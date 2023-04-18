@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "app-icon-white-bg.png",
+      "filename" : "app-icon-black-bg.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
