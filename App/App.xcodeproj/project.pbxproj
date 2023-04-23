@@ -14,6 +14,9 @@
 		4E46479C29EEE23E0062147F /* AppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E46479B29EEE23E0062147F /* AppTests.swift */; };
 		4E4647A629EEE23E0062147F /* AppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E4647A529EEE23E0062147F /* AppUITests.swift */; };
 		4E4647A829EEE23E0062147F /* AppUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E4647A729EEE23E0062147F /* AppUITestsLaunchTests.swift */; };
+		4EC789E129F5A53E001A5AB6 /* AppEnv.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EC789DF29F5A53E001A5AB6 /* AppEnv.swift */; };
+		4EC789E629F5A587001A5AB6 /* AccountData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EC789E529F5A587001A5AB6 /* AccountData.swift */; };
+		4EC789E929F5B160001A5AB6 /* AccountDataBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EC789E829F5B160001A5AB6 /* AccountDataBuilder.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +48,9 @@
 		4E4647A129EEE23E0062147F /* UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E4647A529EEE23E0062147F /* AppUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUITests.swift; sourceTree = "<group>"; };
 		4E4647A729EEE23E0062147F /* AppUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		4EC789DF29F5A53E001A5AB6 /* AppEnv.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppEnv.swift; sourceTree = "<group>"; };
+		4EC789E529F5A587001A5AB6 /* AccountData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AccountData.swift; sourceTree = "<group>"; };
+		4EC789E829F5B160001A5AB6 /* AccountDataBuilder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AccountDataBuilder.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,6 +101,8 @@
 		4E46478829EEE23B0062147F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				4EC789DC29F5A50F001A5AB6 /* Core */,
+				4EC789DD29F5A51A001A5AB6 /* Feature */,
 				4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */,
 				4E46478B29EEE23B0062147F /* ContentView.swift */,
 				4E46478D29EEE23D0062147F /* Assets.xcassets */,
@@ -127,6 +135,47 @@
 				4E4647A729EEE23E0062147F /* AppUITestsLaunchTests.swift */,
 			);
 			path = AppUITests;
+			sourceTree = "<group>";
+		};
+		4EC789DC29F5A50F001A5AB6 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				4EC789DE29F5A528001A5AB6 /* Common */,
+				4EC789E329F5A565001A5AB6 /* Model */,
+				4EC789E429F5A56F001A5AB6 /* Network */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		4EC789DD29F5A51A001A5AB6 /* Feature */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Feature;
+			sourceTree = "<group>";
+		};
+		4EC789DE29F5A528001A5AB6 /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				4EC789DF29F5A53E001A5AB6 /* AppEnv.swift */,
+			);
+			path = Common;
+			sourceTree = "<group>";
+		};
+		4EC789E329F5A565001A5AB6 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				4EC789E829F5B160001A5AB6 /* AccountDataBuilder.swift */,
+				4EC789E529F5A587001A5AB6 /* AccountData.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		4EC789E429F5A56F001A5AB6 /* Network */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Network;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -259,8 +308,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4EC789E629F5A587001A5AB6 /* AccountData.swift in Sources */,
 				4E46478C29EEE23B0062147F /* ContentView.swift in Sources */,
 				4E46478A29EEE23B0062147F /* CrisisCleanupApp.swift in Sources */,
+				4EC789E929F5B160001A5AB6 /* AccountDataBuilder.swift in Sources */,
+				4EC789E129F5A53E001A5AB6 /* AppEnv.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

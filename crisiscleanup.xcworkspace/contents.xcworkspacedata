@@ -4,12 +4,4 @@
    <FileRef
       location = "group:App/App.xcodeproj">
    </FileRef>
-   <Group
-      location = "container:"
-      name = "Feature">
-   </Group>
-   <Group
-      location = "container:"
-      name = "Core">
-   </Group>
 </Workspace>
