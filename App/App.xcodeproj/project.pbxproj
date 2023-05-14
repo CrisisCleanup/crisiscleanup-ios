@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		4E46478A29EEE23B0062147F /* CrisisCleanupApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */; };
-		4E46478C29EEE23B0062147F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E46478B29EEE23B0062147F /* ContentView.swift */; };
 		4E46478E29EEE23D0062147F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E46478D29EEE23D0062147F /* Assets.xcassets */; };
 		4E46479229EEE23D0062147F /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E46479129EEE23D0062147F /* Preview Assets.xcassets */; };
 		4E46479C29EEE23E0062147F /* AppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E46479B29EEE23E0062147F /* AppTests.swift */; };
@@ -38,7 +37,6 @@
 /* Begin PBXFileReference section */
 		4E46478629EEE23B0062147F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrisisCleanupApp.swift; sourceTree = "<group>"; };
-		4E46478B29EEE23B0062147F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		4E46478D29EEE23D0062147F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4E46478F29EEE23D0062147F /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
 		4E46479129EEE23D0062147F /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -104,7 +102,6 @@
 			isa = PBXGroup;
 			children = (
 				4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */,
-				4E46478B29EEE23B0062147F /* ContentView.swift */,
 				4E46478D29EEE23D0062147F /* Assets.xcassets */,
 				4E46478F29EEE23D0062147F /* App.entitlements */,
 				4E46479029EEE23D0062147F /* Preview Content */,
@@ -289,7 +286,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4E46478C29EEE23B0062147F /* ContentView.swift in Sources */,
 				4E46478A29EEE23B0062147F /* CrisisCleanupApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
