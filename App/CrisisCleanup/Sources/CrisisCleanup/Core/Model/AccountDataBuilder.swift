@@ -54,12 +54,12 @@ extension AccountData {
 
 		fileprivate func toAccountData() -> AccountData {
 			return AccountData(
-				id: id, 
-				accessToken: accessToken, 
-				tokenExpiry: tokenExpiry, 
-				fullName: fullName, 
-				emailAddress: emailAddress, 
-				profilePictureUri: profilePictureUri, 
+				id: id,
+				accessToken: accessToken,
+				tokenExpiry: tokenExpiry,
+				fullName: fullName,
+				emailAddress: emailAddress,
+				profilePictureUri: profilePictureUri,
 				org: org
 			)
 		}
