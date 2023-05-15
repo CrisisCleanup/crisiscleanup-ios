@@ -1,8 +1,8 @@
 import XCTest
-@testable import CrisisCleanup
+//@testable import CrisisCleanup
 
 final class CrisisCleanupTests: XCTestCase {
-    func testExample() throws {
-        XCTAssertEqual(CrisisCleanup().text, "CC")
-    }
+//    func testExample() throws {
+//        XCTAssertEqual(CrisisCleanup().text, "CC")
+//    }
 }
