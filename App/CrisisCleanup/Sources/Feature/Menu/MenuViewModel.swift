@@ -6,7 +6,6 @@ protocol MenuViewModelProtocol: ObservableObject {
 }
 
 class MenuViewModel: MenuViewModelProtocol {
-    // TODO Inject
     let appVersionProvider: AppVersionProvider
 
     var versionText: String {
@@ -16,7 +15,7 @@ class MenuViewModel: MenuViewModelProtocol {
         }
     }
 
-    init() {
-        appVersionProvider = AppleAppVersionProvider()
+    init(appVersionProvider: AppVersionProvider) {
+        self.appVersionProvider = appVersionProvider
     }
 }

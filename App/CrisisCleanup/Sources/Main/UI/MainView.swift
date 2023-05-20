@@ -4,7 +4,7 @@ struct MainView<ViewModel>: View where ViewModel: MainViewModelProtocol {
     @ObservedObject var viewModel: ViewModel
     let menuBuilder: MenuBuilder
 
-    public var body: some View {
+    var body: some View {
         TabView {
             CasesView()
                 .navTabItem(destination: .cases)

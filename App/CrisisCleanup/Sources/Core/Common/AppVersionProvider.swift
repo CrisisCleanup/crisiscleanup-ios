@@ -1,6 +1,6 @@
 import Foundation
 
-protocol AppVersionProvider {
+public protocol AppVersionProvider {
     var version: (Int64, String) {get}
     var versionString: String {get}
     var buildNumber: Int64 {get}
