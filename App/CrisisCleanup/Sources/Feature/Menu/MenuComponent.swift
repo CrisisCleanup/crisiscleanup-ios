@@ -5,9 +5,12 @@ protocol MenuBuilder {
     var menuView: AnyView { get }
 }
 
-class MenuComponent: Component<AppVersionDependency>, MenuBuilder {
+class MenuComponent: Component<AppDependency>, MenuBuilder {
     var menuViewModel: MenuViewModel {
-        MenuViewModel(appVersionProvider: dependency.appVersionProvider)
+        MenuViewModel(
+            appEnv: dependency.appEnv,
+            appVersionProvider: dependency.appVersionProvider
+        )
     }
 
     var menuView: AnyView {

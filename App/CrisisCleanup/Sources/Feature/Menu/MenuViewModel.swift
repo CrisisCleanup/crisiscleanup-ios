@@ -6,6 +6,7 @@ protocol MenuViewModelProtocol: ObservableObject {
 }
 
 class MenuViewModel: MenuViewModelProtocol {
+    let appEnv: AppEnv
     let appVersionProvider: AppVersionProvider
 
     var versionText: String {
@@ -15,7 +16,11 @@ class MenuViewModel: MenuViewModelProtocol {
         }
     }
 
-    init(appVersionProvider: AppVersionProvider) {
+    init(
+        appEnv: AppEnv,
+        appVersionProvider: AppVersionProvider
+    ) {
+        self.appEnv = appEnv
         self.appVersionProvider = appVersionProvider
     }
 }

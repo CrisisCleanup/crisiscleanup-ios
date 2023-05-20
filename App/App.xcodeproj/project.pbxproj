@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4E0CCEEC2A1966EE00EC6906 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0CCEEB2A1966EE00EC6906 /* AppSettings.swift */; };
+		4E0CCEF52A196D4F00EC6906 /* AppBuildEnv.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0CCEF42A196D4F00EC6906 /* AppBuildEnv.swift */; };
+		4E0CCEF92A1970E200EC6906 /* ConfigProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0CCEF82A1970E200EC6906 /* ConfigProperties.swift */; };
 		4E46478A29EEE23B0062147F /* CrisisCleanupApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */; };
 		4E46478E29EEE23D0062147F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E46478D29EEE23D0062147F /* Assets.xcassets */; };
 		4E46479229EEE23D0062147F /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E46479129EEE23D0062147F /* Preview Assets.xcassets */; };
@@ -37,6 +40,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4E0CCEEB2A1966EE00EC6906 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		4E0CCEEE2A1967B000EC6906 /* DebugConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = DebugConfig.xcconfig; sourceTree = "<group>"; };
+		4E0CCEEF2A1967C400EC6906 /* NonpConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = NonpConfig.xcconfig; sourceTree = "<group>"; };
+		4E0CCEF02A1967CD00EC6906 /* ReleaseConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = ReleaseConfig.xcconfig; sourceTree = "<group>"; };
+		4E0CCEF12A19695100EC6906 /* AppConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AppConfig.xcconfig; sourceTree = "<group>"; };
+		4E0CCEF42A196D4F00EC6906 /* AppBuildEnv.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBuildEnv.swift; sourceTree = "<group>"; };
+		4E0CCEF82A1970E200EC6906 /* ConfigProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigProperties.swift; sourceTree = "<group>"; };
 		4E46478629EEE23B0062147F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrisisCleanupApp.swift; sourceTree = "<group>"; };
 		4E46478D29EEE23D0062147F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -80,6 +90,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4E0CCEED2A19679D00EC6906 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				4E0CCEEE2A1967B000EC6906 /* DebugConfig.xcconfig */,
+				4E0CCEEF2A1967C400EC6906 /* NonpConfig.xcconfig */,
+				4E0CCEF02A1967CD00EC6906 /* ReleaseConfig.xcconfig */,
+				4E0CCEF12A19695100EC6906 /* AppConfig.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
 		4E46477D29EEE23B0062147F = {
 			isa = PBXGroup;
 			children = (
@@ -105,6 +126,7 @@
 		4E46478829EEE23B0062147F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				4E0CCEED2A19679D00EC6906 /* Config */,
 				4EBFB4502A19122100DA7C84 /* Sources */,
 				4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */,
 				4E46478D29EEE23D0062147F /* Assets.xcassets */,
@@ -160,6 +182,9 @@
 			isa = PBXGroup;
 			children = (
 				4E6469FF2A1916BB009148E0 /* NeedleGenerated.swift */,
+				4E0CCEF42A196D4F00EC6906 /* AppBuildEnv.swift */,
+				4E0CCEEB2A1966EE00EC6906 /* AppSettings.swift */,
+				4E0CCEF82A1970E200EC6906 /* ConfigProperties.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -171,7 +196,8 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4E4647AB29EEE23E0062147F /* Build configuration list for PBXNativeTarget "App" */;
 			buildPhases = (
-				4EBFB44D2A1910D800DA7C84 /* ShellScript */,
+				4E0CCEF32A196BBD00EC6906 /* Overwrite App Config */,
+				4EBFB44D2A1910D800DA7C84 /* Generate Needle Dependency Graph */,
 				4E46478229EEE23B0062147F /* Sources */,
 				4E46478329EEE23B0062147F /* Frameworks */,
 				4E46478429EEE23B0062147F /* Resources */,
@@ -301,8 +327,29 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		4EBFB44D2A1910D800DA7C84 /* ShellScript */ = {
+		4E0CCEF32A196BBD00EC6906 /* Overwrite App Config */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 8;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Overwrite App Config";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "configFileName=\"${CONFIGURATION}Config.xcconfig\"\n\nconfigDir=\"./App/Config\"\nconfigFile=\"${configDir}/${configFileName}\"\nreplaceFile=\"${configDir}/AppConfig.xcconfig\"\nif [ -f \"${configFile}\" ];\nthen\n    cp \"${configFile}\" \"${replaceFile}\"\nelse\n    echo \"Configuration file not found for ${CONFIGURATION}\"\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		4EBFB44D2A1910D800DA7C84 /* Generate Needle Dependency Graph */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -310,6 +357,7 @@
 			);
 			inputPaths = (
 			);
+			name = "Generate Needle Dependency Graph";
 			outputFileListPaths = (
 			);
 			outputPaths = (
@@ -317,6 +365,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "export PATH=\"$PATH:/opt/homebrew/bin\"\n\nneedle generate App/Sources/NeedleGenerated.swift App/Sources/ CrisisCleanup/Sources\n";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -327,6 +376,9 @@
 			files = (
 				4E646A002A1916BB009148E0 /* NeedleGenerated.swift in Sources */,
 				4E46478A29EEE23B0062147F /* CrisisCleanupApp.swift in Sources */,
+				4E0CCEF52A196D4F00EC6906 /* AppBuildEnv.swift in Sources */,
+				4E0CCEF92A1970E200EC6906 /* ConfigProperties.swift in Sources */,
+				4E0CCEEC2A1966EE00EC6906 /* AppSettings.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -380,6 +432,7 @@
 /* Begin XCBuildConfiguration section */
 		4E4647A929EEE23E0062147F /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4E0CCEF12A19695100EC6906 /* AppConfig.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -438,6 +491,7 @@
 		};
 		4E4647AA29EEE23E0062147F /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4E0CCEF12A19695100EC6906 /* AppConfig.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -501,7 +555,8 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "${APP_DISPLAY_NAME}";
+				INFOPLIST_FILE = App/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ccleanup;
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = ccleanup;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -547,7 +602,8 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "${APP_DISPLAY_NAME}";
+				INFOPLIST_FILE = App/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ccleanup;
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = Cleanup;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -670,6 +726,7 @@
 		};
 		4E4647B429EEE4D10062147F /* Nonp */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4E0CCEF12A19695100EC6906 /* AppConfig.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -736,7 +793,8 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "${APP_DISPLAY_NAME}";
+				INFOPLIST_FILE = App/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ccleanup;
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = Cleanup;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;

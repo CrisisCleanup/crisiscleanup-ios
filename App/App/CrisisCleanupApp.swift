@@ -17,9 +17,14 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 struct CrisisCleanupApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
+    let config = loadConfigProperties()
+
     var body: some Scene {
         WindowGroup {
-            RootComponent().mainView
+            RootComponent(
+                appEnv: AppBuildEnv(config),
+                appSettingsProvider: AppSettings(config)
+            ).mainView
         }
     }
 }

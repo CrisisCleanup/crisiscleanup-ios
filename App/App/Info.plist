@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>apiBaseUrl</key>
+	<string>$(API_BASE_URL)</string>
+	<key>baseUrl</key>
+	<string>$(BASE_URL)</string>
+	<key>debugAccountPassword</key>
+	<string>$(DEBUG_ACCOUNT_PASSWORD)</string>
+	<key>debugEmailAddress</key>
+	<string>$(DEBUG_EMAIL_ADDRESS)</string>
+	<key>isDebuggable</key>
+	<string>$(IS_DEBUGGABLE)</string>
+	<key>isProduction</key>
+	<string>$(IS_PRODUCTION)</string>
+</dict>
+</plist>
