@@ -1,7 +1,7 @@
 import SwiftUI
 
-struct MenuView: View {
-    @StateObject private var viewModel = MenuViewModel()
+struct MenuView<ViewModel>: View where ViewModel: MenuViewModelProtocol {
+    @ObservedObject var viewModel: ViewModel
 
     var body: some View {
         Text("Menu \(viewModel.versionText)")

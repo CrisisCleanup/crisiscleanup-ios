@@ -1,8 +1,11 @@
 import SwiftUI
 import Combine
 
-@MainActor
-public class MenuViewModel: ObservableObject {
+protocol MenuViewModelProtocol: ObservableObject {
+    var versionText: String { get }
+}
+
+class MenuViewModel: MenuViewModelProtocol {
     // TODO Inject
     let appVersionProvider: AppVersionProvider
 
@@ -13,7 +16,7 @@ public class MenuViewModel: ObservableObject {
         }
     }
 
-    public init() {
+    init() {
         appVersionProvider = AppleAppVersionProvider()
     }
 }
