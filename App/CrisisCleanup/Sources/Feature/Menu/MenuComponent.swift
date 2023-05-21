@@ -9,7 +9,8 @@ class MenuComponent: Component<AppDependency>, MenuBuilder {
     var menuViewModel: MenuViewModel {
         MenuViewModel(
             appEnv: dependency.appEnv,
-            appVersionProvider: dependency.appVersionProvider
+            appVersionProvider: dependency.appVersionProvider,
+            logger: dependency.loggerFactory.getLogger("menu")
         )
     }
 

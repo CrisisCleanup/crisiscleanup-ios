@@ -10,6 +10,13 @@
 		4E0CCEEC2A1966EE00EC6906 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0CCEEB2A1966EE00EC6906 /* AppSettings.swift */; };
 		4E0CCEF52A196D4F00EC6906 /* AppBuildEnv.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0CCEF42A196D4F00EC6906 /* AppBuildEnv.swift */; };
 		4E0CCEF92A1970E200EC6906 /* ConfigProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0CCEF82A1970E200EC6906 /* ConfigProperties.swift */; };
+		4E0CCF032A19889B00EC6906 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 4E0CCF022A19889B00EC6906 /* FirebaseCrashlytics */; };
+		4E0CCF052A19889B00EC6906 /* FirebasePerformance in Frameworks */ = {isa = PBXBuildFile; productRef = 4E0CCF042A19889B00EC6906 /* FirebasePerformance */; };
+		4E0CCF082A1989FB00EC6906 /* AppLoggerProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0CCF072A1989FB00EC6906 /* AppLoggerProvider.swift */; };
+		4E0CCF112A19A7D100EC6906 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4E0CCF102A19A7D100EC6906 /* GoogleService-Info.plist */; };
+		4E0CCF152A19AA4700EC6906 /* GoogleService-Info-prod.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4E0CCF142A19AA4700EC6906 /* GoogleService-Info-prod.plist */; };
+		4E0CCF1A2A19AB2800EC6906 /* GoogleService-Info-debug.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4E0CCF182A19AB2800EC6906 /* GoogleService-Info-debug.plist */; };
+		4E0CCF1B2A19AB2800EC6906 /* GoogleService-Info-nonp.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4E0CCF192A19AB2800EC6906 /* GoogleService-Info-nonp.plist */; };
 		4E46478A29EEE23B0062147F /* CrisisCleanupApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */; };
 		4E46478E29EEE23D0062147F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E46478D29EEE23D0062147F /* Assets.xcassets */; };
 		4E46479229EEE23D0062147F /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E46479129EEE23D0062147F /* Preview Assets.xcassets */; };
@@ -47,6 +54,11 @@
 		4E0CCEF12A19695100EC6906 /* AppConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AppConfig.xcconfig; sourceTree = "<group>"; };
 		4E0CCEF42A196D4F00EC6906 /* AppBuildEnv.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBuildEnv.swift; sourceTree = "<group>"; };
 		4E0CCEF82A1970E200EC6906 /* ConfigProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigProperties.swift; sourceTree = "<group>"; };
+		4E0CCF072A1989FB00EC6906 /* AppLoggerProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLoggerProvider.swift; sourceTree = "<group>"; };
+		4E0CCF102A19A7D100EC6906 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		4E0CCF142A19AA4700EC6906 /* GoogleService-Info-prod.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info-prod.plist"; sourceTree = "<group>"; };
+		4E0CCF182A19AB2800EC6906 /* GoogleService-Info-debug.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info-debug.plist"; sourceTree = "<group>"; };
+		4E0CCF192A19AB2800EC6906 /* GoogleService-Info-nonp.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info-nonp.plist"; path = "../../../../../../Downloads/GoogleService-Info-nonp.plist"; sourceTree = "<group>"; };
 		4E46478629EEE23B0062147F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrisisCleanupApp.swift; sourceTree = "<group>"; };
 		4E46478D29EEE23D0062147F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -68,7 +80,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4E0CCF032A19889B00EC6906 /* FirebaseCrashlytics in Frameworks */,
 				4EBFB44A2A1910A800DA7C84 /* NeedleFoundation in Frameworks */,
+				4E0CCF052A19889B00EC6906 /* FirebasePerformance in Frameworks */,
 				4E75623E2A117E140029D5D7 /* CrisisCleanup in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -93,6 +107,10 @@
 		4E0CCEED2A19679D00EC6906 /* Config */ = {
 			isa = PBXGroup;
 			children = (
+				4E0CCF102A19A7D100EC6906 /* GoogleService-Info.plist */,
+				4E0CCF182A19AB2800EC6906 /* GoogleService-Info-debug.plist */,
+				4E0CCF192A19AB2800EC6906 /* GoogleService-Info-nonp.plist */,
+				4E0CCF142A19AA4700EC6906 /* GoogleService-Info-prod.plist */,
 				4E0CCEEE2A1967B000EC6906 /* DebugConfig.xcconfig */,
 				4E0CCEEF2A1967C400EC6906 /* NonpConfig.xcconfig */,
 				4E0CCEF02A1967CD00EC6906 /* ReleaseConfig.xcconfig */,
@@ -183,6 +201,7 @@
 			children = (
 				4E6469FF2A1916BB009148E0 /* NeedleGenerated.swift */,
 				4E0CCEF42A196D4F00EC6906 /* AppBuildEnv.swift */,
+				4E0CCF072A1989FB00EC6906 /* AppLoggerProvider.swift */,
 				4E0CCEEB2A1966EE00EC6906 /* AppSettings.swift */,
 				4E0CCEF82A1970E200EC6906 /* ConfigProperties.swift */,
 			);
@@ -197,10 +216,12 @@
 			buildConfigurationList = 4E4647AB29EEE23E0062147F /* Build configuration list for PBXNativeTarget "App" */;
 			buildPhases = (
 				4E0CCEF32A196BBD00EC6906 /* Overwrite App Config */,
+				4E0CCF0F2A19A77F00EC6906 /* Overwrite GoogleService-Info */,
 				4EBFB44D2A1910D800DA7C84 /* Generate Needle Dependency Graph */,
 				4E46478229EEE23B0062147F /* Sources */,
 				4E46478329EEE23B0062147F /* Frameworks */,
 				4E46478429EEE23B0062147F /* Resources */,
+				4E0CCF062A1988F300EC6906 /* Process and Upload dSYMs */,
 			);
 			buildRules = (
 			);
@@ -211,6 +232,8 @@
 			packageProductDependencies = (
 				4E75623D2A117E140029D5D7 /* CrisisCleanup */,
 				4EBFB4492A1910A800DA7C84 /* NeedleFoundation */,
+				4E0CCF022A19889B00EC6906 /* FirebaseCrashlytics */,
+				4E0CCF042A19889B00EC6906 /* FirebasePerformance */,
 			);
 			productName = App;
 			productReference = 4E46478629EEE23B0062147F /* App.app */;
@@ -287,6 +310,7 @@
 			mainGroup = 4E46477D29EEE23B0062147F;
 			packageReferences = (
 				4EBFB4482A1910A800DA7C84 /* XCRemoteSwiftPackageReference "needle" */,
+				4E0CCF012A19889B00EC6906 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			productRefGroup = 4E46478729EEE23B0062147F /* Products */;
 			projectDirPath = "";
@@ -304,9 +328,13 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4E0CCF152A19AA4700EC6906 /* GoogleService-Info-prod.plist in Resources */,
 				4E46479229EEE23D0062147F /* Preview Assets.xcassets in Resources */,
 				4E59A32F2A117606006F2130 /* Localizable.strings in Resources */,
 				4E46478E29EEE23D0062147F /* Assets.xcassets in Resources */,
+				4E0CCF1B2A19AB2800EC6906 /* GoogleService-Info-nonp.plist in Resources */,
+				4E0CCF112A19A7D100EC6906 /* GoogleService-Info.plist in Resources */,
+				4E0CCF1A2A19AB2800EC6906 /* GoogleService-Info-debug.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -344,7 +372,47 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "configFileName=\"${CONFIGURATION}Config.xcconfig\"\n\nconfigDir=\"./App/Config\"\nconfigFile=\"${configDir}/${configFileName}\"\nreplaceFile=\"${configDir}/AppConfig.xcconfig\"\nif [ -f \"${configFile}\" ];\nthen\n    cp \"${configFile}\" \"${replaceFile}\"\nelse\n    echo \"Configuration file not found for ${CONFIGURATION}\"\n    exit 1\nfi\n";
+			shellScript = "configFileName=\"${CONFIGURATION}Config.xcconfig\"\n\nconfigDir=\"./App/Config\"\nconfigFile=\"${configDir}/${configFileName}\"\nreplaceFile=\"${configDir}/AppConfig.xcconfig\"\nif [ -f \"${configFile}\" ]; then\n    cp \"${configFile}\" \"${replaceFile}\"\nelse\n    echo \"Configuration file not found for ${CONFIGURATION}\"\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		4E0CCF062A1988F300EC6906 /* Process and Upload dSYMs */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 8;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Process and Upload dSYMs";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "# This must be the last phase\n\n# TODO Follow https://firebase.google.com/docs/crashlytics/get-started?platform=ios#set-up-dsym-uploading\necho \"dSYMs not processed or uploaded. Awaiting settup in Build Phases\"\n";
+			showEnvVarsInLog = 0;
+		};
+		4E0CCF0F2A19A77F00EC6906 /* Overwrite GoogleService-Info */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 8;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Overwrite GoogleService-Info";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "googleServiceInfo=\"GoogleService-Info\"\nconfigFileName=\"${googleServiceInfo}-${CONFIGURATION}.plist\"\n\nconfigDir=\"./App/Config\"\nconfigFile=\"${configDir}/${configFileName}\"\nreplaceFile=\"${configDir}/${googleServiceInfo}.plist\"\nif [ -f \"${configFile}\" ]; then\n    cp \"${configFile}\" \"${replaceFile}\"\nelse\n    echo \"GoogleService-Info not found for ${CONFIGURATION}\"\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 		4EBFB44D2A1910D800DA7C84 /* Generate Needle Dependency Graph */ = {
@@ -374,6 +442,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4E0CCF082A1989FB00EC6906 /* AppLoggerProvider.swift in Sources */,
 				4E646A002A1916BB009148E0 /* NeedleGenerated.swift in Sources */,
 				4E46478A29EEE23B0062147F /* CrisisCleanupApp.swift in Sources */,
 				4E0CCEF52A196D4F00EC6906 /* AppBuildEnv.swift in Sources */,
@@ -916,6 +985,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		4E0CCF012A19889B00EC6906 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 10.0.0;
+			};
+		};
 		4EBFB4482A1910A800DA7C84 /* XCRemoteSwiftPackageReference "needle" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/uber/needle.git";
@@ -927,6 +1004,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		4E0CCF022A19889B00EC6906 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4E0CCF012A19889B00EC6906 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
+		4E0CCF042A19889B00EC6906 /* FirebasePerformance */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4E0CCF012A19889B00EC6906 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebasePerformance;
+		};
 		4E75623D2A117E140029D5D7 /* CrisisCleanup */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = CrisisCleanup;

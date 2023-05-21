@@ -8,6 +8,7 @@ protocol MenuViewModelProtocol: ObservableObject {
 class MenuViewModel: MenuViewModelProtocol {
     let appEnv: AppEnv
     let appVersionProvider: AppVersionProvider
+    let logger: AppLogger
 
     var versionText: String {
         get {
@@ -18,9 +19,11 @@ class MenuViewModel: MenuViewModelProtocol {
 
     init(
         appEnv: AppEnv,
-        appVersionProvider: AppVersionProvider
+        appVersionProvider: AppVersionProvider,
+        logger: AppLogger
     ) {
         self.appEnv = appEnv
         self.appVersionProvider = appVersionProvider
+        self.logger = logger
     }
 }

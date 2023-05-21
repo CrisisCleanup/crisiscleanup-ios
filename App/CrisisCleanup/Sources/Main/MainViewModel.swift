@@ -6,6 +6,11 @@ protocol MainViewModelProtocol: ObservableObject {
 }
 
 class MainViewModel: MainViewModelProtocol {
-    init() {
+    let logger: AppLogger
+
+    init(
+        logger: AppLogger
+    ) {
+        self.logger = logger
     }
 }
