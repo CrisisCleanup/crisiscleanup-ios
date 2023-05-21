@@ -8,11 +8,7 @@ public protocol AppDependency: Dependency {
 }
 
 extension MainComponent {
-    public var appVersionProvider: AppVersionProvider {
-        return providesAppVersionProvider
-    }
+    public var appVersionProvider: AppVersionProvider { providesAppVersionProvider }
 
-    var providesAppVersionProvider: AppVersionProvider {
-        return shared { AppleAppVersionProvider() }
-    }
+    var providesAppVersionProvider: AppVersionProvider { shared { AppleAppVersionProvider() } }
 }

@@ -11,7 +11,7 @@ class TagLogger: AppLogger {
     }
 
     func logDebug(_ items: Any...) {
-        if(appEnv.isDebuggable) {
+        if (appEnv.isDebuggable) {
             print(self.tag, items)
         }
     }
@@ -19,7 +19,7 @@ class TagLogger: AppLogger {
     func logError(e: Error) {
         Crashlytics.crashlytics().record(error: e)
 
-        if(appEnv.isDebuggable) {
+        if (appEnv.isDebuggable) {
             print(self.tag, e)
         }
     }

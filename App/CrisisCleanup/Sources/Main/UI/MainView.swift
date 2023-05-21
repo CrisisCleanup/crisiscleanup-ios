@@ -2,14 +2,19 @@ import SwiftUI
 
 struct MainView<ViewModel>: View where ViewModel: MainViewModelProtocol {
     @ObservedObject var viewModel: ViewModel
-    let menuBuilder: MenuBuilder
+    let menuViewBuilder: MenuViewBuilder
 
+    @State private var selectedTab = TopLevelDestination.menu
     var body: some View {
-        TabView {
-            CasesView()
-                .navTabItem(destination: .cases)
-            menuBuilder.menuView
-                .navTabItem(destination: .menu)
+        NavigationView {
+            TabView(selection: $selectedTab) {
+                CasesView()
+                    .navTabItem(destination: .cases)
+                    .tag(TopLevelDestination.cases)
+                menuViewBuilder.menuView
+                    .navTabItem(destination: .menu)
+                    .tag(TopLevelDestination.menu)
+            }
         }
     }
 }

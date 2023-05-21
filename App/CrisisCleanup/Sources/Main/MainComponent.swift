@@ -23,15 +23,11 @@ public class MainComponent: BootstrapComponent {
     }
 
     public var mainView: some View {
-        NavigationView {
-            MainView(
-                viewModel: mainViewModel,
-                menuBuilder: menuComponent
-            )
-        }
+        MainView(
+            viewModel: mainViewModel,
+            menuViewBuilder: menuComponent
+        )
     }
 
-    var menuComponent: MenuComponent {
-        return MenuComponent(parent: self)
-    }
+    var menuComponent: MenuComponent { MenuComponent(parent: self) }
 }

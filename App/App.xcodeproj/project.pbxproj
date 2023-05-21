@@ -378,21 +378,23 @@
 		4E0CCF062A1988F300EC6906 /* Process and Upload dSYMs */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
-			buildActionMask = 8;
+			buildActionMask = 12;
 			files = (
 			);
 			inputFileListPaths = (
 			);
 			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
+				"$(SRCROOT)/$(BUILT_PRODUCTS_DIR)/$(INFOPLIST_PATH)",
 			);
 			name = "Process and Upload dSYMs";
 			outputFileListPaths = (
 			);
 			outputPaths = (
 			);
-			runOnlyForDeploymentPostprocessing = 1;
+			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This must be the last phase\n\n# TODO Follow https://firebase.google.com/docs/crashlytics/get-started?platform=ios#set-up-dsym-uploading\necho \"dSYMs not processed or uploaded. Awaiting settup in Build Phases\"\n";
+			shellScript = "# This must be the last phase\nif [[ \"${CONFIGURATION}\" == \"Release\" ]]; then\n    \"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\nelse\n    echo \"Release must manually upload dSYMs\"\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 		4E0CCF0F2A19A77F00EC6906 /* Overwrite GoogleService-Info */ = {

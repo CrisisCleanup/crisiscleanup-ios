@@ -12,19 +12,13 @@ protocol DatabaseVersionProvider {
 
 class AppleAppVersionProvider : AppVersionProvider {
     var version: (Int64, String) {
-        get {
-            let dictionary = Bundle.main.infoDictionary!
-            let versionString = dictionary["CFBundleShortVersionString"] as! String
-            let build = Int64(dictionary["CFBundleVersion"] as! String) ?? 0
-            return (build, versionString)
-        }
+        let dictionary = Bundle.main.infoDictionary!
+        let versionString = dictionary["CFBundleShortVersionString"] as! String
+        let build = Int64(dictionary["CFBundleVersion"] as! String) ?? 0
+        return (build, versionString)
     }
 
-    var versionString: String {
-        get { return version.1 }
-    }
+    var versionString: String { version.1 }
 
-    var buildNumber: Int64 {
-        get { return version.0 }
-    }
+    var buildNumber: Int64 { version.0 }
 }

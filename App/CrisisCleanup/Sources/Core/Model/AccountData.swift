@@ -15,12 +15,8 @@ struct AccountData {
     let profilePictureUri: String
     let org: OrgData
 
-    var isTokenExpired: Bool {
-        get { tokenExpiry <= Date() }
-    }
-    var isTokenInvalid: Bool {
-        get { accessToken.isEmpty || isTokenExpired }
-    }
+    var isTokenExpired: Bool { tokenExpiry <= Date() }
+    var isTokenInvalid: Bool { accessToken.isEmpty || isTokenExpired }
 }
 
 let emptyOrgData = OrgData(id: 0, name: "")

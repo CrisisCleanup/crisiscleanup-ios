@@ -11,19 +11,17 @@ class MenuViewModel: MenuViewModelProtocol {
     let logger: AppLogger
 
     var versionText: String {
-        get {
-            let version = appVersionProvider.version
-            return "\(version.1) (\(version.0))"
-        }
+        let version = appVersionProvider.version
+        return "\(version.1) (\(version.0))"
     }
 
     init(
         appEnv: AppEnv,
         appVersionProvider: AppVersionProvider,
-        logger: AppLogger
+        loggerFactory: AppLoggerFactory
     ) {
         self.appEnv = appEnv
         self.appVersionProvider = appVersionProvider
-        self.logger = logger
+        self.logger = loggerFactory.getLogger("menu")
     }
 }
