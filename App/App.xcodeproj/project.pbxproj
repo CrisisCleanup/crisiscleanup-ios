@@ -14,7 +14,7 @@
 		4E0CCF052A19889B00EC6906 /* FirebasePerformance in Frameworks */ = {isa = PBXBuildFile; productRef = 4E0CCF042A19889B00EC6906 /* FirebasePerformance */; };
 		4E0CCF082A1989FB00EC6906 /* AppLoggerProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0CCF072A1989FB00EC6906 /* AppLoggerProvider.swift */; };
 		4E0CCF112A19A7D100EC6906 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4E0CCF102A19A7D100EC6906 /* GoogleService-Info.plist */; };
-		4E0CCF152A19AA4700EC6906 /* GoogleService-Info-prod.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4E0CCF142A19AA4700EC6906 /* GoogleService-Info-prod.plist */; };
+		4E0CCF152A19AA4700EC6906 /* GoogleService-Info-release.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4E0CCF142A19AA4700EC6906 /* GoogleService-Info-release.plist */; };
 		4E46478A29EEE23B0062147F /* CrisisCleanupApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */; };
 		4E46478E29EEE23D0062147F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E46478D29EEE23D0062147F /* Assets.xcassets */; };
 		4E46479229EEE23D0062147F /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E46479129EEE23D0062147F /* Preview Assets.xcassets */; };
@@ -56,7 +56,7 @@
 		4E0CCEF82A1970E200EC6906 /* ConfigProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigProperties.swift; sourceTree = "<group>"; };
 		4E0CCF072A1989FB00EC6906 /* AppLoggerProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLoggerProvider.swift; sourceTree = "<group>"; };
 		4E0CCF102A19A7D100EC6906 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
-		4E0CCF142A19AA4700EC6906 /* GoogleService-Info-prod.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info-prod.plist"; sourceTree = "<group>"; };
+		4E0CCF142A19AA4700EC6906 /* GoogleService-Info-release.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info-release.plist"; sourceTree = "<group>"; };
 		4E46478629EEE23B0062147F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrisisCleanupApp.swift; sourceTree = "<group>"; };
 		4E46478D29EEE23D0062147F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -110,7 +110,7 @@
 				4E0CCF102A19A7D100EC6906 /* GoogleService-Info.plist */,
 				4ED625852A2509FE00C33EAB /* GoogleService-Info-debug.plist */,
 				4ED625842A2509FE00C33EAB /* GoogleService-Info-nonp.plist */,
-				4E0CCF142A19AA4700EC6906 /* GoogleService-Info-prod.plist */,
+				4E0CCF142A19AA4700EC6906 /* GoogleService-Info-release.plist */,
 				4E0CCEEE2A1967B000EC6906 /* DebugConfig.xcconfig */,
 				4E0CCEEF2A1967C400EC6906 /* NonpConfig.xcconfig */,
 				4E0CCEF02A1967CD00EC6906 /* ReleaseConfig.xcconfig */,
@@ -328,7 +328,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4E0CCF152A19AA4700EC6906 /* GoogleService-Info-prod.plist in Resources */,
+				4E0CCF152A19AA4700EC6906 /* GoogleService-Info-release.plist in Resources */,
 				4E46479229EEE23D0062147F /* Preview Assets.xcassets in Resources */,
 				4E59A32F2A117606006F2130 /* Localizable.strings in Resources */,
 				4E46478E29EEE23D0062147F /* Assets.xcassets in Resources */,
@@ -620,7 +620,7 @@
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = AYLY2UUH8J;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -666,7 +666,7 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = AYLY2UUH8J;
@@ -856,7 +856,7 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = AYLY2UUH8J;
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = AYLY2UUH8J;
