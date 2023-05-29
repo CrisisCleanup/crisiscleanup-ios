@@ -11,19 +11,20 @@ class TagLogger: AppLogger {
     }
 
     func logDebug(_ items: Any...) {
-        if (appEnv.isDebuggable) {
+        if appEnv.isDebuggable {
             print(self.tag, items)
         }
     }
 
-    func logError(e: Error) {
+    func logError(_ e: Error) {
         Crashlytics.crashlytics().record(error: e)
 
-        if (appEnv.isDebuggable) {
+        if appEnv.isDebuggable {
             print(self.tag, e)
         }
     }
 }
+
 class AppLoggerProvider: AppLoggerFactory {
     let appEnv: AppEnv
 

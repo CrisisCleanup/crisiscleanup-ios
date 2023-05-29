@@ -15,8 +15,6 @@
 		4E0CCF082A1989FB00EC6906 /* AppLoggerProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0CCF072A1989FB00EC6906 /* AppLoggerProvider.swift */; };
 		4E0CCF112A19A7D100EC6906 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4E0CCF102A19A7D100EC6906 /* GoogleService-Info.plist */; };
 		4E0CCF152A19AA4700EC6906 /* GoogleService-Info-prod.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4E0CCF142A19AA4700EC6906 /* GoogleService-Info-prod.plist */; };
-		4E0CCF1A2A19AB2800EC6906 /* GoogleService-Info-debug.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4E0CCF182A19AB2800EC6906 /* GoogleService-Info-debug.plist */; };
-		4E0CCF1B2A19AB2800EC6906 /* GoogleService-Info-nonp.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4E0CCF192A19AB2800EC6906 /* GoogleService-Info-nonp.plist */; };
 		4E46478A29EEE23B0062147F /* CrisisCleanupApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */; };
 		4E46478E29EEE23D0062147F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E46478D29EEE23D0062147F /* Assets.xcassets */; };
 		4E46479229EEE23D0062147F /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E46479129EEE23D0062147F /* Preview Assets.xcassets */; };
@@ -27,6 +25,8 @@
 		4E646A002A1916BB009148E0 /* NeedleGenerated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E6469FF2A1916BB009148E0 /* NeedleGenerated.swift */; };
 		4E75623E2A117E140029D5D7 /* CrisisCleanup in Frameworks */ = {isa = PBXBuildFile; productRef = 4E75623D2A117E140029D5D7 /* CrisisCleanup */; };
 		4EBFB44A2A1910A800DA7C84 /* NeedleFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 4EBFB4492A1910A800DA7C84 /* NeedleFoundation */; };
+		4ED6257A2A24F1D200C33EAB /* GoogleService-Info-nonp.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4ED625782A24F1D200C33EAB /* GoogleService-Info-nonp.plist */; };
+		4ED6257B2A24F1D200C33EAB /* GoogleService-Info-debug.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4ED625792A24F1D200C33EAB /* GoogleService-Info-debug.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,8 +57,6 @@
 		4E0CCF072A1989FB00EC6906 /* AppLoggerProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLoggerProvider.swift; sourceTree = "<group>"; };
 		4E0CCF102A19A7D100EC6906 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		4E0CCF142A19AA4700EC6906 /* GoogleService-Info-prod.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info-prod.plist"; sourceTree = "<group>"; };
-		4E0CCF182A19AB2800EC6906 /* GoogleService-Info-debug.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info-debug.plist"; sourceTree = "<group>"; };
-		4E0CCF192A19AB2800EC6906 /* GoogleService-Info-nonp.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info-nonp.plist"; path = "../../../../../../Downloads/GoogleService-Info-nonp.plist"; sourceTree = "<group>"; };
 		4E46478629EEE23B0062147F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrisisCleanupApp.swift; sourceTree = "<group>"; };
 		4E46478D29EEE23D0062147F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -73,6 +71,8 @@
 		4E59A3322A117668006F2130 /* CrisisCleanup */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = CrisisCleanup; path = /Users/oc/project/cricle/ios/App/AppUITests/CrisisCleanup; sourceTree = "<absolute>"; };
 		4E6469FF2A1916BB009148E0 /* NeedleGenerated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NeedleGenerated.swift; sourceTree = "<group>"; };
 		4E75623B2A117A460029D5D7 /* CrisisCleanup */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = CrisisCleanup; sourceTree = "<group>"; };
+		4ED625782A24F1D200C33EAB /* GoogleService-Info-nonp.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info-nonp.plist"; path = "../../../../../../Downloads/GoogleService-Info-nonp.plist"; sourceTree = "<group>"; };
+		4ED625792A24F1D200C33EAB /* GoogleService-Info-debug.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info-debug.plist"; path = "../../../../../../Downloads/GoogleService-Info-debug.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -108,8 +108,8 @@
 			isa = PBXGroup;
 			children = (
 				4E0CCF102A19A7D100EC6906 /* GoogleService-Info.plist */,
-				4E0CCF182A19AB2800EC6906 /* GoogleService-Info-debug.plist */,
-				4E0CCF192A19AB2800EC6906 /* GoogleService-Info-nonp.plist */,
+				4ED625792A24F1D200C33EAB /* GoogleService-Info-debug.plist */,
+				4ED625782A24F1D200C33EAB /* GoogleService-Info-nonp.plist */,
 				4E0CCF142A19AA4700EC6906 /* GoogleService-Info-prod.plist */,
 				4E0CCEEE2A1967B000EC6906 /* DebugConfig.xcconfig */,
 				4E0CCEEF2A1967C400EC6906 /* NonpConfig.xcconfig */,
@@ -330,11 +330,11 @@
 			files = (
 				4E0CCF152A19AA4700EC6906 /* GoogleService-Info-prod.plist in Resources */,
 				4E46479229EEE23D0062147F /* Preview Assets.xcassets in Resources */,
+				4ED6257B2A24F1D200C33EAB /* GoogleService-Info-debug.plist in Resources */,
 				4E59A32F2A117606006F2130 /* Localizable.strings in Resources */,
 				4E46478E29EEE23D0062147F /* Assets.xcassets in Resources */,
-				4E0CCF1B2A19AB2800EC6906 /* GoogleService-Info-nonp.plist in Resources */,
 				4E0CCF112A19A7D100EC6906 /* GoogleService-Info.plist in Resources */,
-				4E0CCF1A2A19AB2800EC6906 /* GoogleService-Info-debug.plist in Resources */,
+				4ED6257A2A24F1D200C33EAB /* GoogleService-Info-nonp.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -394,7 +394,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This must be the last phase\nif [[ \"${CONFIGURATION}\" == \"Release\" ]]; then\n    \"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\nelse\n    echo \"Release must manually upload dSYMs\"\nfi\n";
+			shellScript = "# This must be the last phase\nif [[ \"${CONFIGURATION}\" == \"Nonp\" ]]; then\n    \"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\nelse\n    echo \"Debug/Release must manually upload dSYMs\"\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 		4E0CCF0F2A19A77F00EC6906 /* Overwrite GoogleService-Info */ = {

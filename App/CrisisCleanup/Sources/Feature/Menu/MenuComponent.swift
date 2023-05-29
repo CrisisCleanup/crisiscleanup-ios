@@ -5,22 +5,13 @@ protocol MenuViewBuilder {
     var menuView: AnyView { get }
 }
 
-protocol AuthenticateViewBuilder {
-    var authenticateView: AnyView { get }
-}
-
-class MenuComponent: Component<AppDependency>, MenuViewBuilder, AuthenticateViewBuilder {
+class MenuComponent: Component<AppDependency>, MenuViewBuilder {
     var menuViewModel: MenuViewModel {
         MenuViewModel(
             appEnv: dependency.appEnv,
+            accountDataRepository: dependency.accountDataRepository,
             appVersionProvider: dependency.appVersionProvider,
-            loggerFactory: dependency.loggerFactory
-        )
-    }
-
-    var authenticateViewModel: AuthenticateViewModel {
-        AuthenticateViewModel(
-            appEnv: dependency.appEnv,
+            authEventBus: dependency.authEventBus,
             loggerFactory: dependency.loggerFactory
         )
     }
@@ -29,18 +20,8 @@ class MenuComponent: Component<AppDependency>, MenuViewBuilder, AuthenticateView
         AnyView(
             MenuView(
                 viewModel: menuViewModel,
-                authenticateViewBuilder: self
+                authenticateViewBuilder: dependency.authenticateViewBuilder
             )
         )
     }
-
-    var authenticateView: AnyView {
-        AnyView(
-            AuthenticateView(
-                viewModel: authenticateViewModel
-            )
-        )
-    }
-
-    var authenticateComponent: AuthenticateComponent { AuthenticateComponent(parent: self) }
 }

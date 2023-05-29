@@ -10,8 +10,8 @@ enum TopLevelDestination: String, Identifiable, CaseIterable {
 
     var title: String {
         switch self {
-        case .cases: return "Cases".localizedString
-        case .menu: return "Menu".localizedString
+        case .cases: return "Cases nav".localizedString
+        case .menu: return "Menu nav".localizedString
         }
     }
 

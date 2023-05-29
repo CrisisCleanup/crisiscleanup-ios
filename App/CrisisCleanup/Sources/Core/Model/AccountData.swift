@@ -1,12 +1,12 @@
 import Foundation
 
-struct OrgData {
+public struct OrgData {
     let id: Int64
     let name: String
 }
 
 // sourcery: copyBuilder
-struct AccountData {
+public struct AccountData {
     let id: Int64
     let accessToken: String
     let tokenExpiry: Date

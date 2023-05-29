@@ -1,19 +1,31 @@
 import SwiftUI
 
-struct MainView<ViewModel>: View where ViewModel: MainViewModelProtocol {
-    @ObservedObject var viewModel: ViewModel
+struct MainView: View {
+    @ObservedObject var viewModel: MainViewModel
+    let authenticateViewBuilder: AuthenticateViewBuilder
     let menuViewBuilder: MenuViewBuilder
 
     @State private var selectedTab = TopLevelDestination.menu
     var body: some View {
-        NavigationView {
-            TabView(selection: $selectedTab) {
-                CasesView()
-                    .navTabItem(destination: .cases)
-                    .tag(TopLevelDestination.cases)
-                menuViewBuilder.menuView
-                    .navTabItem(destination: .menu)
-                    .tag(TopLevelDestination.menu)
+        switch viewModel.viewData.state {
+        case .loading:
+            Text("Splash")
+        case .ready:
+            if viewModel.viewData.isAuthenticated {
+                NavigationView {
+                    TabView(selection: $selectedTab) {
+                        CasesView()
+                            .navTabItem(destination: .cases)
+                            .tag(TopLevelDestination.cases)
+                        menuViewBuilder.menuView
+                            .navTabItem(destination: .menu)
+                            .tag(TopLevelDestination.menu)
+                    }
+                }
+            } else {
+                authenticateViewBuilder.authenticateView
+                    .navigationBarTitle("")
+                    .navigationBarHidden(true)
             }
         }
     }

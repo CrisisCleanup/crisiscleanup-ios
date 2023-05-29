@@ -18,18 +18,28 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/uber/needle.git", .upToNextMajor(from: "0.0.23")),
+        .package(url: "https://github.com/Alamofire/Alamofire.git", .upToNextMajor(from: "5.6.4")),
+        .package(url: "https://github.com/auth0/JWTDecode.swift", .upToNextMajor(from: "3.0.1")),
+        .package(url: "https://github.com/exyte/SVGView.git", .upToNextMajor(from: "1.0.4")),
+        .package(url: "https://github.com/groue/GRDB.swift.git", .upToNextMajor(from: "5.7.0")),
     ],
     targets: [
         .target(
             name: "CrisisCleanup",
             dependencies: [
                 .product(name: "NeedleFoundation", package: "needle"),
+                .product(name: "Alamofire", package: "Alamofire"),
+                .product(name: "JWTDecode", package: "JWTDecode.swift"),
+                .product(name: "SVGView", package: "SVGView"),
             ],
             path: "Sources"
         ),
         .testTarget(
             name: "CrisisCleanupTests",
-            dependencies: ["CrisisCleanup"]
+            dependencies: ["CrisisCleanup"],
+            resources: [
+                .copy("TestResources"),
+            ]
         ),
     ]
 )

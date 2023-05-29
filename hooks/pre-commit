@@ -1,0 +1,28 @@
+#!/bin/sh
+
+if git rev-parse --verify HEAD >/dev/null 2>&1
+then
+	against=HEAD
+else
+	# Initial commit: diff against an empty tree object
+	against=$(git hash-object -t tree /dev/null)
+fi
+
+# Redirect output to stderr.
+exec 1>&2
+
+# Alert when config files are changed
+configFileChanges=$(git diff --cached --name-only --diff-filter=AM | grep Config)
+if ! test -z "$configFileChanges"
+then
+	cat <<\EOF
+Error: Changes to files possibly containing keys have been detected.
+
+Unstage these changes while committing otherwise the world wide web will be able to exploit.
+EOF
+echo "$configFileChanges"
+	exit 1
+fi
+
+# If there are whitespace errors, print the offending file names and fail.
+exec git diff-index --check --cached $against --

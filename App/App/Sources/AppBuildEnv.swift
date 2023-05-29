@@ -12,7 +12,7 @@ struct AppBuildEnv : AppEnv {
     }
 
     func runInNonProd(block: () -> Void) {
-        if (self.isNotProduction) {
+        if self.isNotProduction {
             block()
         }
     }

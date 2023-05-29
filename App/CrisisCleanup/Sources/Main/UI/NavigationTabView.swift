@@ -15,7 +15,7 @@ struct NavTabView: View {
 
 extension View {
     func navTabItem(destination: TopLevelDestination) -> some View {
-        self.tabItem {
+        tabItem {
             NavTabView(text: destination.title, imageName: destination.imageName)
         }
     }
