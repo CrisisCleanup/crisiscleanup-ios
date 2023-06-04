@@ -13,8 +13,6 @@
 		4E0CCF032A19889B00EC6906 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 4E0CCF022A19889B00EC6906 /* FirebaseCrashlytics */; };
 		4E0CCF052A19889B00EC6906 /* FirebasePerformance in Frameworks */ = {isa = PBXBuildFile; productRef = 4E0CCF042A19889B00EC6906 /* FirebasePerformance */; };
 		4E0CCF082A1989FB00EC6906 /* AppLoggerProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0CCF072A1989FB00EC6906 /* AppLoggerProvider.swift */; };
-		4E0CCF112A19A7D100EC6906 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4E0CCF102A19A7D100EC6906 /* GoogleService-Info.plist */; };
-		4E0CCF152A19AA4700EC6906 /* GoogleService-Info-release.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4E0CCF142A19AA4700EC6906 /* GoogleService-Info-release.plist */; };
 		4E46478A29EEE23B0062147F /* CrisisCleanupApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */; };
 		4E46478E29EEE23D0062147F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E46478D29EEE23D0062147F /* Assets.xcassets */; };
 		4E46479229EEE23D0062147F /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E46479129EEE23D0062147F /* Preview Assets.xcassets */; };
@@ -25,8 +23,14 @@
 		4E646A002A1916BB009148E0 /* NeedleGenerated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E6469FF2A1916BB009148E0 /* NeedleGenerated.swift */; };
 		4E75623E2A117E140029D5D7 /* CrisisCleanup in Frameworks */ = {isa = PBXBuildFile; productRef = 4E75623D2A117E140029D5D7 /* CrisisCleanup */; };
 		4EBFB44A2A1910A800DA7C84 /* NeedleFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 4EBFB4492A1910A800DA7C84 /* NeedleFoundation */; };
-		4ED625862A2509FE00C33EAB /* GoogleService-Info-nonp.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4ED625842A2509FE00C33EAB /* GoogleService-Info-nonp.plist */; };
-		4ED625872A2509FE00C33EAB /* GoogleService-Info-debug.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4ED625852A2509FE00C33EAB /* GoogleService-Info-debug.plist */; };
+		4ED625912A25160800C33EAB /* DebugConfig.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 4ED625892A25160800C33EAB /* DebugConfig.xcconfig */; };
+		4ED625922A25160800C33EAB /* GoogleService-Info-release.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4ED6258A2A25160800C33EAB /* GoogleService-Info-release.plist */; };
+		4ED625932A25160800C33EAB /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4ED6258B2A25160800C33EAB /* GoogleService-Info.plist */; };
+		4ED625942A25160800C33EAB /* NonpConfig.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 4ED6258C2A25160800C33EAB /* NonpConfig.xcconfig */; };
+		4ED625952A25160800C33EAB /* GoogleService-Info-debug.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4ED6258D2A25160800C33EAB /* GoogleService-Info-debug.plist */; };
+		4ED625962A25160800C33EAB /* ReleaseConfig.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 4ED6258E2A25160800C33EAB /* ReleaseConfig.xcconfig */; };
+		4ED625972A25160800C33EAB /* GoogleService-Info-nonp.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4ED6258F2A25160800C33EAB /* GoogleService-Info-nonp.plist */; };
+		4ED625982A25160800C33EAB /* AppConfig.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 4ED625902A25160800C33EAB /* AppConfig.xcconfig */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,15 +52,9 @@
 
 /* Begin PBXFileReference section */
 		4E0CCEEB2A1966EE00EC6906 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
-		4E0CCEEE2A1967B000EC6906 /* DebugConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = DebugConfig.xcconfig; sourceTree = "<group>"; };
-		4E0CCEEF2A1967C400EC6906 /* NonpConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = NonpConfig.xcconfig; sourceTree = "<group>"; };
-		4E0CCEF02A1967CD00EC6906 /* ReleaseConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = ReleaseConfig.xcconfig; sourceTree = "<group>"; };
-		4E0CCEF12A19695100EC6906 /* AppConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AppConfig.xcconfig; sourceTree = "<group>"; };
 		4E0CCEF42A196D4F00EC6906 /* AppBuildEnv.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBuildEnv.swift; sourceTree = "<group>"; };
 		4E0CCEF82A1970E200EC6906 /* ConfigProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigProperties.swift; sourceTree = "<group>"; };
 		4E0CCF072A1989FB00EC6906 /* AppLoggerProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLoggerProvider.swift; sourceTree = "<group>"; };
-		4E0CCF102A19A7D100EC6906 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
-		4E0CCF142A19AA4700EC6906 /* GoogleService-Info-release.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info-release.plist"; sourceTree = "<group>"; };
 		4E46478629EEE23B0062147F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrisisCleanupApp.swift; sourceTree = "<group>"; };
 		4E46478D29EEE23D0062147F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -71,8 +69,14 @@
 		4E59A3322A117668006F2130 /* CrisisCleanup */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = CrisisCleanup; path = /Users/oc/project/cricle/ios/App/AppUITests/CrisisCleanup; sourceTree = "<absolute>"; };
 		4E6469FF2A1916BB009148E0 /* NeedleGenerated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NeedleGenerated.swift; sourceTree = "<group>"; };
 		4E75623B2A117A460029D5D7 /* CrisisCleanup */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = CrisisCleanup; sourceTree = "<group>"; };
-		4ED625842A2509FE00C33EAB /* GoogleService-Info-nonp.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info-nonp.plist"; sourceTree = "<group>"; };
-		4ED625852A2509FE00C33EAB /* GoogleService-Info-debug.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info-debug.plist"; sourceTree = "<group>"; };
+		4ED625892A25160800C33EAB /* DebugConfig.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = DebugConfig.xcconfig; sourceTree = "<group>"; };
+		4ED6258A2A25160800C33EAB /* GoogleService-Info-release.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info-release.plist"; sourceTree = "<group>"; };
+		4ED6258B2A25160800C33EAB /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		4ED6258C2A25160800C33EAB /* NonpConfig.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = NonpConfig.xcconfig; sourceTree = "<group>"; };
+		4ED6258D2A25160800C33EAB /* GoogleService-Info-debug.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info-debug.plist"; sourceTree = "<group>"; };
+		4ED6258E2A25160800C33EAB /* ReleaseConfig.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = ReleaseConfig.xcconfig; sourceTree = "<group>"; };
+		4ED6258F2A25160800C33EAB /* GoogleService-Info-nonp.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info-nonp.plist"; sourceTree = "<group>"; };
+		4ED625902A25160800C33EAB /* AppConfig.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = AppConfig.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -107,14 +111,14 @@
 		4E0CCEED2A19679D00EC6906 /* Config */ = {
 			isa = PBXGroup;
 			children = (
-				4E0CCF102A19A7D100EC6906 /* GoogleService-Info.plist */,
-				4ED625852A2509FE00C33EAB /* GoogleService-Info-debug.plist */,
-				4ED625842A2509FE00C33EAB /* GoogleService-Info-nonp.plist */,
-				4E0CCF142A19AA4700EC6906 /* GoogleService-Info-release.plist */,
-				4E0CCEEE2A1967B000EC6906 /* DebugConfig.xcconfig */,
-				4E0CCEEF2A1967C400EC6906 /* NonpConfig.xcconfig */,
-				4E0CCEF02A1967CD00EC6906 /* ReleaseConfig.xcconfig */,
-				4E0CCEF12A19695100EC6906 /* AppConfig.xcconfig */,
+				4ED625902A25160800C33EAB /* AppConfig.xcconfig */,
+				4ED625892A25160800C33EAB /* DebugConfig.xcconfig */,
+				4ED6258C2A25160800C33EAB /* NonpConfig.xcconfig */,
+				4ED6258E2A25160800C33EAB /* ReleaseConfig.xcconfig */,
+				4ED6258B2A25160800C33EAB /* GoogleService-Info.plist */,
+				4ED6258D2A25160800C33EAB /* GoogleService-Info-debug.plist */,
+				4ED6258F2A25160800C33EAB /* GoogleService-Info-nonp.plist */,
+				4ED6258A2A25160800C33EAB /* GoogleService-Info-release.plist */,
 			);
 			path = Config;
 			sourceTree = "<group>";
@@ -328,13 +332,17 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4E0CCF152A19AA4700EC6906 /* GoogleService-Info-release.plist in Resources */,
+				4ED625922A25160800C33EAB /* GoogleService-Info-release.plist in Resources */,
+				4ED625982A25160800C33EAB /* AppConfig.xcconfig in Resources */,
+				4ED625912A25160800C33EAB /* DebugConfig.xcconfig in Resources */,
+				4ED625942A25160800C33EAB /* NonpConfig.xcconfig in Resources */,
+				4ED625952A25160800C33EAB /* GoogleService-Info-debug.plist in Resources */,
 				4E46479229EEE23D0062147F /* Preview Assets.xcassets in Resources */,
 				4E59A32F2A117606006F2130 /* Localizable.strings in Resources */,
 				4E46478E29EEE23D0062147F /* Assets.xcassets in Resources */,
-				4ED625872A2509FE00C33EAB /* GoogleService-Info-debug.plist in Resources */,
-				4ED625862A2509FE00C33EAB /* GoogleService-Info-nonp.plist in Resources */,
-				4E0CCF112A19A7D100EC6906 /* GoogleService-Info.plist in Resources */,
+				4ED625962A25160800C33EAB /* ReleaseConfig.xcconfig in Resources */,
+				4ED625972A25160800C33EAB /* GoogleService-Info-nonp.plist in Resources */,
+				4ED625932A25160800C33EAB /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -503,7 +511,7 @@
 /* Begin XCBuildConfiguration section */
 		4E4647A929EEE23E0062147F /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4E0CCEF12A19695100EC6906 /* AppConfig.xcconfig */;
+			baseConfigurationReference = 4ED625902A25160800C33EAB /* AppConfig.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -562,7 +570,7 @@
 		};
 		4E4647AA29EEE23E0062147F /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4E0CCEF12A19695100EC6906 /* AppConfig.xcconfig */;
+			baseConfigurationReference = 4ED625902A25160800C33EAB /* AppConfig.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -799,7 +807,7 @@
 		};
 		4E4647B429EEE4D10062147F /* Nonp */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4E0CCEF12A19695100EC6906 /* AppConfig.xcconfig */;
+			baseConfigurationReference = 4ED625902A25160800C33EAB /* AppConfig.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

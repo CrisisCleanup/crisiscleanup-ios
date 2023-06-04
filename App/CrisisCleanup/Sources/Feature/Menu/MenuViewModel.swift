@@ -10,7 +10,7 @@ class MenuViewModel: ObservableObject {
 
     let isDebuggable: Bool
 
-    @Published var profilePictureUri: URL? = nil
+    @Published var profilePicture: AccountProfilePicture? = nil
 
     var versionText: String {
         let version = appVersionProvider.version
@@ -38,16 +38,24 @@ class MenuViewModel: ObservableObject {
             .map{
                 if let escapedUrl = $0.profilePictureUri.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
                    let url = URL(string: escapedUrl) {
-                    return url
+                    return AccountProfilePicture(
+                        url: url,
+                        isSvg: $0.profilePictureUri.hasSuffix(".svg")
+                    )
                 }
                 return nil
             }
-            .assign(to: &$profilePictureUri)
+            .assign(to: &$profilePicture)
     }
 
     func expireToken() {
-        if (isDebuggable) {
+        if isDebuggable {
             authEventBus.onExpiredToken()
         }
     }
+}
+
+struct AccountProfilePicture {
+    let url: URL
+    let isSvg: Bool
 }

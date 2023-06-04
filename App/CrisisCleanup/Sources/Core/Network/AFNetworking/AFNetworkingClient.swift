@@ -47,10 +47,10 @@ class NetworkEventMonitor : EventMonitor {
         _ request: DataRequest,
         didParseResponse response: DataResponse<Value, AFError>
     ) {
-        guard let data = response.data else {
-            return
-        }
-
+//        guard let data = response.data else {
+//            return
+//        }
+//
 //         if let json = try? JSONSerialization.jsonObject(with: data) {
 //             print(json)
 //         }

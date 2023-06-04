@@ -84,7 +84,9 @@ class AuthenticateViewModel: ObservableObject {
         var errorKey = ""
 
         do {
-            let result = try await authApi.login(emailAddress, password)
+            guard let result = try await authApi.login(emailAddress, password) else {
+                throw GenericError("Server not found")
+            }
             let hasError = result.errors?.isNotEmpty == true
             if hasError {
                 let logErrorMessage = result.errors?.condenseMessages ?? "Server error"

@@ -9,6 +9,8 @@ class MainViewModel: ObservableObject {
 
     private var disposables = Set<AnyCancellable>()
 
+    @Published var isAuthenticated: Bool = false
+
     init(
         accountDataRepository: AccountDataRepository,
         logger: AppLogger
@@ -16,11 +18,12 @@ class MainViewModel: ObservableObject {
         self.accountDataRepository = accountDataRepository
         self.logger = logger
 
-        accountDataRepository.isAuthenticated
-            .sink { b in
+        accountDataRepository.accountData
+            .sink {
+                let accountData = $0
                 self.viewData = MainViewData(
                     state: .ready,
-                    isAuthenticated: b
+                    accountData: accountData
                 )
             }
             .store(in: &disposables)

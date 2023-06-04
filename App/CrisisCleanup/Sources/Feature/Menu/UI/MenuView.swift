@@ -15,10 +15,16 @@ struct MenuView: View {
                         .navigationBarTitle("")
                         .navigationBarHidden(true)
                 } label: {
-                    if let url = viewModel.profilePictureUri {
-                        SVGView(contentsOf: url)
-                            .frame(width: 30, height: 30)
-                            .padding([.vertical], 8)
+                    if let url = viewModel.profilePicture?.url {
+                        if viewModel.profilePicture?.isSvg == true {
+                            SVGView(contentsOf: url)
+                                .frame(width: 30, height: 30)
+                                .padding([.vertical], 8)
+                        } else {
+                            AsyncImage(url: url)
+                                .frame(width: 30, height: 30)
+                                .padding([.vertical], 8)
+                        }
                     } else {
                         Text("Auth")
                     }

@@ -45,10 +45,13 @@ extension MainComponent {
 
     public var accountDataRepository: AccountDataRepository {
         let accountDataSource = AccountInfoUserDefaults()
+        let secureDataSource = KeychainDataSource()
         return shared {
             CrisisCleanupAccountDataRepository(
                 accountDataSource,
-                self.authEventBus
+                secureDataSource,
+                self.authEventBus,
+                self.loggerFactory
             )
         }
     }

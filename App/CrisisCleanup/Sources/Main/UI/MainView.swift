@@ -11,7 +11,7 @@ struct MainView: View {
         case .loading:
             Text("Splash")
         case .ready:
-            if viewModel.viewData.isAuthenticated {
+            if viewModel.viewData.showMainContent {
                 NavigationView {
                     TabView(selection: $selectedTab) {
                         CasesView()

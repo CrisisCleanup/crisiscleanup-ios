@@ -27,7 +27,7 @@ struct NetworkRequest: URLRequestConvertible {
                 request.setValue(h.name, forHTTPHeaderField: h.value)
             }
             if let parameters = self.parameters {
-                switch(method) {
+                switch method {
                 case .get:
                     request = try! URLEncodedFormParameterEncoder().encode(parameters, into: request)
                 default:

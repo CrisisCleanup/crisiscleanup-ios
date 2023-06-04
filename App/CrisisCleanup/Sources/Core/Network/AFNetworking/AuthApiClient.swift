@@ -16,7 +16,7 @@ class AuthApiClient : CrisisCleanupAuthApi {
         jsonDecoder.dateDecodingStrategy = .iso8601
     }
 
-    func login(_ email: String, _ password: String) async throws -> NetworkAuthResult {
+    func login(_ email: String, _ password: String) async throws -> NetworkAuthResult? {
         let payload = NetworkAuthPayload(email: email, password: password)
         let authRequest = requestProvider.login.copy {
             $0.parameters = payload
@@ -28,6 +28,6 @@ class AuthApiClient : CrisisCleanupAuthApi {
                     continuation.resume(returning: response)
                 }
         }
-        return result.value!
+        return result.value
     }
 }

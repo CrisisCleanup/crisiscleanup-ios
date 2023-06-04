@@ -7,16 +7,12 @@ extension AppPreferences {
 	// A default style constructor for the .copy fn to use
 	init(
 		selectedIncidentId: Int64,
-		saveCredentialsPromptCount: Int,
-		disableSaveCredentialsPrompt: Bool,
 		languageKey: String,
 		syncAttempt: SyncAttempt,
 		// This is to prevent overriding the default init if it exists already
 		forCopyInit: Void? = nil
 	) {
 		self.selectedIncidentId = selectedIncidentId
-		self.saveCredentialsPromptCount = saveCredentialsPromptCount
-		self.disableSaveCredentialsPrompt = disableSaveCredentialsPrompt
 		self.languageKey = languageKey
 		self.syncAttempt = syncAttempt
 	}
@@ -31,15 +27,11 @@ extension AppPreferences {
 
 	struct Builder {
 		var selectedIncidentId: Int64
-		var saveCredentialsPromptCount: Int
-		var disableSaveCredentialsPrompt: Bool
 		var languageKey: String
 		var syncAttempt: SyncAttempt
 
 		fileprivate init(original: AppPreferences) {
 			self.selectedIncidentId = original.selectedIncidentId
-			self.saveCredentialsPromptCount = original.saveCredentialsPromptCount
-			self.disableSaveCredentialsPrompt = original.disableSaveCredentialsPrompt
 			self.languageKey = original.languageKey
 			self.syncAttempt = original.syncAttempt
 		}
@@ -47,8 +39,6 @@ extension AppPreferences {
 		fileprivate func toAppPreferences() -> AppPreferences {
 			return AppPreferences(
 				selectedIncidentId: selectedIncidentId,
-				saveCredentialsPromptCount: saveCredentialsPromptCount,
-				disableSaveCredentialsPrompt: disableSaveCredentialsPrompt,
 				languageKey: languageKey,
 				syncAttempt: syncAttempt
 			)

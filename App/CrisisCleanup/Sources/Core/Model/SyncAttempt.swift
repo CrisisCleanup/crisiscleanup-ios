@@ -27,7 +27,7 @@ struct SyncAttempt: Codable {
         _ backoffIntervalSeconds: Double = 15,
         _ nowSeconds: Double = Date.now.timeIntervalSince1970
     ) -> Bool {
-        if (attemptedCounter < 1) {
+        if attemptedCounter < 1 {
             return false
         }
 

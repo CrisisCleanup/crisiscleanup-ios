@@ -20,7 +20,8 @@ public protocol AccountDataRepository {
 }
 
 class CrisisCleanupAccountDataRepository: AccountDataRepository {
-    var accountData: Published<AccountData>.Publisher
+    @Published private var accountDataStream = emptyAccountData
+    lazy var accountData = $accountDataStream
 
     private(set) var accessTokenCached: String = ""
 
@@ -28,17 +29,38 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
     lazy var isAuthenticated = $isAuthenticatedStream
 
     private let accountDataSource: AccountInfoDataSource
+    private let secureDataSource: SecureDataSource
+    private let logger: AppLogger
 
     private var disposables = Set<AnyCancellable>()
 
     init(
         _ accountDataSource: AccountInfoDataSource,
-        _ authEventBus: AuthEventBus
+        _ secureDataSource: SecureDataSource,
+        _ authEventBus: AuthEventBus,
+        _ loggerFactory: AppLoggerFactory
     ) {
         self.accountDataSource = accountDataSource
+        self.secureDataSource = secureDataSource
+        logger = loggerFactory.getLogger("account")
 
-        accountData = accountDataSource.accountData
-        accountData.map{ $0.accessToken.isNotBlank }
+        accountDataSource.accountData.map { sourceData in
+            let email = sourceData.emailAddress
+            if email.isNotBlank {
+                let accessToken = secureDataSource.getAccessToken(email)
+                return sourceData.copy {
+                    $0.accessToken = accessToken
+                }
+            }
+            return sourceData
+        }
+        .assign(to: &accountData)
+        accountData
+            .sink { data in
+                self.accessTokenCached = data.accessToken
+            }
+            .store(in: &disposables)
+        accountData.map { $0.accessToken.isNotBlank }
             .assign(to: &isAuthenticated)
 
         authEventBus.logouts
@@ -64,17 +86,22 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
         expirySeconds: Int64,
         profilePictureUri: String,
         org: OrgData) {
-            accountDataSource.setAccount(AccountInfo(
-                id: id,
-                email: email,
-                firstName: firstName,
-                lastName: lastName,
-                expirySeconds: expirySeconds,
-                profilePictureUri: profilePictureUri,
-                accessToken: accessToken,
-                orgId: org.id,
-                orgName: org.name
-            ))
+            do {
+                try secureDataSource.saveAccessToken(email, accessToken)
+                accountDataSource.setAccount(AccountInfo(
+                    id: id,
+                    email: email,
+                    firstName: firstName,
+                    lastName: lastName,
+                    expirySeconds: expirySeconds,
+                    profilePictureUri: profilePictureUri,
+                    accessToken: "",
+                    orgId: org.id,
+                    orgName: org.name
+                ))
+            } catch {
+                logger.logError(error)
+            }
         }
 
     private func clearAccount() {

@@ -4,8 +4,6 @@ import Foundation
 protocol AppPreferencesDataStore {
     var preferences: Published<AppPreferences>.Publisher { get }
 
-    func incrementSaveCredentialsPrompt()
-    func setDisableSaveCredentialsPrompt(disable: Bool)
     func setSyncAttempt(
         isSuccessful: Bool,
         attemptedSeconds: Double
@@ -24,21 +22,6 @@ class AppPreferencesUserDefaults: AppPreferencesDataStore {
 
     private func update(_ preferences: AppPreferences) {
         UserDefaults.standard.appPreferences = preferences
-    }
-
-    func incrementSaveCredentialsPrompt() {
-        update(
-            UserDefaults.standard.appPreferences.copy { $0.saveCredentialsPromptCount = $0.saveCredentialsPromptCount + 1
-            }
-        )
-    }
-
-    func setDisableSaveCredentialsPrompt(disable: Bool) {
-        update(
-            UserDefaults.standard.appPreferences.copy {
-                $0.disableSaveCredentialsPrompt = disable
-            }
-        )
     }
 
     func setSyncAttempt(

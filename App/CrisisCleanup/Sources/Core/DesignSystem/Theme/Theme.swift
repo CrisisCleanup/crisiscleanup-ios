@@ -25,7 +25,7 @@ class ThemeValues: ObservableObject {
     }
 
     func setTheme(theme: AppTheme) {
-        switch(theme) {
+        switch theme {
         case .thinScreen:
             textFieldInnerPadding = 16.0
         default:

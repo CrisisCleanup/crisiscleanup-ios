@@ -5,13 +5,19 @@ enum MainViewState {
 
 struct MainViewData {
     let state: MainViewState
+    let accountData: AccountData
+    let showMainContent: Bool
+
     let isAuthenticated: Bool
 
     init(
         state: MainViewState = .loading,
-        isAuthenticated: Bool = false
+        accountData: AccountData = emptyAccountData
     ) {
         self.state = state
-        self.isAuthenticated = isAuthenticated
+        self.accountData = accountData
+        isAuthenticated = !accountData.isTokenInvalid
+        self.showMainContent = state == .ready &&
+        accountData.accessToken.isNotBlank
     }
 }
