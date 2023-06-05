@@ -8,4 +8,8 @@ extension String {
         let dateFormatter = ISO8601DateFormatter()
         return dateFormatter.date(from:self)!
     }
+
+    func trim() -> String {
+        self.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 }

@@ -2,9 +2,9 @@
 @discardableResult
 @inline(__always)
 public func with<T>(_ item: T, _ closure: (inout T) -> Void) -> T {
-  var mutableItem = item
-  closure(&mutableItem)
-  return mutableItem
+    var mutableItem = item
+    closure(&mutableItem)
+    return mutableItem
 }
 
 extension Array {
