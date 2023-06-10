@@ -89,7 +89,7 @@ public struct NetworkWorksiteFull: Codable, Equatable {
             return workTypes
         }
         return workTypeMap.values
-            .sorted { $0.0 > $1.0 }
+            .sorted { $0.0 < $1.0 }
             .map { $0.1 }
     }
 
@@ -267,7 +267,7 @@ public struct NetworkWorksiteShort: Codable, Equatable {
             return workTypes
         }
         return workTypeMap.values
-            .sorted { $0.0 > $1.0}
+            .sorted { $0.0 < $1.0}
             .map { $0.1 }
     }
 

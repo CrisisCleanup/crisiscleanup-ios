@@ -16,16 +16,4 @@ public struct NetworkWorkTypeStatusFull: Codable, Equatable {
         case listOrder = "list_order"
         case primaryState = "primary_state"
     }
-
-    init(
-        status: String,
-        name: String,
-        listOrder: Int,
-        primaryState: String
-    ) {
-        self.status = status
-        self.name = name
-        self.listOrder = listOrder
-        self.primaryState = primaryState
-    }
 }

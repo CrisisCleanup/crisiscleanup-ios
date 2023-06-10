@@ -24,30 +24,4 @@ public struct NetworkWorksiteLocationSearch: Codable, Equatable {
         case postalCode = "postal_code"
         case state
     }
-
-    init(
-        incidentId: Int64,
-        id: Int64,
-        address: String,
-        caseNumber: String,
-        city: String,
-        county: String,
-        keyWorkType: NetworkWorkType,
-        location: NetworkLocation.LocationPoint,
-        name: String,
-        postalCode: String?,
-        state: String
-    ) {
-        self.incidentId = incidentId
-        self.id = id
-        self.address = address
-        self.caseNumber = caseNumber
-        self.city = city
-        self.county = county
-        self.keyWorkType = keyWorkType
-        self.location = location
-        self.name = name
-        self.postalCode = postalCode
-        self.state = state
-    }
 }
