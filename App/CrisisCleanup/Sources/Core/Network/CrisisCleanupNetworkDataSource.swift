@@ -22,7 +22,7 @@ public protocol CrisisCleanupNetworkDataSource {
         incidentId: Int64,
         limit: Int,
         offset: Int
-    ) async throws -> NetworkIncidentOrganizationsResult
+    ) async throws -> NetworkOrganizationsResult
 
     func getIncident(
         id: Int64,
@@ -40,18 +40,11 @@ public protocol CrisisCleanupNetworkDataSource {
     ) async throws -> [NetworkWorksiteFull]?
 
     func getWorksite(id: Int64) async throws -> NetworkWorksiteFull?
-    func getWorksiteShort(id: Int64) async throws -> NetworkWorksiteShort?
 
     func getWorksitesCount(
         incidentId: Int64,
         updatedAtAfter: Date?
     ) async throws -> Int
-
-    func getWorksitesAll(
-        incidentId: Int64,
-        updatedAtAfter: Date?,
-        updatedAtBefore: Date?
-    ) async throws -> NetworkWorksitesShortResult
 
     func getWorksitesPage(
         incidentId: Int64,
@@ -60,7 +53,7 @@ public protocol CrisisCleanupNetworkDataSource {
         latitude: Double?,
         longitude: Double?,
         updatedAtAfter: Date?
-    ) async throws -> [NetworkWorksiteShort]
+    ) async throws -> [NetworkWorksitePage]
 
     func getLocationSearchWorksites(
         incidentId: Int64,
@@ -80,4 +73,9 @@ public protocol CrisisCleanupNetworkDataSource {
     func getLocalizationCount(after: Date) async throws -> NetworkCountResult
 
     func getWorkTypeRequests(id: Int64) async throws -> [NetworkWorkTypeRequest]
+
+    func getNearbyOrganizations(
+        latitude: Double,
+        longitude: Double
+    ) -> [NetworkIncidentOrganization]
 }

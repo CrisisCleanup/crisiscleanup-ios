@@ -33,9 +33,6 @@ public struct NetworkWorksiteFull: Codable, Equatable {
     let reportedBy: Int64?
     let state: String
     let svi: Float?
-//    case time = "time"
-//    let times: [Time]
-    // TODO: Test @Serializable(DateSerializer::class)
     let updatedAt: Date
     let what3words: String?
     private let workTypes: [NetworkWorkType]
@@ -70,7 +67,7 @@ public struct NetworkWorksiteFull: Codable, Equatable {
         case workTypes = "work_types"
     }
 
-    private lazy var newestWorkTypeMap = {
+    internal static func getNewestWorkTypeMap(_ workTypes: [NetworkWorkType]) -> [String: (Int, NetworkWorkType)] {
         var newMap: [String: (Int, NetworkWorkType)] = [:]
         workTypes.indices.forEach { index in
             let workType = workTypes[index]
@@ -81,26 +78,51 @@ public struct NetworkWorksiteFull: Codable, Equatable {
             }
         }
         return newMap
-    }()
+    }
 
-    // TODO: Tests
-    lazy private(set) var newestWorkTypes: [NetworkWorkType] = {
-        if newestWorkTypeMap.count == workTypes.count {
+    internal static func getNewestWorkTypes(
+        _ workTypes: [NetworkWorkType],
+        _ workTypeMap: [String: (Int, NetworkWorkType)]
+    ) -> [NetworkWorkType] {
+        if workTypeMap.count == workTypes.count {
             return workTypes
         }
-        return newestWorkTypeMap.values
+        return workTypeMap.values
             .sorted { $0.0 > $1.0 }
             .map { $0.1 }
-    }()
+    }
 
-    lazy private(set) var newestKeyWorkType: NetworkWorkType? = {
-        if newestWorkTypeMap.count == workTypes.count {
+    internal static func getKeyWorkType(
+        _ keyWorkType: NetworkWorkType?,
+        _ workTypes: [NetworkWorkType],
+        _ workTypeMap: [String: (Int, NetworkWorkType)]
+    ) -> NetworkWorkType? {
+        if workTypeMap.count == workTypes.count {
             return keyWorkType
         }
         if let kwt = keyWorkType {
-            return newestWorkTypeMap[kwt.workType]?.1
+            return workTypeMap[kwt.workType]?.1
         }
         return nil
+    }
+
+    private lazy var newestWorkTypeMap = {
+        return NetworkWorksiteFull.getNewestWorkTypeMap(workTypes)
+    }()
+
+    lazy private(set) var newestWorkTypes: [NetworkWorkType] = {
+        return NetworkWorksiteFull.getNewestWorkTypes(
+            workTypes,
+            newestWorkTypeMap
+        )
+    }()
+
+    lazy private(set) var newestKeyWorkType: NetworkWorkType? = {
+        return NetworkWorksiteFull.getKeyWorkType(
+            keyWorkType,
+            workTypes,
+            newestWorkTypeMap
+        )
     }()
 
     public struct Location: Codable, Equatable {
@@ -178,6 +200,9 @@ public struct NetworkWorksiteLocationSearchResult: Codable, Equatable {
     let results: [NetworkWorksiteLocationSearch]?
 }
 
+typealias NetworkWorkTypeShort = NetworkWorksiteFull.WorkTypeShort
+typealias NetworkKeyWorkTypeShort = NetworkWorksiteFull.KeyWorkTypeShort
+
 public struct NetworkWorksiteShort: Codable, Equatable {
     let id: Int64
     let address: String
@@ -185,7 +210,6 @@ public struct NetworkWorksiteShort: Codable, Equatable {
     let city: String
     let county: String
     // Full does not have this field. Updates should not overwrite
-    // TODO: Test @Serializable(DateSerializer::class)
     let createdAt: Date
     // Differs from full
     let favoriteId: Int64?
@@ -197,7 +221,6 @@ public struct NetworkWorksiteShort: Codable, Equatable {
     let postalCode: String?
     let state: String
     let svi: Float?
-    // TODO: @Serializable(DateSerializer::class)
     let updatedAt: Date
     private let workTypes: [NetworkWorksiteFull.WorkTypeShort]
 
@@ -221,8 +244,8 @@ public struct NetworkWorksiteShort: Codable, Equatable {
         case workTypes = "work_types"
     }
 
-    private lazy var newsetWorkTypeMap = {
-        var newMap: [String: (Int, NetworkWorksiteFull.WorkTypeShort)] = [:]
+    internal static func getNewestWorkTypeMap(_ workTypes: [NetworkWorkTypeShort]) -> [String: (Int, NetworkWorkTypeShort)] {
+        var newMap: [String: (Int, NetworkWorkTypeShort)] = [:]
         workTypes.indices.forEach { index in
             let workType = workTypes[index]
             let literal = workType.workType
@@ -232,24 +255,30 @@ public struct NetworkWorksiteShort: Codable, Equatable {
             }
         }
         return newMap
-    }()
+    }
 
-    // TODO: Test
-    lazy var newestWorkTypes: [NetworkWorksiteFull.WorkTypeShort] = {
-        if newsetWorkTypeMap.count == workTypes.count {
+    internal static func getNewestWorkTypes(
+        _ workTypes: [NetworkWorkTypeShort],
+        _ workTypeMap: [String: (Int, NetworkWorkTypeShort)]
+    ) -> [NetworkWorkTypeShort] {
+        if workTypeMap.count == workTypes.count {
             return workTypes
         }
-        return newsetWorkTypeMap.values
+        return workTypeMap.values
             .sorted { $0.0 > $1.0}
             .map { $0.1 }
-    }()
+    }
 
-    lazy var newestKeyWorkType: NetworkWorksiteFull.KeyWorkTypeShort? = {
-        if newsetWorkTypeMap.count == workTypes.count {
+    internal static func getKeyWorkType(
+        _ keyWorkType: NetworkKeyWorkTypeShort?,
+        _ workTypes: [NetworkWorkTypeShort],
+        _ workTypeMap: [String: (Int, NetworkWorkTypeShort)]
+    ) -> NetworkKeyWorkTypeShort? {
+        if workTypeMap.count == workTypes.count {
             return keyWorkType
         }
         if keyWorkType != nil,
-           let kwt = newsetWorkTypeMap[keyWorkType!.workType]?.1 {
+           let kwt = workTypeMap[keyWorkType!.workType]?.1 {
             return NetworkWorksiteFull.KeyWorkTypeShort(
                 workType: kwt.workType,
                 orgClaim: kwt.orgClaim,
@@ -257,6 +286,80 @@ public struct NetworkWorksiteShort: Codable, Equatable {
             )
         }
         return nil
+    }
+
+    private lazy var newsetWorkTypeMap = {
+        return NetworkWorksiteShort.getNewestWorkTypeMap(workTypes)
+    }()
+
+    lazy var newestWorkTypes: [NetworkWorksiteFull.WorkTypeShort] = {
+        return NetworkWorksiteShort.getNewestWorkTypes(
+            workTypes,
+            newsetWorkTypeMap
+        )
+    }()
+
+    lazy var newestKeyWorkType: NetworkWorksiteFull.KeyWorkTypeShort? = {
+        return NetworkWorksiteShort.getKeyWorkType(
+            keyWorkType,
+            workTypes,
+            newsetWorkTypeMap
+        )
+    }()
+}
+
+public struct NetworkWorksitesPageResult: Codable, Equatable {
+    let errors: [NetworkCrisisCleanupApiError]?
+    let count: Int?
+    let results: [NetworkWorksitePage]?
+}
+
+// Copy similar changes from [NetworkWorksiteShort] above
+public struct NetworkWorksitePage: Codable, Equatable {
+    let id: Int64
+    let address: String
+    let autoContactFrequencyT: String
+    let caseNumber: String
+    let city: String
+    let county: String
+    // Full does not have this field. Updates should not overwrite
+    let createdAt: Date
+    let email: String?
+    // Differs from full
+    let favoriteId: Int64?
+    let flags: [NetworkWorksiteFull.FlagShort]
+    let incident: Int64
+    private let keyWorkType: NetworkWorksiteFull.KeyWorkTypeShort?
+    let location: NetworkWorksiteFull.Location
+    let name: String
+    let phone1: String
+    let phone2: String?
+    let postalCode: String?
+    let plusCode: String?
+    let reportedBy: Int64?
+    let state: String
+    let svi: Float?
+    let updatedAt: Date
+    let what3words: String?
+    private let workTypes: [NetworkWorksiteFull.WorkTypeShort]
+
+    private lazy var newsetWorkTypeMap = {
+        return NetworkWorksiteShort.getNewestWorkTypeMap(workTypes)
+    }()
+
+    lazy var newestWorkTypes: [NetworkWorksiteFull.WorkTypeShort] = {
+        return NetworkWorksiteShort.getNewestWorkTypes(
+            workTypes,
+            newsetWorkTypeMap
+        )
+    }()
+
+    lazy var newestKeyWorkType: NetworkWorksiteFull.KeyWorkTypeShort? = {
+        return NetworkWorksiteShort.getKeyWorkType(
+            keyWorkType,
+            workTypes,
+            newsetWorkTypeMap
+        )
     }()
 }
 
@@ -289,7 +392,6 @@ public struct NetworkWorksiteCoreData: Codable, Equatable {
     let reportedBy: Int64?
     let state: String
     let svi: Float?
-    // TODO: @Serializable(DateSerializer::class)
     let updatedAt: Date
     let what3words: String?
     private let workTypes: [NetworkWorkType]
@@ -321,22 +423,14 @@ public struct NetworkWorksiteCoreData: Codable, Equatable {
         case workTypes = "work_types"
     }
 
-    // @Transient
-    // TODO: Test coverage
-    var newestWorkTypes: [NetworkWorkType] {
-        var newMap: [String: (Int, NetworkWorkType)] = [:]
-        workTypes.indices.forEach { index in
-            let workType = workTypes[index]
-            let literal = workType.workType
-            let similar = newMap[literal]
-            if similar == nil || workType.id! > similar!.1.id! {
-                newMap[literal] = (index, workType)
-            }
-        }
+    private lazy var newestWorkTypeMap = {
+        return NetworkWorksiteFull.getNewestWorkTypeMap(workTypes)
+    }()
 
-        return newMap.count == workTypes.count ? workTypes :
-        newMap.values
-            .sorted { $0.0 > $1.0 }
-            .map { $0.1 }
-    }
+    lazy private(set) var newestWorkTypes: [NetworkWorkType] = {
+        return NetworkWorksiteFull.getNewestWorkTypes(
+            workTypes,
+            newestWorkTypeMap
+        )
+    }()
 }

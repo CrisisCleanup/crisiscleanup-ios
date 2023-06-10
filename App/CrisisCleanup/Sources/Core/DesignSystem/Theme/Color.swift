@@ -27,6 +27,8 @@ struct ThemeColor {
     let primaryBlueOneTenthColor: Color
     let primaryRedColor: Color
     let primaryOrangeColor: Color
+    let survivorNoteColor: Color
+    let survivorNoteColorNoTransparency: Color
     let incidentDisasterContainerColor: Color
     let incidentDisasterContentColor: Color
     let attentionBackgroundColor: Color
@@ -35,7 +37,9 @@ struct ThemeColor {
     let actionLinkColor: Color
     let separatorColor: Color
     let selectedOptionContainerColor: Color
+    let navigationContainerColor: Color
     let neutralIconColor: Color
+    let unfocusedBorderColor: Color
 
     init(
         themePrimary: Color = Color(hex: 0xFF2D2D2D),
@@ -48,7 +52,11 @@ struct ThemeColor {
         cancelButtonContainerColor: Color = Color(hex: 0xFFEAEAEA),
         separatorColor: Color = Color(hex: 0xFFF6F8F9),
         selectedOptionContainerColor: Color = Color(hex: 0xFFF6F8F9),
-        neutralIconColor: Color = Color(hex: 0xFF848F99)
+        neutralIconColor: Color = Color(hex: 0xFF848F99),
+        navigationContainerColor: Color = Color(hex: 0xFF2D2D2D),
+        unfocusedBorderColor: Color = Color(hex: 0xFFDADADA),
+
+        crisisCleanupYellow100: Color = Color(hex: 0xFFFFDC68)
     ) {
         self.themePrimary = themePrimary
         self.themePrimaryContainer = themePrimaryContainer
@@ -57,6 +65,11 @@ struct ThemeColor {
         primaryBlueOneTenthColor = primaryBlueColor.opacity(0.1)
         self.primaryRedColor = primaryRedColor
         self.primaryOrangeColor = primaryOrangeColor
+
+        let crisisCleanupYellow100HalfTransparent = crisisCleanupYellow100.opacity(0.5)
+        self.survivorNoteColor = crisisCleanupYellow100HalfTransparent
+        self.survivorNoteColorNoTransparency = Color(hex: 0xFFFBEAB0) // Equivalent of survivorNoteColor over white background
+
         incidentDisasterContainerColor = primaryBlueColor
         self.incidentDisasterContentColor = incidentDisasterContentColor
         attentionBackgroundColor = themePrimaryContainer
@@ -66,5 +79,7 @@ struct ThemeColor {
         self.separatorColor = separatorColor
         self.selectedOptionContainerColor = selectedOptionContainerColor
         self.neutralIconColor = neutralIconColor
+        self.navigationContainerColor = navigationContainerColor
+        self.unfocusedBorderColor = unfocusedBorderColor
     }
 }

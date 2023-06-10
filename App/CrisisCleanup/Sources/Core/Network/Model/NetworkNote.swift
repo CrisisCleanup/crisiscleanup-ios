@@ -18,4 +18,10 @@ public struct NetworkNote: Codable, Equatable {
 
 public struct NetworkNoteNote: Codable, Equatable {
     let note: String
+    let createdAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case note
+        case createdAt = "created_at"
+    }
 }

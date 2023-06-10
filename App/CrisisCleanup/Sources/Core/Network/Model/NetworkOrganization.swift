@@ -1,4 +1,4 @@
-public struct NetworkIncidentOrganizationsResult: Codable, Equatable {
+public struct NetworkOrganizationsResult: Codable, Equatable {
     let errors: [NetworkCrisisCleanupApiError]?
     let count: Int?
     let results: [NetworkIncidentOrganization]?
