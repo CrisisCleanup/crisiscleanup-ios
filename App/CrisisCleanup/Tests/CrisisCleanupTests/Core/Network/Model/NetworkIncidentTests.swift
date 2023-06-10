@@ -1,7 +1,7 @@
 import XCTest
 @testable import CrisisCleanup
 
-final class NetworkIncidentTest: XCTestCase {
+final class NetworkIncidentTests: XCTestCase {
     private let expectedIncidents = [
         fillNetworkIncident(
             158, "2019-09-25T00:00:00Z",
@@ -36,7 +36,7 @@ final class NetworkIncidentTest: XCTestCase {
 
 
     func testGetIncidentsSuccessResult() {
-        let result = Bundle(for: NetworkIncidentTest.self)
+        let result = Bundle(for: NetworkIncidentTests.self)
             .loadJson("getIncidentsSuccess", NetworkIncidentsResult.self)
 
         XCTAssertNil(result.errors)
@@ -52,7 +52,7 @@ final class NetworkIncidentTest: XCTestCase {
     }
 
     func testGetIncidentsResultFail() {
-        let result = Bundle(for: NetworkIncidentTest.self)
+        let result = Bundle(for: NetworkIncidentTests.self)
             .loadJson("expiredTokenResult", NetworkIncidentsResult.self)
 
         XCTAssertNil(result.count)

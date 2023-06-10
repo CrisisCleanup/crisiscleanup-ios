@@ -10,6 +10,14 @@ public struct NetworkLanguageDescription: Codable, Equatable {
         case subtag
         case name = "name_t"
     }
+
+    init(
+        _ subtag: String,
+        _ name: String
+    ) {
+        self.subtag = subtag
+        self.name = name
+    }
 }
 
 public struct NetworkLanguageTranslationResult: Codable, Equatable {
