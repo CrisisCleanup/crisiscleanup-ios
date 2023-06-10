@@ -1,3 +1,4 @@
+import CrisisCleanup
 import Foundation
 
 extension Bundle {
@@ -18,4 +19,31 @@ extension Bundle {
         decoder.dateDecodingStrategy = .iso8601
         return try! decoder.decode(type, from: data)
     }
+}
+
+private let dateFormatter = ISO8601DateFormatter()
+internal func fillNetworkIncident(
+    _ id: Int64,
+    _ startAt: String,
+    _ name: String,
+    _ shortName: String,
+    _ incidentType: String,
+    _ locations: [NetworkIncidentLocation],
+    activePhone: [String]? = nil,
+    turnOnRelease: Bool = false,
+    isArchived: Bool = false,
+    fields: [NetworkIncidentFormField]? = nil
+) -> NetworkIncident {
+    return NetworkIncident(
+        id: id,
+        startAt: dateFormatter.date(from: startAt)!,
+        name: name,
+        shortName: shortName,
+        locations: locations,
+        type: incidentType,
+        activePhoneNumber: activePhone,
+        turnOnRelease: turnOnRelease,
+        isArchived: isArchived,
+        fields: fields
+    )
 }
