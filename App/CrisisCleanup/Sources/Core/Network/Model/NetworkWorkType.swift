@@ -3,10 +3,8 @@ import Foundation
 public struct NetworkWorkType: Codable, Equatable {
     // Incoming network ID is always defined
     let id: Int64?
-    // TODO: @Serializable(DateSerializer::class)
     let createdAt: Date?
     let orgClaim: Int64?
-    // TODO: @Serializable(DateSerializer::class)
     let nextRecurAt: Date?
     let phase: Int?
     let recur: String?
@@ -22,6 +20,26 @@ public struct NetworkWorkType: Codable, Equatable {
         case recur
         case status
         case workType = "work_type"
+    }
+
+    init(
+        id: Int64?,
+        createdAt: Date?,
+        orgClaim: Int64?,
+        nextRecurAt: Date?,
+        phase: Int?,
+        recur: String?,
+        status: String,
+        workType: String
+    ) {
+        self.id = id
+        self.createdAt = createdAt
+        self.orgClaim = orgClaim
+        self.nextRecurAt = nextRecurAt
+        self.phase = phase
+        self.recur = recur
+        self.status = status
+        self.workType = workType
     }
 }
 

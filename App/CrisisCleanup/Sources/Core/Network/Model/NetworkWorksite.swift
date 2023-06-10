@@ -32,7 +32,8 @@ public struct NetworkWorksiteFull: Codable, Equatable {
     let postalCode: String?
     let reportedBy: Int64?
     let state: String
-    let svi: Float?
+    @FloatStringOptional
+    var svi: Float?
     let updatedAt: Date
     let what3words: String?
     private let workTypes: [NetworkWorkType]
@@ -220,7 +221,8 @@ public struct NetworkWorksiteShort: Codable, Equatable {
     let name: String
     let postalCode: String?
     let state: String
-    let svi: Float?
+    @FloatStringOptional
+    var svi: Float?
     let updatedAt: Date
     private let workTypes: [NetworkWorksiteFull.WorkTypeShort]
 
@@ -322,8 +324,9 @@ public struct NetworkWorksitePage: Codable, Equatable {
     let caseNumber: String
     let city: String
     let county: String
+    @DateWorksitesPage
     // Full does not have this field. Updates should not overwrite
-    let createdAt: Date
+    var createdAt: Date
     let email: String?
     // Differs from full
     let favoriteId: Int64?
@@ -334,14 +337,43 @@ public struct NetworkWorksitePage: Codable, Equatable {
     let name: String
     let phone1: String
     let phone2: String?
-    let postalCode: String?
     let plusCode: String?
+    let postalCode: String?
     let reportedBy: Int64?
     let state: String
-    let svi: Float?
-    let updatedAt: Date
+    @FloatStringOptional
+    var svi: Float?
+    @DateWorksitesPage
+    var updatedAt: Date
     let what3words: String?
     private let workTypes: [NetworkWorksiteFull.WorkTypeShort]
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case address
+        case autoContactFrequencyT = "auto_contact_frequency_t"
+        case caseNumber = "case_number"
+        case city
+        case county
+        case createdAt = "created_at"
+        case email
+        case favoriteId = "favorite_id"
+        case flags
+        case incident
+        case keyWorkType = "key_work_type"
+        case location
+        case name
+        case phone1
+        case phone2
+        case plusCode = "pluscode"
+        case postalCode = "postal_code"
+        case reportedBy = "reported_by"
+        case state
+        case svi
+        case updatedAt = "updated_at"
+        case what3words = "what3words"
+        case workTypes = "work_types"
+    }
 
     private lazy var newsetWorkTypeMap = {
         return NetworkWorksiteShort.getNewestWorkTypeMap(workTypes)
@@ -391,7 +423,8 @@ public struct NetworkWorksiteCoreData: Codable, Equatable {
     let postalCode: String?
     let reportedBy: Int64?
     let state: String
-    let svi: Float?
+    @FloatStringOptional
+    var svi: Float?
     let updatedAt: Date
     let what3words: String?
     private let workTypes: [NetworkWorkType]
@@ -433,4 +466,52 @@ public struct NetworkWorksiteCoreData: Codable, Equatable {
             newestWorkTypeMap
         )
     }()
+}
+
+@propertyWrapper
+struct FloatStringOptional: Codable, Equatable {
+    var wrappedValue: Float?
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(Float.self) {
+            wrappedValue = value
+        } else if let s = try? container.decode(String.self) {
+            wrappedValue = Float(s)
+        } else {
+            wrappedValue = nil
+        }
+    }
+}
+
+internal struct WorksitesPageDateFormatter {
+    let formatter: DateFormatter
+
+    init() {
+        formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSxxx"
+    }
+}
+
+private let iso8601DateFormatter = ISO8601DateFormatter()
+
+@propertyWrapper
+struct DateWorksitesPage: Codable, Equatable {
+    static private let customDate = WorksitesPageDateFormatter()
+    var wrappedValue: Date
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let s = try? container.decode(String.self) {
+            if let customDate = DateWorksitesPage.customDate.formatter.date(from: s) {
+                wrappedValue = customDate
+                return
+            }
+            else if let isoDate = iso8601DateFormatter.date(from: s) {
+                wrappedValue = isoDate
+                return
+            }
+        }
+        throw GenericError("Failed to parse date. Is it a common format?")
+    }
 }

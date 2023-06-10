@@ -8,7 +8,6 @@ public struct KeyDynamicValuePair: Codable, Equatable {
     }
 }
 
-// TODO: Test @Serializable(DynamicValueSerializer::class)
 public struct DynamicValue: Codable, Equatable {
     let valueString: String
     let isBool: Bool
@@ -22,6 +21,24 @@ public struct DynamicValue: Codable, Equatable {
         self.valueString = valueString
         self.isBool = isBool
         self.valueBool = valueBool
+    }
+
+    public init(from decoder: Decoder) throws {
+        var s = ""
+        var isB = false
+        var b = false
+
+        let container = try decoder.singleValueContainer()
+        if let stringValue = try? container.decode(String.self) {
+            s = stringValue
+        } else if let boolValue = try? container.decode(Bool.self) {
+            b = boolValue
+            isB = true
+        }
+
+        self.valueString = s
+        self.isBool = isB
+        self.valueBool = b
     }
 
     var isBoolTrue: Bool { isBool && valueBool }
