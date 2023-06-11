@@ -1,4 +1,4 @@
-// sourcery: copyBuilder
+// sourcery: copyBuilder, skipCopyInit
 public struct Incident {
     let id: Int64
     let name: String
@@ -9,6 +9,7 @@ public struct Incident {
     let turnOnRelease: Bool
     let disasterLiteral: String
 
+    // sourcery:begin: skipCopy
     lazy var disaster: Disaster = {
         disasterFromLiteral(disasterLiteral)
     }()
@@ -23,6 +24,27 @@ public struct Incident {
             .filter { $0.selectToggleWorkType.isNotBlank }
             .associate { ($0.fieldKey, $0.selectToggleWorkType) }
     }()
+    // sourcery:end
+
+    init(
+        id: Int64,
+        name: String,
+        shortName: String,
+        locations: [IncidentLocation],
+        activePhoneNumbers: [String],
+        formFields: [IncidentFormField],
+        turnOnRelease: Bool,
+        disasterLiteral: String
+    ) {
+        self.id = id
+        self.name = name
+        self.shortName = shortName
+        self.locations = locations
+        self.activePhoneNumbers = activePhoneNumbers
+        self.formFields = formFields
+        self.turnOnRelease = turnOnRelease
+        self.disasterLiteral = disasterLiteral
+    }
 }
 
 let EmptyIncident = Incident(

@@ -6,16 +6,24 @@ public protocol IncidentsRepository {
 
     var incidents: Published<[Incident]>.Publisher { get }
 
-    func getIncident(id: Int64) async -> Incident?
-    func getIncident(id: Int64, loadFormFields: Bool) async -> Incident?
-    func getIncidents(startAt: Date) async -> [Incident]
+    func getIncident(_ id: Int64, _ loadFormFields: Bool) async -> Incident?
+    func getIncidents(_ startAt: Date) async -> [Incident]
 
-    func streamIncident(id: Int64) -> Published<Incident?>.Publisher
+    func streamIncident(_ id: Int64) -> Published<Incident?>.Publisher
 
     func pullIncidents() async
 
     func pullIncident(id: Int64) async
 
-    func pullIncidentOrganizations(incidentId: Int64) async
-    func pullIncidentOrganizations(incidentId: Int64, force: Bool) async
+    func pullIncidentOrganizations(_ incidentId: Int64, _ force: Bool) async
+}
+
+extension IncidentsRepository {
+    func getIncident(_ id: Int64) async -> Incident? {
+        return await getIncident(id, false)
+    }
+
+    func pullIncidentOrganizations(_ incidentId: Int64) async {
+        await pullIncidentOrganizations(incidentId, false)
+    }
 }

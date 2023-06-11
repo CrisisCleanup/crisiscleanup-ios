@@ -18,9 +18,7 @@ enum Disaster: String, Identifiable, CaseIterable {
     case Volcano
     case Wind
 
-    var id: String {
-        rawValue
-    }
+    var id: String { rawValue }
 
     var literal: String {
         switch self {
