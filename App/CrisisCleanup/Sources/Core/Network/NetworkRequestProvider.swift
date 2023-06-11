@@ -7,8 +7,112 @@ public protocol NetworkRequestProvider {
 extension NetworkRequestProvider {
     var login: NetworkRequest {
         NetworkRequest(
-            url: apiUrl("api-token-auth"),
+            apiUrl("api-token-auth"),
             method: .post
+        )
+    }
+
+    var languages: NetworkRequest {
+        NetworkRequest(apiUrl("languages"))
+    }
+
+    var languageTranslations: NetworkRequest {
+        NetworkRequest(
+            apiUrl("translation"),
+            wrapResponseKey: "translation"
+        )
+    }
+
+    var localizationCount: NetworkRequest {
+        NetworkRequest(apiUrl("localizations/count"))
+    }
+
+    var workTypeStatuses: NetworkRequest {
+        NetworkRequest(apiUrl("statuses"))
+    }
+
+    var incidents: NetworkRequest {
+        NetworkRequest(
+            apiUrl("incidents"),
+            addTokenHeader: true
+        )
+    }
+
+    var incidentLocations: NetworkRequest {
+        NetworkRequest(
+            apiUrl("locations"),
+            addTokenHeader: true
+        )
+    }
+
+    var incident: NetworkRequest {
+        NetworkRequest(
+            apiUrl("incident"),
+            addTokenHeader: true,
+            wrapResponseKey: "incident"
+        )
+    }
+
+    var incidentOrganizations: NetworkRequest {
+        NetworkRequest(
+            apiUrl("incidents"),
+            addTokenHeader: true
+        )
+    }
+
+    var worksitesCoreData: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites"),
+            addTokenHeader: true
+        )
+    }
+
+    var worksitesLocationSearch: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites"),
+            addTokenHeader: true
+        )
+    }
+
+    var worksitesSearch: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites_all"),
+            addTokenHeader: true
+        )
+    }
+
+    var worksites: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites"),
+            addTokenHeader: true
+        )
+    }
+
+    var worksitesCount: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites/count"),
+            addTokenHeader: true
+        )
+    }
+
+    var worksitesPage: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites_page"),
+            addTokenHeader: true
+        )
+    }
+
+    var workTypeRequests: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksite_requests"),
+            addTokenHeader: true
+        )
+    }
+
+    var nearbyClaimedOrganizations: NetworkRequest {
+        NetworkRequest(
+            apiUrl("organizations"),
+            addTokenHeader: true
         )
     }
 }

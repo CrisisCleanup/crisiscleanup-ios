@@ -13,7 +13,7 @@ protocol AppPreferencesDataStore {
     func setLanguageKey(key: String)
 }
 
-fileprivate let jsonDecoder = JSONDecoder()
+fileprivate let jsonDecoder = JsonDecoderFactory().decoder()
 fileprivate let jsonEncoder = JSONEncoder()
 
 class AppPreferencesUserDefaults: AppPreferencesDataStore {

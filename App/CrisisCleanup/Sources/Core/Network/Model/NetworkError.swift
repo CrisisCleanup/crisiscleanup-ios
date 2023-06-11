@@ -21,7 +21,18 @@ public struct NetworkCrisisCleanupApiError: Codable, Equatable {
     }
 }
 
+struct ExpiredTokenError: Error {}
+
 extension Array where Element == NetworkCrisisCleanupApiError {
+    func tryThrowException() throws {
+        if isNotEmpty {
+            let isExpiredToken = first { $0.isExpiredToken } != nil
+            let error: Error = isExpiredToken ? ExpiredTokenError()
+            : GenericError(condenseMessages)
+            throw error
+        }
+    }
+
     var condenseMessages: String {
         map { $0.messages?.joined(separator: ". ") ?? "" }
             .filter { $0.isNotBlank }

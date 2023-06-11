@@ -10,14 +10,24 @@ extension NetworkRequest {
 		url: URL,
 		method: HTTPMethod,
 		headers: HTTPHeaders?,
-		parameters: Encodable?,
+		additionalPaths: [String]?,
+		queryParameters: [URLQueryItem]?,
+		formParameters: Encodable?,
+		bodyParameters: Encodable?,
+		addTokenHeader: Bool,
+		wrapResponseKey: String?,
 		// This is to prevent overriding the default init if it exists already
 		forCopyInit: Void? = nil
 	) {
 		self.url = url
 		self.method = method
 		self.headers = headers
-		self.parameters = parameters
+		self.additionalPaths = additionalPaths
+		self.queryParameters = queryParameters
+		self.formParameters = formParameters
+		self.bodyParameters = bodyParameters
+		self.addTokenHeader = addTokenHeader
+		self.wrapResponseKey = wrapResponseKey
 	}
 
 	// struct copy, lets you overwrite specific variables retaining the value of the rest
@@ -32,13 +42,23 @@ extension NetworkRequest {
 		var url: URL
 		var method: HTTPMethod
 		var headers: HTTPHeaders?
-		var parameters: Encodable?
+		var additionalPaths: [String]?
+		var queryParameters: [URLQueryItem]?
+		var formParameters: Encodable?
+		var bodyParameters: Encodable?
+		var addTokenHeader: Bool
+		var wrapResponseKey: String?
 
 		fileprivate init(original: NetworkRequest) {
 			self.url = original.url
 			self.method = original.method
 			self.headers = original.headers
-			self.parameters = original.parameters
+			self.additionalPaths = original.additionalPaths
+			self.queryParameters = original.queryParameters
+			self.formParameters = original.formParameters
+			self.bodyParameters = original.bodyParameters
+			self.addTokenHeader = original.addTokenHeader
+			self.wrapResponseKey = original.wrapResponseKey
 		}
 
 		fileprivate func toNetworkRequest() -> NetworkRequest {
@@ -46,7 +66,12 @@ extension NetworkRequest {
 				url: url,
 				method: method,
 				headers: headers,
-				parameters: parameters
+				additionalPaths: additionalPaths,
+				queryParameters: queryParameters,
+				formParameters: formParameters,
+				bodyParameters: bodyParameters,
+				addTokenHeader: addTokenHeader,
+				wrapResponseKey: wrapResponseKey
 			)
 		}
 	}

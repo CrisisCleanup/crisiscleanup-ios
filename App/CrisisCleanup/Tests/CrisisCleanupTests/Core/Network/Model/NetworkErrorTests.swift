@@ -21,7 +21,7 @@ final class NetworkErrorTests: XCTestCase {
             #"{"field":"field","message":["one"]}"#,
             #"{"field":"field","message":["one","two"]}"#,
         ]
-        let decoder = JSONDecoder()
+        let decoder = JsonDecoderFactory().decoder()
         for i in 0...(expecteds.count-1) {
             let expected = expecteds[i]
             let data = Data(jsons[i].utf8)

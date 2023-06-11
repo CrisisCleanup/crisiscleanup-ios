@@ -9,7 +9,7 @@ protocol AccountInfoDataSource {
     func expireToken()
 }
 
-fileprivate let jsonDecoder = JSONDecoder()
+fileprivate let jsonDecoder = JsonDecoderFactory().decoder()
 fileprivate let jsonEncoder = JSONEncoder()
 
 class AccountInfoUserDefaults: AccountInfoDataSource {

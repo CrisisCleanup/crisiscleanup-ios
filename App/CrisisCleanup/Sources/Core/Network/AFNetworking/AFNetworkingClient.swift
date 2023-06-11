@@ -5,6 +5,8 @@ class AFNetworkingClient {
     private let appEnv: AppEnv
     private let session: Session
 
+    private let jsonDecoder: JSONDecoder
+
     init(
         _ appEnv: AppEnv,
         interceptor: RequestInterceptor? = nil
@@ -26,10 +28,27 @@ class AFNetworkingClient {
             interceptor: interceptor,
             eventMonitors: eventMonitors
         )
+
+        jsonDecoder = JsonDecoderFactory().decoder()
     }
 
     func request(_ convertible: URLRequestConvertible) -> DataRequest {
         return session.request(convertible)
+    }
+
+    func callbackContinue<T: Decodable>(
+        requestConvertible: URLRequestConvertible,
+        type: T.Type
+    ) async -> DataResponse<T, AFError> {
+        let result = await withCheckedContinuation { continuation in
+            request(requestConvertible).responseDecodable(
+                of: type,
+                decoder:jsonDecoder
+            ) { response in
+                continuation.resume(returning: response)
+            }
+        }
+        return result
     }
 }
 

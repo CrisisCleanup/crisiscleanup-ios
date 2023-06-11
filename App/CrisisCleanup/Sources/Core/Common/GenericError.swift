@@ -1,4 +1,4 @@
-struct GenericError: Error {
+public struct GenericError: Error {
     let message: String
 
     init(_ message: String) {

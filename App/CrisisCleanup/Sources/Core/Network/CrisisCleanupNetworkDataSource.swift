@@ -5,7 +5,7 @@ public protocol CrisisCleanupAuthApi {
 }
 
 public protocol CrisisCleanupNetworkDataSource {
-    func getStatuses() async throws -> NetworkWorkTypeStatusResult
+    func getStatuses() async throws -> NetworkWorkTypeStatusResult?
 
     func getIncidents(
         fields: [String],
@@ -22,7 +22,7 @@ public protocol CrisisCleanupNetworkDataSource {
         incidentId: Int64,
         limit: Int,
         offset: Int
-    ) async throws -> NetworkOrganizationsResult
+    ) async throws -> NetworkOrganizationsResult?
 
     func getIncident(
         id: Int64,
@@ -70,12 +70,12 @@ public protocol CrisisCleanupNetworkDataSource {
 
     func getLanguageTranslations(key: String) async throws -> NetworkLanguageTranslation?
 
-    func getLocalizationCount(after: Date) async throws -> NetworkCountResult
+    func getLocalizationCount(after: Date) async throws -> NetworkCountResult?
 
     func getWorkTypeRequests(id: Int64) async throws -> [NetworkWorkTypeRequest]
 
     func getNearbyOrganizations(
         latitude: Double,
         longitude: Double
-    ) -> [NetworkIncidentOrganization]
+    ) async throws -> [NetworkIncidentOrganization]
 }

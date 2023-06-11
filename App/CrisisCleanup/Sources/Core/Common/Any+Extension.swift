@@ -7,6 +7,12 @@ public func with<T>(_ item: T, _ closure: (inout T) -> Void) -> T {
     return mutableItem
 }
 
+@discardableResult
+public func withLet<T>(_ item: Optional<T>, _ closure: (inout T) -> Void) -> Optional<T> {
+  guard let item = item else { return nil }
+  return with(item, closure)
+}
+
 extension Array {
     var firstOrNil: Element? { isEmpty ? nil : first }
     var isNotEmpty: Bool { !isEmpty }
