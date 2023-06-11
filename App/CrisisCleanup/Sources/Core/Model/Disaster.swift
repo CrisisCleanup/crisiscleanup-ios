@@ -1,49 +1,49 @@
 enum Disaster: String, Identifiable, CaseIterable {
-    case ContaminatedWater
-    case Earthquake
-    case Fire
-    case Flood
-    case FloodRain
-    case FloodThunderStorm
-    case Hail
-    case Hurricane
-    case MudSlide
-    case Other
-    case Snow
-    case Tornado
-    case TornadoFlood
-    case TornadoWindFlood
-    case TropicalStorm
-    case Virus
-    case Volcano
-    case Wind
+    case contaminatedWater
+    case earthquake
+    case fire
+    case flood
+    case floodRain
+    case floodThunderStorm
+    case hail
+    case hurricane
+    case mudSlide
+    case other
+    case snow
+    case tornado
+    case tornadoFlood
+    case tornadoWindFlood
+    case tropicalStorm
+    case virus
+    case volcano
+    case wind
 
     var id: String { rawValue }
 
     var literal: String {
         switch self {
-        case .ContaminatedWater: return "contaminated_water"
-        case .Earthquake: return "earthquake"
-        case .Fire: return "fire"
-        case .Flood: return "flood"
-        case .FloodRain: return "flood_rain"
-        case .FloodThunderStorm: return "flood_tstorm"
-        case .Hail: return "hail"
-        case .Hurricane: return "hurricane"
-        case .MudSlide: return "mud_slide"
-        case .Other: return "other"
-        case .Snow: return "snow"
-        case .Tornado: return "tornado"
-        case .TornadoFlood: return "tornado_flood"
-        case .TornadoWindFlood: return "flood_tornado_wind"
-        case .TropicalStorm: return "tropical_storm"
-        case .Virus: return "virus"
-        case .Volcano: return "volcano"
-        case .Wind: return "wind"
+        case .contaminatedWater: return "contaminated_water"
+        case .earthquake: return "earthquake"
+        case .fire: return "fire"
+        case .flood: return "flood"
+        case .floodRain: return "flood_rain"
+        case .floodThunderStorm: return "flood_tstorm"
+        case .hail: return "hail"
+        case .hurricane: return "hurricane"
+        case .mudSlide: return "mud_slide"
+        case .other: return "other"
+        case .snow: return "snow"
+        case .tornado: return "tornado"
+        case .tornadoFlood: return "tornado_flood"
+        case .tornadoWindFlood: return "flood_tornado_wind"
+        case .tropicalStorm: return "tropical_storm"
+        case .virus: return "virus"
+        case .volcano: return "volcano"
+        case .wind: return "wind"
         }
     }
 }
 
 fileprivate let reverseLookup = Disaster.allCases.associateBy{ $0.literal }
-func disasterFromLiteral(_ literal: String) -> Disaster { reverseLookup[literal] ?? Disaster.Other
+func disasterFromLiteral(_ literal: String) -> Disaster { reverseLookup[literal] ?? Disaster.other
 }

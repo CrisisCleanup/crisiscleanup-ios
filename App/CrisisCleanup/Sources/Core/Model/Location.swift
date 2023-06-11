@@ -10,23 +10,23 @@ public struct Location {
 }
 
 enum LocationShape: String, Identifiable, CaseIterable {
-    case Unknown
-    case Point
-    case Polygon
-    case MultiPolygon
+    case unknown
+    case point
+    case polygon
+    case multiPolygon
 
     var id: String { rawValue }
 
     var literal: String {
         switch self {
-        case .Point: return "point"
-        case .Polygon: return "polygon"
-        case .MultiPolygon: return "multipolygon"
+        case .point: return "point"
+        case .polygon: return "polygon"
+        case .multiPolygon: return "multipolygon"
         default: return ""
         }
     }
 }
 
 fileprivate let reverseLookup = LocationShape.allCases.associateBy{ $0.literal }
-func disasterFromLiteral(_ literal: String) -> LocationShape { reverseLookup[literal] ?? LocationShape.Unknown
+func disasterFromLiteral(_ literal: String) -> LocationShape { reverseLookup[literal] ?? LocationShape.unknown
 }
