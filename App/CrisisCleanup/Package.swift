@@ -21,7 +21,6 @@ let package = Package(
         .package(url: "https://github.com/Alamofire/Alamofire.git", .upToNextMajor(from: "5.6.4")),
         .package(url: "https://github.com/auth0/JWTDecode.swift", .upToNextMajor(from: "3.0.1")),
         .package(url: "https://github.com/exyte/SVGView.git", .upToNextMajor(from: "1.0.4")),
-        .package(url: "https://github.com/groue/GRDB.swift.git", .upToNextMajor(from: "5.7.0")),
     ],
     targets: [
         .target(
@@ -36,7 +35,9 @@ let package = Package(
         ),
         .testTarget(
             name: "CrisisCleanupTests",
-            dependencies: ["CrisisCleanup"],
+            dependencies: [
+                "CrisisCleanup",
+            ],
             resources: [
                 .copy("TestResources"),
             ]

@@ -152,7 +152,7 @@ class AuthenticateViewModel: ObservableObject {
 
             let loginResult = await authenticateAsync(emailAddress, password)
             if let result = loginResult.success {
-                with (result) { r in
+                with(result) { r in
                     accountDataRepository.setAccount(
                         id: r.claims.id,
                         accessToken: r.accessToken,

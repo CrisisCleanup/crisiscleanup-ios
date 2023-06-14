@@ -14,7 +14,7 @@ extension Incident {
 		var id: Int64
 		var name: String
 		var shortName: String
-		var locations: [IncidentLocation]
+		var locationIds: [Int64]
 		var activePhoneNumbers: [String]
 		var formFields: [IncidentFormField]
 		var turnOnRelease: Bool
@@ -24,7 +24,7 @@ extension Incident {
 			self.id = original.id
 			self.name = original.name
 			self.shortName = original.shortName
-			self.locations = original.locations
+			self.locationIds = original.locationIds
 			self.activePhoneNumbers = original.activePhoneNumbers
 			self.formFields = original.formFields
 			self.turnOnRelease = original.turnOnRelease
@@ -36,7 +36,7 @@ extension Incident {
 				id: id,
 				name: name,
 				shortName: shortName,
-				locations: locations,
+				locationIds: locationIds,
 				activePhoneNumbers: activePhoneNumbers,
 				formFields: formFields,
 				turnOnRelease: turnOnRelease,

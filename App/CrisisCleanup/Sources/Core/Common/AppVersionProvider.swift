@@ -1,13 +1,13 @@
 import Foundation
 
 public protocol AppVersionProvider {
-    var version: (Int64, String) {get}
-    var versionString: String {get}
-    var buildNumber: Int64 {get}
+    var version: (Int64, String) { get }
+    var versionString: String { get }
+    var buildNumber: Int64 { get }
 }
 
 protocol DatabaseVersionProvider {
-    var databaseVersion: Int {get}
+    var databaseVersion: Int32 { get }
 }
 
 class AppleAppVersionProvider : AppVersionProvider {

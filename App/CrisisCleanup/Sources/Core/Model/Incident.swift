@@ -3,7 +3,7 @@ public struct Incident {
     let id: Int64
     let name: String
     let shortName: String
-    let locations: [IncidentLocation]
+    let locationIds: [Int64]
     let activePhoneNumbers: [String]
     let formFields: [IncidentFormField]
     let turnOnRelease: Bool
@@ -30,7 +30,7 @@ public struct Incident {
         id: Int64,
         name: String,
         shortName: String,
-        locations: [IncidentLocation],
+        locationIds: [Int64],
         activePhoneNumbers: [String],
         formFields: [IncidentFormField],
         turnOnRelease: Bool,
@@ -39,7 +39,7 @@ public struct Incident {
         self.id = id
         self.name = name
         self.shortName = shortName
-        self.locations = locations
+        self.locationIds = locationIds
         self.activePhoneNumbers = activePhoneNumbers
         self.formFields = formFields
         self.turnOnRelease = turnOnRelease
@@ -51,7 +51,7 @@ let EmptyIncident = Incident(
     id: -1,
     name: "",
     shortName: "",
-    locations: [],
+    locationIds: [],
     activePhoneNumbers: [],
     formFields: [],
     turnOnRelease: false,
@@ -84,10 +84,54 @@ public struct IncidentFormField {
     let parentKey: String
     let selectToggleWorkType: String
 
-    private lazy var htmlTypeLower = {
-        htmlType.lowercased()
-    }()
-    lazy var isDivEnd: Bool = { htmlTypeLower == "divend" }()
-    lazy var isHidden: Bool = { htmlTypeLower == "hidden" }()
-    lazy var isFrequency: Bool = { htmlTypeLower == "cronselect" }()
+    let isDivEnd: Bool
+    let isHidden: Bool
+    let isFrequency: Bool
+
+    init(
+        label: String,
+        htmlType: String,
+        group: String,
+        help: String,
+        placeholder: String,
+        validation: String,
+        valuesDefault: [String : String?]?,
+        values: [String : String],
+        isCheckboxDefaultTrue: Bool,
+        recurDefault: String,
+        isRequired: Bool,
+        isReadOnly: Bool,
+        isReadOnlyBreakGlass: Bool,
+        labelOrder: Int,
+        listOrder: Int,
+        isInvalidated: Bool,
+        fieldKey: String,
+        parentKey: String,
+        selectToggleWorkType: String
+    ) {
+        self.label = label
+        self.htmlType = htmlType
+        self.group = group
+        self.help = help
+        self.placeholder = placeholder
+        self.validation = validation
+        self.valuesDefault = valuesDefault
+        self.values = values
+        self.isCheckboxDefaultTrue = isCheckboxDefaultTrue
+        self.recurDefault = recurDefault
+        self.isRequired = isRequired
+        self.isReadOnly = isReadOnly
+        self.isReadOnlyBreakGlass = isReadOnlyBreakGlass
+        self.labelOrder = labelOrder
+        self.listOrder = listOrder
+        self.isInvalidated = isInvalidated
+        self.fieldKey = fieldKey
+        self.parentKey = parentKey
+        self.selectToggleWorkType = selectToggleWorkType
+
+        let htmlTypeLower = htmlType.lowercased()
+        isDivEnd = htmlTypeLower == "divend"
+        isHidden = htmlTypeLower == "hidden"
+        isFrequency = htmlTypeLower == "cronselect"
+    }
 }
