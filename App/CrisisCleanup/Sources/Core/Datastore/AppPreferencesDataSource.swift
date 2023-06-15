@@ -5,12 +5,18 @@ public protocol AppPreferencesDataStore {
     var preferences: Published<AppPreferences>.Publisher { get }
 
     func setSyncAttempt(
-        isSuccessful: Bool,
-        attemptedSeconds: Double
+        _ isSuccessful: Bool,
+        _ attemptedSeconds: Double
     )
     func clearSyncData()
     func setSelectedIncident(id: Int64)
     func setLanguageKey(key: String)
+}
+
+extension AppPreferencesDataStore {
+    func setSyncAttempt(_ isSuccessful: Bool) {
+        setSyncAttempt(isSuccessful, Date().timeIntervalSince1970)
+    }
 }
 
 fileprivate let jsonDecoder = JsonDecoderFactory().decoder()
@@ -25,8 +31,8 @@ class AppPreferencesUserDefaults: AppPreferencesDataStore {
     }
 
     func setSyncAttempt(
-        isSuccessful: Bool,
-        attemptedSeconds: Double = Date.now.timeIntervalSince1970
+        _ isSuccessful: Bool,
+        _ attemptedSeconds: Double
     ) {
         let preferences = UserDefaults.standard.appPreferences
         let previousAttempt = preferences.syncAttempt

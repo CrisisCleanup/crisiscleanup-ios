@@ -15,7 +15,7 @@ public protocol CrisisCleanupNetworkDataSource {
     ) async throws -> [NetworkIncident]
 
     func getIncidentLocations(
-        locationIds: [Int64]
+        _ locationIds: [Int64]
     ) async throws -> [NetworkLocation]
 
     func getIncidentOrganizations(
@@ -78,4 +78,13 @@ public protocol CrisisCleanupNetworkDataSource {
         latitude: Double,
         longitude: Double
     ) async throws -> [NetworkIncidentOrganization]
+}
+
+extension CrisisCleanupNetworkDataSource {
+    func getIncidents(
+        _ fields: [String],
+        _ after: Date?
+    ) async throws -> [NetworkIncident] {
+        return try await getIncidents(fields: fields, limit: 250, ordering: "-start_at", after: after)
+    }
 }

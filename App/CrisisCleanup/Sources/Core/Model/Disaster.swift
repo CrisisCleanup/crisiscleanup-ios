@@ -44,6 +44,6 @@ enum Disaster: String, Identifiable, CaseIterable {
     }
 }
 
-fileprivate let reverseLookup = Disaster.allCases.associateBy{ $0.literal }
+private let reverseLookup = Disaster.allCases.associateBy{ $0.literal }
 func disasterFromLiteral(_ literal: String) -> Disaster { reverseLookup[literal] ?? Disaster.other
 }

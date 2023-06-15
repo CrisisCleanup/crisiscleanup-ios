@@ -64,7 +64,16 @@ extension MainComponent {
 
     public var appPreferences: AppPreferencesDataStore { shared { AppPreferencesUserDefaults() } }
 
-    public var incidentsRepository: IncidentsRepository { shared { OfflineFirstIncidentsRepository() } }
+    public var incidentsRepository: IncidentsRepository {
+        shared {
+            OfflineFirstIncidentsRepository(
+                dataSource: networkDataSource,
+                appPreferencesDataStore: appPreferences,
+                loggerFactory: loggerFactory
+            )
+        }
+    }
+
     public var workTypeStatusRepository: WorkTypeStatusRepository {
         shared {
             CrisisCleanupWorkTypeStatusRepository(

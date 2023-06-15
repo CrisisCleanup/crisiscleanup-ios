@@ -13,7 +13,7 @@ public protocol KeyAssetTranslator : KeyTranslator {
     func translate(_ phraseKey: String, _ fallbackAssetKey: String) -> String
 }
 
-fileprivate class EmptyTranslator: KeyAssetTranslator {
+private class EmptyTranslator: KeyAssetTranslator {
     func callAsFunction(_ phraseKey: String) -> String {
         return translate(phraseKey) ?? phraseKey
     }
@@ -30,8 +30,7 @@ fileprivate class EmptyTranslator: KeyAssetTranslator {
         return translated == phraseKey ? nil : translated
     }
 }
-
-fileprivate let emptyTranslator = EmptyTranslator()
+private let emptyTranslator = EmptyTranslator()
 
 private struct TranslatorKey: EnvironmentKey {
     static var defaultValue: KeyAssetTranslator { emptyTranslator }

@@ -98,7 +98,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         throw response.error ?? networkError
     }
 
-    func getIncidentLocations(locationIds: [Int64]) async throws -> [NetworkLocation] {
+    func getIncidentLocations(_ locationIds: [Int64]) async throws -> [NetworkLocation] {
         let request = requestProvider.incidentLocations.addQueryItems(
             "id__in", locationIds.map{String($0)}.commaJoined,
             "limit", String(locationIds.count)
@@ -284,7 +284,6 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
     func getLanguageTranslations(_ key: String) async throws -> NetworkLanguageTranslation? {
         let request = requestProvider.languageTranslations
             .addPaths(key)
-        print("request translations \(request)")
         let response = await networkClient.callbackContinue(
             requestConvertible: request,
             type: NetworkLanguageTranslationResult.self,

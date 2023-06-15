@@ -27,6 +27,6 @@ enum LocationShape: String, Identifiable, CaseIterable {
     }
 }
 
-fileprivate let reverseLookup = LocationShape.allCases.associateBy{ $0.literal }
+private let reverseLookup = LocationShape.allCases.associateBy{ $0.literal }
 func disasterFromLiteral(_ literal: String) -> LocationShape { reverseLookup[literal] ?? LocationShape.unknown
 }

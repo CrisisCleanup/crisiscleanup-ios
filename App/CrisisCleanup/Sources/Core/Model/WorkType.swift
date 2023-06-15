@@ -85,7 +85,7 @@ public enum WorkTypeStatus: String, Identifiable, CaseIterable {
 }
 
 
-fileprivate let literalStatusLookup = WorkTypeStatus.allCases.associateBy{ $0.literal }
+private let literalStatusLookup = WorkTypeStatus.allCases.associateBy{ $0.literal }
 func statusFromLiteral(_ literal: String) -> WorkTypeStatus { literalStatusLookup[literal] ?? WorkTypeStatus.unknown
 }
 

@@ -82,8 +82,23 @@ class AppSyncer: SyncPuller, SyncPusher {
         // TODO:
     }
 
-    func appPull(_ cancelOngoing: Bool) {
+    private func pullIncidents() async throws {
+        try await incidentsRepository.pullIncidents()
+    }
 
+    func appPull(_ cancelOngoing: Bool) {
+        if !isOnline { return }
+        Task {
+            await withThrowingTaskGroup(of: Void.self) { group -> Void in
+                group.addTask { try await self.pullIncidents() }
+                do {
+                    try await group.waitForAll()
+                } catch {
+                    // TODO: Handle proper
+                    print(error)
+                }
+            }
+        }
     }
 
     func stopPull() {
@@ -101,8 +116,13 @@ class AppSyncer: SyncPuller, SyncPusher {
     }
 
     private func pullIncidents() -> Task<Void, Error> {
-        return Task {
-            try Task.checkCancellation()
+        Task {
+            do {
+                try await incidentsRepository.pullIncidents()
+            } catch {
+                // TODO: Handle proper
+                print(error)
+            }
         }
     }
 

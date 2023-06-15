@@ -32,6 +32,7 @@ class CrisisCleanupWorkTypeStatusRepository: WorkTypeStatusRepository {
         self.dataSource = dataSource
         logger = loggerFactory.getLogger("work-type-status")
     }
+
     func loadStatuses(_ force: Bool) async {
         if statusLookup.count > 0 { return }
 

@@ -40,10 +40,11 @@ class MainViewModel: ObservableObject {
                 self.sync(false)
             }
             .store(in: &disposables)
+
+        syncPuller.pullUnauthenticatedData()
     }
 
     private func sync(_ force: Bool) {
-        syncPuller.pullUnauthenticatedData()
-        // TODO: Do
+        syncPuller.appPull(force)
     }
 }

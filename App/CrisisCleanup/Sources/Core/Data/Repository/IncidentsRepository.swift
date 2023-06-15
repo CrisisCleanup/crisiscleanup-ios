@@ -11,7 +11,7 @@ public protocol IncidentsRepository {
 
     func streamIncident(_ id: Int64) -> AnyPublisher<Incident?, Never>
 
-    func pullIncidents() async
+    func pullIncidents() async throws
 
     func pullIncident(id: Int64) async
 
