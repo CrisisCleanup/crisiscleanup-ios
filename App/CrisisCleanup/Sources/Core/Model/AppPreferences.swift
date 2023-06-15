@@ -1,5 +1,5 @@
 // sourcery: copyBuilder
-struct AppPreferences: Codable {
+public struct AppPreferences: Codable {
     let selectedIncidentId: Int64
     let languageKey: String
     let syncAttempt: SyncAttempt

@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-protocol AppPreferencesDataStore {
+public protocol AppPreferencesDataStore {
     var preferences: Published<AppPreferences>.Publisher { get }
 
     func setSyncAttempt(

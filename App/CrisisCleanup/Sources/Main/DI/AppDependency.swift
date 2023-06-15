@@ -5,16 +5,28 @@ public protocol AppDependency: Dependency {
     var appSettingsProvider: AppSettingsProvider { get }
     var appVersionProvider: AppVersionProvider { get }
     var loggerFactory: AppLoggerFactory { get }
+    var networkMonitor: NetworkMonitor { get }
 
     var inputValidator: InputValidator { get }
 
     var networkRequestProvider: NetworkRequestProvider { get }
     var authApi: CrisisCleanupAuthApi { get }
+    var readApi: CrisisCleanupNetworkDataSource { get }
+
+    var appPreferences: AppPreferencesDataStore { get }
+
+    var incidentsRepository: IncidentsRepository { get }
+    var languageTranslationsRepository: LanguageTranslationsRepository { get }
+    var workTypeStatusRepository: WorkTypeStatusRepository { get }
 
     var authenticateViewBuilder: AuthenticateViewBuilder { get }
 
     var authEventBus: AuthEventBus { get }
     var accountDataRepository: AccountDataRepository { get }
+
+    var syncPuller: SyncPuller { get }
+    var syncPusher: SyncPusher { get }
+    var syncLoggerFactory: SyncLoggerFactory { get }
 }
 
 extension MainComponent {
@@ -24,18 +36,35 @@ extension MainComponent {
 
     var providesAppVersionProvider: AppVersionProvider { shared { AppleAppVersionProvider() } }
 
+    public var networkMonitor: NetworkMonitor {
+        shared {
+            // TODO: Pass host URL by environment
+            NetworkReachability()
+        }
+    }
+
     public var networkRequestProvider: NetworkRequestProvider {
         shared { CrisisCleanupNetworkRequestProvider(appSettingsProvider) }
     }
 
     public var authApi: CrisisCleanupAuthApi {
-        shared {
-            AuthApiClient(
-                appEnv: appEnv,
-                networkRequestProvider: networkRequestProvider
-            )
-        }
+        AuthApiClient(
+            appEnv: appEnv,
+            networkRequestProvider: networkRequestProvider
+        )
     }
+    public var readApi: CrisisCleanupNetworkDataSource {
+        DataApiClient(
+            appEnv: appEnv,
+            networkRequestProvider: networkRequestProvider
+        )
+    }
+
+    public var appPreferences: AppPreferencesDataStore { shared { AppPreferencesUserDefaults() } }
+
+    public var incidentsRepository: IncidentsRepository { shared { OfflineFirstIncidentsRepository() } }
+    public var languageTranslationsRepository: LanguageTranslationsRepository { shared { OfflineFirstLanguageTranslationsRepository() } }
+    public var workTypeStatusRepository: WorkTypeStatusRepository { shared { CrisisCleanupWorkTypeStatusRepository() } }
 
     public var authenticateViewBuilder: AuthenticateViewBuilder { self }
 
@@ -54,5 +83,58 @@ extension MainComponent {
                 self.loggerFactory
             )
         }
+    }
+
+    var providesAppSyncer: AppSyncer {
+        shared {
+            AppSyncer (
+                accountDataRepository: accountDataRepository,
+                incidentsRepository: incidentsRepository,
+                languageRepository: languageTranslationsRepository,
+                statusRepository: workTypeStatusRepository,
+                appPreferencesDataStore: appPreferences,
+                syncLoggerFactory: syncLoggerFactory,
+                authEventBus: authEventBus,
+                networkMonitor: networkMonitor
+            )
+        }
+    }
+
+    public var syncPuller: SyncPuller { providesAppSyncer }
+
+    public var syncPusher: SyncPusher { providesAppSyncer }
+
+    public var syncLoggerFactory: SyncLoggerFactory { shared { DebugSyncLoggerFactory(loggerFactory) } }
+}
+
+// TODO: Replace when actual logger is ready
+private class DebugSyncLoggerFactory: SyncLoggerFactory {
+    private let loggerFactory: AppLoggerFactory
+
+    func getLogger(_ type: String) -> SyncLogger {
+        return DebugSyncLogger(loggerFactory.getLogger(type))
+    }
+
+    init(_ loggerFactory: AppLoggerFactory) {
+        self.loggerFactory = loggerFactory
+    }
+}
+
+private class DebugSyncLogger: SyncLogger {
+    private var logger: AppLogger
+
+    init(_ logger: AppLogger) {
+        self.logger = logger
+    }
+
+    func clear() -> SyncLogger {
+        return self
+    }
+
+    func flush() {}
+
+    func log(_ message: String, _ details: String, _ type: String) -> SyncLogger {
+        logger.logDebug(type, message, details)
+        return self
     }
 }
