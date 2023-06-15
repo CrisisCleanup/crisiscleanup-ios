@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MainView: View {
     @ObservedObject var viewModel: MainViewModel
+    @Environment(\.translator) var translator
     let authenticateViewBuilder: AuthenticateViewBuilder
     let menuViewBuilder: MenuViewBuilder
 
@@ -15,15 +16,17 @@ struct MainView: View {
                 NavigationView {
                     TabView(selection: $selectedTab) {
                         CasesView()
-                            .navTabItem(destination: .cases)
+                            .navTabItem(.cases, viewModel.translator)
                             .tag(TopLevelDestination.cases)
                         menuViewBuilder.menuView
-                            .navTabItem(destination: .menu)
+                            .navTabItem(.menu, viewModel.translator)
                             .tag(TopLevelDestination.menu)
                     }
                 }
+                .environment(\.translator, viewModel.translator)
             } else {
                 authenticateViewBuilder.authenticateView
+                    .environment(\.translator, viewModel.translator)
                     .navigationBarTitle("")
                     .navigationBarHidden(true)
             }

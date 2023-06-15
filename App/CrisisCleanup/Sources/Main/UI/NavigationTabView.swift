@@ -14,9 +14,14 @@ struct NavTabView: View {
 }
 
 extension View {
-    func navTabItem(destination: TopLevelDestination) -> some View {
+    func navTabItem(
+        _ destination: TopLevelDestination,
+        _ translator: KeyAssetTranslator
+    ) -> some View {
         tabItem {
-            NavTabView(text: destination.title, imageName: destination.imageName)
+            NavTabView(
+                text: translator.translate(destination.titleTranslateKey, destination.titleLocalizationKey),
+                imageName: destination.imageName)
         }
     }
 }

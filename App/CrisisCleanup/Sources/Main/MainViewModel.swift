@@ -3,6 +3,7 @@ import Combine
 
 class MainViewModel: ObservableObject {
     private let accountDataRepository: AccountDataRepository
+    let translator: KeyAssetTranslator
     private let syncPuller: SyncPuller
     private let logger: AppLogger
 
@@ -14,10 +15,12 @@ class MainViewModel: ObservableObject {
 
     init(
         accountDataRepository: AccountDataRepository,
+        translationsRepository: LanguageTranslationsRepository,
         syncPuller: SyncPuller,
         logger: AppLogger
     ) {
         self.accountDataRepository = accountDataRepository
+        translator = translationsRepository
         self.syncPuller = syncPuller
         self.logger = logger
 

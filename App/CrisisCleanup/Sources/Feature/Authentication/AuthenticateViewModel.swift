@@ -9,6 +9,7 @@ class AuthenticateViewModel: ObservableObject {
     private let accessTokenDecoder: AccessTokenDecoder
     private let accountDataRepository: AccountDataRepository
     private let authEventBus: AuthEventBus
+    private let translator: KeyAssetTranslator
     private let logger: AppLogger
 
     let isDebuggable: Bool
@@ -31,6 +32,7 @@ class AuthenticateViewModel: ObservableObject {
         accessTokenDecoder: AccessTokenDecoder,
         accountDataRepository: AccountDataRepository,
         authEventBus: AuthEventBus,
+        translator: KeyAssetTranslator,
         loggerFactory: AppLoggerFactory
     ) {
         self.appEnv = appEnv
@@ -40,6 +42,7 @@ class AuthenticateViewModel: ObservableObject {
         self.accessTokenDecoder = accessTokenDecoder
         self.accountDataRepository = accountDataRepository
         self.authEventBus = authEventBus
+        self.translator = translator
         logger = loggerFactory.getLogger("auth")
 
         isDebuggable = appEnv.isDebuggable
@@ -62,14 +65,20 @@ class AuthenticateViewModel: ObservableObject {
     }
 
     private func validateInput(_ emailAddress: String, _ password: String) -> Bool {
+        if emailAddress.isBlank {
+            errorMessage = translator("invitationSignup.email_error")
+            emailHasFocus = true
+            return false
+        }
+
         if !inputValidator.validateEmailAddress(emailAddress) {
-            errorMessage = "Enter valid email error".localizedString
+            errorMessage = translator.translate("invitationSignup.invalid_email_error", "Enter valid email error")
             emailHasFocus = true
             return false
         }
 
         if password.isBlank {
-            errorMessage = "Enter valid password error".localizedString
+            errorMessage = translator("invitationSignup.password_length_error")
             passwordHasFocus = true
             return false
         }
@@ -81,7 +90,7 @@ class AuthenticateViewModel: ObservableObject {
         _ emailAddress: String,
         _ password: String
     ) async -> LoginResult {
-        var errorKey = ""
+        var errorMessage = ""
 
         do {
             guard let result = try await authApi.login(emailAddress, password) else {
@@ -91,7 +100,7 @@ class AuthenticateViewModel: ObservableObject {
             if hasError {
                 let logErrorMessage = result.errors?.condenseMessages ?? "Server error"
                 if logErrorMessage == "Unable to log in with provided credentials." {
-                    errorKey = "Invalid credentials"
+                    errorMessage = translator("loginForm.invalid_credentials_msg")
                 } else {
                     logger.logError(GenericError(logErrorMessage))
                 }
@@ -124,11 +133,11 @@ class AuthenticateViewModel: ObservableObject {
                 return LoginResult(errorMessage: "", success: success   )
             }
         } catch {
-            errorKey = "Unknown auth error"
+            errorMessage = "Unknown auth error".localizedString
         }
 
         return LoginResult(
-            errorMessage: errorKey.localizedString,
+            errorMessage: errorMessage,
             success: nil
         )
     }

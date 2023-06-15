@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-public protocol LanguageTranslationsRepository: KeyTranslator {
+public protocol LanguageTranslationsRepository: KeyAssetTranslator {
     var isLoading: Published<Bool>.Publisher { get }
 
     var supportedLanguages: Published<[Language]>.Publisher { get }
@@ -33,24 +33,24 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
     @Published private var currentLanguageStream = EnglishLanguage
     lazy var currentLanguage = $currentLanguageStream
 
-    @Published private var translationCountStream = 0
-    lazy var translationCount = $translationCountStream
-
     private let dataSource: CrisisCleanupNetworkDataSource
     private let logger: AppLogger
 
     private var appPreferences: AppPreferences = AppPreferences()
 
     private var translationCache = Dictionary<String, String>()
+    private let statusRepository: WorkTypeStatusRepository
 
     private var disposables = Set<AnyCancellable>()
 
     init(
         dataSource: CrisisCleanupNetworkDataSource,
         appPreferencesDataStore: AppPreferencesDataStore,
+        statusRepository: WorkTypeStatusRepository,
         loggerFactory: AppLoggerFactory
     ) {
         self.dataSource = dataSource
+        self.statusRepository = statusRepository
         logger = loggerFactory.getLogger("language-translations")
 
         appPreferencesDataStore.preferences
@@ -84,12 +84,14 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
     private func pullLanguages() async throws {
         let languages = try await dataSource.getLanguages()
         // TODO: Save to db
+        logger.logDebug("languages fromnetwork", languages)
     }
 
     private func pullTranslations(_ key: String) async throws {
         if let translations = try await dataSource.getLanguageTranslations(key) {
             // TODO: Save to database when ready
             translationCache = translations.translations
+            translationCountStream = translationCache.count
         }
     }
 
@@ -107,8 +109,20 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
         // TODO: Do
     }
 
+    // MARK: - KeyAssetTranslator
+
+    @Published private var translationCountStream = 0
+    lazy var translationCount = $translationCountStream
+
+    func translate(_ phraseKey: String, _ fallbackAssetKey: String) -> String {
+        return translate(phraseKey) ?? (fallbackAssetKey.isBlank ? phraseKey : fallbackAssetKey.localizedString)
+    }
+
     func translate(_ phraseKey: String) -> String? {
-        // TODO: Do
-        return nil
+        return translationCache[phraseKey] ?? statusRepository.translateStatus(phraseKey)
+    }
+
+    func callAsFunction(_ phraseKey: String) -> String {
+        return translate(phraseKey) ?? phraseKey
     }
 }

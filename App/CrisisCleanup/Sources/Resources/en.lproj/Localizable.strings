@@ -1,5 +1,4 @@
 
-"Cases nav" = "Cases";
 "Menu nav" = "Menu";
 
 "Email hint" = "Email";
@@ -7,10 +6,8 @@
 
 "Login action" = "Login";
 "Logout action" = "Logout";
-"Dismiss auth action" = "Dismiss";
+"Cancel action" = "Cancel";
 
 "Enter valid email error" = "Enter a valid email address";
-"Enter valid password error" = "Enter a password";
 
 "Unknown auth error" = "We are experiencing issues with login/logout. Please try again later.";
-"Invalid credentials" = "The email or password is incorrect. Try again.";

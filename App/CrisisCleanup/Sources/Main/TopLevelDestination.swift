@@ -8,10 +8,17 @@ enum TopLevelDestination: String, Identifiable, CaseIterable {
         rawValue
     }
 
-    var title: String {
+    var titleTranslateKey: String {
         switch self {
-        case .cases: return "Cases nav".localizedString
-        case .menu: return "Menu nav".localizedString
+        case .cases: return "casesVue.cases"
+        case .menu: return "nav.menu"
+        }
+    }
+
+    var titleLocalizationKey: String {
+        switch self {
+        case .cases: return ""
+        case .menu: return "Menu nav"
         }
     }
 

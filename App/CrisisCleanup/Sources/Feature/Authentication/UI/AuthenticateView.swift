@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AuthenticateView: View {
     @Environment(\.presentationMode) var presentationMode
+    @Environment(\.translator) var t: KeyAssetTranslator
     @ObservedObject var viewModel: AuthenticateViewModel
 
     var body: some View {
@@ -24,6 +25,7 @@ struct AuthenticateView: View {
 }
 
 struct LoginView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
     @ObservedObject var viewModel: AuthenticateViewModel
     var dismissScreen: () -> ()
 
@@ -47,7 +49,7 @@ struct LoginView: View {
                     .padding([.vertical])
             }
 
-            TextField("Email hint".localizedString, text: $emailAddress)
+            TextField(t.translate("loginForm.email_placeholder", "Email hint"), text: $emailAddress)
                 .textFieldBorder()
                 .keyboardType(.emailAddress)
                 .autocapitalization(.none)
@@ -58,7 +60,7 @@ struct LoginView: View {
                 .onChange(of: viewModel.emailHasFocus) { emailHasFocus = $0 }
                 .onSubmit { authenticate() }
                 .onAppear { emailHasFocus = true }
-            ToggleSecureTextField("Password hint".localizedString, text: $password)
+            ToggleSecureTextField(t.translate("loginForm.password_placeholder", "Password hint"), text: $password)
                 .padding([.vertical])
                 .focused($passwordHasFocus)
                 .disabled(disabled)
@@ -81,7 +83,7 @@ struct LoginView: View {
             } label: {
                 BusyButtonContent(
                     isBusy: viewModel.isAuthenticating,
-                    text: "Login action".localizedString
+                    text: t.translate("actions.login", "Login action")
                 )
             }
             .buttonStyle(buttonStyle)
@@ -94,7 +96,7 @@ struct LoginView: View {
                 } label:  {
                     BusyButtonContent(
                         isBusy: viewModel.isAuthenticating,
-                        text: "Dismiss auth action".localizedString
+                        text: t.translate("actions.cancel", "Cancel action")
                     )
                 }
                 .buttonStyle(buttonStyle)
@@ -107,6 +109,7 @@ struct LoginView: View {
 }
 
 struct LogoutView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
     @ObservedObject var viewModel: AuthenticateViewModel
     var logout: () -> ()
     var dismissScreen: () -> ()
@@ -127,7 +130,7 @@ struct LogoutView: View {
             } label: {
                 BusyButtonContent(
                     isBusy: viewModel.isAuthenticating,
-                    text: "Logout action".localizedString
+                    text: t.translate("actions.logout", "Logout action")
                 )
             }
             .buttonStyle(buttonStyle)
@@ -140,7 +143,7 @@ struct LogoutView: View {
                 } label:  {
                     BusyButtonContent(
                         isBusy: viewModel.isAuthenticating,
-                        text: "Dismiss auth action".localizedString
+                        text: t.translate("actions.cancel", "Cancel action")
                     )
                 }
                 .buttonStyle(buttonStyle)

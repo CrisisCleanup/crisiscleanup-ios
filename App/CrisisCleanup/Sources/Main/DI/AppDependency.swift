@@ -19,6 +19,8 @@ public protocol AppDependency: Dependency {
     var languageTranslationsRepository: LanguageTranslationsRepository { get }
     var workTypeStatusRepository: WorkTypeStatusRepository { get }
 
+    var translator: KeyAssetTranslator { get }
+
     var authenticateViewBuilder: AuthenticateViewBuilder { get }
 
     var authEventBus: AuthEventBus { get }
@@ -76,10 +78,13 @@ extension MainComponent {
             OfflineFirstLanguageTranslationsRepository(
                 dataSource: networkDataSource,
                 appPreferencesDataStore: appPreferences,
+                statusRepository: workTypeStatusRepository,
                 loggerFactory: loggerFactory
             )
         }
     }
+
+    public var translator: KeyAssetTranslator { languageTranslationsRepository }
 
     public var authenticateViewBuilder: AuthenticateViewBuilder { self }
 

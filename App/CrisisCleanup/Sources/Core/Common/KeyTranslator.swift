@@ -5,18 +5,17 @@ public protocol KeyTranslator {
     var translationCount: Published<Int>.Publisher { get }
 
     func translate(_ phraseKey: String) -> String?
+
+    func callAsFunction(_ phraseKey: String) -> String
 }
 
 public protocol KeyAssetTranslator : KeyTranslator {
     func translate(_ phraseKey: String, _ fallbackAssetKey: String) -> String
-
-    // TODO: Does this work? If not delete.
-    func callAsFunction(_ phraseKey: String, _ fallbackAssetKey: String) -> String
 }
 
 fileprivate class EmptyTranslator: KeyAssetTranslator {
-    func callAsFunction(_ phraseKey: String, _ fallbackAssetKey: String) -> String {
-        return translate(phraseKey, fallbackAssetKey)
+    func callAsFunction(_ phraseKey: String) -> String {
+        return translate(phraseKey) ?? phraseKey
     }
 
     @Published private var translationCountStream = 0
