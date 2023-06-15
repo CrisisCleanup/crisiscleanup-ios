@@ -2,16 +2,18 @@ import Alamofire
 import Combine
 
 class NetworkReachability: NetworkMonitor {
-    @Published private var isOnlineStream = false
+    @Published private var isOnlineStream = true
+    @Published private var isNotOnlineStream = false
 
     lazy var isOnline = $isOnlineStream
-    lazy var isNotOnline = $isOnlineStream
+    lazy var isNotOnline = $isNotOnlineStream
 
     private let reachabilityManager: NetworkReachabilityManager
 
     init(_ host: String = "https://crisiscleanup.org") {
         reachabilityManager = NetworkReachabilityManager(host: host)!
-        $isOnlineStream.map{ !$0 }.assign(to: &isNotOnline)
+        $isOnlineStream.map { !$0 }
+            .assign(to: &isNotOnline)
         startNetworkMonitoring()
     }
 
@@ -21,9 +23,16 @@ class NetworkReachability: NetworkMonitor {
             case .reachable(.cellular),
                     .reachable(.ethernetOrWiFi):
                 self.isOnlineStream = true
+#if targetEnvironment(simulator)
+            case .notReachable:
+                self.isOnlineStream = true
+            case .unknown:
+                self.isOnlineStream = false
+#else
             case .notReachable,
                     .unknown:
                 self.isOnlineStream = false
+#endif
             }
         }
     }

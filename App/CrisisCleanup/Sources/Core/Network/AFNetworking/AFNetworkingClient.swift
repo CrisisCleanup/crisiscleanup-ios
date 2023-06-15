@@ -38,12 +38,17 @@ class AFNetworkingClient {
 
     func callbackContinue<T: Decodable>(
         requestConvertible: URLRequestConvertible,
-        type: T.Type
+        type: T.Type,
+        wrapResponseKey: String = ""
     ) async -> DataResponse<T, AFError> {
         let result = await withCheckedContinuation { continuation in
+            let dataPreproccessor = wrapResponseKey.isEmpty
+            ? DecodableResponseSerializer<T>.defaultDataPreprocessor
+            : WrapResponseKeyPreprocessor(wrapResponseKey)
             request(requestConvertible).responseDecodable(
                 of: type,
-                decoder:jsonDecoder
+                dataPreprocessor: dataPreproccessor,
+                decoder: jsonDecoder
             ) { response in
                 continuation.resume(returning: response)
             }
@@ -70,8 +75,8 @@ class NetworkEventMonitor : EventMonitor {
 //            return
 //        }
 //
-//         if let json = try? JSONSerialization.jsonObject(with: data) {
-//             print(json)
-//         }
+//        if let json = try? JSONSerialization.jsonObject(with: data) {
+//            print(json)
+//        }
     }
 }

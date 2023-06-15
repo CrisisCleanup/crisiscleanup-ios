@@ -15,7 +15,6 @@ extension NetworkRequest {
 		formParameters: Encodable?,
 		bodyParameters: Encodable?,
 		addTokenHeader: Bool,
-		wrapResponseKey: String?,
 		// This is to prevent overriding the default init if it exists already
 		forCopyInit: Void? = nil
 	) {
@@ -27,7 +26,6 @@ extension NetworkRequest {
 		self.formParameters = formParameters
 		self.bodyParameters = bodyParameters
 		self.addTokenHeader = addTokenHeader
-		self.wrapResponseKey = wrapResponseKey
 	}
 
 	// struct copy, lets you overwrite specific variables retaining the value of the rest
@@ -47,7 +45,6 @@ extension NetworkRequest {
 		var formParameters: Encodable?
 		var bodyParameters: Encodable?
 		var addTokenHeader: Bool
-		var wrapResponseKey: String?
 
 		fileprivate init(original: NetworkRequest) {
 			self.url = original.url
@@ -58,7 +55,6 @@ extension NetworkRequest {
 			self.formParameters = original.formParameters
 			self.bodyParameters = original.bodyParameters
 			self.addTokenHeader = original.addTokenHeader
-			self.wrapResponseKey = original.wrapResponseKey
 		}
 
 		fileprivate func toNetworkRequest() -> NetworkRequest {
@@ -70,8 +66,7 @@ extension NetworkRequest {
 				queryParameters: queryParameters,
 				formParameters: formParameters,
 				bodyParameters: bodyParameters,
-				addTokenHeader: addTokenHeader,
-				wrapResponseKey: wrapResponseKey
+				addTokenHeader: addTokenHeader
 			)
 		}
 	}

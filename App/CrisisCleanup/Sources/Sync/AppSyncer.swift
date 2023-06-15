@@ -1,9 +1,12 @@
+import Atomics
 import BackgroundTasks
 import Combine
 
 public protocol SyncPuller {
     func appPull(_ cancelOngoing: Bool)
     func stopPull()
+
+    func pullUnauthenticatedData()
 
     func appPullIncident(_ id: Int64)
     func stopPullIncident()
@@ -20,10 +23,10 @@ public protocol SyncPusher {
 }
 
 class AppSyncer: SyncPuller, SyncPusher {
-    private let pullLock: NSLock = NSLock()
+    private let pullLock = NSLock()
     private var pullOperation: Operation? = nil
 
-    private let pullLanguageLock: NSLock = NSLock()
+    private let pullLanguageGuard = ManagedAtomic<Bool>(false)
 
     private var accountData: AccountData = emptyAccountData
     private var isOnline: Bool = false
@@ -71,9 +74,9 @@ class AppSyncer: SyncPuller, SyncPusher {
         }
     }
 
-    private var isValidAccountToken: Bool { !accountData.isTokenInvalid }
+    private var isValidAccountToken: Bool { !accountData.isTokenInvalid && isOnline }
 
-    private var isSyncPossible: Bool { isValidAccountToken && isOnline }
+    private var isSyncPossible: Bool { isValidAccountToken }
 
     private func pull(_ task: BgPullTask) {
         // TODO:
@@ -84,9 +87,9 @@ class AppSyncer: SyncPuller, SyncPusher {
     }
 
     func stopPull() {
-        pullLock.lock()
-        pullOperation?.cancel()
-        pullLock.unlock()
+        pullLock.withLock {
+            pullOperation?.cancel()
+        }
     }
 
     func appPullIncident(_ id: Int64) {
@@ -97,23 +100,44 @@ class AppSyncer: SyncPuller, SyncPusher {
 
     }
 
-    private func pullLanguage() async throws {
-//        if pullLanguageLock.try() {
-//            defer { pullLanguageLock.unlock() }
-//
-//        }
+    private func pullIncidents() -> Task<Void, Error> {
+        return Task {
+            try Task.checkCancellation()
+        }
     }
 
-    private func pullStatuses() async throws {
-
+    private func pullSelectedIncidentWorksites() -> Task<Void, Error> {
+        return Task {
+            try Task.checkCancellation()
+        }
     }
 
-    private func pullIncidents() async throws {
-
+    func pullUnauthenticatedData() {
+        if !isOnline { return }
+        Task {
+            await withThrowingTaskGroup(of: Void.self) { group -> Void in
+                group.addTask { await self.pullLanguage() }
+                group.addTask { await self.pullStatuses() }
+                do {
+                    try await group.waitForAll()
+                } catch {
+                    // TODO: Handle proper
+                    print(error)
+                }
+            }
+        }
     }
 
-    private func pullSelectedIncidentWorksites() async throws {
+    private func pullLanguage() async {
+        if pullLanguageGuard.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged {
+            defer { pullLanguageGuard.store(false, ordering: .relaxed) }
 
+            await languageRepository.loadLanguages()
+        }
+    }
+
+    private func pullStatuses() async {
+        await statusRepository.loadStatuses()
     }
 }
 

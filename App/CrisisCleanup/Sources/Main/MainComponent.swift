@@ -9,6 +9,7 @@ public class MainComponent: BootstrapComponent, AuthenticateViewBuilder {
     var mainViewModel: MainViewModel {
         MainViewModel(
             accountDataRepository: accountDataRepository,
+            syncPuller: syncPuller,
             logger: loggerFactory.getLogger("main")
         )
     }

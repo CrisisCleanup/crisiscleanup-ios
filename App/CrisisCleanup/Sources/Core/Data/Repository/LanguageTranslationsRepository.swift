@@ -1,4 +1,5 @@
 import Combine
+import Foundation
 
 public protocol LanguageTranslationsRepository: KeyTranslator {
     var isLoading: Published<Bool>.Publisher { get }
@@ -35,14 +36,71 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
     @Published private var translationCountStream = 0
     lazy var translationCount = $translationCountStream
 
+    private let dataSource: CrisisCleanupNetworkDataSource
+    private let logger: AppLogger
+
+    private var appPreferences: AppPreferences = AppPreferences()
+
     private var translationCache = Dictionary<String, String>()
 
-    init() {
+    private var disposables = Set<AnyCancellable>()
 
+    init(
+        dataSource: CrisisCleanupNetworkDataSource,
+        appPreferencesDataStore: AppPreferencesDataStore,
+        loggerFactory: AppLoggerFactory
+    ) {
+        self.dataSource = dataSource
+        logger = loggerFactory.getLogger("language-translations")
+
+        appPreferencesDataStore.preferences
+            .assign(to: \.appPreferences, on: self)
+            .store(in: &disposables)
     }
 
     func loadLanguages(_ force: Bool) async {
-        // TODO: Do
+        // TODO Rely on language count when database is ready
+        if translationCache.count > 0 { return }
+
+        isLoadingStream = true
+        do {
+            defer { isLoadingStream = false }
+
+            let languageCount = 0
+
+            if force || languageCount == 0 {
+                try await pullLanguages()
+            }
+
+            if languageCount == 0 {
+                try await pullTranslations(EnglishLanguage.key)
+            }
+            // TODO: Pull updated once database is saving results
+        } catch {
+            logger.logError(error)
+        }
+    }
+
+    private func pullLanguages() async throws {
+        let languages = try await dataSource.getLanguages()
+        // TODO: Save to db
+    }
+
+    private func pullTranslations(_ key: String) async throws {
+        if let translations = try await dataSource.getLanguageTranslations(key) {
+            // TODO: Save to database when ready
+            translationCache = translations.translations
+        }
+    }
+
+    private func pullUpdatedTranslations(_ key: String) async throws {
+        // TODO: Compare localizations updated since then pull
+        try await pullTranslations(key)
+    }
+
+    private func pullUpdatedTranslations() async throws {
+        try await pullLanguages()
+        try await pullUpdatedTranslations(appPreferences.languageKey)
     }
 
     func setLanguage(_ key: String) {

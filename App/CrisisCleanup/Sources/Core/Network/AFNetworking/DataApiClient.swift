@@ -140,7 +140,8 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
             )
         let response = await networkClient.callbackContinue(
             requestConvertible: request,
-            type: NetworkIncidentResult.self
+            type: NetworkIncidentResult.self,
+            wrapResponseKey: "incident"
         )
         if let result = response.value {
             try result.errors?.tryThrowException()
@@ -280,12 +281,14 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         ).value?.results ?? [NetworkLanguageDescription]()
     }
 
-    func getLanguageTranslations(key: String) async throws -> NetworkLanguageTranslation? {
+    func getLanguageTranslations(_ key: String) async throws -> NetworkLanguageTranslation? {
         let request = requestProvider.languageTranslations
             .addPaths(key)
+        print("request translations \(request)")
         let response = await networkClient.callbackContinue(
             requestConvertible: request,
-            type: NetworkLanguageTranslationResult.self
+            type: NetworkLanguageTranslationResult.self,
+            wrapResponseKey: "translation"
         )
         if let result = response.value {
             try result.errors?.tryThrowException()

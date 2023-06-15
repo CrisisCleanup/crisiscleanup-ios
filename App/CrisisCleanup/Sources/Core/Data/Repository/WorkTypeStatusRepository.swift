@@ -20,17 +20,34 @@ class CrisisCleanupWorkTypeStatusRepository: WorkTypeStatusRepository {
     @Published private var workTypeStatusOptionsStream: [WorkTypeStatus] = []
     lazy var workTypeStatusOptions = $workTypeStatusOptionsStream
 
+    private let dataSource: CrisisCleanupNetworkDataSource
+    private let logger: AppLogger
+
+    private var statusLookup = [String: PopulatedWorkTypeStatus]()
+
+    init(
+        dataSource: CrisisCleanupNetworkDataSource,
+        loggerFactory: AppLoggerFactory
+    ) {
+        self.dataSource = dataSource
+        logger = loggerFactory.getLogger("work-type-status")
+    }
     func loadStatuses(_ force: Bool) async {
-        // TODO: Do
+        if statusLookup.count > 0 { return }
+
+        do {
+            let statuses = try await dataSource.getStatuses()?.results ?? []
+            statusLookup = statuses.map { $0.asPopulatedModel() }.associateBy { $0.status }
+        } catch {
+            logger.logError(error)
+        }
     }
 
     func translateStatus(_ status: String) -> String? {
-        // TODO: Do
-        return nil
+        return statusLookup[status]?.name
     }
 
     func translateStatus(_ status: WorkTypeStatus) -> String? {
-        // TODO: Do
-        return nil
+        return translateStatus(status.literal)
     }
 }

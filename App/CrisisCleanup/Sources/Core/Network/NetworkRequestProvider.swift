@@ -18,8 +18,7 @@ extension NetworkRequestProvider {
 
     var languageTranslations: NetworkRequest {
         NetworkRequest(
-            apiUrl("translation"),
-            wrapResponseKey: "translation"
+            apiUrl("languages")
         )
     }
 
@@ -48,8 +47,7 @@ extension NetworkRequestProvider {
     var incident: NetworkRequest {
         NetworkRequest(
             apiUrl("incident"),
-            addTokenHeader: true,
-            wrapResponseKey: "incident"
+            addTokenHeader: true
         )
     }
 

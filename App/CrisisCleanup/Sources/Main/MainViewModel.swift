@@ -3,6 +3,7 @@ import Combine
 
 class MainViewModel: ObservableObject {
     private let accountDataRepository: AccountDataRepository
+    private let syncPuller: SyncPuller
     private let logger: AppLogger
 
     @Published var viewData: MainViewData = MainViewData()
@@ -13,9 +14,11 @@ class MainViewModel: ObservableObject {
 
     init(
         accountDataRepository: AccountDataRepository,
+        syncPuller: SyncPuller,
         logger: AppLogger
     ) {
         self.accountDataRepository = accountDataRepository
+        self.syncPuller = syncPuller
         self.logger = logger
 
         accountDataRepository.accountData
@@ -27,5 +30,17 @@ class MainViewModel: ObservableObject {
                 )
             }
             .store(in: &disposables)
+
+        accountDataRepository.accountData
+            .filter { !$0.isTokenInvalid }
+            .sink { data in
+                self.sync(false)
+            }
+            .store(in: &disposables)
+    }
+
+    private func sync(_ force: Bool) {
+        syncPuller.pullUnauthenticatedData()
+        // TODO: Do
     }
 }

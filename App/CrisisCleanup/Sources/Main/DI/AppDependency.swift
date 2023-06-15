@@ -11,7 +11,7 @@ public protocol AppDependency: Dependency {
 
     var networkRequestProvider: NetworkRequestProvider { get }
     var authApi: CrisisCleanupAuthApi { get }
-    var readApi: CrisisCleanupNetworkDataSource { get }
+    var networkDataSource: CrisisCleanupNetworkDataSource { get }
 
     var appPreferences: AppPreferencesDataStore { get }
 
@@ -53,7 +53,7 @@ extension MainComponent {
             networkRequestProvider: networkRequestProvider
         )
     }
-    public var readApi: CrisisCleanupNetworkDataSource {
+    public var networkDataSource: CrisisCleanupNetworkDataSource {
         DataApiClient(
             appEnv: appEnv,
             networkRequestProvider: networkRequestProvider
@@ -63,8 +63,23 @@ extension MainComponent {
     public var appPreferences: AppPreferencesDataStore { shared { AppPreferencesUserDefaults() } }
 
     public var incidentsRepository: IncidentsRepository { shared { OfflineFirstIncidentsRepository() } }
-    public var languageTranslationsRepository: LanguageTranslationsRepository { shared { OfflineFirstLanguageTranslationsRepository() } }
-    public var workTypeStatusRepository: WorkTypeStatusRepository { shared { CrisisCleanupWorkTypeStatusRepository() } }
+    public var workTypeStatusRepository: WorkTypeStatusRepository {
+        shared {
+            CrisisCleanupWorkTypeStatusRepository(
+                dataSource: networkDataSource,
+                loggerFactory: loggerFactory
+            )
+        }
+    }
+    public var languageTranslationsRepository: LanguageTranslationsRepository {
+        shared {
+            OfflineFirstLanguageTranslationsRepository(
+                dataSource: networkDataSource,
+                appPreferencesDataStore: appPreferences,
+                loggerFactory: loggerFactory
+            )
+        }
+    }
 
     public var authenticateViewBuilder: AuthenticateViewBuilder { self }
 

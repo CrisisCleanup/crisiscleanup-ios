@@ -68,7 +68,7 @@ public protocol CrisisCleanupNetworkDataSource {
 
     func getLanguages() async throws -> [NetworkLanguageDescription]
 
-    func getLanguageTranslations(key: String) async throws -> NetworkLanguageTranslation?
+    func getLanguageTranslations(_ key: String) async throws -> NetworkLanguageTranslation?
 
     func getLocalizationCount(after: Date) async throws -> NetworkCountResult?
 

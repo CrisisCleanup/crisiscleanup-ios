@@ -21,6 +21,7 @@ let package = Package(
         .package(url: "https://github.com/Alamofire/Alamofire.git", .upToNextMajor(from: "5.6.4")),
         .package(url: "https://github.com/auth0/JWTDecode.swift", .upToNextMajor(from: "3.0.1")),
         .package(url: "https://github.com/exyte/SVGView.git", .upToNextMajor(from: "1.0.4")),
+        .package(url: "https://github.com/apple/swift-atomics.git", .upToNextMajor(from: "1.0.0")),
     ],
     targets: [
         .target(
@@ -30,6 +31,7 @@ let package = Package(
                 .product(name: "Alamofire", package: "Alamofire"),
                 .product(name: "JWTDecode", package: "JWTDecode.swift"),
                 .product(name: "SVGView", package: "SVGView"),
+                .product(name: "Atomics", package: "swift-atomics"),
             ],
             path: "Sources"
         ),

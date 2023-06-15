@@ -11,7 +11,6 @@ struct NetworkRequest: URLRequestConvertible {
     let formParameters: Encodable?
     let bodyParameters: Encodable?
     let addTokenHeader: Bool
-    let wrapResponseKey: String?
 
     init(
         _ url: URL,
@@ -21,8 +20,7 @@ struct NetworkRequest: URLRequestConvertible {
         queryParameters: [URLQueryItem]? = nil,
         formParameters: Encodable? = nil,
         bodyParameters: Encodable? = nil,
-        addTokenHeader: Bool = false,
-        wrapResponseKey: String = ""
+        addTokenHeader: Bool = false
     ) {
         self.url = url
         self.method = method
@@ -32,7 +30,6 @@ struct NetworkRequest: URLRequestConvertible {
         self.formParameters = formParameters
         self.bodyParameters = bodyParameters
         self.addTokenHeader = addTokenHeader
-        self.wrapResponseKey = wrapResponseKey
     }
 
     func addPaths(_ paths: String...) -> NetworkRequest {
@@ -70,12 +67,10 @@ struct NetworkRequest: URLRequestConvertible {
                 url = url.appending(queryItems: q)
             }
 
+            request.url = url
+
             if addTokenHeader {
                 request.setValue("", forHTTPHeaderField: "Authorization")
-            }
-
-            if wrapResponseKey?.isNotBlank == true {
-                request.setValue(wrapResponseKey!, forHTTPHeaderField: "wrap-response-key")
             }
 
             if let parameters = formParameters {
