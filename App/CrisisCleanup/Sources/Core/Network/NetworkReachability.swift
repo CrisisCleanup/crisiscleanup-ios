@@ -3,10 +3,10 @@ import Combine
 
 class NetworkReachability: NetworkMonitor {
     @Published private var isOnlineStream = true
-    @Published private var isNotOnlineStream = false
+    lazy private(set) var isOnline = $isOnlineStream
 
-    lazy var isOnline = $isOnlineStream
-    lazy var isNotOnline = $isNotOnlineStream
+    @Published private var isNotOnlineStream = false
+    lazy private(set) var isNotOnline = $isNotOnlineStream
 
     private let reachabilityManager: NetworkReachabilityManager
 

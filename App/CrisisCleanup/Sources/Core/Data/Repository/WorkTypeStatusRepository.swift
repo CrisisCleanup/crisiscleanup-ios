@@ -18,7 +18,7 @@ extension WorkTypeStatusRepository {
 
 class CrisisCleanupWorkTypeStatusRepository: WorkTypeStatusRepository {
     @Published private var workTypeStatusOptionsStream: [WorkTypeStatus] = []
-    lazy var workTypeStatusOptions = $workTypeStatusOptionsStream
+    lazy private(set) var workTypeStatusOptions = $workTypeStatusOptionsStream
 
     private let dataSource: CrisisCleanupNetworkDataSource
     private let logger: AppLogger

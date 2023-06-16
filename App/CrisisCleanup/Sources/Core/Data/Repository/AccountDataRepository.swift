@@ -21,12 +21,12 @@ public protocol AccountDataRepository {
 
 class CrisisCleanupAccountDataRepository: AccountDataRepository {
     @Published private var accountDataStream = emptyAccountData
-    lazy var accountData = $accountDataStream
+    lazy private(set) var accountData = $accountDataStream
 
     private(set) var accessTokenCached: String = ""
 
     @Published private var isAuthenticatedStream = false
-    lazy var isAuthenticated = $isAuthenticatedStream
+    lazy private(set) var isAuthenticated = $isAuthenticatedStream
 
     private let accountDataSource: AccountInfoDataSource
     private let secureDataSource: SecureDataSource

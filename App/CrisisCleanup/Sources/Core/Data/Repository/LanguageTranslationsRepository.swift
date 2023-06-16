@@ -25,13 +25,13 @@ extension LanguageTranslationsRepository {
 
 class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository {
     @Published private var isLoadingStream = false
-    lazy var isLoading = $isLoadingStream
+    lazy private(set) var isLoading = $isLoadingStream
 
     @Published private var supportedLanguagesStream: [Language] = []
-    lazy var supportedLanguages = $supportedLanguagesStream
+    lazy private(set) var supportedLanguages = $supportedLanguagesStream
 
     @Published private var currentLanguageStream = EnglishLanguage
-    lazy var currentLanguage = $currentLanguageStream
+    lazy private(set) var currentLanguage = $currentLanguageStream
 
     private let dataSource: CrisisCleanupNetworkDataSource
     private let logger: AppLogger
@@ -112,7 +112,7 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
     // MARK: - KeyAssetTranslator
 
     @Published private var translationCountStream = 0
-    lazy var translationCount = $translationCountStream
+    lazy private(set) var translationCount = $translationCountStream
 
     func translate(_ phraseKey: String, _ fallbackAssetKey: String) -> String {
         return translate(phraseKey) ?? (fallbackAssetKey.isBlank ? phraseKey : fallbackAssetKey.localizedString)

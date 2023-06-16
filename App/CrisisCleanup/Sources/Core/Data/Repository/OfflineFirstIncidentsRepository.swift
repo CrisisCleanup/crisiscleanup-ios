@@ -3,7 +3,7 @@ import Foundation
 
 class OfflineFirstIncidentsRepository: IncidentsRepository {
     @Published private var isLoadingStream = false
-    lazy var isLoading = $isLoadingStream
+    lazy private(set) var isLoading = $isLoadingStream
 
     private let incidentsQueryFields = [
         "id",
@@ -18,9 +18,8 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
     ]
     private let fullIncidentQueryFields: [String]
 
-
     @Published private var incidentsStream: [Incident] = []
-    lazy var incidents = $incidentsStream
+    lazy private(set) var incidents = $incidentsStream
 
     private var incidentPublisher = Just<Incident?>(nil)
 
@@ -116,8 +115,7 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
 
             try await saveIncidentsSecondaryData(networkIncidents)
 
-            // TODO Query locations as well
-
+            // TODO: Do
         }
     }
 

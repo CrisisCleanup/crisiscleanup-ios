@@ -19,7 +19,7 @@ private class EmptyTranslator: KeyAssetTranslator {
     }
 
     @Published private var translationCountStream = 0
-    lazy var translationCount = $translationCountStream
+    lazy private(set) var translationCount = $translationCountStream
 
     func translate(_ phraseKey: String, _ fallbackAssetKey: String) -> String {
         return fallbackAssetKey.localizedString

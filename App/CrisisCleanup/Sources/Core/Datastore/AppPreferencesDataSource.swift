@@ -24,7 +24,7 @@ fileprivate let jsonEncoder = JSONEncoder()
 
 class AppPreferencesUserDefaults: AppPreferencesDataStore {
     @Published private var preferencesStream = AppPreferences()
-    lazy var preferences = $preferencesStream
+    lazy private(set) var preferences = $preferencesStream
 
     private func update(_ preferences: AppPreferences) {
         UserDefaults.standard.appPreferences = preferences

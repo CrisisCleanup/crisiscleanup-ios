@@ -14,7 +14,7 @@ fileprivate let jsonEncoder = JSONEncoder()
 
 class AccountInfoUserDefaults: AccountInfoDataSource {
     @Published private var accountDataStream: AccountData = emptyAccountData
-    lazy var accountData = $accountDataStream
+    lazy private(set) var accountData = $accountDataStream
 
     init() {
         UserDefaults.standard.publisher(for: \.accountInfoData)
