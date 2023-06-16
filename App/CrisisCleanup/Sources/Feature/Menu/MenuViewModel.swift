@@ -4,6 +4,7 @@ import Combine
 class MenuViewModel: ObservableObject {
     private let appEnv: AppEnv
     private let accountDataRepository: AccountDataRepository
+    private let incidentSelector: IncidentSelector
     private let appVersionProvider: AppVersionProvider
     private let authEventBus: AuthEventBus
     private let logger: AppLogger
@@ -11,6 +12,8 @@ class MenuViewModel: ObservableObject {
     let isDebuggable: Bool
 
     @Published var profilePicture: AccountProfilePicture? = nil
+
+    @Published private(set) var incidentsData = LoadingIncidentsData
 
     var versionText: String {
         let version = appVersionProvider.version
@@ -22,12 +25,14 @@ class MenuViewModel: ObservableObject {
     init(
         appEnv: AppEnv,
         accountDataRepository: AccountDataRepository,
+        incidentSelector: IncidentSelector,
         appVersionProvider: AppVersionProvider,
         authEventBus: AuthEventBus,
         loggerFactory: AppLoggerFactory
     ) {
         self.appEnv = appEnv
         self.accountDataRepository = accountDataRepository
+        self.incidentSelector = incidentSelector
         self.appVersionProvider = appVersionProvider
         self.authEventBus = authEventBus
         logger = loggerFactory.getLogger("menu")
@@ -46,6 +51,9 @@ class MenuViewModel: ObservableObject {
                 return nil
             }
             .assign(to: &$profilePicture)
+
+        incidentSelector.incidentsData.sink { self.incidentsData = $0 }
+            .store(in: &disposables)
     }
 
     func expireToken() {

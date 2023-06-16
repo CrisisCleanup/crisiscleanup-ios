@@ -4,6 +4,7 @@ import Foundation
 public protocol IncidentSelector {
     var incidentId: Published<Int64>.Publisher { get }
     var incident: Published<Incident>.Publisher { get }
+    var incidentsData: Published<IncidentsData>.Publisher { get }
 
     func setIncident(incident: Incident)
 }

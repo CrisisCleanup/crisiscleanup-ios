@@ -1,21 +1,24 @@
 import SwiftUI
 
 struct MainView: View {
-    @ObservedObject var viewModel: MainViewModel
     @Environment(\.translator) var translator
+
+    @ObservedObject var viewModel: MainViewModel
     let authenticateViewBuilder: AuthenticateViewBuilder
+    let casesViewBuilder: CasesViewBuilder
     let menuViewBuilder: MenuViewBuilder
 
     @State private var selectedTab = TopLevelDestination.menu
     var body: some View {
         switch viewModel.viewData.state {
         case .loading:
+            // TODO: Show actual splash screen (or loading animation)
             Text("Splash")
         case .ready:
             if viewModel.viewData.showMainContent {
                 NavigationView {
                     TabView(selection: $selectedTab) {
-                        CasesView()
+                        casesViewBuilder.casesView
                             .navTabItem(.cases, viewModel.translator)
                             .tag(TopLevelDestination.cases)
                         menuViewBuilder.menuView

@@ -22,6 +22,7 @@ public protocol AppDependency: Dependency {
     var translator: KeyAssetTranslator { get }
 
     var authenticateViewBuilder: AuthenticateViewBuilder { get }
+    var incidentSelectViewBuilder: IncidentSelectViewBuilder { get }
 
     var authEventBus: AuthEventBus { get }
     var accountDataRepository: AccountDataRepository { get }
@@ -98,6 +99,7 @@ extension MainComponent {
     public var translator: KeyAssetTranslator { languageTranslationsRepository }
 
     public var authenticateViewBuilder: AuthenticateViewBuilder { self }
+    public var incidentSelectViewBuilder: IncidentSelectViewBuilder { self }
 
     public var authEventBus: AuthEventBus {
         return shared { CrisisCleanupAuthEventBus() }

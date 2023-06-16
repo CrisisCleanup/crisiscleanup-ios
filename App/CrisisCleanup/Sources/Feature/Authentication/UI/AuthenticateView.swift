@@ -3,6 +3,7 @@ import SwiftUI
 struct AuthenticateView: View {
     @Environment(\.presentationMode) var presentationMode
     @Environment(\.translator) var t: KeyAssetTranslator
+
     @ObservedObject var viewModel: AuthenticateViewModel
 
     var body: some View {

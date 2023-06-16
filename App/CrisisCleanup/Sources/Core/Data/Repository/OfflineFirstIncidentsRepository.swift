@@ -105,9 +105,20 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
             }
             let networkIncidents = try await dataSource.getIncidents(queryFields, pullAfter)
 
-            let sortedIncidents = networkIncidents
+            var sortedIncidents = networkIncidents
                 .sorted(by: { a, b in a.startAt >= b.startAt })
                 .map { $0.asExternalModel() }
+
+            // TODO: Remove after plugged into env w/ sufficient incidents
+            let initialIncidentCount = sortedIncidents.count
+            var copyId = Int64(515123)
+            for i in initialIncidentCount ... 20 {
+                let copyIndex = i % initialIncidentCount
+                sortedIncidents += [sortedIncidents[copyIndex].copy {
+                    $0.id = copyId
+                }]
+                copyId += 1
+            }
 
             incidentsStream = sortedIncidents
 

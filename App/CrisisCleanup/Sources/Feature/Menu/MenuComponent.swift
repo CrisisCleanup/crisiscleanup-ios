@@ -10,6 +10,7 @@ class MenuComponent: Component<AppDependency>, MenuViewBuilder {
         MenuViewModel(
             appEnv: dependency.appEnv,
             accountDataRepository: dependency.accountDataRepository,
+            incidentSelector: dependency.incidentSelector,
             appVersionProvider: dependency.appVersionProvider,
             authEventBus: dependency.authEventBus,
             loggerFactory: dependency.loggerFactory
@@ -20,7 +21,8 @@ class MenuComponent: Component<AppDependency>, MenuViewBuilder {
         AnyView(
             MenuView(
                 viewModel: menuViewModel,
-                authenticateViewBuilder: dependency.authenticateViewBuilder
+                authenticateViewBuilder: dependency.authenticateViewBuilder,
+                incidentSelectViewBuilder: dependency.incidentSelectViewBuilder
             )
         )
     }

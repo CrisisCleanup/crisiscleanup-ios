@@ -1,7 +1,7 @@
 import NeedleFoundation
 import SwiftUI
 
-public class MainComponent: BootstrapComponent, AuthenticateViewBuilder {
+public class MainComponent: BootstrapComponent, AuthenticateViewBuilder, IncidentSelectViewBuilder {
     public private(set) var appEnv: AppEnv
     public private(set) var appSettingsProvider: AppSettingsProvider
     public private(set) var loggerFactory: AppLoggerFactory
@@ -25,12 +25,14 @@ public class MainComponent: BootstrapComponent, AuthenticateViewBuilder {
         self.loggerFactory = loggerFactory
     }
 
+    var casesComponent: CasesComponent { CasesComponent(parent: self) }
     var menuComponent: MenuComponent { MenuComponent(parent: self) }
 
     public var mainView: some View {
         MainView(
             viewModel: mainViewModel,
             authenticateViewBuilder: self,
+            casesViewBuilder: casesComponent,
             menuViewBuilder: menuComponent
         )
     }
@@ -41,6 +43,17 @@ public class MainComponent: BootstrapComponent, AuthenticateViewBuilder {
         AnyView(
             AuthenticateView(
                 viewModel: authenticateComponent.authenticateViewModel
+            )
+        )
+    }
+
+    var incidentSelectComponent: IncidentSelectComponent { IncidentSelectComponent(parent: self) }
+
+    public func incidentSelectView(onDismiss: @escaping () -> Void ) -> AnyView {
+        AnyView(
+            IncidentSelectView(
+                viewModel: incidentSelectComponent.incidentSelectViewModel,
+                onDismiss: onDismiss
             )
         )
     }
