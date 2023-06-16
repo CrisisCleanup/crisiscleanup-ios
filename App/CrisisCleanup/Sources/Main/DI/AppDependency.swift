@@ -29,6 +29,8 @@ public protocol AppDependency: Dependency {
     var syncPuller: SyncPuller { get }
     var syncPusher: SyncPusher { get }
     var syncLoggerFactory: SyncLoggerFactory { get }
+
+    var incidentSelector: IncidentSelector { get }
 }
 
 extension MainComponent {
@@ -134,6 +136,15 @@ extension MainComponent {
     public var syncPusher: SyncPusher { providesAppSyncer }
 
     public var syncLoggerFactory: SyncLoggerFactory { shared { DebugSyncLoggerFactory(loggerFactory) } }
+
+    public var incidentSelector: IncidentSelector {
+        shared {
+            IncidentSelectRepository(
+                preferencesStore: appPreferences,
+                incidentsRepository: incidentsRepository
+            )
+        }
+    }
 }
 
 // TODO: Replace when actual logger is ready

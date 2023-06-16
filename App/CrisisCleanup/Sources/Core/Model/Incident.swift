@@ -1,5 +1,5 @@
 // sourcery: copyBuilder, skipCopyInit
-public struct Incident {
+public struct Incident: Equatable {
     let id: Int64
     let name: String
     let shortName: String
@@ -44,6 +44,10 @@ public struct Incident {
         self.formFields = formFields
         self.turnOnRelease = turnOnRelease
         self.disasterLiteral = disasterLiteral
+    }
+
+    public static func ==(lhs: Incident, rhs: Incident) -> Bool {
+        return lhs.id == rhs.id
     }
 }
 
