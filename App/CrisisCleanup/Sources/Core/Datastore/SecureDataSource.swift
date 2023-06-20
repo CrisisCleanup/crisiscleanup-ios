@@ -46,7 +46,7 @@ class KeychainDataSource: SecureDataSource {
         _ emailAddress: String,
         _ accessToken: String
     ) throws {
-        if emailAddress.isBlank {
+        guard emailAddress.isNotBlank else {
             return
         }
 

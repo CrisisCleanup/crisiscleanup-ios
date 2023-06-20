@@ -1,5 +1,5 @@
-import CrisisCleanup
 import Foundation
+@testable import CrisisCleanup
 
 extension Bundle {
     func loadTestResource(_ resourceFileName: String) -> Data {

@@ -4,12 +4,10 @@ import Combine
 
 public protocol SyncPuller {
     func appPull(_ cancelOngoing: Bool)
-    func stopPull()
 
     func pullUnauthenticatedData()
 
     func appPullIncident(_ id: Int64)
-    func stopPullIncident()
 }
 
 extension SyncPuller {
@@ -23,9 +21,6 @@ public protocol SyncPusher {
 }
 
 class AppSyncer: SyncPuller, SyncPusher {
-    private let pullLock = NSLock()
-    private var pullOperation: Operation? = nil
-
     private let pullLanguageGuard = ManagedAtomic<Bool>(false)
 
     private var accountData: AccountData = emptyAccountData
@@ -37,6 +32,9 @@ class AppSyncer: SyncPuller, SyncPusher {
     private let statusRepository: WorkTypeStatusRepository
     private let syncLogger: SyncLogger
     private let authEventBus: AuthEventBus
+
+    private let pullLock = NSLock()
+    private var pullTask: Task<Void, Error>? = nil
 
     private var disposables = Set<AnyCancellable>()
 
@@ -69,17 +67,17 @@ class AppSyncer: SyncPuller, SyncPusher {
             .store(in: &disposables)
 
         let scheduler = BGTaskScheduler.shared
-        scheduler.register(forTaskWithIdentifier: BackgroundTaskType.pull.rawValue, using: nil) {task in
+        scheduler.register(forTaskWithIdentifier: BackgroundTaskType.pull.rawValue, using: nil) { task in
             self.pull(task as! BgPullTask)
         }
     }
 
-    private var isValidAccountToken: Bool { !accountData.isTokenInvalid && isOnline }
+    private var isValidAccountToken: Bool { !accountData.isTokenInvalid }
 
-    private var isSyncPossible: Bool { isValidAccountToken }
+    private var isSyncPossible: Bool { isValidAccountToken && isOnline }
 
     private func pull(_ task: BgPullTask) {
-        // TODO:
+        // TODO: Do
     }
 
     private func pullIncidents() async throws {
@@ -88,11 +86,19 @@ class AppSyncer: SyncPuller, SyncPusher {
 
     func appPull(_ cancelOngoing: Bool) {
         if !isOnline { return }
-        Task {
-            await withThrowingTaskGroup(of: Void.self) { group -> Void in
-                group.addTask { try await self.pullIncidents() }
+
+        pullLock.withLock {
+            if cancelOngoing {
+                pullTask?.cancel()
+            }
+
+            pullTask = Task {
                 do {
-                    try await group.waitForAll()
+                    // TODO: Wait for account token and skip if token is invalid
+                    try await withThrowingTaskGroup(of: Void.self) { group -> Void in
+                        group.addTask { try await self.incidentsRepository.pullIncidents() }
+                        try await group.waitForAll()
+                    }
                 } catch {
                     // TODO: Handle proper
                     print(error)
@@ -101,24 +107,16 @@ class AppSyncer: SyncPuller, SyncPusher {
         }
     }
 
-    func stopPull() {
-        pullLock.withLock {
-            pullOperation?.cancel()
-        }
-    }
-
     func appPullIncident(_ id: Int64) {
+        if !isOnline { return }
 
-    }
-
-    func stopPullIncident() {
-
-    }
-
-    private func pullIncidents() -> Task<Void, Error> {
         Task {
             do {
-                try await incidentsRepository.pullIncidents()
+                // TODO: Wait for account token and skip if token is invalid
+                try await withThrowingTaskGroup(of: Void.self) { group -> Void in
+                    group.addTask { try await self.incidentsRepository.pullIncident(id) }
+                    try await group.waitForAll()
+                }
             } catch {
                 // TODO: Handle proper
                 print(error)
@@ -128,6 +126,7 @@ class AppSyncer: SyncPuller, SyncPusher {
 
     private func pullSelectedIncidentWorksites() -> Task<Void, Error> {
         return Task {
+            // TODO: Do
             try Task.checkCancellation()
         }
     }

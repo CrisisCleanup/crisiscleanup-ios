@@ -24,6 +24,8 @@ public struct Incident: Equatable {
             .filter { $0.selectToggleWorkType.isNotBlank }
             .associate { ($0.fieldKey, $0.selectToggleWorkType) }
     }()
+
+    var isEmptyIncident: Bool { id <= 0 }
     // sourcery:end
 
     init(
@@ -46,8 +48,15 @@ public struct Incident: Equatable {
         self.disasterLiteral = disasterLiteral
     }
 
-    public static func ==(lhs: Incident, rhs: Incident) -> Bool {
-        return lhs.id == rhs.id
+    public static func == (lhs: Incident, rhs: Incident) -> Bool {
+        return lhs.id == rhs.id &&
+        lhs.name == rhs.name &&
+        lhs.shortName == rhs.shortName &&
+        lhs.locationIds == rhs.locationIds &&
+        lhs.activePhoneNumbers == rhs.activePhoneNumbers &&
+        lhs.formFields == rhs.formFields &&
+        lhs.turnOnRelease == rhs.turnOnRelease &&
+        lhs.disasterLiteral == rhs.disasterLiteral
     }
 }
 
@@ -67,7 +76,7 @@ public struct IncidentLocation {
     let location: Int64
 }
 
-public struct IncidentFormField {
+public struct IncidentFormField: Equatable {
     let label: String
     let htmlType: String
     let group: String
@@ -88,9 +97,11 @@ public struct IncidentFormField {
     let parentKey: String
     let selectToggleWorkType: String
 
+    // sourcery:begin: skipCopy
     let isDivEnd: Bool
     let isHidden: Bool
     let isFrequency: Bool
+    // sourcery:end
 
     init(
         label: String,

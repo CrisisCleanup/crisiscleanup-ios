@@ -2,7 +2,7 @@ import Foundation
 
 private let releaseDaysThreshold = 30.days
 
-// sourcery: copyBuilder
+// sourcery: copyBuilder, skipCopyInit
 public struct WorkType {
     let id: Int64
     let createdAt: Date?
@@ -49,19 +49,19 @@ public struct WorkType {
 }
 
 public enum WorkTypeStatus: String, Identifiable, CaseIterable {
-    case unknown
-    case openAssigned
-    case openUnassigned
-    case openPartiallyCompleted
-    case openNeedsFollowUp
-    case openUnresponsive
-    case closedCompleted
-    case closedIncomplete
-    case closedOutOfScope
-    case closedDoneByOthers
-    case closedNoHelpWanted
-    case closedDuplicate
-    case closedRejected
+    case unknown,
+         openAssigned,
+         openUnassigned,
+         openPartiallyCompleted,
+         openNeedsFollowUp,
+         openUnresponsive,
+         closedCompleted,
+         closedIncomplete,
+         closedOutOfScope,
+         closedDoneByOthers,
+         closedNoHelpWanted,
+         closedDuplicate,
+         closedRejected
 
     public var id: String { rawValue }
 
@@ -161,50 +161,50 @@ private func typeFromLiteral(_ type: String) -> WorkTypeType {
 }
 
 public enum WorkTypeType: String, Identifiable, CaseIterable {
-    case animalServices
-    case ash
-    case catchmentGutters
-    case chimneyCapping
-    case constructionConsultation
-    case coreReliefItems
-    case debris
-    case deferredMaintenance
-    case demolition
-    case domesticServices
-    case erosion
-    case escort
-    case favorite
-    case fence
-    case fire
-    case food
-    case important
-    case landslide
-    case leak
-    case meals
-    case moldRemediation
-    case muckOut
-    case other
-    case oxygen
-    case pipe
-    case ppe
-    case prescription
-    case rebuild
-    case rebuildTotal
-    case retardantCleanup
-    case sandbagging
-    case shelter
-    case shopping
-    case smokeDamage
-    case snowGround
-    case snowRoof
-    case structure
-    case tarp
-    case temporaryHousing
-    case trees
-    case treesHeavyEquipment
-    case unknown
-    case waterBottles
-    case wellnessCheck
+    case animalServices,
+         ash,
+         catchmentGutters,
+         chimneyCapping,
+         constructionConsultation,
+         coreReliefItems,
+         debris,
+         deferredMaintenance,
+         demolition,
+         domesticServices,
+         erosion,
+         escort,
+         favorite,
+         fence,
+         fire,
+         food,
+         important,
+         landslide,
+         leak,
+         meals,
+         moldRemediation,
+         muckOut,
+         other,
+         oxygen,
+         pipe,
+         ppe,
+         prescription,
+         rebuild,
+         rebuildTotal,
+         retardantCleanup,
+         sandbagging,
+         shelter,
+         shopping,
+         smokeDamage,
+         snowGround,
+         snowRoof,
+         structure,
+         tarp,
+         temporaryHousing,
+         trees,
+         treesHeavyEquipment,
+         unknown,
+         waterBottles,
+         wellnessCheck
 
     public var id: String { rawValue }
 }

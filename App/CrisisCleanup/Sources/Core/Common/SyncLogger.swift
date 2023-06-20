@@ -6,11 +6,11 @@ public protocol SyncLogger {
 
 extension SyncLogger {
     func log(_ message: String, _ details: String) -> SyncLogger {
-        return log(message, details, "")
+        log(message, details, "")
     }
 
     func log(_ message: String) -> SyncLogger {
-        return log(message, "")
+        log(message, "")
     }
 }
 

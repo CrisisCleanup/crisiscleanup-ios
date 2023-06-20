@@ -21,47 +21,57 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
     @Published private var incidentsStream: [Incident] = []
     lazy private(set) var incidents = $incidentsStream
 
-    private var incidentPublisher = Just<Incident?>(nil)
-
     private let dataSource: CrisisCleanupNetworkDataSource
     private let appPreferencesDataStore: AppPreferencesDataStore
+    private let incidentDao: IncidentDao
+    private let locationDao: LocationDao
     private let logger: AppLogger
 
     private var statusLookup = [String: PopulatedWorkTypeStatus]()
 
+    private var disposables = Set<AnyCancellable>()
+
     init(
         dataSource: CrisisCleanupNetworkDataSource,
         appPreferencesDataStore: AppPreferencesDataStore,
+        incidentDao: IncidentDao,
+        locationDao: LocationDao,
         loggerFactory: AppLoggerFactory
     ) {
         self.dataSource = dataSource
         self.appPreferencesDataStore = appPreferencesDataStore
+        self.incidentDao = incidentDao
+        self.locationDao = locationDao
         logger = loggerFactory.getLogger("incidents")
 
         fullIncidentQueryFields = incidentsQueryFields + ["form_fields"]
+
+        incidentDao.streamIncidents()
+            .receive(on: RunLoop.main)
+            .sink { completion in
+            } receiveValue: {
+                self.incidentsStream = $0
+            }
+            .store(in: &disposables)
     }
 
-    func getIncidents(_ startAt: Date) async -> [Incident] {
-        // TODO: Do
-        return []
+    func getIncident(_ id: Int64, _ loadFormFields: Bool) throws -> Incident? {
+        loadFormFields
+        ? try incidentDao.getFormFieldsIncident(id)
+        : try incidentDao.getIncident(id)
     }
 
-    func getIncident(_ id: Int64, _ loadFormFields: Bool) async -> Incident? {
-        // TODO: Do
-        return nil
+    func getIncidents(_ startAt: Date) throws -> [Incident] {
+        try incidentDao.getIncidents(startAt)
     }
 
-    func streamIncident(_ id: Int64) -> AnyPublisher<Incident?, Never> {
-        // TODO: Do
-        return incidentPublisher.eraseToAnyPublisher()
+    func streamIncident(_ id: Int64) -> AnyPublisher<Incident?, Error> {
+        incidentDao.streamFormFieldsIncident(id)
     }
 
     private func saveLocations(_ incidents: [NetworkIncident]) async throws {
-        let incidentLocationLookup = incidents.associate { ($0.id, $0.locations ) }
-        let locationIds = incidentLocationLookup.values.flatMap { $0.map { il in il.location } }
-
+        let locationIds = incidents.flatMap { $0.locations.map { il in il.location } }
         let locations = try await dataSource.getIncidentLocations(locationIds)
-        var locationLookup = [Int64: Location]()
         if locations.isNotEmpty {
             let sourceLocations = locations.map {
                 let multiCoordinates = $0.geom?.condensedCoordinates
@@ -73,16 +83,32 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
                     multiCoordinates: multiCoordinates
                 )
             }
-            locationLookup = sourceLocations.associateBy { $0.id }
+            try await locationDao.saveLocations(sourceLocations)
         }
+    }
 
-        // TODO: Do
-        print("location lookup", incidentLocationLookup)
-        print("locations", locationLookup)
+    private func saveIncidentsPrimaryData(_ incidents: [NetworkIncident]) async throws {
+        try await incidentDao.saveIncidents(
+            incidents.map { $0.asRecord },
+            incidents.flatMap { $0.asLocationRecords },
+            incidents.flatMap { $0.asIncidentToLocationRecords }
+        )
+    }
+
+    private func saveFormFields(_ incidents: [NetworkIncident]) async throws {
+        let incidentsFields = try incidents
+            .filter { $0.fields?.isNotEmpty == true }
+            .map {
+                let incidentId = $0.id
+                let fields = try $0.fields!.map { f in try f.asRecord(incidentId) }
+                return (incidentId, fields)
+            }
+        try await incidentDao.updateFormFields(incidentsFields)
     }
 
     private func saveIncidentsSecondaryData(_ incidents: [NetworkIncident]) async throws {
         try await saveLocations(incidents)
+        try await saveFormFields(incidents)
     }
 
     private func syncInternal(forcePullAll: Bool = false) async throws {
@@ -90,8 +116,11 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         do {
             defer { isLoadingStream = false }
 
-            // TODO: Query count from database when ready
-            let pullAll = forcePullAll || incidentsStream.count < 10
+            var pullAll = forcePullAll
+            if !pullAll {
+                let localIncidentsCount = incidentDao.getIncidentCount()
+                pullAll = localIncidentsCount < 10
+            }
 
             let queryFields: [String]
             let pullAfter: Date?
@@ -105,28 +134,32 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
             }
             let networkIncidents = try await dataSource.getIncidents(queryFields, pullAfter)
 
-            var sortedIncidents = networkIncidents
-                .sorted(by: { a, b in a.startAt >= b.startAt })
-                .map { $0.asExternalModel() }
+            if networkIncidents.isNotEmpty {
+                try await saveIncidentsPrimaryData(networkIncidents)
 
-            // TODO: Remove after plugged into env w/ sufficient incidents
-            let initialIncidentCount = sortedIncidents.count
-            var copyId = Int64(515123)
-            for i in initialIncidentCount ... 20 {
-                let copyIndex = i % initialIncidentCount
-                sortedIncidents += [sortedIncidents[copyIndex].copy {
-                    $0.id = copyId
-                }]
-                copyId += 1
+                try Task.checkCancellation()
+
+                let recentIncidents = networkIncidents.filter { $0.startAt > recentTime }
+                try await saveIncidentsSecondaryData(recentIncidents)
+
+                try Task.checkCancellation()
+
+                let incidentsWithFields = networkIncidents.map({ $0.fields }).filter({ $0 != nil})
+                if incidentsWithFields.isEmpty {
+                    let ordered = networkIncidents.sorted { a, b in
+                        a.startAt > b.startAt
+                    }
+                    let latestIncidents: [NetworkIncident] = Array(ordered[..<min(3, ordered.count)])
+                    for incident in latestIncidents {
+                        if let networkIncident = try await dataSource.getIncident(
+                            id: incident.id,
+                            fields: fullIncidentQueryFields
+                        ) {
+                            try await saveFormFields([networkIncident])
+                        }
+                    }
+                }
             }
-
-            incidentsStream = sortedIncidents
-
-            try Task.checkCancellation()
-
-            try await saveIncidentsSecondaryData(networkIncidents)
-
-            // TODO: Do
         }
     }
 
@@ -134,7 +167,6 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         var isSuccessful = false
         do {
             defer {
-                // TODO: Test isSuccessful changes correctly on successful
                 appPreferencesDataStore.setSyncAttempt(isSuccessful)
             }
 
@@ -143,11 +175,15 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         }
     }
 
-    func pullIncident(id: Int64) async {
-        // TODO: Do
+    func pullIncident(_ id: Int64) async throws {
+        if let networkIncident = try await dataSource.getIncident(id: id, fields: fullIncidentQueryFields) {
+            let incidents = [networkIncident]
+            try await saveIncidentsPrimaryData(incidents)
+            try await saveIncidentsSecondaryData(incidents)
+        }
     }
 
-    func pullIncidentOrganizations(_ incidentId: Int64, _ force: Bool) async {
+    func pullIncidentOrganizations(_ incidentId: Int64, _ force: Bool) async throws {
         // TODO: Do
     }
 }

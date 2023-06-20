@@ -35,7 +35,7 @@ extension IncidentsData {
 		}
 
 		fileprivate func toIncidentsData() -> IncidentsData {
-			return IncidentsData(
+			IncidentsData(
 				isLoading: isLoading,
 				selected: selected,
 				incidents: incidents

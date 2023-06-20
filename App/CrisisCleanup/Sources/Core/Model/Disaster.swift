@@ -1,22 +1,22 @@
 enum Disaster: String, Identifiable, CaseIterable {
-    case contaminatedWater
-    case earthquake
-    case fire
-    case flood
-    case floodRain
-    case floodThunderStorm
-    case hail
-    case hurricane
-    case mudSlide
-    case other
-    case snow
-    case tornado
-    case tornadoFlood
-    case tornadoWindFlood
-    case tropicalStorm
-    case virus
-    case volcano
-    case wind
+    case contaminatedWater,
+         earthquake,
+         fire,
+         flood,
+         floodRain,
+         floodThunderStorm,
+         hail,
+         hurricane,
+         mudSlide,
+         other,
+         snow,
+         tornado,
+         tornadoFlood,
+         tornadoWindFlood,
+         tropicalStorm,
+         virus,
+         volcano,
+         wind
 
     var id: String { rawValue }
 

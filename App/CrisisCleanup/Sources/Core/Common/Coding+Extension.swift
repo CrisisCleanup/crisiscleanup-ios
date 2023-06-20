@@ -20,3 +20,10 @@ class JsonDecoderFactory {
         return jsonDecoder
     }
 }
+
+extension JSONEncoder {
+    func encodeToString(_ payload: Encodable) throws -> String {
+        let data = try encode(payload)
+        return String(decoding: data, as: UTF8.self)
+    }
+}

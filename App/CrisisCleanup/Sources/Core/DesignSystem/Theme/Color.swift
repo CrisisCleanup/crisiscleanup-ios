@@ -14,9 +14,7 @@ extension Color {
         )
     }
 
-    func disabledAlpha() -> Color {
-        return opacity(_disabledAlpha)
-    }
+    func disabledAlpha() -> Color { opacity(_disabledAlpha) }
 }
 
 struct ThemeColor {

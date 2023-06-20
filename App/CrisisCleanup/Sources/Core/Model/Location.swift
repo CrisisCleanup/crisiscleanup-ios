@@ -1,4 +1,4 @@
-public struct Location {
+public struct Location: Equatable {
     let id: Int64
     let shapeLiteral: String
     // Should only be defined for Point and Polygon
@@ -10,10 +10,10 @@ public struct Location {
 }
 
 enum LocationShape: String, Identifiable, CaseIterable {
-    case unknown
-    case point
-    case polygon
-    case multiPolygon
+    case unknown,
+         point,
+         polygon,
+         multiPolygon
 
     var id: String { rawValue }
 

@@ -16,7 +16,7 @@ struct MainView: View {
             Text("Splash")
         case .ready:
             if viewModel.viewData.showMainContent {
-                NavigationView {
+                NavigationStack {
                     TabView(selection: $selectedTab) {
                         casesViewBuilder.casesView
                             .navTabItem(.cases, viewModel.translator)

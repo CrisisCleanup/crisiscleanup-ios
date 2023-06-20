@@ -9,13 +9,16 @@ class MainViewModel: ObservableObject {
 
     @Published var viewData: MainViewData = MainViewData()
 
+    @Published var isAuthenticated: Bool = false
+
     private var disposables = Set<AnyCancellable>()
 
-    @Published var isAuthenticated: Bool = false
+    private var incidentsData: IncidentsData = LoadingIncidentsData
 
     init(
         accountDataRepository: AccountDataRepository,
         translationsRepository: LanguageTranslationsRepository,
+        incidentSelector: IncidentSelector,
         syncPuller: SyncPuller,
         logger: AppLogger
     ) {
@@ -24,27 +27,40 @@ class MainViewModel: ObservableObject {
         self.syncPuller = syncPuller
         self.logger = logger
 
-        accountDataRepository.accountData
-            .sink {
-                let accountData = $0
-                self.viewData = MainViewData(
-                    state: .ready,
-                    accountData: accountData
-                )
+        incidentSelector.incidentsData
+            .sink { data in
+                self.incidentsData = data
+
+                if !data.isEmpty {
+                    self.sync(true)
+                    syncPuller.appPullIncident(data.selectedId)
+                    // TODO: Additional
+                }
             }
             .store(in: &disposables)
 
         accountDataRepository.accountData
-            .filter { !$0.isTokenInvalid }
-            .sink { data in
-                self.sync(false)
+            .sink { accountData in
+                self.viewData = MainViewData(
+                    state: .ready,
+                    accountData: accountData
+                )
+
+                if !accountData.isTokenInvalid {
+                    self.sync(false)
+
+                    let data = self.incidentsData
+                    if !data.isEmpty {
+                        syncPuller.appPullIncident(data.selectedId)
+                    }
+                }
             }
             .store(in: &disposables)
 
         syncPuller.pullUnauthenticatedData()
     }
 
-    private func sync(_ force: Bool) {
-        syncPuller.appPull(force)
+    private func sync(_ cancelOngoing: Bool) {
+        syncPuller.appPull(cancelOngoing)
     }
 }
