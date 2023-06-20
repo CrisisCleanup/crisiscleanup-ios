@@ -20,7 +20,7 @@ class AFNetworkingClient {
 
         var eventMonitors: [EventMonitor] = []
         if appEnv.isDebuggable {
-            eventMonitors.append(NetworkEventMonitor())
+            eventMonitors.append(LogEventMonitor())
         }
 
         session = Session(
@@ -57,7 +57,7 @@ class AFNetworkingClient {
     }
 }
 
-class NetworkEventMonitor : EventMonitor {
+private class LogEventMonitor : EventMonitor {
     let queue = DispatchQueue(label: "com.crisiscleanup.network")
 
     func requestDidFinish(_ request: Request) {

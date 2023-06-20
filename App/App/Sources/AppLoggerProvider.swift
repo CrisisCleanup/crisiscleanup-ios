@@ -17,6 +17,10 @@ class TagLogger: AppLogger {
     }
 
     func logError(_ e: Error) {
+        if e is CancellationError {
+            return
+        }
+
         Crashlytics.crashlytics().record(error: e)
 
         if appEnv.isDebuggable {

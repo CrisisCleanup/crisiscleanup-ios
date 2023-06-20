@@ -15,14 +15,14 @@ public protocol KeyAssetTranslator : KeyTranslator {
 
 private class EmptyTranslator: KeyAssetTranslator {
     func callAsFunction(_ phraseKey: String) -> String {
-        return translate(phraseKey) ?? phraseKey
+        translate(phraseKey) ?? phraseKey
     }
 
     @Published private var translationCountStream = 0
     lazy private(set) var translationCount = $translationCountStream
 
     func translate(_ phraseKey: String, _ fallbackAssetKey: String) -> String {
-        return fallbackAssetKey.localizedString
+        fallbackAssetKey.localizedString
     }
 
     func translate(_ phraseKey: String) -> String? {

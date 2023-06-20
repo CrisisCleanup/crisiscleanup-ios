@@ -34,8 +34,11 @@ class CrisisCleanupWorkTypeStatusRepository: WorkTypeStatusRepository {
     }
 
     func loadStatuses(_ force: Bool) async {
-        if statusLookup.count > 0 { return }
+        guard statusLookup.isEmpty else {
+            return
+        }
 
+        // TODO: Load to and save from database, filter, finish
         do {
             let statuses = try await dataSource.getStatuses()?.results ?? []
             statusLookup = statuses.map { $0.asPopulatedModel() }.associateBy { $0.status }
@@ -45,10 +48,10 @@ class CrisisCleanupWorkTypeStatusRepository: WorkTypeStatusRepository {
     }
 
     func translateStatus(_ status: String) -> String? {
-        return statusLookup[status]?.name
+        statusLookup[status]?.name
     }
 
     func translateStatus(_ status: WorkTypeStatus) -> String? {
-        return translateStatus(status.literal)
+        translateStatus(status.literal)
     }
 }

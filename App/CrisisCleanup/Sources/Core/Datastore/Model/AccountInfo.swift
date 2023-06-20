@@ -37,7 +37,7 @@ struct AccountInfo: Codable {
 }
 
 fileprivate func defaultProfilePictureUri(_ fullName: String) -> String {
-    return fullName.isBlank ? "" : "https://avatars.dicebear.com/api/bottts/\(fullName).svg"
+    fullName.isBlank ? "" : "https://avatars.dicebear.com/api/bottts/\(fullName).svg"
 }
 
 extension AccountInfo {

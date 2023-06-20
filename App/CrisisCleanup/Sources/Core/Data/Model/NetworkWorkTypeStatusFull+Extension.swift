@@ -1,6 +1,6 @@
 extension NetworkWorkTypeStatusFull {
     func asPopulatedModel() -> PopulatedWorkTypeStatus {
-        return PopulatedWorkTypeStatus(
+        PopulatedWorkTypeStatus(
             status: status,
             name: name,
             primaryState: primaryState

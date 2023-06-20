@@ -10,6 +10,7 @@ public class MainComponent: BootstrapComponent, AuthenticateViewBuilder, Inciden
         MainViewModel(
             accountDataRepository: accountDataRepository,
             translationsRepository: languageTranslationsRepository,
+            incidentSelector: incidentSelector,
             syncPuller: syncPuller,
             logger: loggerFactory.getLogger("main")
         )

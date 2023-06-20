@@ -46,7 +46,7 @@ extension NetworkRequestProvider {
 
     var incident: NetworkRequest {
         NetworkRequest(
-            apiUrl("incident"),
+            apiUrl("incidents"),
             addTokenHeader: true
         )
     }

@@ -37,7 +37,7 @@ class IncidentSelectRepository: IncidentSelector {
             .assign(to: &incidentId)
 
         Publishers.CombineLatest(
-            incidentsRepository.incidents,
+            incidentsRepository.incidents.removeDuplicates(),
             preferencesStore.preferences
         )
         .filter { incidents, _ in
@@ -50,7 +50,7 @@ class IncidentSelectRepository: IncidentSelector {
             }
 
             var targetIncident = incidents.first { $0.id == targetId } ?? EmptyIncident
-            if targetIncident == EmptyIncident && incidents.isNotEmpty {
+            if targetIncident.isEmptyIncident && incidents.isNotEmpty {
                 targetIncident = incidents[0]
             }
 
@@ -65,7 +65,7 @@ class IncidentSelectRepository: IncidentSelector {
 
     func setIncident(incident: Incident) {
         incidentLock.withLock {
-            preferencesStore.setSelectedIncident(id: incident.id)
+            preferencesStore.setSelectedIncident(incident.id)
             incidentsDataStream = incidentsDataStream.copy {
                 $0.selected = incident
             }

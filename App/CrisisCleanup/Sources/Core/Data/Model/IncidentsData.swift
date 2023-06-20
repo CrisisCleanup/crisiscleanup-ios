@@ -5,8 +5,8 @@ public struct IncidentsData {
     let incidents: [Incident]
 
     // sourcery:begin: skipCopy
-    lazy var isEmpty: Bool = { incidents.isEmpty }()
-    lazy var selectedId: Int64 = { selected.id }()
+    var isEmpty: Bool { incidents.isEmpty }
+    var selectedId: Int64 { selected.id }
     // sourcery:end
 }
 

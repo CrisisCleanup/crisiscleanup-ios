@@ -9,8 +9,8 @@ public protocol AppPreferencesDataStore {
         _ attemptedSeconds: Double
     )
     func clearSyncData()
-    func setSelectedIncident(id: Int64)
-    func setLanguageKey(key: String)
+    func setSelectedIncident(_ id: Int64)
+    func setLanguageKey(_ key: String)
 }
 
 extension AppPreferencesDataStore {
@@ -54,7 +54,7 @@ class AppPreferencesUserDefaults: AppPreferencesDataStore {
         })
     }
 
-    func setSelectedIncident(id: Int64) {
+    func setSelectedIncident(_ id: Int64) {
         update(
             UserDefaults.standard.appPreferences.copy {
                 $0.selectedIncidentId = id
@@ -62,7 +62,7 @@ class AppPreferencesUserDefaults: AppPreferencesDataStore {
         )
     }
 
-    func setLanguageKey(key: String) {
+    func setLanguageKey(_ key: String) {
         update(
             UserDefaults.standard.appPreferences.copy {
                 $0.languageKey = key

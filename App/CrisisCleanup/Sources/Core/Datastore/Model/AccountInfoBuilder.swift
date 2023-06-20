@@ -61,7 +61,7 @@ extension AccountInfo {
 		}
 
 		fileprivate func toAccountInfo() -> AccountInfo {
-			return AccountInfo(
+			AccountInfo(
 				id: id,
 				email: email,
 				firstName: firstName,

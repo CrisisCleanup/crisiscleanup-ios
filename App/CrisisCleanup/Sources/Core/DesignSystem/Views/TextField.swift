@@ -3,7 +3,7 @@ import SwiftUI
 extension View {
     func textFieldBorder() -> some View {
         // TODO: Change text and border color based on state (disabled, selected, ...). Create style instead?
-        return self
+        self
             .padding(appTheme.textFieldInnerPadding)
             .cornerRadius(appTheme.cornerRadius)
             .overlay(
