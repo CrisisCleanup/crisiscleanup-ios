@@ -4,7 +4,7 @@ import Combine
 class IncidentSelectViewModel: ObservableObject {
     @Published private(set) var incidentsData = LoadingIncidentsData
 
-    private let incidentSelector: IncidentSelector
+    let incidentSelector: IncidentSelector
 
     private var disposables = Set<AnyCancellable>()
 

@@ -10,22 +10,19 @@ struct IncidentSelectView: View {
 
     var body: some View{
         VStack {
-            HStack {
-                let count = viewModel.incidentsData.incidents.count
-                Text("Present incident select \(count)")
-            }
-            .padding()
+            Text("˜˜Change incident").frame(alignment: .bottom).padding()
+                List(viewModel.incidentsData.incidents, id: \.id) { ee in
+                    let isSelected: Bool = viewModel.incidentsData.selected.id == ee.id
+                    HStack {
+                        Text(ee.name).bold(isSelected).onTapGesture {
+                            viewModel.incidentSelector.setIncident(incident: ee)
+                            onDismiss()
+                        }
+                    }
+                }
             Button(t("actions.close")) {
                 onDismiss()
             }
         }
-        .padding()
-        .overlay {
-            GeometryReader { geometry in
-                Color.clear.preference(key: FloatPreferenceKey.self, value: geometry.size.height)
-            }
-        }
-        .onPreferenceChange(FloatPreferenceKey.self) { incidentSheetSize.height = $0 }
-        .presentationDetents([.height(incidentSheetSize.height)])
     }
 }

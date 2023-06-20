@@ -28,7 +28,7 @@ struct MenuView: View {
                 }
                 .sheet(isPresented: $showIncidentSelect) {
                     incidentSelectViewBuilder.incidentSelectView( onDismiss: {showIncidentSelect = false} )
-                }
+                }.disabled(viewModel.incidentsData.incidents.isEmpty)
 
                 Spacer()
                 NavigationLink {
