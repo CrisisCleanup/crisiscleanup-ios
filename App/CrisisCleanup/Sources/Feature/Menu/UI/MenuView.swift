@@ -7,6 +7,7 @@ struct MenuView: View {
     @ObservedObject var viewModel: MenuViewModel
     let authenticateViewBuilder: AuthenticateViewBuilder
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
+    let incidentsTypeIconsAssetsFolder = "incident_type_icons/"
 
     @State var showIncidentSelect = false
 
@@ -16,6 +17,9 @@ struct MenuView: View {
                 Button {
                     showIncidentSelect.toggle()
                 } label: {
+                    HStack{
+                        Image(incidentsTypeIconsAssetsFolder+viewModel.incidentsData.selected.disasterLiteral, bundle: .module).foregroundColor(Color.blue)
+                    }
                     let selectedIncident = viewModel.incidentsData.selected.shortName
                     let title = selectedIncident.isEmpty
                     ? t.translate(
