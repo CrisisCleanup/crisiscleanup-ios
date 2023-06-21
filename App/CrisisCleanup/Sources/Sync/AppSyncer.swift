@@ -24,7 +24,6 @@ class AppSyncer: SyncPuller, SyncPusher {
     private let pullLanguageGuard = ManagedAtomic<Bool>(false)
 
     private var accountData: AccountData = emptyAccountData
-    private var isOnline: Bool = false
     private var appPreferences: AppPreferences = AppPreferences()
 
     private let incidentsRepository: IncidentsRepository
@@ -46,6 +45,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         appPreferencesDataStore: AppPreferencesDataStore,
         syncLoggerFactory: SyncLoggerFactory,
         authEventBus: AuthEventBus,
+        // TODO: isOnline signal is not reliable. Find a better way or do without.
         networkMonitor: NetworkMonitor
     ) {
         self.incidentsRepository = incidentsRepository
@@ -53,10 +53,6 @@ class AppSyncer: SyncPuller, SyncPusher {
         self.statusRepository = statusRepository
         syncLogger = syncLoggerFactory.getLogger("")
         self.authEventBus = authEventBus
-
-        networkMonitor.isOnline
-            .assign(to: \.isOnline, on: self)
-            .store(in: &disposables)
 
         accountDataRepository.accountData
             .assign(to: \.accountData, on: self)
@@ -74,7 +70,7 @@ class AppSyncer: SyncPuller, SyncPusher {
 
     private var isValidAccountToken: Bool { !accountData.isTokenInvalid }
 
-    private var isSyncPossible: Bool { isValidAccountToken && isOnline }
+    private var isSyncPossible: Bool { isValidAccountToken }
 
     private func pull(_ task: BgPullTask) {
         // TODO: Do
@@ -85,8 +81,6 @@ class AppSyncer: SyncPuller, SyncPusher {
     }
 
     func appPull(_ cancelOngoing: Bool) {
-        if !isOnline { return }
-
         pullLock.withLock {
             if cancelOngoing {
                 pullTask?.cancel()
@@ -108,8 +102,6 @@ class AppSyncer: SyncPuller, SyncPusher {
     }
 
     func appPullIncident(_ id: Int64) {
-        if !isOnline { return }
-
         Task {
             do {
                 // TODO: Wait for account token and skip if token is invalid
@@ -132,7 +124,6 @@ class AppSyncer: SyncPuller, SyncPusher {
     }
 
     func pullUnauthenticatedData() {
-        if !isOnline { return }
         Task {
             await withThrowingTaskGroup(of: Void.self) { group -> Void in
                 group.addTask { await self.pullLanguage() }
