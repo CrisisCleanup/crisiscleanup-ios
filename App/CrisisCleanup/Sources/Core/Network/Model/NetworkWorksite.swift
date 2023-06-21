@@ -503,12 +503,11 @@ struct DateWorksitesPage: Codable, Equatable {
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         if let s = try? container.decode(String.self) {
-            if let customDate = DateWorksitesPage.customDate.formatter.date(from: s) {
-                wrappedValue = customDate
-                return
-            }
-            else if let isoDate = iso8601DateFormatter.date(from: s) {
+            if let isoDate = iso8601DateFormatter.date(from: s) {
                 wrappedValue = isoDate
+                return
+            } else if let customDate = DateWorksitesPage.customDate.formatter.date(from: s) {
+                wrappedValue = customDate
                 return
             }
         }

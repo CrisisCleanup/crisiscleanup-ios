@@ -18,7 +18,7 @@ final class NetworkWorksitesPageTests: XCTestCase {
 
         XCTAssertNil(result.errors)
         XCTAssertEqual(146, result.count)
-        XCTAssertEqual(14, result.results?.count)
+        XCTAssertEqual(10, result.results?.count)
     }
 
     func testGetWorksitesResultFail() throws {
