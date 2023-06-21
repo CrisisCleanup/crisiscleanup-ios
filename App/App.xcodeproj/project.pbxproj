@@ -217,8 +217,8 @@
 				4E0CCF0F2A19A77F00EC6906 /* Overwrite GoogleService-Info */,
 				4EBFB44D2A1910D800DA7C84 /* Generate Needle Dependency Graph */,
 				4E46478229EEE23B0062147F /* Sources */,
-				4E46478329EEE23B0062147F /* Frameworks */,
 				4E46478429EEE23B0062147F /* Resources */,
+				4E46478329EEE23B0062147F /* Frameworks */,
 				4E0CCF062A1988F300EC6906 /* Process and Upload dSYMs */,
 			);
 			buildRules = (
@@ -354,21 +354,23 @@
 		4E0CCEF32A196BBD00EC6906 /* Overwrite App Config */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
-			buildActionMask = 8;
+			buildActionMask = 12;
 			files = (
 			);
 			inputFileListPaths = (
 			);
 			inputPaths = (
+				"$(SRCROOT)/App/Config/${CONFIGURATION}Config.xcconfig",
 			);
 			name = "Overwrite App Config";
 			outputFileListPaths = (
 			);
 			outputPaths = (
+				"$(SRCROOT)/App/Config/AppConfig.xcconfig",
 			);
-			runOnlyForDeploymentPostprocessing = 1;
+			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "configFileName=\"${CONFIGURATION}Config.xcconfig\"\n\nconfigDir=\"./App/Config\"\nconfigFile=\"${configDir}/${configFileName}\"\nreplaceFile=\"${configDir}/AppConfig.xcconfig\"\nif [ -f \"${configFile}\" ]; then\n    cp \"${configFile}\" \"${replaceFile}\"\nelse\n    echo \"Configuration file not found for ${CONFIGURATION}\"\n    exit 1\nfi\n";
+			shellScript = "if [ -f \"${SCRIPT_INPUT_FILE_0}\" ]; then\n    cp \"${SCRIPT_INPUT_FILE_0}\" \"${SCRIPT_OUTPUT_FILE_0}\"\n    configFileName=$(basename \"${SCRIPT_INPUT_FILE_0}\")\n    echo \"Copied ${configFileName}\"\nelse\n    echo \"Configuration file not found for ${CONFIGURATION}\"\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 		4E0CCF062A1988F300EC6906 /* Process and Upload dSYMs */ = {
@@ -396,7 +398,7 @@
 		4E0CCF0F2A19A77F00EC6906 /* Overwrite GoogleService-Info */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
-			buildActionMask = 8;
+			buildActionMask = 12;
 			files = (
 			);
 			inputFileListPaths = (
@@ -408,9 +410,9 @@
 			);
 			outputPaths = (
 			);
-			runOnlyForDeploymentPostprocessing = 1;
+			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "googleServiceInfo=\"GoogleService-Info\"\nconfigFileName=\"${googleServiceInfo}-${CONFIGURATION}.plist\"\n\nconfigDir=\"./App/Config\"\nconfigFile=\"${configDir}/${configFileName}\"\nreplaceFile=\"${configDir}/${googleServiceInfo}.plist\"\nif [ -f \"${configFile}\" ]; then\n    cp \"${configFile}\" \"${replaceFile}\"\nelse\n    echo \"GoogleService-Info not found for ${CONFIGURATION}\"\n    exit 1\nfi\n";
+			shellScript = "googleServiceInfo=\"GoogleService-Info\"\nconfigFileName=\"${googleServiceInfo}-${CONFIGURATION}.plist\"\n\nconfigDir=\"./App/Config\"\nconfigFile=\"${configDir}/${configFileName}\"\nreplaceFile=\"${configDir}/${googleServiceInfo}.plist\"\nif [ -f \"${configFile}\" ]; then\n    cp \"${configFile}\" \"${replaceFile}\"\n    echo \"Copied ${configFileName}\"\nelse\n    echo \"GoogleService-Info not found for ${CONFIGURATION}\"\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 		4EBFB44D2A1910D800DA7C84 /* Generate Needle Dependency Graph */ = {
@@ -616,7 +618,7 @@
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = AYLY2UUH8J;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -640,7 +642,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 0.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.crisiscleanup-dev";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -663,7 +665,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = AYLY2UUH8J;
@@ -688,7 +690,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 0.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -854,7 +856,7 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = AYLY2UUH8J;
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = AYLY2UUH8J;
@@ -880,7 +882,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 0.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.crisiscleanup-nonp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

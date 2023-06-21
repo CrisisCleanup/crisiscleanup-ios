@@ -10,6 +10,7 @@ class MenuViewModel: ObservableObject {
     private let logger: AppLogger
 
     let isDebuggable: Bool
+    let isProduction: Bool
 
     @Published var profilePicture: AccountProfilePicture? = nil
 
@@ -17,7 +18,7 @@ class MenuViewModel: ObservableObject {
 
     var versionText: String {
         let version = appVersionProvider.version
-        return "\(version.1) (\(version.0))"
+        return isProduction ? version.1 : "\(version.1) (\(version.0))"
     }
 
     private var disposables = Set<AnyCancellable>()
@@ -38,6 +39,7 @@ class MenuViewModel: ObservableObject {
         logger = loggerFactory.getLogger("menu")
 
         isDebuggable = appEnv.isDebuggable
+        isProduction = appEnv.isProduction
 
         accountDataRepository.accountData
             .map{
