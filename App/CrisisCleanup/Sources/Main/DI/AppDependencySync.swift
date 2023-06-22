@@ -19,15 +19,6 @@ extension MainComponent {
     public var syncPusher: SyncPusher { providesAppSyncer }
 
     public var syncLoggerFactory: SyncLoggerFactory { shared { DebugSyncLoggerFactory(loggerFactory) } }
-
-    public var incidentSelector: IncidentSelector {
-        shared {
-            IncidentSelectRepository(
-                preferencesStore: appPreferences,
-                incidentsRepository: incidentsRepository
-            )
-        }
-    }
 }
 
 // TODO: Replace when actual logger is ready

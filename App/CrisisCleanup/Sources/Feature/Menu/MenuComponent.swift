@@ -6,7 +6,7 @@ protocol MenuViewBuilder {
 }
 
 class MenuComponent: Component<AppDependency>, MenuViewBuilder {
-    var menuViewModel: MenuViewModel {
+    lazy var menuViewModel: MenuViewModel = {
         MenuViewModel(
             appEnv: dependency.appEnv,
             accountDataRepository: dependency.accountDataRepository,
@@ -15,7 +15,7 @@ class MenuComponent: Component<AppDependency>, MenuViewBuilder {
             authEventBus: dependency.authEventBus,
             loggerFactory: dependency.loggerFactory
         )
-    }
+    }()
 
     var menuView: AnyView {
         AnyView(

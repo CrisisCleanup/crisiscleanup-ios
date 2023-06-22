@@ -20,6 +20,12 @@ class CasesViewModel: ObservableObject {
         let version = appVersionProvider.version
         return isProduction ? version.1 : "\(version.1) (\(version.0))"
     }
+    private let mapBoundsManager: CasesMapBoundsManager
+
+    @Published private(set) var incidentLocationBounds = MapViewCameraBoundsDefault
+    private lazy var incidentLocationBoundsPublisher = $incidentLocationBounds
+
+    @Published private(set) var isMapBusy: Bool = false
 
     private var disposables = Set<AnyCancellable>()
 
@@ -29,6 +35,7 @@ class CasesViewModel: ObservableObject {
         incidentSelector: IncidentSelector,
         appVersionProvider: AppVersionProvider,
         authEventBus: AuthEventBus,
+        incidentBoundsProvider: IncidentBoundsProvider,
         loggerFactory: AppLoggerFactory
     ) {
         self.appEnv = appEnv
@@ -36,12 +43,28 @@ class CasesViewModel: ObservableObject {
         self.incidentSelector = incidentSelector
         self.appVersionProvider = appVersionProvider
         self.authEventBus = authEventBus
+
+        mapBoundsManager = CasesMapBoundsManager(
+            incidentSelector,
+            incidentBoundsProvider
+        )
+
         logger = loggerFactory.getLogger("cases")
 
         isDebuggable = appEnv.isDebuggable
         isProduction = appEnv.isProduction
 
         incidentSelector.incidentsData.sink { self.incidentsData = $0 }
+            .store(in: &disposables)
+
+        mapBoundsManager.mapCameraBoundsPublisher
+            .eraseToAnyPublisher()
+            .assign(to: &incidentLocationBoundsPublisher)
+
+        mapBoundsManager.isDeterminingBoundsPublisher
+            .sink { b0 in
+                self.isMapBusy = b0
+            }
             .store(in: &disposables)
     }
 

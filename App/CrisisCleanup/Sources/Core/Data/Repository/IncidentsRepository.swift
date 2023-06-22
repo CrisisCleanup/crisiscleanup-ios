@@ -2,14 +2,14 @@ import Combine
 import Foundation
 
 public protocol IncidentsRepository {
-    var isLoading: Published<Bool>.Publisher { get }
+    var isLoading: any Publisher<Bool, Never> { get }
 
-    var incidents: Published<[Incident]>.Publisher { get }
+    var incidents: any Publisher<[Incident], Never> { get }
 
     func getIncident(_ id: Int64, _ loadFormFields: Bool) throws -> Incident?
     func getIncidents(_ startAt: Date) throws -> [Incident]
 
-    func streamIncident(_ id: Int64) -> AnyPublisher<Incident?, Error>
+    func streamIncident(_ id: Int64) -> any Publisher<Incident?, Never>
 
     func pullIncidents() async throws
 

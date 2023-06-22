@@ -49,6 +49,7 @@ public class IncidentDao {
     func streamIncidents() -> AnyPublisher<[Incident], Error> {
         ValueObservation
             .tracking(fetchIncidents(_:))
+            .removeDuplicates()
             .map { $0.map { p in p.asExternalModel() } }
             .publisher(in: reader)
             .share()
@@ -66,6 +67,7 @@ public class IncidentDao {
     func streamFormFieldsIncident(_ id: Int64) -> AnyPublisher<Incident?, Error> {
         ValueObservation
             .tracking({ db in try self.fetchFormFieldsIncident(db, id) })
+            .removeDuplicates()
             .map { p in p?.asExternalModel() }
             .publisher(in: reader)
             .share()
@@ -139,7 +141,7 @@ extension AppDatabase {
 
 // MARK: - Requests
 
-private struct PopulatedIncident: Decodable, FetchableRecord {
+private struct PopulatedIncident: Equatable, Decodable, FetchableRecord {
     let incident: IncidentRecord
     let incidentLocations: [IncidentLocationRecord]
 
@@ -148,7 +150,7 @@ private struct PopulatedIncident: Decodable, FetchableRecord {
     }
 }
 
-private struct PopulatedFormFieldsIncident: Decodable, FetchableRecord {
+private struct PopulatedFormFieldsIncident: Equatable, Decodable, FetchableRecord {
     let incident: IncidentRecord
     let incidentLocations: [IncidentLocationRecord]
     let incidentFormFields: [IncidentFormFieldRecord]

@@ -48,6 +48,7 @@ class AuthenticateViewModel: ObservableObject {
         isDebuggable = appEnv.isDebuggable
 
         accountDataRepository.accountData
+            .eraseToAnyPublisher()
             .receive(on: RunLoop.main)
             .sink { data in
                 self.viewData = AuthenticateViewData(

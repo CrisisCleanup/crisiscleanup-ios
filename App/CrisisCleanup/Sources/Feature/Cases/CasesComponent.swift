@@ -6,16 +6,17 @@ protocol CasesViewBuilder {
 }
 
 class CasesComponent: Component<AppDependency>, CasesViewBuilder {
-    var casesViewModel: CasesViewModel {
+    lazy var casesViewModel: CasesViewModel = {
         CasesViewModel(
             appEnv: dependency.appEnv,
             accountDataRepository: dependency.accountDataRepository,
             incidentSelector: dependency.incidentSelector,
             appVersionProvider: dependency.appVersionProvider,
             authEventBus: dependency.authEventBus,
+            incidentBoundsProvider: dependency.incidentBoundsProvider,
             loggerFactory: dependency.loggerFactory
         )
-    }
+    }()
 
     var casesView: AnyView {
         AnyView(

@@ -1,25 +1,30 @@
 import Combine
 
 public protocol AuthEventBus {
-    var logouts: Published<Bool>.Publisher { get }
-    var expiredTokens: Published<Bool>.Publisher { get }
+    var logouts: any Publisher<Bool, Never> { get }
+    var expiredTokens: any Publisher<Bool, Never> { get }
 
     func onLogout()
     func onExpiredToken()
 }
 
 class CrisisCleanupAuthEventBus: AuthEventBus {
-    @Published private var logoutStream = false
-    lazy private(set) var logouts = $logoutStream
+    private let logoutSubject = PassthroughSubject<Bool, Never>()
+    let logouts: any Publisher<Bool, Never>
 
-    @Published private var expiredTokenStream = false
-    lazy private(set) var expiredTokens = $expiredTokenStream
+    private let expiredTokenSubject = PassthroughSubject<Bool, Never>()
+    let expiredTokens: any Publisher<Bool, Never>
+
+    init() {
+        logouts = logoutSubject.share()
+        expiredTokens = expiredTokenSubject.share()
+    }
 
     func onLogout() {
-        logoutStream = true
+        logoutSubject.send(true)
     }
 
     func onExpiredToken() {
-        expiredTokenStream = true
+        expiredTokenSubject.send(true)
     }
 }

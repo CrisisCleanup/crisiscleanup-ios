@@ -1,7 +1,7 @@
 import Combine
 
 public protocol WorkTypeStatusRepository {
-    var workTypeStatusOptions: Published<[WorkTypeStatus]>.Publisher { get }
+    var workTypeStatusOptions: any Publisher<[WorkTypeStatus], Never> { get }
 
     func loadStatuses(_ force: Bool) async
 
@@ -17,8 +17,8 @@ extension WorkTypeStatusRepository {
 }
 
 class CrisisCleanupWorkTypeStatusRepository: WorkTypeStatusRepository {
-    @Published private var workTypeStatusOptionsStream: [WorkTypeStatus] = []
-    lazy private(set) var workTypeStatusOptions = $workTypeStatusOptionsStream
+    private let workTypeStatusOptionsSubject = CurrentValueSubject<[WorkTypeStatus], Never>([])
+    let workTypeStatusOptions: any Publisher<[WorkTypeStatus], Never>
 
     private let dataSource: CrisisCleanupNetworkDataSource
     private let logger: AppLogger
@@ -31,6 +31,8 @@ class CrisisCleanupWorkTypeStatusRepository: WorkTypeStatusRepository {
     ) {
         self.dataSource = dataSource
         logger = loggerFactory.getLogger("work-type-status")
+
+        workTypeStatusOptions = workTypeStatusOptionsSubject
     }
 
     func loadStatuses(_ force: Bool) async {
