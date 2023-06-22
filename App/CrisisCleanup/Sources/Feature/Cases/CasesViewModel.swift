@@ -5,8 +5,6 @@ class CasesViewModel: ObservableObject {
     private let incidentSelector: IncidentSelector
     private let logger: AppLogger
 
-    @Published var profilePicture: AccountProfilePicture? = nil
-
     @Published private(set) var incidentsData = LoadingIncidentsData
 
     private let mapBoundsManager: CasesMapBoundsManager
@@ -45,9 +43,4 @@ class CasesViewModel: ObservableObject {
             }
             .store(in: &disposables)
     }
-}
-
-struct AccountProfilePicture {
-    let url: URL
-    let isSvg: Bool
 }
