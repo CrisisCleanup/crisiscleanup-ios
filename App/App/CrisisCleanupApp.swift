@@ -28,7 +28,8 @@ struct CrisisCleanupApp: App {
                 appEnv: appEnv,
                 appSettingsProvider: AppSettings(config),
                 loggerFactory: AppLoggerProvider(appEnv)
-            ).mainView
+            )
+            .mainView
         }
     }
 }

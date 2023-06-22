@@ -1,11 +1,11 @@
 import Combine
 
 public protocol AccountDataRepository {
-    var accountData: Published<AccountData>.Publisher { get }
+    var accountData: any Publisher<AccountData, Never> { get }
 
     var accessTokenCached: String { get }
 
-    var isAuthenticated: Published<Bool>.Publisher { get }
+    var isAuthenticated: any Publisher<Bool, Never> { get }
 
     func setAccount(
         id: Int64,
@@ -20,13 +20,12 @@ public protocol AccountDataRepository {
 }
 
 class CrisisCleanupAccountDataRepository: AccountDataRepository {
-    @Published private var accountDataStream = emptyAccountData
-    lazy private(set) var accountData = $accountDataStream
+    private let accountDataSubject = CurrentValueSubject<AccountData, Never>(emptyAccountData)
+    let accountData: any Publisher<AccountData, Never>
 
     private(set) var accessTokenCached: String = ""
 
-    @Published private var isAuthenticatedStream = false
-    lazy private(set) var isAuthenticated = $isAuthenticatedStream
+    let isAuthenticated: any Publisher<Bool, Never>
 
     private let accountDataSource: AccountInfoDataSource
     private let secureDataSource: SecureDataSource
@@ -44,32 +43,47 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
         self.secureDataSource = secureDataSource
         logger = loggerFactory.getLogger("account")
 
-        accountDataSource.accountData.map { sourceData in
-            let email = sourceData.emailAddress
-            if email.isNotBlank {
-                let accessToken = secureDataSource.getAccessToken(email)
-                return sourceData.copy {
-                    $0.accessToken = accessToken
-                }
-            }
-            return sourceData
-        }
-        .assign(to: &accountData)
-        accountData
+        accountData = accountDataSubject
+
+        let accountDataShare = accountData
+            .eraseToAnyPublisher()
+
+        isAuthenticated = accountDataShare
+            .map { $0.accessToken.isNotBlank }
+
+        accountDataShare
             .sink { data in
                 self.accessTokenCached = data.accessToken
             }
             .store(in: &disposables)
-        accountData.map { $0.accessToken.isNotBlank }
-            .assign(to: &isAuthenticated)
+
+        accountDataSource.accountData
+            .eraseToAnyPublisher()
+            .map { sourceData in
+                let email = sourceData.emailAddress
+                if email.isNotBlank {
+                    let accessToken = secureDataSource.getAccessToken(email)
+                    return sourceData.copy {
+                        $0.accessToken = accessToken
+                    }
+                }
+                return sourceData
+            }
+            .sink(receiveCompletion: { completion in
+            }, receiveValue: { sourceData in
+                self.accountDataSubject.value = sourceData
+            })
+            .store(in: &disposables)
 
         authEventBus.logouts
+            .eraseToAnyPublisher()
             .filter({ b in b })
             .sink { [weak self] _ in
                 await self?.onLogout()
             }
             .store(in: &disposables)
         authEventBus.expiredTokens
+            .eraseToAnyPublisher()
             .filter({ b in b })
             .sink { [weak self] _ in
                 await self?.onExpiredToken()

@@ -1,6 +1,6 @@
 import Combine
 
 public protocol NetworkMonitor {
-    var isOnline: Published<Bool>.Publisher { get }
-    var isNotOnline: Published<Bool>.Publisher { get }
+    var isOnline: any Publisher<Bool, Never> { get }
+    var isNotOnline: any Publisher<Bool, Never> { get }
 }

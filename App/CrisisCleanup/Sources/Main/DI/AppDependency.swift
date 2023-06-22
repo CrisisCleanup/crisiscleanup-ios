@@ -18,6 +18,7 @@ public protocol AppDependency: Dependency {
     var incidentsRepository: IncidentsRepository { get }
     var languageTranslationsRepository: LanguageTranslationsRepository { get }
     var workTypeStatusRepository: WorkTypeStatusRepository { get }
+    var locationsRepository: LocationsRepository { get }
 
     var translator: KeyAssetTranslator { get }
 
@@ -32,6 +33,8 @@ public protocol AppDependency: Dependency {
     var syncPusher: SyncPusher { get }
 
     var incidentSelector: IncidentSelector { get }
+
+    var incidentBoundsProvider: IncidentBoundsProvider { get }
 }
 
 extension MainComponent {
@@ -87,5 +90,14 @@ extension MainComponent {
 
     public var authEventBus: AuthEventBus {
         return shared { CrisisCleanupAuthEventBus() }
+    }
+
+    public var incidentSelector: IncidentSelector {
+        shared {
+            IncidentSelectRepository(
+                preferencesStore: appPreferences,
+                incidentsRepository: incidentsRepository
+            )
+        }
     }
 }

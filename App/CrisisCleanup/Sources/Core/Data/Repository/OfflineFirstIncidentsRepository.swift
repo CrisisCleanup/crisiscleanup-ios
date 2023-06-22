@@ -2,8 +2,8 @@ import Combine
 import Foundation
 
 class OfflineFirstIncidentsRepository: IncidentsRepository {
-    @Published private var isLoadingStream = false
-    lazy private(set) var isLoading = $isLoadingStream
+    private let isLoadingSubject = CurrentValueSubject<Bool, Never>(false)
+    let isLoading: any Publisher<Bool, Never>
 
     private let incidentsQueryFields = [
         "id",
@@ -18,8 +18,8 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
     ]
     private let fullIncidentQueryFields: [String]
 
-    @Published private var incidentsStream: [Incident] = []
-    lazy private(set) var incidents = $incidentsStream
+    private let incidentsSubject = CurrentValueSubject<[Incident], Never>([])
+    let incidents: any Publisher<[Incident], Never>
 
     private let dataSource: CrisisCleanupNetworkDataSource
     private let appPreferencesDataStore: AppPreferencesDataStore
@@ -46,11 +46,14 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
 
         fullIncidentQueryFields = incidentsQueryFields + ["form_fields"]
 
+        isLoading = isLoadingSubject.share()
+        incidents = incidentsSubject.share()
+
         incidentDao.streamIncidents()
             .receive(on: RunLoop.main)
             .sink { completion in
             } receiveValue: {
-                self.incidentsStream = $0
+                self.incidentsSubject.value = $0
             }
             .store(in: &disposables)
     }
@@ -65,8 +68,10 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         try incidentDao.getIncidents(startAt)
     }
 
-    func streamIncident(_ id: Int64) -> AnyPublisher<Incident?, Error> {
+    func streamIncident(_ id: Int64) -> any Publisher<Incident?, Never> {
         incidentDao.streamFormFieldsIncident(id)
+            .assertNoFailure()
+            .share()
     }
 
     private func saveLocations(_ incidents: [NetworkIncident]) async throws {
@@ -112,9 +117,9 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
     }
 
     private func syncInternal(forcePullAll: Bool = false) async throws {
-        isLoadingStream = true
+        isLoadingSubject.value = true
         do {
-            defer { isLoadingStream = false }
+            defer { isLoadingSubject.value = false }
 
             var pullAll = forcePullAll
             if !pullAll {

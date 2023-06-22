@@ -33,6 +33,7 @@ extension MainComponent {
             )
         }
     }
+
     public var languageTranslationsRepository: LanguageTranslationsRepository {
         shared {
             OfflineFirstLanguageTranslationsRepository(
@@ -42,6 +43,12 @@ extension MainComponent {
                 statusRepository: workTypeStatusRepository,
                 loggerFactory: loggerFactory
             )
+        }
+    }
+
+    public var locationsRepository: LocationsRepository {
+        shared {
+            OfflineFirstLocationsRepository(locationDao)
         }
     }
 }

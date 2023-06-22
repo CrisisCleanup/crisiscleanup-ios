@@ -18,6 +18,7 @@ public class LanguageDao {
     func streamLanguages() -> AnyPublisher<[Language], Error> {
         ValueObservation
             .tracking(fetchLanguages(_:))
+            .removeDuplicates()
             .publisher(in: reader)
             .map { $0.map { r in r.asExternalModel() } }
             .share()
@@ -36,6 +37,7 @@ public class LanguageDao {
     func streamLanguageTranslations(_ key: String) -> AnyPublisher<LanguageTranslations?, Error> {
         ValueObservation
             .tracking { try self.fetchLanguageTranslations($0, key) }
+            .removeDuplicates()
             .publisher(in: reader)
             .map { $0?.asExternalModel() }
             .share()

@@ -2,7 +2,7 @@ import Combine
 import Foundation
 
 protocol AccountInfoDataSource {
-    var accountData: Published<AccountData>.Publisher { get }
+    var accountData: any Publisher<AccountData, Never> { get }
 
     func setAccount(_ info: AccountInfo)
     func clearAccount()
@@ -13,11 +13,10 @@ fileprivate let jsonDecoder = JsonDecoderFactory().decoder()
 fileprivate let jsonEncoder = JSONEncoder()
 
 class AccountInfoUserDefaults: AccountInfoDataSource {
-    @Published private var accountDataStream: AccountData = emptyAccountData
-    lazy private(set) var accountData = $accountDataStream
+    let accountData: any Publisher<AccountData, Never>
 
     init() {
-        UserDefaults.standard.publisher(for: \.accountInfoData)
+        accountData = UserDefaults.standard.publisher(for: \.accountInfoData)
             .map { infoData in
                 let accountData: AccountData
                 if infoData != nil,
@@ -28,8 +27,7 @@ class AccountInfoUserDefaults: AccountInfoDataSource {
                 }
                 return accountData
             }
-            .receive(on: RunLoop.main)
-            .assign(to: &accountData)
+            .share()
     }
 
     func setAccount(_ info: AccountInfo) {

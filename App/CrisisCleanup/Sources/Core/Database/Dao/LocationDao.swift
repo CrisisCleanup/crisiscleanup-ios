@@ -34,22 +34,23 @@ public class LocationDao {
         try await database.saveLocations(locations)
     }
 
-    func getLocations(_ ids: [Int64]) throws -> [Location] {
-        try reader.read { db in try fetchLocations(db, ids) }
-        .map { $0.asExternalModel() }
+    func getLocations(_ ids: [Int64]) -> [Location] {
+        try! reader.read { db in fetchLocations(db, ids) }
+            .map { $0.asExternalModel() }
     }
 
-    func streamLocations(_ ids: [Int64]) throws -> AnyPublisher<[Location], Error> {
+    func streamLocations(_ ids: [Int64]) -> AnyPublisher<[Location], Error> {
         ValueObservation
-            .tracking({ db in try self.fetchLocations(db, ids) })
+            .tracking({ db in self.fetchLocations(db, ids) })
+            .removeDuplicates()
             .map { locations in locations.map { $0.asExternalModel() } }
             .publisher(in: reader)
             .share()
             .eraseToAnyPublisher()
     }
 
-    private func fetchLocations(_ db: Database, _ ids: [Int64]) throws -> [LocationRecord] {
-        try LocationRecord
+    private func fetchLocations(_ db: Database, _ ids: [Int64]) -> [LocationRecord] {
+        try! LocationRecord
             .filter(ids: ids)
             .fetchAll(db)
     }
