@@ -3,7 +3,7 @@ import CoreLocation
 import Foundation
 
 public protocol IncidentBoundsProvider {
-    var mappingBoundsIncidentIds: Published<Set<Int64>>.Publisher { get }
+    var mappingBoundsIncidentIds: any Publisher<Set<Int64>, Never> { get }
 
     func mapIncidentBounds(_ incident: Incident) -> AnyPublisher<IncidentBounds, Never>
 
@@ -19,8 +19,8 @@ class MapsIncidentBoundsProvider: IncidentBoundsProvider {
     private let staleDuration: TimeInterval
     private var cache: [Int64: CacheEntry]
 
-    @Published private var mappingBoundsIncidentIdsStream = Set<Int64>()
-    lazy var mappingBoundsIncidentIds = $mappingBoundsIncidentIdsStream
+    private let incidentIdsPublisher = CurrentValueSubject<Set<Int64>, Never>(Set())
+    let mappingBoundsIncidentIds: any Publisher<Set<Int64>, Never>
 
     init(
         incidentsRepository: IncidentsRepository,
@@ -32,19 +32,20 @@ class MapsIncidentBoundsProvider: IncidentBoundsProvider {
         self.staleDuration = staleDuration
         self.cache = [Int64: CacheEntry]()
 
-        mappingBoundsIncidentIdsStream = Set()
+        mappingBoundsIncidentIds = incidentIdsPublisher
+            .share()
     }
 
     func getIncidentBounds(_ incidentId: Int64) -> IncidentBounds? { cache[incidentId]?.bounds }
 
     private func publishIds(_ id: Int64, _ add: Bool) {
-        var copyIds = Set(mappingBoundsIncidentIdsStream)
+        var copyIds = Set(incidentIdsPublisher.value)
         if add {
             copyIds.insert(id)
         } else {
             copyIds.remove(id)
         }
-        mappingBoundsIncidentIdsStream = copyIds
+        incidentIdsPublisher.send(copyIds)
     }
 
     private func cacheIncidentBounds(
@@ -79,9 +80,11 @@ class MapsIncidentBoundsProvider: IncidentBoundsProvider {
                 do {
                     return try self.cacheIncidentBounds(incidentId, locations, Set(locationIds))
                 } catch {
+                    // TODO: Return previous value not a default value
                     return DefaultIncidentBounds
                 }
             }
+            .assertNoFailure()
             .eraseToAnyPublisher()
         }
     }

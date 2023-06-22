@@ -2,7 +2,7 @@ import Combine
 import Foundation
 
 public protocol AppPreferencesDataStore {
-    var preferences: Published<AppPreferences>.Publisher { get }
+    var preferences: any Publisher<AppPreferences, Never> { get }
 
     func setSyncAttempt(
         _ isSuccessful: Bool,
@@ -23,11 +23,24 @@ fileprivate let jsonDecoder = JsonDecoderFactory().decoder()
 fileprivate let jsonEncoder = JSONEncoder()
 
 class AppPreferencesUserDefaults: AppPreferencesDataStore {
-    @Published private var preferencesStream = AppPreferences()
-    lazy private(set) var preferences = $preferencesStream
+    let preferences: any Publisher<AppPreferences, Never>
 
     private func update(_ preferences: AppPreferences) {
         UserDefaults.standard.appPreferences = preferences
+    }
+
+    init() {
+        preferences = UserDefaults.standard.publisher(for: \.appPreferencesData)
+            .map { preferencesData in
+                let appPreferences: AppPreferences
+                if preferencesData != nil,
+                   let data = try? jsonDecoder.decode(AppPreferences.self, from: preferencesData!) {
+                    appPreferences = data
+                } else {
+                    appPreferences = AppPreferences()
+                }
+                return appPreferences
+            }
     }
 
     func setSyncAttempt(

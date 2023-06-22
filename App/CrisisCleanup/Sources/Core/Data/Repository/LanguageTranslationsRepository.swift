@@ -79,6 +79,7 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
             .store(in: &disposables)
 
         appPreferencesDataStore.preferences
+            .eraseToAnyPublisher()
             .map { languageDao.streamLanguageTranslations($0.languageKey) }
             .switchToLatest()
             .receive(on: RunLoop.main)

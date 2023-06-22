@@ -2,28 +2,29 @@ import Combine
 import Foundation
 
 public protocol IncidentSelector {
-    var incidentId: Published<Int64>.Publisher { get }
-    var incident: Published<Incident>.Publisher { get }
-    var incidentsData: Published<IncidentsData>.Publisher { get }
+    var incidentId: any Publisher<Int64, Never> { get }
+    var incident: any Publisher<Incident, Never> { get }
+    var incidentsData: any Publisher<IncidentsData, Never> { get }
 
     func setIncident(incident: Incident)
 }
 
 class IncidentSelectRepository: IncidentSelector {
-    @Published private var incidentsDataStream = LoadingIncidentsData
-    lazy private(set) var incidentsData = $incidentsDataStream
+    private let incidentsDataSubject = CurrentValueSubject<IncidentsData, Never>(LoadingIncidentsData)
 
-    @Published private var incidentStream = EmptyIncident
-    lazy private(set) var incident = $incidentStream
+    let incidentsData: any Publisher<IncidentsData, Never>
 
-    @Published private var incidentIdStream = EmptyIncident.id
-    lazy private(set) var incidentId = $incidentIdStream
+    let incident: any Publisher<Incident, Never>
+
+    let incidentId: any Publisher<Int64, Never>
 
     private let preferencesStore: AppPreferencesDataStore
 
     private let incidentLock = NSLock()
 
-    private let disposables = Set<AnyCancellable>()
+    private var incidentIdCache: Int64 = EmptyIncident.id
+
+    private var disposables = Set<AnyCancellable>()
 
     init(
         preferencesStore: AppPreferencesDataStore,
@@ -31,42 +32,55 @@ class IncidentSelectRepository: IncidentSelector {
     ) {
         self.preferencesStore = preferencesStore
 
-        incidentsData.map { $0.selected }
-            .assign(to: &incident )
-        incident.map { $0.id }
-            .assign(to: &incidentId)
+        incidentsData = incidentsDataSubject
 
+        let incidentDataErase = incidentsData
+            .eraseToAnyPublisher()
+            .share()
+
+        incident = incidentDataErase
+            .map({ data in
+                return data.selected
+            })
+            .share()
+        incidentId = incidentDataErase
+            .map { data in data.selectedId }
+            .share()
+
+        let incidentsPublisher = incidentsRepository.incidents.eraseToAnyPublisher()
+        let preferencesPublisher = preferencesStore.preferences.eraseToAnyPublisher()
         Publishers.CombineLatest(
-            incidentsRepository.incidents.removeDuplicates(),
-            preferencesStore.preferences
+            incidentsPublisher,
+            preferencesPublisher
         )
         .filter { incidents, _ in
-            incidents.isNotEmpty
+            incidents.isNotEmpty && self.incidentIdCache == EmptyIncident.id
         }
-        .map { incidents, preferences in
-            var targetId = self.incidentIdStream
+        .sink { incidents, preferences in
+            var targetId = self.incidentIdCache
             if targetId == EmptyIncident.id {
                 targetId = preferences.selectedIncidentId
             }
 
             var targetIncident = incidents.first { $0.id == targetId } ?? EmptyIncident
-            if targetIncident.isEmptyIncident && incidents.isNotEmpty {
+            if targetIncident.isEmptyIncident {
                 targetIncident = incidents[0]
             }
 
-            return IncidentsData(
+            self.incidentIdCache = targetIncident.id
+            self.incidentsDataSubject.value = IncidentsData(
                 isLoading: false,
                 selected: targetIncident,
                 incidents: incidents
             )
         }
-        .assign(to: &incidentsData)
+        .store(in: &disposables)
     }
 
     func setIncident(incident: Incident) {
         incidentLock.withLock {
             preferencesStore.setSelectedIncident(incident.id)
-            incidentsDataStream = incidentsDataStream.copy {
+            incidentsDataSubject.value = incidentsDataSubject.value.copy {
                 $0.selected = incident
             }
         }

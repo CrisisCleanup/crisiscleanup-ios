@@ -9,24 +9,45 @@ internal class CasesMapBoundsManager {
 
     var centerCache: LatLng { mapBoundsCache.center }
 
-    @Published private(set) var mapCameraBounds = MapViewCameraBoundsDefault
-    private lazy var mapCameraBoundsPublisher = $mapCameraBounds
+    private let mapCameraBoundsSubject = CurrentValueSubject<MapViewCameraBounds, Never>(MapViewCameraBoundsDefault)
+    let mapCameraBoundsPublisher: any Publisher<MapViewCameraBounds, Never>
 
-    @Published private(set) var isDeterminingBounds = false
+    let isDeterminingBoundsPublisher: any Publisher<Bool, Never>
 
-    @Published private(set) var incidentIdCache: Int64 = EmptyIncident.id
-
-    @Published private var incidentIdBounds = DefaultIncidentBounds
-    private lazy var incidentIdBoundsPublisher = $incidentIdBounds
+    private var incidentIdCache: Int64 = EmptyIncident.id
 
     private var disposables = Set<AnyCancellable>()
 
     init(
-        incidentSelector: IncidentSelector,
-        incidentBoundsProvider: IncidentBoundsProvider
+        _ incidentSelector: IncidentSelector,
+        _ incidentBoundsProvider: IncidentBoundsProvider
     ) {
         self.incidentSelector = incidentSelector
         self.incidentBoundsProvider = incidentBoundsProvider
+
+        mapCameraBoundsPublisher = mapCameraBoundsSubject
+            .share()
+
+        let incidentIdPublisher = incidentSelector.incidentId
+            .eraseToAnyPublisher()
+        let incidentBoundsPublisher = incidentBoundsProvider.mappingBoundsIncidentIds.eraseToAnyPublisher()
+
+        isDeterminingBoundsPublisher = Publishers.CombineLatest(
+            incidentIdPublisher,
+            incidentBoundsPublisher)
+        .map { id, ids in
+            ids.contains(id)
+        }
+        .share()
+
+        // TODO: Why is this logging twice every time the incident is changed? All downstream observers fire 2x as well...
+//        incidentSelector.incident
+//            .eraseToAnyPublisher()
+//            .share()
+//            .sink { data in
+//            print("bounds incident chnage \(data.id) \(self)")
+//        }
+//        .store(in: &disposables)
 
         incidentSelector.incident
             .eraseToAnyPublisher()
@@ -35,27 +56,15 @@ internal class CasesMapBoundsManager {
                 return self.incidentBoundsProvider.mapIncidentBounds(incident)
             }
             .switchToLatest()
-            .assign(to: &self.incidentIdBoundsPublisher)
-
-        incidentIdBoundsPublisher
             .receive(on: RunLoop.main)
             .sink { incidentBounds in
                 if (incidentBounds.locations.isNotEmpty) {
                     let bounds = incidentBounds.bounds
-                    self.mapCameraBounds = MapViewCameraBounds(bounds)
+                    self.mapCameraBoundsSubject.value = MapViewCameraBounds(bounds)
                     self.cacheBounds(bounds)
                 }
             }
             .store(in: &disposables)
-
-        incidentSelector.incidentId.combineLatest(
-            incidentBoundsProvider.mappingBoundsIncidentIds, { id, ids in
-                ids.contains(id)
-            })
-        .sink(receiveValue: { isMappingBounds in
-            self.isDeterminingBounds = isMappingBounds
-        })
-        .store(in: &disposables)
     }
 
     func cacheBounds(_ bounds: LatLngBounds) {
@@ -63,7 +72,7 @@ internal class CasesMapBoundsManager {
     }
 
     func restoreBounds() {
-        mapCameraBounds = MapViewCameraBounds(mapBoundsCache, 0)
+        mapCameraBoundsSubject.value = MapViewCameraBounds(mapBoundsCache, 0)
     }
 
     func restoreIncidentBounds() {
@@ -72,7 +81,7 @@ internal class CasesMapBoundsManager {
             let bounds = incidentBounds.bounds
             let latLngBounds = LatLngBounds(southWest: bounds.southWest, northEast: bounds.northEast)
 
-            mapCameraBounds = MapViewCameraBounds(latLngBounds)
+            mapCameraBoundsSubject.value = MapViewCameraBounds(latLngBounds)
             mapBoundsCache = latLngBounds
         }
     }

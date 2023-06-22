@@ -9,6 +9,7 @@ class CasesComponent: Component<AppDependency>, CasesViewBuilder {
     var casesViewModel: CasesViewModel {
         CasesViewModel(
             incidentSelector: dependency.incidentSelector,
+            incidentBoundsProvider: dependency.incidentBoundsProvider,
             loggerFactory: dependency.loggerFactory
         )
     }
