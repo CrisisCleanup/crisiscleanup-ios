@@ -4,7 +4,7 @@ import Foundation
 public protocol WorksitesRepository {
     var isLoading: any Publisher<Bool, Never> { get }
 
-    var syncWorksitesFullIncidentId: any Publisher<[Int64], Never> { get }
+    var syncWorksitesFullIncidentId: any Publisher<Int64, Never> { get }
 
     func streamWorksitesMapVisual(
         incidentId: Int64,
@@ -14,7 +14,7 @@ public protocol WorksitesRepository {
         longitudeRight: Double,
         limit: Int,
         offset: Int
-    ) async -> any Publisher<[[WorksiteMapMark]], Error>
+    ) async -> any Publisher<[WorksiteMapMark], Error>
 
     /**
      * Stream of an incident's [Worksite]s
@@ -25,7 +25,7 @@ public protocol WorksitesRepository {
 
     func streamLocalWorksite(_ worksiteId: Int64) -> any Publisher<LocalWorksite?, Never>
 
-    func streamRecentWorksites(_ incidentId: Int64) -> any Publisher<[[WorksiteSummary]], Never>
+    func streamRecentWorksites(_ incidentId: Int64) -> any Publisher<[WorksiteSummary], Never>
 
     func getWorksitesMapVisual(_ incidentId: Int64, _ limit: Int, _ offset: Int) throws -> [WorksiteMapMark]
 
@@ -37,7 +37,7 @@ public protocol WorksitesRepository {
         longitudeEast: Double,
         limit: Int,
         offset: Int
-    ) throws -> [WorksiteMapMark]
+    ) async throws -> [WorksiteMapMark]
 
     func getWorksitesCount(_ incidentId: Int64) throws -> Int
 
@@ -47,7 +47,7 @@ public protocol WorksitesRepository {
         latitudeNorth: Double,
         longitudeLeft: Double,
         longitudeRight: Double
-    ) throws -> Int
+    ) -> Int
 
     func refreshWorksites(
         _ incidentId: Int64,
