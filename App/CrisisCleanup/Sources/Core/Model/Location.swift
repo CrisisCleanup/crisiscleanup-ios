@@ -6,7 +6,20 @@ public struct Location: Equatable {
     // Should only be defined for MultiPolygon
     let multiCoordinates: [[Double]]?
 
-    lazy var shape: LocationShape = { disasterFromLiteral(shapeLiteral) }()
+    let shape: LocationShape
+
+    init(
+        id: Int64,
+        shapeLiteral: String,
+        coordinates: [Double]?,
+        multiCoordinates: [[Double]]?
+    ) {
+        self.id = id
+        self.shapeLiteral = shapeLiteral
+        self.coordinates = coordinates
+        self.multiCoordinates = multiCoordinates
+        shape = disasterFromLiteral(shapeLiteral)
+    }
 }
 
 enum LocationShape: String, Identifiable, CaseIterable {
