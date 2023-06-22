@@ -89,7 +89,7 @@ private let literalStatusLookup = WorkTypeStatus.allCases.associateBy{ $0.litera
 func statusFromLiteral(_ literal: String) -> WorkTypeStatus { literalStatusLookup[literal] ?? WorkTypeStatus.unknown
 }
 
-public struct WorkTypeStatusClaim {
+public struct WorkTypeStatusClaim: Hashable {
     let status: WorkTypeStatus
     let isClaimed: Bool
 

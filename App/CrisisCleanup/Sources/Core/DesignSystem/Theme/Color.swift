@@ -3,7 +3,6 @@ import SwiftUI
 private let _disabledAlpha = 0.38
 
 extension Color {
-
     init(hex: Int64) {
         self.init(
             .sRGB,
