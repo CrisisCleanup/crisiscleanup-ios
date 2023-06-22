@@ -64,8 +64,3 @@ class MenuViewModel: ObservableObject {
         }
     }
 }
-
-struct AccountProfilePicture {
-    let url: URL
-    let isSvg: Bool
-}

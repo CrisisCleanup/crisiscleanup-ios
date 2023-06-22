@@ -8,7 +8,11 @@ protocol CasesViewBuilder {
 class CasesComponent: Component<AppDependency>, CasesViewBuilder {
     var casesViewModel: CasesViewModel {
         CasesViewModel(
+            appEnv: dependency.appEnv,
+            accountDataRepository: dependency.accountDataRepository,
             incidentSelector: dependency.incidentSelector,
+            appVersionProvider: dependency.appVersionProvider,
+            authEventBus: dependency.authEventBus,
             loggerFactory: dependency.loggerFactory
         )
     }
@@ -17,6 +21,7 @@ class CasesComponent: Component<AppDependency>, CasesViewBuilder {
         AnyView(
             CasesView(
                 viewModel: casesViewModel,
+                authenticateViewBuilder: dependency.authenticateViewBuilder,
                 incidentSelectViewBuilder: dependency.incidentSelectViewBuilder
             )
         )

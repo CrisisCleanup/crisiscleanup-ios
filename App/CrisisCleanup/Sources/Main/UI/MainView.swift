@@ -8,7 +8,7 @@ struct MainView: View {
     let casesViewBuilder: CasesViewBuilder
     let menuViewBuilder: MenuViewBuilder
 
-    @State private var selectedTab = TopLevelDestination.menu
+    @State private var selectedTab = TopLevelDestination.cases
     var body: some View {
         switch viewModel.viewData.state {
         case .loading:
