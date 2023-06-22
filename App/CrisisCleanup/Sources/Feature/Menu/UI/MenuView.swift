@@ -71,5 +71,7 @@ struct MenuView: View {
             Spacer()
         }
         .padding()
+        .onAppear { viewModel.onViewAppear() }
+        .onDisappear { viewModel.onViewDisappear() }
     }
 }

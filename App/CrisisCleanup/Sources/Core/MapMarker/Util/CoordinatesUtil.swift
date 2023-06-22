@@ -1,6 +1,58 @@
 import CoreLocation
 import Foundation
 
+class CoordinatesUtil {
+    static func getMiddleLongitude(_ left: Double, _ right: Double) -> Double {
+        var left = left
+        while left > right {
+            left -= 360
+        }
+
+        return ((left + right) * 0.5).remainder(dividingBy: 360)
+    }
+
+    static func getMiddleCoordinate(_ a: LatLng, _ b: LatLng) -> LatLng {
+        let latitude = (a.latitude + b.latitude) * 0.5
+        let longitude = getMiddleLongitude(a.longitude, b.longitude)
+        return LatLng(latitude, longitude)
+    }
+
+    static func lerpLatitude(
+        _ from: Double,
+        _ to: Double,
+        _ lerp: Double
+    ) -> Double {
+        from + (to - from) * lerp
+    }
+
+    // TODO Write tests
+    static func lerpLongitude(
+        _ from: Double,
+        _ to: Double,
+        _ lerp: Double,
+        _ lerpToWest: Bool
+    ) -> Double {
+        if (lerpToWest) {
+            if (to <= from) {
+                return from + (to - from) * lerp
+            }
+
+            let wrappedTo = to - 360
+            let longitude = from + (wrappedTo - from) * lerp
+            return longitude < -180 ? longitude + 360 : longitude
+
+        } else {
+            if (to >= from) {
+                return from + (to - from) * lerp
+            }
+
+            let wrappedTo = to + 360
+            let longitude = from + (wrappedTo - from) * lerp
+            return longitude > 180 ? longitude - 360 : longitude
+        }
+    }
+}
+
 extension Array where Element == Location {
     internal var toLatLngs: [LocationLatLng] {
         filter { $0.multiCoordinates?.isNotEmpty == true || $0.coordinates?.isNotEmpty == true }
@@ -121,10 +173,7 @@ extension Array where Element == LocationLatLng {
 
                     if furthestDistance > closestDistance {
                         // TODO: Spherical interpolate
-                        incidentCentroid = LatLng(
-                            (closestPoint.latitude + furthestPoint.latitude) * 0.5,
-                            (furthestPoint.longitude + furthestPoint.longitude) * 0.5
-                        )
+                        incidentCentroid = CoordinatesUtil.getMiddleCoordinate(closestPoint, furthestPoint)
                     }
                 }
             }

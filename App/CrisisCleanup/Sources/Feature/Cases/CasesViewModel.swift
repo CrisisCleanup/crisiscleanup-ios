@@ -41,4 +41,12 @@ class CasesViewModel: ObservableObject {
             }
             .store(in: &disposables)
     }
+
+    func onViewAppear() {
+        // TODO: Resume observations
+    }
+
+    func onViewDisappear() {
+        // TODO: Pause observations
+    }
 }
