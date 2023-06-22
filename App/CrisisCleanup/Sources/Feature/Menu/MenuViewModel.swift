@@ -43,6 +43,7 @@ class MenuViewModel: ObservableObject {
 
         accountDataRepository.accountData
             .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
             .map{
                 if let escapedUrl = $0.profilePictureUri.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
                    let url = URL(string: escapedUrl) {
@@ -55,7 +56,10 @@ class MenuViewModel: ObservableObject {
             }
             .assign(to: &$profilePicture)
 
-        incidentSelector.incidentsData.sink { self.incidentsData = $0 }
+        incidentSelector.incidentsData
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .sink { self.incidentsData = $0 }
             .store(in: &disposables)
     }
 

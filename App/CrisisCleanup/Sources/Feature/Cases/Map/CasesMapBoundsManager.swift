@@ -47,7 +47,6 @@ internal class CasesMapBoundsManager {
                 return self.incidentBoundsProvider.mapIncidentBounds(incident)
             }
             .switchToLatest()
-            .receive(on: RunLoop.main)
             .sink { incidentBounds in
                 if (incidentBounds.locations.isNotEmpty) {
                     let bounds = incidentBounds.bounds

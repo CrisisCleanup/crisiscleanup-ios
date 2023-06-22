@@ -50,7 +50,6 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         incidents = incidentsSubject.share()
 
         incidentDao.streamIncidents()
-            .receive(on: RunLoop.main)
             .sink { completion in
             } receiveValue: {
                 self.incidentsSubject.value = $0

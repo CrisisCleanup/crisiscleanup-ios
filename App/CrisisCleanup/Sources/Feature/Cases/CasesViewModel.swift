@@ -30,14 +30,20 @@ class CasesViewModel: ObservableObject {
 
         logger = loggerFactory.getLogger("cases")
 
-        incidentSelector.incidentsData.sink { self.incidentsData = $0 }
+        incidentSelector.incidentsData
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .sink { self.incidentsData = $0 }
             .store(in: &disposables)
 
         mapBoundsManager.mapCameraBoundsPublisher
             .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
             .assign(to: &incidentLocationBoundsPublisher)
 
         mapBoundsManager.isDeterminingBoundsPublisher
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
             .sink { b0 in
                 self.isMapBusy = b0
             }
