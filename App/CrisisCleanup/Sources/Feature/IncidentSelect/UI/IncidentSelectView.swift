@@ -10,7 +10,7 @@ struct IncidentSelectView: View {
 
     var body: some View{
         VStack {
-            Text("˜˜Change incident").frame(alignment: .bottom).padding()
+            Text(t("nav.change_incident")).frame(alignment: .bottom).padding()
                 List(viewModel.incidentsData.incidents, id: \.id) { ee in
                     let isSelected: Bool = viewModel.incidentsData.selected.id == ee.id
                     HStack {
