@@ -32,8 +32,8 @@ class CoordinatesUtil {
         _ lerp: Double,
         _ lerpToWest: Bool
     ) -> Double {
-        if (lerpToWest) {
-            if (to <= from) {
+        if lerpToWest {
+            if to <= from {
                 return from + (to - from) * lerp
             }
 
@@ -42,7 +42,7 @@ class CoordinatesUtil {
             return longitude < -180 ? longitude + 360 : longitude
 
         } else {
-            if (to >= from) {
+            if to >= from {
                 return from + (to - from) * lerp
             }
 
@@ -83,14 +83,12 @@ fileprivate func flattenDoubleArray(_ double: [[LatLng]]) -> [LatLng] {
 extension Array where Element == LocationLatLng {
     func toIncidentBounds() throws -> IncidentBounds {
         let locations = map {
-            let multiBounds = $0.multiCoordinates.map { latLngs in
+            let multiCoords = $0.multiCoordinates
+            let multiBounds = multiCoords.map { latLngs in
                 latLngs.count < 3 ? nil : latLngs.latLngBounds
             }
-            var areas = [Double]()
-            for i in multiBounds.indices {
-                let latLngBounds = multiBounds[i]
-                let area = latLngBounds == nil ? 0.0 : PolyUtil.shoelaceArea($0.multiCoordinates[i])
-                areas.append(area)
+            let areas = multiBounds.enumerated().map { (i, latLngBounds) in
+                latLngBounds == nil ? 0.0 : PolyUtil.shoelaceArea(multiCoords[i])
             }
             return LocationBounds(
                 locationLatLng: $0,
@@ -115,8 +113,7 @@ extension Array where Element == LocationLatLng {
                 var maxArea = 0.0
                 var latLngs: [LatLng]? = nil
                 var bounds: LatLngBounds? = nil
-                for i in locationLatLng.boundAreas.indices {
-                    let area = locationLatLng.boundAreas[i]
+                for (i, area) in locationLatLng.boundAreas.enumerated() {
                     if maxArea < area {
                         maxArea = area
                         latLngs = locationLatLng.locationLatLng.multiCoordinates[i]

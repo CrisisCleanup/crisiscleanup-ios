@@ -2,6 +2,8 @@ import Combine
 import Foundation
 
 class OfflineFirstWorksitesRepository: WorksitesRepository {
+    private let dataSource: CrisisCleanupNetworkDataSource
+
     private let isLoadingSubject = CurrentValueSubject<Bool, Never>(false)
     var isLoading: any Publisher<Bool, Never>
 
@@ -9,7 +11,10 @@ class OfflineFirstWorksitesRepository: WorksitesRepository {
     var syncWorksitesFullIncidentId: any Publisher<Int64, Never>
 
     init(
+        dataSource: CrisisCleanupNetworkDataSource
     ) {
+        self.dataSource = dataSource
+
         self.isLoading = isLoadingSubject
         self.syncWorksitesFullIncidentId = syncWorksitesFullIncidentIdSubject
     }

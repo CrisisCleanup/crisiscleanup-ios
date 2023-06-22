@@ -25,7 +25,6 @@ public struct Worksite {
     let id: Int64
     let address: String
     let autoContactFrequencyT: String
-    let autoContactFrequency: AutoContactFrequency
     let caseNumber: String
     let city: String
     let county: String
@@ -65,6 +64,8 @@ public struct Worksite {
     }
 
     // sourcery:begin: skipCopy
+    let autoContactFrequency: AutoContactFrequency
+
     var isNew: Bool { id <= 0 }
 
     var isLocalFavorite: Bool { isAssignedToOrgMember }
@@ -84,7 +85,7 @@ public struct Worksite {
     private func toggleFlag(_ flag: WorksiteFlagType) -> Worksite {
         let flagReason = flag.literal
         let toggledFlags = {
-            if (flags?.contains(where: { $0.reasonT == flagReason }) == true) {
+            if flags?.contains(where: { $0.reasonT == flagReason }) == true {
                 return flags?.filter({ $0.reasonT != flagReason })
             } else {
                 let addFlag = WorksiteFlag.flag(reasonT: flagReason)

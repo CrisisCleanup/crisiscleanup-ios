@@ -1,8 +1,6 @@
 // Generated using Sourcery 2.0.2 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
-import Foundation
-
 extension SyncAttempt {
 	// A default style constructor for the .copy fn to use
 	init(

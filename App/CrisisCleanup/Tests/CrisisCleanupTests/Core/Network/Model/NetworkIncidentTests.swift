@@ -45,8 +45,8 @@ final class NetworkIncidentTests: XCTestCase {
 
         let incidents = result.results!
         XCTAssertEqual(result.count, incidents.count)
-        for i in incidents.indices {
-            XCTAssertEqual(expectedIncidents[i], incidents[i])
+        for (i, incident) in incidents.enumerated() {
+            XCTAssertEqual(expectedIncidents[i], incident)
         }
         XCTAssertEqual(1658334531, incidents[1].startAt.timeIntervalSince1970)
     }

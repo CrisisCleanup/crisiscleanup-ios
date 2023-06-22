@@ -48,7 +48,7 @@ internal class CasesMapBoundsManager {
             }
             .switchToLatest()
             .sink { incidentBounds in
-                if (incidentBounds.locations.isNotEmpty) {
+                if incidentBounds.locations.isNotEmpty {
                     let bounds = incidentBounds.bounds
                     self.mapCameraBoundsSubject.value = MapViewCameraBounds(bounds)
                     self.cacheBounds(bounds)

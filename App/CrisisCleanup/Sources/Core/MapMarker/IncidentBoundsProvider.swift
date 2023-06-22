@@ -71,7 +71,7 @@ class MapsIncidentBoundsProvider: IncidentBoundsProvider {
     func mapIncidentBounds(_ incident: Incident) -> AnyPublisher<IncidentBounds, Never> {
         let incidentId = incident.id
         let locationIds = incident.locationIds
-        if (incidentId == EmptyIncident.id || locationIds.isEmpty) {
+        if incidentId == EmptyIncident.id || locationIds.isEmpty {
             return Just(DefaultIncidentBounds)
                 .eraseToAnyPublisher()
         } else {

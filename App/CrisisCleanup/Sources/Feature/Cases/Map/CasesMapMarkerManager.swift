@@ -32,11 +32,11 @@ class CasesMapMarkerManager {
         var ne = boundsNe
         let fullCount = getWorksitesCount(incidentId, sw, ne)
         var queryCount = fullCount
-        if (fullCount > maxMarkersOnMap) {
+        if fullCount > maxMarkersOnMap {
             let halfSw = CoordinatesUtil.getMiddleCoordinate(sw, middle)
             let halfNe = CoordinatesUtil.getMiddleCoordinate(middle, ne)
             let halfCount = getWorksitesCount(incidentId, halfSw, halfNe)
-            if (maxMarkersOnMap > halfCount) {
+            if maxMarkersOnMap > halfCount {
                 let evenDistWeight =
                 Double(maxMarkersOnMap - halfCount) / Double(fullCount - halfCount)
                 let south = CoordinatesUtil.lerpLatitude(halfSw.latitude, sw.latitude, evenDistWeight)
@@ -62,9 +62,9 @@ class CasesMapMarkerManager {
     }
 
     func queryWorksitesInBounds(
-        incidentId: Int64,
-        boundsSw: LatLng,
-        boundsNe: LatLng
+        _ incidentId: Int64,
+        _ boundsSw: LatLng,
+        _ boundsNe: LatLng
     ) async throws -> ([WorksiteMapMark], Int) {
         // TODO: Adjust based on device resources and app performance
         let maxMarkersOnMap = 512
@@ -75,6 +75,21 @@ class CasesMapMarkerManager {
             boundsSw,
             boundsNe,
             middle
+        )
+
+        try Task.checkCancellation()
+
+        let sw = q.southWest
+        let ne = q.northEast
+        let mapMarks = try await worksitesRepository.getWorksitesMapVisual(
+            incidentId: incidentId,
+            latitudeSouth: sw.latitude,
+            latitudeNorth: ne.latitude,
+            longitudeWest: sw.longitude,
+            longitudeEast: ne.longitude,
+            // TODO Review if this is sufficient and mostly complete
+            limit: min(q.queryCount, 2 * maxMarkersOnMap),
+            offset: 0
         )
 
         try Task.checkCancellation()
@@ -95,30 +110,15 @@ class CasesMapMarkerManager {
             return pow(x - midX, 2.0) + pow(y - midY, 2.0) + pow(z - midZ, 2.0)
         }
 
-        let sw = q.southWest
-        let ne = q.northEast
-        let mapMarks = try await worksitesRepository.getWorksitesMapVisual(
-            incidentId: incidentId,
-            latitudeSouth: sw.latitude,
-            latitudeNorth: ne.latitude,
-            longitudeWest: sw.longitude,
-            longitudeEast: ne.longitude,
-            // TODO Review if this is sufficient and mostly complete
-            limit: min(q.queryCount, 2 * maxMarkersOnMap),
-            offset: 0
-        )
-        var marksFromCenter: [MarkerFromCenter] = []
-        for index in mapMarks.indices {
-            let mark = mapMarks[index]
+        var marksFromCenter = mapMarks.enumerated().map { (index, mark) in
             let distanceMeasure = approxDistanceFromMiddle(mark.latitude, mark.longitude)
-            let fromCenter = MarkerFromCenter(
+            return MarkerFromCenter(
                 sortOrder: index,
                 mark: mark,
                 deltaLatitude: mark.latitude - middle.latitude,
                 deltaLongitude: mark.longitude - middle.longitude,
                 distanceMeasure: distanceMeasure
             )
-            marksFromCenter.append(fromCenter)
         }
         let distanceToMiddleSorted = marksFromCenter.sorted(by: { a, b in
             a.distanceMeasure - b.distanceMeasure <= 0

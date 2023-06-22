@@ -68,7 +68,7 @@ private let statusClaimMapMarkerColors: [WorkTypeStatusClaim: MapMarkerColor] = 
 
 internal func getMapMarkerColors(statusClaim: WorkTypeStatusClaim) -> MapMarkerColor {
     var colors = statusClaimMapMarkerColors[statusClaim]
-    if (colors == nil) {
+    if colors == nil {
         if let status = statusClaimToStatus[statusClaim] {
             colors = statusMapMarkerColors[status]
         }

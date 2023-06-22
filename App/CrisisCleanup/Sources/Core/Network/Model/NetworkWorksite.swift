@@ -70,8 +70,7 @@ public struct NetworkWorksiteFull: Codable, Equatable {
 
     internal static func getNewestWorkTypeMap(_ workTypes: [NetworkWorkType]) -> [String: (Int, NetworkWorkType)] {
         var newMap: [String: (Int, NetworkWorkType)] = [:]
-        workTypes.indices.forEach { index in
-            let workType = workTypes[index]
+        workTypes.enumerated().forEach { (index, workType) in
             let literal = workType.workType
             let similar = newMap[literal]
             if similar == nil || workType.id! > similar!.1.id! {
@@ -248,8 +247,7 @@ public struct NetworkWorksiteShort: Codable, Equatable {
 
     internal static func getNewestWorkTypeMap(_ workTypes: [NetworkWorkTypeShort]) -> [String: (Int, NetworkWorkTypeShort)] {
         var newMap: [String: (Int, NetworkWorkTypeShort)] = [:]
-        workTypes.indices.forEach { index in
-            let workType = workTypes[index]
+        workTypes.enumerated().forEach { (index, workType) in
             let literal = workType.workType
             let similar = newMap[literal]
             if similar == nil || workType.id > similar!.1.id {

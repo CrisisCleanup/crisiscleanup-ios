@@ -51,4 +51,12 @@ extension MainComponent {
             OfflineFirstLocationsRepository(locationDao)
         }
     }
+
+    public var worksitesRepository: WorksitesRepository {
+        shared {
+            OfflineFirstWorksitesRepository(
+                dataSource: networkDataSource
+            )
+        }
+    }
 }
