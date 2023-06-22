@@ -5,7 +5,6 @@ struct CasesView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @ObservedObject var viewModel: CasesViewModel
-    let authenticateViewBuilder: AuthenticateViewBuilder
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
     let incidentsTypeIconsAssetsFolder = "incident_type_icons/"
 
@@ -17,17 +16,11 @@ struct CasesView: View {
                 Button {
                     showIncidentSelect.toggle()
                 } label: {
-                    HStack{
-                        Image(incidentsTypeIconsAssetsFolder+viewModel.incidentsData.selected.disasterLiteral, bundle: .module).foregroundColor(Color.blue)
-                    }
-                    let selectedIncident = viewModel.incidentsData.selected.shortName
-                    let title = selectedIncident.isEmpty
-                    ? t.translate(
-                        TopLevelDestination.menu.titleTranslateKey,
-                        TopLevelDestination.menu.titleLocalizationKey
-                    )
-                    : selectedIncident
-                    Text(title)
+                    let selectedIncident = viewModel.incidentsData.selected
+                    let icon = selectedIncident.disasterLiteral.isEmpty
+                    ? "other" : selectedIncident.disasterLiteral
+                    Image(incidentsTypeIconsAssetsFolder+icon, bundle: .module).foregroundColor(Color.blue)
+
                     // TODO: Dropdown arrow. Use SF Symbols.
                 }
                 .sheet(isPresented: $showIncidentSelect) {

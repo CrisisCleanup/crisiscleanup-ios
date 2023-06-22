@@ -8,8 +8,6 @@ struct MenuView: View {
     let authenticateViewBuilder: AuthenticateViewBuilder
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
 
-    @State var showIncidentSelect = false
-
     var body: some View{
         VStack {
             HStack {
