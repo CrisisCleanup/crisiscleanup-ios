@@ -2,7 +2,7 @@ import Combine
 import SwiftUI
 
 public protocol KeyTranslator {
-    var translationCount: Published<Int>.Publisher { get }
+    var translationCount: any Publisher<Int, Never> { get }
 
     func translate(_ phraseKey: String) -> String?
 
@@ -18,8 +18,7 @@ private class EmptyTranslator: KeyAssetTranslator {
         translate(phraseKey) ?? phraseKey
     }
 
-    @Published private var translationCountStream = 0
-    lazy private(set) var translationCount = $translationCountStream
+    let translationCount: any Publisher<Int, Never> = Just(0).eraseToAnyPublisher()
 
     func translate(_ phraseKey: String, _ fallbackAssetKey: String) -> String {
         fallbackAssetKey.localizedString

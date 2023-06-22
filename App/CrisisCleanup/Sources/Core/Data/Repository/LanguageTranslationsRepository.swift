@@ -2,11 +2,11 @@ import Combine
 import Foundation
 
 public protocol LanguageTranslationsRepository: KeyAssetTranslator {
-    var isLoading: Published<Bool>.Publisher { get }
+    var isLoading: any Publisher<Bool, Never> { get }
 
-    var supportedLanguages: Published<[Language]>.Publisher { get }
+    var supportedLanguages: any Publisher<[Language], Never> { get }
 
-    var currentLanguage: Published<Language>.Publisher { get }
+    var currentLanguage: any Publisher<Language, Never> { get }
 
     func loadLanguages(_ force: Bool) async
 
@@ -24,17 +24,12 @@ extension LanguageTranslationsRepository {
 }
 
 class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository {
-    private var isLoadingLanguages = CurrentValueSubject<Bool, Never>(false)
-    private var isSettingLanguage = CurrentValueSubject<Bool, Never>(false)
+    let isLoading: any Publisher<Bool, Never>
+    private var isLoadingLanguagesSubject = CurrentValueSubject<Bool, Never>(false)
+    private var isSettingLanguageSubject = CurrentValueSubject<Bool, Never>(false)
 
-    @Published private var isLoadingStream = false
-    lazy private(set) var isLoading = $isLoadingStream
-
-    @Published private var supportedLanguagesStream: [Language] = [EnglishLanguage]
-    lazy private(set) var supportedLanguages = $supportedLanguagesStream
-
-    @Published private var currentLanguageStream = EnglishLanguage
-    lazy private(set) var currentLanguage = $currentLanguageStream
+    let supportedLanguages: any Publisher<[Language], Never>
+    let currentLanguage: any Publisher<Language, Never>
 
     private let dataSource: CrisisCleanupNetworkDataSource
     private let appPreferencesDataStore: AppPreferencesDataStore
@@ -63,34 +58,47 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
         self.statusRepository = statusRepository
         logger = loggerFactory.getLogger("language-translations")
 
+        isLoading = Publishers.CombineLatest(
+            isLoadingLanguagesSubject,
+            isSettingLanguageSubject)
+        .map { (b0, b1) in b0 || b1 }
+
+        supportedLanguages = languageDao.streamLanguages()
+            .assertNoFailure()
+            .map { languages in
+                languages.isEmpty ? [EnglishLanguage] : languages
+            }
+
+        let languageData = appPreferencesDataStore.preferences
+            .eraseToAnyPublisher()
+            .map { languageDao.streamLanguageTranslations($0.languageKey) }
+            .switchToLatest()
+            .map { languageTranslations in
+                let lookup = languageTranslations?.translations ?? [String:String]()
+                let selectedLanguage = languageTranslations?.language ?? EnglishLanguage
+                return (lookup, selectedLanguage)
+            }
+            .assertNoFailure()
+            .share()
+
+        translationCount = languageData.map { (lookup, _) in
+            lookup.count
+        }
+        .share()
+
+        currentLanguage = languageData.map { (_, language)  in
+            language
+        }
+        .share()
+
         appPreferencesDataStore.preferences
             .assign(to: \.appPreferences, on: self)
             .store(in: &disposables)
 
-        isLoadingLanguages.combineLatest(isSettingLanguage)
-            .map { (b0, b1) in b0 || b1 }
-            .assign(to: &isLoading)
-
-        languageDao.streamLanguages()
-            .sink { completion in
-            } receiveValue: { languages in
-                self.supportedLanguagesStream = languages.isEmpty ? [EnglishLanguage] : languages
-            }
-            .store(in: &disposables)
-
-        appPreferencesDataStore.preferences
-            .eraseToAnyPublisher()
-            .map { languageDao.streamLanguageTranslations($0.languageKey) }
-            .switchToLatest()
-            .receive(on: RunLoop.main)
-            .sink { completion in
-            } receiveValue: { languageTranslations in
-                let lookup = languageTranslations?.translations ?? [String:String]()
-                self.translations = lookup
-                self.currentLanguageStream = languageTranslations?.language ?? EnglishLanguage
-                self.translationCountStream = lookup.count
-            }
-            .store(in: &disposables)
+        languageData.sink { (lookup, _) in
+            self.translations = lookup
+        }
+        .store(in: &disposables)
     }
 
     private func pullLanguages() async throws {
@@ -107,9 +115,9 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
     }
 
     func loadLanguages(_ force: Bool) async {
-        isLoadingLanguages.value = true
+        isLoadingLanguagesSubject.value = true
         do {
-            defer { isLoadingLanguages.value = false }
+            defer { isLoadingLanguagesSubject.value = false }
 
             let languageCount = languageDao.getLanguageCount()
 
@@ -144,9 +152,9 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
     func setLanguage(_ key: String) {
         setLanguageTask?.cancel()
         setLanguageTask = Task {
-            isSettingLanguage.value = true
+            isSettingLanguageSubject.value = true
             do {
-                defer { isSettingLanguage.value = false }
+                defer { isSettingLanguageSubject.value = false }
 
                 try await pullUpdatedTranslations(key)
 
@@ -161,8 +169,7 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
 
     // MARK: - KeyAssetTranslator
 
-    @Published private var translationCountStream = 0
-    lazy private(set) var translationCount = $translationCountStream
+    let translationCount: any Publisher<Int, Never>
 
     func translate(_ phraseKey: String, _ fallbackAssetKey: String) -> String {
         translate(phraseKey) ?? (fallbackAssetKey.isBlank ? phraseKey : fallbackAssetKey.localizedString)

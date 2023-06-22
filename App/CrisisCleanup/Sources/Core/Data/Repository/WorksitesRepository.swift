@@ -2,9 +2,9 @@ import Combine
 import Foundation
 
 public protocol WorksitesRepository {
-    var isLoading: Published<Bool>.Publisher { get }
+    var isLoading: any Publisher<Bool, Never> { get }
 
-    var syncWorksitesFullIncidentId: Published<[Int64]>.Publisher { get }
+    var syncWorksitesFullIncidentId: any Publisher<[Int64], Never> { get }
 
     func streamWorksitesMapVisual(
         incidentId: Int64,
@@ -14,18 +14,18 @@ public protocol WorksitesRepository {
         longitudeRight: Double,
         limit: Int,
         offset: Int
-    ) async throws -> Published<[[WorksiteMapMark]]>.Publisher
+    ) async -> any Publisher<[[WorksiteMapMark]], Error>
 
     /**
      * Stream of an incident's [Worksite]s
      */
-    func streamWorksites(_ incidentId: Int64, _ limit: Int, _ offset: Int) throws -> Published<[Worksite]>.Publisher
+    func streamWorksites(_ incidentId: Int64, _ limit: Int, _ offset: Int) -> any Publisher<[Worksite], Error>
 
-    func streamIncidentWorksitesCount(_ id: Int64) throws -> Published<Int>.Publisher
+    func streamIncidentWorksitesCount(_ id: Int64) -> any Publisher<Int, Never>
 
-    func streamLocalWorksite(_ worksiteId: Int64) throws -> Published<LocalWorksite?>.Publisher
+    func streamLocalWorksite(_ worksiteId: Int64) -> any Publisher<LocalWorksite?, Never>
 
-    func streamRecentWorksites(_ incidentId: Int64) throws -> Published<[[WorksiteSummary]]>.Publisher
+    func streamRecentWorksites(_ incidentId: Int64) -> any Publisher<[[WorksiteSummary]], Never>
 
     func getWorksitesMapVisual(_ incidentId: Int64, _ limit: Int, _ offset: Int) throws -> [WorksiteMapMark]
 

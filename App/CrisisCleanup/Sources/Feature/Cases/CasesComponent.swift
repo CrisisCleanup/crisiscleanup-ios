@@ -6,13 +6,13 @@ protocol CasesViewBuilder {
 }
 
 class CasesComponent: Component<AppDependency>, CasesViewBuilder {
-    var casesViewModel: CasesViewModel {
+    lazy var casesViewModel: CasesViewModel = {
         CasesViewModel(
             incidentSelector: dependency.incidentSelector,
             incidentBoundsProvider: dependency.incidentBoundsProvider,
             loggerFactory: dependency.loggerFactory
         )
-    }
+    }()
 
     var casesView: AnyView {
         AnyView(

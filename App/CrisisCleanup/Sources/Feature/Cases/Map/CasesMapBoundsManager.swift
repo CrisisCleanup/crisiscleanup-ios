@@ -40,15 +40,6 @@ internal class CasesMapBoundsManager {
         }
         .share()
 
-        // TODO: Why is this logging twice every time the incident is changed? All downstream observers fire 2x as well...
-//        incidentSelector.incident
-//            .eraseToAnyPublisher()
-//            .share()
-//            .sink { data in
-//            print("bounds incident chnage \(data.id) \(self)")
-//        }
-//        .store(in: &disposables)
-
         incidentSelector.incident
             .eraseToAnyPublisher()
             .map { incident in

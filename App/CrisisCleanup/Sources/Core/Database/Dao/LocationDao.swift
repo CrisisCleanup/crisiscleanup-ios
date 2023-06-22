@@ -42,6 +42,7 @@ public class LocationDao {
     func streamLocations(_ ids: [Int64]) -> AnyPublisher<[Location], Error> {
         ValueObservation
             .tracking({ db in self.fetchLocations(db, ids) })
+            .removeDuplicates()
             .map { locations in locations.map { $0.asExternalModel() } }
             .publisher(in: reader)
             .share()
