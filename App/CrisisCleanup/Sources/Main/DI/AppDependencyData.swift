@@ -59,4 +59,8 @@ extension MainComponent {
             )
         }
     }
+
+    public var searchWorksitesRepository: SearchWorksitesRepository {
+        FakeSearchWorksitesRepository()
+    }
 }

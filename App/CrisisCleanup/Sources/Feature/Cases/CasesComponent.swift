@@ -20,7 +20,8 @@ class CasesComponent: Component<AppDependency>, CasesViewBuilder {
         AnyView(
             CasesView(
                 viewModel: casesViewModel,
-                incidentSelectViewBuilder: dependency.incidentSelectViewBuilder
+                incidentSelectViewBuilder: dependency.incidentSelectViewBuilder,
+                casesSearchViewBuilder: dependency.casesSearchViewBuilder
             )
         )
     }

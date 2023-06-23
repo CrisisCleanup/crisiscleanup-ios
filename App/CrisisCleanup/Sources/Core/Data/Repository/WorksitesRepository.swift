@@ -59,7 +59,7 @@ public protocol WorksitesRepository {
 
     func getWorksiteSyncStats(_ incidentId: Int64) throws -> IncidentDataSyncStats?
 
-    func getLocalId(_ networkWorksiteId: Int64) throws -> Int64
+    func getLocalId(_ networkWorksiteId: Int64) async throws -> Int64
 
     func syncNetworkWorksite(
         _ worksite: NetworkWorksiteFull,

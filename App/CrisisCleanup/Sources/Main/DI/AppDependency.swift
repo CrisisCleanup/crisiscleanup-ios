@@ -20,11 +20,13 @@ public protocol AppDependency: Dependency {
     var workTypeStatusRepository: WorkTypeStatusRepository { get }
     var locationsRepository: LocationsRepository { get }
     var worksitesRepository: WorksitesRepository { get }
+    var searchWorksitesRepository: SearchWorksitesRepository { get }
 
     var translator: KeyAssetTranslator { get }
 
     var authenticateViewBuilder: AuthenticateViewBuilder { get }
     var incidentSelectViewBuilder: IncidentSelectViewBuilder { get }
+    var casesSearchViewBuilder: CasesSearchViewBuilder { get }
 
     var authEventBus: AuthEventBus { get }
     var accountDataRepository: AccountDataRepository { get }
@@ -90,6 +92,7 @@ extension MainComponent {
 
     public var authenticateViewBuilder: AuthenticateViewBuilder { self }
     public var incidentSelectViewBuilder: IncidentSelectViewBuilder { self }
+    public var casesSearchViewBuilder: CasesSearchViewBuilder { self }
 
     public var authEventBus: AuthEventBus {
         return shared { CrisisCleanupAuthEventBus() }

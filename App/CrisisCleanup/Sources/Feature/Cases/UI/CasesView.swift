@@ -6,6 +6,8 @@ struct CasesView: View {
 
     @ObservedObject var viewModel: CasesViewModel
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
+    let casesSearchViewBuilder: CasesSearchViewBuilder
+
     let incidentsTypeIconsAssetsFolder = "incident_type_icons/"
 
     @State var showIncidentSelect = false
@@ -32,6 +34,13 @@ struct CasesView: View {
 
             Spacer()
             Text("cases")
+            Spacer()
+            NavigationLink {
+                casesSearchViewBuilder.casesSearchView
+                    .navigationBarTitle("search-title")
+            } label: {
+                Text("search-button")
+            }
             Spacer()
         }
         .padding()

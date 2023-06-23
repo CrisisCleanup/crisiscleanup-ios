@@ -14,17 +14,11 @@ public struct WorkType {
     let workTypeLiteral: String
 
     // sourcery:begin: skipCopy
-    lazy var isClaimed: Bool = { orgClaim != nil }()
-    lazy var status: WorkTypeStatus = { statusFromLiteral(statusLiteral) }()
-    lazy var statusClaim = { WorkTypeStatusClaim(status, isClaimed) }()
-    lazy var workType: WorkTypeType = { typeFromLiteral(workTypeLiteral) }()
-
-    var isReleaseEligible: Bool {
-        if let at = createdAt {
-            return Date.now.addingTimeInterval(releaseDaysThreshold) > at
-        }
-        return false
-    }
+    let isClaimed: Bool
+    let status: WorkTypeStatus
+    let statusClaim: WorkTypeStatusClaim
+    let workType: WorkTypeType
+    let isReleaseEligible: Bool
     // sourcery:end
 
     init(
@@ -45,6 +39,17 @@ public struct WorkType {
         self.recur = recur
         self.statusLiteral = statusLiteral
         self.workTypeLiteral = workTypeLiteral
+
+        isClaimed = orgClaim != nil
+        status = statusFromLiteral(statusLiteral)
+        statusClaim = WorkTypeStatusClaim(status, isClaimed)
+        workType = typeFromLiteral(workTypeLiteral)
+        isReleaseEligible = {
+            if let at = createdAt {
+                return Date.now.addingTimeInterval(releaseDaysThreshold) > at
+            }
+            return false
+        }()
     }
 }
 

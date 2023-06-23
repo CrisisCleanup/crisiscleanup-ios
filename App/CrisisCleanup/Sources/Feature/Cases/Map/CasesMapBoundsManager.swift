@@ -28,8 +28,9 @@ internal class CasesMapBoundsManager {
         mapCameraBoundsPublisher = mapCameraBoundsSubject
             .share()
 
-        let incidentIdPublisher = incidentSelector.incidentId
-            .eraseToAnyPublisher()
+        let incidentIdPublisher = incidentSelector.incidentId.eraseToAnyPublisher()
+        let incidentPublisher = incidentSelector.incident.eraseToAnyPublisher()
+
         let incidentBoundsPublisher = incidentBoundsProvider.mappingBoundsIncidentIds.eraseToAnyPublisher()
 
         isDeterminingBoundsPublisher = Publishers.CombineLatest(
@@ -40,8 +41,7 @@ internal class CasesMapBoundsManager {
         }
         .share()
 
-        incidentSelector.incident
-            .eraseToAnyPublisher()
+        incidentPublisher
             .map { incident in
                 self.incidentIdCache = incident.id
                 return self.incidentBoundsProvider.mapIncidentBounds(incident)

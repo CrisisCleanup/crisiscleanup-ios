@@ -14,9 +14,17 @@ class IncidentSelectRepository: IncidentSelector {
 
     let incidentsData: any Publisher<IncidentsData, Never>
 
-    let incident: any Publisher<Incident, Never>
+    var incident: any Publisher<Incident, Never> {
+        incidentsData
+            .eraseToAnyPublisher()
+            .map { data in data.selected }
+    }
 
-    let incidentId: any Publisher<Int64, Never>
+    var incidentId: any Publisher<Int64, Never> {
+        incidentsData
+            .eraseToAnyPublisher()
+            .map { data in data.selected.id }
+    }
 
     private let preferencesStore: AppPreferencesDataStore
 
@@ -33,19 +41,6 @@ class IncidentSelectRepository: IncidentSelector {
         self.preferencesStore = preferencesStore
 
         incidentsData = incidentsDataSubject
-
-        let incidentDataErase = incidentsData
-            .eraseToAnyPublisher()
-            .share()
-
-        incident = incidentDataErase
-            .map({ data in
-                return data.selected
-            })
-            .share()
-        incidentId = incidentDataErase
-            .map { data in data.selectedId }
-            .share()
 
         let incidentsPublisher = incidentsRepository.incidents.eraseToAnyPublisher()
         let preferencesPublisher = preferencesStore.preferences.eraseToAnyPublisher()
