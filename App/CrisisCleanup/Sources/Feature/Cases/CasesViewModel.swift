@@ -63,6 +63,8 @@ class CasesViewModel: ObservableObject {
                 self.isMapBusy = b0
             }
             .store(in: &disposables)
+
+        Task { await loadFakeData() }
     }
 
     func onViewAppear() {
@@ -155,5 +157,10 @@ class CasesViewModel: ObservableObject {
             }
         }
         return markOffsets
+    }
+
+    private let fakeDataLoader = FakeDataLoader()
+    private func loadFakeData() async {
+        fakeDataLoader.loadData()
     }
 }

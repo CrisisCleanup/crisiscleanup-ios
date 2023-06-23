@@ -36,7 +36,10 @@ let package = Package(
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "GRDB", package: "GRDB.swift"),
             ],
-            path: "Sources"
+            path: "Sources",
+            resources: [
+                .copy("FakeData")
+            ]
         ),
         .testTarget(
             name: "CrisisCleanupTests",
