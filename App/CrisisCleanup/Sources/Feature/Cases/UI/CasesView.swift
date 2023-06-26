@@ -12,7 +12,7 @@ struct CasesView: View {
 
     @State var showIncidentSelect = false
 
-    var body: some View{
+    var body: some View {
         VStack {
             HStack {
                 Button {
@@ -34,6 +34,20 @@ struct CasesView: View {
 
             Spacer()
             Text("cases")
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]) {
+                    ForEach(WorkTypeType.allCases) { workTypeType in
+                        Text(workTypeType.rawValue)
+                        if let imageName = workTypeIconLookup[workTypeType] {
+                            Image(imageName, bundle: .module)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 36, height: 36)
+                                .padding([.vertical], 8)
+                        }
+                    }
+                }
+            }
             Spacer()
             NavigationLink {
                 casesSearchViewBuilder.casesSearchView

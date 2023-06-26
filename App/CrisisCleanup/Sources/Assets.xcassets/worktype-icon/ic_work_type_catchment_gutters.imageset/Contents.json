@@ -1,0 +1,15 @@
+{
+  "images" : [
+    {
+      "filename" : "ic_work_type_catchment_gutters.svg",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  },
+  "properties" : {
+    "template-rendering-intent" : "template"
+  }
+}

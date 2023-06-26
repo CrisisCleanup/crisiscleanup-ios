@@ -46,9 +46,14 @@ struct MenuView: View {
                                 .frame(width: 30, height: 30)
                                 .padding([.vertical], 8)
                         } else {
-                            AsyncImage(url: url)
-                                .frame(width: 30, height: 30)
-                                .padding([.vertical], 8)
+                            AsyncImage(url: url) { image in
+                                image.resizable()
+                                    .scaledToFit()
+                            } placeholder: {
+                                ProgressView()
+                            }
+                            .frame(width: 36, height: 36)
+                            .padding([.vertical], 8)
                         }
                     } else {
                         Text("Auth")
