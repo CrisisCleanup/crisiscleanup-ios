@@ -17,6 +17,8 @@ class OfflineFirstWorksitesRepository: WorksitesRepository {
 
         self.isLoading = isLoadingSubject
         self.syncWorksitesFullIncidentId = syncWorksitesFullIncidentIdSubject
+
+        Task { await loadFakeData() }
     }
 
     func streamWorksitesMapVisual(
@@ -55,9 +57,25 @@ class OfflineFirstWorksitesRepository: WorksitesRepository {
         return PassthroughSubject<[WorksiteSummary], Never>()
     }
 
+    private func fakeWorksitesMapVisual() -> [WorksiteMapMark] {
+        let worksites = fakeDataLoader.cycleWorksites()
+        return worksites.map { worksite in
+            WorksiteMapMark(
+                id: worksite.id,
+                latitude: worksite.longitude,
+                longitude: worksite.latitude,
+                statusClaim: worksite.keyWorkType!.statusClaim,
+                workType: worksite.keyWorkType!.workType,
+                workTypeCount: Int.random(in: 0..<3),
+                isFavorite: Int.random(in: 0..<10) < 2,
+                isHighPriority: Int.random(in: 0..<10) < 2
+            )
+        }
+    }
+
     func getWorksitesMapVisual(_ incidentId: Int64, _ limit: Int, _ offset: Int) throws -> [WorksiteMapMark] {
         // TODO: Do
-        return []
+        return fakeWorksitesMapVisual()
     }
 
     func getWorksitesMapVisual(
@@ -69,7 +87,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository {
         limit: Int,
         offset: Int) async throws -> [WorksiteMapMark] {
             // TODO: Do
-            return []
+            return fakeWorksitesMapVisual()
         }
 
     func getWorksitesCount(_ incidentId: Int64) throws -> Int {
@@ -135,8 +153,15 @@ class OfflineFirstWorksitesRepository: WorksitesRepository {
         emails: [String],
         phoneNumbers: [String],
         shareMessage: String,
-        noClaimReason: String?) async throws -> Bool {
-            // TODO: Do
-            return false
-        }
+        noClaimReason: String?
+    ) async throws -> Bool {
+        // TODO: Do
+        return false
+    }
+
+
+    private let fakeDataLoader = FakeDataLoader()
+    private func loadFakeData() async {
+        fakeDataLoader.loadData()
+    }
 }

@@ -37,7 +37,7 @@ public struct Worksite {
     let incidentId: Int64
     let keyWorkType: WorkType?
     let latitude: Double
-    let Int64itude: Double
+    let longitude: Double
     let name: String
     let networkId: Int64
     let notes: [WorksiteNote]
@@ -113,7 +113,7 @@ public struct Worksite {
         incidentId: Int64,
         keyWorkType: WorkType?,
         latitude: Double,
-        Int64itude: Double,
+        longitude: Double,
         name: String,
         networkId: Int64,
         notes: [WorksiteNote] = [],
@@ -146,7 +146,7 @@ public struct Worksite {
         self.incidentId = incidentId
         self.keyWorkType = keyWorkType
         self.latitude = latitude
-        self.Int64itude = Int64itude
+        self.longitude = longitude
         self.name = name
         self.networkId = networkId
         self.notes = notes
@@ -181,7 +181,7 @@ let EmptyWorksite = Worksite(
     incidentId: EmptyIncident.id,
     keyWorkType: nil,
     latitude: 0.0,
-    Int64itude: 0.0,
+    longitude: 0.0,
     name: "",
     networkId: -1,
     phone1: "",

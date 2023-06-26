@@ -18,8 +18,11 @@ class CasesViewModel: ObservableObject {
     private lazy var incidentLocationBoundsPublisher = $incidentLocationBounds
 
     @Published private(set) var isMapBusy: Bool = false
+    private let isGeneratingWorksiteMarkers = CurrentValueSubject<Bool, Never>(false)
 
     private let mapMarkerManager: CasesMapMarkerManager
+
+    @Published private(set) var worksiteMapMarkers: [WorksiteIconMapMark] = []
 
     private var disposables = Set<AnyCancellable>()
 
@@ -64,7 +67,36 @@ class CasesViewModel: ObservableObject {
             }
             .store(in: &disposables)
 
-        Task { await loadFakeData() }
+        qsm.worksiteQueryState
+            .eraseToAnyPublisher()
+            .debounce(
+                for: .seconds(0.25),
+                scheduler: RunLoop.main
+            )
+            .asyncMap { wqs in
+                if wqs.incidentId == EmptyIncident.id {
+                    return [WorksiteIconMapMark]()
+                } else {
+                    Task { @MainActor in self.isGeneratingWorksiteMarkers.value = true }
+                    do {
+                        defer {
+                            Task { @MainActor in self.isGeneratingWorksiteMarkers.value = false }
+                        }
+
+                        return try await self.generateWorksiteMarkers(wqs)
+                    } catch {
+                        self.logger.logError(error)
+                    }
+                }
+                return [WorksiteIconMapMark]()
+            }
+            .map({ marks in
+                print("Marks \(marks)")
+                return marks
+            })
+            .receive(on: RunLoop.main)
+            .assign(to: \.worksiteMapMarkers, on: self)
+            .store(in: &disposables)
     }
 
     func onViewAppear() {
@@ -77,7 +109,7 @@ class CasesViewModel: ObservableObject {
 
     private let zeroOffset = (0.0, 0.0)
 
-    private func generateWorksiteMarkers(wqs: WorksiteQueryState) async throws -> [WorksiteIconMapMark] {
+    private func generateWorksiteMarkers(_ wqs: WorksiteQueryState) async throws -> [WorksiteIconMapMark] {
         let id = wqs.incidentId
         let sw = wqs.coordinateBounds.southWest
         let ne = wqs.coordinateBounds.northEast
@@ -157,10 +189,5 @@ class CasesViewModel: ObservableObject {
             }
         }
         return markOffsets
-    }
-
-    private let fakeDataLoader = FakeDataLoader()
-    private func loadFakeData() async {
-        fakeDataLoader.loadData()
     }
 }

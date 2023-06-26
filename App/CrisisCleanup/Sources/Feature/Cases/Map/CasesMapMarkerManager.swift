@@ -135,11 +135,6 @@ class CasesMapMarkerManager {
     }
 }
 
-private let OneRadian = Double.pi / 180
-fileprivate extension Double {
-    var radians: Double { self * OneRadian }
-}
-
 private struct BoundsQueryParams {
     let fullCount: Int
     let queryCount: Int
