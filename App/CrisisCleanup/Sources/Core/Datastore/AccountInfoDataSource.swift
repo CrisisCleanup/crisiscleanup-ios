@@ -27,7 +27,6 @@ class AccountInfoUserDefaults: AccountInfoDataSource {
                 }
                 return accountData
             }
-            .share()
     }
 
     func setAccount(_ info: AccountInfo) {

@@ -41,7 +41,6 @@ class AppPreferencesUserDefaults: AppPreferencesDataStore {
                 }
                 return appPreferences
             }
-            .share()
     }
 
     func setSyncAttempt(

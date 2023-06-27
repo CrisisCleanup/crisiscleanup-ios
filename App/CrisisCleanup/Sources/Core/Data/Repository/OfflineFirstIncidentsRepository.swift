@@ -46,8 +46,8 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
 
         fullIncidentQueryFields = incidentsQueryFields + ["form_fields"]
 
-        isLoading = isLoadingSubject.share()
-        incidents = incidentsSubject.share()
+        isLoading = isLoadingSubject
+        incidents = incidentsSubject
 
         incidentDao.streamIncidents()
             .sink { completion in
@@ -70,7 +70,6 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
     func streamIncident(_ id: Int64) -> any Publisher<Incident?, Never> {
         incidentDao.streamFormFieldsIncident(id)
             .assertNoFailure()
-            .share()
     }
 
     private func saveLocations(_ incidents: [NetworkIncident]) async throws {

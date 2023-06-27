@@ -13,7 +13,6 @@ class NetworkReachability: NetworkMonitor {
 
         isOnline = isOnlineSubject
             .eraseToAnyPublisher()
-            .share()
         isNotOnline = isOnline
             .eraseToAnyPublisher()
             .map { b in !b }
