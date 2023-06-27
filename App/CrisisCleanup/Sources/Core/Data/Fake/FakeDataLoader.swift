@@ -71,7 +71,7 @@ private extension Bundle {
 
 extension NetworkWorksiteShort {
     fileprivate func asExternalModel(_ id: Int64) -> Worksite {
-        let keyWorkType = getNewestKeyWorkType()
+        let keyWorkType = newestKeyWorkType()
         return Worksite(
             id: id,
             address: address,
@@ -106,7 +106,7 @@ extension NetworkWorksiteShort {
             svi: svi == nil ? nil : Double(svi!),
             updatedAt: updatedAt,
             what3Words: nil,
-            workTypes: getNewestWorkTypes().map { workType in
+            workTypes: newestWorkTypes().map { workType in
                 WorkType(
                     id: 0,
                     createdAt: nil,
