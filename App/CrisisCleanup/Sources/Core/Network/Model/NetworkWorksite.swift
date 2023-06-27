@@ -306,6 +306,25 @@ public struct NetworkWorksiteShort: Codable, Equatable {
             newsetWorkTypeMap()
         )
     }
+
+    private func getNewsetWorkTypeMap() -> [String: (Int, NetworkWorkTypeShort)] {
+        return NetworkWorksiteShort.getNewestWorkTypeMap(workTypes)
+    }
+
+    func getNewestWorkTypes() -> [NetworkWorkTypeShort] {
+        return NetworkWorksiteShort.getNewestWorkTypes(
+            workTypes,
+            getNewsetWorkTypeMap()
+        )
+    }
+
+    func getNewestKeyWorkType() -> NetworkKeyWorkTypeShort? {
+        return NetworkWorksiteShort.getKeyWorkType(
+            keyWorkType,
+            workTypes,
+            getNewsetWorkTypeMap()
+        )
+    }
 }
 
 public struct NetworkWorksitesPageResult: Codable, Equatable {

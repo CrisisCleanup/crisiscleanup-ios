@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="18px" height="18px" viewBox="0 0 18 18" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 61.2 (89653) - https://sketch.com -->
+    <title>ic_work_type_plus</title>
+    <desc>Created with Sketch.</desc>
+    <g id="worktype-icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="ic_work_type_plus" transform="translate(1.000000, 1.000000)" fill-rule="nonzero">
+            <rect id="Rectangle" stroke="#2D2D2D" fill-opacity="0.8" fill="#FFFFFF" x="0.25" y="0.25" width="15.5" height="15.5" rx="2"></rect>
+            <path d="M7.336,3.935 C7.37379369,3.58523899 7.67673645,3.32496244 8.02819941,3.34028939 C8.37966237,3.35561635 8.65879736,3.64127674 8.666,3.993 L8.666,7.333 L12.007,7.333 C12.3621395,7.33565881 12.6529127,7.61613076 12.6683742,7.9709435 C12.6838356,8.32575624 12.418562,8.63045863 12.065,8.664 L12.007,8.667 L8.667,8.667 L8.667,12.007 L8.664,12.065 C8.62620631,12.414761 8.32326355,12.6750376 7.97180059,12.6597106 C7.62033763,12.6443837 7.34120264,12.3587233 7.334,12.007 L7.334,8.667 L3.992,8.667 C3.63686049,8.66434119 3.34608726,8.38386924 3.33062585,8.0290565 C3.31516443,7.67424376 3.58043796,7.36954137 3.934,7.336 L3.992,7.333 L7.332,7.333 L7.332,3.993 L7.336,3.935 Z" id="Path" fill="#2D2D2D"></path>
+        </g>
+    </g>
+</svg>
