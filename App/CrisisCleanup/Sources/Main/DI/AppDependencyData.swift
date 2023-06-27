@@ -1,6 +1,8 @@
 extension MainComponent {
     var appDatabase: AppDatabase { shared { .shared } }
 
+    public var databaseVersionProvider: DatabaseVersionProvider { appDatabase }
+
     var languageDao: LanguageDao {
         LanguageDao(appDatabase)
     }

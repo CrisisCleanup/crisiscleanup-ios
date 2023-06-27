@@ -52,17 +52,17 @@ extension IncidentRecord: Codable, FetchableRecord, PersistableRecord {
              turnOnRelease,
              isArchived
     }
-
-    static func isNotArchived() -> SQLSpecificExpressible {
-        Columns.isArchived == false
-    }
-
-    static func startingAt(_ startAt: Date) -> SQLSpecificExpressible {
-        Columns.startAt > startAt
-    }
 }
 
 extension DerivableRequest<IncidentRecord> {
+    func isNotArchived() -> Self {
+        filter(IncidentRecord.Columns.isArchived == false)
+    }
+
+    func startingAt(_ startAt: Date) -> Self {
+        filter(IncidentRecord.Columns.startAt > startAt)
+    }
+
     func orderedByStartAtDesc() -> Self {
         order(IncidentRecord.Columns.startAt.desc)
     }

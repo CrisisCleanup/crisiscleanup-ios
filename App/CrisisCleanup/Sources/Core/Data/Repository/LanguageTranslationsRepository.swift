@@ -141,7 +141,7 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
 
     private func pullUpdatedTranslations(_ key: String) async throws {
         if let t = languageDao.getLanguageTranslations(key) {
-            let localizationUpdateCount = try await dataSource.getLocalizationCount(after: t.syncedAt)
+            let localizationUpdateCount = try await dataSource.getLocalizationCount(t.syncedAt)
             if localizationUpdateCount?.count ?? 0 > 0 {
                 try await pullLanguages()
                 try await pullTranslations(key)

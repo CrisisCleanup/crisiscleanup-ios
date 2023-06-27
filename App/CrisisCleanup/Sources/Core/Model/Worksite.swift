@@ -37,7 +37,7 @@ public struct Worksite {
     let incidentId: Int64
     let keyWorkType: WorkType?
     let latitude: Double
-    let Int64itude: Double
+    let longitude: Double
     let name: String
     let networkId: Int64
     let notes: [WorksiteNote]
@@ -47,7 +47,7 @@ public struct Worksite {
     let postalCode: String
     let reportedBy: Int64?
     let state: String
-    let svi: Float?
+    let svi: Double?
     let updatedAt: Date?
     let what3Words: String?
     let workTypes: [WorkType]
@@ -113,7 +113,7 @@ public struct Worksite {
         incidentId: Int64,
         keyWorkType: WorkType?,
         latitude: Double,
-        Int64itude: Double,
+        longitude: Double,
         name: String,
         networkId: Int64,
         notes: [WorksiteNote] = [],
@@ -123,7 +123,7 @@ public struct Worksite {
         postalCode: String,
         reportedBy: Int64?,
         state: String,
-        svi: Float?,
+        svi: Double?,
         updatedAt: Date?,
         what3Words: String? = nil,
         workTypes: [WorkType],
@@ -146,7 +146,7 @@ public struct Worksite {
         self.incidentId = incidentId
         self.keyWorkType = keyWorkType
         self.latitude = latitude
-        self.Int64itude = Int64itude
+        self.longitude = longitude
         self.name = name
         self.networkId = networkId
         self.notes = notes
@@ -181,7 +181,7 @@ let EmptyWorksite = Worksite(
     incidentId: EmptyIncident.id,
     keyWorkType: nil,
     latitude: 0.0,
-    Int64itude: 0.0,
+    longitude: 0.0,
     name: "",
     networkId: -1,
     phone1: "",
@@ -196,7 +196,7 @@ let EmptyWorksite = Worksite(
 
 let CROSS_STREET_FIELD_KEY = "cross_street"
 
-public struct WorksiteFormValue {
+public struct WorksiteFormValue: Equatable {
     let isBoolean: Bool
     let valueString: String
     let valueBoolean: Bool
@@ -251,7 +251,7 @@ enum WorksiteFlagType: String, Identifiable, CaseIterable {
 
 private let flagTypeLookup = WorksiteFlagType.allCases.associateBy{ $0.literal }
 
-public struct WorksiteFlag {
+public struct WorksiteFlag: Equatable {
     let id: Int64
     let action: String
     let createdAt: Date
@@ -332,7 +332,7 @@ public struct WorksiteFlag {
     }
 }
 
-public struct WorksiteNote {
+public struct WorksiteNote: Equatable {
     let id: Int64
     let createdAt: Date
     let isSurvivor: Bool
@@ -340,11 +340,23 @@ public struct WorksiteNote {
 
     static func create(_ isSurvivor: Bool = false) -> WorksiteNote {
         WorksiteNote(
-            id: 0,
-            createdAt: Date(),
-            isSurvivor: isSurvivor,
-            note: ""
+            0,
+            Date(),
+            isSurvivor,
+            ""
         )
+    }
+
+    init(
+        _ id: Int64,
+        _ createdAt: Date,
+        _ isSurvivor: Bool,
+        _ note: String
+    ) {
+        self.id = id
+        self.createdAt = createdAt
+        self.isSurvivor = isSurvivor
+        self.note = note
     }
 }
 

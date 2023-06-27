@@ -28,7 +28,7 @@ extension Worksite {
 		var incidentId: Int64
 		var keyWorkType: WorkType?
 		var latitude: Double
-		var Int64itude: Double
+		var longitude: Double
 		var name: String
 		var networkId: Int64
 		var notes: [WorksiteNote]
@@ -38,7 +38,7 @@ extension Worksite {
 		var postalCode: String
 		var reportedBy: Int64?
 		var state: String
-		var svi: Float?
+		var svi: Double?
 		var updatedAt: Date?
 		var what3Words: String?
 		var workTypes: [WorkType]
@@ -61,7 +61,7 @@ extension Worksite {
 			self.incidentId = original.incidentId
 			self.keyWorkType = original.keyWorkType
 			self.latitude = original.latitude
-			self.Int64itude = original.Int64itude
+			self.longitude = original.longitude
 			self.name = original.name
 			self.networkId = original.networkId
 			self.notes = original.notes
@@ -96,7 +96,7 @@ extension Worksite {
 				incidentId: incidentId,
 				keyWorkType: keyWorkType,
 				latitude: latitude,
-				Int64itude: Int64itude,
+				longitude: longitude,
 				name: name,
 				networkId: networkId,
 				notes: notes,
