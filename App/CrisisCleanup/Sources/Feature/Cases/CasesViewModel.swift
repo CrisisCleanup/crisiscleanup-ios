@@ -5,10 +5,14 @@ import Foundation
 class CasesViewModel: ObservableObject {
     private let incidentSelector: IncidentSelector
     private let worksitesRepository: WorksitesRepository
+    private let dataPullReporter: IncidentDataPullReporter
     private let mapCaseIconProvider: MapCaseIconProvider
     private let logger: AppLogger
 
     @Published private(set) var incidentsData = LoadingIncidentsData
+
+    @Published private(set) var showDataProgress = false
+    @Published private(set) var dataProgress = 0.0
 
     private let qsm: CasesQueryStateManager
 
@@ -25,16 +29,19 @@ class CasesViewModel: ObservableObject {
     @Published private(set) var worksiteMapMarkers: [WorksiteIconMapMark] = []
 
     private var disposables = Set<AnyCancellable>()
+    private var observableSubscriptions = Set<AnyCancellable>()
 
     init(
         incidentSelector: IncidentSelector,
         incidentBoundsProvider: IncidentBoundsProvider,
         worksitesRepository: WorksitesRepository,
+        dataPullReporter: IncidentDataPullReporter,
         mapCaseIconProvider: MapCaseIconProvider,
         loggerFactory: AppLoggerFactory
     ) {
         self.incidentSelector = incidentSelector
         self.worksitesRepository = worksitesRepository
+        self.dataPullReporter = dataPullReporter
         self.mapCaseIconProvider = mapCaseIconProvider
 
         logger = loggerFactory.getLogger("cases")
@@ -100,11 +107,28 @@ class CasesViewModel: ObservableObject {
     }
 
     func onViewAppear() {
-        // TODO: Resume observations
+        // TODO: Subscribe to other subscriptions that are only relevent on screen
+        subscribeDataPullStats()
     }
 
     func onViewDisappear() {
-        // TODO: Pause observations
+        let subscriptions = observableSubscriptions
+        observableSubscriptions = Set<AnyCancellable>()
+        for subscription in subscriptions {
+            subscription.cancel()
+        }
+    }
+
+    private func subscribeDataPullStats() {
+        dataPullReporter.incidentDataPullStats
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .sink { stats in
+                self.logger.logDebug("Data pull stats", stats)
+                self.showDataProgress = stats.isOngoing
+                self.dataProgress = stats.progress
+            }
+            .store(in: &observableSubscriptions)
     }
 
     private let zeroOffset = (0.0, 0.0)

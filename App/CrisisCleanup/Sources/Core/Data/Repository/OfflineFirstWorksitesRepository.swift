@@ -17,7 +17,6 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     private let syncWorksitesFullIncidentIdSubject = CurrentValueSubject<Int64, Never>(EmptyWorksite.id)
     var syncWorksitesFullIncidentId: any Publisher<Int64, Never>
 
-    private let incidentDataPullStatsSubject = CurrentValueSubject<IncidentDataPullStats, Never>(IncidentDataPullStats())
     var incidentDataPullStats: any Publisher<IncidentDataPullStats, Never>
 
     init(
@@ -41,7 +40,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
 
         isLoading = isLoadingSubject
         syncWorksitesFullIncidentId = syncWorksitesFullIncidentIdSubject
-        incidentDataPullStats = incidentDataPullStatsSubject
+        incidentDataPullStats = worksitesSyncer.dataPullStats
 
         Task { await loadFakeData() }
     }

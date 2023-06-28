@@ -9,28 +9,31 @@ struct CasesView: View {
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
     let casesSearchViewBuilder: CasesSearchViewBuilder
 
-    let incidentsTypeIconsAssetsFolder = "incident_type_icons/"
-
     @State var showIncidentSelect = false
     @State var map = MKMapView()
 
     var body: some View {
         ZStack {
-            
+
             MapView(map: $map, viewModel: viewModel)
-               
+
+            if viewModel.showDataProgress {
+                VStack {
+                    ProgressView(value: viewModel.dataProgress, total: 1)
+                        .progressViewStyle(
+                            LinearProgressViewStyle(tint: appTheme.colors.primaryOrangeColor)
+                        )
+                    Spacer()
+                }
+            }
+
             VStack {
                 HStack {
                     VStack(spacing: 0) {
                         Button {
                             showIncidentSelect.toggle()
-                        
-                            print("toggling")
                         } label: {
-                            let selectedIncident = viewModel.incidentsData.selected
-                            let icon = selectedIncident.disasterLiteral.isEmpty
-                            ? "other" : selectedIncident.disasterLiteral
-                            Image(incidentsTypeIconsAssetsFolder+icon, bundle: .module).foregroundColor(Color.blue)
+                            IncidentDisasterImage(viewModel.incidentsData.selected)
                         }
                         .sheet(isPresented: $showIncidentSelect) {
                             incidentSelectViewBuilder.incidentSelectView( onDismiss: {showIncidentSelect = false} )
@@ -130,5 +133,7 @@ struct CasesView: View {
             }
             .padding()
         }
+        .onAppear { viewModel.onViewAppear() }
+        .onDisappear { viewModel.onViewDisappear() }
     }
 }

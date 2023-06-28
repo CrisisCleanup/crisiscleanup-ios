@@ -15,13 +15,6 @@ enum TopLevelDestination: String, Identifiable, CaseIterable {
         }
     }
 
-    var titleLocalizationKey: String {
-        switch self {
-        case .cases: return ""
-        case .menu: return "Menu nav"
-        }
-    }
-
     var imageName: String {
         switch self {
         case .cases: return "cases"

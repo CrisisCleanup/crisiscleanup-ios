@@ -11,6 +11,7 @@ class CasesComponent: Component<AppDependency>, CasesViewBuilder {
             incidentSelector: dependency.incidentSelector,
             incidentBoundsProvider: dependency.incidentBoundsProvider,
             worksitesRepository: dependency.worksitesRepository,
+            dataPullReporter: dependency.incidentDataPullReporter,
             mapCaseIconProvider: dependency.mapCaseIconProvider,
             loggerFactory: dependency.loggerFactory
         )

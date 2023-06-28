@@ -16,15 +16,34 @@ struct MainView: View {
             Text("Splash")
         case .ready:
             if viewModel.viewData.showMainContent {
+                let navColor = appTheme.colors.navigationContainerColor
                 NavigationStack {
-                    TabView(selection: $selectedTab) {
-                        casesViewBuilder.casesView
-                            .navTabItem(.cases, viewModel.translator)
-                            .tag(TopLevelDestination.cases)
-                        menuViewBuilder.menuView
-                            .navTabItem(.menu, viewModel.translator)
-                            .tag(TopLevelDestination.menu)
+                    ZStack {
+                        navColor.ignoresSafeArea()
+                        VStack {
+                            // TODO: Change status icon colors without this empty Text
+                            Text("")
+
+                            TabView {
+                                Group {
+                                    TabViewContainer {
+                                        casesViewBuilder.casesView
+                                    }
+                                    .navTabItem(.cases, viewModel.translator)
+                                    .tag(TopLevelDestination.cases)
+
+                                    TabViewContainer {
+                                        menuViewBuilder.menuView
+                                    }
+                                    .navTabItem(.menu, viewModel.translator)
+                                    .tag(TopLevelDestination.menu)
+                                }
+                                .toolbarColorScheme(.light, for: .tabBar)
+                            }
+                        }
                     }
+                    .toolbarBackground(.visible, for: .navigationBar)
+                    .toolbarColorScheme(.light, for: .navigationBar)
                 }
                 .environment(\.translator, viewModel.translator)
             } else {
@@ -32,6 +51,37 @@ struct MainView: View {
                     .environment(\.translator, viewModel.translator)
                     .navigationBarTitle("")
                     .navigationBarHidden(true)
+            }
+        }
+    }
+}
+
+private struct TabViewContainer<Content: View>: View {
+    let backgroundColor: Color
+    let bottomPadding: CGFloat?
+
+    private let content: Content
+
+    init(
+        backgroundColor: Color = appTheme.colors.navigationContainerColor,
+        bottomPadding: CGFloat? = 8,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.content = content()
+        self.backgroundColor = backgroundColor
+        self.bottomPadding = bottomPadding
+    }
+
+    var body: some View {
+        ZStack {
+            backgroundColor.ignoresSafeArea()
+
+            VStack {
+                content
+
+                Rectangle()
+                    .fill(Color.clear)
+                    .frame(height: bottomPadding)
             }
         }
     }
