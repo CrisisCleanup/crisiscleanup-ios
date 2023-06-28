@@ -1,12 +1,12 @@
 import Combine
 import Foundation
 
-protocol IncidentDataPullReporter {
+public protocol IncidentDataPullReporter {
     var incidentDataPullStats: any Publisher<IncidentDataPullStats, Never> { get }
 }
 
 // sourcery: copyBuilder, skipCopyInit
-struct IncidentDataPullStats {
+public struct IncidentDataPullStats {
     let isStarted: Bool
     let incidentId: Int64
     let pullStart: Date

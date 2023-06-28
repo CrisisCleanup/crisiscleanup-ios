@@ -111,6 +111,20 @@ extension WorksiteRootRecord: Codable, FetchableRecord, MutablePersistableRecord
             ]
         )
     }
+
+    static func getCount(_ db: Database, _ incidentId: Int64) throws -> Int {
+        try WorksiteRootRecord
+            .filter(Columns.incidentId == incidentId)
+            .fetchCount(db)
+    }
+
+    static func getWorksiteId(_ db: Database, _ networkId: Int64) throws -> Int64 {
+        let record = try WorksiteRootRecord
+            .all()
+            .filter(Columns.networkId == networkId && Columns.localGlobalUuid == "")
+            .fetchOne(db)
+        return record?.id ?? 0
+    }
 }
 
 extension DerivableRequest<WorksiteRootRecord> {
@@ -333,6 +347,25 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
             .fetchAll(db)
             .first!
             .id
+    }
+
+    static func getCount(
+        _ db: Database,
+        _ incidentId: Int64,
+        south: Double,
+        north: Double,
+        west: Double,
+        east: Double
+    ) throws -> Int {
+        try WorksiteRecord
+            .filter(
+                Columns.incidentId == incidentId &&
+                Columns.longitude > west &&
+                Columns.longitude < east &&
+                Columns.latitude < north &&
+                Columns.latitude > south
+            )
+            .fetchCount(db)
     }
 }
 

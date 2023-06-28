@@ -322,7 +322,6 @@ public struct NetworkWorksitePage: Codable, Equatable {
     let caseNumber: String
     let city: String
     let county: String
-    @DateWorksitesPage
     // Full does not have this field. Updates should not overwrite
     var createdAt: Date
     let email: String?
@@ -341,7 +340,6 @@ public struct NetworkWorksitePage: Codable, Equatable {
     let state: String
     @FloatStringOptional
     var svi: Float?
-    @DateWorksitesPage
     var updatedAt: Date
     let what3words: String?
     private let workTypes: [NetworkWorksiteFull.WorkTypeShort]
@@ -479,36 +477,5 @@ struct FloatStringOptional: Codable, Equatable {
         } else {
             wrappedValue = nil
         }
-    }
-}
-
-internal struct WorksitesPageDateFormatter {
-    let formatter: DateFormatter
-
-    init() {
-        formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSxxx"
-    }
-}
-
-private let iso8601DateFormatter = ISO8601DateFormatter()
-
-@propertyWrapper
-struct DateWorksitesPage: Codable, Equatable {
-    static private let customDate = WorksitesPageDateFormatter()
-    var wrappedValue: Date
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if let s = try? container.decode(String.self) {
-            if let isoDate = iso8601DateFormatter.date(from: s) {
-                wrappedValue = isoDate
-                return
-            } else if let customDate = DateWorksitesPage.customDate.formatter.date(from: s) {
-                wrappedValue = customDate
-                return
-            }
-        }
-        throw GenericError("Failed to parse date. Is it a common format?")
     }
 }

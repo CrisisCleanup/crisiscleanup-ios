@@ -61,6 +61,7 @@ public class IncidentDao {
         try IncidentRecord
             .all()
             .isNotArchived()
+            .orderedByStartAtDesc()
             .including(all: IncidentRecord.locations)
             .asRequest(of: PopulatedIncident.self)
             .fetchAll(db)

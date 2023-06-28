@@ -73,7 +73,7 @@ class CasesSearchViewModel: ObservableObject {
                         self.isInitialLoading.value = false
                     }
 
-                    if (incidentId > 0) {
+                    if incidentId > 0 {
                         return worksitesRepository.streamRecentWorksites(incidentId)
                             .eraseToAnyPublisher()
                             .map { list in
@@ -146,7 +146,7 @@ class CasesSearchViewModel: ObservableObject {
     }
 
     func onBack() -> Bool {
-        if (searchQuery.isNotBlank) {
+        if searchQuery.isNotBlank {
             searchQuery = ""
             return false
         }
@@ -156,7 +156,7 @@ class CasesSearchViewModel: ObservableObject {
 
     func onSelectWorksite(result: CaseSummaryResult) {
         Task {
-            if (isSelectingResult.value) {
+            if isSelectingResult.value {
                 return
             }
             isSelectingResult.value = true

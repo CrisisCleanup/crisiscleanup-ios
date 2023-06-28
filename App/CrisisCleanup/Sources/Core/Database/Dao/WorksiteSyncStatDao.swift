@@ -38,6 +38,18 @@ public class WorksiteSyncStatDao {
             appBuildVersionCode
         )
     }
+
+    func upsertStats(_ stats: WorksiteSyncStatRecord) async throws {
+        try await database.upsertWorksiteSyncStats(stats)
+    }
+
+    func getSyncStats(_ incidentId: Int64) throws -> IncidentDataSyncStats? {
+        try reader.read { db in
+            try WorksiteSyncStatRecord.all()
+                .byId(incidentId)
+                .fetchOne(db)
+        }?.asExternalModel()
+    }
 }
 
 extension AppDatabase {
@@ -77,5 +89,11 @@ extension AppDatabase {
                 appBuildVersionCode
             )
         }
+    }
+
+    fileprivate func upsertWorksiteSyncStats(
+        _ stats: WorksiteSyncStatRecord
+    ) async throws {
+        try await dbWriter.write { db in try stats.upsert(db) }
     }
 }

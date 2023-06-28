@@ -12,7 +12,6 @@ class NetworkReachability: NetworkMonitor {
         reachabilityManager = NetworkReachabilityManager(host: host)!
 
         isOnline = isOnlineSubject
-            .eraseToAnyPublisher()
         isNotOnline = isOnline
             .eraseToAnyPublisher()
             .map { b in !b }

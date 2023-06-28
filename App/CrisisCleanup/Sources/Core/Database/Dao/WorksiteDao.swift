@@ -22,7 +22,7 @@ public class WorksiteDao {
         _ size: Int,
         _ dataName: String
     ) throws {
-        if (worksitesSize != size) {
+        if worksitesSize != size {
             throw GenericError("Inconsistent data size. Each worksite must have corresponding \(dataName).")
         }
     }
@@ -137,7 +137,7 @@ public class WorksiteDao {
         keepKeyWorkType: Bool = false
     ) throws -> Bool {
         let isLocallyModified = modifiedAt?.isLocalModified ?? false
-        if (modifiedAt == nil) {
+        if modifiedAt == nil {
             let id = try WorksiteRootRecord.insertOrRollback(
                 db,
                 syncedAt,
@@ -155,7 +155,7 @@ public class WorksiteDao {
 
             return true
 
-        } else if (!isLocallyModified) {
+        } else if !isLocallyModified {
             try WorksiteRootRecord.syncUpdate(
                 db,
                 id: modifiedAt!.id,
@@ -375,6 +375,48 @@ public class WorksiteDao {
         return (isUpdated, worksiteId)
     }
 
+    func streamIncidentWorksitesCount(_ id: Int64) -> AnyPublisher<Int, Error> {
+        ValueObservation
+            .tracking({ db in try self.fetchIncidentWorksitesCount(db, id) })
+            .removeDuplicates()
+            .publisher(in: reader)
+            .share()
+            .eraseToAnyPublisher()
+    }
+
+    func getWorksitesCount(_ incidentId: Int64) throws -> Int {
+        return try reader.read({ db in try self.fetchIncidentWorksitesCount(db, incidentId) })
+    }
+
+    private func fetchIncidentWorksitesCount(_ db: Database, _ incidentId: Int64) throws -> Int {
+        try WorksiteRootRecord.getCount(db, incidentId)
+    }
+
+    func getWorksitesCount(
+        _ incidentId: Int64,
+        south: Double,
+        north: Double,
+        west: Double,
+        east: Double
+    ) throws -> Int {
+        return try reader.read({ db in
+            try WorksiteRecord.getCount(
+                db,
+                incidentId,
+                south: south,
+                north: north,
+                west: west,
+                east: east
+            )
+        })
+    }
+
+    func getWorksiteId(_ networkId: Int64) throws -> Int64 {
+        try reader.read { db in
+            try WorksiteRootRecord.getWorksiteId(db, networkId)
+        }
+    }
+
     // MARK: - Test access
 
     internal func getLocalWorksite(_ id: Int64) throws -> PopulatedLocalWorksite? {
@@ -423,7 +465,7 @@ extension AppDatabase {
     ) async throws -> Bool {
         return try await dbWriter.write { db in
             let (isSynced, _) = try worksiteDao.syncWorksite(db, records, syncedAt)
-            if (!isSynced) {
+            if !isSynced {
                 _ = try worksiteDao.syncFillWorksite(db, records)
             }
             return isSynced

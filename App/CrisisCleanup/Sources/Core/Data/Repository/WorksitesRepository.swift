@@ -6,16 +6,6 @@ public protocol WorksitesRepository {
 
     var syncWorksitesFullIncidentId: any Publisher<Int64, Never> { get }
 
-    func streamWorksitesMapVisual(
-        incidentId: Int64,
-        latitudeSouth: Double,
-        latitudeNorth: Double,
-        longitudeLeft: Double,
-        longitudeRight: Double,
-        limit: Int,
-        offset: Int
-    ) async -> any Publisher<[WorksiteMapMark], Error>
-
     /**
      * Stream of an incident's [Worksite]s
      */
@@ -37,7 +27,7 @@ public protocol WorksitesRepository {
         longitudeEast: Double,
         limit: Int,
         offset: Int
-    ) async throws -> [WorksiteMapMark]
+    ) throws -> [WorksiteMapMark]
 
     func getWorksitesCount(_ incidentId: Int64) throws -> Int
 
@@ -47,19 +37,19 @@ public protocol WorksitesRepository {
         latitudeNorth: Double,
         longitudeLeft: Double,
         longitudeRight: Double
-    ) -> Int
+    ) throws -> Int
 
     func refreshWorksites(
         _ incidentId: Int64,
-        _ forceQueryDeltas: Bool,
-        _ forceRefreshAll: Bool
+        forceQueryDeltas: Bool,
+        forceRefreshAll: Bool
     ) async throws
 
     func syncWorksitesFull(_ incidentId: Int64) async throws -> Bool
 
     func getWorksiteSyncStats(_ incidentId: Int64) throws -> IncidentDataSyncStats?
 
-    func getLocalId(_ networkWorksiteId: Int64) async throws -> Int64
+    func getLocalId(_ networkWorksiteId: Int64) throws -> Int64
 
     func syncNetworkWorksite(
         _ worksite: NetworkWorksiteFull,
@@ -87,7 +77,11 @@ public protocol WorksitesRepository {
 
 extension WorksitesRepository {
     func refreshWorksites(_ incidentId: Int64) async throws {
-        try await refreshWorksites(incidentId, false, false)
+        try await refreshWorksites(
+            incidentId,
+            forceQueryDeltas: false,
+            forceRefreshAll: false
+        )
     }
 
     func syncNetworkWorksite(_ worksite: NetworkWorksiteFull) async throws -> Bool {

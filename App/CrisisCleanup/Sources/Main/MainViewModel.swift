@@ -60,6 +60,16 @@ class MainViewModel: ObservableObject {
         syncPuller.pullUnauthenticatedData()
     }
 
+    func onViewAppear() {
+        syncPuller.appPullIncidentWorksitesDelta()
+
+        // TODO: Resume observations
+    }
+
+    func onViewDisappear() {
+        // TODO: Pause observations
+    }
+
     private func sync(_ cancelOngoing: Bool) {
         syncPuller.appPull(cancelOngoing)
     }

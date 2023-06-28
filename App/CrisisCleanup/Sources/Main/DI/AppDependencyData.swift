@@ -15,6 +15,14 @@ extension MainComponent {
         LocationDao(appDatabase)
     }
 
+    var worksiteDao: WorksiteDao {
+        WorksiteDao(appDatabase, syncLoggerFactory.getLogger("worksite-dao"))
+    }
+
+    var worksiteSyncStatDao: WorksiteSyncStatDao {
+        WorksiteSyncStatDao(appDatabase)
+    }
+
     public var incidentsRepository: IncidentsRepository {
         shared {
             OfflineFirstIncidentsRepository(
@@ -57,7 +65,14 @@ extension MainComponent {
     public var worksitesRepository: WorksitesRepository {
         shared {
             OfflineFirstWorksitesRepository(
-                dataSource: networkDataSource
+                dataSource: networkDataSource,
+                worksitesSyncer: worksitesSyncer,
+                worksiteSyncStatDao: worksiteSyncStatDao,
+                worksiteDao: worksiteDao,
+                accountDataRepository: accountDataRepository,
+                languageTranslationsRepository: languageTranslationsRepository,
+                appVersionProvider: appVersionProvider,
+                loggerFactory: loggerFactory
             )
         }
     }

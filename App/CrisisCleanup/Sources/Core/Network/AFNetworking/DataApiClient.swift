@@ -219,7 +219,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
     ) async throws -> [NetworkWorksitePage] {
         let page = (pageOffset ?? 0) <= 1 ? nil : String(pageOffset!)
         let centerCoordinates: String? = latitude == nil && longitude == nil ? nil : "\(latitude!),\(longitude!)"
-        let request = requestProvider.worksites
+        let request = requestProvider.worksitesPage
             .addQueryItems(
                 "incident", String(incidentId),
                 "limit", String(pageCount),

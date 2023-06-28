@@ -6,6 +6,7 @@ extension MainComponent {
                 incidentsRepository: incidentsRepository,
                 languageRepository: languageTranslationsRepository,
                 statusRepository: workTypeStatusRepository,
+                worksitesRepository: worksitesRepository,
                 appPreferencesDataStore: appPreferences,
                 syncLoggerFactory: syncLoggerFactory,
                 authEventBus: authEventBus,
@@ -17,6 +18,22 @@ extension MainComponent {
     public var syncPuller: SyncPuller { providesAppSyncer }
 
     public var syncPusher: SyncPusher { providesAppSyncer }
+
+    var worksitesSyncer: WorksitesSyncer {
+        IncidentWorksitesSyncer(
+            networkDataSource: networkDataSource,
+            networkDataCache: WorksitesNetworkDataFileCache(
+                networkDataSource: networkDataSource,
+                loggerFactory: loggerFactory
+            ),
+            worksiteDao: worksiteDao,
+            worksiteSyncStatDao: worksiteSyncStatDao,
+            appVersionProvider: appVersionProvider,
+            loggerFactory: loggerFactory
+        )
+    }
+
+    public var incidentDataPullReporter: IncidentDataPullReporter { worksitesRepository as! IncidentDataPullReporter }
 
     public var syncLoggerFactory: SyncLoggerFactory { shared { DebugSyncLoggerFactory(loggerFactory) } }
 }

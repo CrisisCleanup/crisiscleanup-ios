@@ -72,11 +72,11 @@ struct TileCoordinates {
         _ latitude: Double,
         _ longitude: Double
     ) -> (Double, Double)? {
-        if (latitude < querySouthwest.latitude ||
+        if latitude < querySouthwest.latitude ||
             latitude > queryNortheast.latitude ||
             longitude < querySouthwest.longitude ||
             longitude > queryNortheast.longitude
-        ) {
+        {
             return nil
         }
 
@@ -90,9 +90,9 @@ struct TileCoordinates {
         var yNorm = 0.5 - log((1 + siny) / (1 - siny)) / FOUR_PI
         yNorm = (yNorm * Double(maxIndex)).truncatingRemainder(dividingBy: 1)
 
-        if (latitude < southwest.latitude) {
+        if latitude < southwest.latitude {
             yNorm += 1
-        } else if (latitude > northeast.latitude) {
+        } else if latitude > northeast.latitude {
             yNorm -= 1
         }
 

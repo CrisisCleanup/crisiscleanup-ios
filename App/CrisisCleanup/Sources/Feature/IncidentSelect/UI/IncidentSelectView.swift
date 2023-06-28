@@ -15,7 +15,7 @@ struct IncidentSelectView: View {
                     let isSelected: Bool = viewModel.incidentsData.selected.id == ee.id
                     HStack {
                         Text(ee.name).bold(isSelected).onTapGesture {
-                            viewModel.incidentSelector.setIncident(incident: ee)
+                            viewModel.incidentSelector.setIncident(ee)
                             onDismiss()
                         }
                     }

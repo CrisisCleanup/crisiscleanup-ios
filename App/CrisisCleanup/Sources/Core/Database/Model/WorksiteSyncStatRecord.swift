@@ -10,6 +10,20 @@ struct WorksiteSyncStatRecord : Identifiable, Equatable {
     let attemptedSync: Date?
     let attemptedCounter: Int
     let appBuildVersionCode: Int64
+
+    func asExternalModel() -> IncidentDataSyncStats {
+        IncidentDataSyncStats(
+            incidentId: id,
+            syncStart: syncStart,
+            dataCount: targetCount,
+            syncAttempt: SyncAttempt(
+                successfulSeconds: successfulSync?.timeIntervalSince1970 ?? 0.0,
+                attemptedSeconds: attemptedSync?.timeIntervalSince1970 ?? 0.0,
+                attemptedCounter: attemptedCounter
+            ),
+            appBuildVersionCode: appBuildVersionCode
+        )
+    }
 }
 
 extension WorksiteSyncStatRecord: Codable, FetchableRecord, PersistableRecord {
@@ -60,14 +74,14 @@ extension WorksiteSyncStatRecord: Codable, FetchableRecord, PersistableRecord {
     ) throws {
         try db.execute(
             sql: """
-            UPDATE OR IGNORE worksite_sync_stats
+            UPDATE OR IGNORE worksiteSyncStat
             SET
             pagedCount         =:pagedCount,
             successfulSync     =:successfulSync,
             attemptedSync      =:attemptedSync,
             attemptedCounter   =:attemptedCounter,
             appBuildVersionCode=:appBuildVersionCode
-            WHERE id=:incidentId AND syncStart=:syncStart
+            WHERE id=:id AND syncStart=:syncStart
             """,
             arguments: [
                 Columns.pagedCount.rawValue: pagedCount,
@@ -78,6 +92,29 @@ extension WorksiteSyncStatRecord: Codable, FetchableRecord, PersistableRecord {
                 Columns.id.rawValue: incidentId,
                 Columns.syncStart.rawValue: syncStart
             ]
+        )
+    }
+}
+
+extension DerivableRequest<WorksiteSyncStatRecord> {
+    func byId(_ incidentId: Int64) -> Self {
+        filter(WorksiteSyncStatRecord.Columns.id == incidentId)
+    }
+}
+
+extension IncidentDataSyncStats {
+    func asWorksiteSyncStatsRecord() -> WorksiteSyncStatRecord {
+        WorksiteSyncStatRecord(
+            id: incidentId,
+            syncStart: syncStart,
+            targetCount: dataCount,
+            pagedCount: pagedCount,
+            successfulSync: syncAttempt.successfulSeconds <= 0 ? nil
+            : Date(timeIntervalSince1970: syncAttempt.successfulSeconds),
+            attemptedSync: syncAttempt.attemptedSeconds <= 0 ? nil
+            : Date(timeIntervalSince1970: syncAttempt.attemptedSeconds),
+            attemptedCounter: syncAttempt.attemptedCounter,
+            appBuildVersionCode: appBuildVersionCode
         )
     }
 }

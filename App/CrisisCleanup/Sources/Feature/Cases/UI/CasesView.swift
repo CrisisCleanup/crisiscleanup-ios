@@ -31,8 +31,6 @@ struct CasesView: View {
                             let icon = selectedIncident.disasterLiteral.isEmpty
                             ? "other" : selectedIncident.disasterLiteral
                             Image(incidentsTypeIconsAssetsFolder+icon, bundle: .module).foregroundColor(Color.blue)
-                            
-                            // TODO: Dropdown arrow. Use SF Symbols.
                         }
                         .sheet(isPresented: $showIncidentSelect) {
                             incidentSelectViewBuilder.incidentSelectView( onDismiss: {showIncidentSelect = false} )

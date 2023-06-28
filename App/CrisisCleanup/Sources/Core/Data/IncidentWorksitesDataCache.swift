@@ -35,10 +35,10 @@ class WorksitesNetworkDataFileCache: WorksitesNetworkDataCache {
         loggerFactory: AppLoggerFactory
     ) {
         self.networkDataSource = networkDataSource
-        logger = loggerFactory.getLogger("worksites-cache")
+        logger = loggerFactory.getLogger("wsync-cache")
 
         jsonDecoder = JsonDecoderFactory().decoder()
-        jsonEncoder = JSONEncoder()
+        jsonEncoder = JsonEncoderFactory().encoder()
     }
 
     private func shortWorksitesFileName(_ incidentId: Int64, _ page: Int) -> String
@@ -69,12 +69,12 @@ class WorksitesNetworkDataFileCache: WorksitesNetworkDataCache {
         if FileManager.default.fileExists(atPath: filePath) {
             if let contents = try? Data(contentsOf: fileUrl) {
                 let cachedData = try jsonDecoder.decode(IncidentWorksitesPageRequest.self, from: contents)
-                if (cachedData.incidentId == incidentId &&
+                if cachedData.incidentId == incidentId &&
                     cachedData.page == pageIndex &&
                     cachedData.totalCount == expectedCount &&
                     // TODO Use configurable duration
                     cachedData.requestTime.addingTimeInterval(4.days) > Date.now
-                ) {
+                {
                     return cachedData
                 }
             }

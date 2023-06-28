@@ -6,7 +6,7 @@ public protocol IncidentSelector {
     var incident: any Publisher<Incident, Never> { get }
     var incidentsData: any Publisher<IncidentsData, Never> { get }
 
-    func setIncident(incident: Incident)
+    func setIncident(_ incident: Incident)
 }
 
 class IncidentSelectRepository: IncidentSelector {
@@ -62,17 +62,22 @@ class IncidentSelectRepository: IncidentSelector {
                 targetIncident = incidents[0]
             }
 
-            self.incidentIdCache = targetIncident.id
-            self.incidentsDataSubject.value = IncidentsData(
-                isLoading: false,
-                selected: targetIncident,
-                incidents: incidents
-            )
+            if targetIncident != EmptyIncident &&
+                targetIncident.id != preferences.selectedIncidentId {
+                self.setIncident(targetIncident)
+            } else {
+                self.incidentIdCache = targetIncident.id
+                self.incidentsDataSubject.value = IncidentsData(
+                    isLoading: false,
+                    selected: targetIncident,
+                    incidents: incidents
+                )
+            }
         }
         .store(in: &disposables)
     }
 
-    func setIncident(incident: Incident) {
+    func setIncident(_ incident: Incident) {
         incidentLock.withLock {
             preferencesStore.setSelectedIncident(incident.id)
             incidentsDataSubject.value = incidentsDataSubject.value.copy {

@@ -11,8 +11,8 @@ class CasesMapMarkerManager {
         _ id: Int64,
         _ southWest: LatLng,
         _ northEast: LatLng
-    ) -> Int {
-        worksitesRepository.getWorksitesCount(
+    ) throws -> Int {
+        try worksitesRepository.getWorksitesCount(
             incidentId: id,
             latitudeSouth: southWest.latitude,
             latitudeNorth: northEast.longitude,
@@ -27,15 +27,15 @@ class CasesMapMarkerManager {
         _ boundsSw: LatLng,
         _ boundsNe: LatLng,
         _ middle: LatLng
-    ) -> BoundsQueryParams {
+    ) throws -> BoundsQueryParams {
         var sw = boundsSw
         var ne = boundsNe
-        let fullCount = getWorksitesCount(incidentId, sw, ne)
+        let fullCount = try getWorksitesCount(incidentId, sw, ne)
         var queryCount = fullCount
         if fullCount > maxMarkersOnMap {
             let halfSw = CoordinatesUtil.getMiddleCoordinate(sw, middle)
             let halfNe = CoordinatesUtil.getMiddleCoordinate(middle, ne)
-            let halfCount = getWorksitesCount(incidentId, halfSw, halfNe)
+            let halfCount = try getWorksitesCount(incidentId, halfSw, halfNe)
             if maxMarkersOnMap > halfCount {
                 let evenDistWeight =
                 Double(maxMarkersOnMap - halfCount) / Double(fullCount - halfCount)
@@ -69,7 +69,7 @@ class CasesMapMarkerManager {
         // TODO: Adjust based on device resources and app performance
         let maxMarkersOnMap = 512
         let middle = CoordinatesUtil.getMiddleCoordinate(boundsSw, boundsNe)
-        let q = getBoundQueryParams(
+        let q = try getBoundQueryParams(
             maxMarkersOnMap,
             incidentId,
             boundsSw,
@@ -81,7 +81,7 @@ class CasesMapMarkerManager {
 
         let sw = q.southWest
         let ne = q.northEast
-        let mapMarks = try await worksitesRepository.getWorksitesMapVisual(
+        let mapMarks = try worksitesRepository.getWorksitesMapVisual(
             incidentId: incidentId,
             latitudeSouth: sw.latitude,
             latitudeNorth: ne.latitude,
@@ -110,7 +110,7 @@ class CasesMapMarkerManager {
             return pow(x - midX, 2.0) + pow(y - midY, 2.0) + pow(z - midZ, 2.0)
         }
 
-        var marksFromCenter = mapMarks.enumerated().map { (index, mark) in
+        let marksFromCenter = mapMarks.enumerated().map { (index, mark) in
             let distanceMeasure = approxDistanceFromMiddle(mark.latitude, mark.longitude)
             return MarkerFromCenter(
                 sortOrder: index,

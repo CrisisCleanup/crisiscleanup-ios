@@ -47,7 +47,7 @@ class IncidentWorksitesSyncer: WorksitesSyncer {
         self.worksiteDao = worksiteDao
         self.worksiteSyncStatDao = worksiteSyncStatDao
         self.appVersionProvider = appVersionProvider
-        logger = loggerFactory.getLogger("worksites-sync")
+        logger = loggerFactory.getLogger("wsync")
         dataPullStats = dataPullStatsSubject
     }
 
@@ -141,7 +141,7 @@ class IncidentWorksitesSyncer: WorksitesSyncer {
                 startSyncRequestTime = cachedData.requestTime
             }
 
-            // TODO Deltas must account for deleted and/or reassigned if not inherently accounted for
+            // TODO: Deltas must account for deleted and/or reassigned if not inherently accounted for
 
             let saveData = syncStats.pagedCount < dbSaveCount + pageCount || isDeltaPull
             if saveData {

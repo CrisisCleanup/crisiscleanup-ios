@@ -21,6 +21,16 @@ class JsonDecoderFactory {
     }
 }
 
+class JsonEncoderFactory {
+    func encoder(
+        dateEncodingStrategy: JSONEncoder.DateEncodingStrategy = .iso8601
+    ) -> JSONEncoder {
+        let jsonEncoder = JSONEncoder()
+        jsonEncoder.dateEncodingStrategy = dateEncodingStrategy
+        return jsonEncoder
+    }
+}
+
 extension JSONEncoder {
     func encodeToString(_ payload: Encodable) throws -> String {
         let data = try encode(payload)

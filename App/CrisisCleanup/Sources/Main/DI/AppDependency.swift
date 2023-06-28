@@ -35,6 +35,7 @@ public protocol AppDependency: Dependency {
     var syncLoggerFactory: SyncLoggerFactory { get }
     var syncPuller: SyncPuller { get }
     var syncPusher: SyncPusher { get }
+    var incidentDataPullReporter: IncidentDataPullReporter { get }
 
     var incidentSelector: IncidentSelector { get }
 
