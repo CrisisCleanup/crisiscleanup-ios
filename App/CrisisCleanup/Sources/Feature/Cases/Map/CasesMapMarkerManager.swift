@@ -15,7 +15,7 @@ class CasesMapMarkerManager {
         try worksitesRepository.getWorksitesCount(
             incidentId: id,
             latitudeSouth: southWest.latitude,
-            latitudeNorth: northEast.longitude,
+            latitudeNorth: northEast.latitude,
             longitudeLeft: southWest.longitude,
             longitudeRight: northEast.longitude
         )
