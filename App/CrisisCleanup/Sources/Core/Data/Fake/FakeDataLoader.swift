@@ -93,8 +93,8 @@ extension NetworkWorksiteShort {
                 statusLiteral: keyWorkType?.status ?? "",
                 workTypeLiteral: keyWorkType?.workType ?? ""
             ),
-            latitude: location.coordinates[1],
-            longitude: location.coordinates[0],
+            latitude: location.coordinates[0],
+            longitude: location.coordinates[1],
             name: name,
             networkId: id,
             phone1: "",
