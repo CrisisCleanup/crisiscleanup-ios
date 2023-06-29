@@ -41,9 +41,7 @@ public struct MapViewCameraBounds {
         self.applyGuard = ManagedAtomic<Bool>(initialApply)
     }
 
-    /**
-     * @return true if bounds has yet to be taken (and applied to map) or false otherwise
-     */
+    /// - Returns: true if bounds has yet to be taken (and applied to map) or false otherwise
     func takeApply() -> Bool { applyGuard.exchange(false, ordering: .acquiring) }
 }
 

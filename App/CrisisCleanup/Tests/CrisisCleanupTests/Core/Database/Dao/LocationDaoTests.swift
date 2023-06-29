@@ -26,7 +26,7 @@ class LocationDaoTests: XCTestCase {
         ]
         try await locationDao.saveLocations(locationsA)
 
-        let actual = try locationDao.getLocations([2, 3])
+        let actual = locationDao.getLocations([2, 3])
         XCTAssertEqual(locationsA, actual)
 
         let locationsB = [
@@ -45,7 +45,7 @@ class LocationDaoTests: XCTestCase {
         ]
         try await locationDao.saveLocations(locationsB)
 
-        try locationDao.streamLocations([3, 2])
+        locationDao.streamLocations([3, 2])
             .collect(1)
             .expect([locationsB])
             .waitForExpectations(timeout: 0.1)

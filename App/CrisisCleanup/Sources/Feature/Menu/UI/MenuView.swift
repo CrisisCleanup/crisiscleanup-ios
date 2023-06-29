@@ -11,7 +11,7 @@ struct MenuView: View {
 
     @State var showIncidentSelect = false
 
-    var body: some View{
+    var body: some View {
         VStack {
             HStack {
                 Button {
@@ -62,21 +62,36 @@ struct MenuView: View {
             }
             .padding([.vertical])
 
-            Text("\(viewModel.versionText)")
+            Text(viewModel.versionText)
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             if viewModel.isDebuggable {
-                Button("Expire token") {
-                    viewModel.expireToken()
-                }
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
+                MenuScreenDebugView(viewModel: viewModel)
             }
+
             Spacer()
         }
         .padding()
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
+    }
+}
+
+private struct MenuScreenDebugView: View {
+    @ObservedObject var viewModel: MenuViewModel
+
+    var body: some View {
+        VStack {
+            Text(viewModel.databaseVersionText)
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button("Expire token") {
+                viewModel.expireToken()
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 }

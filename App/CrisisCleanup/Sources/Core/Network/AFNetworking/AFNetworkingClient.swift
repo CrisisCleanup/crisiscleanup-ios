@@ -61,9 +61,9 @@ private class LogEventMonitor : EventMonitor {
     let queue = DispatchQueue(label: "com.crisiscleanup.network")
 
     func requestDidFinish(_ request: Request) {
-        if let headers = request.response?.headers {
-            print(headers)
-        }
+//        if let headers = request.response?.headers {
+//            print(headers)
+//        }
         print(request.description)
     }
 

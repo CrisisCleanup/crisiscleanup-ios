@@ -21,7 +21,7 @@ public class IncidentDao {
     private func fetchIncident(_ db: Database, _ id: Int64) throws -> PopulatedIncident? {
         try IncidentRecord
             .filter(id: id)
-            .filter(IncidentRecord.isNotArchived())
+            .isNotArchived()
             .including(all: IncidentRecord.locations)
             .asRequest(of: PopulatedIncident.self)
             .fetchOne(db)
@@ -38,8 +38,9 @@ public class IncidentDao {
 
     private func fetchIncidentsStartingAt(_ db: Database, _ startAt: Date) throws -> [PopulatedIncident] {
         try IncidentRecord
-            .filter(IncidentRecord.isNotArchived())
-            .filter(IncidentRecord.startingAt(startAt))
+            .all()
+            .isNotArchived()
+            .startingAt(startAt)
             .orderedByStartAtDesc()
             .including(all: IncidentRecord.locations)
             .asRequest(of: PopulatedIncident.self)
@@ -58,7 +59,8 @@ public class IncidentDao {
 
     private func fetchIncidents(_ db: Database) throws -> [PopulatedIncident] {
         try IncidentRecord
-            .filter(IncidentRecord.isNotArchived())
+            .all()
+            .isNotArchived()
             .including(all: IncidentRecord.locations)
             .asRequest(of: PopulatedIncident.self)
             .fetchAll(db)
@@ -77,7 +79,7 @@ public class IncidentDao {
     private func fetchFormFieldsIncident(_ db: Database, _ id: Int64) throws -> PopulatedFormFieldsIncident? {
         try IncidentRecord
             .filter(id: id)
-            .filter(IncidentRecord.isNotArchived())
+            .isNotArchived()
             .including(all: IncidentRecord.locations)
             .including(all: IncidentRecord.incidentFormFields)
             .asRequest(of: PopulatedFormFieldsIncident.self)

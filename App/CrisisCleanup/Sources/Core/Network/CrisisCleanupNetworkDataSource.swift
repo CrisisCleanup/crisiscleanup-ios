@@ -25,8 +25,8 @@ public protocol CrisisCleanupNetworkDataSource {
     ) async throws -> NetworkOrganizationsResult?
 
     func getIncident(
-        id: Int64,
-        fields: [String]
+        _ id: Int64,
+        _ fields: [String]
     ) async throws -> NetworkIncident?
 
     func getWorksitesCoreData(
@@ -35,15 +35,13 @@ public protocol CrisisCleanupNetworkDataSource {
         offset: Int
     ) async throws -> [NetworkWorksiteCoreData]?
 
-    func getWorksites(
-        worksiteIds: [Int64]
-    ) async throws -> [NetworkWorksiteFull]?
+    func getWorksites(_ worksiteIds: [Int64]) async throws -> [NetworkWorksiteFull]?
 
-    func getWorksite(id: Int64) async throws -> NetworkWorksiteFull?
+    func getWorksite(_ id: Int64) async throws -> NetworkWorksiteFull?
 
     func getWorksitesCount(
-        incidentId: Int64,
-        updatedAtAfter: Date?
+        _ incidentId: Int64,
+        _ updatedAtAfter: Date?
     ) async throws -> Int
 
     func getWorksitesPage(
@@ -62,21 +60,21 @@ public protocol CrisisCleanupNetworkDataSource {
     ) async throws -> [NetworkWorksiteLocationSearch]
 
     func getSearchWorksites(
-        incidentId: Int64,
-        q: String
+        _ incidentId: Int64,
+        _ q: String
     ) async throws -> [NetworkWorksiteShort]
 
     func getLanguages() async throws -> [NetworkLanguageDescription]
 
     func getLanguageTranslations(_ key: String) async throws -> NetworkLanguageTranslation?
 
-    func getLocalizationCount(after: Date) async throws -> NetworkCountResult?
+    func getLocalizationCount(_ after: Date) async throws -> NetworkCountResult?
 
-    func getWorkTypeRequests(id: Int64) async throws -> [NetworkWorkTypeRequest]
+    func getWorkTypeRequests(_ id: Int64) async throws -> [NetworkWorkTypeRequest]
 
     func getNearbyOrganizations(
-        latitude: Double,
-        longitude: Double
+        _ latitude: Double,
+        _ longitude: Double
     ) async throws -> [NetworkIncidentOrganization]
 }
 

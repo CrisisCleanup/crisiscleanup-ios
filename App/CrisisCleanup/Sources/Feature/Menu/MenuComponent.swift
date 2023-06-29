@@ -12,6 +12,7 @@ class MenuComponent: Component<AppDependency>, MenuViewBuilder {
             accountDataRepository: dependency.accountDataRepository,
             incidentSelector: dependency.incidentSelector,
             appVersionProvider: dependency.appVersionProvider,
+            databaseVersionProvider: dependency.databaseVersionProvider,
             authEventBus: dependency.authEventBus,
             loggerFactory: dependency.loggerFactory
         )

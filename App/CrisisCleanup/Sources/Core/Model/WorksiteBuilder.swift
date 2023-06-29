@@ -38,7 +38,7 @@ extension Worksite {
 		var postalCode: String
 		var reportedBy: Int64?
 		var state: String
-		var svi: Float?
+		var svi: Double?
 		var updatedAt: Date?
 		var what3Words: String?
 		var workTypes: [WorkType]

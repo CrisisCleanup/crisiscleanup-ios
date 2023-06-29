@@ -6,7 +6,7 @@ public protocol AppVersionProvider {
     var buildNumber: Int64 { get }
 }
 
-protocol DatabaseVersionProvider {
+public protocol DatabaseVersionProvider {
     var databaseVersion: Int32 { get }
 }
 

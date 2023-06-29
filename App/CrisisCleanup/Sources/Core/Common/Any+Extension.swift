@@ -8,6 +8,14 @@ public func with<T>(_ item: T, _ closure: (inout T) -> Void) -> T {
 }
 
 @discardableResult
+@inline(__always)
+public func with<T>(_ item: T, _ closure: (inout T) async throws -> Void) async throws -> T {
+    var mutableItem = item
+    try await closure(&mutableItem)
+    return mutableItem
+}
+
+@discardableResult
 public func withLet<T>(_ item: Optional<T>, _ closure: (inout T) -> Void) -> Optional<T> {
   guard let item = item else { return nil }
   return with(item, closure)

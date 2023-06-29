@@ -6,6 +6,7 @@ class MenuViewModel: ObservableObject {
     private let accountDataRepository: AccountDataRepository
     private let incidentSelector: IncidentSelector
     private let appVersionProvider: AppVersionProvider
+    private let databaseVersionProvider: DatabaseVersionProvider
     private let authEventBus: AuthEventBus
     private let logger: AppLogger
 
@@ -21,6 +22,10 @@ class MenuViewModel: ObservableObject {
         return isProduction ? version.1 : "\(version.1) (\(version.0))"
     }
 
+    var databaseVersionText: String {
+        isProduction ? "" : "DB \(databaseVersionProvider.databaseVersion)"
+    }
+
     private var disposables = Set<AnyCancellable>()
 
     init(
@@ -28,6 +33,7 @@ class MenuViewModel: ObservableObject {
         accountDataRepository: AccountDataRepository,
         incidentSelector: IncidentSelector,
         appVersionProvider: AppVersionProvider,
+        databaseVersionProvider: DatabaseVersionProvider,
         authEventBus: AuthEventBus,
         loggerFactory: AppLoggerFactory
     ) {
@@ -35,6 +41,7 @@ class MenuViewModel: ObservableObject {
         self.accountDataRepository = accountDataRepository
         self.incidentSelector = incidentSelector
         self.appVersionProvider = appVersionProvider
+        self.databaseVersionProvider = databaseVersionProvider
         self.authEventBus = authEventBus
         logger = loggerFactory.getLogger("menu")
 
