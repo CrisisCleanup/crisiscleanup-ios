@@ -417,6 +417,41 @@ public class WorksiteDao {
         }
     }
 
+    func getWorksitesMapVisual(
+            _ incidentId: Int64,
+            south: Double,
+            north: Double,
+            west: Double,
+            east: Double,
+            limit: Int,
+            offset: Int
+    ) throws -> [WorksiteMapMark] {
+        try reader.read { db in
+            let worksiteAlias = TableAlias(name: "w")
+            let worksiteColumns = WorksiteRootRecord.worksite
+                .select(WorksiteRecord.visualColumns)
+                .aliased(worksiteAlias)
+            let request = WorksiteRootRecord
+                .all()
+                .selectIdColumn()
+                .including(required: worksiteColumns
+                    .byBounds(
+                        alias: worksiteAlias,
+                        south: south,
+                        north: north,
+                        west: west,
+                        east: east
+                    )
+                        .orderByUpdatedAtDescIdDesc()
+                )
+                .including(all: WorksiteRootRecord.worksiteFlags)
+                .annotated(with: WorksiteRootRecord.workTypes.count)
+                .limit(limit, offset: offset)
+                .asRequest(of: PopulatedWorksiteMapVisual.self)
+            return try request.fetchAll(db)
+        }.map { record in record.asExternalModel() }
+    }
+
     // MARK: - Test access
 
     internal func getLocalWorksite(_ id: Int64) throws -> PopulatedLocalWorksite? {
@@ -589,6 +624,44 @@ internal struct PopulatedLocalWorksite: Equatable, Decodable, FetchableRecord {
                 localModifiedAt: worksiteRoot.localModifiedAt,
                 syncedAt: worksiteRoot.syncedAt
             )
+        )
+    }
+}
+
+private let highPriorityFlagLiteral = WorksiteFlagType.highPriority.literal
+
+private struct PopulatedWorksiteMapVisual: Decodable, FetchableRecord {
+    struct WorksiteMapVisualSubset : Decodable {
+        let latitude: Double
+        let longitude: Double
+        let keyWorkTypeType: String
+        let keyWorkTypeOrgClaim: Int64?
+        let keyWorkTypeStatus: String
+        let favoriteId: Int64?
+    }
+
+    let id: Int64
+    let worksite: WorksiteMapVisualSubset
+    let workTypeCount: Int
+    let worksiteFlags: [WorksiteFlagRecord]
+
+    func asExternalModel() -> WorksiteMapMark {
+        WorksiteMapMark(
+            id: id,
+            latitude: worksite.latitude,
+            longitude: worksite.longitude,
+            statusClaim: WorkTypeStatusClaim.make(
+                worksite.keyWorkTypeStatus,
+                worksite.keyWorkTypeOrgClaim
+            ),
+            workType: WorkTypeStatusClaim.getType(type: worksite.keyWorkTypeType),
+            workTypeCount: workTypeCount,
+            // TODO: Account for unsynced local favorite as well
+            isFavorite: worksite.favoriteId != nil,
+            isHighPriority: worksiteFlags.first { flag in
+                flag.isHighPriority == true ||
+                flag.reasonT == highPriorityFlagLiteral
+            } != nil
         )
     }
 }

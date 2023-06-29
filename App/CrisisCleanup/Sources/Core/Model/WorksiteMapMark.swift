@@ -1,4 +1,4 @@
-public struct WorksiteMapMark {
+public struct WorksiteMapMark: Equatable {
     let id: Int64
     let latitude: Double
     let longitude: Double

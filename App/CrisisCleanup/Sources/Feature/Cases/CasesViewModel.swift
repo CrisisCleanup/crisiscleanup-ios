@@ -98,7 +98,7 @@ class CasesViewModel: ObservableObject {
                 return [WorksiteIconMapMark]()
             }
             .map({ marks in
-                print("Marks \(marks)")
+                print("Marks \(marks.count)")
                 return marks
             })
             .receive(on: RunLoop.main)
@@ -124,7 +124,6 @@ class CasesViewModel: ObservableObject {
             .eraseToAnyPublisher()
             .receive(on: RunLoop.main)
             .sink { stats in
-                self.logger.logDebug("Data pull stats", stats)
                 self.showDataProgress = stats.isOngoing
                 self.dataProgress = stats.progress
             }

@@ -4,8 +4,8 @@ struct CoordinateBounds {
 }
 
 let CoordinateBoundsDefault = CoordinateBounds(
-    southWest: LatLng(0.0, 0.0),
-    northEast: LatLng(0.0, 0.0)
+    southWest: DefaultBounds.southWest,
+    northEast: DefaultBounds.northEast
 )
 
 // sourcery: copyBuilder

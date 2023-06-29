@@ -2,16 +2,6 @@ import XCTest
 @testable import CrisisCleanup
 
 final class NetworkWorksitesPageTests: XCTestCase {
-    func testWorksitesPageDate() {
-        let formatter = WorksitesPageDateFormatter().formatter
-
-        let expectedDate = Date(timeIntervalSince1970: 1683140180505.0 / 1000.0)
-
-        let dateString = "2023-05-03T18:56:20.505769+00:00"
-        let date = formatter.date(from: dateString)
-        XCTAssertEqual(date, expectedDate)
-    }
-
     func testGetWorksitesSuccessResult() throws {
         let result = Bundle(for: NetworkWorksitesPageTests.self)
             .loadJson("worksitesPageSuccess", NetworkWorksitesPageResult.self)

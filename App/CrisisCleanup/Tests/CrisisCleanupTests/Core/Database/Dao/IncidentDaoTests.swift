@@ -88,6 +88,13 @@ class IncidentDaoTests: XCTestCase {
             .collect(1)
             .expect([[
                 testIncident(
+                    987,
+                    "Berry",
+                    "Tornado Ber",
+                    "tornado",
+                    locationIds: [843]
+                ),
+                testIncident(
                     152,
                     "Apricot",
                     "Hur A",
@@ -95,13 +102,6 @@ class IncidentDaoTests: XCTestCase {
                     locationIds: [145],
                     activePhoneNumbers: ["active-phone"],
                     turnOnRelease: true
-                ),
-                testIncident(
-                    987,
-                    "Berry",
-                    "Tornado Ber",
-                    "tornado",
-                    locationIds: [843]
                 )
             ]])
             .waitForExpectations(timeout: 0.1)

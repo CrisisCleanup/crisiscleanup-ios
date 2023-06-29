@@ -13,6 +13,8 @@
 		<string>fetch</string>
 		<string>processing</string>
 	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
 	<key>apiBaseUrl</key>
 	<string>$(API_BASE_URL)</string>
 	<key>baseUrl</key>

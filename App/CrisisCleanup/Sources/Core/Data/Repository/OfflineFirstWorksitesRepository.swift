@@ -69,27 +69,6 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         return PassthroughSubject<[WorksiteSummary], Never>()
     }
 
-    private func fakeWorksitesMapVisual() -> [WorksiteMapMark] {
-        let worksites = fakeDataLoader.cycleWorksites()
-        return worksites.map { worksite in
-            WorksiteMapMark(
-                id: worksite.id,
-                latitude: worksite.latitude,
-                longitude: worksite.longitude,
-                statusClaim: worksite.keyWorkType!.statusClaim,
-                workType: worksite.keyWorkType!.workType,
-                workTypeCount: Int.random(in: 0..<3),
-                isFavorite: Int.random(in: 0..<10) < 2,
-                isHighPriority: Int.random(in: 0..<10) < 2
-            )
-        }
-    }
-
-    func getWorksitesMapVisual(_ incidentId: Int64, _ limit: Int, _ offset: Int) throws -> [WorksiteMapMark] {
-        // TODO: Do
-        return fakeWorksitesMapVisual()
-    }
-
     func getWorksitesMapVisual(
         incidentId: Int64,
         latitudeSouth: Double,
@@ -98,8 +77,15 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         longitudeEast: Double,
         limit: Int,
         offset: Int) throws -> [WorksiteMapMark] {
-            // TODO: Do
-            return fakeWorksitesMapVisual()
+            try worksiteDao.getWorksitesMapVisual(
+                incidentId,
+                south: latitudeSouth,
+                north: latitudeNorth,
+                west: longitudeWest,
+                east: longitudeEast,
+                limit: limit,
+                offset: offset
+            )
         }
 
     func getWorksitesCount(_ incidentId: Int64) throws -> Int {

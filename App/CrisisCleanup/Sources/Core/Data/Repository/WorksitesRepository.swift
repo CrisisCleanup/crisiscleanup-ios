@@ -17,8 +17,6 @@ public protocol WorksitesRepository {
 
     func streamRecentWorksites(_ incidentId: Int64) -> any Publisher<[WorksiteSummary], Never>
 
-    func getWorksitesMapVisual(_ incidentId: Int64, _ limit: Int, _ offset: Int) throws -> [WorksiteMapMark]
-
     func getWorksitesMapVisual(
         incidentId: Int64,
         latitudeSouth: Double,

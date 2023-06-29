@@ -149,6 +149,10 @@ extension DerivableRequest<WorksiteRootRecord> {
     func byIncidentId(_ id: Int64) -> Self {
         filter(RootColumns.incidentId == id)
     }
+
+    func selectIdColumn() -> Self {
+        select(RootColumns.id)
+    }
 }
 
 fileprivate typealias RootColumns = WorksiteRootRecord.Columns
@@ -367,15 +371,41 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
             )
             .fetchCount(db)
     }
+
+    static var visualColumns: [SQLSelectable] {
+        [
+            Columns.latitude,
+            Columns.longitude,
+            Columns.keyWorkTypeStatus,
+            Columns.keyWorkTypeType,
+            Columns.keyWorkTypeOrgClaim,
+            Columns.favoriteId
+        ]
+    }
 }
 
+fileprivate typealias WorksiteColumns = WorksiteRecord.Columns
 extension DerivableRequest<WorksiteRecord> {
     func orderByUpdatedAtDescIdDesc() -> Self {
         order(
-            WorksiteRecord.Columns.updatedAt.desc,
-            WorksiteRecord.Columns.id.desc
+            WorksiteColumns.updatedAt.desc,
+            WorksiteColumns.id.desc
         )
     }
+
+    func byBounds(
+        alias: TableAlias,
+        south: Double,
+        north: Double,
+        west: Double,
+        east: Double) -> Self {
+            filter(
+                alias[WorksiteColumns.longitude] > west &&
+                alias[WorksiteColumns.longitude] < east &&
+                alias[WorksiteColumns.latitude] > south &&
+                alias[WorksiteColumns.latitude] < north
+            )
+        }
 }
 
 // MARK: - Work type
