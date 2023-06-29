@@ -9,11 +9,9 @@ struct CasesView: View {
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
     let casesSearchViewBuilder: CasesSearchViewBuilder
 
-    @State var showIncidentSelect = false
+    @State var openIncidentSelect = false
     @State var map = MKMapView()
-    @State var totAnnots = 0
-    @State var inViewAnnots = 0
-    @State var prevIncident: Int64? = nil
+
     @State private var region = MKCoordinateRegion(
         center: CLLocationCoordinate2D(
             latitude: 40.83834587046632,
@@ -23,10 +21,28 @@ struct CasesView: View {
             longitudeDelta: 0.03)
     )
 
+    func animateToSelectedIncidentBounds(_ bounds: LatLngBounds) {
+        let latDelta = bounds.northEast.latitude - bounds.southWest.latitude
+        let longDelta = bounds.northEast.longitude - bounds.southWest.longitude
+        let span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: longDelta)
+
+        let center = bounds.center
+        let regionCenter = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: center.latitude, longitude: center.longitude), span: span)
+        let region = map.regionThatFits(regionCenter)
+        map.setRegion(region, animated: true)
+    }
+
     var body: some View {
         ZStack {
 
-            MapView(map: $map, totAnnots: $totAnnots, inViewAnnots: $inViewAnnots, prevIncident: $prevIncident, viewModel: viewModel)
+            MapView(map: $map, viewModel: viewModel)
+                .onReceive(viewModel.$incidentLocationBounds) { bounds in
+                    animateToSelectedIncidentBounds(bounds.bounds)
+                }
+                .onReceive(viewModel.$worksiteMapMarkers) { markers in
+                    map.removeAnnotations(map.annotations)
+                    map.addAnnotations(viewModel.worksiteMapMarkers)
+                }
 
             if viewModel.showDataProgress {
                 VStack {
@@ -42,78 +58,19 @@ struct CasesView: View {
                 HStack {
                     VStack(spacing: 0) {
                         Button {
-                            showIncidentSelect.toggle()
+                            openIncidentSelect.toggle()
                         } label: {
                             IncidentDisasterImage(viewModel.incidentsData.selected)
                         }
-                        .sheet(isPresented: $showIncidentSelect) {
-                            incidentSelectViewBuilder.incidentSelectView( onDismiss: {showIncidentSelect = false} )
+                        .sheet(isPresented: $openIncidentSelect) {
+                            incidentSelectViewBuilder.incidentSelectView( onDismiss: {openIncidentSelect = false} )
                         }.disabled(viewModel.incidentsData.incidents.isEmpty)
 
-                        Image(systemName: "plus")
-                            .padding()
-                            .background(Color.white)
-                            .foregroundColor(Color.black)
-                            .cornerRadius(5)
-                            .padding(.vertical)
-                            .onTapGesture {
-                                print("zooming in")
-                                print(map.region.span.latitudeDelta)
-                                var region = map.region
-                                let latDelta = region.span.latitudeDelta*0.60
-                                let longDelta = region.span.longitudeDelta*0.60
-                                region.span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: longDelta)
-                                map.setRegion(region, animated: true)
-
-                            }
-
-                        Image(systemName: "minus")
-                            .padding()
-                            .background(Color.white)
-                            .foregroundColor(Color.black)
-                            .cornerRadius(5)
-                            .onTapGesture {
-                                print("zooming out")
-                                var region = map.region
-                                let latDelta = region.span.latitudeDelta*1.30
-                                let longDelta = region.span.longitudeDelta*1.30
-                                region.span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: longDelta)
-                                map.setRegion(region, animated: true)
-                            }
-
-                        Image("ic_zoom_incident", bundle: .module)
-                            .background(Color.white)
-                            .foregroundColor(Color.black)
-                            .cornerRadius(5)
-                            .padding(.top)
-                            .onTapGesture {
-                                //                                map.camera.centerCoordinateDistance =
-                                map.setCamera(MKMapCamera(lookingAtCenter: map.centerCoordinate, fromDistance: CLLocationDistance(50*1000), pitch: 0.0, heading: 0.0), animated: true)
-                            }
-
-                        Image("ic_zoom_interactive", bundle: .module)
-                            .background(Color.white)
-                            .foregroundColor(Color.black)
-                            .cornerRadius(5)
-                            .padding(.top)
-                            .onTapGesture {
-                                let center = viewModel.incidentLocationBounds.bounds.center
-                                let latDelta = viewModel.incidentLocationBounds.bounds.northEast.latitude - viewModel.incidentLocationBounds.bounds.southWest.latitude
-                                let longDelta = viewModel.incidentLocationBounds.bounds.northEast.longitude - viewModel.incidentLocationBounds.bounds.southWest.longitude
-                                var region = map.region
-
-                                let span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: longDelta)
-                                region = map.regionThatFits(MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: center.latitude, longitude: center.longitude), span: span))
-                                //                                map.region
-                                map.setRegion(region, animated: true)
-
-                            }
-
-                        Image("ic_layers", bundle: .module)
-                            .background(Color.white)
-                            .foregroundColor(Color.black)
-                            .cornerRadius(5)
-                            .padding(.top)
+                        MapControls(
+                            viewModel: viewModel,
+                            map: map,
+                            animateToSelectedIncidentBounds: animateToSelectedIncidentBounds
+                        )
 
                         Spacer()
 
@@ -122,7 +79,7 @@ struct CasesView: View {
                         HStack {
                             Spacer()
 
-                            Text("~~\(inViewAnnots) cases out of \(totAnnots)")
+                            Text("~~n cases out of t")
                                 .padding()
                                 .background(Color.black)
                                 .foregroundColor(Color.white)
@@ -181,5 +138,72 @@ struct CasesView: View {
         }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
+    }
+}
+
+private struct MapControls: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @ObservedObject var viewModel: CasesViewModel
+    var map: MKMapView
+    var animateToSelectedIncidentBounds: (LatLngBounds) -> Void
+
+    var body: some View {
+        Image(systemName: "plus")
+            .padding()
+            .background(Color.white)
+            .foregroundColor(Color.black)
+            .cornerRadius(5)
+            .padding(.vertical)
+            .onTapGesture {
+                print("zooming in")
+                print(map.region.span.latitudeDelta)
+                var region = map.region
+                let latDelta = region.span.latitudeDelta*0.60
+                let longDelta = region.span.longitudeDelta*0.60
+                region.span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: longDelta)
+                map.setRegion(region, animated: true)
+
+            }
+
+        Image(systemName: "minus")
+            .padding()
+            .background(Color.white)
+            .foregroundColor(Color.black)
+            .cornerRadius(5)
+            .onTapGesture {
+                print("zooming out")
+                var region = map.region
+                let latDelta = region.span.latitudeDelta*1.30
+                let longDelta = region.span.longitudeDelta*1.30
+                region.span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: longDelta)
+                map.setRegion(region, animated: true)
+            }
+
+        Image("ic_zoom_incident", bundle: .module)
+            .background(Color.white)
+            .foregroundColor(Color.black)
+            .cornerRadius(5)
+            .padding(.top)
+            .onTapGesture {
+                //                                map.camera.centerCoordinateDistance =
+                map.setCamera(MKMapCamera(lookingAtCenter: map.centerCoordinate, fromDistance: CLLocationDistance(50*1000), pitch: 0.0, heading: 0.0), animated: true)
+            }
+
+        Image("ic_zoom_interactive", bundle: .module)
+            .background(Color.white)
+            .foregroundColor(Color.black)
+            .cornerRadius(5)
+            .padding(.top)
+            .onTapGesture {
+                let bounds = viewModel.incidentLocationBounds.bounds
+                animateToSelectedIncidentBounds(bounds)
+            }
+
+        Image("ic_layers", bundle: .module)
+            .background(Color.white)
+            .foregroundColor(Color.black)
+            .cornerRadius(5)
+            .padding(.top)
     }
 }

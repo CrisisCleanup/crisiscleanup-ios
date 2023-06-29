@@ -1,6 +1,7 @@
 import SwiftUI
 import Combine
 import Foundation
+import MapKit
 
 class CasesViewModel: ObservableObject {
     private let incidentSelector: IncidentSelector
@@ -26,7 +27,7 @@ class CasesViewModel: ObservableObject {
 
     private let mapMarkerManager: CasesMapMarkerManager
 
-    @Published private(set) var worksiteMapMarkers: [WorksiteIconMapMark] = []
+    @Published private(set) var worksiteMapMarkers: [WorksiteAnnotationMapMark] = []
 
     private var disposables = Set<AnyCancellable>()
     private var observableSubscriptions = Set<AnyCancellable>()
@@ -82,7 +83,7 @@ class CasesViewModel: ObservableObject {
             )
             .asyncMap { wqs in
                 if wqs.incidentId == EmptyIncident.id {
-                    return [WorksiteIconMapMark]()
+                    return [WorksiteAnnotationMapMark]()
                 } else {
                     Task { @MainActor in self.isGeneratingWorksiteMarkers.value = true }
                     do {
@@ -95,12 +96,13 @@ class CasesViewModel: ObservableObject {
                         self.logger.logError(error)
                     }
                 }
-                return [WorksiteIconMapMark]()
+                return [WorksiteAnnotationMapMark]()
             }
             .map({ marks in
                 print("Marks \(marks.count)")
                 return marks
             })
+            .removeDuplicates()
             .receive(on: RunLoop.main)
             .assign(to: \.worksiteMapMarkers, on: self)
             .store(in: &disposables)
@@ -132,7 +134,7 @@ class CasesViewModel: ObservableObject {
 
     private let zeroOffset = (0.0, 0.0)
 
-    private func generateWorksiteMarkers(_ wqs: WorksiteQueryState) async throws -> [WorksiteIconMapMark] {
+    private func generateWorksiteMarkers(_ wqs: WorksiteQueryState) async throws -> [WorksiteAnnotationMapMark] {
         let id = wqs.incidentId
         let sw = wqs.coordinateBounds.southWest
         let ne = wqs.coordinateBounds.northEast
@@ -144,8 +146,22 @@ class CasesViewModel: ObservableObject {
 
         return marks.enumerated().map { (index, mark) in
             let offset = index < markOffsets.count ? markOffsets[index] : zeroOffset
-            return mark.asWorksiteIconMapMark(mapCaseIconProvider, offset)
+            return mark.asAnnotationMapMark(mapCaseIconProvider, offset)
         }
+    }
+
+    func onMapCameraChange(
+        _ zoom: Double,
+        _ region: MKCoordinateRegion
+    ) {
+        qsm.mapZoomSubject.value = zoom
+
+        let center = region.center
+        let span = region.span
+        qsm.mapBoundsSubject.value = CoordinateBounds(
+            southWest: center.subtract(span).latLng,
+            northEast: center.add(span).latLng
+        )
     }
 
     private let denseMarkCountThreshold = 15
@@ -163,9 +179,9 @@ class CasesViewModel: ObservableObject {
 
         var bucketIndices = Array(repeating: -1, count: marks.count)
         var buckets = [[Int]]()
-        for i in 0 ..< marks.count - 1 {
+        for i in 0 ..< max(0, marks.count - 1) {
             let iMark = marks[i]
-            for j in i + 1 ..< marks.count {
+            for j in i + 1 ..< max(1, marks.count) {
                 let jMark = marks[j]
                 if abs(iMark.latitude - jMark.latitude) < denseDegreeThreshold &&
                     abs(iMark.longitude - jMark.longitude) < denseDegreeThreshold
@@ -212,5 +228,23 @@ class CasesViewModel: ObservableObject {
             }
         }
         return markOffsets
+    }
+}
+
+extension CLLocationCoordinate2D {
+    var latLng: LatLng { LatLng(latitude, longitude) }
+
+    func add(_ span: MKCoordinateSpan) -> CLLocationCoordinate2D {
+        CLLocationCoordinate2D(
+            latitude: latitude + span.latitudeDelta,
+            longitude: longitude + span.longitudeDelta
+        )
+    }
+
+    func subtract(_ span: MKCoordinateSpan) -> CLLocationCoordinate2D {
+        CLLocationCoordinate2D(
+            latitude: latitude - span.latitudeDelta,
+            longitude: longitude - span.longitudeDelta
+        )
     }
 }
