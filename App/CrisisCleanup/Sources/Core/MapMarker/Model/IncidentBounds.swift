@@ -75,7 +75,7 @@ struct LatLngBounds {
                 south = min(south, latLng.latitude)
                 north = max(north, latLng.latitude)
                 west = min(west, latLng.longitude)
-                east = min(east, latLng.longitude)
+                east = max(east, latLng.longitude)
             } else {
                 isBuilding = true
                 south = latLng.latitude

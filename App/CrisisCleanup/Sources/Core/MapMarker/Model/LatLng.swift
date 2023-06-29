@@ -1,7 +1,7 @@
 import Atomics
 import CoreLocation
 
-public struct LatLng: Equatable {
+public struct LatLng: Equatable, CustomStringConvertible {
     let latitude: Double
     let longitude: Double
 
@@ -9,6 +9,8 @@ public struct LatLng: Equatable {
         self.latitude = latitude
         self.longitude = longitude
     }
+
+    public var description: String { "lat/lng \(latitude)/\(longitude)" }
 }
 
 extension CLLocation {
