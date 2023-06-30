@@ -10,7 +10,7 @@ class WorkTypeIconProvider: MapCaseIconProvider {
 
     private let cacheLock = NSLock()
     private let cache = LRUCache<CacheKey, UIImage>(countLimit: 64)
-    private let scaledCache = LRUCache<String, UIImage>(countLimit: 16)
+    private let bwCache = LRUCache<String, UIImage>(countLimit: 16)
     private let cgImageCache = LRUCache<CacheKey, CGImage>(countLimit: 64)
 
     // TODO: Parameterize values
@@ -28,12 +28,11 @@ class WorkTypeIconProvider: MapCaseIconProvider {
     private lazy var plusImageLazy: UIImage = {
         let image = WorkTypeIconProvider.loadIcon("ic_work_type_plus")
         let filteredImage = grayscaleToColor(image, fromColorInt: 0, toColorInt: -1)
-        let scaledImage = scaleImage(UIImage(cgImage: filteredImage), imageSize: plusImageSize)
-        return scaledImage
+        return UIImage(cgImage: filteredImage)
     }()
 
     init() {
-        bitmapSize = 32.0 + 2 * shadowRadius
+        bitmapSize = 36.0 + 2 * shadowRadius
         let centerOffset = bitmapSize * 0.5
         bitmapCenterOffset = (centerOffset, centerOffset)
         iconOffset = bitmapCenterOffset
@@ -80,7 +79,12 @@ class WorkTypeIconProvider: MapCaseIconProvider {
     }
 
     // TODO: Reserach a sharper scaling algorithm that can preserve quality edges as well as outlines.
-    private func scaleImage(_ image: UIImage, imageSize: Double, offset: Double = 0) -> UIImage {
+    private func scaleImage(
+        _ image: UIImage,
+        imageSize: Double,
+        offset: Double = 0,
+        scaleToScreen: Bool = false
+    ) -> UIImage {
         let drawSize = imageSize - 2 * offset
 
         let baseSize = image.size
@@ -99,7 +103,7 @@ class WorkTypeIconProvider: MapCaseIconProvider {
         let offsetRect = CGRectMake(x, y, x + size.width, y + size.height)
         let squareSize = CGSize(width: imageSize, height: imageSize)
 
-        UIGraphicsBeginImageContextWithOptions(squareSize, false, 1)
+        UIGraphicsBeginImageContextWithOptions(squareSize, false, scaleToScreen ? 1 : 0)
 
         let context = UIGraphicsGetCurrentContext()!
         context.interpolationQuality = .high
@@ -133,17 +137,17 @@ class WorkTypeIconProvider: MapCaseIconProvider {
         }
         let iconName = workTypeIconLookup[lookupKey] ?? workTypeIconLookup[.unknown]!
 
-        var scaledImage = scaledCache.value(forKey: iconName)
-        if scaledImage == nil {
+        var bwImage = bwCache.value(forKey: iconName)
+        if bwImage == nil {
             let baseImage = WorkTypeIconProvider.loadIcon(iconName)
-            scaledImage = scaleImage(baseImage, imageSize: bitmapSize, offset: shadowRadius)
-            scaledCache.setValue(scaledImage, forKey: iconName)
+            bwCache.setValue(bwImage, forKey: iconName)
+            bwImage = baseImage
         }
 
         let colors = getMapMarkerColors(cacheKey.statusClaim)
-        let filteredImage = grayscaleToColor(scaledImage!, fromColorInt: colors.fillLong, toColorInt: colors.strokeLong)
+        let filteredImage = grayscaleToColor(bwImage!, fromColorInt: colors.fillLong, toColorInt: colors.strokeLong)
 
-        let shadowImage = UIImage(cgImage: filteredImage).withShadow(blur: 4)
+        let shadowImage = UIImage(cgImage: filteredImage).withShadow(blur: 6)
 
         var plussedImage = shadowImage
         if cacheKey.hasMultipleWorkTypes {
@@ -170,7 +174,8 @@ class WorkTypeIconProvider: MapCaseIconProvider {
             UIGraphicsEndImageContext()
         }
 
-        return plussedImage.cgImage!
+        let scaledImage = scaleImage(plussedImage, imageSize: bitmapSize, offset: shadowRadius, scaleToScreen: true)
+        return scaledImage.cgImage!
     }
 }
 

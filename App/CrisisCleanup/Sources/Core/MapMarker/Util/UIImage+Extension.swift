@@ -7,7 +7,7 @@ extension UIImage {
     func withShadow(
         blur: CGFloat,
         offset: CGSize = .zero,
-        color: UIColor = UIColor(white: 0.7, alpha: 0.8)
+        color: UIColor = UIColor(white: 0.1, alpha: 0.7)
     ) -> UIImage {
         let shadowRect = CGRect(
             x: offset.width - blur,
@@ -22,7 +22,7 @@ extension UIImage {
                 height: max(shadowRect.maxY, size.height) - min(shadowRect.minY, 0)
             ),
             false,
-            1
+            0
         )
 
         let context = UIGraphicsGetCurrentContext()!
