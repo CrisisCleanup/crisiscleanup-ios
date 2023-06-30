@@ -33,6 +33,8 @@ class CasesViewModel: ObservableObject {
 
     @Published private(set) var casesCount: (Int, Int) = (0, 0)
 
+    @Published private(set) var selectedCaseAnnotation: WorksiteAnnotationMapMark = WorksiteAnnotationMapMark()
+
     private var disposables = Set<AnyCancellable>()
     private var observableSubscriptions = Set<AnyCancellable>()
 
@@ -251,6 +253,12 @@ class CasesViewModel: ObservableObject {
                 }
             }
         }
+    }
+
+    func didSelectWorksite(
+        _ worksite: WorksiteAnnotationMapMark
+    ) {
+        selectedCaseAnnotation = worksite
     }
 
     private let denseMarkCountThreshold = 15
