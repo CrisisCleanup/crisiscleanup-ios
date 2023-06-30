@@ -43,6 +43,7 @@ struct CasesView: View {
                     map.removeAnnotations(map.annotations)
                     map.addAnnotations(viewModel.worksiteMapMarkers)
                 }
+                .saturation(0.0)
 
             if viewModel.showDataProgress {
                 VStack {
