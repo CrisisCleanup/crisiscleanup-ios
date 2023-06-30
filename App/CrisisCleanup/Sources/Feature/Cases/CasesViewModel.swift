@@ -102,10 +102,6 @@ class CasesViewModel: ObservableObject {
                 }
                 return [WorksiteAnnotationMapMark]()
             }
-            .map({ marks in
-                print("Marks \(marks.count)")
-                return marks
-            })
             .removeDuplicates()
             .receive(on: RunLoop.main)
             .assign(to: \.worksiteMapMarkers, on: self)
