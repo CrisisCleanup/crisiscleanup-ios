@@ -28,6 +28,9 @@ class CasesViewModel: ObservableObject {
     private let mapMarkerManager: CasesMapMarkerManager
 
     @Published private(set) var worksiteMapMarkers: [WorksiteAnnotationMapMark] = []
+    private lazy var mapMarkersPublisher = $worksiteMapMarkers
+
+    @Published private(set) var casesCount: (Int, Int) = (0, 0)
 
     private var disposables = Set<AnyCancellable>()
     private var observableSubscriptions = Set<AnyCancellable>()
@@ -35,6 +38,7 @@ class CasesViewModel: ObservableObject {
     init(
         incidentSelector: IncidentSelector,
         incidentBoundsProvider: IncidentBoundsProvider,
+        incidentsRepository: IncidentsRepository,
         worksitesRepository: WorksitesRepository,
         dataPullReporter: IncidentDataPullReporter,
         mapCaseIconProvider: MapCaseIconProvider,
@@ -105,6 +109,32 @@ class CasesViewModel: ObservableObject {
             .removeDuplicates()
             .receive(on: RunLoop.main)
             .assign(to: \.worksiteMapMarkers, on: self)
+            .store(in: &disposables)
+
+        let incidentWorksitesCount = incidentSelector.incidentId
+            .eraseToAnyPublisher()
+            .map { id in
+                worksitesRepository.streamIncidentWorksitesCount(id)
+                    .eraseToAnyPublisher()
+                    .map { count in (id, count) }
+            }
+            .switchToLatest()
+            .map { (id, count) in IncidentIdWorksiteCount(id: id, count: count) }
+
+        incidentsRepository.isLoading.eraseToAnyPublisher()
+            .combineLatest(
+                mapMarkersPublisher.eraseToAnyPublisher(),
+                incidentWorksitesCount.eraseToAnyPublisher()
+            )
+            .map { (isSyncing, markers, worksitesCount) in
+                var totalCount = worksitesCount.count
+                if (totalCount == 0 && isSyncing) {
+                    totalCount = -1
+                }
+                return (markers.count, totalCount)
+            }
+            .receive(on: RunLoop.main)
+            .assign(to: \.casesCount, on: self)
             .store(in: &disposables)
     }
 
@@ -247,4 +277,9 @@ extension CLLocationCoordinate2D {
             longitude: longitude - span.longitudeDelta
         )
     }
+}
+
+struct IncidentIdWorksiteCount {
+    let id: Int64
+    let count: Int
 }

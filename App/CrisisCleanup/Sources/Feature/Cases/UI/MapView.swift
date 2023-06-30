@@ -23,10 +23,9 @@ class Coordinator: NSObject, MKMapViewDelegate {
         let zoom = log2(360.0 * mapView.frame.size.width / (mapView.region.span.longitudeDelta * 128))
         viewModel.onMapCameraChange(zoom, mapView.region)
     }
-    
+
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         return createPolygonRenderer(for: overlay as! MKPolygon)
-    
     }
 
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
@@ -40,24 +39,21 @@ class Coordinator: NSObject, MKMapViewDelegate {
                 view.annotation = annotation
                 view.canShowCallout = true
 
-                view.image = annotationMapMark.mapIcon ?? UIImage(named: "ic_work_type_animal_services", in: .module, with: .none)
+                view.image = annotationMapMark.mapIcon ?? UIImage(named: "ic_work_type_unknown", in: .module, with: .none)
                 return view
             }
             return annotationView
         }
         return mapView.view(for: annotation)
     }
-    
+
     func createPolygonRenderer(for polygon: MKPolygon) -> MKPolygonRenderer {
         let renderer = MKPolygonRenderer(polygon: polygon)
-        renderer.alpha = 1.0
+        renderer.alpha = 0.9
         renderer.lineWidth = 0
-        
-        let fillColor = UIColor.black
-        
-        renderer.fillColor = fillColor
+        renderer.fillColor = UIColor.black
         renderer.blendMode = .color
-        
+
         return renderer
     }
 }
@@ -65,29 +61,28 @@ class Coordinator: NSObject, MKMapViewDelegate {
 struct MapView : UIViewRepresentable {
     @Binding var map: MKMapView
     @ObservedObject var viewModel: CasesViewModel
-    
+
     let firstHalf = [
         CLLocationCoordinate2D(latitude: -90, longitude: -180),
         CLLocationCoordinate2D(latitude: -90, longitude: 0),
         CLLocationCoordinate2D(latitude: 90, longitude: 0),
         CLLocationCoordinate2D(latitude: 90, longitude: -180)
     ]
-    
+
     let secondHalf = [
         CLLocationCoordinate2D(latitude: 90, longitude: 0),
         CLLocationCoordinate2D(latitude: 90, longitude: 180),
         CLLocationCoordinate2D(latitude: -90, longitude: 180),
         CLLocationCoordinate2D(latitude: -90, longitude: 0)
     ]
-    
+
     var firstHalfOverlay: MKPolygon {
         return MKPolygon(coordinates: firstHalf, count: firstHalf.count)
     }
-    
+
     var secondHalfOverlay: MKPolygon {
         return MKPolygon(coordinates: secondHalf, count: secondHalf.count)
     }
-    
 
     func makeUIView(context: Context) -> MKMapView {
         map.overrideUserInterfaceStyle = .light
@@ -96,10 +91,10 @@ struct MapView : UIViewRepresentable {
         map.camera.centerCoordinateDistance = 20
         map.showsUserLocation = false
         map.isRotateEnabled = false
-        
+
         map.addOverlay(firstHalfOverlay, level: .aboveRoads)
         map.addOverlay(secondHalfOverlay, level: .aboveRoads)
-        
+
         map.delegate = context.coordinator
 
         return map
@@ -111,5 +106,5 @@ struct MapView : UIViewRepresentable {
 
     func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<MapView>) {
     }
-    
+
 }

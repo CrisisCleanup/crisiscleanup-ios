@@ -10,6 +10,7 @@ class CasesComponent: Component<AppDependency>, CasesViewBuilder {
         CasesViewModel(
             incidentSelector: dependency.incidentSelector,
             incidentBoundsProvider: dependency.incidentBoundsProvider,
+            incidentsRepository: dependency.incidentsRepository,
             worksitesRepository: dependency.worksitesRepository,
             dataPullReporter: dependency.incidentDataPullReporter,
             mapCaseIconProvider: dependency.mapCaseIconProvider,

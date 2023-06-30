@@ -43,7 +43,6 @@ struct CasesView: View {
                     map.removeAnnotations(map.annotations)
                     map.addAnnotations(viewModel.worksiteMapMarkers)
                 }
-                .saturation(0.0)
 
             if viewModel.showDataProgress {
                 VStack {
@@ -80,18 +79,15 @@ struct CasesView: View {
                         HStack {
                             Spacer()
 
-                            Text("~~n cases out of t")
-                                .padding()
-                                .background(Color.black)
-                                .foregroundColor(Color.white)
-                                .cornerRadius(5)
-
-                            //                            Text("~~\(viewModel.incidentsData.selectedId.description) : \(viewModel.worksiteMapMarkers.count)")
-                            //                                .padding()
-                            //                                .background(Color.black)
-                            //                                .foregroundColor(Color.white)
-                            //                                .cornerRadius(5)
-                            //
+                            let (casesCount, totalCount) = viewModel.casesCount
+                            if totalCount >= 0 {
+                                Text("~~\(casesCount) cases\nof \(totalCount)")
+                                    .multilineTextAlignment(.center)
+                                    .padding()
+                                    .background(appTheme.colors.navigationContainerColor)
+                                    .foregroundColor(Color.white)
+                                    .cornerRadius(5)
+                            }
 
                             Spacer()
 
