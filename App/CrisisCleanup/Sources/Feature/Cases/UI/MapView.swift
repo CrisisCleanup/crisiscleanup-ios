@@ -13,6 +13,7 @@ class Coordinator: NSObject, MKMapViewDelegate {
     }
 
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        viewModel.didSelectWorksite((mapView.selectedAnnotations[0] as! WorksiteAnnotationMapMark))
     }
 
     func mapView(_ mapView: MKMapView, didDeselect view: MKAnnotationView) {

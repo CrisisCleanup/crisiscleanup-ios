@@ -12,14 +12,7 @@ struct CasesView: View {
     @State var openIncidentSelect = false
     @State var map = MKMapView()
 
-    @State private var region = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(
-            latitude: 40.83834587046632,
-            longitude: 14.254053016537693),
-        span: MKCoordinateSpan(
-            latitudeDelta: 0.03,
-            longitudeDelta: 0.03)
-    )
+    @State var caseTapped = false
 
     func animateToSelectedIncidentBounds(_ bounds: LatLngBounds) {
         let latDelta = bounds.northEast.latitude - bounds.southWest.latitude
@@ -43,6 +36,16 @@ struct CasesView: View {
                     map.removeAnnotations(map.annotations)
                     map.addAnnotations(viewModel.worksiteMapMarkers)
                 }
+                .onReceive(viewModel.$selectedCaseAnnotation) { marker in
+                    caseTapped = marker.source != nil ? true: false
+                }
+
+
+            NavigationLink(destination: ViewCaseView(viewModel: viewModel), isActive: $caseTapped) {
+                    EmptyView()
+            }.onDisappear() {
+                map.selectedAnnotations = []
+            }
 
             if viewModel.showDataProgress {
                 VStack {
