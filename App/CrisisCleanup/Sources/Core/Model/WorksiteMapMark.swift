@@ -1,5 +1,7 @@
 public struct WorksiteMapMark: Equatable {
     let id: Int64
+    // Added in iOS due to specific map platform functionality relating to managing annotations
+    let incidentId: Int64
     let latitude: Double
     let longitude: Double
     let statusClaim: WorkTypeStatusClaim
@@ -10,6 +12,7 @@ public struct WorksiteMapMark: Equatable {
 
     init(
         id: Int64,
+        incidentId: Int64,
         latitude: Double,
         longitude: Double,
         statusClaim: WorkTypeStatusClaim,
@@ -19,6 +22,7 @@ public struct WorksiteMapMark: Equatable {
         isHighPriority: Bool = false
     ) {
         self.id = id
+        self.incidentId = incidentId
         self.latitude = latitude
         self.longitude = longitude
         self.statusClaim = statusClaim

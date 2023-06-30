@@ -27,8 +27,9 @@ class CasesViewModel: ObservableObject {
 
     private let mapMarkerManager: CasesMapMarkerManager
 
+    private let annotationSetLock = NSLock()
+    private var annotationIdSet = Set<Int64>()
     @Published private(set) var worksiteMapMarkers: [WorksiteAnnotationMapMark] = []
-    private lazy var mapMarkersPublisher = $worksiteMapMarkers
 
     @Published private(set) var casesCount: (Int, Int) = (0, 0)
 
@@ -79,33 +80,57 @@ class CasesViewModel: ObservableObject {
             }
             .store(in: &disposables)
 
-        qsm.worksiteQueryState
+        let worksitesInBounds = qsm.worksiteQueryState
             .eraseToAnyPublisher()
             .debounce(
                 for: .seconds(0.25),
                 scheduler: RunLoop.main
             )
             .asyncMap { wqs in
-                if wqs.incidentId == EmptyIncident.id {
-                    return [WorksiteAnnotationMapMark]()
-                } else {
+                let queryIncidentId = wqs.incidentId
+
+                var annotations = [WorksiteAnnotationMapMark]()
+                if queryIncidentId != EmptyIncident.id {
                     Task { @MainActor in self.isGeneratingWorksiteMarkers.value = true }
                     do {
                         defer {
                             Task { @MainActor in self.isGeneratingWorksiteMarkers.value = false }
                         }
 
-                        return try await self.generateWorksiteMarkers(wqs)
+                        annotations = try await self.generateWorksiteMarkers(wqs)
                     } catch {
                         self.logger.logError(error)
                     }
                 }
-                return [WorksiteAnnotationMapMark]()
+
+                return (queryIncidentId, annotations)
             }
-            .removeDuplicates()
-            .receive(on: RunLoop.main)
-            .assign(to: \.worksiteMapMarkers, on: self)
-            .store(in: &disposables)
+
+        worksitesInBounds.asyncThrowsMap { (queryIncidentId, annotations) in
+            var newAnnotations: [WorksiteAnnotationMapMark] = []
+            self.annotationSetLock.withLock {
+                let idSet = self.annotationIdSet
+                for a in annotations {
+                    if !idSet.contains(a.source.id) {
+                        self.annotationIdSet.insert(a.source.id)
+                        newAnnotations.append(a)
+                    }
+                }
+            }
+
+            if queryIncidentId != self.incidentsData.selectedId {
+                self.annotationSetLock.withLock {
+                    self.annotationIdSet = Set<Int64>()
+                }
+                throw CancellationError()
+            }
+
+            return newAnnotations
+        }
+        .removeDuplicates()
+        .receive(on: RunLoop.main)
+        .assign(to: \.worksiteMapMarkers, on: self)
+        .store(in: &disposables)
 
         let incidentWorksitesCount = incidentSelector.incidentId
             .eraseToAnyPublisher()
@@ -119,15 +144,15 @@ class CasesViewModel: ObservableObject {
 
         incidentsRepository.isLoading.eraseToAnyPublisher()
             .combineLatest(
-                mapMarkersPublisher.eraseToAnyPublisher(),
+                worksitesInBounds.eraseToAnyPublisher(),
                 incidentWorksitesCount.eraseToAnyPublisher()
             )
-            .map { (isSyncing, markers, worksitesCount) in
+            .map { (isSyncing, inBoundsMarkers, worksitesCount) in
                 var totalCount = worksitesCount.count
                 if (totalCount == 0 && isSyncing) {
                     totalCount = -1
                 }
-                return (markers.count, totalCount)
+                return (inBoundsMarkers.1.count, totalCount)
             }
             .receive(on: RunLoop.main)
             .assign(to: \.casesCount, on: self)

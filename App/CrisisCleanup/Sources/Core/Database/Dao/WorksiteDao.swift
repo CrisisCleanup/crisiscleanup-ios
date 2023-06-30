@@ -434,6 +434,7 @@ public class WorksiteDao {
             let request = WorksiteRootRecord
                 .all()
                 .selectIdColumn()
+                .byIncidentId(incidentId)
                 .including(required: worksiteColumns
                     .byBounds(
                         alias: worksiteAlias,
@@ -632,6 +633,7 @@ private let highPriorityFlagLiteral = WorksiteFlagType.highPriority.literal
 
 private struct PopulatedWorksiteMapVisual: Decodable, FetchableRecord {
     struct WorksiteMapVisualSubset : Decodable {
+        let incidentId: Int64
         let latitude: Double
         let longitude: Double
         let keyWorkTypeType: String
@@ -648,6 +650,7 @@ private struct PopulatedWorksiteMapVisual: Decodable, FetchableRecord {
     func asExternalModel() -> WorksiteMapMark {
         WorksiteMapMark(
             id: id,
+            incidentId: worksite.incidentId,
             latitude: worksite.latitude,
             longitude: worksite.longitude,
             statusClaim: WorkTypeStatusClaim.make(

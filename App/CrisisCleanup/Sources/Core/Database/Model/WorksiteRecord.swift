@@ -374,6 +374,7 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
 
     static var visualColumns: [SQLSelectable] {
         [
+            Columns.incidentId, // Map (UI) needs incident ID
             Columns.latitude,
             Columns.longitude,
             Columns.keyWorkTypeStatus,

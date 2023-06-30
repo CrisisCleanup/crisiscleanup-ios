@@ -39,9 +39,19 @@ struct CasesView: View {
                 .onReceive(viewModel.$incidentLocationBounds) { bounds in
                     animateToSelectedIncidentBounds(bounds.bounds)
                 }
-                .onReceive(viewModel.$worksiteMapMarkers) { markers in
-                    map.removeAnnotations(map.annotations)
-                    map.addAnnotations(viewModel.worksiteMapMarkers)
+                .onReceive(viewModel.$incidentsData) { data in
+                    let annotations = map.annotations
+                    if annotations.isNotEmpty,
+                       (annotations[0] as! WorksiteAnnotationMapMark).source.incidentId != data.selectedId {
+                        map.removeAnnotations(annotations)
+                    }
+                }
+                .onReceive(viewModel.$worksiteMapMarkers) { addAnnotations in
+                    let annotations = map.annotations
+                    if annotations.count > 5000 {
+                        map.removeAnnotations(annotations)
+                    }
+                    map.addAnnotations(addAnnotations)
                 }
 
             if viewModel.showDataProgress {

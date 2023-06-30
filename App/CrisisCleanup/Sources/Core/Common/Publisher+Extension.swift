@@ -20,6 +20,16 @@ extension Publisher where Self.Failure == Never {
             }
         }
     }
+
+    func asyncThrowsMap<T>(_ transform: @escaping ((Self.Output) async throws -> T)) -> Publishers.FlatMap<Future<T, Never>, Self> {
+        flatMap { value in
+            Future { promise in
+                Task {
+                    promise(.success(try await transform(value)))
+                }
+            }
+        }
+    }
 }
 
 // https://medium.com/geekculture/from-combine-to-async-await-c08bf1d15b77

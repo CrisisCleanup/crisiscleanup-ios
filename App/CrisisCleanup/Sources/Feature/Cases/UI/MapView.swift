@@ -91,6 +91,7 @@ struct MapView : UIViewRepresentable {
         map.camera.centerCoordinateDistance = 20
         map.showsUserLocation = false
         map.isRotateEnabled = false
+        map.isPitchEnabled = false
 
         map.addOverlay(firstHalfOverlay, level: .aboveRoads)
         map.addOverlay(secondHalfOverlay, level: .aboveRoads)
