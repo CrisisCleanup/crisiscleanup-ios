@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 61.2 (89653) - https://sketch.com -->
+    <title>ic_edit_underscore_small</title>
+    <desc>Created with Sketch.</desc>
+    <g id="icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
+        <g id="ic_edit_underscore" transform="translate(3.000000, 3.000000)" stroke="#2D2D2D" stroke-width="1.5">
+            <line x1="10.7476" y1="17.4429" x2="18.0002" y2="17.4429" id="Path"></line>
+            <path d="M9.78,0.79479 C10.5557,-0.132213 11.95,-0.268144 12.8962,0.49173 C12.9485,0.53296 14.6295,1.83879 14.6295,1.83879 C15.669,2.46719 15.992,3.80311 15.3494,4.82259 C15.3153,4.87718 5.81195,16.7645 5.81195,16.7645 C5.49578,17.1589 5.01583,17.3918 4.50291,17.3973 L0.86353,17.443 L0.04353,13.9723 C-0.071338,13.4843 0.04353,12.9718 0.3597,12.5773 L9.78,0.79479 Z" id="Path"></path>
+            <line x1="8.021" y1="3.00092" x2="13.4732" y2="7.18804" id="Path"></line>
+        </g>
+    </g>
+</svg>

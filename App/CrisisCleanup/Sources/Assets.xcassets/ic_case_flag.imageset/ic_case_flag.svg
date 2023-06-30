@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 61.2 (89653) - https://sketch.com -->
+    <title>ic_flag_small</title>
+    <desc>Created with Sketch.</desc>
+    <g id="icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
+        <g id="ic_flag" transform="translate(5.000000, 3.000000)" stroke="#2D2D2D" stroke-width="1.5">
+            <path d="M3.9647,0 C2.11607,0 1.375,1.26386 1.375,3.08353 L1.375,7.35681 C1.375,9.1206 1.375,10.4424 1.375,10.4424 L13.7361,10.4424 C14.2238,10.4424 14.531,9.9175 14.2925,9.4924 L11.8867,5.20366 L14.2885,0.95194 C14.5283,0.52616 14.2211,0 13.7327,0 L3.9647,0 Z" id="Path"></path>
+            <line x1="1.37695" y1="7.00046" x2="1.37695" y2="18.0005" id="Path"></line>
+        </g>
+    </g>
+</svg>

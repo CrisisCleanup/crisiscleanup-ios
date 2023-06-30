@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="48px" height="48px" viewBox="0 0 48 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 61.2 (89653) - https://sketch.com -->
+    <title>ic_select_on_map</title>
+    <desc>Created with Sketch.</desc>
+    <g id="ic_select_on_map" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <path d="M13,18.4053201 L13,33.6883701 C13,33.9806701 13.225344,34.0858701 13.503247,33.9240701 L19.66667,30.3395701 L19.66667,14.0000001 L13.503247,17.5839801 C13.225344,17.7457101 13,18.1130401 13,18.4053201 Z M20.77778,30.4415701 L26.3333,33.9999701 L26.3333,17.5583801 L20.77778,14.0000001 L20.77778,30.4415701 Z M34.0667,14.3116101 L34.0667,29.5946701 C34.0667,29.8869701 33.8413,30.2542701 33.5634,30.4159701 L27.4,33.9999701 L27.4,17.6604001 L33.5634,14.0758851 C33.8413,13.9141541 34.0667,14.0193321 34.0667,14.3116101 Z" id="Shape" fill="#000000"></path>
+    </g>
+</svg>

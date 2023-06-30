@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 61.2 (89653) - https://sketch.com -->
+    <title>ic_share_small</title>
+    <desc>Created with Sketch.</desc>
+    <g id="icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
+        <g id="ic_share" transform="translate(4.000000, 3.000000)" stroke="#2D2D2D" stroke-width="1.5">
+            <path d="M3.14423,11.7692 C4.67364,11.7692 5.91346,10.5294 5.91346,9 C5.91346,7.4706 4.67364,6.23077 3.14423,6.23077 C1.61483,6.23077 0.375,7.4706 0.375,9 C0.375,10.5294 1.61483,11.7692 3.14423,11.7692 Z" id="Path"></path>
+            <path d="M12.8366,18 C14.366,18 15.6058,16.7602 15.6058,15.2308 C15.6058,13.7014 14.366,12.4615 12.8366,12.4615 C11.3072,12.4615 10.0674,13.7014 10.0674,15.2308 C10.0674,16.7602 11.3072,18 12.8366,18 Z" id="Path"></path>
+            <path d="M12.8366,5.53846 C14.366,5.53846 15.6058,4.29864 15.6058,2.76923 C15.6058,1.23983 14.366,0 12.8366,0 C11.3072,0 10.0674,1.23983 10.0674,2.76923 C10.0674,4.29864 11.3072,5.53846 12.8366,5.53846 Z" id="Path"></path>
+            <line x1="10.5077" y1="4.26654" x2="5.47363" y2="7.50271" id="Path"></line>
+            <line x1="5.47363" y1="10.4973" x2="10.5077" y2="13.7334" id="Path"></line>
+        </g>
+    </g>
+</svg>
