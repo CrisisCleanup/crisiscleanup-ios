@@ -27,7 +27,7 @@ struct MainView: View {
                             TabView {
                                 Group {
                                     TabViewContainer {
-                                        casesViewBuilder.casesView
+                                        WorkTypeIconsView(viewModel.iconImages)
                                     }
                                     .navTabItem(.cases, viewModel.translator)
                                     .tag(TopLevelDestination.cases)

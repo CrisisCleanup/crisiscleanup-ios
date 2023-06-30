@@ -6,6 +6,7 @@ class MainViewModel: ObservableObject {
     let translator: KeyAssetTranslator
     private let syncPuller: SyncPuller
     private let logger: AppLogger
+    private let iconProvider: MapCaseIconProvider
 
     @Published var viewData: MainViewData = MainViewData()
 
@@ -15,17 +16,21 @@ class MainViewModel: ObservableObject {
 
     private var incidentsData: IncidentsData = LoadingIncidentsData
 
+    @Published var iconImages: [UIImage] = [UIImage]()
+
     init(
         accountDataRepository: AccountDataRepository,
         translationsRepository: LanguageTranslationsRepository,
         incidentSelector: IncidentSelector,
         syncPuller: SyncPuller,
+        workTypeIconProvider: MapCaseIconProvider,
         logger: AppLogger
     ) {
         self.accountDataRepository = accountDataRepository
         translator = translationsRepository
         self.syncPuller = syncPuller
         self.logger = logger
+        iconProvider = workTypeIconProvider
 
         incidentSelector.incidentsData
             .sink { data in
@@ -58,6 +63,13 @@ class MainViewModel: ObservableObject {
             .store(in: &disposables)
 
         syncPuller.pullUnauthenticatedData()
+
+        Task {
+            let images = WorkTypeIconImageGenerator.generate(iconProvider)
+            Task { @MainActor in
+                self.iconImages = images
+            }
+        }
     }
 
     func onViewAppear() {

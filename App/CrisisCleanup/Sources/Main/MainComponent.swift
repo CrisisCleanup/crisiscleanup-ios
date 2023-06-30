@@ -16,6 +16,7 @@ public class MainComponent: BootstrapComponent,
             translationsRepository: languageTranslationsRepository,
             incidentSelector: incidentSelector,
             syncPuller: syncPuller,
+            workTypeIconProvider: mapCaseIconProvider,
             logger: loggerFactory.getLogger("main")
         )
     }
