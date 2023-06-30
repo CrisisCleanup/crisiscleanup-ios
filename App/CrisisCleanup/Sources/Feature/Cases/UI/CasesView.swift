@@ -43,15 +43,6 @@ struct CasesView: View {
                     caseTapped = marker.source != nil ? true: false
                 }
 
-
-            NavigationLink(destination: ViewCaseView(viewModel: viewModel), isActive: $caseTapped) {
-                    EmptyView()
-            }.onDisappear() {
-                map.selectedAnnotations = []
-            }
-
-            // TODO: Animate rather than instant
-
             if viewModel.showDataProgress {
                 VStack {
                     ProgressView(value: viewModel.dataProgress, total: 1)
@@ -151,6 +142,13 @@ struct CasesView: View {
         }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
+        .navigationDestination(isPresented: $caseTapped) {
+            // TODO: Change to view builder pattern
+            ViewCaseView(viewModel: viewModel)
+                .onDisappear() {
+                    map.selectedAnnotations = []
+                }
+        }
     }
 }
 
