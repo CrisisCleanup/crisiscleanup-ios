@@ -1,4 +1,4 @@
-let workTypeIconLookup = [
+internal let workTypeIconLookup = [
     WorkTypeType.animalServices: "ic_work_type_animal_services",
     WorkTypeType.ash: "ic_work_type_ash",
     WorkTypeType.catchmentGutters: "ic_work_type_catchment_gutters",

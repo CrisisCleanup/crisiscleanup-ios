@@ -24,8 +24,8 @@ let statusOutOfScopeRejectedColor = Color(hex: statusOutOfScopeRejectedColorCode
 let statusUnresponsiveColor = Color(hex: statusUnresponsiveColorCode)
 
 struct MapMarkerColor {
-    private let fillLong: Int64
-    private let strokeLong: Int64
+    let fillLong: Int64
+    let strokeLong: Int64
     let fillInt: Int
     let strokeInt: Int
     let fill: Color
@@ -66,7 +66,7 @@ private let statusClaimMapMarkerColors: [WorkTypeStatusClaim: MapMarkerColor] = 
     WorkTypeStatusClaim(.closedDuplicate, false): MapMarkerColor(statusDuplicateUnclaimedColorCode),
 ]
 
-internal func getMapMarkerColors(statusClaim: WorkTypeStatusClaim) -> MapMarkerColor {
+internal func getMapMarkerColors(_ statusClaim: WorkTypeStatusClaim) -> MapMarkerColor {
     var colors = statusClaimMapMarkerColors[statusClaim]
     if colors == nil {
         if let status = statusClaimToStatus[statusClaim] {

@@ -16,7 +16,7 @@ extension WorksiteMapMark {
         _ iconProvider: MapCaseIconProvider,
         _ additionalScreenOffset: (Double, Double)
     ) -> WorksiteAnnotationMapMark {
-        let (xOffset, yOffset) = additionalScreenOffset
+        // let (xOffset, yOffset) = additionalScreenOffset
 
         let point = WorksiteAnnotationMapMark()
         point.coordinate = CLLocationCoordinate2D(
@@ -25,14 +25,29 @@ extension WorksiteMapMark {
         )
         point.source = self
         // TODO: Get an identifier based on the icon descriptor as well. Likely status-claim-worktype|favorite|high-priority
+        let hasMultipleWorkTypes = workTypeCount > 1
         point.mapIcon = iconProvider.getIcon(
             statusClaim,
             workType,
             isFavorite,
             isHighPriority,
-            workTypeCount > 1
+            hasMultipleWorkTypes
         )
-        point.reuseIdentifier = "\(self.id)"
+
+        let statusId = statusClaim.status.literal
+        let isClaimed = statusClaim.isClaimed
+        // Match logic in work type icon resolver
+        var lookupKey = workType
+        if isFavorite {
+            lookupKey = .favorite
+        }
+        else if isHighPriority {
+            lookupKey = .important
+        }
+        let workTypeId = lookupKey.rawValue
+
+        point.reuseIdentifier = "\(statusId)-\(isClaimed)-\(workTypeId)-\(hasMultipleWorkTypes)"
+
         // mapIconOffset = Offset(0.5f + xOffset, 0.5f + yOffset),
         return point
     }

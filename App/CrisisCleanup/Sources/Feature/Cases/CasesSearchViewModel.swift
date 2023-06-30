@@ -140,7 +140,7 @@ class CasesSearchViewModel: ObservableObject {
 
     private func getIcon(_ workType: WorkType?) -> UIImage? {
         if let wt = workType {
-            return mapCaseIconProvider.getIconBitmap(wt.statusClaim, wt.workType, false)
+            return mapCaseIconProvider.getIcon(wt.statusClaim, wt.workType, false)
         }
         return nil
     }
@@ -168,7 +168,7 @@ class CasesSearchViewModel: ObservableObject {
                 let incidentId = incidentIdCache
                 var worksiteId = result.summary.id
                 if worksiteId <= 0 {
-                    worksiteId = try await worksitesRepository.getLocalId(result.networkWorksiteId)
+                    worksiteId = try worksitesRepository.getLocalId(result.networkWorksiteId)
                 }
                 selectedWorksiteSubject.value = (incidentId, worksiteId)
             } catch {

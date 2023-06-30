@@ -19,6 +19,7 @@
 		4E46479C29EEE23E0062147F /* AppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E46479B29EEE23E0062147F /* AppTests.swift */; };
 		4E4647A629EEE23E0062147F /* AppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E4647A529EEE23E0062147F /* AppUITests.swift */; };
 		4E4647A829EEE23E0062147F /* AppUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E4647A729EEE23E0062147F /* AppUITestsLaunchTests.swift */; };
+		4E4975C22A4E266000EEC7A2 /* LerpGrayscaleToColorKernel.ci.metal in Sources */ = {isa = PBXBuildFile; fileRef = 4E4975C12A4E266000EEC7A2 /* LerpGrayscaleToColorKernel.ci.metal */; };
 		4E59A32F2A117606006F2130 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 4E59A3312A117606006F2130 /* Localizable.strings */; };
 		4E646A002A1916BB009148E0 /* NeedleGenerated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E6469FF2A1916BB009148E0 /* NeedleGenerated.swift */; };
 		4E75623E2A117E140029D5D7 /* CrisisCleanup in Frameworks */ = {isa = PBXBuildFile; productRef = 4E75623D2A117E140029D5D7 /* CrisisCleanup */; };
@@ -26,6 +27,37 @@
 		4ED625932A25160800C33EAB /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4ED6258B2A25160800C33EAB /* GoogleService-Info.plist */; };
 		4ED625982A25160800C33EAB /* AppConfig.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 4ED625902A25160800C33EAB /* AppConfig.xcconfig */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXBuildRule section */
+		4E4975BE2A4E227C00EEC7A2 /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.proxy.script;
+			filePatterns = "*.ci.metal";
+			fileType = pattern.proxy;
+			inputFiles = (
+			);
+			isEditable = 1;
+			outputFiles = (
+				"$(DERIVED_FILE_DIR)/${INPUT_FILE_BASE}.air",
+			);
+			runOncePerArchitecture = 0;
+			script = "# https://www.kodeco.com/25658084-core-image-tutorial-for-ios-custom-filters\nxcrun metal -c -fcikernel \"${INPUT_FILE_PATH}\" \\\n  -o \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+		};
+		4E4975BF2A4E22C000EEC7A2 /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.proxy.script;
+			filePatterns = "*.ci.air";
+			fileType = pattern.proxy;
+			inputFiles = (
+			);
+			isEditable = 1;
+			outputFiles = (
+				"$(METAL_LIBRARY_OUTPUT_DIR)/$(INPUT_FILE_BASE).metallib",
+			);
+			runOncePerArchitecture = 0;
+			script = "# https://www.kodeco.com/25658084-core-image-tutorial-for-ios-custom-filters\nxcrun metallib -cikernel \"${INPUT_FILE_PATH}\" -o \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+		};
+/* End PBXBuildRule section */
 
 /* Begin PBXContainerItemProxy section */
 		4E46479829EEE23E0062147F /* PBXContainerItemProxy */ = {
@@ -59,6 +91,7 @@
 		4E4647A129EEE23E0062147F /* UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E4647A529EEE23E0062147F /* AppUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUITests.swift; sourceTree = "<group>"; };
 		4E4647A729EEE23E0062147F /* AppUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		4E4975C12A4E266000EEC7A2 /* LerpGrayscaleToColorKernel.ci.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = LerpGrayscaleToColorKernel.ci.metal; sourceTree = "<group>"; };
 		4E59A3302A117606006F2130 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		4E59A3322A117668006F2130 /* CrisisCleanup */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = CrisisCleanup; path = /Users/oc/project/cricle/ios/App/AppUITests/CrisisCleanup; sourceTree = "<absolute>"; };
 		4E6469FF2A1916BB009148E0 /* NeedleGenerated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NeedleGenerated.swift; sourceTree = "<group>"; };
@@ -142,6 +175,7 @@
 		4E46478829EEE23B0062147F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				4E4975C02A4E264400EEC7A2 /* Filters */,
 				4E0CCEED2A19679D00EC6906 /* Config */,
 				4EBFB4502A19122100DA7C84 /* Sources */,
 				4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */,
@@ -177,6 +211,14 @@
 				4E4647A729EEE23E0062147F /* AppUITestsLaunchTests.swift */,
 			);
 			path = AppUITests;
+			sourceTree = "<group>";
+		};
+		4E4975C02A4E264400EEC7A2 /* Filters */ = {
+			isa = PBXGroup;
+			children = (
+				4E4975C12A4E266000EEC7A2 /* LerpGrayscaleToColorKernel.ci.metal */,
+			);
+			path = Filters;
 			sourceTree = "<group>";
 		};
 		4E59A3352A117993006F2130 /* Packages */ = {
@@ -222,6 +264,8 @@
 				4E0CCF062A1988F300EC6906 /* Process and Upload dSYMs */,
 			);
 			buildRules = (
+				4E4975BF2A4E22C000EEC7A2 /* PBXBuildRule */,
+				4E4975BE2A4E227C00EEC7A2 /* PBXBuildRule */,
 			);
 			dependencies = (
 				4EBFB44C2A1910B100DA7C84 /* PBXTargetDependency */,
@@ -443,6 +487,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4E0CCF082A1989FB00EC6906 /* AppLoggerProvider.swift in Sources */,
+				4E4975C22A4E266000EEC7A2 /* LerpGrayscaleToColorKernel.ci.metal in Sources */,
 				4E646A002A1916BB009148E0 /* NeedleGenerated.swift in Sources */,
 				4E46478A29EEE23B0062147F /* CrisisCleanupApp.swift in Sources */,
 				4E0CCEF52A196D4F00EC6906 /* AppBuildEnv.swift in Sources */,

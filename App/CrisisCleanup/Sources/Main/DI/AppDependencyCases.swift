@@ -13,17 +13,7 @@ extension MainComponent {
 
     public var mapCaseIconProvider: MapCaseIconProvider {
         shared {
-            NullMapCaseIconProvider()
+            WorkTypeIconProvider()
         }
-    }
-}
-
-private class NullMapCaseIconProvider: MapCaseIconProvider {
-    func getIcon(_ statusClaim: WorkTypeStatusClaim, _ workType: WorkTypeType, _ isFavorite: Bool, _ isImportant: Bool, _ hasMultipleWorkTypes: Bool) -> UIImage? {
-        nil
-    }
-
-    func getIconBitmap(_ statusClaim: WorkTypeStatusClaim, _ workType: WorkTypeType, _ hasMultipleWorkTypes: Bool) -> UIImage? {
-        nil
     }
 }

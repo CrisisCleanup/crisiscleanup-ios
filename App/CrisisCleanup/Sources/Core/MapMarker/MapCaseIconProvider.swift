@@ -4,7 +4,7 @@ public protocol MapCaseIconProvider {
     /**
      * Offset to the center of the icon (in pixels)
      */
-    // let iconOffset: Offset
+    var iconOffset: (Double, Double) { get }
 
     func getIcon(
         _ statusClaim: WorkTypeStatusClaim,
@@ -14,7 +14,7 @@ public protocol MapCaseIconProvider {
         _ hasMultipleWorkTypes: Bool
     ) -> UIImage?
 
-    func getIconBitmap(
+    func getIcon(
         _ statusClaim: WorkTypeStatusClaim,
         _ workType: WorkTypeType,
         _ hasMultipleWorkTypes: Bool
