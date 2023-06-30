@@ -21,7 +21,10 @@ class Coordinator: NSObject, MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
         // From https://medium.com/@dmytrobabych/getting-actual-rotation-and-zoom-level-for-mapkit-mkmapview-e7f03f430aa9
         let zoom = log2(360.0 * mapView.frame.size.width / (mapView.region.span.longitudeDelta * 128))
-        viewModel.onMapCameraChange(zoom, mapView.region)
+
+        // There is a bug with map view where sometimes the map is animating but regionDidChangeAnimated doesn't report it correctly.
+        // Assume animation should always happen so inform view model when not reported
+        viewModel.onMapCameraChange(zoom, mapView.region, animated)
     }
 
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {

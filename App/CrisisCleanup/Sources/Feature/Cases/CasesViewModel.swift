@@ -27,9 +27,8 @@ class CasesViewModel: ObservableObject {
 
     private let mapMarkerManager: CasesMapMarkerManager
 
-    private let annotationSetLock = NSLock()
-    private var annotationIdSet = Set<Int64>()
-    @Published private(set) var worksiteMapMarkers: [WorksiteAnnotationMapMark] = []
+    private let mapMarkersLock = NSLock()
+    @Published private(set) var incidentMapMarkers: IncidentAnnotations = emptyIncidentAnnotations
 
     @Published private(set) var casesCount: (Int, Int) = (0, 0)
 
@@ -86,8 +85,17 @@ class CasesViewModel: ObservableObject {
                 for: .seconds(0.25),
                 scheduler: RunLoop.main
             )
-            .asyncMap { wqs in
+            .asyncThrowsMap { wqs in
                 let queryIncidentId = wqs.incidentId
+
+                try self.mapMarkersLock.withLock {
+                    if queryIncidentId != self.incidentMapMarkers.incidentId {
+                        Task { @MainActor in
+                            self.incidentMapMarkers = IncidentAnnotations(queryIncidentId)
+                        }
+                        throw CancellationError()
+                    }
+                }
 
                 var annotations = [WorksiteAnnotationMapMark]()
                 if queryIncidentId != EmptyIncident.id {
@@ -108,28 +116,35 @@ class CasesViewModel: ObservableObject {
 
         worksitesInBounds.asyncThrowsMap { (queryIncidentId, annotations) in
             var newAnnotations: [WorksiteAnnotationMapMark] = []
-            self.annotationSetLock.withLock {
-                let idSet = self.annotationIdSet
-                for a in annotations {
-                    if !idSet.contains(a.source.id) {
-                        self.annotationIdSet.insert(a.source.id)
-                        newAnnotations.append(a)
+            return try self.mapMarkersLock.withLock {
+                let incidentAnnotations = self.incidentMapMarkers
+                if incidentAnnotations.incidentId == queryIncidentId {
+                    var idSet = incidentAnnotations.annotationIdSet
+                    for a in annotations {
+                        if !idSet.contains(a.source.id) {
+                            idSet.insert(a.source.id)
+                            newAnnotations.append(a)
+                        }
                     }
+                    return IncidentAnnotations(
+                        queryIncidentId,
+                        annotationIdSet: idSet,
+                        newAnnotations: newAnnotations
+                    )
+                } else {
+                    throw CancellationError()
                 }
             }
-
-            if queryIncidentId != self.incidentsData.selectedId {
-                self.annotationSetLock.withLock {
-                    self.annotationIdSet = Set<Int64>()
-                }
-                throw CancellationError()
-            }
-
-            return newAnnotations
         }
-        .removeDuplicates()
         .receive(on: RunLoop.main)
-        .assign(to: \.worksiteMapMarkers, on: self)
+        .sink(receiveCompletion: { completion in
+        }, receiveValue: { incidentAnnotations in
+            if incidentAnnotations.incidentId == self.incidentsData.selectedId {
+                self.mapMarkersLock.withLock {
+                    self.incidentMapMarkers = incidentAnnotations
+                }
+            }
+        })
         .store(in: &disposables)
 
         let incidentWorksitesCount = incidentSelector.incidentId
@@ -203,7 +218,8 @@ class CasesViewModel: ObservableObject {
 
     func onMapCameraChange(
         _ zoom: Double,
-        _ region: MKCoordinateRegion
+        _ region: MKCoordinateRegion,
+        _ didAnimate: Bool
     ) {
         qsm.mapZoomSubject.value = zoom
 
@@ -213,6 +229,19 @@ class CasesViewModel: ObservableObject {
             southWest: center.subtract(span).latLng,
             northEast: center.add(span).latLng
         )
+
+        // Seems like there is a map view bug. This accounts for those times.
+        if !didAnimate {
+            Task {
+                do {
+                    // Animations seem to take around half a second - 1 second. Split the diff.
+                    try await Task.sleep(for: .seconds(0.7))
+                    self.qsm.mapZoomSubject.value = self.qsm.mapZoomSubject.value + Double.random(in: -0.001..<0.001)
+                } catch {
+                    self.logger.logDebug(error.localizedDescription)
+                }
+            }
+        }
     }
 
     private let denseMarkCountThreshold = 15
@@ -304,3 +333,21 @@ struct IncidentIdWorksiteCount {
     let id: Int64
     let count: Int
 }
+
+struct IncidentAnnotations {
+    let incidentId: Int64
+    var annotationIdSet: Set<Int64>
+    let newAnnotations: [WorksiteAnnotationMapMark]
+
+    init(
+        _ incidentId: Int64,
+        annotationIdSet: Set<Int64> = Set<Int64>(),
+        newAnnotations: [WorksiteAnnotationMapMark] = [WorksiteAnnotationMapMark]()
+    ) {
+        self.incidentId = incidentId
+        self.annotationIdSet = annotationIdSet
+        self.newAnnotations = newAnnotations
+    }
+}
+
+private let emptyIncidentAnnotations = IncidentAnnotations(EmptyIncident.id)
