@@ -15,6 +15,7 @@ struct MenuView: View {
                 authenticateViewBuilder: authenticateViewBuilder,
                 incidentSelectViewBuilder: incidentSelectViewBuilder
             )
+            .tint(.black)
             .padding([.horizontal, .top])
 
             Text(viewModel.versionText)
@@ -87,7 +88,8 @@ private struct TopBar: View {
                         } placeholder: {
                             ProgressView()
                         }
-                        .frame(width: 36, height: 36)
+                        .frame(width: 48, height: 48)
+                        .clipShape(Circle())
                         .padding([.vertical], 8)
                     }
                 } else {

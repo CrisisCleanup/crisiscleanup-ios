@@ -51,12 +51,14 @@ class MenuViewModel: ObservableObject {
         accountDataRepository.accountData
             .eraseToAnyPublisher()
             .receive(on: RunLoop.main)
-            .map{
-                if let escapedUrl = $0.profilePictureUri.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+            .map {
+                let pictureUrl = $0.profilePictureUri
+                let isSvg = pictureUrl.hasSuffix(".svg")
+                if let escapedUrl = isSvg ? pictureUrl.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) : pictureUrl,
                    let url = URL(string: escapedUrl) {
                     return AccountProfilePicture(
                         url: url,
-                        isSvg: $0.profilePictureUri.hasSuffix(".svg")
+                        isSvg: isSvg
                     )
                 }
                 return nil

@@ -81,7 +81,6 @@ class CasesViewModel: ObservableObject {
         )
         .receive(on: RunLoop.main)
         .sink { b0, b1, b2 in
-            print("Busy? \(b0) \(b1) \(b2)")
             self.isMapBusy = b0 || b1 || b2
         }
         .store(in: &disposables)
