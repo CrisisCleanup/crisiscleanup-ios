@@ -15,6 +15,7 @@ struct MenuView: View {
                 authenticateViewBuilder: authenticateViewBuilder,
                 incidentSelectViewBuilder: incidentSelectViewBuilder
             )
+            .padding([.horizontal, .top])
 
             Text(viewModel.versionText)
                 .padding()
@@ -26,7 +27,6 @@ struct MenuView: View {
 
             Spacer()
         }
-        .padding()
         .background(.white)
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }

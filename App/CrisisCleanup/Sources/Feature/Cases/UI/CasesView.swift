@@ -47,13 +47,23 @@ struct CasesView: View {
                     map.addAnnotations(incidentAnnotations.newAnnotations)
                 }
 
+            // TODO: Animate rather than instant
+
             if viewModel.showDataProgress {
                 VStack {
                     ProgressView(value: viewModel.dataProgress, total: 1)
                         .progressViewStyle(
                             LinearProgressViewStyle(tint: appTheme.colors.primaryOrangeColor)
                         )
+
                     Spacer()
+                }
+            }
+
+            if viewModel.isMapBusy {
+                VStack {
+                    ProgressView()
+                        .frame(alignment: .center)
                 }
             }
 

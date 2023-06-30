@@ -24,6 +24,7 @@ class CasesViewModel: ObservableObject {
 
     @Published private(set) var isMapBusy: Bool = false
     private let isGeneratingWorksiteMarkers = CurrentValueSubject<Bool, Never>(false)
+    private let isDelayingRegionBug = CurrentValueSubject<Bool, Never>(false)
 
     private let mapMarkerManager: CasesMapMarkerManager
 
@@ -71,13 +72,17 @@ class CasesViewModel: ObservableObject {
             .receive(on: RunLoop.main)
             .assign(to: &incidentLocationBoundsPublisher)
 
-        mapBoundsManager.isDeterminingBoundsPublisher
-            .eraseToAnyPublisher()
-            .receive(on: RunLoop.main)
-            .sink { b0 in
-                self.isMapBusy = b0
-            }
-            .store(in: &disposables)
+        Publishers.CombineLatest3(
+            mapBoundsManager.isDeterminingBoundsPublisher.eraseToAnyPublisher(),
+            isGeneratingWorksiteMarkers,
+            isDelayingRegionBug
+        )
+        .receive(on: RunLoop.main)
+        .sink { b0, b1, b2 in
+            print("Busy? \(b0) \(b1) \(b2)")
+            self.isMapBusy = b0 || b1 || b2
+        }
+        .store(in: &disposables)
 
         let worksitesInBounds = qsm.worksiteQueryState
             .eraseToAnyPublisher()
@@ -232,8 +237,12 @@ class CasesViewModel: ObservableObject {
 
         // Seems like there is a map view bug. This accounts for those times.
         if !didAnimate {
+            isDelayingRegionBug.value = true
             Task {
                 do {
+                    defer {
+                        Task { @MainActor in self.isDelayingRegionBug.value = false }
+                    }
                     // Animations seem to take around half a second - 1 second. Split the diff.
                     try await Task.sleep(for: .seconds(0.7))
                     self.qsm.mapZoomSubject.value = self.qsm.mapZoomSubject.value + Double.random(in: -0.001..<0.001)
