@@ -4,7 +4,9 @@ import SwiftUI
 public class MainComponent: BootstrapComponent,
                             AuthenticateViewBuilder,
                             IncidentSelectViewBuilder,
-                            CasesSearchViewBuilder
+                            CasesFilterViewBuilder,
+                            CasesSearchViewBuilder,
+                            ViewCaseViewBuilder
 {
     public private(set) var appEnv: AppEnv
     public private(set) var appSettingsProvider: AppSettingsProvider
@@ -58,9 +60,31 @@ public class MainComponent: BootstrapComponent,
         incidentSelectComponent.incidentSelectView(onDismiss: onDismiss)
     }
 
-    var casesSearchComponent: CasesSearchComponent { CasesSearchComponent(parent: self) }
+    lazy var casesFilterComponent: CasesFilterComponent = { CasesFilterComponent(parent: self) }()
+
+    public var casesFilterView: AnyView {
+        casesFilterComponent.casesFilterView
+    }
+
+    lazy var casesSearchComponent: CasesSearchComponent = { CasesSearchComponent(parent: self) }()
 
     public var casesSearchView: AnyView {
         casesSearchComponent.casesSearchView
+    }
+
+    lazy var viewCaseComponent: ViewCaseComponent = { ViewCaseComponent(parent: self) }()
+
+    public func viewCaseView(incidentId: Int64, worksiteId: Int64) -> AnyView {
+        viewCaseComponent.viewCaseView(
+            incidentId: incidentId,
+            worksiteId: worksiteId
+        )
+    }
+
+    public func onViewCasePopped(incidentId: Int64, worksiteId: Int64) {
+        viewCaseComponent.onViewCasePopped(
+            incidentId: incidentId,
+            worksiteId: worksiteId
+        )
     }
 }

@@ -59,3 +59,11 @@ extension AnyPublisher {
         }
     }
 }
+
+func cancelSubscriptions(_ subscriptions: Set<AnyCancellable>) -> Set<AnyCancellable> {
+    let copy = subscriptions
+    for s in copy {
+        s.cancel()
+    }
+    return Set<AnyCancellable>()
+}

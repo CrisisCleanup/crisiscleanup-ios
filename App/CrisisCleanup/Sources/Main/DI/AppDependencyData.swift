@@ -23,6 +23,14 @@ extension MainComponent {
         WorksiteSyncStatDao(appDatabase)
     }
 
+    var workTypeStatusDao: WorkTypeStatusDao {
+        WorkTypeStatusDao(appDatabase)
+    }
+
+    var recentWorksiteDao: RecentWorksiteDao {
+        RecentWorksiteDao(appDatabase)
+    }
+
     public var incidentsRepository: IncidentsRepository {
         shared {
             OfflineFirstIncidentsRepository(
@@ -39,6 +47,7 @@ extension MainComponent {
         shared {
             CrisisCleanupWorkTypeStatusRepository(
                 dataSource: networkDataSource,
+                workTypeStatusDao: workTypeStatusDao,
                 loggerFactory: loggerFactory
             )
         }
@@ -69,6 +78,7 @@ extension MainComponent {
                 worksitesSyncer: worksitesSyncer,
                 worksiteSyncStatDao: worksiteSyncStatDao,
                 worksiteDao: worksiteDao,
+                recentWorksiteDao: recentWorksiteDao,
                 accountDataRepository: accountDataRepository,
                 languageTranslationsRepository: languageTranslationsRepository,
                 appVersionProvider: appVersionProvider,

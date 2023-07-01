@@ -361,13 +361,13 @@ extension AppDatabase {
                 t.column("worksiteId", .integer)
                     .notNull()
                     .references("worksiteRoot", onDelete: .cascade)
-                 t.column("fieldKey", .text)
+                t.column("fieldKey", .text)
                     .notNull()
-                 t.column("isBoolValue", .boolean)
+                t.column("isBoolValue", .boolean)
                     .notNull()
-                 t.column("valueString", .text)
+                t.column("valueString", .text)
                     .notNull()
-                 t.column("valueBool", .boolean)
+                t.column("valueBool", .boolean)
                     .notNull()
             }
             try db.create(
@@ -445,6 +445,39 @@ extension AppDatabase {
                 t.column("appBuildVersionCode", .integer)
                     .notNull()
             }
+        }
+
+        migrator.registerMigration(
+            "work-type-status-recent-case",
+            foreignKeyChecks: .immediate
+        ) { db in
+            try db.create(table: "workTypeStatus") { t in
+                /// status
+                t.primaryKey("id", .text)
+                t.column("name", .text)
+                    .notNull()
+                t.column("listOrder", .integer)
+                    .notNull()
+                t.column("primaryState", .text)
+                    .notNull()
+            }
+            try db.create(
+                indexOn: "workTypeStatus",
+                columns: ["listOrder"]
+            )
+
+            try db.create(table: "recentWorksite") { t in
+                t.primaryKey("id", .integer)
+                    .references("worksite", onDelete: .cascade)
+                t.column("incidentId", .integer)
+                    .notNull()
+                t.column("viewedAt", .date)
+                    .notNull()
+            }
+            try db.create(
+                indexOn: "recentWorksite",
+                columns: ["incidentId", "viewedAt"]
+            )
         }
 
         return migrator

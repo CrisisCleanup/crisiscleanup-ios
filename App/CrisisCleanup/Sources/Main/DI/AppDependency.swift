@@ -28,6 +28,8 @@ public protocol AppDependency: Dependency {
     var authenticateViewBuilder: AuthenticateViewBuilder { get }
     var incidentSelectViewBuilder: IncidentSelectViewBuilder { get }
     var casesSearchViewBuilder: CasesSearchViewBuilder { get }
+    var casesFilterViewBuilder: CasesFilterViewBuilder { get }
+    var viewCaseViewBuilder: ViewCaseViewBuilder { get }
 
     var authEventBus: AuthEventBus { get }
     var accountDataRepository: AccountDataRepository { get }
@@ -95,6 +97,8 @@ extension MainComponent {
     public var authenticateViewBuilder: AuthenticateViewBuilder { self }
     public var incidentSelectViewBuilder: IncidentSelectViewBuilder { self }
     public var casesSearchViewBuilder: CasesSearchViewBuilder { self }
+    public var casesFilterViewBuilder: CasesFilterViewBuilder { self }
+    public var viewCaseViewBuilder: ViewCaseViewBuilder { self }
 
     public var authEventBus: AuthEventBus {
         return shared { CrisisCleanupAuthEventBus() }

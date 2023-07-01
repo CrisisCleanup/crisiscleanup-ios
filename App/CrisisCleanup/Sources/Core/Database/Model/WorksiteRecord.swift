@@ -160,6 +160,7 @@ fileprivate typealias RootColumns = WorksiteRootRecord.Columns
 // sourcery: copyBuilder
 struct WorksiteRecord : Identifiable, Equatable {
     static let root = belongsTo(WorksiteRootRecord.self)
+    static let recent = hasOne(RecentWorksiteRecord.self)
 
     var id: Int64?
     let networkId: Int64

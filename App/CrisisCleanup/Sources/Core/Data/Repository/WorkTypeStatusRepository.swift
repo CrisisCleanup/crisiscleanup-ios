@@ -21,15 +21,18 @@ class CrisisCleanupWorkTypeStatusRepository: WorkTypeStatusRepository {
     let workTypeStatusOptions: any Publisher<[WorkTypeStatus], Never>
 
     private let dataSource: CrisisCleanupNetworkDataSource
+    private let workTypeStatusDao: WorkTypeStatusDao
     private let logger: AppLogger
 
     private var statusLookup = [String: PopulatedWorkTypeStatus]()
 
     init(
         dataSource: CrisisCleanupNetworkDataSource,
+        workTypeStatusDao: WorkTypeStatusDao,
         loggerFactory: AppLoggerFactory
     ) {
         self.dataSource = dataSource
+        self.workTypeStatusDao = workTypeStatusDao
         logger = loggerFactory.getLogger("work-type-status")
 
         workTypeStatusOptions = workTypeStatusOptionsSubject
@@ -40,13 +43,18 @@ class CrisisCleanupWorkTypeStatusRepository: WorkTypeStatusRepository {
             return
         }
 
-        // TODO: Load to and save from database, filter, finish
         do {
             let statuses = try await dataSource.getStatuses()?.results ?? []
-            statusLookup = statuses.map { $0.asPopulatedModel() }.associateBy { $0.status }
+            try await workTypeStatusDao.upsert(statuses.map { $0.asRecord() })
+
+            statusLookup = try! workTypeStatusDao.getStatuses().associateBy { $0.status }
         } catch {
             logger.logError(error)
         }
+
+        workTypeStatusOptionsSubject.value = statusLookup
+            .filter { $0.value.primaryState != "need" }
+            .map { statusFromLiteral($0.key) }
     }
 
     func translateStatus(_ status: String) -> String? {

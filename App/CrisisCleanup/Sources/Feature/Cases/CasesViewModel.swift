@@ -5,6 +5,7 @@ import MapKit
 
 class CasesViewModel: ObservableObject {
     private let incidentSelector: IncidentSelector
+    private let incidentsRepository: IncidentsRepository
     private let worksitesRepository: WorksitesRepository
     private let dataPullReporter: IncidentDataPullReporter
     private let mapCaseIconProvider: MapCaseIconProvider
@@ -20,7 +21,6 @@ class CasesViewModel: ObservableObject {
     private let mapBoundsManager: CasesMapBoundsManager
 
     @Published private(set) var incidentLocationBounds = MapViewCameraBoundsDefault
-    private lazy var incidentLocationBoundsPublisher = $incidentLocationBounds
 
     @Published private(set) var isMapBusy: Bool = false
     private let isGeneratingWorksiteMarkers = CurrentValueSubject<Bool, Never>(false)
@@ -35,8 +35,7 @@ class CasesViewModel: ObservableObject {
 
     @Published private(set) var selectedCaseAnnotation: WorksiteAnnotationMapMark = WorksiteAnnotationMapMark()
 
-    private var disposables = Set<AnyCancellable>()
-    private var observableSubscriptions = Set<AnyCancellable>()
+    private var subscriptions = Set<AnyCancellable>()
 
     init(
         incidentSelector: IncidentSelector,
@@ -48,6 +47,7 @@ class CasesViewModel: ObservableObject {
         loggerFactory: AppLoggerFactory
     ) {
         self.incidentSelector = incidentSelector
+        self.incidentsRepository = incidentsRepository
         self.worksitesRepository = worksitesRepository
         self.dataPullReporter = dataPullReporter
         self.mapCaseIconProvider = mapCaseIconProvider
@@ -62,29 +62,52 @@ class CasesViewModel: ObservableObject {
         mapMarkerManager = CasesMapMarkerManager(worksitesRepository: worksitesRepository)
 
         qsm = CasesQueryStateManager(incidentSelector)
+    }
 
-        incidentSelector.incidentsData
-            .eraseToAnyPublisher()
-            .receive(on: RunLoop.main)
-            .sink { self.incidentsData = $0 }
-            .store(in: &disposables)
+    func onViewAppear() {
+        subscribeLoading()
+        subscribeIncidentsData()
+        subscribeIncidentBounds()
+        subscribeWorksiteInBounds()
+        subscribeDataPullStats()
+    }
 
-        mapBoundsManager.mapCameraBoundsPublisher
-            .eraseToAnyPublisher()
-            .receive(on: RunLoop.main)
-            .assign(to: &incidentLocationBoundsPublisher)
+    func onViewDisappear() {
+        subscriptions = cancelSubscriptions(subscriptions)
+    }
 
-        Publishers.CombineLatest3(
+    private func subscribeLoading() {
+        let subscription = Publishers.CombineLatest3(
             mapBoundsManager.isDeterminingBoundsPublisher.eraseToAnyPublisher(),
             isGeneratingWorksiteMarkers,
             isDelayingRegionBug
         )
-        .receive(on: RunLoop.main)
-        .sink { b0, b1, b2 in
-            self.isMapBusy = b0 || b1 || b2
-        }
-        .store(in: &disposables)
+            .receive(on: RunLoop.main)
+            .sink { b0, b1, b2 in
+                self.isMapBusy = b0 || b1 || b2
+            }
+        subscriptions.insert(subscription)
+    }
 
+    private func subscribeIncidentsData() {
+        let subscription = incidentSelector.incidentsData
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .sink { self.incidentsData = $0 }
+        subscriptions.insert(subscription)
+    }
+
+    private func subscribeIncidentBounds() {
+        let subscription = mapBoundsManager.mapCameraBoundsPublisher
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .sink(receiveValue: { bounds in
+                self.incidentLocationBounds = bounds
+            })
+        subscriptions.insert(subscription)
+    }
+
+    private func subscribeWorksiteInBounds() {
         let worksitesInBounds = qsm.worksiteQueryState
             .eraseToAnyPublisher()
             .debounce(
@@ -120,7 +143,7 @@ class CasesViewModel: ObservableObject {
                 return (queryIncidentId, annotations)
             }
 
-        worksitesInBounds.asyncThrowsMap { (queryIncidentId, annotations) in
+        let annotationsSubscription = worksitesInBounds.asyncThrowsMap { (queryIncidentId, annotations) in
             var newAnnotations: [WorksiteAnnotationMapMark] = []
             return try self.mapMarkersLock.withLock {
                 let incidentAnnotations = self.incidentMapMarkers
@@ -142,28 +165,29 @@ class CasesViewModel: ObservableObject {
                 }
             }
         }
-        .receive(on: RunLoop.main)
-        .sink(receiveCompletion: { completion in
-        }, receiveValue: { incidentAnnotations in
-            if incidentAnnotations.incidentId == self.incidentsData.selectedId {
-                self.mapMarkersLock.withLock {
-                    self.incidentMapMarkers = incidentAnnotations
+            .receive(on: RunLoop.main)
+            .sink(receiveCompletion: { completion in
+            }, receiveValue: { incidentAnnotations in
+                if incidentAnnotations.incidentId == self.incidentsData.selectedId {
+                    self.mapMarkersLock.withLock {
+                        self.incidentMapMarkers = incidentAnnotations
+                    }
                 }
-            }
-        })
-        .store(in: &disposables)
+            })
+
+        subscriptions.insert(annotationsSubscription)
 
         let incidentWorksitesCount = incidentSelector.incidentId
             .eraseToAnyPublisher()
             .map { id in
-                worksitesRepository.streamIncidentWorksitesCount(id)
+                self.worksitesRepository.streamIncidentWorksitesCount(id)
                     .eraseToAnyPublisher()
                     .map { count in (id, count) }
             }
             .switchToLatest()
             .map { (id, count) in IncidentIdWorksiteCount(id: id, count: count) }
 
-        incidentsRepository.isLoading.eraseToAnyPublisher()
+        let countSubscription = self.incidentsRepository.isLoading.eraseToAnyPublisher()
             .combineLatest(
                 worksitesInBounds.eraseToAnyPublisher(),
                 incidentWorksitesCount.eraseToAnyPublisher()
@@ -177,20 +201,8 @@ class CasesViewModel: ObservableObject {
             }
             .receive(on: RunLoop.main)
             .assign(to: \.casesCount, on: self)
-            .store(in: &disposables)
-    }
 
-    func onViewAppear() {
-        // TODO: Subscribe to other subscriptions that are only relevent on screen
-        subscribeDataPullStats()
-    }
-
-    func onViewDisappear() {
-        let subscriptions = observableSubscriptions
-        observableSubscriptions = Set<AnyCancellable>()
-        for subscription in subscriptions {
-            subscription.cancel()
-        }
+        subscriptions.insert(countSubscription)
     }
 
     private func subscribeDataPullStats() {
@@ -201,7 +213,7 @@ class CasesViewModel: ObservableObject {
                 self.showDataProgress = stats.isOngoing
                 self.dataProgress = stats.progress
             }
-            .store(in: &observableSubscriptions)
+            .store(in: &subscriptions)
     }
 
     private let zeroOffset = (0.0, 0.0)

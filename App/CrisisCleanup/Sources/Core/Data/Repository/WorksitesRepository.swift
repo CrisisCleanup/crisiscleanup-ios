@@ -6,11 +6,6 @@ public protocol WorksitesRepository {
 
     var syncWorksitesFullIncidentId: any Publisher<Int64, Never> { get }
 
-    /**
-     * Stream of an incident's [Worksite]s
-     */
-    func streamWorksites(_ incidentId: Int64, _ limit: Int, _ offset: Int) -> any Publisher<[Worksite], Error>
-
     func streamIncidentWorksitesCount(_ id: Int64) -> any Publisher<Int, Never>
 
     func streamLocalWorksite(_ worksiteId: Int64) -> any Publisher<LocalWorksite?, Never>
@@ -57,10 +52,10 @@ public protocol WorksitesRepository {
     func pullWorkTypeRequests(_ networkWorksiteId: Int64) async throws
 
     func setRecentWorksite(
-        _ incidentId: Int64,
-        _ worksiteId: Int64,
-        _ viewStart: Date
-    ) async throws
+        incidentId: Int64,
+        worksiteId: Int64,
+        viewStart: Date
+    )
 
     func getUnsyncedCounts(_ worksiteId: Int64) throws -> [Int]
 

@@ -12,7 +12,11 @@ private func fakeSummaryResult(
         zipCode: "zipCode\(id)",
         county: "county\(id)",
         caseNumber: "caseNumber\(id)",
-        workType: nil
+        workType: WorkType(
+            id: 24,
+            statusLiteral: WorkTypeStatus.openAssigned.literal,
+            workTypeLiteral: WorkTypeType.muckOut.rawValue
+        )
     )
 }
 

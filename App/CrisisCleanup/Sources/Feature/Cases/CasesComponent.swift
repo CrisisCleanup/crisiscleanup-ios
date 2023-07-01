@@ -23,7 +23,9 @@ class CasesComponent: Component<AppDependency>, CasesViewBuilder {
             CasesView(
                 viewModel: casesViewModel,
                 incidentSelectViewBuilder: dependency.incidentSelectViewBuilder,
-                casesSearchViewBuilder: dependency.casesSearchViewBuilder
+                casesSearchViewBuilder: dependency.casesSearchViewBuilder,
+                casesFilterViewBuilder: dependency.casesFilterViewBuilder,
+                viewCaseViewBuilder: dependency.viewCaseViewBuilder
             )
         )
     }

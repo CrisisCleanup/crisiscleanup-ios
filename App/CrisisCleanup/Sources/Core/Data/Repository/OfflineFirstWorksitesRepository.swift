@@ -6,6 +6,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     private let worksitesSyncer: WorksitesSyncer
     private let worksiteSyncStatDao: WorksiteSyncStatDao
     private let worksiteDao: WorksiteDao
+    private let recentWorksiteDao: RecentWorksiteDao
     private let accountDataRepository: AccountDataRepository
     private let languageTranslationsRepository: LanguageTranslationsRepository
     private let appVersionProvider: AppVersionProvider
@@ -24,6 +25,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         worksitesSyncer: WorksitesSyncer,
         worksiteSyncStatDao: WorksiteSyncStatDao,
         worksiteDao: WorksiteDao,
+        recentWorksiteDao: RecentWorksiteDao,
         accountDataRepository: AccountDataRepository,
         languageTranslationsRepository: LanguageTranslationsRepository,
         appVersionProvider: AppVersionProvider,
@@ -33,6 +35,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         self.worksitesSyncer = worksitesSyncer
         self.worksiteSyncStatDao = worksiteSyncStatDao
         self.worksiteDao = worksiteDao
+        self.recentWorksiteDao = recentWorksiteDao
         self.accountDataRepository = accountDataRepository
         self.languageTranslationsRepository = languageTranslationsRepository
         self.appVersionProvider = appVersionProvider
@@ -43,15 +46,6 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         incidentDataPullStats = worksitesSyncer.dataPullStats
 
         Task { await loadFakeData() }
-    }
-
-    func streamWorksites(
-        _ incidentId: Int64,
-        _ limit: Int,
-        _ offset: Int
-    ) -> any Publisher<[Worksite], Error> {
-        // TODO: Do
-        return PassthroughSubject<[Worksite], Error>()
     }
 
     func streamIncidentWorksitesCount(_ id: Int64) -> any Publisher<Int, Never> {
@@ -65,8 +59,8 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     }
 
     func streamRecentWorksites(_ incidentId: Int64) -> any Publisher<[WorksiteSummary], Never> {
-        // TODO: Do
-        return PassthroughSubject<[WorksiteSummary], Never>()
+        recentWorksiteDao.streamRecentWorksites(incidentId)
+            .assertNoFailure()
     }
 
     func getWorksitesMapVisual(
@@ -198,11 +192,22 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     }
 
     func setRecentWorksite(
-        _ incidentId: Int64,
-        _ worksiteId: Int64,
-        _ viewStart: Date) async throws {
-            // TODO: Do
+        incidentId: Int64,
+        worksiteId: Int64,
+        viewStart: Date
+    ) {
+        Task {
+            do {
+                try await recentWorksiteDao.upsert(RecentWorksiteRecord(
+                    id: worksiteId,
+                    incidentId: incidentId,
+                    viewedAt: viewStart
+                ))
+            } catch {
+                logger.logError(error)
+            }
         }
+    }
 
     func getUnsyncedCounts(_ worksiteId: Int64) throws -> [Int] {
         // TODO: Do

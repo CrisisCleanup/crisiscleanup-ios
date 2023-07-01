@@ -8,11 +8,16 @@ struct CasesView: View {
     @ObservedObject var viewModel: CasesViewModel
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
     let casesSearchViewBuilder: CasesSearchViewBuilder
+    let casesFilterViewBuilder: CasesFilterViewBuilder
+    let viewCaseViewBuilder: ViewCaseViewBuilder
 
-    @State var openIncidentSelect = false
     @State var map = MKMapView()
 
-    @State var caseTapped = false
+    @State var openFilters = false
+    @State var openIncidentSelect = false
+
+    @State var viewWorksite = false
+    @State var openWorksiteIds: (Int64, Int64) = (0, 0)
 
     func animateToSelectedIncidentBounds(_ bounds: LatLngBounds) {
         let latDelta = bounds.northEast.latitude - bounds.southWest.latitude
@@ -40,7 +45,9 @@ struct CasesView: View {
                     map.addAnnotations(incidentAnnotations.newAnnotations)
                 }
                 .onReceive(viewModel.$selectedCaseAnnotation) { marker in
-                    caseTapped = marker.source != nil ? true: false
+                    let worksiteId = marker.source?.id ?? 0
+                    openWorksiteIds = (viewModel.incidentsData.selectedId, worksiteId)
+                    viewWorksite = worksiteId > 0
                 }
 
             if viewModel.showDataProgress {
@@ -93,25 +100,30 @@ struct CasesView: View {
                                     .padding()
                                     .background(appTheme.colors.navigationContainerColor)
                                     .foregroundColor(Color.white)
-                                    .cornerRadius(5)
+                                    .cornerRadius(appTheme.cornerRadius)
                             }
 
                             Spacer()
 
                             NavigationLink {
                                 casesSearchViewBuilder.casesSearchView
-                                    .navigationBarTitle("search-title")
+                                 .navigationBarHidden(true)
                             } label: {
                                 Image("ic_search", bundle: .module)
                                     .background(Color.white)
                                     .foregroundColor(Color.black)
-                                    .cornerRadius(5)
+                                    .cornerRadius(appTheme.cornerRadius)
                             }
 
-                            Image("ic_dials", bundle: .module)
-                                .background(Color.white)
-                                .foregroundColor(Color.black)
-                                .cornerRadius(5)
+                            Button {
+                                openFilters = true
+                            } label: {
+                                // TODO: Use component
+                                Image("ic_dials", bundle: .module)
+                                    .background(Color.white)
+                                    .foregroundColor(Color.black)
+                                    .cornerRadius(appTheme.cornerRadius)
+                            }
 
                         }
                         Spacer()
@@ -127,13 +139,12 @@ struct CasesView: View {
                             .padding()
                             .background(Color.yellow)
                             .foregroundColor(Color.black)
-                            .cornerRadius(5)
+                            .cornerRadius(appTheme.cornerRadius)
 
                         Image("ic_table", bundle: .module)
-                        //                            .padding()
                             .background(Color.yellow)
                             .foregroundColor(Color.black)
-                            .cornerRadius(5)
+                            .cornerRadius(appTheme.cornerRadius)
                             .padding(.top)
                     }
                 }
@@ -142,12 +153,30 @@ struct CasesView: View {
         }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
-        .navigationDestination(isPresented: $caseTapped) {
-            // TODO: Change to view builder pattern
-            ViewCaseView(viewModel: viewModel)
-                .onDisappear() {
-                    map.selectedAnnotations = []
-                }
+        .navigationDestination(isPresented: $viewWorksite) {
+            let (incidentId, worksiteId) = openWorksiteIds
+            viewCaseViewBuilder.viewCaseView(
+                incidentId: incidentId,
+                worksiteId: worksiteId
+            )
+            .onDisappear() {
+                // TODO: This likely does not work when another view is pushed onto the stack... Implement an observer of the current stack path
+                print("View case disappear")
+                viewCaseViewBuilder.onViewCasePopped(
+                    incidentId: openWorksiteIds.0,
+                    worksiteId: openWorksiteIds.1
+                )
+                openWorksiteIds = (0, 0)
+                map.selectedAnnotations = []
+            }
+        }
+        .navigationDestination(isPresented: $openFilters) {
+            if openFilters {
+                casesFilterViewBuilder.casesFilterView
+                    .onDisappear {
+                        openFilters = false
+                    }
+            }
         }
     }
 }
@@ -164,7 +193,7 @@ private struct MapControls: View {
             .padding()
             .background(Color.white)
             .foregroundColor(Color.black)
-            .cornerRadius(5)
+            .cornerRadius(appTheme.cornerRadius)
             .padding(.vertical)
             .onTapGesture {
                 print("zooming in")
@@ -181,7 +210,7 @@ private struct MapControls: View {
             .padding()
             .background(Color.white)
             .foregroundColor(Color.black)
-            .cornerRadius(5)
+            .cornerRadius(appTheme.cornerRadius)
             .onTapGesture {
                 print("zooming out")
                 var region = map.region
@@ -194,7 +223,7 @@ private struct MapControls: View {
         Image("ic_zoom_incident", bundle: .module)
             .background(Color.white)
             .foregroundColor(Color.black)
-            .cornerRadius(5)
+            .cornerRadius(appTheme.cornerRadius)
             .padding(.top)
             .onTapGesture {
                 //                                map.camera.centerCoordinateDistance =
@@ -204,7 +233,7 @@ private struct MapControls: View {
         Image("ic_zoom_interactive", bundle: .module)
             .background(Color.white)
             .foregroundColor(Color.black)
-            .cornerRadius(5)
+            .cornerRadius(appTheme.cornerRadius)
             .padding(.top)
             .onTapGesture {
                 let bounds = viewModel.incidentLocationBounds.bounds
@@ -214,7 +243,7 @@ private struct MapControls: View {
         Image("ic_layers", bundle: .module)
             .background(Color.white)
             .foregroundColor(Color.black)
-            .cornerRadius(5)
+            .cornerRadius(appTheme.cornerRadius)
             .padding(.top)
     }
 }

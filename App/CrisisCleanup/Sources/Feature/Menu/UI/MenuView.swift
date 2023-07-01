@@ -73,13 +73,12 @@ private struct TopBar: View {
             Spacer()
             NavigationLink {
                 authenticateViewBuilder.authenticateView
-                    .navigationBarTitle("")
                     .navigationBarHidden(true)
             } label: {
                 if let url = viewModel.profilePicture?.url {
                     if viewModel.profilePicture?.isSvg == true {
                         SVGView(contentsOf: url)
-                            .frame(width: 30, height: 30)
+                            .frame(width: 48, height: 48)
                             .padding([.vertical], 8)
                     } else {
                         AsyncImage(url: url) { image in
