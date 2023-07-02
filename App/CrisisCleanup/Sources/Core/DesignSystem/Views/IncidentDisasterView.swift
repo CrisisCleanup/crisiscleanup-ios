@@ -8,7 +8,7 @@ struct IncidentDisasterImage: View {
 
     init(_ incident: Incident) {
         isValidIncident = incident != EmptyIncident
-        let disaster = isValidIncident ? incident.disasterLiteral : "other"
+        let disaster = incident.disaster.literal
         iconPath = "\(incidentsAssetIconPath)/\(disaster)"
     }
 

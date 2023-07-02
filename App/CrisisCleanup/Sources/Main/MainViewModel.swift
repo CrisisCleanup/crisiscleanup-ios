@@ -3,17 +3,16 @@ import Combine
 
 class MainViewModel: ObservableObject {
     private let accountDataRepository: AccountDataRepository
+    private let incidentSelector: IncidentSelector
     let translator: KeyAssetTranslator
     private let syncPuller: SyncPuller
     private let logger: AppLogger
 
     @Published var viewData: MainViewData = MainViewData()
 
-    @Published var isAuthenticated: Bool = false
-
-    private var disposables = Set<AnyCancellable>()
-
     private var incidentsData: IncidentsData = LoadingIncidentsData
+
+    private var subscriptions = Set<AnyCancellable>()
 
     init(
         accountDataRepository: AccountDataRepository,
@@ -24,50 +23,60 @@ class MainViewModel: ObservableObject {
     ) {
         self.accountDataRepository = accountDataRepository
         translator = translationsRepository
+        self.incidentSelector = incidentSelector
         self.syncPuller = syncPuller
         self.logger = logger
 
+        syncPuller.pullUnauthenticatedData()
+    }
+
+    func onViewAppear() {
+        subscribeIncidentsData()
+        subscribeAccountData()
+    }
+
+    func onViewDisappear() {
+        subscriptions = cancelSubscriptions(subscriptions)
+    }
+
+    private func subscribeIncidentsData() {
         incidentSelector.incidentsData
             .sink { data in
                 self.incidentsData = data
 
                 if !data.isEmpty {
                     self.sync(true)
-                    syncPuller.appPullIncident(data.selectedId)
+                    self.syncPuller.appPullIncident(data.selectedId)
                     // TODO: Additional
                 }
             }
-            .store(in: &disposables)
+            .store(in: &subscriptions)
+    }
 
-        accountDataRepository.accountData
-            .sink { accountData in
-                self.viewData = MainViewData(
-                    state: .ready,
-                    accountData: accountData
-                )
+    private func subscribeAccountData() {
+        accountDataRepository.accountData.eraseToAnyPublisher().combineLatest(
+            self.translator.translationCount.eraseToAnyPublisher()
+        )
+        .filter { (_, translationCount) in
+            translationCount > 0
+        }
+        .receive(on: RunLoop.main)
+        .sink { (accountData, _) in
+            self.viewData = MainViewData(
+                state: .ready,
+                accountData: accountData
+            )
 
-                if !accountData.isTokenInvalid {
-                    self.sync(false)
+            if !accountData.isTokenInvalid {
+                self.sync(false)
 
-                    let data = self.incidentsData
-                    if !data.isEmpty {
-                        syncPuller.appPullIncident(data.selectedId)
-                    }
+                let data = self.incidentsData
+                if !data.isEmpty {
+                    self.syncPuller.appPullIncident(data.selectedId)
                 }
             }
-            .store(in: &disposables)
-
-        syncPuller.pullUnauthenticatedData()
-    }
-
-    func onViewAppear() {
-        syncPuller.appPullIncidentWorksitesDelta()
-
-        // TODO: Resume observations
-    }
-
-    func onViewDisappear() {
-        // TODO: Pause observations
+        }
+        .store(in: &subscriptions)
     }
 
     private func sync(_ cancelOngoing: Bool) {

@@ -4,9 +4,7 @@ enum TopLevelDestination: String, Identifiable, CaseIterable {
     case cases
     case menu
 
-    var id: String {
-        rawValue
-    }
+    var id: String { rawValue }
 
     var titleTranslateKey: String {
         switch self {

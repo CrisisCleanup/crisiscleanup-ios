@@ -5,15 +5,20 @@ import SwiftUI
 import MapKit
 
 class Coordinator: NSObject, MKMapViewDelegate {
-    var viewModel: CasesViewModel
+    let viewModel: CasesViewModel
+    let onSelectWorksite: (Int64) -> Void
 
-    init(_ viewModel: CasesViewModel)
-    {
+    init(
+        _ viewModel: CasesViewModel,
+        _ onSelectWorksite: @escaping (Int64) -> Void
+    ) {
         self.viewModel = viewModel
+        self.onSelectWorksite = onSelectWorksite
     }
 
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        viewModel.didSelectWorksite((mapView.selectedAnnotations[0] as! WorksiteAnnotationMapMark))
+        let selected = mapView.selectedAnnotations[0] as! WorksiteAnnotationMapMark
+        onSelectWorksite(selected.source.id)
     }
 
     func mapView(_ mapView: MKMapView, didDeselect view: MKAnnotationView) {
@@ -65,6 +70,7 @@ class Coordinator: NSObject, MKMapViewDelegate {
 struct MapView : UIViewRepresentable {
     @Binding var map: MKMapView
     @ObservedObject var viewModel: CasesViewModel
+    let onSelectWorksite: (Int64) -> Void
 
     let firstHalf = [
         CLLocationCoordinate2D(latitude: -90, longitude: -180),
@@ -106,10 +112,9 @@ struct MapView : UIViewRepresentable {
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(viewModel)
+        Coordinator(viewModel, onSelectWorksite)
     }
 
     func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<MapView>) {
     }
-
 }

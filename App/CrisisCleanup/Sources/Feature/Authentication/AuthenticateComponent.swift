@@ -2,7 +2,7 @@ import NeedleFoundation
 import SwiftUI
 
 class AuthenticateComponent: Component<AppDependency> {
-    var authenticateViewModel: AuthenticateViewModel {
+    private var authenticateViewModel: AuthenticateViewModel {
         AuthenticateViewModel(
             appEnv: dependency.appEnv,
             appSettings: dependency.appSettingsProvider,
@@ -16,9 +16,11 @@ class AuthenticateComponent: Component<AppDependency> {
         )
     }
 
-    var authenticateView: some View {
-        AuthenticateView(
-            viewModel: authenticateViewModel
+    var authenticateView: AnyView {
+        AnyView(
+            AuthenticateView(
+                viewModel: authenticateViewModel
+            )
         )
     }
 }

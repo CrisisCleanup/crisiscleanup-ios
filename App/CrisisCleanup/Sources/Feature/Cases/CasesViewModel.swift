@@ -1,7 +1,7 @@
-import SwiftUI
 import Combine
 import Foundation
 import MapKit
+import SwiftUI
 
 class CasesViewModel: ObservableObject {
     private let incidentSelector: IncidentSelector
@@ -31,9 +31,9 @@ class CasesViewModel: ObservableObject {
     private let mapMarkersLock = NSLock()
     @Published private(set) var incidentMapMarkers: IncidentAnnotations = emptyIncidentAnnotations
 
-    @Published private(set) var casesCount: (Int, Int) = (0, 0)
+    @Published private(set) var casesCount: (Int, Int) = (-1, -1)
 
-    @Published private(set) var selectedCaseAnnotation: WorksiteAnnotationMapMark = WorksiteAnnotationMapMark()
+    private var hasDisappeared = false
 
     private var subscriptions = Set<AnyCancellable>()
 
@@ -74,37 +74,43 @@ class CasesViewModel: ObservableObject {
 
     func onViewDisappear() {
         subscriptions = cancelSubscriptions(subscriptions)
+        hasDisappeared = true
     }
 
     private func subscribeLoading() {
-        let subscription = Publishers.CombineLatest3(
+        Publishers.CombineLatest4(
+            incidentsRepository.isLoading.eraseToAnyPublisher(),
             mapBoundsManager.isDeterminingBoundsPublisher.eraseToAnyPublisher(),
             isGeneratingWorksiteMarkers,
             isDelayingRegionBug
         )
             .receive(on: RunLoop.main)
-            .sink { b0, b1, b2 in
-                self.isMapBusy = b0 || b1 || b2
+            .sink { b0, b1, b2, b3 in
+                self.isMapBusy = b0 || b1 || b2 || b3
             }
-        subscriptions.insert(subscription)
+            .store(in: &subscriptions)
     }
 
     private func subscribeIncidentsData() {
-        let subscription = incidentSelector.incidentsData
+        incidentSelector.incidentsData
             .eraseToAnyPublisher()
             .receive(on: RunLoop.main)
             .sink { self.incidentsData = $0 }
-        subscriptions.insert(subscription)
+            .store(in: &subscriptions)
     }
 
     private func subscribeIncidentBounds() {
-        let subscription = mapBoundsManager.mapCameraBoundsPublisher
+        mapBoundsManager.mapCameraBoundsPublisher
             .eraseToAnyPublisher()
             .receive(on: RunLoop.main)
             .sink(receiveValue: { bounds in
-                self.incidentLocationBounds = bounds
+                if self.hasDisappeared {
+                    self.hasDisappeared = false
+                } else {
+                    self.incidentLocationBounds = bounds
+                }
             })
-        subscriptions.insert(subscription)
+            .store(in: &subscriptions)
     }
 
     private func subscribeWorksiteInBounds() {
@@ -120,6 +126,7 @@ class CasesViewModel: ObservableObject {
                 try self.mapMarkersLock.withLock {
                     if queryIncidentId != self.incidentMapMarkers.incidentId {
                         Task { @MainActor in
+                            self.casesCount = (-1, -1)
                             self.incidentMapMarkers = IncidentAnnotations(queryIncidentId)
                         }
                         throw CancellationError()
@@ -143,7 +150,7 @@ class CasesViewModel: ObservableObject {
                 return (queryIncidentId, annotations)
             }
 
-        let annotationsSubscription = worksitesInBounds.asyncThrowsMap { (queryIncidentId, annotations) in
+        worksitesInBounds.asyncThrowsMap { (queryIncidentId, annotations) in
             var newAnnotations: [WorksiteAnnotationMapMark] = []
             return try self.mapMarkersLock.withLock {
                 let incidentAnnotations = self.incidentMapMarkers
@@ -174,8 +181,7 @@ class CasesViewModel: ObservableObject {
                     }
                 }
             })
-
-        subscriptions.insert(annotationsSubscription)
+            .store(in: &subscriptions)
 
         let incidentWorksitesCount = incidentSelector.incidentId
             .eraseToAnyPublisher()
@@ -187,7 +193,7 @@ class CasesViewModel: ObservableObject {
             .switchToLatest()
             .map { (id, count) in IncidentIdWorksiteCount(id: id, count: count) }
 
-        let countSubscription = self.incidentsRepository.isLoading.eraseToAnyPublisher()
+        self.incidentsRepository.isLoading.eraseToAnyPublisher()
             .combineLatest(
                 worksitesInBounds.eraseToAnyPublisher(),
                 incidentWorksitesCount.eraseToAnyPublisher()
@@ -201,8 +207,7 @@ class CasesViewModel: ObservableObject {
             }
             .receive(on: RunLoop.main)
             .assign(to: \.casesCount, on: self)
-
-        subscriptions.insert(countSubscription)
+            .store(in: &subscriptions)
     }
 
     private func subscribeDataPullStats() {
@@ -256,6 +261,8 @@ class CasesViewModel: ObservableObject {
                     defer {
                         Task { @MainActor in self.isDelayingRegionBug.value = false }
                     }
+                    // TODO: This fails when the number of worksites is large and the delay expires before all data is downloaded.
+                    //       Better to get to the bottom of the bug than compounding the hack.
                     // Animations seem to take around half a second - 1 second. Split the diff.
                     try await Task.sleep(for: .seconds(0.7))
                     self.qsm.mapZoomSubject.value = self.qsm.mapZoomSubject.value + Double.random(in: -0.001..<0.001)
@@ -264,12 +271,6 @@ class CasesViewModel: ObservableObject {
                 }
             }
         }
-    }
-
-    func didSelectWorksite(
-        _ worksite: WorksiteAnnotationMapMark
-    ) {
-        selectedCaseAnnotation = worksite
     }
 
     private let denseMarkCountThreshold = 15

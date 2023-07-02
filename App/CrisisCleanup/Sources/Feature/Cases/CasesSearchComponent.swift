@@ -6,7 +6,7 @@ public protocol CasesSearchViewBuilder {
 }
 
 class CasesSearchComponent: Component<AppDependency>, CasesSearchViewBuilder {
-    private lazy var casesSearchViewModel: CasesSearchViewModel = {
+    private var casesSearchViewModel: CasesSearchViewModel {
         CasesSearchViewModel(
             incidentSelector: dependency.incidentSelector,
             worksitesRepository: dependency.worksitesRepository,
@@ -14,13 +14,12 @@ class CasesSearchComponent: Component<AppDependency>, CasesSearchViewBuilder {
             mapCaseIconProvider: dependency.mapCaseIconProvider,
             loggerFactory: dependency.loggerFactory
         )
-    }()
+    }
 
     var casesSearchView: AnyView {
         AnyView(
             CasesSearchView(
-                viewModel: casesSearchViewModel,
-                casesFilterViewBuilder: dependency.casesFilterViewBuilder
+                viewModel: casesSearchViewModel
             )
         )
     }

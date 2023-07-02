@@ -5,14 +5,12 @@ struct MenuView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @ObservedObject var viewModel: MenuViewModel
-    let authenticateViewBuilder: AuthenticateViewBuilder
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
 
     var body: some View {
         VStack {
             TopBar(
                 viewModel: viewModel,
-                authenticateViewBuilder: authenticateViewBuilder,
                 incidentSelectViewBuilder: incidentSelectViewBuilder
             )
             .tint(.black)
@@ -36,9 +34,9 @@ struct MenuView: View {
 
 private struct TopBar: View {
     @Environment(\.translator) var t: KeyAssetTranslator
+    @EnvironmentObject var router: NavigationRouter
 
     @ObservedObject var viewModel: MenuViewModel
-    let authenticateViewBuilder: AuthenticateViewBuilder
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
 
     @State var showIncidentSelect = false
@@ -71,9 +69,8 @@ private struct TopBar: View {
             }.disabled(viewModel.incidentsData.incidents.isEmpty)
 
             Spacer()
-            NavigationLink {
-                authenticateViewBuilder.authenticateView
-                    .navigationBarHidden(true)
+            Button {
+                router.openAuthentication()
             } label: {
                 if let url = viewModel.profilePicture?.url {
                     if viewModel.profilePicture?.isSvg == true {

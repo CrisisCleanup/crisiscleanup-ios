@@ -1,7 +1,6 @@
-import SwiftUI
 import Combine
 import Foundation
-import MapKit
+import SwiftUI
 
 class ViewCaseViewModel: ObservableObject {
     private let incidentsRepository: IncidentsRepository
@@ -34,7 +33,6 @@ class ViewCaseViewModel: ObservableObject {
     }
 
     func onViewAppear() {
-
     }
 
     func onViewDisappear() {

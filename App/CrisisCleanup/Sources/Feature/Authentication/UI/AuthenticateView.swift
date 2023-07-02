@@ -1,26 +1,35 @@
 import SwiftUI
 
 struct AuthenticateView: View {
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @ObservedObject var viewModel: AuthenticateViewModel
 
     var body: some View {
-        let dismissScreen = { presentationMode.wrappedValue.dismiss() }
-        if viewModel.viewData.isTokenInvalid {
-            LoginView(
-                viewModel: viewModel,
-                dismissScreen: dismissScreen,
-                emailAddress: viewModel.viewData.accountData.emailAddress
-            )
-        } else {
-            let logout = { viewModel.logout() }
-            LogoutView(
-                viewModel: viewModel,
-                logout: logout,
-                dismissScreen: dismissScreen
-            )
+        let dismissScreen = { dismiss() }
+        ZStack {
+            if viewModel.viewData.isTokenInvalid {
+                LoginView(
+                    viewModel: viewModel,
+                    dismissScreen: dismissScreen,
+                    emailAddress: viewModel.viewData.accountData.emailAddress
+                )
+            } else {
+                let logout = { viewModel.logout() }
+                LogoutView(
+                    viewModel: viewModel,
+                    logout: logout,
+                    dismissScreen: dismissScreen
+                )
+            }
+        }
+        .onAppear { viewModel.onViewAppear() }
+        .onDisappear { viewModel.onViewDisappear() }
+        .onReceive(viewModel.$isAuthenticateSuccessful) { b in
+            if b {
+                dismiss()
+            }
         }
     }
 }

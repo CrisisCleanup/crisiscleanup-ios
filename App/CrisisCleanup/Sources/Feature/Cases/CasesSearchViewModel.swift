@@ -51,7 +51,6 @@ class CasesSearchViewModel: ObservableObject {
     }
 
     func onViewAppear() {
-        searchQuery = ""
         subscribeToLoadingStates()
         subscribeToIncidentData()
         subscribeToRecents()

@@ -4,11 +4,9 @@ import SVGView
 struct CasesSearchView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var router: NavigationRouter
 
     @ObservedObject var viewModel: CasesSearchViewModel
-    let casesFilterViewBuilder: CasesFilterViewBuilder
-
-    @State var openFilters = false
 
     var body: some View{
         let isLoading = viewModel.isLoading
@@ -31,7 +29,7 @@ struct CasesSearchView: View {
                         .disabled(isSelectingResult)
 
                     Button {
-                        openFilters = true
+                        router.openFilterCases()
                     } label: {
                         // TODO: Use component
                         Image("ic_dials", bundle: .module)
@@ -60,13 +58,5 @@ struct CasesSearchView: View {
         }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
-        .navigationDestination(isPresented: $openFilters) {
-            if openFilters {
-                casesFilterViewBuilder.casesFilterView
-                    .onDisappear {
-                        openFilters = false
-                    }
-            }
-        }
     }
 }

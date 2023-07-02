@@ -10,22 +10,14 @@ public struct Incident: Equatable {
     let disasterLiteral: String
 
     // sourcery:begin: skipCopy
-    lazy var disaster: Disaster = {
-        disasterFromLiteral(disasterLiteral)
-    }()
+    let disaster: Disaster
 
-    lazy var formFieldLookup: [String: IncidentFormField] = {
-        formFields.associateBy { $0.fieldKey }
-    }()
+    let formFieldLookup: [String: IncidentFormField]
 
     /// Form data fields categorized under a work type
-    lazy var workTypeLookup: [String: String] = {
-        formFields
-            .filter { $0.selectToggleWorkType.isNotBlank }
-            .associate { ($0.fieldKey, $0.selectToggleWorkType) }
-    }()
+    let workTypeLookup: [String: String]
 
-    var isEmptyIncident: Bool { id <= 0 }
+    let isEmptyIncident: Bool
     // sourcery:end
 
     init(
@@ -46,6 +38,13 @@ public struct Incident: Equatable {
         self.formFields = formFields
         self.turnOnRelease = turnOnRelease
         self.disasterLiteral = disasterLiteral
+
+        disaster = disasterFromLiteral(disasterLiteral)
+        formFieldLookup = formFields.associateBy { $0.fieldKey }
+        workTypeLookup = formFields
+            .filter { $0.selectToggleWorkType.isNotBlank }
+            .associate { ($0.fieldKey, $0.selectToggleWorkType) }
+        isEmptyIncident = id <= 0
     }
 
     public static func == (lhs: Incident, rhs: Incident) -> Bool {

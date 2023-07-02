@@ -22,7 +22,6 @@ class MenuComponent: Component<AppDependency>, MenuViewBuilder {
         AnyView(
             MenuView(
                 viewModel: menuViewModel,
-                authenticateViewBuilder: dependency.authenticateViewBuilder,
                 incidentSelectViewBuilder: dependency.incidentSelectViewBuilder
             )
         )

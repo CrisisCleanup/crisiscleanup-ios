@@ -6,11 +6,11 @@ public protocol CasesFilterViewBuilder {
 }
 
 class CasesFilterComponent: Component<AppDependency>, CasesFilterViewBuilder {
-    private lazy var casesFilterViewModel: CasesFilterViewModel = {
+    private var casesFilterViewModel: CasesFilterViewModel {
         CasesFilterViewModel(
             loggerFactory: dependency.loggerFactory
         )
-    }()
+    }
 
     var casesFilterView: AnyView {
         AnyView(

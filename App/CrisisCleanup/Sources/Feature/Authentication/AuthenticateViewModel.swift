@@ -21,8 +21,9 @@ class AuthenticateViewModel: ObservableObject {
     @Published var emailHasFocus: Bool = false
 
     @Published var isAuthenticating: Bool = false
+    @Published var isAuthenticateSuccessful: Bool = false
 
-    private var disposables = Set<AnyCancellable>()
+    private var subscriptions = Set<AnyCancellable>()
 
     init(
         appEnv: AppEnv,
@@ -46,7 +47,17 @@ class AuthenticateViewModel: ObservableObject {
         logger = loggerFactory.getLogger("auth")
 
         isDebuggable = appEnv.isDebuggable
+    }
 
+    func onViewAppear() {
+        subscribeAccountData()
+    }
+
+    func onViewDisappear() {
+        subscriptions = cancelSubscriptions(subscriptions)
+    }
+
+    private func subscribeAccountData() {
         accountDataRepository.accountData
             .eraseToAnyPublisher()
             .receive(on: RunLoop.main)
@@ -56,7 +67,7 @@ class AuthenticateViewModel: ObservableObject {
                     accountData: data
                 )
             }
-            .store(in: &disposables)
+            .store(in: &subscriptions)
     }
 
     private func resetVisualState() {
@@ -155,9 +166,9 @@ class AuthenticateViewModel: ObservableObject {
         }
 
         isAuthenticating = true
-        Task { @MainActor in
+        Task {
             defer {
-                isAuthenticating = false
+                Task { @MainActor in isAuthenticating = false }
             }
 
             let loginResult = await authenticateAsync(emailAddress, password)
@@ -174,6 +185,8 @@ class AuthenticateViewModel: ObservableObject {
                         org: r.orgData
                     )
                 }
+
+                Task { @MainActor in self.isAuthenticateSuccessful = true }
             } else {
                 errorMessage = loginResult.errorMessage
             }

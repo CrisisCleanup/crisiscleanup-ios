@@ -3,65 +3,69 @@ import SwiftUI
 struct MainView: View {
     @Environment(\.translator) var translator
 
+    @ObservedObject var router = NavigationRouter()
+
     @ObservedObject var viewModel: MainViewModel
     let authenticateViewBuilder: AuthenticateViewBuilder
     let casesViewBuilder: CasesViewBuilder
     let menuViewBuilder: MenuViewBuilder
+    let casesFilterViewBuilder: CasesFilterViewBuilder
+    let casesSearchViewBuilder: CasesSearchViewBuilder
+    let viewCaseViewBuilder: ViewCaseViewBuilder
 
     @State private var selectedTab = TopLevelDestination.cases
     var body: some View {
-        switch viewModel.viewData.state {
-        case .loading:
-            // TODO: Show actual splash screen (or loading animation)
-            Text("Splash")
-        case .ready:
-            if viewModel.viewData.showMainContent {
-                let navColor = appTheme.colors.navigationContainerColor
-                NavigationStack {
-                    ZStack {
-                        navColor.ignoresSafeArea()
-                        VStack {
-                            // TODO: Why is a view required to change system bar (and tab bar) backgrounds?
-                            Rectangle()
-                                .fill(.clear)
-                                .frame(height: 0)
-                                .background(.clear)
+        Group {
+            switch viewModel.viewData.state {
+            case .loading:
+                // TODO: Show actual splash screen (or loading animation)
+                Text("Splash/loading")
+            case .ready:
+                if viewModel.viewData.showMainContent {
+                    let navColor = appTheme.colors.navigationContainerColor
+                    NavigationStack(path: $router.path) {
+                        ZStack {
+                            navColor.ignoresSafeArea()
+                            VStack {
+                                // TODO: Why is a view required to change system bar (and tab bar) backgrounds?
+                                Rectangle()
+                                    .fill(.clear)
+                                    .frame(height: 0)
+                                    .background(.clear)
 
-                            TabView(selection: $selectedTab) {
-                                Group {
-                                    TabViewContainer {
-                                        casesViewBuilder.casesView
+                                TabView(selection: $selectedTab) {
+                                    Group {
+                                        MainTabs(
+                                            viewModel: viewModel,
+                                            authenticateViewBuilder: authenticateViewBuilder,
+                                            casesViewBuilder: casesViewBuilder,
+                                            menuViewBuilder: menuViewBuilder,
+                                            casesFilterViewBuilder: casesFilterViewBuilder,
+                                            casesSearchViewBuilder: casesSearchViewBuilder,
+                                            viewCaseViewBuilder: viewCaseViewBuilder
+                                        )
                                     }
-                                    .navTabItem(.cases, viewModel.translator)
-                                    .tag(TopLevelDestination.cases)
-
-                                    TabViewContainer(
-                                        bottomPadding: 0,
-                                        addBottomRect: true
-                                    ) {
-                                        menuViewBuilder.menuView
-                                    }
-                                    .navTabItem(.menu, viewModel.translator)
-                                    .tag(TopLevelDestination.menu)
+                                    .toolbarColorScheme(.light, for: .tabBar)
                                 }
-                                .toolbarColorScheme(.light, for: .tabBar)
+                                // TODO: Tinting here will cause all downstream views to reverse the tint...
+                                //       Find a more targeted solution
+                                //.tint(.white)
                             }
-                            // TODO: Tinting here will cause all downstream views to reverse the tint...
-                            //       Find a more targeted solution
-                            //.tint(.white)
                         }
+                        .toolbarBackground(.visible, for: .navigationBar)
+                        .toolbarColorScheme(.light, for: .navigationBar)
                     }
-                    .toolbarBackground(.visible, for: .navigationBar)
-                    .toolbarColorScheme(.light, for: .navigationBar)
+                } else {
+                    authenticateViewBuilder.authenticateView
+                        .navigationBarTitle("")
+                        .navigationBarHidden(true)
                 }
-                .environment(\.translator, viewModel.translator)
-            } else {
-                authenticateViewBuilder.authenticateView
-                    .environment(\.translator, viewModel.translator)
-                    .navigationBarTitle("")
-                    .navigationBarHidden(true)
             }
         }
+        .onAppear { viewModel.onViewAppear() }
+        .onDisappear { viewModel.onViewDisappear() }
+        .environment(\.translator, viewModel.translator)
+        .environmentObject(router)
     }
 }
 
@@ -101,5 +105,54 @@ private struct TabViewContainer<Content: View>: View {
                 }
             }
         }
+    }
+}
+
+private struct MainTabs: View {
+    @ObservedObject var viewModel: MainViewModel
+    let authenticateViewBuilder: AuthenticateViewBuilder
+    let casesViewBuilder: CasesViewBuilder
+    let menuViewBuilder: MenuViewBuilder
+    let casesFilterViewBuilder: CasesFilterViewBuilder
+    let casesSearchViewBuilder: CasesSearchViewBuilder
+    let viewCaseViewBuilder: ViewCaseViewBuilder
+
+    var body: some View {
+        TabViewContainer {
+            casesViewBuilder.casesView
+                .navigationDestination(for: NavigationRoute.self) { route in
+                    switch route {
+                    case .authenticate:
+                        authenticateViewBuilder.authenticateView
+                            .navigationBarHidden(true)
+                            .onAppear { viewModel.onViewDisappear() }
+                            .onDisappear { viewModel.onViewAppear() }
+                    case .filterCases:
+                        casesFilterViewBuilder.casesFilterView
+                    case .searchCases:
+                        casesSearchViewBuilder.casesSearchView
+                            .navigationBarHidden(true)
+                    case .viewCase(let incidentId, let worksiteId):
+                        viewCaseViewBuilder.viewCaseView(
+                            incidentId: incidentId,
+                            worksiteId: worksiteId
+                        )
+                    default:
+                        Text("Route \(route.id) needs implementing")
+                    }
+                }
+        }
+        .navTabItem(.cases, viewModel.translator)
+        .tag(TopLevelDestination.cases)
+
+        TabViewContainer(
+            bottomPadding: 0,
+            addBottomRect: true
+        ) {
+            menuViewBuilder.menuView
+            // Prior routes are used
+        }
+        .navTabItem(.menu, viewModel.translator)
+        .tag(TopLevelDestination.menu)
     }
 }

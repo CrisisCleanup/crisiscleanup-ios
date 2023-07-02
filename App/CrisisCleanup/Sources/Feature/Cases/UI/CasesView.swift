@@ -1,23 +1,18 @@
-import SwiftUI
-import SVGView
+import Foundation
 import MapKit
+import SVGView
+import SwiftUI
 
 struct CasesView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
+    @EnvironmentObject var router: NavigationRouter
 
     @ObservedObject var viewModel: CasesViewModel
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
-    let casesSearchViewBuilder: CasesSearchViewBuilder
-    let casesFilterViewBuilder: CasesFilterViewBuilder
-    let viewCaseViewBuilder: ViewCaseViewBuilder
 
     @State var map = MKMapView()
 
-    @State var openFilters = false
     @State var openIncidentSelect = false
-
-    @State var viewWorksite = false
-    @State var openWorksiteIds: (Int64, Int64) = (0, 0)
 
     func animateToSelectedIncidentBounds(_ bounds: LatLngBounds) {
         let latDelta = bounds.northEast.latitude - bounds.southWest.latitude
@@ -30,10 +25,35 @@ struct CasesView: View {
         map.setRegion(region, animated: true)
     }
 
+    func casesCountText(_ visibleCount: Int, _ totalCount: Int) -> String {
+        {
+            if visibleCount == totalCount || visibleCount == 0 {
+                if (visibleCount == 0) {
+                    return t("info.t_of_t_cases").replacingOccurrences(of: "{visible_count}", with: "\(totalCount)")
+                } else if totalCount == 1 {
+                    return t("info.1_of_1_case")
+                } else {
+                    return t("info.t_of_t_cases").replacingOccurrences(of: "{visible_count}", with: "\(totalCount)")
+                }
+            } else {
+                return t("info.v_of_t_cases")
+                    .replacingOccurrences(of: "{visible_count}", with: "\(visibleCount)")
+                    .replacingOccurrences(of: "{total_count}", with: "\(totalCount)")
+            }
+        }()
+    }
+
     var body: some View {
         ZStack {
 
-            MapView(map: $map, viewModel: viewModel)
+            MapView(
+                map: $map,
+                viewModel: viewModel,
+                onSelectWorksite: { worksiteId in
+                    let incidentId = viewModel.incidentsData.selectedId
+                    router.viewCase(incidentId: incidentId, worksiteId: worksiteId)
+                }
+            )
                 .onReceive(viewModel.$incidentLocationBounds) { bounds in
                     animateToSelectedIncidentBounds(bounds.bounds)
                 }
@@ -43,11 +63,6 @@ struct CasesView: View {
                         map.removeAnnotations(annotations)
                     }
                     map.addAnnotations(incidentAnnotations.newAnnotations)
-                }
-                .onReceive(viewModel.$selectedCaseAnnotation) { marker in
-                    let worksiteId = marker.source?.id ?? 0
-                    openWorksiteIds = (viewModel.incidentsData.selectedId, worksiteId)
-                    viewWorksite = worksiteId > 0
                 }
 
             if viewModel.showDataProgress {
@@ -78,7 +93,8 @@ struct CasesView: View {
                         }
                         .sheet(isPresented: $openIncidentSelect) {
                             incidentSelectViewBuilder.incidentSelectView( onDismiss: {openIncidentSelect = false} )
-                        }.disabled(viewModel.incidentsData.incidents.isEmpty)
+                        }
+                        .disabled(viewModel.incidentsData.incidents.isEmpty)
 
                         MapControls(
                             viewModel: viewModel,
@@ -95,7 +111,7 @@ struct CasesView: View {
 
                             let (casesCount, totalCount) = viewModel.casesCount
                             if totalCount >= 0 {
-                                Text("~~\(casesCount) cases\nof \(totalCount)")
+                                Text(casesCountText(casesCount, totalCount))
                                     .multilineTextAlignment(.center)
                                     .padding()
                                     .background(appTheme.colors.navigationContainerColor)
@@ -105,9 +121,8 @@ struct CasesView: View {
 
                             Spacer()
 
-                            NavigationLink {
-                                casesSearchViewBuilder.casesSearchView
-                                 .navigationBarHidden(true)
+                            Button {
+                                router.openSearchCases()
                             } label: {
                                 Image("ic_search", bundle: .module)
                                     .background(Color.white)
@@ -116,7 +131,7 @@ struct CasesView: View {
                             }
 
                             Button {
-                                openFilters = true
+                                router.openFilterCases()
                             } label: {
                                 // TODO: Use component
                                 Image("ic_dials", bundle: .module)
@@ -151,33 +166,11 @@ struct CasesView: View {
             }
             .padding()
         }
-        .onAppear { viewModel.onViewAppear() }
+        .onAppear {
+            viewModel.onViewAppear()
+            map.selectedAnnotations = []
+        }
         .onDisappear { viewModel.onViewDisappear() }
-        .navigationDestination(isPresented: $viewWorksite) {
-            let (incidentId, worksiteId) = openWorksiteIds
-            viewCaseViewBuilder.viewCaseView(
-                incidentId: incidentId,
-                worksiteId: worksiteId
-            )
-            .onDisappear() {
-                // TODO: This likely does not work when another view is pushed onto the stack... Implement an observer of the current stack path
-                print("View case disappear")
-                viewCaseViewBuilder.onViewCasePopped(
-                    incidentId: openWorksiteIds.0,
-                    worksiteId: openWorksiteIds.1
-                )
-                openWorksiteIds = (0, 0)
-                map.selectedAnnotations = []
-            }
-        }
-        .navigationDestination(isPresented: $openFilters) {
-            if openFilters {
-                casesFilterViewBuilder.casesFilterView
-                    .onDisappear {
-                        openFilters = false
-                    }
-            }
-        }
     }
 }
 
@@ -188,6 +181,14 @@ private struct MapControls: View {
     var map: MKMapView
     var animateToSelectedIncidentBounds: (LatLngBounds) -> Void
 
+    func zoomDelta(scale: Double) {
+        var region = map.region
+        let latDelta = region.span.latitudeDelta * scale
+        let longDelta = region.span.longitudeDelta * scale
+        region.span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: longDelta)
+        map.setRegion(region, animated: true)
+    }
+
     var body: some View {
         Image(systemName: "plus")
             .padding()
@@ -195,30 +196,14 @@ private struct MapControls: View {
             .foregroundColor(Color.black)
             .cornerRadius(appTheme.cornerRadius)
             .padding(.vertical)
-            .onTapGesture {
-                print("zooming in")
-                print(map.region.span.latitudeDelta)
-                var region = map.region
-                let latDelta = region.span.latitudeDelta*0.60
-                let longDelta = region.span.longitudeDelta*0.60
-                region.span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: longDelta)
-                map.setRegion(region, animated: true)
-
-            }
+            .onTapGesture { zoomDelta(scale: 0.5) }
 
         Image(systemName: "minus")
             .padding()
             .background(Color.white)
             .foregroundColor(Color.black)
             .cornerRadius(appTheme.cornerRadius)
-            .onTapGesture {
-                print("zooming out")
-                var region = map.region
-                let latDelta = region.span.latitudeDelta*1.30
-                let longDelta = region.span.longitudeDelta*1.30
-                region.span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: longDelta)
-                map.setRegion(region, animated: true)
-            }
+            .onTapGesture { zoomDelta(scale: 1.5) }
 
         Image("ic_zoom_incident", bundle: .module)
             .background(Color.white)
@@ -226,7 +211,6 @@ private struct MapControls: View {
             .cornerRadius(appTheme.cornerRadius)
             .padding(.top)
             .onTapGesture {
-                //                                map.camera.centerCoordinateDistance =
                 map.setCamera(MKMapCamera(lookingAtCenter: map.centerCoordinate, fromDistance: CLLocationDistance(50*1000), pitch: 0.0, heading: 0.0), animated: true)
             }
 

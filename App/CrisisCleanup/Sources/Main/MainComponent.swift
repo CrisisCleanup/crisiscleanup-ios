@@ -40,19 +40,16 @@ public class MainComponent: BootstrapComponent,
             viewModel: mainViewModel,
             authenticateViewBuilder: self,
             casesViewBuilder: casesComponent,
-            menuViewBuilder: menuComponent
+            menuViewBuilder: menuComponent,
+            casesFilterViewBuilder: casesFilterViewBuilder,
+            casesSearchViewBuilder: casesSearchViewBuilder,
+            viewCaseViewBuilder: viewCaseViewBuilder
         )
     }
 
     var authenticateComponent: AuthenticateComponent { AuthenticateComponent(parent: self) }
 
-    public var authenticateView: AnyView {
-        AnyView(
-            AuthenticateView(
-                viewModel: authenticateComponent.authenticateViewModel
-            )
-        )
-    }
+    public var authenticateView: AnyView { authenticateComponent.authenticateView }
 
     var incidentSelectComponent: IncidentSelectComponent { IncidentSelectComponent(parent: self) }
 
@@ -62,27 +59,16 @@ public class MainComponent: BootstrapComponent,
 
     lazy var casesFilterComponent: CasesFilterComponent = { CasesFilterComponent(parent: self) }()
 
-    public var casesFilterView: AnyView {
-        casesFilterComponent.casesFilterView
-    }
+    public var casesFilterView: AnyView { casesFilterComponent.casesFilterView }
 
     lazy var casesSearchComponent: CasesSearchComponent = { CasesSearchComponent(parent: self) }()
 
-    public var casesSearchView: AnyView {
-        casesSearchComponent.casesSearchView
-    }
+    public var casesSearchView: AnyView { casesSearchComponent.casesSearchView }
 
     lazy var viewCaseComponent: ViewCaseComponent = { ViewCaseComponent(parent: self) }()
 
     public func viewCaseView(incidentId: Int64, worksiteId: Int64) -> AnyView {
         viewCaseComponent.viewCaseView(
-            incidentId: incidentId,
-            worksiteId: worksiteId
-        )
-    }
-
-    public func onViewCasePopped(incidentId: Int64, worksiteId: Int64) {
-        viewCaseComponent.onViewCasePopped(
             incidentId: incidentId,
             worksiteId: worksiteId
         )
