@@ -96,7 +96,7 @@ struct MapView : UIViewRepresentable {
 
     func makeUIView(context: Context) -> MKMapView {
         map.overrideUserInterfaceStyle = .light
-        map.mapType = MKMapType.mutedStandard
+        map.mapType = .standard
         map.pointOfInterestFilter = .excludingAll
         map.camera.centerCoordinateDistance = 20
         map.showsUserLocation = false
