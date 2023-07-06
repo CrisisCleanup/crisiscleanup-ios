@@ -3,10 +3,12 @@ extension Array {
     var isNotEmpty: Bool { !isEmpty }
 
     func associateBy<T>(_ transform: (Element) throws -> T) rethrows -> [T: Element] {
-        Dictionary(uniqueKeysWithValues: zip(
-            try map(transform),
-            self
-        ))
+        var dictionary = [T: Element]()
+        try forEach {
+            let key = try transform($0)
+            dictionary[key] = $0
+        }
+        return dictionary
     }
 
     func associate<Key, Value>(_ transform: (Element) throws -> (Key, Value)) rethrows -> [Key: Value] {
