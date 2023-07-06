@@ -1,6 +1,6 @@
 import Foundation
 
-struct NetworkImage {
+struct NetworkImage: Equatable {
     let id: Int64
     let createdAt: Date
     let title: String

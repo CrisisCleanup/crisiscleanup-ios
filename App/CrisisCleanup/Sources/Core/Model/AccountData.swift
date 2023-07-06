@@ -1,6 +1,6 @@
 import Foundation
 
-public struct OrgData {
+public struct OrgData: Equatable {
     let id: Int64
     let name: String
 }

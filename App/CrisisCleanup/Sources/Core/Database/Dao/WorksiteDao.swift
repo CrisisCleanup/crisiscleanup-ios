@@ -418,13 +418,13 @@ public class WorksiteDao {
     }
 
     func getWorksitesMapVisual(
-            _ incidentId: Int64,
-            south: Double,
-            north: Double,
-            west: Double,
-            east: Double,
-            limit: Int,
-            offset: Int
+        _ incidentId: Int64,
+        south: Double,
+        north: Double,
+        west: Double,
+        east: Double,
+        limit: Int,
+        offset: Int
     ) throws -> [WorksiteMapMark] {
         try reader.read { db in
             let worksiteAlias = TableAlias(name: "w")
@@ -453,10 +453,16 @@ public class WorksiteDao {
         }.map { record in record.asExternalModel() }
     }
 
-    // MARK: - Test access
+    func streamLocalWorksite(_ id: Int64) -> AnyPublisher<PopulatedLocalWorksite?, Error> {
+        ValueObservation
+            .tracking({ db in try self.fetchLocalWorksite(db, id) })
+            .removeDuplicates()
+            .publisher(in: reader)
+            .share()
+            .eraseToAnyPublisher()
+    }
 
-    internal func getLocalWorksite(_ id: Int64) throws -> PopulatedLocalWorksite? {
-        try reader.read { db in
+    private func fetchLocalWorksite(_ db: Database, _ id: Int64) throws -> PopulatedLocalWorksite? {
         try WorksiteRootRecord
             .filter(id: id)
             .including(required: WorksiteRootRecord.worksite)
@@ -466,29 +472,58 @@ public class WorksiteDao {
             .including(all: WorksiteRootRecord.workTypes)
             .asRequest(of: PopulatedLocalWorksite.self)
             .fetchOne(db)
+    }
+
+    func getWorksiteNetworkId(_ worksiteId: Int64) -> Int64 {
+        try! reader.read { db in
+            try WorksiteRecord
+                .filter(id: worksiteId)
+                .selectNetworkId()
+                .asRequest(of: Int64.self)
+                .fetchOne(db)!
         }
+    }
+
+    func getIncidentId(_ worksiteId: Int64) -> Int64 {
+        try! reader.read { db in
+            try WorksiteRecord
+                .filter(id: worksiteId)
+                .selectIncidentId()
+                .asRequest(of: Int64.self)
+                .fetchOne(db)!
+        }
+    }
+
+    func onSyncEnd(_ worksiteId: Int64, _ syncedAt: Date = Date.now) async throws -> Bool {
+        try await database.onSyncEnd(worksiteId, syncedAt)
+    }
+
+    // MARK: - Test access
+
+    internal func getLocalWorksite(_ id: Int64) throws -> PopulatedLocalWorksite? {
+        try reader.read { db in try self.fetchLocalWorksite(db, id) }
     }
 
     internal func getWorksite(_ id: Int64) throws -> PopulatedWorksite? {
         try reader.read { db in
-        try WorksiteRootRecord
-            .filter(id: id)
-            .including(required: WorksiteRootRecord.worksite)
-            .including(all: WorksiteRootRecord.workTypes)
-            .asRequest(of: PopulatedWorksite.self)
-            .fetchOne(db)
+            try WorksiteRootRecord
+                .filter(id: id)
+                .including(required: WorksiteRootRecord.worksite)
+                .including(all: WorksiteRootRecord.workTypes)
+                .asRequest(of: PopulatedWorksite.self)
+                .fetchOne(db)
         }
     }
 
     internal func getWorksites(_ incidentId: Int64) throws -> [PopulatedWorksite] {
         try reader.read { db in
-        try WorksiteRootRecord
-            .all()
-            .byIncidentId(incidentId)
-            .including(required: WorksiteRootRecord.worksite.orderByUpdatedAtDescIdDesc())
-            .including(all: WorksiteRootRecord.workTypes)
-            .asRequest(of: PopulatedWorksite.self)
-            .fetchAll(db)
+            try WorksiteRootRecord
+                .all()
+                .byIncidentId(incidentId)
+                .including(required: WorksiteRootRecord.worksite.orderByUpdatedAtDescIdDesc())
+                .including(all: WorksiteRootRecord.workTypes)
+                .asRequest(of: PopulatedWorksite.self)
+                .fetchAll(db)
         }
     }
 }
@@ -506,6 +541,30 @@ extension AppDatabase {
             }
             return isSynced
         }
+    }
+
+    fileprivate func onSyncEnd(
+        _ worksiteId: Int64,
+        _ syncedAt: Date
+    ) async throws -> Bool {
+        try await dbWriter.write { db in
+            let hasModification = try db.getUnsyncedFlagCount(worksiteId) > 0 ||
+            db.getUnsyncedNoteCount(worksiteId) > 0 ||
+            db.getUnsyncedWorkTypeCount(worksiteId) > 0 ||
+            db.getWorksiteChangeCount(worksiteId) > 0
+            if (hasModification) {
+                return false
+            }
+            try db.setWorksiteRootUnmodified(worksiteId, syncedAt)
+            try db.deleteUnsyncedWorkTypeTransferRequests(worksiteId)
+            return true
+        }
+    }
+}
+
+extension Database {
+    fileprivate func setWorksiteRootUnmodified(_ worksiteId: Int64, _ syncedAt: Date) throws {
+        try WorksiteRootRecord.setRootUnmodified(self, worksiteId, syncedAt)
     }
 }
 
@@ -601,8 +660,8 @@ internal struct PopulatedLocalWorksite: Equatable, Decodable, FetchableRecord {
                         }
                         return  {
                             if a.networkId < 0 { return true }
-                                else if b.networkId < 0 { return false }
-                                else { return a.networkId > b.networkId }
+                            else if b.networkId < 0 { return false }
+                            else { return a.networkId > b.networkId }
                         }()
                     })
                     .map { $0.asExternalModel() },

@@ -31,6 +31,30 @@ extension MainComponent {
         RecentWorksiteDao(appDatabase)
     }
 
+    var worksiteFlagDao: WorksiteFlagDao {
+        WorksiteFlagDao(appDatabase)
+    }
+
+    var worksiteNoteDao: WorksiteNoteDao {
+        WorksiteNoteDao(appDatabase)
+    }
+
+    var workTypeDao: WorkTypeDao {
+        WorkTypeDao(appDatabase)
+    }
+
+    var organizationsDao: IncidentOrganizationDao {
+        IncidentOrganizationDao(appDatabase)
+    }
+
+    var worksiteChangeDao: WorksiteChangeDao {
+        WorksiteChangeDao(appDatabase)
+    }
+
+    var workTypeTransferRequestDao: WorkTypeTransferRequestDao {
+        WorkTypeTransferRequestDao(appDatabase)
+    }
+
     public var incidentsRepository: IncidentsRepository {
         shared {
             OfflineFirstIncidentsRepository(
@@ -89,5 +113,37 @@ extension MainComponent {
 
     public var searchWorksitesRepository: SearchWorksitesRepository {
         FakeSearchWorksitesRepository()
+    }
+
+    public var organizationsRepository: OrganizationsRepository {
+        shared {
+            OfflineFirstOrganizationsRepository(
+                incidentOrganizationDao: organizationsDao,
+                networkDataSource: networkDataSource,
+                loggerFactory: loggerFactory
+            )
+        }
+    }
+
+    public var worksiteChangeRepository: WorksiteChangeRepository {
+        shared {
+            CrisisCleanupWorksiteChangeRepository(
+                worksiteDao: worksiteDao,
+                worksiteChangeDao: worksiteChangeDao,
+                worksiteFlagDao: worksiteFlagDao,
+                worksiteNoteDao: worksiteNoteDao,
+                workTypeDao: workTypeDao,
+                worksiteChangeSyncer: NetworkWorksiteChangeSyncer(),
+                accountDataRepository: accountDataRepository,
+                networkDataSource: networkDataSource,
+                worksitesRepository: worksitesRepository,
+                organizationsRepository: organizationsRepository,
+                authEventBus: authEventBus,
+                networkMonitor: networkMonitor,
+                appEnv: appEnv,
+                syncLoggerFactory: syncLoggerFactory,
+                loggerFactory: loggerFactory
+            )
+        }
     }
 }

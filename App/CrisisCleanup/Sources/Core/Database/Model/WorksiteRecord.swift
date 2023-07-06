@@ -112,6 +112,27 @@ extension WorksiteRootRecord: Codable, FetchableRecord, MutablePersistableRecord
         )
     }
 
+    static func setRootUnmodified(
+        _ db: Database,
+        _ id: Int64,
+        _ syncedAt: Date
+    ) throws {
+        try db.execute(
+            sql:
+                """
+                UPDATE worksiteRoot
+                SET syncedAt=:syncedAt,
+                    isLocalModified=0,
+                    syncAttempt=0
+                WHERE id=:id
+                """,
+            arguments: [
+                Columns.id.rawValue: id,
+                Columns.syncedAt.rawValue: syncedAt,
+            ]
+        )
+    }
+
     static func getCount(_ db: Database, _ incidentId: Int64) throws -> Int {
         try WorksiteRootRecord
             .filter(Columns.incidentId == incidentId)
@@ -400,14 +421,23 @@ extension DerivableRequest<WorksiteRecord> {
         south: Double,
         north: Double,
         west: Double,
-        east: Double) -> Self {
-            filter(
-                alias[WorksiteColumns.longitude] > west &&
-                alias[WorksiteColumns.longitude] < east &&
-                alias[WorksiteColumns.latitude] > south &&
-                alias[WorksiteColumns.latitude] < north
-            )
-        }
+        east: Double
+    ) -> Self {
+        filter(
+            alias[WorksiteColumns.longitude] > west &&
+            alias[WorksiteColumns.longitude] < east &&
+            alias[WorksiteColumns.latitude] > south &&
+            alias[WorksiteColumns.latitude] < north
+        )
+    }
+
+    func selectNetworkId() -> Self {
+        select(WorksiteColumns.networkId)
+    }
+
+    func selectIncidentId() -> Self {
+        select(WorksiteColumns.incidentId)
+    }
 }
 
 // MARK: - Work type
@@ -518,6 +548,19 @@ extension WorkTypeRecord: Codable, FetchableRecord, MutablePersistableRecord {
             .all()
             .filter(Columns.worksiteId == worksiteId)
             .fetchAll(db)
+    }
+}
+
+extension DerivableRequest<WorkTypeRecord> {
+    func selectIdNetworkIdColumns() -> Self {
+        select(WorkTypeRecord.Columns.id, WorkTypeRecord.Columns.networkId)
+    }
+
+    func filterByUnsynced(_ worksiteId: Int64) -> Self {
+        filter(
+            WorkTypeRecord.Columns.worksiteId == worksiteId &&
+            WorkTypeRecord.Columns.networkId <= 0
+        )
     }
 }
 
@@ -704,6 +747,19 @@ extension WorksiteFlagRecord: Codable, FetchableRecord, MutablePersistableRecord
     }
 }
 
+extension DerivableRequest<WorksiteFlagRecord> {
+    func selectIdNetworkIdColumns() -> Self {
+        select(WorksiteFlagRecord.Columns.id, WorksiteFlagRecord.Columns.networkId)
+    }
+
+    func filterByUnsynced(_ worksiteId: Int64) -> Self {
+        filter(
+            WorksiteFlagRecord.Columns.worksiteId == worksiteId &&
+            WorksiteFlagRecord.Columns.networkId <= 0
+        )
+    }
+}
+
 // MARK: - Note
 
 // sourcery: copyBuilder
@@ -821,5 +877,18 @@ extension WorksiteNoteRecord: Codable, FetchableRecord, MutablePersistableRecord
             .all()
             .filter(Columns.worksiteId == worksiteId)
             .fetchAll(db)
+    }
+}
+
+extension DerivableRequest<WorksiteNoteRecord> {
+    func selectIdNetworkIdColumns() -> Self {
+        select(WorksiteNoteRecord.Columns.id, WorksiteNoteRecord.Columns.networkId)
+    }
+
+    func filterByUnsynced(_ worksiteId: Int64) -> Self {
+        filter(
+            WorksiteNoteRecord.Columns.worksiteId == worksiteId &&
+            WorksiteNoteRecord.Columns.networkId <= 0
+        )
     }
 }

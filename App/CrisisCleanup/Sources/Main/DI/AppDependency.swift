@@ -22,6 +22,8 @@ public protocol AppDependency: Dependency {
     var locationsRepository: LocationsRepository { get }
     var worksitesRepository: WorksitesRepository { get }
     var searchWorksitesRepository: SearchWorksitesRepository { get }
+    var organizationsRepository: OrganizationsRepository { get }
+    var worksiteChangeRepository: WorksiteChangeRepository  { get }
 
     var translator: KeyAssetTranslator { get }
 
@@ -44,6 +46,7 @@ public protocol AppDependency: Dependency {
     var incidentBoundsProvider: IncidentBoundsProvider { get }
 
     var mapCaseIconProvider: MapCaseIconProvider { get }
+    var editableWorksiteProvider: EditableWorksiteProvider { get }
 }
 
 extension MainComponent {

@@ -1,7 +1,8 @@
 import Foundation
 import GRDB
 
-// TODO: Add equivalent database table(s). Write tests as necessary.
+// TODO: Create database tables and related
+
 struct NetworkFileRecord : Identifiable, Equatable {
     let id: Int64
     let createdAt: Date

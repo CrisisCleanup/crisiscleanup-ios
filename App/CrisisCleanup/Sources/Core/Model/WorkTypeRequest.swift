@@ -1,6 +1,6 @@
 import Foundation
 
-struct WorkTypeRequest {
+struct WorkTypeRequest: Equatable {
     let workType: String
     let byOrg: Int64
     let createdAt: Date

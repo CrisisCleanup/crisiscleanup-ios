@@ -1,10 +1,10 @@
-public struct LocationLatLng {
+public struct LocationLatLng: Equatable {
     let id: Int64
     let shape: LocationShape
     let multiCoordinates: [[LatLng]]
 }
 
-public struct LocationBounds {
+public struct LocationBounds: Equatable {
     let locationLatLng: LocationLatLng
     let multiBounds: [LatLngBounds?]
     let boundAreas: [Double]
@@ -25,7 +25,7 @@ public struct LocationBounds {
     }
 }
 
-public struct IncidentBounds {
+public struct IncidentBounds: Equatable {
     let locations: [LocationBounds]
     let bounds: LatLngBounds
     let centroid: LatLng
@@ -40,7 +40,7 @@ let DefaultIncidentBounds = IncidentBounds(
     bounds: MapViewCameraBoundsDefault.bounds,
     centroid: MapViewCameraBoundsDefault.bounds.center)
 
-struct LatLngBounds {
+struct LatLngBounds: Equatable {
     let southWest: LatLng
     let northEast: LatLng
     let center: LatLng

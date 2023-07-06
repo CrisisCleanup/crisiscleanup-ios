@@ -20,6 +20,8 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
 
     var incidentDataPullStats: any Publisher<IncidentDataPullStats, Never>
 
+    private let orgIdPublisher: AnyPublisher<Int64, Never>
+
     init(
         dataSource: CrisisCleanupNetworkDataSource,
         worksitesSyncer: WorksitesSyncer,
@@ -45,6 +47,11 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         syncWorksitesFullIncidentId = syncWorksitesFullIncidentIdSubject
         incidentDataPullStats = worksitesSyncer.dataPullStats
 
+        orgIdPublisher = accountDataRepository.accountData
+            .eraseToAnyPublisher()
+            .asyncMap { $0.org.id }
+            .eraseToAnyPublisher()
+
         Task { await loadFakeData() }
     }
 
@@ -54,8 +61,15 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     }
 
     func streamLocalWorksite(_ worksiteId: Int64) -> any Publisher<LocalWorksite?, Never> {
-        // TODO: Do
-        return PassthroughSubject<LocalWorksite?, Never>()
+        worksiteDao.streamLocalWorksite(worksiteId)
+            .assertNoFailure()
+            .asyncMap({ localWorksite in
+                let orgId = try! await self.orgIdPublisher.asyncFirst()
+                return localWorksite?.asExternalModel(
+                    orgId,
+                    self.languageTranslationsRepository
+                )
+            })
     }
 
     func streamRecentWorksites(_ incidentId: Int64) -> any Publisher<[WorksiteSummary], Never> {
@@ -70,17 +84,18 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         longitudeWest: Double,
         longitudeEast: Double,
         limit: Int,
-        offset: Int) throws -> [WorksiteMapMark] {
-            try worksiteDao.getWorksitesMapVisual(
-                incidentId,
-                south: latitudeSouth,
-                north: latitudeNorth,
-                west: longitudeWest,
-                east: longitudeEast,
-                limit: limit,
-                offset: offset
-            )
-        }
+        offset: Int
+    ) throws -> [WorksiteMapMark] {
+        try worksiteDao.getWorksitesMapVisual(
+            incidentId,
+            south: latitudeSouth,
+            north: latitudeNorth,
+            west: longitudeWest,
+            east: longitudeEast,
+            limit: limit,
+            offset: offset
+        )
+    }
 
     func getWorksitesCount(_ incidentId: Int64) throws -> Int {
         try worksiteDao.getWorksitesCount(incidentId)
@@ -179,8 +194,8 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     }
 
     func syncNetworkWorksite(_ worksite: NetworkWorksiteFull, _ syncedAt: Date) async throws -> Bool {
-        // TODO: Do
-        return false
+        let records = worksite.asRecords()
+        return try await worksiteDao.syncNetworkWorksite(records, syncedAt)
     }
 
     func getLocalId(_ networkWorksiteId: Int64) throws -> Int64 {
@@ -188,7 +203,17 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     }
 
     func pullWorkTypeRequests(_ networkWorksiteId: Int64) async throws {
-        // TODO: Do
+        do {
+            let workTypeRequests = try await dataSource.getWorkTypeRequests(networkWorksiteId)
+            if workTypeRequests.isNotEmpty {
+                let worksiteId = try worksiteDao.getWorksiteId(networkWorksiteId)
+                // TODO: Finish when work type requests are blocked
+                // let records = workTypeRequests.map { $0.asRecord(worksiteId) }
+                // workTypeTransferRequestDao.syncUpsert(records)
+            }
+        } catch {
+            logger.logError(error)
+        }
     }
 
     func setRecentWorksite(
