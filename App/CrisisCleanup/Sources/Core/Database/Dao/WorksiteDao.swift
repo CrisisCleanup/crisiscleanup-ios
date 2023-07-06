@@ -588,6 +588,7 @@ internal struct PopulatedWorksite: Equatable, Decodable, FetchableRecord {
             city: worksite.city,
             county: worksite.county,
             createdAt: worksite.createdAt,
+            email: worksite.email,
             favoriteId: worksite.favoriteId,
             incidentId: worksite.incidentId,
             keyWorkType: keyWorkType,
@@ -641,6 +642,7 @@ internal struct PopulatedLocalWorksite: Equatable, Decodable, FetchableRecord {
                 city: worksite.city,
                 county: worksite.county,
                 createdAt: worksite.createdAt,
+                email: worksite.email,
                 favoriteId: worksite.favoriteId,
                 // TODO: Do
                 // files: ,

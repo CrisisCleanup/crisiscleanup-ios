@@ -1,3 +1,4 @@
+import Atomics
 import Combine
 import Foundation
 import MapKit
@@ -30,6 +31,7 @@ class CasesViewModel: ObservableObject {
 
     private let mapMarkersLock = NSLock()
     @Published private(set) var incidentMapMarkers: IncidentAnnotations = emptyIncidentAnnotations
+    private let wipeIncidentAnnotations = ManagedAtomic(false)
 
     @Published private(set) var casesCount: (Int, Int) = (-1, -1)
 
@@ -123,14 +125,12 @@ class CasesViewModel: ObservableObject {
             .asyncThrowsMap { wqs in
                 let queryIncidentId = wqs.incidentId
 
-                try self.mapMarkersLock.withLock {
-                    if queryIncidentId != self.incidentMapMarkers.incidentId {
-                        Task { @MainActor in
-                            self.casesCount = (-1, -1)
-                            self.incidentMapMarkers = IncidentAnnotations(queryIncidentId)
-                        }
-                        throw CancellationError()
+                if queryIncidentId != self.incidentMapMarkers.incidentId {
+                    Task { @MainActor in
+                        self.casesCount = (-1, -1)
+                        self.resetMapMarkers()
                     }
+                    throw CancellationError()
                 }
 
                 var annotations = [WorksiteAnnotationMapMark]()
@@ -151,30 +151,41 @@ class CasesViewModel: ObservableObject {
             }
 
         worksitesInBounds.asyncThrowsMap { (queryIncidentId, annotations) in
-            var newAnnotations: [WorksiteAnnotationMapMark] = []
-            return try self.mapMarkersLock.withLock {
-                let incidentAnnotations = self.incidentMapMarkers
-                if incidentAnnotations.incidentId == queryIncidentId {
-                    var idSet = incidentAnnotations.annotationIdSet
-                    for a in annotations {
-                        if !idSet.contains(a.source.id) {
-                            idSet.insert(a.source.id)
-                            newAnnotations.append(a)
-                        }
+            var idSet: Set<Int64>? = nil
+
+            if self.wipeIncidentAnnotations.exchange(false, ordering: .sequentiallyConsistent) {
+                idSet = []
+            } else {
+                self.mapMarkersLock.withLock {
+                    let incidentAnnotations = self.incidentMapMarkers
+                    if queryIncidentId == self.incidentsData.selectedId {
+                        idSet = incidentAnnotations.annotationIdSet
                     }
-                    return IncidentAnnotations(
-                        queryIncidentId,
-                        annotationIdSet: idSet,
-                        newAnnotations: newAnnotations
-                    )
-                } else {
-                    throw CancellationError()
                 }
             }
+
+            var incidentAnnotations = IncidentAnnotations(EmptyIncident.id)
+            if var annotationIds = idSet {
+                var newAnnotations: [WorksiteAnnotationMapMark] = []
+                for mark in annotations {
+                    let worksiteId = mark.source.id
+                    if !annotationIds.contains(worksiteId) {
+                        annotationIds.insert(worksiteId)
+                        newAnnotations.append(mark)
+                    }
+                }
+                incidentAnnotations = IncidentAnnotations(
+                    queryIncidentId,
+                    annotationIdSet: annotationIds,
+                    newAnnotations: newAnnotations
+                )
+            } else {
+                throw CancellationError()
+            }
+            return incidentAnnotations
         }
             .receive(on: RunLoop.main)
-            .sink(receiveCompletion: { completion in
-            }, receiveValue: { incidentAnnotations in
+            .sink(receiveValue: { incidentAnnotations in
                 if incidentAnnotations.incidentId == self.incidentsData.selectedId {
                     self.mapMarkersLock.withLock {
                         self.incidentMapMarkers = incidentAnnotations
@@ -219,6 +230,19 @@ class CasesViewModel: ObservableObject {
                 self.dataProgress = stats.progress
             }
             .store(in: &subscriptions)
+    }
+
+    @MainActor
+    private func resetMapMarkers() {
+        mapMarkersLock.withLock {
+            incidentMapMarkers = IncidentAnnotations(incidentsData.selectedId)
+        }
+    }
+
+    // TODO: Redesign the annotation generation stream to be certain so view does not need to report when markers are missing
+    func onMissingMapMarkers() {
+        logger.logDebug("!Missing annotations")
+        _ = wipeIncidentAnnotations.exchange(true, ordering: .acquiring)
     }
 
     private let zeroOffset = (0.0, 0.0)

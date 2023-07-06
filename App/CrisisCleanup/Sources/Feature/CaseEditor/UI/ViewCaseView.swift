@@ -148,8 +148,6 @@ private struct ViewCaseInfo: View {
                                 Image(systemName: "phone.fill")
                                 Text(phoneText)
                             }
-                            // TODO: Email is not saving...
-                            let a = print("Email \(worksite.email)")
                             if worksite.email?.isNotBlank == true {
                                 HStack {
                                     Image(systemName: "envelope.fill")

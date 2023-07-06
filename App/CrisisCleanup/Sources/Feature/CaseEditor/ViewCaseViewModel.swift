@@ -49,6 +49,8 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
 
     private let nextRecurDateFormat: DateFormatter
 
+    private let isFirstVisible = ManagedAtomic(true)
+
     private var subscriptions = Set<AnyCancellable>()
 
     init(
@@ -88,20 +90,19 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         localTranslate = { phraseKey in
             editableWorksiteProvider.translate(key: phraseKey) ?? translator(phraseKey)
         }
+
         dataLoader = CaseEditorDataLoader(
             isCreateWorksite: false,
             incidentIdIn: incidentIdIn,
-            worksiteIdIn: worksiteIdIn,
             accountDataRepository: accountDataRepository,
             incidentsRepository: incidentsRepository,
             incidentRefresher: incidentRefresher,
             incidentBoundsProvider: incidentBoundsProvider,
             worksitesRepository: worksitesRepository,
             worksiteChangeRepository: worksiteChangeRepository,
-            languageRepository: languageRepository,
+            keyTranslator: languageRepository,
             languageRefresher: languageRefresher,
             workTypeStatusRepository: workTypeStatusRepository,
-            translate: localTranslate,
             editableWorksiteProvider: editableWorksiteProvider,
             networkMonitor: networkMonitor,
             appEnv: appEnv,
@@ -116,21 +117,36 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         nextRecurDateFormat = DateFormatter()
         nextRecurDateFormat.dateFormat = "EEE MMMM d yyyy 'at' h:mm a"
 
+        updateHeaderTitle()
+        subscribeToSubTitle()
+    }
+
+    deinit {
+        dataLoader.unsubscribe()
+    }
+
+    func onViewAppear() {
+        let isFirstAppear = isFirstVisible.exchange(false, ordering: .sequentiallyConsistent)
+
+        if isFirstAppear {
+            self.editableWorksiteProvider.reset(incidentIdIn)
+        }
+
         subscribeToLoading()
         subscribeToSyncing()
         subscribeToSaving()
-
-        updateHeaderTitle()
-        subscribeToSubTitle()
 
         subscribeToCaseData()
         subscribeToWorksiteChange()
         subscribeToWorkTypeProfile()
 
-        self.editableWorksiteProvider.reset(incidentIdIn)
-    }
-
-    func onViewAppear() {
+        if isFirstAppear {
+            dataLoader.loadData(
+                incidentIdIn: incidentIdIn,
+                worksiteIdIn: worksiteIdIn,
+                translate: localTranslate
+            )
+        }
     }
 
     func onViewDisappear() {
@@ -168,20 +184,20 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
 
     private func subscribeToCaseData() {
         uiState
-            // TODO: Throttle
+        // TODO: Throttle instead of debounce
             .debounce(
                 for: .seconds(0.15),
                 scheduler: RunLoop.current
             )
             .map { state in
-            switch state {
-            case .caseData(let caseData): return caseData
-            default: return nil
+                switch state {
+                case .caseData(let caseData): return caseData
+                default: return nil
+                }
             }
-        }
-        .receive(on: RunLoop.main)
-        .assign(to: \.caseData, on: self)
-        .store(in: &subscriptions)
+            .receive(on: RunLoop.main)
+            .assign(to: \.caseData, on: self)
+            .store(in: &subscriptions)
     }
 
     private func subscribeToWorksiteChange() {
@@ -237,6 +253,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         localTranslate(phraseKey)
     }
 
+    // TODO: Redesign for specific implementors. Not all implementors need callAsFunction translate.
     func callAsFunction(_ phraseKey: String) -> String {
         localTranslate(phraseKey)
     }

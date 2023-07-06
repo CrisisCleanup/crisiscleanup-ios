@@ -4,7 +4,12 @@ import Foundation
 
 internal class CaseEditorDataLoader {
     private let isCreateWorksite: Bool
+    private let worksitesRepository: WorksitesRepository
+    private let worksiteChangeRepository: WorksiteChangeRepository
     private let editableWorksiteProvider: EditableWorksiteProvider
+    private let incidentRefresher: IncidentRefresher
+    private let languageRefresher: LanguageRefresher
+    private let workTypeStatusRepository: WorkTypeStatusRepository
     private let logger: AppLogger
 
     private let logDebug: Bool
@@ -30,6 +35,12 @@ internal class CaseEditorDataLoader {
     private let isInitiallySynced = ManagedAtomic<Bool>(false)
     private let isWorksitePulledSubject = CurrentValueSubject<Bool, Never>(false)
 
+    private let incidentDataStream: AnyPublisher<IncidentBoundsPair?, Never>
+    private let organizationStream: AnyPublisher<OrgData, Never>
+    private let workTypeStatusStream: AnyPublisher<[WorkTypeStatus], Never>
+    private let isOnlinePublisher: AnyPublisher<Bool, Never>
+    private let keyTranslator: KeyTranslator
+
     private let uiStateSubject = CurrentValueSubject<CaseEditorUiState, Never>(CaseEditorUiState.loading)
     let uiState: any Publisher<CaseEditorUiState, Never>
 
@@ -38,17 +49,15 @@ internal class CaseEditorDataLoader {
     init(
         isCreateWorksite: Bool,
         incidentIdIn: Int64,
-        worksiteIdIn: Int64?,
         accountDataRepository: AccountDataRepository,
         incidentsRepository: IncidentsRepository,
         incidentRefresher: IncidentRefresher,
         incidentBoundsProvider: IncidentBoundsProvider,
         worksitesRepository: WorksitesRepository,
         worksiteChangeRepository: WorksiteChangeRepository,
-        languageRepository: LanguageTranslationsRepository,
+        keyTranslator: KeyTranslator,
         languageRefresher: LanguageRefresher,
         workTypeStatusRepository: WorkTypeStatusRepository,
-        translate: @escaping (String) -> String,
         editableWorksiteProvider: EditableWorksiteProvider,
         networkMonitor: NetworkMonitor,
         appEnv: AppEnv,
@@ -56,7 +65,12 @@ internal class CaseEditorDataLoader {
         debugTag: String = ""
     ) {
         self.isCreateWorksite = isCreateWorksite
+        self.worksitesRepository = worksitesRepository
+        self.worksiteChangeRepository = worksiteChangeRepository
         self.editableWorksiteProvider = editableWorksiteProvider
+        self.incidentRefresher = incidentRefresher
+        self.languageRefresher = languageRefresher
+        self.workTypeStatusRepository = workTypeStatusRepository
         logger = loggerFactory.getLogger(debugTag)
 
         logDebug = appEnv.isDebuggable && debugTag.isNotBlank
@@ -73,15 +87,17 @@ internal class CaseEditorDataLoader {
         .map { (b0, b1) in b0 || b1 }
         .receive(on: RunLoop.main)
 
-        worksiteIdSubject.value = worksiteIdIn
-
-        let organizationStream = accountDataRepository.accountData
+        organizationStream = accountDataRepository.accountData
             .eraseToAnyPublisher()
             .map { $0.org }
             .removeDuplicates()
-
-        let incidentDataStream = incidentsRepository.streamIncident(incidentIdIn)
+            .share()
             .eraseToAnyPublisher()
+
+        incidentDataStream = incidentsRepository.streamIncident(incidentIdIn)
+            .eraseToAnyPublisher()
+            .share()
+            .removeDuplicates()
             .map { incident in
                 let publisher: AnyPublisher<IncidentBoundsPair?, Never>
                 if let incident = incident {
@@ -98,8 +114,12 @@ internal class CaseEditorDataLoader {
             }
             .switchToLatest()
             .removeDuplicates()
+            .share()
+            .eraseToAnyPublisher()
 
         worksiteStream = worksiteIdSubject
+            .share()
+            .removeDuplicates()
             .eraseToAnyPublisher()
             .map { worksiteId in
                 if worksiteId == nil || worksiteId! <= 0 {
@@ -112,20 +132,75 @@ internal class CaseEditorDataLoader {
             }
             .switchToLatest()
             .removeDuplicates()
+            .share()
             .eraseToAnyPublisher()
 
-        let workTypeStatusStream = workTypeStatusRepository.workTypeStatusOptions
+        workTypeStatusStream = workTypeStatusRepository.workTypeStatusOptions
+            .eraseToAnyPublisher()
+            .share()
+            .eraseToAnyPublisher()
 
         uiState = uiStateSubject
+            .share()
             .receive(on: RunLoop.main)
 
-        let isOnlinePublisher = networkMonitor.isOnline.eraseToAnyPublisher()
+        isOnlinePublisher = networkMonitor.isOnline.eraseToAnyPublisher()
+
+        self.keyTranslator = keyTranslator
+    }
+
+    func loadData(
+        incidentIdIn: Int64,
+        worksiteIdIn: Int64,
+        translate: @escaping (String) -> String
+    ) {
+        Task {
+            self.isRefreshingIncident.value = true
+            do {
+                defer { self.isRefreshingIncident.value = false}
+                await incidentRefresher.pullIncident(incidentIdIn)
+            }
+            await languageRefresher.pullLanguages()
+            await workTypeStatusRepository.loadStatuses()
+        }
+
+        worksiteStream
+            .filter { $0 != nil }
+            .sink(receiveValue: {
+            if let localWorksite = $0 {
+                if self.isInitiallySynced.exchange(true, ordering: .acquiringAndReleasing) {
+                    return
+                }
+
+                do {
+                    defer {
+                        self.isRefreshingWorksite.value = false
+                        self.isWorksitePulledSubject.value = true
+                    }
+
+                    let worksite = localWorksite.worksite
+                    let networkId = worksite.networkId
+                    if worksite.id > 0 &&
+                        (networkId > 0 || localWorksite.localChanges.isLocalModified) {
+                        self.isRefreshingWorksite.value = true
+                        let isSynced = await self.worksiteChangeRepository.trySyncWorksite(worksite.id)
+                        if isSynced && networkId > 0 {
+                            // TODO: Is unfinished. See method for task once work type requests are in progress.
+                            try await self.worksitesRepository.pullWorkTypeRequests(networkId)
+                        }
+                    }
+                } catch {
+                    self.logger.logError(error)
+                }
+            }
+        })
+        .store(in: &disposables)
 
         Publishers.CombineLatest(
             Publishers.CombineLatest3(
                 dataLoadCountStream,
                 organizationStream,
-                workTypeStatusStream.eraseToAnyPublisher()
+                workTypeStatusStream
             ),
             Publishers.CombineLatest4(
                 incidentDataStream,
@@ -146,6 +221,7 @@ internal class CaseEditorDataLoader {
             )
         }
         .filter { $0.incidentData != nil }
+        .debounce(for: .seconds(0.15), scheduler: RunLoop.current)
         .asyncThrowsMap { stateData in
             let organization = stateData.organization
             let workTypeStatuses = stateData.statuses
@@ -182,7 +258,7 @@ internal class CaseEditorDataLoader {
             let loadedWorksite = localWorksite?.worksite
             let isOnline: Bool
             do {
-                isOnline = try await isOnlinePublisher.asyncFirst()
+                isOnline = try await self.isOnlinePublisher.asyncFirst()
             } catch {
                 isOnline = false
                 self.logger.logError(error)
@@ -195,13 +271,13 @@ internal class CaseEditorDataLoader {
 
             try Task.checkCancellation()
 
-            with(editableWorksiteProvider) { ewp in
+            with(self.editableWorksiteProvider) { ewp in
                 ewp.incident = incident
 
                 if (loadedWorksite != nil && ewp.takeStale()) || ewp.formFields.isEmpty {
                     ewp.formFields = FormFieldNode.buildTree(
                         incident.formFields,
-                        languageRepository
+                        self.keyTranslator
                     )
                     // TODO: Test this produces a flat array
                     .map { $0.flatten() }
@@ -301,7 +377,7 @@ internal class CaseEditorDataLoader {
             var isEditingAllowed = self.editSectionsSubject.value.isNotEmpty && workTypeStatuses.isNotEmpty
             var isNetworkLoadFinished = true
             var isLocalLoadFinished = true
-            if !isCreateWorksite {
+            if !self.isCreateWorksite {
                 isEditingAllowed = isEditingAllowed && localWorksite != nil
                 isNetworkLoadFinished = isEditingAllowed && isPulled
                 isLocalLoadFinished = isNetworkLoadFinished && worksiteState.formData?.isNotEmpty == true
@@ -324,56 +400,16 @@ internal class CaseEditorDataLoader {
                 )
             )
         }
-        .receive(on: RunLoop.main)
-        .sink { completion in
-        } receiveValue: { state in
+        .sink(receiveValue: { state in
             self.uiStateSubject.value = state
-        }
+        })
         .store(in: &disposables)
 
-        Task {
-            self.isRefreshingIncident.value = true
-            do {
-                defer { self.isRefreshingIncident.value = false}
-                await incidentRefresher.pullIncident(incidentIdIn)
-            }
-            await languageRefresher.pullLanguages()
-            await workTypeStatusRepository.loadStatuses()
-        }
+        worksiteIdSubject.value = worksiteIdIn
+    }
 
-        worksiteStream.asyncMap {
-            if let localWorksite = $0 {
-                if self.isInitiallySynced.exchange(true, ordering: .acquiringAndReleasing) {
-                    return
-                }
-
-                do {
-                    defer {
-                        self.isRefreshingWorksite.value = false
-                        self.isWorksitePulledSubject.value = true
-                    }
-
-                    let worksite = localWorksite.worksite
-                    let networkId = worksite.networkId
-                    if worksite.id > 0 &&
-                        (networkId > 0 || localWorksite.localChanges.isLocalModified) {
-                        self.isRefreshingWorksite.value = true
-                        let isSynced = await worksiteChangeRepository.trySyncWorksite(worksite.id)
-                        if isSynced && networkId > 0 {
-                            // TODO: Is unfinihsed. See method for task once work type requests are blocked.
-                            try await worksitesRepository.pullWorkTypeRequests(networkId)
-                        }
-                    }
-                } catch {
-                    self.logger.logError(error)
-                }
-            }
-        }
-        .sink(
-            receiveCompletion: { _ in },
-            receiveValue: { _ in }
-        )
-        .store(in: &disposables)
+    func unsubscribe() {
+        _ = cancelSubscriptions(disposables)
     }
 
     func reloadData(_ worksiteId: Int64) {

@@ -13,19 +13,11 @@ class ViewCaseComponent: Component<AppDependency>, ViewCaseViewBuilder {
             accountDataRepository: dependency.accountDataRepository,
             incidentsRepository: dependency.incidentsRepository,
             organizationsRepository: dependency.organizationsRepository,
-            incidentRefresher: IncidentRefresher(
-                dependency.incidentsRepository,
-                dependency.networkMonitor,
-                dependency.loggerFactory
-            ),
+            incidentRefresher: dependency.incidentRefresher,
             incidentBoundsProvider: dependency.incidentBoundsProvider,
             worksitesRepository: dependency.worksitesRepository,
             languageRepository: dependency.languageTranslationsRepository,
-            languageRefresher: LanguageRefresher(
-                dependency.languageTranslationsRepository,
-                dependency.networkMonitor,
-                dependency.loggerFactory
-            ),
+            languageRefresher: dependency.languageRefresher,
             workTypeStatusRepository: dependency.workTypeStatusRepository,
             editableWorksiteProvider: dependency.editableWorksiteProvider,
             translator: dependency.translator,

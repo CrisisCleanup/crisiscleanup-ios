@@ -47,6 +47,8 @@ public protocol AppDependency: Dependency {
 
     var mapCaseIconProvider: MapCaseIconProvider { get }
     var editableWorksiteProvider: EditableWorksiteProvider { get }
+    var incidentRefresher: IncidentRefresher { get }
+    var languageRefresher: LanguageRefresher { get }
 }
 
 extension MainComponent {

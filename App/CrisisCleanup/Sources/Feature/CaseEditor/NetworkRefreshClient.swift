@@ -1,7 +1,7 @@
 import Atomics
 import Foundation
 
-class IncidentRefresher {
+public class IncidentRefresher {
     private let incidentsRepository: IncidentsRepository
     private let networkMonitor: NetworkMonitor
     private let logger: AppLogger
@@ -33,7 +33,7 @@ class IncidentRefresher {
     }
 }
 
-class LanguageRefresher {
+public class LanguageRefresher {
     private let languageRepository: LanguageTranslationsRepository
     private let networkMonitor: NetworkMonitor
     private let logger: AppLogger

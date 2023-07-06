@@ -63,6 +63,9 @@ struct CasesView: View {
                         map.removeAnnotations(annotations)
                     }
                     map.addAnnotations(incidentAnnotations.newAnnotations)
+                    if map.annotations.isEmpty && !incidentAnnotations.annotationIdSet.isEmpty {
+                        viewModel.onMissingMapMarkers()
+                    }
                 }
 
             if viewModel.showDataProgress {

@@ -9,7 +9,7 @@ extension MainComponent {
                 locationsRepository: locationsRepository
             )
         }
-    }
+}
 
     public var mapCaseIconProvider: MapCaseIconProvider {
         shared {
@@ -20,6 +20,26 @@ extension MainComponent {
     public var editableWorksiteProvider: EditableWorksiteProvider {
         shared {
             SingleEditableWorksiteProvider()
+        }
+    }
+
+    public var incidentRefresher: IncidentRefresher {
+        shared {
+            IncidentRefresher(
+                incidentsRepository,
+                networkMonitor,
+                loggerFactory
+            )
+        }
+    }
+
+    public var languageRefresher: LanguageRefresher {
+        shared {
+            LanguageRefresher(
+                languageTranslationsRepository,
+                networkMonitor,
+                loggerFactory
+            )
         }
     }
 }
