@@ -93,6 +93,7 @@ struct CasesView: View {
                             openIncidentSelect.toggle()
                         } label: {
                             IncidentDisasterImage(viewModel.incidentsData.selected)
+                                .shadow(radius: 2)
                         }
                         .sheet(isPresented: $openIncidentSelect) {
                             incidentSelectViewBuilder.incidentSelectView( onDismiss: {openIncidentSelect = false} )
@@ -120,28 +121,41 @@ struct CasesView: View {
                                     .background(appTheme.colors.navigationContainerColor)
                                     .foregroundColor(Color.white)
                                     .cornerRadius(appTheme.cornerRadius)
+                                    .shadow(radius: 2)
                             }
 
                             Spacer()
 
-                            Button {
-                                router.openSearchCases()
-                            } label: {
-                                Image("ic_search", bundle: .module)
-                                    .background(Color.white)
-                                    .foregroundColor(Color.black)
-                                    .cornerRadius(appTheme.cornerRadius)
-                            }
+                            HStack(spacing: 0) {
+                                Button {
+                                    router.openSearchCases()
+                                } label: {
+                                    Image("ic_search", bundle: .module)
+                                        .frame(width: 50, height:50)
+                                        .background(Color.white)
+                                        .foregroundColor(Color.black)
+                                }
 
-                            Button {
-                                router.openFilterCases()
-                            } label: {
-                                // TODO: Use component
-                                Image("ic_dials", bundle: .module)
-                                    .background(Color.white)
-                                    .foregroundColor(Color.black)
-                                    .cornerRadius(appTheme.cornerRadius)
+                                Divider()
+                                    .frame(height: 50)
+
+                                Button {
+                                    router.openFilterCases()
+                                } label: {
+                                    // TODO: Use component
+                                    Image("ic_dials", bundle: .module)
+                                        .frame(width: 50, height:50)
+                                        .background(Color.white)
+                                        .foregroundColor(Color.black)
+
+                                }
+
                             }
+                            .frame(width: 100, height:50)
+                            .background(Color.white)
+                            .foregroundColor(Color.black)
+                            .cornerRadius(appTheme.cornerRadius)
+                            .shadow(radius: 2)
 
                         }
                         Spacer()
@@ -153,17 +167,30 @@ struct CasesView: View {
                 HStack {
                     Spacer()
                     VStack {
-                        Image(systemName: "plus")
-                            .padding()
-                            .background(Color.yellow)
-                            .foregroundColor(Color.black)
-                            .cornerRadius(appTheme.cornerRadius)
 
-                        Image("ic_table", bundle: .module)
-                            .background(Color.yellow)
-                            .foregroundColor(Color.black)
-                            .cornerRadius(appTheme.cornerRadius)
-                            .padding(.top)
+                        Button {
+
+                        } label: {
+                            Image(systemName: "plus")
+                                .padding()
+                                .background(Color.yellow)
+                                .foregroundColor(Color.black)
+                                .frame(width: 50, height:50)
+                                .cornerRadius(appTheme.cornerRadius)
+                                .shadow(radius: 2)
+                        }
+
+                        Button {
+
+                        } label: {
+                            Image("ic_table", bundle: .module)
+                                .background(Color.yellow)
+                                .foregroundColor(Color.black)
+                                .frame(width: 50, height:50)
+                                .cornerRadius(appTheme.cornerRadius)
+                                .shadow(radius: 2)
+                                .padding(.bottom)
+                        }
                     }
                 }
             }
@@ -193,44 +220,70 @@ private struct MapControls: View {
     }
 
     var body: some View {
-        Image(systemName: "plus")
-            .padding()
-            .background(Color.white)
-            .foregroundColor(Color.black)
-            .cornerRadius(appTheme.cornerRadius)
-            .padding(.vertical)
-            .onTapGesture { zoomDelta(scale: 0.5) }
-
-        Image(systemName: "minus")
-            .padding()
-            .background(Color.white)
-            .foregroundColor(Color.black)
-            .cornerRadius(appTheme.cornerRadius)
-            .onTapGesture { zoomDelta(scale: 1.5) }
-
-        Image("ic_zoom_incident", bundle: .module)
-            .background(Color.white)
-            .foregroundColor(Color.black)
-            .cornerRadius(appTheme.cornerRadius)
-            .padding(.top)
-            .onTapGesture {
-                map.setCamera(MKMapCamera(lookingAtCenter: map.centerCoordinate, fromDistance: CLLocationDistance(50*1000), pitch: 0.0, heading: 0.0), animated: true)
+        VStack(spacing: 0) {
+            Button {
+                zoomDelta(scale: 0.5)
+            } label: {
+                Image(systemName: "plus")
+                    .frame(width: 50, height: 50)
+                    .background(Color.white)
+                    .foregroundColor(Color.black)
             }
 
-        Image("ic_zoom_interactive", bundle: .module)
-            .background(Color.white)
-            .foregroundColor(Color.black)
-            .cornerRadius(appTheme.cornerRadius)
-            .padding(.top)
-            .onTapGesture {
-                let bounds = viewModel.incidentLocationBounds.bounds
-                animateToSelectedIncidentBounds(bounds)
+            Divider()
+
+            Button {
+                zoomDelta(scale: 1.5)
+            } label: {
+                Image(systemName: "minus")
+                    .frame(width: 50, height: 50)
+                    .background(Color.white)
+                    .foregroundColor(Color.black)
             }
 
-        Image("ic_layers", bundle: .module)
-            .background(Color.white)
-            .foregroundColor(Color.black)
-            .cornerRadius(appTheme.cornerRadius)
-            .padding(.top)
+        }
+        .background(Color.white)
+        .frame(width: 50, height:100)
+        .cornerRadius(appTheme.cornerRadius)
+        .shadow(radius: 2)
+        .padding(.top)
+
+        Button {
+            map.setCamera(MKMapCamera(lookingAtCenter: map.centerCoordinate, fromDistance: CLLocationDistance(50*1000), pitch: 0.0, heading: 0.0), animated: true)
+        } label: {
+            Image("ic_zoom_incident", bundle: .module)
+                .frame(width: 50, height:50)
+                .background(Color.white)
+                .foregroundColor(Color.black)
+                .cornerRadius(appTheme.cornerRadius)
+                .shadow(radius: 2)
+                .padding(.top)
+        }
+
+        Button {
+            let bounds = viewModel.incidentLocationBounds.bounds
+            animateToSelectedIncidentBounds(bounds)
+        } label: {
+            Image("ic_zoom_interactive", bundle: .module)
+                .frame(width: 50, height:50)
+                .background(Color.white)
+                .foregroundColor(Color.black)
+                .cornerRadius(appTheme.cornerRadius)
+                .shadow(radius: 2)
+                .padding(.top)
+        }
+
+        Button {
+
+        } label: {
+            Image("ic_layers", bundle: .module)
+                .frame(width: 50, height:50)
+                .background(Color.white)
+                .foregroundColor(Color.black)
+                .cornerRadius(appTheme.cornerRadius)
+                .shadow(radius: 2)
+                .padding(.top)
+        }
+
     }
 }
