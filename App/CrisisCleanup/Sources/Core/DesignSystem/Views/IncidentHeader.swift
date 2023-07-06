@@ -1,8 +1,4 @@
-//
-//  IncidentHeader.swift
-//
 //  Created by Anthony Aguilar on 7/5/23.
-//
 
 import SwiftUI
 
@@ -14,6 +10,5 @@ struct IncidentHeader: View {
             IncidentDisasterImage(incident)
             Text(incident.name)
         }
-
     }
 }

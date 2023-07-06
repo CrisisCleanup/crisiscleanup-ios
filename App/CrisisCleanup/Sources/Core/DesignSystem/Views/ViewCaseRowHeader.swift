@@ -1,8 +1,4 @@
-//
-//  SwiftUIView.swift
-//
 //  Created by Anthony Aguilar on 7/5/23.
-//
 
 import SwiftUI
 
@@ -11,19 +7,18 @@ struct ViewCaseRowHeader: View {
     var rowNum: Int64
     var rowTitle: String
 
+    private let shapeSize = 32.0
+
     var body: some View {
         HStack {
             Text(rowNum.description)
-                .padding()
-                .clipShape(Circle())
-                .frame(width:50, height:50)
-                .background(Color.yellow)
+                .frame(width: shapeSize, height: shapeSize)
                 .foregroundColor(Color.black)
-                .cornerRadius(40)
+                .background(appTheme.colors.attentionBackgroundColor)
+                .clipShape(Circle())
             Text(rowTitle)
 
             Spacer()
-
         }
         .padding(.leading)
     }

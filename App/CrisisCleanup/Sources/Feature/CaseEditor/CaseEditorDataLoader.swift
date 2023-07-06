@@ -310,16 +310,18 @@ internal class CaseEditorDataLoader {
             let isPendingSync = !isLocalLoadFinished ||
             localWorksite?.localChanges.isLocalModified ?? false
             return CaseEditorUiState.caseData(
-                orgId: organization.id,
-                isEditingAllowed: isEditingAllowed,
-                statusOptions: workTypeStatuses,
-                worksite: worksiteState,
-                incident: incident,
-                localWorksite: localWorksite,
-                isNetworkLoadFinished: isNetworkLoadFinished,
-                isLocalLoadFinished: isLocalLoadFinished,
-                isTranslationUpdated: isTranslationUpdated,
-                isPendingSync: isPendingSync
+                CaseEditorCaseData(
+                    orgId: organization.id,
+                    isEditingAllowed: isEditingAllowed,
+                    statusOptions: workTypeStatuses,
+                    worksite: worksiteState,
+                    incident: incident,
+                    localWorksite: localWorksite,
+                    isNetworkLoadFinished: isNetworkLoadFinished,
+                    isLocalLoadFinished: isLocalLoadFinished,
+                    isTranslationUpdated: isTranslationUpdated,
+                    isPendingSync: isPendingSync
+                )
             )
         }
         .receive(on: RunLoop.main)
@@ -391,20 +393,22 @@ private struct CaseEditorStateData: Equatable {
     let isPulled: Bool
 }
 
+struct CaseEditorCaseData {
+    let orgId: Int64
+    let isEditingAllowed: Bool
+    let statusOptions: [WorkTypeStatus]
+    let worksite: Worksite
+    let incident: Incident
+    let localWorksite: LocalWorksite?
+    let isNetworkLoadFinished: Bool
+    let isLocalLoadFinished: Bool
+    let isTranslationUpdated: Bool
+    let isPendingSync: Bool
+}
+
 enum CaseEditorUiState {
     case loading,
-         caseData(
-            orgId: Int64,
-            isEditingAllowed: Bool,
-            statusOptions: [WorkTypeStatus],
-            worksite: Worksite,
-            incident: Incident,
-            localWorksite: LocalWorksite?,
-            isNetworkLoadFinished: Bool,
-            isLocalLoadFinished: Bool,
-            isTranslationUpdated: Bool,
-            isPendingSync: Bool
-         ),
+         caseData(_ caseData: CaseEditorCaseData),
          error(_ errorMessage: String)
 }
 

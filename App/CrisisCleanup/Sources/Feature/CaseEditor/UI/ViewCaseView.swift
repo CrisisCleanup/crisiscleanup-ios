@@ -6,16 +6,8 @@ import MapKit
 struct ViewCaseView: View {
     @Environment(\.isPresented) var isPresented
 
-    @State var viewModel: ViewCaseViewModel
-    var incident: Incident = Incident(id: 1234, name: "hurricane hello world", shortName: "short name", locationIds: [123], activePhoneNumbers: ["1234567890"], formFields: [], turnOnRelease: false, disasterLiteral: "temp")
-    @State private var region = MKCoordinateRegion(
-                   center: CLLocationCoordinate2D(
-                       latitude: 40.83834587046632,
-                       longitude: 14.254053016537693),
-                   span: MKCoordinateSpan(
-                       latitudeDelta: 0.03,
-                       longitudeDelta: 0.03)
-                   )
+    @ObservedObject var viewModel: ViewCaseViewModel
+
     @State private var offset = CGSize.zero
 
     enum ViewCaseTabs {
@@ -74,9 +66,9 @@ struct ViewCaseView: View {
                 .toolbar {
                     ToolbarItem(placement: .principal) {
                         VStack {
-                            Text("View Case#")
+                            Text(viewModel.headerTitle)
                                 .font(.headline)
-                            Text("county, state")
+                            Text(viewModel.subTitle)
                                 .font(.subheadline)
                         }
 
@@ -114,61 +106,77 @@ struct ViewCaseView: View {
 }
 
 private struct ViewCaseInfo: View {
-    @State var viewModel: ViewCaseViewModel
+    @Environment(\.translator) var t: KeyAssetTranslator
+    @EnvironmentObject var router: NavigationRouter
+
+    @ObservedObject var viewModel: ViewCaseViewModel
     @State var map = MKMapView()
-    var incident: Incident = Incident(id: 1234, name: "hurricane hello world", shortName: "short name", locationIds: [123], activePhoneNumbers: ["1234567890"], formFields: [], turnOnRelease: false, disasterLiteral: "temp")
-    @State private var region = MKCoordinateRegion(
-                   center: CLLocationCoordinate2D(
-                       latitude: 40.83834587046632,
-                       longitude: 14.254053016537693),
-                   span: MKCoordinateSpan(
-                       latitudeDelta: 0.03,
-                       longitudeDelta: 0.03)
-
-
-                   )
+//    @State private var region = MKCoordinateRegion(
+//                   center: CLLocationCoordinate2D(
+//                       latitude: 40.83834587046632,
+//                       longitude: 14.254053016537693),
+//                   span: MKCoordinateSpan(
+//                       latitudeDelta: 0.03,
+//                       longitudeDelta: 0.03)
+//                   )
 
     var body: some View {
         ScrollView {
             VStack {
-                HStack{
-                    IncidentHeader(incident: incident)
-                        .padding([.leading, .bottom])
-                    Spacer()
+                if let caseState = viewModel.caseData {
+                    HStack{
+                        IncidentHeader(incident: caseState.incident)
+                            .padding([.leading, .bottom])
+                        Spacer()
+                    }
                 }
 
-                ViewCaseRowHeader(rowNum: 1, rowTitle: "Property Information")
+                ViewCaseRowHeader(rowNum: 1, rowTitle: t("caseForm.property_information"))
 
-                // create property information component?
-                HStack {
-                    VStack (alignment: .leading) {
-                        HStack {
-                            Image(systemName: "person.fill")
-                            Text("First Name")
+                if let worksite = viewModel.caseData?.worksite {
+                    // create property information component?
+                    HStack {
+                        VStack (alignment: .leading) {
+                            HStack {
+                                Image(systemName: "person.fill")
+                                Text(worksite.name)
+                            }
+                            let phoneText = [worksite.phone1, worksite.phone2]
+                                .filter { $0?.isNotBlank == true }
+                                .joined(separator: "; ")
+                            HStack {
+                                Image(systemName: "phone.fill")
+                                Text(phoneText)
+                            }
+                            // TODO: Email is not saving...
+                            let a = print("Email \(worksite.email)")
+                            if worksite.email?.isNotBlank == true {
+                                HStack {
+                                    Image(systemName: "envelope.fill")
+                                    Text(worksite.email!)
+                                }
+                            }
+                            // TODO: Port full address logic
+                            HStack {
+                                Image(systemName: "mappin.circle.fill")
+                                Text("12345 Main St. City, State 12345")
+                            }
                         }
-                        HStack {
-                            Image(systemName: "phone.fill")
-                            Text("123-456-7890")
-                        }
-                        HStack {
-                            Image(systemName: "envelope.fill")
-                            Text("email@email.com")
-                        }
-                        HStack {
-                            Image(systemName: "mappin.circle.fill")
-                            Text("12345 Main St. City, State 12345")
-                        }
+                        Spacer()
+                    }.padding()
 
-                    }
-                    Spacer()
-                }.padding()
-
-                ViewCaseMapView(map: $map, caseCoordinates: CLLocationCoordinate2D(latitude: 40.83834587046632, longitude: 14.254053016537693))
+                    ViewCaseMapView(
+                        map: $map,
+                        caseCoordinates: CLLocationCoordinate2D(
+                            latitude: worksite.latitude,
+                            longitude: worksite.longitude
+                        )
+                    )
                     .frame(width: UIScreen.main.bounds.size.width, height: 200)
-
+                }
 
                 HStack {
-                    ViewCaseRowHeader(rowNum: 3, rowTitle: "Work")
+                    ViewCaseRowHeader(rowNum: 3, rowTitle: t("caseForm.work"))
 
                     VStack (alignment: .trailing) {
                         // TODO: make component
@@ -197,9 +205,6 @@ private struct ViewCaseInfo: View {
 
                     WorkTypeRow()
                 }
-
-                ViewCaseRowHeader(rowNum: 5, rowTitle: "Volunteer Work")
-
             }
         }
     }

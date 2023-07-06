@@ -21,6 +21,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     private let localTranslate: (String) -> String
 
     @Published private(set) var headerTitle = ""
+    @Published private(set) var subTitle = ""
 
     @Published private(set) var isLoading = true
 
@@ -38,6 +39,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     private let editableWorksite: AnyPublisher<Worksite, Never>
 
     private let uiState: AnyPublisher<CaseEditorUiState, Never>
+    @Published private(set) var caseData: CaseEditorCaseData? = nil
 
     @Published private(set) var workTypeProfile: WorkTypeProfile? = nil
 
@@ -119,7 +121,9 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         subscribeToSaving()
 
         updateHeaderTitle()
+        subscribeToSubTitle()
 
+        subscribeToCaseData()
         subscribeToWorksiteChange()
         subscribeToWorkTypeProfile()
 
@@ -162,6 +166,24 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         .store(in: &subscriptions)
     }
 
+    private func subscribeToCaseData() {
+        uiState
+            // TODO: Throttle
+            .debounce(
+                for: .seconds(0.15),
+                scheduler: RunLoop.current
+            )
+            .map { state in
+            switch state {
+            case .caseData(let caseData): return caseData
+            default: return nil
+            }
+        }
+        .receive(on: RunLoop.main)
+        .assign(to: \.caseData, on: self)
+        .store(in: &subscriptions)
+    }
+
     private func subscribeToWorksiteChange() {
         dataLoader.worksiteStream
             .sink(receiveValue: { localWorksiteOptional in
@@ -193,6 +215,18 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         headerTitle = caseNumber.isEmpty
         ? localTranslate("nav.work_view_case")
         : "\(localTranslate("actions.view")) \(caseNumber)"
+    }
+
+    private func subscribeToSubTitle() {
+        editableWorksite
+            .map { worksite in
+                worksite.isNew ? "" : [worksite.county, worksite.state]
+                    .filter { $0.isNotBlank }
+                    .joined(separator: ", ")
+            }
+            .receive(on: RunLoop.main)
+            .assign(to: \.subTitle, on: self)
+            .store(in: &subscriptions)
     }
 
     // MARK: KeyTranslator
