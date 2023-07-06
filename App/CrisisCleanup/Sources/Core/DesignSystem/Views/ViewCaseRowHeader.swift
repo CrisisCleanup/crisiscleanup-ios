@@ -22,10 +22,7 @@ struct ViewCaseRowHeader: View {
                 .cornerRadius(40)
             Text(rowTitle)
 
-            if(rowNum != 3)
-            {
-                Spacer()
-            }
+            Spacer()
 
         }
         .padding(.leading)

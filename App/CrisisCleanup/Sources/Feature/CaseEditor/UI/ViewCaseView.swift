@@ -16,6 +16,7 @@ struct ViewCaseView: View {
                        latitudeDelta: 0.03,
                        longitudeDelta: 0.03)
                    )
+    @State private var offset = CGSize.zero
 
     enum ViewCaseTabs {
         case info
@@ -26,85 +27,87 @@ struct ViewCaseView: View {
     @State private var selectedTab: ViewCaseTabs = .info
 
     var body: some View {
-        VStack {
+        ZStack {
+            VStack {
 
-            HStack {
-                VStack {
-                    HStack{
-                        Spacer()
-                        Text("Info")
-                            .onTapGesture {
-                                selectedTab = .info
-                            }
-                        Spacer()
+                HStack {
+                    VStack {
+                        HStack{
+                            Spacer()
+                            Text("Info")
+                                .onTapGesture {
+                                    selectedTab = .info
+                                }
+                            Spacer()
+                        }
+                        Divider()
+                            .frame(height: 2)
+                            .background(selectedTab == .info ? Color.orange : Color.gray)
                     }
-                    Divider()
-                     .frame(height: 2)
-                     .background(selectedTab == .info ? Color.orange : Color.gray)
-                }
-                VStack {
-                    HStack {
-                        Spacer()
-                        Text("Photos")
-                            .onTapGesture {
-                                selectedTab = .photos
-                            }
-                        Spacer()
+                    VStack {
+                        HStack {
+                            Spacer()
+                            Text("Photos")
+                                .onTapGesture {
+                                    selectedTab = .photos
+                                }
+                            Spacer()
+                        }
+                        Divider()
+                            .frame(height: 2)
+                            .background(selectedTab == .photos ? Color.orange : Color.gray)
                     }
-                    Divider()
-                     .frame(height: 2)
-                     .background(selectedTab == .photos ? Color.orange : Color.gray)
-                }
-                VStack {
-                    HStack{
-                        Spacer()
-                        Text("Notes")
-                            .onTapGesture {
-                                selectedTab = .notes
-                            }
-                        Spacer()
+                    VStack {
+                        HStack{
+                            Spacer()
+                            Text("Notes")
+                                .onTapGesture {
+                                    selectedTab = .notes
+                                }
+                            Spacer()
+                        }
+                        Divider()
+                            .frame(height: 2)
+                            .background(selectedTab == .notes ? Color.orange : Color.gray)
                     }
-                    Divider()
-                     .frame(height: 2)
-                     .background(selectedTab == .notes ? Color.orange : Color.gray)
                 }
-            }
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    ZStack {
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
                         VStack {
                             Text("View Case#")
                                 .font(.headline)
                             Text("county, state")
                                 .font(.subheadline)
-
                         }
 
-                        HStack {
-                            Spacer()
+                    }
 
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        HStack {
                             Image(systemName: "exclamationmark.triangle.fill")
 
                             Image(systemName: "heart.fill")
                         }
+
                     }
                 }
+
+                // TODO: redraws the view when switching tabs? Change Zindex instead?
+                            switch selectedTab {
+                            case .info:
+                                ViewCaseInfo(viewModel: viewModel)
+                            case .photos:
+                                ViewCasePhotos()
+                            case .notes:
+                                ViewCaseNotes()
+                            }
+
+                Spacer()
+
+                BottomNav()
+
             }
-
-            // TODO: redraws the view when switching tabs? Change Zindex instead?
-            switch selectedTab {
-            case .info:
-                ViewCaseInfo(viewModel: viewModel)
-            case .photos:
-                ViewCasePhotos()
-            case .notes:
-                ViewCaseNotes()
-            }
-
-            Spacer()
-
         }
-
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
     }
@@ -112,6 +115,7 @@ struct ViewCaseView: View {
 
 private struct ViewCaseInfo: View {
     @State var viewModel: ViewCaseViewModel
+    @State var map = MKMapView()
     var incident: Incident = Incident(id: 1234, name: "hurricane hello world", shortName: "short name", locationIds: [123], activePhoneNumbers: ["1234567890"], formFields: [], turnOnRelease: false, disasterLiteral: "temp")
     @State private var region = MKCoordinateRegion(
                    center: CLLocationCoordinate2D(
@@ -120,14 +124,18 @@ private struct ViewCaseInfo: View {
                    span: MKCoordinateSpan(
                        latitudeDelta: 0.03,
                        longitudeDelta: 0.03)
+
+
                    )
 
     var body: some View {
         ScrollView {
             VStack {
-
-                // placeholder text
-                Text("Incident \(viewModel.incidentIdIn) Worksite \(viewModel.worksiteIdIn)")
+                HStack{
+                    IncidentHeader(incident: incident)
+                        .padding([.leading, .bottom])
+                    Spacer()
+                }
 
                 ViewCaseRowHeader(rowNum: 1, rowTitle: "Property Information")
 
@@ -155,7 +163,9 @@ private struct ViewCaseInfo: View {
                     Spacer()
                 }.padding()
 
-                Map(coordinateRegion: $region)
+                ViewCaseMapView(map: $map, caseCoordinates: CLLocationCoordinate2D(latitude: 40.83834587046632, longitude: 14.254053016537693))
+                    .frame(width: UIScreen.main.bounds.size.width, height: 200)
+
 
                 HStack {
                     ViewCaseRowHeader(rowNum: 3, rowTitle: "Work")
@@ -185,33 +195,7 @@ private struct ViewCaseInfo: View {
                     Text("Cocoa Florida Stake, The Church of Jesus Christ of Latter Day Saints")
                         .padding(.horizontal)
 
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text("Tree work")
-                            HStack {
-                                Circle()
-                                    .foregroundColor(Color.green)
-                                    .frame(width: 25, height: 25)
-                                Text("Closed, completed")
-                                Spacer()
-
-                                Text("Release")
-                                    .lineLimit(1)
-                                    .padding()
-                                    .background(Color.white)
-                                    .border(.black, width: 2)
-                                    .cornerRadius(appTheme.cornerRadius)
-
-
-                            }
-
-                        }
-                        .padding()
-                        .background(Color.white)
-                        .cornerRadius(appTheme.cornerRadius)
-                        .shadow(radius: 2)
-                        .padding()
-                    }
+                    WorkTypeRow()
                 }
 
                 ViewCaseRowHeader(rowNum: 5, rowTitle: "Volunteer Work")
@@ -231,6 +215,35 @@ private struct ViewCaseNotes: View {
     var body: some View {
         VStack {
             Text("Notes")
+        }
+    }
+}
+
+private struct BottomNav: View {
+    var body: some View {
+        HStack {
+            Spacer()
+
+            VStack {
+                Image("ic_case_share", bundle: .module)
+                Text("Share")
+            }
+            Spacer()
+            VStack {
+                Image("ic_case_flag", bundle: .module)
+                Text("Flag")
+            }
+            Spacer()
+            VStack {
+                Image("ic_case_history", bundle: .module)
+                Text("History")
+            }
+            Spacer()
+            VStack {
+                Image("ic_case_edit", bundle: .module)
+                Text("Edit")
+            }
+            Spacer()
         }
     }
 }
