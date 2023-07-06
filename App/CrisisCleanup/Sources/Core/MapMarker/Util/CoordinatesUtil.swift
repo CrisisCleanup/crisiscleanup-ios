@@ -76,8 +76,7 @@ extension Array where Element == Location {
 }
 
 fileprivate func flattenDoubleArray(_ double: [[LatLng]]) -> [LatLng] {
-    let single = Array(double.joined())
-    return single
+    Array(double.joined())
 }
 
 extension Array where Element == LocationLatLng {

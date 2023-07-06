@@ -21,7 +21,7 @@ enum AutoContactFrequency: String, Identifiable, CaseIterable {
 private let autoContactFrequencyLookup = AutoContactFrequency.allCases.associateBy{ $0.literal }
 
 // sourcery: copyBuilder, skipCopyInit
-public struct Worksite {
+public struct Worksite: Equatable {
     let id: Int64
     let address: String
     let autoContactFrequencyT: String

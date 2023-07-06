@@ -22,7 +22,6 @@ class CasesSearchViewModel: ObservableObject {
     @Published var recentWorksites: [CaseSummaryResult] = []
 
     @Published var searchQuery = ""
-    private lazy var searchQueryPublisher = $searchQuery
 
     @Published var searchResults = CasesSearchResults()
 
@@ -118,7 +117,7 @@ class CasesSearchViewModel: ObservableObject {
     }
 
     private func subscribeToSearch() {
-        let searchQueryIntermediate = searchQueryPublisher
+        let searchQueryIntermediate = $searchQuery
             .debounce(
                 for: .seconds(0.2),
                 scheduler: RunLoop.current

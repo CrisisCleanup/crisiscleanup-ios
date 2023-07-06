@@ -16,4 +16,10 @@ extension MainComponent {
             WorkTypeIconProvider()
         }
     }
+
+    public var editableWorksiteProvider: EditableWorksiteProvider {
+        shared {
+            SingleEditableWorksiteProvider()
+        }
+    }
 }

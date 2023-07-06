@@ -10,14 +10,12 @@ extension Array {
     }
 
     func associate<Key, Value>(_ transform: (Element) throws -> (Key, Value)) rethrows -> [Key: Value] {
-        var keys: [Key] = []
-        var values: [Value] = []
+        var dictionary = [Key: Value]()
         try forEach {
             let (key, value) = try transform($0)
-            keys.append(key)
-            values.append(value)
+            dictionary[key] = value
         }
-        return Dictionary(uniqueKeysWithValues: zip(keys, values))
+        return dictionary
     }
 }
 

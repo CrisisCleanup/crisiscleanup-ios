@@ -10,8 +10,29 @@ class ViewCaseComponent: Component<AppDependency>, ViewCaseViewBuilder {
 
     func viewCaseViewModel(incidentId: Int64, worksiteId: Int64) -> ViewCaseViewModel {
         ViewCaseViewModel(
+            accountDataRepository: dependency.accountDataRepository,
             incidentsRepository: dependency.incidentsRepository,
+            organizationsRepository: dependency.organizationsRepository,
+            incidentRefresher: IncidentRefresher(
+                dependency.incidentsRepository,
+                dependency.networkMonitor,
+                dependency.loggerFactory
+            ),
+            incidentBoundsProvider: dependency.incidentBoundsProvider,
             worksitesRepository: dependency.worksitesRepository,
+            languageRepository: dependency.languageTranslationsRepository,
+            languageRefresher: LanguageRefresher(
+                dependency.languageTranslationsRepository,
+                dependency.networkMonitor,
+                dependency.loggerFactory
+            ),
+            workTypeStatusRepository: dependency.workTypeStatusRepository,
+            editableWorksiteProvider: dependency.editableWorksiteProvider,
+            translator: dependency.translator,
+            worksiteChangeRepository: dependency.worksiteChangeRepository,
+            syncPusher: dependency.syncPusher,
+            networkMonitor: dependency.networkMonitor,
+            appEnv: dependency.appEnv,
             loggerFactory: dependency.loggerFactory,
             incidentId: incidentId,
             worksiteId: worksiteId

@@ -1,3 +1,7 @@
+struct ExpiredTokenException: Error {
+    let message = "Auth token is expired"
+}
+
 public struct NetworkCrisisCleanupApiError: Codable, Equatable {
     let field: String
     let messages: [String]?
