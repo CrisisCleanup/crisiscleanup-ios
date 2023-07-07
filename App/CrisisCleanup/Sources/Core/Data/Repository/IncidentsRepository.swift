@@ -15,7 +15,7 @@ public protocol IncidentsRepository {
 
     func pullIncident(_ id: Int64) async throws
 
-    func pullIncidentOrganizations(_ incidentId: Int64, _ force: Bool) async throws
+    func pullIncidentOrganizations(_ incidentId: Int64, _ force: Bool) async
 }
 
 extension IncidentsRepository {
@@ -23,7 +23,7 @@ extension IncidentsRepository {
         try getIncident(id, false)
     }
 
-    func pullIncidentOrganizations(_ incidentId: Int64) async throws {
-        try await pullIncidentOrganizations(incidentId, false)
+    func pullIncidentOrganizations(_ incidentId: Int64) async {
+        await pullIncidentOrganizations(incidentId, false)
     }
 }

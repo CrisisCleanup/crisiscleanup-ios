@@ -169,7 +169,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         }
 
         let accountData = try await accountDataPublisher.asyncFirst()
-        if (accountData.isTokenInvalid) {
+        if accountData.isTokenInvalid {
             _ = syncLogger.log("Not syncing. Invalid account token.")
             return false
         }
@@ -185,7 +185,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
             }
 
             let performSync = syncingWorksiteIdsLock.withLock {
-                if (_syncingWorksiteIds.contains(worksiteId)) {
+                if _syncingWorksiteIds.contains(worksiteId) {
                     _ = syncLogger.log("Not syncing. Currently being synced.")
                     return false
                 }
@@ -211,7 +211,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
             if let endError = unhandledException {
                 self.appLogger.logError(endError)
 
-                if (rethrowError) {
+                if rethrowError {
                     throw endError
                 } else {
                     // TODO Indicate error visually
@@ -224,7 +224,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
     }
 
     private func syncWorksite(_ worksiteId: Int64) async throws {
-        syncLogger = syncLoggerFactory.getLogger("syncing-worksite-\(worksiteId)-\(Date.now.timeIntervalSince1970)")
+        syncLogger = syncLoggerFactory.getLogger("syncing-worksite-\(worksiteId)-\(Date.now.timeIntervalSince1970.rounded())")
 
         var syncException: Error? = nil
 
@@ -236,7 +236,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
 //            let newestChangeOrgId = newestChange.organizationId
 //            let accountData = try await accountDataPublisher.asyncFirst()
 //            let organizationId = accountData.org.id
-//            if (newestChangeOrgId != organizationId) {
+//            if newestChangeOrgId != organizationId {
 //                _ = syncLogger.log("Not syncing. Org mismatch \(organizationId) != \(newestChangeOrgId).")
 //                // TODO Insert notice that newest change of worksite was with a different organization
 //                return
@@ -264,7 +264,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         var incidentId = Int64(0)
         var syncNetworkWorksite: NetworkWorksiteFull? = nil
         let networkWorksiteId = worksiteDao.getWorksiteNetworkId(worksiteId)
-        if (networkWorksiteId > 0) {
+        if networkWorksiteId > 0 {
             do {
                 syncNetworkWorksite = try await networkDataSource.getWorksite(networkWorksiteId)
                 incidentId = worksiteDao.getIncidentId(worksiteId)
@@ -274,7 +274,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         }
 
         let isFullySynced = try await worksiteDao.onSyncEnd(worksiteId)
-        if (isFullySynced) {
+        if isFullySynced {
             _ = syncLogger.clear()
                 .log("Worksite fully synced.")
         } else {
@@ -304,8 +304,8 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         }
 
         var oldestReferenceChangeIndex = max(startingSyncIndex - 1, 0)
-        while (oldestReferenceChangeIndex > 0) {
-            if (sortedChanges[oldestReferenceChangeIndex].isSynced) {
+        while oldestReferenceChangeIndex > 0 {
+            if sortedChanges[oldestReferenceChangeIndex].isSynced {
                 break
             }
             oldestReferenceChangeIndex -= 1
@@ -314,7 +314,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
 
         let hasSnapshotChanges = startingSyncIndex < sortedChanges.count
         let newestChange = sortedChanges.last!
-        if (hasSnapshotChanges || !newestChange.isArchived) {
+        if hasSnapshotChanges || !newestChange.isArchived {
             let syncChanges =
             hasSnapshotChanges ? Array(sortedChanges[startingSyncIndex..<sortedChanges.count])
             : [newestChange]

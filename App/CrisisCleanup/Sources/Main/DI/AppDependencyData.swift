@@ -55,6 +55,10 @@ extension MainComponent {
         WorkTypeTransferRequestDao(appDatabase)
     }
 
+    var personContactDao: PersonContactDao {
+        PersonContactDao(appDatabase)
+    }
+
     public var incidentsRepository: IncidentsRepository {
         shared {
             OfflineFirstIncidentsRepository(
@@ -62,6 +66,8 @@ extension MainComponent {
                 appPreferencesDataStore: appPreferences,
                 incidentDao: incidentDao,
                 locationDao: locationDao,
+                incidentOrganizationDao: organizationsDao,
+                organizationsSyncer: organizationsSyncer,
                 loggerFactory: loggerFactory
             )
         }

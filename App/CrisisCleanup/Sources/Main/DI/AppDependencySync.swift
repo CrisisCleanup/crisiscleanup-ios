@@ -33,6 +33,17 @@ extension MainComponent {
         )
     }
 
+    var organizationsSyncer: OrganizationsSyncer {
+        IncidentOrganizationSyncer(
+            networkDataSource: networkDataSource,
+            networkDataCache: IncidentOrganizationsDataFileCache(loggerFactory: loggerFactory),
+            incidentOrganizationDao: organizationsDao,
+            personContactDao: personContactDao,
+            appVersionProvider: appVersionProvider,
+            loggerFactory: loggerFactory
+        )
+    }
+
     public var incidentDataPullReporter: IncidentDataPullReporter { worksitesRepository as! IncidentDataPullReporter }
 
     public var syncLoggerFactory: SyncLoggerFactory { shared { DebugSyncLoggerFactory(loggerFactory) } }

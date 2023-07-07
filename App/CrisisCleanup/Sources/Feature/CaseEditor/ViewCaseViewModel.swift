@@ -224,7 +224,163 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     }
 
     private func subscribeToWorkTypeProfile() {
-        // TODO: Process data and assign to workTypeProfile
+        Publishers.CombineLatest3(
+            $caseData.assertNoFailure().eraseToAnyPublisher(),
+            editableWorksite,
+            organizationLookup
+        )
+        .filter { (stateData, worksite, orgLookup) in
+            stateData != nil &&
+            !worksite.isNew &&
+            orgLookup.isNotEmpty
+        }
+        .filter { (stateData, _, orgLookup) in
+            orgLookup.keys.contains(stateData!.orgId)
+        }
+        .map { (stateData, worksite, orgLookup) in
+            let stateData = stateData!
+            let isTurnOnRelease = stateData.incident.turnOnRelease
+            let myOrgId = stateData.orgId
+            let worksiteWorkTypes = worksite.workTypes
+
+            let myOrg = orgLookup[myOrgId]!
+
+            let requestedTypes = Set(
+                stateData.worksite.workTypeRequests
+                    .filter { $0.hasNoResponse }
+                    .map { $0.workType }
+            )
+
+            let summaries = self.getWorkTypeSummaries(
+                worksiteWorkTypes,
+                stateData,
+                worksite,
+                requestedTypes,
+                isTurnOnRelease,
+                myOrgId,
+                myOrg
+            )
+
+            let claimedWorkType = summaries.filter { summary in summary.workType.orgClaim != nil }
+            let unclaimed = summaries.filter { summary in summary.workType.orgClaim == nil }
+            let otherOrgClaimedWorkTypes =
+            claimedWorkType.filter { !$0.isClaimedByMyOrg }
+            let orgClaimedWorkTypes = claimedWorkType.filter { $0.isClaimedByMyOrg }
+
+            var otherOrgClaimMap = [Int64: [WorkTypeSummary]]()
+            otherOrgClaimedWorkTypes.forEach { summary in
+                let orgId = summary.workType.orgClaim!
+                var otherOrgWorkTypes = otherOrgClaimMap[orgId] ?? []
+                otherOrgWorkTypes.append(summary)
+                otherOrgClaimMap[orgId] = otherOrgWorkTypes
+            }
+            let otherOrgClaims = otherOrgClaimMap.map { (orgId, summaries) in
+                let name = orgLookup[orgId]?.name
+                if name == nil {
+                    self.refreshOrganizationLookup()
+                }
+                return OrgClaimWorkType(
+                    orgId: orgId,
+                    orgName: name ?? "",
+                    workTypes: summaries,
+                    isMyOrg: false
+                )
+            }
+
+            let myOrgName = myOrg.name
+            let orgClaimed = OrgClaimWorkType(
+                orgId: myOrgId,
+                orgName: myOrgName,
+                workTypes: orgClaimedWorkTypes,
+                isMyOrg: true
+            )
+
+            let releasable = otherOrgClaimedWorkTypes
+                .filter { summary in summary.isReleasable }
+                // TODO: Does this sort perform as expected
+                .sorted(by: { a, b in a.name.localizedStandardCompare(b.name) == .orderedAscending })
+            let requestable = otherOrgClaimedWorkTypes
+                .filter { summary in !(summary.isReleasable || summary.isRequested) }
+            // TODO: Does this sort perform as expected
+                .sorted(by: { a, b in a.name.localizedStandardCompare(b.name) == .orderedAscending })
+            return WorkTypeProfile(
+                orgId: myOrgId,
+                otherOrgClaims: otherOrgClaims,
+                orgClaims: orgClaimed,
+                unclaimed: unclaimed,
+                releasable: releasable,
+                requestable: requestable,
+
+                orgName: myOrgName,
+                caseNumber: worksite.caseNumber
+            )
+        }
+        .receive(on: RunLoop.main)
+        .assign(to: \.workTypeProfile, on: self)
+        .store(in: &subscriptions)
+    }
+
+    private func getWorkTypeSummaries(
+        _ worksiteWorkTypes: [WorkType],
+        _ stateData: CaseEditorCaseData,
+        _ worksite: Worksite,
+        _ requestedTypes: Set<String>,
+        _ isTurnOnRelease: Bool,
+        _ myOrgId: Int64,
+        _ myOrg: IncidentOrganization
+    ) -> [WorkTypeSummary] {
+        worksiteWorkTypes.map { workType in
+            let workTypeLiteral = workType.workTypeLiteral
+            var name = localTranslate(workTypeLiteral)
+            if name == workTypeLiteral {
+                name = localTranslate("workType.\(workTypeLiteral)")
+            }
+            let summaryJobTypes = worksite.summarizeWorkTypeJobs(
+                stateData.incident.workTypeLookup,
+                workTypeLiteral,
+                localTranslate,
+                name
+            )
+            let rRuleSummary: String? = {
+//                if let rRuleString = workType.recur {
+//                    // TODO: Use RRule library and customize where lacking
+//                     return RRule(rRuleString).toHumanReadableText(translator)
+//                }
+                return nil
+            }()
+            let nextRecurSummary: String? = {
+                if let nextRecurAt = workType.nextRecurAt,
+                   nextRecurAt > Date.now {
+                       let nextDate = nextRecurDateFormat.string(from: nextRecurAt)
+                       return "\(localTranslate("shareWorksite.next_recur")) \(nextDate)"
+                   }
+                return nil
+            }()
+            let summary = [
+                summaryJobTypes.combineTrimText(),
+                rRuleSummary,
+                nextRecurSummary,
+            ]
+                .combineTrimText("\n")
+            return WorkTypeSummary(
+                workType: workType,
+                name: name,
+                jobSummary: summary,
+                isRequested: requestedTypes.contains(workType.workTypeLiteral),
+                isReleasable: isTurnOnRelease && workType.isReleaseEligible,
+                myOrgId: myOrgId,
+                isClaimedByMyOrg: myOrg.affiliateIds.contains(workType.orgClaim ?? -1)
+            )
+        }
+    }
+
+    private func refreshOrganizationLookup() {
+        if !isOrganizationsRefreshed.exchange(true, ordering: .sequentiallyConsistent) {
+            Task {
+                await incidentsRepository.pullIncidentOrganizations(incidentIdIn, true)
+                await incidentsRepository.pullIncidentOrganizations(incidentIdIn, true)
+            }
+        }
     }
 
     private func updateHeaderTitle(_ caseNumber: String = "") {
@@ -309,5 +465,24 @@ struct WorkTypeProfile {
         requestableCount = requestable.count
         self.orgName = orgName
         self.caseNumber = caseNumber
+    }
+}
+
+fileprivate extension Worksite {
+    func summarizeWorkTypeJobs(
+        _ workTypeLookup: [String: String],
+        _ workTypeLiteral: String,
+        _ translate: (String) -> String,
+        _ name: String
+    ) -> [String?] {
+        if let formData = formData {
+            return formData
+                .filter { formValue in workTypeLookup[formValue.key] == workTypeLiteral }
+                .filter { formValue in formValue.value.isBooleanTrue }
+                .map { formValue in translate(formValue.key) }
+                .filter { jobName in jobName != name }
+                .filter { $0.isNotBlank == true }
+        }
+        return []
     }
 }

@@ -26,7 +26,7 @@ class MenuViewModel: ObservableObject {
         isProduction ? "" : "DB \(databaseVersionProvider.databaseVersion)"
     }
 
-    private var disposables = Set<AnyCancellable>()
+    private var subscriptions = Set<AnyCancellable>()
 
     init(
         appEnv: AppEnv,
@@ -47,7 +47,26 @@ class MenuViewModel: ObservableObject {
 
         isDebuggable = appEnv.isDebuggable
         isProduction = appEnv.isProduction
+    }
 
+    func onViewAppear() {
+        subscribeIncidentsData()
+        subscribeToProfilePicture()
+    }
+
+    func onViewDisappear() {
+        subscriptions = cancelSubscriptions(subscriptions)
+    }
+
+    private func subscribeIncidentsData() {
+        incidentSelector.incidentsData
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.incidentsData, on: self)
+            .store(in: &subscriptions)
+    }
+
+    private func subscribeToProfilePicture() {
         accountDataRepository.accountData
             .eraseToAnyPublisher()
             .receive(on: RunLoop.main)
@@ -63,21 +82,8 @@ class MenuViewModel: ObservableObject {
                 }
                 return nil
             }
-            .assign(to: &$profilePicture)
-
-        incidentSelector.incidentsData
-            .eraseToAnyPublisher()
-            .receive(on: RunLoop.main)
-            .sink { self.incidentsData = $0 }
-            .store(in: &disposables)
-    }
-
-    func onViewAppear() {
-        // TODO: Resume observations
-    }
-
-    func onViewDisappear() {
-        // TODO: Pause observations
+            .assign(to: \.profilePicture, on: self)
+            .store(in: &subscriptions)
     }
 
     func expireToken() {

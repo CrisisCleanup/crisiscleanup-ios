@@ -552,7 +552,7 @@ extension AppDatabase {
             db.getUnsyncedNoteCount(worksiteId) > 0 ||
             db.getUnsyncedWorkTypeCount(worksiteId) > 0 ||
             db.getWorksiteChangeCount(worksiteId) > 0
-            if (hasModification) {
+            if hasModification {
                 return false
             }
             try db.setWorksiteRootUnmodified(worksiteId, syncedAt)
