@@ -3,7 +3,7 @@ import Foundation
 private let releaseDaysThreshold = 30.days
 
 // sourcery: copyBuilder, skipCopyInit
-public struct WorkType: Equatable {
+public struct WorkType: Equatable, Hashable {
     let id: Int64
     let createdAt: Date?
     let orgClaim: Int64?

@@ -4,6 +4,28 @@ import SwiftUI
 import MapKit
 
 struct ViewCaseView: View {
+    @State var showPicker = false
+
+    var pickerStatusOptions: [String: Color] = [
+        "unknown": Color.black,
+        "open_assigned": Color.yellow,
+        "open_unassigned": Color.orange,
+        "open_partially-completed": Color.blue,
+        "open_needs-follow-up": Color.pink,
+        "open_unresponsive": Color.gray,
+        "closed_completed": Color.green,
+        "closed_incomplete": Color.green,
+        "closed_out-of-scope": Color.black,
+        "closed_done-by-others": Color.green,
+        "closed_no-help-wanted": Color.green,
+        "closed_duplicate": Color.green,
+        "closed_rejected": Color.black,
+        "need_unfilled": Color.black,
+        "need_filled": Color.black,
+        "need_overdue": Color.black,
+    ]
+    @State private var selectedStatus = "unknown"
+
     @Environment(\.isPresented) var isPresented
 
     @ObservedObject var viewModel: ViewCaseViewModel
@@ -87,7 +109,7 @@ struct ViewCaseView: View {
                 // TODO: redraws the view when switching tabs? Change Zindex instead?
                 switch selectedTab {
                 case .info:
-                    ViewCaseInfo(viewModel: viewModel)
+                    ViewCaseInfo(showPicker: $showPicker, viewModel: viewModel)
                 case .photos:
                     ViewCasePhotos()
                 case .notes:
@@ -98,6 +120,33 @@ struct ViewCaseView: View {
 
                 BottomNav()
 
+                if(showPicker) {
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            Text("Close")
+                                .foregroundColor(Color.accentColor)
+                                .padding(.trailing)
+                                .onTapGesture {
+                                    showPicker = false
+                                }
+                        }
+                        Picker("Please choose a status", selection: $selectedStatus) {
+                            let options = Array(pickerStatusOptions.keys)
+                            ForEach(options, id: \.self) { option in
+                                HStack {
+                                    Circle()
+                                        .foregroundColor(pickerStatusOptions[option])
+                                    Text(option)
+                                        .foregroundColor(Color.black)
+
+                                }
+                            }
+                        }.pickerStyle(.wheel)
+                    }
+                }
+
             }
         }
         .onAppear { viewModel.onViewAppear() }
@@ -106,6 +155,7 @@ struct ViewCaseView: View {
 }
 
 private struct ViewCaseInfo: View {
+    @Binding var showPicker: Bool
     @Environment(\.translator) var t: KeyAssetTranslator
     @EnvironmentObject var router: NavigationRouter
 
@@ -156,7 +206,11 @@ private struct ViewCaseInfo: View {
                     Text("Cocoa Florida Stake, The Church of Jesus Christ of Latter Day Saints")
                         .padding(.horizontal)
 
-                    WorkTypeRow()
+                    let workTypes = viewModel.caseData?.worksite.workTypes ?? []
+                    ForEach(workTypes, id: \.self) {workType in
+                        WorkTypeRow(showPicker: $showPicker, workType: workType)
+
+                    }
                 }
             }
         }
