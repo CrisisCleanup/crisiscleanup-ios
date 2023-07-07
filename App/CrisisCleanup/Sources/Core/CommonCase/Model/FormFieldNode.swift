@@ -70,7 +70,7 @@ public struct FormFieldNode {
         var groupedByParent = [String: [IncidentFormField]]()
         inputFormFields.forEach {
             let parentKey = $0.parentKey
-            if (!groupedByParent.keys.contains(parentKey)) {
+            if !groupedByParent.keys.contains(parentKey) {
                 groupedByParent[parentKey] = []
             }
             groupedByParent[parentKey]!.append($0)
@@ -80,7 +80,7 @@ public struct FormFieldNode {
             let sorted = value.sorted { a, b in
                 let aListOrder = a.listOrder
                 let bListOrder = b.listOrder
-                if (aListOrder == bListOrder) {
+                if aListOrder == bListOrder {
                     return a.labelOrder < b.labelOrder
                 }
                 return aListOrder < bListOrder

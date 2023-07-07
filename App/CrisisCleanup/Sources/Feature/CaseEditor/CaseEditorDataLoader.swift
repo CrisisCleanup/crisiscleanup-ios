@@ -167,34 +167,34 @@ internal class CaseEditorDataLoader {
         worksiteStream
             .filter { $0 != nil }
             .sink(receiveValue: {
-            if let localWorksite = $0 {
-                if self.isInitiallySynced.exchange(true, ordering: .acquiringAndReleasing) {
-                    return
-                }
-
-                do {
-                    defer {
-                        self.isRefreshingWorksite.value = false
-                        self.isWorksitePulledSubject.value = true
+                if let localWorksite = $0 {
+                    if self.isInitiallySynced.exchange(true, ordering: .acquiringAndReleasing) {
+                        return
                     }
 
-                    let worksite = localWorksite.worksite
-                    let networkId = worksite.networkId
-                    if worksite.id > 0 &&
-                        (networkId > 0 || localWorksite.localChanges.isLocalModified) {
-                        self.isRefreshingWorksite.value = true
-                        let isSynced = await self.worksiteChangeRepository.trySyncWorksite(worksite.id)
-                        if isSynced && networkId > 0 {
-                            // TODO: Is unfinished. See method for task once work type requests are in progress.
-                            try await self.worksitesRepository.pullWorkTypeRequests(networkId)
+                    do {
+                        defer {
+                            self.isRefreshingWorksite.value = false
+                            self.isWorksitePulledSubject.value = true
                         }
+
+                        let worksite = localWorksite.worksite
+                        let networkId = worksite.networkId
+                        if worksite.id > 0 &&
+                            (networkId > 0 || localWorksite.localChanges.isLocalModified) {
+                            self.isRefreshingWorksite.value = true
+                            let isSynced = await self.worksiteChangeRepository.trySyncWorksite(worksite.id)
+                            if isSynced && networkId > 0 {
+                                // TODO: Is unfinished. See method for task once work type requests are in progress.
+                                try await self.worksitesRepository.pullWorkTypeRequests(networkId)
+                            }
+                        }
+                    } catch {
+                        self.logger.logError(error)
                     }
-                } catch {
-                    self.logger.logError(error)
                 }
-            }
-        })
-        .store(in: &disposables)
+            })
+            .store(in: &disposables)
 
         Publishers.CombineLatest(
             Publishers.CombineLatest3(

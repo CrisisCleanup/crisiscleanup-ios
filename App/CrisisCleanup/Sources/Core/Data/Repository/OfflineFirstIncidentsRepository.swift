@@ -25,6 +25,8 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
     private let appPreferencesDataStore: AppPreferencesDataStore
     private let incidentDao: IncidentDao
     private let locationDao: LocationDao
+    private let incidentOrganizationDao: IncidentOrganizationDao
+    private let organizationsSyncer: OrganizationsSyncer
     private let logger: AppLogger
 
     private var statusLookup = [String: PopulatedWorkTypeStatus]()
@@ -36,12 +38,16 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         appPreferencesDataStore: AppPreferencesDataStore,
         incidentDao: IncidentDao,
         locationDao: LocationDao,
+        incidentOrganizationDao: IncidentOrganizationDao,
+        organizationsSyncer: OrganizationsSyncer,
         loggerFactory: AppLoggerFactory
     ) {
         self.dataSource = dataSource
         self.appPreferencesDataStore = appPreferencesDataStore
         self.incidentDao = incidentDao
         self.locationDao = locationDao
+        self.incidentOrganizationDao = incidentOrganizationDao
+        self.organizationsSyncer = organizationsSyncer
         logger = loggerFactory.getLogger("incidents")
 
         fullIncidentQueryFields = incidentsQueryFields + ["form_fields"]
@@ -186,7 +192,25 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         }
     }
 
-    func pullIncidentOrganizations(_ incidentId: Int64, _ force: Bool) async throws {
-        // TODO: Do
+    func pullIncidentOrganizations(_ incidentId: Int64, _ force: Bool) async {
+        if !force {
+            do {
+                if let syncStats = try incidentOrganizationDao.getSyncStats(incidentId),
+                   syncStats.targetCount > 0,
+                   let syncedAt = syncStats.successfulSync,
+                   syncedAt.addingTimeInterval(14.days) > Date.now,
+                   syncStats.appBuildVersionCode >= IncidentOrganizationsStableModelBuildVersion {
+                    return
+                }
+            } catch {
+                logger.logError(error)
+            }
+        }
+
+        do {
+            try await organizationsSyncer.sync(incidentId)
+        } catch {
+            logger.logError(error)
+        }
     }
 }

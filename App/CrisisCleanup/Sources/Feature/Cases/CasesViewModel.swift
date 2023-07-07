@@ -97,7 +97,7 @@ class CasesViewModel: ObservableObject {
         incidentSelector.incidentsData
             .eraseToAnyPublisher()
             .receive(on: RunLoop.main)
-            .sink { self.incidentsData = $0 }
+            .assign(to: \.incidentsData, on: self)
             .store(in: &subscriptions)
     }
 
@@ -211,7 +211,7 @@ class CasesViewModel: ObservableObject {
             )
             .map { (isSyncing, inBoundsMarkers, worksitesCount) in
                 var totalCount = worksitesCount.count
-                if (totalCount == 0 && isSyncing) {
+                if totalCount == 0 && isSyncing {
                     totalCount = -1
                 }
                 return (inBoundsMarkers.1.count, totalCount)

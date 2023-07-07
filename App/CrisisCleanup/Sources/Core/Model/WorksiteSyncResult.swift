@@ -30,12 +30,12 @@ public struct WorksiteSyncResult {
         var partialSuccessCount = 0
         var failCount = 0
         changeResults.forEach {
-            if ($0.isSuccessful) { successCount+=1 }
-            else if ($0.isPartiallySuccessful) { partialSuccessCount+=1 }
-            else if ($0.isFail) { failCount+=1 }
+            if $0.isSuccessful { successCount+=1 }
+            else if $0.isPartiallySuccessful { partialSuccessCount+=1 }
+            else if $0.isFail { failCount+=1 }
         }
         let outcomeSummary = {
-            if (totalChangeCount > 1) {
+            if totalChangeCount > 1 {
                 return [
                     "\(totalChangeCount) changes",
                     "  \(successCount) success",
@@ -44,9 +44,9 @@ public struct WorksiteSyncResult {
                 ].joined(separator: "\n")
             } else {
                 return "1 change: " + {
-                    if (successCount > 0) { return "success" }
-                    else if (partialSuccessCount > 0) { return "partial" }
-                    else if (failCount > 0) { return "fail" }
+                    if successCount > 0 { return "success" }
+                    else if partialSuccessCount > 0 { return "partial" }
+                    else if failCount > 0 { return "fail" }
                     else { return "" }
                 }()
             }

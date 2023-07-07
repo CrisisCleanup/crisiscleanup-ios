@@ -28,7 +28,7 @@ struct CasesView: View {
     func casesCountText(_ visibleCount: Int, _ totalCount: Int) -> String {
         {
             if visibleCount == totalCount || visibleCount == 0 {
-                if (visibleCount == 0) {
+                if visibleCount == 0 {
                     return t("info.t_of_t_cases").replacingOccurrences(of: "{visible_count}", with: "\(totalCount)")
                 } else if totalCount == 1 {
                     return t("info.1_of_1_case")

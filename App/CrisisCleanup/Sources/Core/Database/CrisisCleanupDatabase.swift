@@ -480,6 +480,67 @@ extension AppDatabase {
             )
         }
 
+        migrator.registerMigration(
+            "incident-organization-primary-contact",
+            foreignKeyChecks: .immediate
+        ) { db in
+            try db.create(table: "incidentOrganization") { t in
+                t.primaryKey("id", .integer)
+                t.column("name", .text)
+                    .notNull()
+            }
+
+            try db.create(table: "personContact") { t in
+                t.primaryKey("id", .integer)
+                t.column("firstName", .text)
+                    .notNull()
+                t.column("lastName", .text)
+                    .notNull()
+                t.column("email", .text)
+                    .notNull()
+                t.column("mobile", .text)
+                    .notNull()
+            }
+
+            try db.create(table: "organizationToPrimaryContact") { t in
+                /// Organization ID
+                t.column("id", .integer)
+                    .notNull()
+                    .references("incidentOrganization", onDelete: .cascade)
+                t.column("contactId", .integer)
+                    .notNull()
+                    .references("personContact", onDelete: .cascade)
+                t.primaryKey(["id", "contactId"])
+            }
+            try db.create(
+                indexOn: "organizationToPrimaryContact",
+                columns: ["contactId", "id"]
+            )
+
+            try db.create(table: "organizationAffiliate") { t in
+                /// Organization ID
+                t.column("id", .integer)
+                    .notNull()
+                    .references("incidentOrganization", onDelete: .cascade)
+                t.column("affiliateId", .integer)
+                    .notNull()
+                t.primaryKey(["id", "affiliateId"])
+            }
+            try db.create(
+                indexOn: "organizationAffiliate",
+                columns: ["affiliateId", "id"]
+            )
+
+            try db.create(table: "incidentOrganizationSyncStat") { t in
+                /// Incident ID
+                t.primaryKey("id", .integer)
+                t.column("targetCount", .integer)
+                    .notNull()
+                t.column("successfulSync", .date)
+                t.column("appBuildVersionCode", .integer)
+                    .notNull()
+            }
+        }
         return migrator
     }
 }

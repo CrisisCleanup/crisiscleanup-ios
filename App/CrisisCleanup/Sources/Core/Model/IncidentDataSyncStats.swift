@@ -8,7 +8,7 @@ private let WorksitesStableModelBuildVersion = 14
 /**
  * Build version of the app where incident organization (related) entity models were last changed
  */
-let IncidentOrganizationsStableModelBuildVersion = 14
+let IncidentOrganizationsStableModelBuildVersion = 16
 
 /**
  * Keeps track of incident data (worksites, organizations, ...) syncing
@@ -30,7 +30,7 @@ public struct IncidentDataSyncStats {
      *
      * This is the same units as [dataCount].
      */
-    let pagedCount: Int = 0
+    let pagedCount: Int
     /**
      * Sync attempt stats after the first full sync (of base data)
      */
@@ -64,6 +64,7 @@ public struct IncidentDataSyncStats {
         incidentId: Int64,
         syncStart: Date,
         dataCount: Int,
+        pagedCount: Int = 0,
         syncAttempt: SyncAttempt,
         appBuildVersionCode: Int64,
         stableModelVersion: Int = WorksitesStableModelBuildVersion
@@ -71,6 +72,7 @@ public struct IncidentDataSyncStats {
         self.incidentId = incidentId
         self.syncStart = syncStart
         self.dataCount = dataCount
+        self.pagedCount = pagedCount
         self.syncAttempt = syncAttempt
         self.appBuildVersionCode = appBuildVersionCode
         self.stableModelVersion = stableModelVersion

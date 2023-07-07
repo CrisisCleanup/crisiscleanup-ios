@@ -157,7 +157,10 @@ class AppSyncer: SyncPuller, SyncPusher {
             do {
                 // TODO: Wait for account token and skip if token is invalid
                 try await withThrowingTaskGroup(of: Void.self) { group -> Void in
-                    group.addTask { try await self.incidentsRepository.pullIncident(id) }
+                    group.addTask {
+                        try await self.incidentsRepository.pullIncident(id)
+                        await self.incidentsRepository.pullIncidentOrganizations(id)
+                    }
                     try await group.waitForAll()
                 }
             } catch {
