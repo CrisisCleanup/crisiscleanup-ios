@@ -78,44 +78,6 @@ class WorkTypeIconProvider: MapCaseIconProvider {
         return getIcon(statusClaim, workType, false, false, hasMultipleWorkTypes)
     }
 
-    // TODO: Reserach a sharper scaling algorithm that can preserve quality edges as well as outlines.
-    private func scaleImage(
-        _ image: UIImage,
-        imageSize: Double,
-        offset: Double = 0,
-        scaleToScreen: Bool = false
-    ) -> UIImage {
-        let drawSize = imageSize - 2 * offset
-
-        let baseSize = image.size
-        let widthD = Double(baseSize.width)
-        let heightD = Double(baseSize.height)
-        let widthScale = drawSize / widthD
-        let heightScale = drawSize / heightD
-        let scale = min(widthScale, heightScale)
-        let size = CGSize(
-            width: widthD * scale,
-            height: heightD * scale
-        )
-
-        let x = offset + (drawSize - size.width) * 0.5
-        let y = offset + (drawSize - size.height) * 0.5
-        let offsetRect = CGRectMake(x, y, x + size.width, y + size.height)
-        let squareSize = CGSize(width: imageSize, height: imageSize)
-
-        UIGraphicsBeginImageContextWithOptions(squareSize, false, scaleToScreen ? 1 : 0)
-
-        let context = UIGraphicsGetCurrentContext()!
-        context.interpolationQuality = .high
-        context.setShouldAntialias(true)
-
-        image.draw(in: offsetRect)
-        let scaledImage = UIGraphicsGetImageFromCurrentImageContext()!
-        UIGraphicsEndImageContext()
-
-        return scaledImage
-    }
-
     private func grayscaleToColor(_ imageIn: UIImage, fromColorInt: Int64, toColorInt: Int64) -> CGImage {
         let context = CIContext()
         let ciImage = CIImage(image: imageIn)
@@ -174,7 +136,7 @@ class WorkTypeIconProvider: MapCaseIconProvider {
             UIGraphicsEndImageContext()
         }
 
-        let scaledImage = scaleImage(plussedImage, imageSize: bitmapSize, offset: shadowRadius, scaleToScreen: true)
+        let scaledImage = plussedImage.scaleImage(imageSize: bitmapSize, offset: shadowRadius, scaleToScreen: true)
         return scaledImage.cgImage!
     }
 }

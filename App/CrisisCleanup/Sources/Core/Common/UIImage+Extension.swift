@@ -1,3 +1,4 @@
+import CoreGraphics
 import UIKit
 
 // From https://stackoverflow.com/questions/69126164/add-a-drop-shadow-on-an-uiimage-not-uiimageview
@@ -47,5 +48,42 @@ extension UIImage {
         UIGraphicsEndImageContext()
 
         return image
+    }
+
+    // TODO: Reserach a sharper scaling algorithm that can preserve quality edges as well as outlines.
+    func scaleImage(
+        imageSize: Double,
+        offset: Double = 0,
+        scaleToScreen: Bool = false
+    ) -> UIImage {
+        let drawSize = imageSize - 2 * offset
+
+        let baseSize = size
+        let widthD = Double(baseSize.width)
+        let heightD = Double(baseSize.height)
+        let widthScale = drawSize / widthD
+        let heightScale = drawSize / heightD
+        let scale = min(widthScale, heightScale)
+        let scaledSize = CGSize(
+            width: widthD * scale,
+            height: heightD * scale
+        )
+
+        let x = offset + (drawSize - scaledSize.width) * 0.5
+        let y = offset + (drawSize - scaledSize.height) * 0.5
+        let offsetRect = CGRectMake(x, y, x + scaledSize.width, y + scaledSize.height)
+        let squareSize = CGSize(width: imageSize, height: imageSize)
+
+        UIGraphicsBeginImageContextWithOptions(squareSize, false, scaleToScreen ? 1 : 0)
+
+        let context = UIGraphicsGetCurrentContext()!
+        context.interpolationQuality = .high
+        context.setShouldAntialias(true)
+
+        draw(in: offsetRect)
+        let scaledImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+
+        return scaledImage
     }
 }

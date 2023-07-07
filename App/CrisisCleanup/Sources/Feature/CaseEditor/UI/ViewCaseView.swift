@@ -85,14 +85,14 @@ struct ViewCaseView: View {
                 }
 
                 // TODO: redraws the view when switching tabs? Change Zindex instead?
-                            switch selectedTab {
-                            case .info:
-                                ViewCaseInfo(viewModel: viewModel)
-                            case .photos:
-                                ViewCasePhotos()
-                            case .notes:
-                                ViewCaseNotes()
-                            }
+                switch selectedTab {
+                case .info:
+                    ViewCaseInfo(viewModel: viewModel)
+                case .photos:
+                    ViewCasePhotos()
+                case .notes:
+                    ViewCaseNotes()
+                }
 
                 Spacer()
 
@@ -110,15 +110,6 @@ private struct ViewCaseInfo: View {
     @EnvironmentObject var router: NavigationRouter
 
     @ObservedObject var viewModel: ViewCaseViewModel
-    @State var map = MKMapView()
-//    @State private var region = MKCoordinateRegion(
-//                   center: CLLocationCoordinate2D(
-//                       latitude: 40.83834587046632,
-//                       longitude: 14.254053016537693),
-//                   span: MKCoordinateSpan(
-//                       latitudeDelta: 0.03,
-//                       longitudeDelta: 0.03)
-//                   )
 
     var body: some View {
         ScrollView {
@@ -134,43 +125,7 @@ private struct ViewCaseInfo: View {
                 ViewCaseRowHeader(rowNum: 1, rowTitle: t("caseForm.property_information"))
 
                 if let worksite = viewModel.caseData?.worksite {
-                    // create property information component?
-                    HStack {
-                        VStack (alignment: .leading) {
-                            HStack {
-                                Image(systemName: "person.fill")
-                                Text(worksite.name)
-                            }
-                            let phoneText = [worksite.phone1, worksite.phone2]
-                                .filter { $0?.isNotBlank == true }
-                                .joined(separator: "; ")
-                            HStack {
-                                Image(systemName: "phone.fill")
-                                Text(phoneText)
-                            }
-                            if worksite.email?.isNotBlank == true {
-                                HStack {
-                                    Image(systemName: "envelope.fill")
-                                    Text(worksite.email!)
-                                }
-                            }
-                            // TODO: Port full address logic
-                            HStack {
-                                Image(systemName: "mappin.circle.fill")
-                                Text("12345 Main St. City, State 12345")
-                            }
-                        }
-                        Spacer()
-                    }.padding()
-
-                    ViewCaseMapView(
-                        map: $map,
-                        caseCoordinates: CLLocationCoordinate2D(
-                            latitude: worksite.latitude,
-                            longitude: worksite.longitude
-                        )
-                    )
-                    .frame(width: UIScreen.main.bounds.size.width, height: 200)
+                    PropertyInformationView(worksite: worksite)
                 }
 
                 HStack {
@@ -248,5 +203,70 @@ private struct BottomNav: View {
             }
             Spacer()
         }
+    }
+}
+
+private struct PropertyInformationView: View {
+    let worksite: Worksite
+    @State var map = MKMapView()
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            // TODO: Common dimensions
+            let horizontalPadding = 8.0
+            let verticalPadding = 4.0
+            let iconSize = 36.0
+            HStack {
+                Image(systemName: "person.fill")
+                    .frame(width: iconSize, height: iconSize)
+                Text(worksite.name)
+            }
+            .horizontalVerticalPadding(horizontalPadding, verticalPadding)
+
+            let phoneText = [worksite.phone1, worksite.phone2]
+                .filter { $0?.isNotBlank == true }
+                .joined(separator: "; ")
+            HStack {
+                Image(systemName: "phone.fill")
+                    .frame(width: iconSize, height: iconSize)
+                Text(phoneText)
+            }
+            .horizontalVerticalPadding(horizontalPadding, verticalPadding)
+
+            if worksite.email?.isNotBlank == true {
+                HStack {
+                    Image(systemName: "envelope.fill")
+                        .frame(width: iconSize, height: iconSize)
+                    Text(worksite.email!)
+                }
+                .horizontalVerticalPadding(horizontalPadding, verticalPadding)
+            }
+
+            let fullAddress = [
+                worksite.address,
+                worksite.city,
+                worksite.state,
+                worksite.postalCode,
+            ].combineTrimText()
+            HStack {
+                Image(systemName: "mappin.circle.fill")
+                    .frame(width: iconSize, height: iconSize)
+                Text(fullAddress)
+            }
+            .horizontalVerticalPadding(horizontalPadding, verticalPadding)
+
+            ViewCaseMapView(
+                map: $map,
+                caseCoordinates: CLLocationCoordinate2D(
+                    latitude: worksite.latitude,
+                    longitude: worksite.longitude
+                )
+            )
+            .frame(maxWidth: .infinity, minHeight: 200, maxHeight: 200)
+        }
+        .background(.white)
+        .cornerRadius(appTheme.cornerRadius)
+        .padding()
+        .shadow(radius: appTheme.shadowRadius)
     }
 }

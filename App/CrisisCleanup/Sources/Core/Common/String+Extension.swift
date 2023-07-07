@@ -13,3 +13,15 @@ extension String {
         self.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
+
+extension Array where Element == Optional<String> {
+    func filterNotBlankTrim() -> [String] {
+        filter { $0?.isNotBlank == true }
+            .map { $0!.trim() }
+    }
+
+    func combineTrimText(_ separator: String = ", ") -> String {
+        filterNotBlankTrim()
+            .joined(separator: separator)
+    }
+}
