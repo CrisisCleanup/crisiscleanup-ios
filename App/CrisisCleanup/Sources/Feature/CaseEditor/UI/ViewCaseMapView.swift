@@ -34,11 +34,10 @@ class ViewCaseMapCoordinator: NSObject, MKMapViewDelegate {
 
     func createPolygonRenderer(for polygon: MKPolygon) -> MKPolygonRenderer {
         let renderer = MKPolygonRenderer(polygon: polygon)
-        renderer.alpha = 0.9
+        renderer.alpha = 0.5
         renderer.lineWidth = 0
         renderer.fillColor = UIColor.black
         renderer.blendMode = .color
-
         return renderer
     }
 }
