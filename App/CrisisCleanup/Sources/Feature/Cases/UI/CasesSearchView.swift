@@ -16,7 +16,6 @@ struct CasesSearchView: View {
 
         ZStack {
             VStack {
-                // TODO: Style with border and padding
                 HStack {
                     Button {
                         dismiss()
@@ -57,9 +56,8 @@ struct CasesSearchView: View {
                     }
                 }
                 .overlay(
-                    // TODO: Common color
                     RoundedRectangle(cornerRadius: appTheme.cornerRadius)
-                        .stroke(.gray, lineWidth: 1)
+                        .stroke(appTheme.colors.unfocusedBorderColor, lineWidth: 1)
                 )
                 .padding()
 

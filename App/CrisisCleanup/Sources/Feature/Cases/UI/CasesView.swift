@@ -257,7 +257,16 @@ private struct MapControls: View {
         .padding(.top)
 
         Button {
-            map.setCamera(MKMapCamera(lookingAtCenter: map.centerCoordinate, fromDistance: CLLocationDistance(50*1000), pitch: 0.0, heading: 0.0), animated: true)
+            map.setCamera(
+                MKMapCamera(
+                    lookingAtCenter: map.centerCoordinate,
+                    // TODO: Calculate based on zoom level rather than distance
+                    fromDistance: CLLocationDistance(500*1000),
+                    pitch: 0.0,
+                    heading: 0.0
+                ),
+                animated: true
+            )
         } label: {
             Image("ic_zoom_incident", bundle: .module)
                 .frame(width: buttonSize, height: buttonSize)
