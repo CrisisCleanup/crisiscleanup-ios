@@ -147,6 +147,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         subscribeToCaseData()
         subscribeToWorksiteChange()
         subscribeToWorkTypeProfile()
+        subscribeToFilesNotes()
 
         if isFirstAppear {
             dataLoader.loadData(
@@ -332,6 +333,53 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         .receive(on: RunLoop.main)
         .assign(to: \.workTypeProfile, on: self)
         .store(in: &subscriptions)
+    }
+
+    private func subscribeToFilesNotes() {
+        let filesNotes = Publishers.CombineLatest(
+            editableWorksite,
+            $caseData.eraseToAnyPublisher()
+        )
+            .filter { (_, state) in state != nil }
+            .map { (worksite, state) in
+                let state = state!
+                let fileImages = worksite.files.map { $0.asCaseImage() }
+                let localImages: [CaseImage]
+                if let localWorksiteImages = state.localWorksite {
+                    localImages = localWorksiteImages.localImages.map { $0.asCaseImage() }
+                } else {
+                    localImages = []
+                }
+                // TODO: Notes are not loading proper
+                print("worksite \(worksite.notes)")
+                return (fileImages, localImages, worksite.notes)
+            }
+            .share()
+
+        filesNotes.map { (fileImages, localImages, notes) in
+            let fileCount = fileImages.count + localImages.count
+            var photosTitle = self.localTranslate("caseForm.photos")
+            if fileCount > 0 {
+                photosTitle = "\(photosTitle) (\(fileCount))"
+            }
+
+            var notesTitle = self.localTranslate("formLabels.notes")
+            let noteCount = notes.count
+            if noteCount > 0 {
+                notesTitle = "\(notesTitle) (\(noteCount))"
+            }
+
+            return [
+                .info: self.localTranslate("nav.info"),
+                .photos: photosTitle,
+                .notes: notesTitle
+            ]
+        }
+        .receive(on: RunLoop.main)
+        .assign(to: \.tabTitles, on: self)
+        .store(in: &subscriptions)
+
+        // TODO: Before and after photos when ready
     }
 
     private func getWorkTypeSummaries(
