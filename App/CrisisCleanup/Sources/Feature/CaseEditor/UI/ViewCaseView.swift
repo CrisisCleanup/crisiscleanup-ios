@@ -179,20 +179,23 @@ private struct ViewCaseNotes: View {
 private struct BottomNavButton: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
+    private let action: () -> Void
     private let imageName: String
     private let textTranslateKey: String
 
     init(
         _ imageName: String,
-        _ textTranslateKey: String
+        _ textTranslateKey: String,
+        _ action: @escaping () -> Void
     ) {
         self.imageName = imageName
         self.textTranslateKey = textTranslateKey
+        self.action = action
     }
 
     var body: some View {
         Button {
-            // TODO: Router action
+            action()
         } label: {
             VStack {
                 Image(imageName, bundle: .module)
@@ -206,34 +209,26 @@ private struct BottomNav: View {
     @EnvironmentObject var router: NavigationRouter
 
     var body: some View {
-        // TODO: Space evenly within safe area rather than Spacers on ends
         HStack {
-            Spacer()
-            Button {
+            BottomNavButton("ic_case_share", "actions.share")
+            {
                 router.openCaseShare()
-            } label: {
-                BottomNavButton("ic_case_share", "actions.share")
             }
             Spacer()
-            Button {
+            BottomNavButton("ic_case_flag", "nav.flag") {
                 router.openCaseFlags()
-            } label: {
-                BottomNavButton("ic_case_flag", "nav.flag")
             }
             Spacer()
-            Button {
+            BottomNavButton("ic_case_history", "actions.history") {
                 router.openCaseHistory()
-            } label: {
-                BottomNavButton("ic_case_history", "actions.history")
             }
             Spacer()
-            Button {
-
-            } label: {
-                BottomNavButton("ic_case_edit", "actions.edit")
+            BottomNavButton("ic_case_edit", "actions.edit") {
+                // TODO: Open with router
             }
-            Spacer()
         }
+        .padding(.horizontal, 24)
+        .padding(.top)
         .tint(.black)
     }
 }
