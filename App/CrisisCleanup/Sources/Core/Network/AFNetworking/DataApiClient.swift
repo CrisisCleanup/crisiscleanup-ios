@@ -238,7 +238,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         throw response.error ?? networkError
     }
 
-    func getLocationSearchWorksites(incidentId: Int64, q: String, limit: Int) async throws -> [NetworkWorksiteLocationSearch] {
+    func getLocationSearchWorksites(_ incidentId: Int64, _ q: String, _ limit: Int) async throws -> [NetworkWorksiteLocationSearch] {
         let request = requestProvider.worksitesLocationSearch
             .addQueryItems(
                 "incident", String(incidentId),
@@ -258,7 +258,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
     }
 
     func getSearchWorksites(_ incidentId: Int64, _ q: String) async throws -> [NetworkWorksiteShort] {
-        let request = requestProvider.worksitesLocationSearch
+        let request = requestProvider.worksitesSearch
             .addQueryItems(
                 "incident", String(incidentId),
                 "search", q

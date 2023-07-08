@@ -118,7 +118,12 @@ extension MainComponent {
     }
 
     public var searchWorksitesRepository: SearchWorksitesRepository {
-        FakeSearchWorksitesRepository()
+        shared {
+            MemorySearchWorksitesRepository(
+                networkDataSource,
+                loggerFactory
+            )
+        }
     }
 
     public var organizationsRepository: OrganizationsRepository {

@@ -54,9 +54,9 @@ public protocol CrisisCleanupNetworkDataSource {
     ) async throws -> [NetworkWorksitePage]
 
     func getLocationSearchWorksites(
-        incidentId: Int64,
-        q: String,
-        limit: Int
+        _ incidentId: Int64,
+        _ q: String,
+        _ limit: Int
     ) async throws -> [NetworkWorksiteLocationSearch]
 
     func getSearchWorksites(

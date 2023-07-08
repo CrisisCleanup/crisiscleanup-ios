@@ -51,14 +51,20 @@ struct CasesSearchView: View {
                 .padding()
 
                 ScrollView {
+                    let isEditable = !isSelectingResult
                     if viewModel.searchQuery.isBlank {
                         RecentCasesView(
                             recents: viewModel.recentWorksites,
                             onSelect: onCaseSelect,
-                            isEditable: !isSelectingResult)
+                            isEditable: isEditable)
                     } else {
-                        if viewModel.searchResults.options.isNotEmpty {
-
+                        let searchResults = viewModel.searchResults.options
+                        if searchResults.isNotEmpty {
+                            ExistingWorksitesList(
+                                worksites: searchResults,
+                                onSelect: onCaseSelect,
+                                isEditable: isEditable
+                            )
                         } else {
                             let message = viewModel.searchResults.isShortQ ? t("info.search_query_is_short") : t("info.no_search_results").replacingOccurrences(of: "{search_string}", with: viewModel.searchResults.q)
                             Text(message)
