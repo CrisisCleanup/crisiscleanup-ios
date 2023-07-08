@@ -99,9 +99,10 @@ struct CasesView: View {
                         } label: {
                             IncidentDisasterImage(
                                 viewModel.incidentsData.selected,
-                                disabled: hasNoIncidents
+                                disabled: hasNoIncidents,
+                                background: .white
                             )
-                                .shadow(radius: 2)
+                            .shadow(radius: appTheme.shadowRadius)
                         }
                         .sheet(
                             isPresented: $openIncidentSelect,
@@ -138,7 +139,7 @@ struct CasesView: View {
                                     .background(appTheme.colors.navigationContainerColor)
                                     .foregroundColor(Color.white)
                                     .cornerRadius(appTheme.cornerRadius)
-                                    .shadow(radius: 2)
+                                    .shadow(radius: appTheme.shadowRadius)
                             }
 
                             Spacer()
@@ -172,7 +173,7 @@ struct CasesView: View {
                             .background(Color.white)
                             .foregroundColor(Color.black)
                             .cornerRadius(appTheme.cornerRadius)
-                            .shadow(radius: 2)
+                            .shadow(radius: appTheme.shadowRadius)
 
                         }
                         Spacer()
@@ -194,7 +195,7 @@ struct CasesView: View {
                                 .foregroundColor(Color.black)
                                 .frame(width: buttonSize, height: buttonSize)
                                 .cornerRadius(appTheme.cornerRadius)
-                                .shadow(radius: 2)
+                                .shadow(radius: appTheme.shadowRadius)
                         }
 
                         Button {
@@ -205,7 +206,7 @@ struct CasesView: View {
                                 .foregroundColor(Color.black)
                                 .frame(width: buttonSize, height: buttonSize)
                                 .cornerRadius(appTheme.cornerRadius)
-                                .shadow(radius: 2)
+                                .shadow(radius: appTheme.shadowRadius)
                                 .padding(.bottom)
                         }
                     }
@@ -265,7 +266,7 @@ private struct MapControls: View {
         .background(Color.white)
         .frame(width: buttonSize, height: buttonSizeDoublePlus1)
         .cornerRadius(appTheme.cornerRadius)
-        .shadow(radius: 2)
+        .shadow(radius: appTheme.shadowRadius)
         .padding(.top)
 
         Button {
@@ -285,7 +286,7 @@ private struct MapControls: View {
                 .background(Color.white)
                 .foregroundColor(Color.black)
                 .cornerRadius(appTheme.cornerRadius)
-                .shadow(radius: 2)
+                .shadow(radius: appTheme.shadowRadius)
                 .padding(.top)
         }
 
@@ -298,21 +299,19 @@ private struct MapControls: View {
                 .background(Color.white)
                 .foregroundColor(Color.black)
                 .cornerRadius(appTheme.cornerRadius)
-                .shadow(radius: 2)
+                .shadow(radius: appTheme.shadowRadius)
                 .padding(.top)
         }
 
-        Button {
-
-        } label: {
-            Image("ic_layers", bundle: .module)
-                .frame(width: buttonSize, height: buttonSize)
-                .background(Color.white)
-                .foregroundColor(Color.black)
-                .cornerRadius(appTheme.cornerRadius)
-                .shadow(radius: 2)
-                .padding(.top)
-        }
-
+//        Button {
+//        } label: {
+//            Image("ic_layers", bundle: .module)
+//                .frame(width: buttonSize, height: buttonSize)
+//                .background(Color.white)
+//                .foregroundColor(Color.black)
+//                .cornerRadius(appTheme.cornerRadius)
+//                .shadow(radius: appTheme.shadowRadius)
+//                .padding(.top)
+//        }
     }
 }
