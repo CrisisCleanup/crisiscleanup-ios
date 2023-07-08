@@ -43,6 +43,14 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
 
     @Published private(set) var workTypeProfile: WorkTypeProfile? = nil
 
+    @Published private(set) var tabTitles: [ViewCaseTabs: String] = [
+        .info: "",
+        .photos: "",
+        .notes: ""
+    ]
+    @Published private(set) var statusOptions: [WorkTypeStatus] = []
+    @Published private(set) var beforeAfterPhotos: [ImageCategory: [CaseImage]] = [:]
+
     private let previousNoteCount = ManagedAtomic(0)
 
     var addImageCategory = ImageCategory.before
@@ -184,19 +192,25 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
 
     private func subscribeToCaseData() {
         uiState
-        // TODO: Throttle instead of debounce
-            .debounce(
+            .throttle(
                 for: .seconds(0.15),
-                scheduler: RunLoop.current
+                scheduler: RunLoop.current,
+                latest: true
             )
             .map { state in
-                switch state {
-                case .caseData(let caseData): return caseData
-                default: return nil
-                }
+                let result: CaseEditorCaseData? = {
+                    switch state {
+                    case .caseData(let caseData): return caseData
+                    default: return nil
+                    }
+                }()
+                return result
             }
             .receive(on: RunLoop.main)
-            .assign(to: \.caseData, on: self)
+            .sink(receiveValue: { stateData in
+                self.caseData = stateData
+                self.statusOptions = stateData == nil ? [] : stateData!.statusOptions
+            })
             .store(in: &subscriptions)
     }
 
@@ -485,4 +499,10 @@ fileprivate extension Worksite {
         }
         return []
     }
+}
+
+enum ViewCaseTabs {
+    case info
+    case photos
+    case notes
 }

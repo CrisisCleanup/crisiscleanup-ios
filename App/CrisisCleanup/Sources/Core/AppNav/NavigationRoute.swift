@@ -1,4 +1,4 @@
-enum NavigationRoute: Identifiable, Hashable {
+public enum NavigationRoute: Identifiable, Hashable, Codable {
     case work,
          menu,
          authenticate,
@@ -7,7 +7,7 @@ enum NavigationRoute: Identifiable, Hashable {
          viewCase(incidentId: Int64, worksiteId: Int64),
          createEditCase(incidentId: Int64, worksiteId: Int64)
 
-    var id: Int {
+    public var id: Int {
         switch self {
         case .work: return 0
         case .menu: return 1

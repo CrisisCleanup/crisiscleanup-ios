@@ -1,5 +1,4 @@
 import SwiftUI
-import SVGView
 
 struct CasesSearchView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
@@ -8,9 +7,10 @@ struct CasesSearchView: View {
 
     @ObservedObject var viewModel: CasesSearchViewModel
 
-    var body: some View{
+    var body: some View {
         let isLoading = viewModel.isLoading
         let isSelectingResult = viewModel.isSelectingResult
+        let onCaseSelect = { result in viewModel.onSelectWorksite(result) }
 
         ZStack {
             VStack {
@@ -19,14 +19,19 @@ struct CasesSearchView: View {
                     Button {
                         dismiss()
                     } label: {
+                        let buttonSize = 48.0
                         Image(systemName: "chevron.backward")
+                            .frame(width: buttonSize, height: buttonSize)
                     }
 
-                    TextField("search hint", text: $viewModel.searchQuery)
-                        .autocapitalization(.none)
-                        .padding([.vertical])
-                        .disableAutocorrection(true)
-                        .disabled(isSelectingResult)
+                    TextField(
+                        t("actions.search"),
+                        text: $viewModel.searchQuery
+                    )
+                    .autocapitalization(.none)
+                    .padding([.vertical])
+                    .disableAutocorrection(true)
+                    .disabled(isSelectingResult)
 
                     Button {
                         router.openFilterCases()
@@ -38,17 +43,31 @@ struct CasesSearchView: View {
                             .cornerRadius(appTheme.cornerRadius)
                     }
                 }
-                Text("Instruction or text feedback")
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Text("recents list")
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Text("or search results scrollable list")
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Text("depending on query length, and results")
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Spacer()
+                .overlay(
+                    // TODO: Common color
+                    RoundedRectangle(cornerRadius: appTheme.cornerRadius)
+                        .stroke(.gray, lineWidth: 1)
+                )
+                .padding()
+
+                ScrollView {
+                    if viewModel.searchQuery.isBlank {
+                        RecentCasesView(
+                            recents: viewModel.recentWorksites,
+                            onSelect: onCaseSelect,
+                            isEditable: !isSelectingResult)
+                    } else {
+                        if viewModel.searchResults.options.isNotEmpty {
+
+                        } else {
+                            let message = viewModel.searchResults.isShortQ ? t("info.search_query_is_short") : t("info.no_search_results").replacingOccurrences(of: "{search_string}", with: viewModel.searchResults.q)
+                            Text(message)
+                                .padding(.horizontal)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                }
             }
-            .padding()
 
             VStack {
                 if isLoading {
@@ -58,5 +77,30 @@ struct CasesSearchView: View {
         }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
+        .onReceive(viewModel.$selectedWorksite) { (incidentId, worksiteId) in
+            router.viewCase(incidentId: incidentId, worksiteId: worksiteId)
+        }
+    }
+}
+
+private struct RecentCasesView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    let recents: [CaseSummaryResult]
+    let onSelect: (CaseSummaryResult) -> Void
+    let isEditable: Bool
+
+    var body: some View {
+        if recents.isNotEmpty {
+            Text(t("casesVue.recently_viewed"))
+                .padding(.horizontal)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+
+        ExistingWorksitesList(
+            worksites: recents,
+            onSelect: onSelect,
+            isEditable: isEditable
+        )
     }
 }

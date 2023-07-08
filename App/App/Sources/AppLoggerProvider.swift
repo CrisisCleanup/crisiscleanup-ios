@@ -21,10 +21,10 @@ class TagLogger: AppLogger {
             return
         }
 
-        Crashlytics.crashlytics().record(error: e)
-
         if appEnv.isDebuggable {
             print(self.tag, e)
+        } else {
+            Crashlytics.crashlytics().record(error: e)
         }
     }
 }

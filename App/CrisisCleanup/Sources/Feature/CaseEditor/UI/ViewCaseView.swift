@@ -26,17 +26,12 @@ struct ViewCaseView: View {
     ]
     @State private var selectedStatus = "unknown"
 
+    @Environment(\.translator) var t: KeyAssetTranslator
     @Environment(\.isPresented) var isPresented
 
     @ObservedObject var viewModel: ViewCaseViewModel
 
     @State private var offset = CGSize.zero
-
-    enum ViewCaseTabs {
-        case info
-        case photos
-        case notes
-    }
 
     @State private var selectedTab: ViewCaseTabs = .info
 
@@ -44,11 +39,15 @@ struct ViewCaseView: View {
         ZStack {
             VStack {
 
+                // TODO: Flag chips with delete actions
+
+                let tabTitles = viewModel.tabTitles
+
                 HStack {
                     VStack {
                         HStack{
                             Spacer()
-                            Text("Info")
+                            Text(tabTitles[.info] ?? "")
                                 .onTapGesture {
                                     selectedTab = .info
                                 }
@@ -61,7 +60,7 @@ struct ViewCaseView: View {
                     VStack {
                         HStack {
                             Spacer()
-                            Text("Photos")
+                            Text(tabTitles[.photos] ?? "")
                                 .onTapGesture {
                                     selectedTab = .photos
                                 }
@@ -74,7 +73,7 @@ struct ViewCaseView: View {
                     VStack {
                         HStack{
                             Spacer()
-                            Text("Notes")
+                            Text(tabTitles[.notes] ?? "")
                                 .onTapGesture {
                                     selectedTab = .notes
                                 }
@@ -231,32 +230,60 @@ private struct ViewCaseNotes: View {
     }
 }
 
+private struct BottomNavButton: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    private let action: () -> Void
+    private let imageName: String
+    private let textTranslateKey: String
+
+    init(
+        _ imageName: String,
+        _ textTranslateKey: String,
+        _ action: @escaping () -> Void
+    ) {
+        self.imageName = imageName
+        self.textTranslateKey = textTranslateKey
+        self.action = action
+    }
+
+    var body: some View {
+        Button {
+            action()
+        } label: {
+            VStack {
+                Image(imageName, bundle: .module)
+                Text(t(textTranslateKey))
+            }
+        }
+    }
+}
+
 private struct BottomNav: View {
+    @EnvironmentObject var router: NavigationRouter
+
     var body: some View {
         HStack {
-            Spacer()
-
-            VStack {
-                Image("ic_case_share", bundle: .module)
-                Text("Share")
+            BottomNavButton("ic_case_share", "actions.share")
+            {
+                router.openCaseShare()
             }
             Spacer()
-            VStack {
-                Image("ic_case_flag", bundle: .module)
-                Text("Flag")
+            BottomNavButton("ic_case_flag", "nav.flag") {
+                router.openCaseFlags()
             }
             Spacer()
-            VStack {
-                Image("ic_case_history", bundle: .module)
-                Text("History")
+            BottomNavButton("ic_case_history", "actions.history") {
+                router.openCaseHistory()
             }
             Spacer()
-            VStack {
-                Image("ic_case_edit", bundle: .module)
-                Text("Edit")
+            BottomNavButton("ic_case_edit", "actions.edit") {
+                // TODO: Open with router
             }
-            Spacer()
         }
+        .padding(.horizontal, 24)
+        .padding(.top)
+        .tint(.black)
     }
 }
 

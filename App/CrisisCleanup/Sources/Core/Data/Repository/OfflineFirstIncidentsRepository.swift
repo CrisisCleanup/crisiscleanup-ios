@@ -56,10 +56,9 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         incidents = incidentsSubject
 
         incidentDao.streamIncidents()
-            .sink { completion in
-            } receiveValue: {
+            .sink(receiveValue: {
                 self.incidentsSubject.value = $0
-            }
+            })
             .store(in: &disposables)
     }
 

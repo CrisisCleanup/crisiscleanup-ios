@@ -47,12 +47,13 @@ public class IncidentDao {
             .fetchAll(db)
     }
 
-    func streamIncidents() -> AnyPublisher<[Incident], Error> {
+    func streamIncidents() -> AnyPublisher<[Incident], Never> {
         ValueObservation
             .tracking(fetchIncidents(_:))
             .removeDuplicates()
             .map { $0.map { p in p.asExternalModel() } }
             .publisher(in: reader)
+            .assertNoFailure()
             .share()
             .eraseToAnyPublisher()
     }

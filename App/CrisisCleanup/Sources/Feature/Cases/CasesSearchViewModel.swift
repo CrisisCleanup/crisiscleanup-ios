@@ -16,8 +16,7 @@ class CasesSearchViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var isSelectingResult = false
 
-    let selectedWorksite: any Publisher<(Int64, Int64), Never>
-    private let selectedWorksiteSubject = CurrentValueSubject<(Int64, Int64), Never>((EmptyIncident.id, EmptyWorksite.id))
+    @Published var selectedWorksite = (EmptyIncident.id, EmptyWorksite.id)
 
     @Published var recentWorksites: [CaseSummaryResult] = []
 
@@ -26,8 +25,6 @@ class CasesSearchViewModel: ObservableObject {
     @Published var searchResults = CasesSearchResults()
 
     private let emptyResults = [CaseSummaryResult]()
-
-    private var incidentIdCache: Int64 = EmptyIncident.id
 
     private var subscriptions = Set<AnyCancellable>()
 
@@ -44,14 +41,14 @@ class CasesSearchViewModel: ObservableObject {
         self.mapCaseIconProvider = mapCaseIconProvider
         logger = loggerFactory.getLogger("search-case")
 
-        selectedWorksite = selectedWorksiteSubject
-
-        incidentIdPublisher = incidentSelector.incidentId.eraseToAnyPublisher()
+        incidentIdPublisher = incidentSelector.incidentId
+            .eraseToAnyPublisher()
+            .removeDuplicates()
+            .eraseToAnyPublisher()
     }
 
     func onViewAppear() {
         subscribeToLoadingStates()
-        subscribeToIncidentData()
         subscribeToRecents()
         subscribeToSearch()
     }
@@ -76,44 +73,36 @@ class CasesSearchViewModel: ObservableObject {
         subscriptions.insert(selectingSubscription)
     }
 
-    private func subscribeToIncidentData() {
-        let subscription = incidentIdPublisher
-            .receive(on: RunLoop.main)
-            .assign(to: \.incidentIdCache, on: self)
-        subscriptions.insert(subscription)
-    }
-
     private func subscribeToRecents() {
-        let subscription = incidentIdPublisher
+        incidentIdPublisher
             .map { incidentId in
-                do {
-                    if incidentId > 0 {
-                        return self.worksitesRepository.streamRecentWorksites(incidentId)
-                            .eraseToAnyPublisher()
-                            .map { list in
-                                list.map { summary in
-                                    CaseSummaryResult(
-                                        summary,
-                                        self.getIcon(summary.workType)
-                                    )
-                                }
+                let publisher: AnyPublisher<[CaseSummaryResult], Never>
+                if incidentId > 0 {
+                    publisher = self.worksitesRepository.streamRecentWorksites(incidentId)
+                        .eraseToAnyPublisher()
+                        .map { list in
+                            return list.map { summary in
+                                CaseSummaryResult(
+                                    summary,
+                                    self.getIcon(summary.workType),
+                                    listItemKey: summary.id
+                                )
                             }
-                            .eraseToAnyPublisher()
-                    } else {
-                        return Just(self.emptyResults).eraseToAnyPublisher()
-                    }
+                        }
+                        .eraseToAnyPublisher()
+                } else {
+                    publisher = Just(self.emptyResults).eraseToAnyPublisher()
                 }
+                return publisher
             }
             .switchToLatest()
             .receive(on: RunLoop.main)
-            .sink(receiveCompletion: { _ in
-            }, receiveValue: { recents in
+            .sink(receiveValue: { recents in
+                print("Recents sink \(recents.count)")
                 self.isInitialLoading.value = false
-
-                print("Recent cases \(recents)")
                 self.recentWorksites = recents
             })
-        subscriptions.insert(subscription)
+            .store(in: &subscriptions)
     }
 
     private func subscribeToSearch() {
@@ -158,7 +147,7 @@ class CasesSearchViewModel: ObservableObject {
         }
         .receive(on: RunLoop.main)
         .sink { results in
-            print("Search results \(results)")
+            print("Search sink \(results.options.count)")
             self.searchResults = results
         }
         subscriptions.insert(subscription)
@@ -171,32 +160,27 @@ class CasesSearchViewModel: ObservableObject {
         return nil
     }
 
-    func onBack() -> Bool {
-        if searchQuery.isNotBlank {
-            searchQuery = ""
-            return false
+    func onSelectWorksite(_ result: CaseSummaryResult) {
+        if isSelectingResultSubject.value {
+            return
         }
-
-        return true
-    }
-
-    func onSelectWorksite(result: CaseSummaryResult) {
+        isSelectingResultSubject.value = true
         Task {
-            if isSelectingResultSubject.value {
-                return
-            }
-            isSelectingResultSubject.value = true
             do {
                 defer {
-                    isSelectingResultSubject.value = false
+                    Task { @MainActor in isSelectingResultSubject.value = false }
                 }
 
-                let incidentId = incidentIdCache
+                let incidentId = try await incidentIdPublisher.asyncFirst()
                 var worksiteId = result.summary.id
                 if worksiteId <= 0 {
                     worksiteId = try worksitesRepository.getLocalId(result.networkWorksiteId)
                 }
-                selectedWorksiteSubject.value = (incidentId, worksiteId)
+
+                let mainWorksiteId = worksiteId
+                Task { @MainActor in
+                    self.selectedWorksite = (incidentId, mainWorksiteId)
+                }
             } catch {
                 logger.logError(error)
             }
