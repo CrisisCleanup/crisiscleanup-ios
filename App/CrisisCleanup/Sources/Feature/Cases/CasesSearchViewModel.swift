@@ -98,7 +98,6 @@ class CasesSearchViewModel: ObservableObject {
             .switchToLatest()
             .receive(on: RunLoop.main)
             .sink(receiveValue: { recents in
-                print("Recents sink \(recents.count)")
                 self.isInitialLoading.value = false
                 self.recentWorksites = recents
             })
@@ -146,10 +145,7 @@ class CasesSearchViewModel: ObservableObject {
             return CasesSearchResults(q, false)
         }
         .receive(on: RunLoop.main)
-        .sink { results in
-            print("Search sink \(results.options.count)")
-            self.searchResults = results
-        }
+        .assign(to: \.searchResults, on: self)
         subscriptions.insert(subscription)
     }
 

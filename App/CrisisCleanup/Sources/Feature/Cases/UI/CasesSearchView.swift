@@ -11,6 +11,8 @@ struct CasesSearchView: View {
         let isLoading = viewModel.isLoading
         let isSelectingResult = viewModel.isSelectingResult
         let onCaseSelect = { result in viewModel.onSelectWorksite(result) }
+        let disable = isSelectingResult
+        let isEditable = !isSelectingResult
 
         ZStack {
             VStack {
@@ -31,16 +33,27 @@ struct CasesSearchView: View {
                     .autocapitalization(.none)
                     .padding([.vertical])
                     .disableAutocorrection(true)
-                    .disabled(isSelectingResult)
+                    .disabled(disable)
+
+                    if viewModel.searchQuery.isNotBlank {
+                        Button {
+                            viewModel.searchQuery = ""
+                        } label: {
+                            Image(systemName: "xmark")
+                                .background(Color.white)
+                                .foregroundColor(Color.black)
+                        }
+                        .disabled(disable)
+                    }
 
                     Button {
                         router.openFilterCases()
                     } label: {
-                        // TODO: Use component
                         Image("ic_dials", bundle: .module)
                             .background(Color.white)
                             .foregroundColor(Color.black)
                             .cornerRadius(appTheme.cornerRadius)
+                            .disabled(disable)
                     }
                 }
                 .overlay(
@@ -51,7 +64,6 @@ struct CasesSearchView: View {
                 .padding()
 
                 ScrollView {
-                    let isEditable = !isSelectingResult
                     if viewModel.searchQuery.isBlank {
                         RecentCasesView(
                             recents: viewModel.recentWorksites,
