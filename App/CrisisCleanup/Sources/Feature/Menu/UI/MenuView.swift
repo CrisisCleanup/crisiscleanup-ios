@@ -72,8 +72,15 @@ private struct TopBar: View {
                         .frame(width: 10, height: 8)
                 }
             }
-            .sheet(isPresented: $showIncidentSelect) {
-                incidentSelectViewBuilder.incidentSelectView( onDismiss: {showIncidentSelect = false} )
+            .sheet(
+                isPresented: $showIncidentSelect,
+                onDismiss: {
+                    incidentSelectViewBuilder.onIncidentSelectDismiss()
+                }
+            ) {
+                incidentSelectViewBuilder.incidentSelectView(
+                    onDismiss: { showIncidentSelect = false }
+                )
             }
             .disabled(hasNoIncidents)
 

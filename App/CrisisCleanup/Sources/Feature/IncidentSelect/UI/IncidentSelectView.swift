@@ -6,23 +6,39 @@ struct IncidentSelectView: View {
     @ObservedObject var viewModel: IncidentSelectViewModel
     var onDismiss: () -> Void
 
-    @State private var incidentSheetSize: CGSize = .zero
-
     var body: some View{
         VStack {
-            Text(t("nav.change_incident")).frame(alignment: .bottom).padding()
-                List(viewModel.incidentsData.incidents, id: \.id) { ee in
-                    let isSelected: Bool = viewModel.incidentsData.selected.id == ee.id
-                    HStack {
-                        Text(ee.name).bold(isSelected).onTapGesture {
-                            viewModel.incidentSelector.setIncident(ee)
+            Text(t("nav.change_incident"))
+                .frame(alignment: .bottom)
+                .padding()
+
+            let selectedId = viewModel.incidentsData.selectedId
+            ScrollViewReader { scrollView in
+                List(viewModel.incidentsData.incidents, id: \.id) { incident in
+                    let isSelected = selectedId == incident.id
+                    Text(incident.name)
+                        .bold(isSelected)
+                        .onTapGesture {
+                            viewModel.incidentSelector.setIncident(incident)
                             onDismiss()
                         }
+                        .frame(height: 48)
+                }
+                .task {
+                    viewModel.onOptionsRendered()
+                }
+                .onReceive(viewModel.$selectedIncidentId) { id in
+                    if id > -1 {
+                        scrollView.scrollTo(id, anchor: .top)
                     }
                 }
+            }
+
             Button(t("actions.close")) {
                 onDismiss()
             }
         }
+        .onAppear { viewModel.onViewAppear() }
+        .onDisappear { viewModel.onViewDisappear() }
     }
 }

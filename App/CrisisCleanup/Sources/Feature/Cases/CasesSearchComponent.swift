@@ -30,7 +30,7 @@ class CasesSearchComponent: Component<AppDependency>, CasesSearchViewBuilder {
         _ = cancelSubscriptions(disposables)
     }
 
-    private func casesSearchViewModel() -> CasesSearchViewModel {
+    private func getViewModel() -> CasesSearchViewModel {
         if viewModel == nil {
             viewModel = CasesSearchViewModel(
                 incidentSelector: dependency.incidentSelector,
@@ -46,7 +46,7 @@ class CasesSearchComponent: Component<AppDependency>, CasesSearchViewBuilder {
     var casesSearchView: AnyView {
         AnyView(
             CasesSearchView(
-                viewModel: casesSearchViewModel()
+                viewModel: getViewModel()
             )
         )
     }

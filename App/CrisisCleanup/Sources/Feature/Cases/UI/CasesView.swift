@@ -103,8 +103,15 @@ struct CasesView: View {
                             )
                                 .shadow(radius: 2)
                         }
-                        .sheet(isPresented: $openIncidentSelect) {
-                            incidentSelectViewBuilder.incidentSelectView( onDismiss: {openIncidentSelect = false} )
+                        .sheet(
+                            isPresented: $openIncidentSelect,
+                            onDismiss: {
+                                incidentSelectViewBuilder.onIncidentSelectDismiss()
+                            }
+                        ) {
+                            incidentSelectViewBuilder.incidentSelectView(
+                                onDismiss: { openIncidentSelect = false }
+                            )
                         }
                         .disabled(hasNoIncidents)
 
