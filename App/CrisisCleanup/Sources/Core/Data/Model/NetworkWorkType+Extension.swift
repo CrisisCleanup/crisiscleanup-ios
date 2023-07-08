@@ -1,7 +1,7 @@
 extension NetworkWorkType {
     func asRecord() -> WorkTypeRecord {
         WorkTypeRecord(
-            id: 0,
+            id: nil,
             // Incoming network ID is always defined
             networkId: id!,
             worksiteId: 0,

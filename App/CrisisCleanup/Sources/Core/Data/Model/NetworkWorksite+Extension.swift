@@ -4,7 +4,7 @@ import Foundation
 extension NetworkWorksiteFull {
     func asRecord() -> WorksiteRecord {
         WorksiteRecord(
-            id: 0,
+            id: nil,
             networkId: id,
             incidentId: incident,
             address: address,
@@ -39,7 +39,7 @@ extension NetworkWorksiteFull {
 extension NetworkWorksiteCoreData {
     func asRecord() -> WorksiteRecord {
         WorksiteRecord(
-            id: 0,
+            id: nil,
             networkId: id,
             incidentId: incident,
             address: address,
@@ -154,7 +154,7 @@ extension KeyDynamicValuePair {
 extension NetworkFlag {
     func asRecord() -> WorksiteFlagRecord {
         WorksiteFlagRecord(
-            id: 0,
+            id: nil,
             // Incoming network ID is always defined
             networkId: id!,
             worksiteId: 0,
@@ -171,7 +171,7 @@ extension NetworkFlag {
 extension NetworkNote {
     func asRecord() -> WorksiteNoteRecord {
         WorksiteNoteRecord(
-            id: 0,
+            id: nil,
             localGlobalUuid: "",
             // Incoming network ID is always defined
             networkId: id!,

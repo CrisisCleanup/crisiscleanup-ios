@@ -93,6 +93,7 @@ class WorksiteMapVisualTests: XCTestCase {
         )
         let expected = [WorksiteMapMark(
             id: 1,
+            incidentId: 1,
             latitude: 34.5,
             longitude: -18.53235135,
             statusClaim: WorkTypeStatusClaim.make("key-work-type-status", 64),

@@ -184,11 +184,6 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         }
     }
 
-    func syncWorksitesFull(_ incidentId: Int64) async throws -> Bool {
-        // TODO: Do
-        return false
-    }
-
     func getWorksiteSyncStats(_ incidentId: Int64) throws -> IncidentDataSyncStats? {
         try worksiteSyncStatDao.getSyncStats(incidentId)
     }

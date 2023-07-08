@@ -38,8 +38,6 @@ public protocol WorksitesRepository {
         forceRefreshAll: Bool
     ) async throws
 
-    func syncWorksitesFull(_ incidentId: Int64) async throws -> Bool
-
     func getWorksiteSyncStats(_ incidentId: Int64) throws -> IncidentDataSyncStats?
 
     func getLocalId(_ networkWorksiteId: Int64) throws -> Int64

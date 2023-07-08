@@ -22,6 +22,16 @@ public class MainComponent: BootstrapComponent,
         )
     }
 
+    private var routerObserver: RouterObserver {
+        shared {
+            AppRouteObserver()
+        }
+    }
+
+    var navigationRouter: NavigationRouter {
+        NavigationRouter(routerObserver: routerObserver)
+    }
+
     public init(
         appEnv: AppEnv,
         appSettingsProvider: AppSettingsProvider,
@@ -38,6 +48,7 @@ public class MainComponent: BootstrapComponent,
     public var mainView: some View {
         MainView(
             viewModel: mainViewModel,
+            router: navigationRouter,
             authenticateViewBuilder: self,
             casesViewBuilder: casesComponent,
             menuViewBuilder: menuComponent,
@@ -61,11 +72,13 @@ public class MainComponent: BootstrapComponent,
 
     public var casesFilterView: AnyView { casesFilterComponent.casesFilterView }
 
-    lazy var casesSearchComponent: CasesSearchComponent = { CasesSearchComponent(parent: self) }()
+    lazy var casesSearchComponent: CasesSearchComponent = { CasesSearchComponent(parent: self, routerObserver: routerObserver)
+    }()
 
     public var casesSearchView: AnyView { casesSearchComponent.casesSearchView }
 
-    lazy var viewCaseComponent: ViewCaseComponent = { ViewCaseComponent(parent: self) }()
+    lazy var viewCaseComponent: ViewCaseComponent = { ViewCaseComponent(parent: self, routerObserver: routerObserver)
+    }()
 
     public func viewCaseView(incidentId: Int64, worksiteId: Int64) -> AnyView {
         viewCaseComponent.viewCaseView(

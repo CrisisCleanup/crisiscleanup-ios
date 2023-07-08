@@ -3,9 +3,9 @@ import SwiftUI
 struct MainView: View {
     @Environment(\.translator) var translator
 
-    @ObservedObject var router = NavigationRouter()
-
     @ObservedObject var viewModel: MainViewModel
+    @ObservedObject var router: NavigationRouter
+
     let authenticateViewBuilder: AuthenticateViewBuilder
     let casesViewBuilder: CasesViewBuilder
     let menuViewBuilder: MenuViewBuilder

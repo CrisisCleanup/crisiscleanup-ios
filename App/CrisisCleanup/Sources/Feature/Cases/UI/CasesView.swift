@@ -14,6 +14,9 @@ struct CasesView: View {
 
     @State var openIncidentSelect = false
 
+    let buttonSize = 48.0
+    let buttonSizeDoublePlus1 = 97.0
+
     func animateToSelectedIncidentBounds(_ bounds: LatLngBounds) {
         let latDelta = bounds.northEast.latitude - bounds.southWest.latitude
         let longDelta = bounds.northEast.longitude - bounds.southWest.longitude
@@ -103,7 +106,9 @@ struct CasesView: View {
                         MapControls(
                             viewModel: viewModel,
                             map: map,
-                            animateToSelectedIncidentBounds: animateToSelectedIncidentBounds
+                            animateToSelectedIncidentBounds: animateToSelectedIncidentBounds,
+                            buttonSize: buttonSize,
+                            buttonSizeDoublePlus1: buttonSizeDoublePlus1
                         )
 
                         Spacer()
@@ -131,27 +136,27 @@ struct CasesView: View {
                                     router.openSearchCases()
                                 } label: {
                                     Image("ic_search", bundle: .module)
-                                        .frame(width: 50, height:50)
+                                        .frame(width: buttonSize, height: buttonSize)
                                         .background(Color.white)
                                         .foregroundColor(Color.black)
                                 }
 
                                 Divider()
-                                    .frame(height: 50)
+                                    .frame(height: buttonSize)
 
                                 Button {
                                     router.openFilterCases()
                                 } label: {
                                     // TODO: Use component
                                     Image("ic_dials", bundle: .module)
-                                        .frame(width: 50, height:50)
+                                        .frame(width: buttonSize, height: buttonSize)
                                         .background(Color.white)
                                         .foregroundColor(Color.black)
 
                                 }
 
                             }
-                            .frame(width: 100, height:50)
+                            .frame(width: buttonSizeDoublePlus1, height: buttonSize)
                             .background(Color.white)
                             .foregroundColor(Color.black)
                             .cornerRadius(appTheme.cornerRadius)
@@ -175,7 +180,7 @@ struct CasesView: View {
                                 .padding()
                                 .background(Color.yellow)
                                 .foregroundColor(Color.black)
-                                .frame(width: 50, height:50)
+                                .frame(width: buttonSize, height: buttonSize)
                                 .cornerRadius(appTheme.cornerRadius)
                                 .shadow(radius: 2)
                         }
@@ -186,7 +191,7 @@ struct CasesView: View {
                             Image("ic_table", bundle: .module)
                                 .background(Color.yellow)
                                 .foregroundColor(Color.black)
-                                .frame(width: 50, height:50)
+                                .frame(width: buttonSize, height: buttonSize)
                                 .cornerRadius(appTheme.cornerRadius)
                                 .shadow(radius: 2)
                                 .padding(.bottom)
@@ -208,8 +213,11 @@ private struct MapControls: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @ObservedObject var viewModel: CasesViewModel
-    var map: MKMapView
-    var animateToSelectedIncidentBounds: (LatLngBounds) -> Void
+    let map: MKMapView
+    let animateToSelectedIncidentBounds: (LatLngBounds) -> Void
+
+    let buttonSize: Double
+    let buttonSizeDoublePlus1: Double
 
     func zoomDelta(scale: Double) {
         var region = map.region
@@ -225,7 +233,7 @@ private struct MapControls: View {
                 zoomDelta(scale: 0.5)
             } label: {
                 Image(systemName: "plus")
-                    .frame(width: 50, height: 50)
+                    .frame(width: buttonSize, height: buttonSize)
                     .background(Color.white)
                     .foregroundColor(Color.black)
             }
@@ -236,14 +244,14 @@ private struct MapControls: View {
                 zoomDelta(scale: 1.5)
             } label: {
                 Image(systemName: "minus")
-                    .frame(width: 50, height: 50)
+                    .frame(width: buttonSize, height: buttonSize)
                     .background(Color.white)
                     .foregroundColor(Color.black)
             }
 
         }
         .background(Color.white)
-        .frame(width: 50, height:100)
+        .frame(width: buttonSize, height: buttonSizeDoublePlus1)
         .cornerRadius(appTheme.cornerRadius)
         .shadow(radius: 2)
         .padding(.top)
@@ -252,7 +260,7 @@ private struct MapControls: View {
             map.setCamera(MKMapCamera(lookingAtCenter: map.centerCoordinate, fromDistance: CLLocationDistance(50*1000), pitch: 0.0, heading: 0.0), animated: true)
         } label: {
             Image("ic_zoom_incident", bundle: .module)
-                .frame(width: 50, height:50)
+                .frame(width: buttonSize, height: buttonSize)
                 .background(Color.white)
                 .foregroundColor(Color.black)
                 .cornerRadius(appTheme.cornerRadius)
@@ -265,7 +273,7 @@ private struct MapControls: View {
             animateToSelectedIncidentBounds(bounds)
         } label: {
             Image("ic_zoom_interactive", bundle: .module)
-                .frame(width: 50, height:50)
+                .frame(width: buttonSize, height: buttonSize)
                 .background(Color.white)
                 .foregroundColor(Color.black)
                 .cornerRadius(appTheme.cornerRadius)
@@ -277,7 +285,7 @@ private struct MapControls: View {
 
         } label: {
             Image("ic_layers", bundle: .module)
-                .frame(width: 50, height:50)
+                .frame(width: buttonSize, height: buttonSize)
                 .background(Color.white)
                 .foregroundColor(Color.black)
                 .cornerRadius(appTheme.cornerRadius)
