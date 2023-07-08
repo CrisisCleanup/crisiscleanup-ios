@@ -5,11 +5,16 @@ private let incidentsAssetIconPath = "incident_type_icons"
 struct IncidentDisasterImage: View {
     private let isValidIncident: Bool
     private let iconPath: String
+    private let isEditable: Bool
 
-    init(_ incident: Incident) {
+    init(
+        _ incident: Incident,
+        disabled: Bool = false
+    ) {
         isValidIncident = incident != EmptyIncident
         let disaster = incident.disaster.literal
         iconPath = "\(incidentsAssetIconPath)/\(disaster)"
+        isEditable = !disabled
     }
 
     var body: some View {
@@ -17,6 +22,6 @@ struct IncidentDisasterImage: View {
             .resizable()
             .scaledToFit()
             .frame(width: 48, height: 48)
-            .foregroundColor(isValidIncident ? appTheme.colors.incidentDisasterContainerColor : Color.gray)
+            .foregroundColor(isValidIncident && isEditable ? appTheme.colors.incidentDisasterContainerColor : Color.gray)
     }
 }
