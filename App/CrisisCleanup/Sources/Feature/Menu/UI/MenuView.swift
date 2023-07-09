@@ -8,10 +8,13 @@ struct MenuView: View {
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
 
     var body: some View {
+        let hasNoIncidents = viewModel.incidentsData.incidents.isEmpty
+
         VStack {
             TopBar(
                 viewModel: viewModel,
-                incidentSelectViewBuilder: incidentSelectViewBuilder
+                incidentSelectViewBuilder: incidentSelectViewBuilder,
+                hasNoIncidents: hasNoIncidents
             )
             .tint(.black)
             .padding([.horizontal, .top])
@@ -38,17 +41,22 @@ private struct TopBar: View {
 
     @ObservedObject var viewModel: MenuViewModel
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
+    let hasNoIncidents: Bool
 
     @State var showIncidentSelect = false
 
     var body: some View {
+
         HStack {
             Button {
                 showIncidentSelect.toggle()
             } label: {
                 let selectedIncident = viewModel.incidentsData.selected
 
-                IncidentDisasterImage(selectedIncident)
+                IncidentDisasterImage(
+                    selectedIncident,
+                    disabled: hasNoIncidents
+                )
 
                 let title = selectedIncident.isEmptyIncident
                 ? t(TopLevelDestination.menu.titleTranslateKey)
@@ -64,9 +72,17 @@ private struct TopBar: View {
                         .frame(width: 10, height: 8)
                 }
             }
-            .sheet(isPresented: $showIncidentSelect) {
-                incidentSelectViewBuilder.incidentSelectView( onDismiss: {showIncidentSelect = false} )
-            }.disabled(viewModel.incidentsData.incidents.isEmpty)
+            .sheet(
+                isPresented: $showIncidentSelect,
+                onDismiss: {
+                    incidentSelectViewBuilder.onIncidentSelectDismiss()
+                }
+            ) {
+                incidentSelectViewBuilder.incidentSelectView(
+                    onDismiss: { showIncidentSelect = false }
+                )
+            }
+            .disabled(hasNoIncidents)
 
             Spacer()
             Button {

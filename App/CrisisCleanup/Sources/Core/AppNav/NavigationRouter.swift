@@ -59,4 +59,7 @@ class NavigationRouter: ObservableObject {
     func openCaseHistory() {
         print("Open case history")
     }
+    func openWorkTypeTransfer(_ isRequest: Bool) {
+        print("Transfer work type \(isRequest)")
+    }
 }

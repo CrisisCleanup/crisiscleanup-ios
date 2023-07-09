@@ -3,21 +3,31 @@ import SwiftUI
 
 public protocol IncidentSelectViewBuilder {
     func incidentSelectView(onDismiss: @escaping () -> Void) -> AnyView
+    func onIncidentSelectDismiss()
 }
 
 class IncidentSelectComponent: Component<AppDependency>, IncidentSelectViewBuilder {
-    var incidentSelectViewModel: IncidentSelectViewModel {
-        IncidentSelectViewModel(
-            incidentSelector: dependency.incidentSelector
-        )
+    private var viewModel: IncidentSelectViewModel? = nil
+
+    private func getViewModel() -> IncidentSelectViewModel {
+        if viewModel == nil {
+            viewModel = IncidentSelectViewModel(
+                incidentSelector: dependency.incidentSelector
+            )
+        }
+        return viewModel!
     }
 
     func incidentSelectView(onDismiss: @escaping () -> Void) -> AnyView {
         AnyView(
             IncidentSelectView(
-                viewModel: incidentSelectViewModel,
+                viewModel: getViewModel(),
                 onDismiss: onDismiss
             )
         )
+    }
+
+    func onIncidentSelectDismiss() {
+        viewModel = nil
     }
 }

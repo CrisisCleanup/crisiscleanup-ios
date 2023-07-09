@@ -58,24 +58,40 @@ public class MainComponent: BootstrapComponent,
         )
     }
 
+    // MARK: Authenticate
+
     var authenticateComponent: AuthenticateComponent { AuthenticateComponent(parent: self) }
 
     public var authenticateView: AnyView { authenticateComponent.authenticateView }
 
-    var incidentSelectComponent: IncidentSelectComponent { IncidentSelectComponent(parent: self) }
+    // MARK: Incident select
+
+    lazy var incidentSelectComponent: IncidentSelectComponent = {
+        IncidentSelectComponent(parent: self)
+    }()
 
     public func incidentSelectView(onDismiss: @escaping () -> Void ) -> AnyView {
         incidentSelectComponent.incidentSelectView(onDismiss: onDismiss)
     }
 
+    public func onIncidentSelectDismiss() {
+        incidentSelectComponent.onIncidentSelectDismiss()
+    }
+
+    // MARK: Cases filter
+
     lazy var casesFilterComponent: CasesFilterComponent = { CasesFilterComponent(parent: self) }()
 
     public var casesFilterView: AnyView { casesFilterComponent.casesFilterView }
+
+    // MARK: Cases search
 
     lazy var casesSearchComponent: CasesSearchComponent = { CasesSearchComponent(parent: self, routerObserver: routerObserver)
     }()
 
     public var casesSearchView: AnyView { casesSearchComponent.casesSearchView }
+
+    // MARK: View Case
 
     lazy var viewCaseComponent: ViewCaseComponent = { ViewCaseComponent(parent: self, routerObserver: routerObserver)
     }()

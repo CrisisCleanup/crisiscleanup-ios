@@ -89,19 +89,31 @@ struct CasesView: View {
                 }
             }
 
+            let hasNoIncidents = viewModel.incidentsData.incidents.isEmpty
+
             VStack {
                 HStack {
                     VStack(spacing: 0) {
                         Button {
                             openIncidentSelect.toggle()
                         } label: {
-                            IncidentDisasterImage(viewModel.incidentsData.selected)
+                            IncidentDisasterImage(
+                                viewModel.incidentsData.selected,
+                                disabled: hasNoIncidents
+                            )
                                 .shadow(radius: 2)
                         }
-                        .sheet(isPresented: $openIncidentSelect) {
-                            incidentSelectViewBuilder.incidentSelectView( onDismiss: {openIncidentSelect = false} )
+                        .sheet(
+                            isPresented: $openIncidentSelect,
+                            onDismiss: {
+                                incidentSelectViewBuilder.onIncidentSelectDismiss()
+                            }
+                        ) {
+                            incidentSelectViewBuilder.incidentSelectView(
+                                onDismiss: { openIncidentSelect = false }
+                            )
                         }
-                        .disabled(viewModel.incidentsData.incidents.isEmpty)
+                        .disabled(hasNoIncidents)
 
                         MapControls(
                             viewModel: viewModel,
@@ -257,7 +269,16 @@ private struct MapControls: View {
         .padding(.top)
 
         Button {
-            map.setCamera(MKMapCamera(lookingAtCenter: map.centerCoordinate, fromDistance: CLLocationDistance(50*1000), pitch: 0.0, heading: 0.0), animated: true)
+            map.setCamera(
+                MKMapCamera(
+                    lookingAtCenter: map.centerCoordinate,
+                    // TODO: Calculate based on zoom level rather than distance
+                    fromDistance: CLLocationDistance(500*1000),
+                    pitch: 0.0,
+                    heading: 0.0
+                ),
+                animated: true
+            )
         } label: {
             Image("ic_zoom_incident", bundle: .module)
                 .frame(width: buttonSize, height: buttonSize)

@@ -1,10 +1,8 @@
 import Foundation
 import GRDB
 
-// TODO: Create database tables and related
-
 struct WorksiteChangeRecord: Identifiable, Equatable {
-    let id: Int64
+    var id: Int64?
     let appVersion: Int64
     let organizationId: Int64
     let worksiteId: Int64
@@ -22,7 +20,7 @@ struct WorksiteChangeRecord: Identifiable, Equatable {
 
     func asExternalModel(_ maxSyncLimit: Int = 3) -> SavedWorksiteChange {
         SavedWorksiteChange(
-            id: id,
+            id: id!,
             syncUuid: syncUuid,
             createdAt: createdAt,
             organizationId: organizationId,
@@ -36,7 +34,9 @@ struct WorksiteChangeRecord: Identifiable, Equatable {
     }
 }
 
-extension WorksiteChangeRecord: Codable, FetchableRecord, PersistableRecord {
+extension WorksiteChangeRecord: Codable, FetchableRecord, MutablePersistableRecord {
+    static var databaseTableName: String = "worksiteChange"
+
     fileprivate enum Columns: String, ColumnExpression {
         case id,
              appVersion,
@@ -47,6 +47,10 @@ extension WorksiteChangeRecord: Codable, FetchableRecord, PersistableRecord {
              changeData,
              createdAt,
              saveAttempt
+    }
+
+    mutating func didInsert(_ inserted: InsertionSuccess) {
+        id = inserted.rowID
     }
 }
 

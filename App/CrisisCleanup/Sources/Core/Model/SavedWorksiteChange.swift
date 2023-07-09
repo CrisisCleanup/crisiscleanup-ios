@@ -42,11 +42,12 @@ public struct SavedWorksiteChange: Equatable {
         self.archiveActionLiteral = archiveActionLiteral
         self.stopSyncing = stopSyncing
 
-        let archiveAction = { switch archiveActionLiteral {
-        case WorksiteChangeArchiveAction.synced.literal: return WorksiteChangeArchiveAction.synced
-        case WorksiteChangeArchiveAction.partiallySynced.literal: return WorksiteChangeArchiveAction.partiallySynced
-        default: return WorksiteChangeArchiveAction.pending
-        }
+        let archiveAction = {
+            switch archiveActionLiteral {
+            case WorksiteChangeArchiveAction.synced.literal: return WorksiteChangeArchiveAction.synced
+            case WorksiteChangeArchiveAction.partiallySynced.literal: return WorksiteChangeArchiveAction.partiallySynced
+            default: return WorksiteChangeArchiveAction.pending
+            }
         }()
 
         self.isSynced = archiveAction == WorksiteChangeArchiveAction.synced

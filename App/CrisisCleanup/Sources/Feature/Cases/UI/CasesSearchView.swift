@@ -11,10 +11,11 @@ struct CasesSearchView: View {
         let isLoading = viewModel.isLoading
         let isSelectingResult = viewModel.isSelectingResult
         let onCaseSelect = { result in viewModel.onSelectWorksite(result) }
+        let disable = isSelectingResult
+        let isEditable = !isSelectingResult
 
         ZStack {
             VStack {
-                // TODO: Style with border and padding
                 HStack {
                     Button {
                         dismiss()
@@ -31,27 +32,36 @@ struct CasesSearchView: View {
                     .autocapitalization(.none)
                     .padding([.vertical])
                     .disableAutocorrection(true)
-                    .disabled(isSelectingResult)
+                    .disabled(disable)
+
+                    if viewModel.searchQuery.isNotBlank {
+                        Button {
+                            viewModel.searchQuery = ""
+                        } label: {
+                            Image(systemName: "xmark")
+                                .background(Color.white)
+                                .foregroundColor(Color.black)
+                        }
+                        .disabled(disable)
+                    }
 
                     Button {
                         router.openFilterCases()
                     } label: {
-                        // TODO: Use component
                         Image("ic_dials", bundle: .module)
                             .background(Color.white)
                             .foregroundColor(Color.black)
                             .cornerRadius(appTheme.cornerRadius)
+                            .disabled(disable)
                     }
                 }
                 .overlay(
-                    // TODO: Common color
                     RoundedRectangle(cornerRadius: appTheme.cornerRadius)
-                        .stroke(.gray, lineWidth: 1)
+                        .stroke(appTheme.colors.unfocusedBorderColor, lineWidth: 1)
                 )
                 .padding()
 
                 ScrollView {
-                    let isEditable = !isSelectingResult
                     if viewModel.searchQuery.isBlank {
                         RecentCasesView(
                             recents: viewModel.recentWorksites,
