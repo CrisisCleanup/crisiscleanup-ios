@@ -4,8 +4,6 @@ import SwiftUI
 import MapKit
 
 struct ViewCaseView: View {
-    @State var showPicker = false
-
     private let FlagColorFallback = Color(hex: 0xFF000000)
     private let FlagColors = [
         WorksiteFlagType.highPriority: Color(hex: 0xFF367bc3),
@@ -14,26 +12,6 @@ struct ViewCaseView: View {
         WorksiteFlagType.wrongLocation: Color(hex: 0xFFf77020),
         WorksiteFlagType.wrongIncident: Color(hex: 0xFFc457e7),
     ]
-
-    var pickerStatusOptions: [String: Color] = [
-        "unknown": Color.black,
-        "open_assigned": Color.yellow,
-        "open_unassigned": Color.orange,
-        "open_partially-completed": Color.blue,
-        "open_needs-follow-up": Color.pink,
-        "open_unresponsive": Color.gray,
-        "closed_completed": Color.green,
-        "closed_incomplete": Color.green,
-        "closed_out-of-scope": Color.black,
-        "closed_done-by-others": Color.green,
-        "closed_no-help-wanted": Color.green,
-        "closed_duplicate": Color.green,
-        "closed_rejected": Color.black,
-        "need_unfilled": Color.black,
-        "need_filled": Color.black,
-        "need_overdue": Color.black,
-    ]
-    @State private var selectedStatus = "unknown"
 
     @Environment(\.translator) var t: KeyAssetTranslator
     @Environment(\.isPresented) var isPresented
@@ -117,7 +95,7 @@ struct ViewCaseView: View {
                 // TODO: redraws the view when switching tabs? Change Zindex instead?
                 switch selectedTab {
                 case .info:
-                    ViewCaseInfo(showPicker: $showPicker, viewModel: viewModel)
+                    ViewCaseInfo(viewModel: viewModel)
                 case .photos:
                     ViewCasePhotos()
                 case .notes:
@@ -127,34 +105,6 @@ struct ViewCaseView: View {
                 Spacer()
 
                 BottomNav()
-
-                if(showPicker) {
-                    VStack {
-                        Spacer()
-                        HStack {
-                            Spacer()
-                            Text("Close")
-                                .foregroundColor(Color.accentColor)
-                                .padding(.trailing)
-                                .onTapGesture {
-                                    showPicker = false
-                                }
-                        }
-                        Picker("Please choose a status", selection: $selectedStatus) {
-                            let options = Array(pickerStatusOptions.keys)
-                            ForEach(options, id: \.self) { option in
-                                HStack {
-                                    Circle()
-                                        .foregroundColor(pickerStatusOptions[option])
-                                    Text(option)
-                                        .foregroundColor(Color.black)
-
-                                }
-                            }
-                        }.pickerStyle(.wheel)
-                    }
-                }
-
             }
         }
         .onAppear { viewModel.onViewAppear() }
@@ -163,7 +113,6 @@ struct ViewCaseView: View {
 }
 
 private struct ViewCaseInfo: View {
-    @Binding var showPicker: Bool
     @Environment(\.translator) var t: KeyAssetTranslator
     @EnvironmentObject var router: NavigationRouter
 
@@ -186,39 +135,8 @@ private struct ViewCaseInfo: View {
                     PropertyInformationView(worksite: worksite)
                 }
 
-                HStack {
-                    ViewCaseRowHeader(rowNum: 3, rowTitle: t("caseForm.work"))
-
-                    VStack (alignment: .trailing) {
-                        // TODO: make component
-                        Text("Claim all available work types")
-                            .lineLimit(1)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .minimumScaleFactor(0.5)
-                            .padding()
-                            .background(Color.yellow)
-                            .cornerRadius(appTheme.cornerRadius)
-                        Text("Release all")
-                            .lineLimit(1)
-                            .padding()
-                            .background(Color.white)
-                            .border(.black, width: 2)
-                            .cornerRadius(appTheme.cornerRadius)
-                    }.padding(.trailing)
-
-                }
-
-                VStack {
-                    Text("Claimed by")
-                        .padding(.horizontal)
-                    Text("Cocoa Florida Stake, The Church of Jesus Christ of Latter Day Saints")
-                        .padding(.horizontal)
-
-                    let workTypes = viewModel.caseData?.worksite.workTypes ?? []
-                    ForEach(workTypes, id: \.self) {workType in
-                        WorkTypeRow(showPicker: $showPicker, workType: workType)
-
-                    }
+                if let workTypeProfile = viewModel.workTypeProfile {
+                    InfoWorkView(profile: workTypeProfile)
                 }
             }
         }
@@ -287,7 +205,7 @@ private struct BottomNav: View {
             }
             Spacer()
             BottomNavButton("ic_case_edit", "actions.edit") {
-                // TODO: Open with router
+                // TODO: Open with router passing in IDs
             }
         }
         .padding(.horizontal, 24)
@@ -354,9 +272,6 @@ private struct PropertyInformationView: View {
             )
             .frame(maxWidth: .infinity, minHeight: 200, maxHeight: 200)
         }
-        .background(.white)
-        .cornerRadius(appTheme.cornerRadius)
-        .padding()
-        .shadow(radius: appTheme.shadowRadius)
+        .cardContainerPadded()
     }
 }

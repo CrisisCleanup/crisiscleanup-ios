@@ -477,7 +477,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     }
 }
 
-struct WorkTypeSummary {
+struct WorkTypeSummary: Identifiable {
     let workType: WorkType
     let name: String
     let jobSummary: String
@@ -485,13 +485,17 @@ struct WorkTypeSummary {
     let isReleasable: Bool
     let myOrgId: Int64
     let isClaimedByMyOrg: Bool
+
+    var id: String { workType.workTypeLiteral }
 }
 
-struct OrgClaimWorkType {
+struct OrgClaimWorkType: Identifiable {
     let orgId: Int64
     let orgName: String
     let workTypes: [WorkTypeSummary]
     let isMyOrg: Bool
+
+    var id: Int64 { orgId }
 }
 
 struct WorkTypeProfile {

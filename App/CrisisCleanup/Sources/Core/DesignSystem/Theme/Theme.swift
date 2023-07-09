@@ -17,7 +17,7 @@ class ThemeValues: ObservableObject {
         textFieldInnerPadding: Double = 16.0,
         textFieldOutlineWidth: Double = 0.5,
         cornerRadius: Double = 4.0,
-        shadowRadius: Double = 2.0
+        shadowRadius: Double = 1.0
     ) {
         self.textFieldInnerPadding = textFieldInnerPadding
         self.textFieldOutlineWidth = textFieldOutlineWidth
