@@ -148,8 +148,8 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
 
         if isFirstAppear {
             editableWorksiteProvider.reset(incidentIdIn)
-            transferWorkTypeProvider.clearPendingTransfer()
         }
+        transferWorkTypeProvider.clearPendingTransfer()
 
         subscribeToLoading()
         subscribeToSyncing()

@@ -5,11 +5,11 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
          searchCases,
          filterCases,
          viewCase(incidentId: Int64, worksiteId: Int64),
-         createEditCase(incidentId: Int64, worksiteId: Int64),
+         createEditCase(incidentId: Int64, worksiteId: Int64?),
          caseShare,
          caseFlags,
          caseHistory,
-         caseWorkTypeTransfer(isRequest: Bool)
+         caseWorkTypeTransfer
 
     public var id: Int {
         switch self {

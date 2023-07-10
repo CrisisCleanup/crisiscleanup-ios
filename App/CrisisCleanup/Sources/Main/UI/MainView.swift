@@ -12,6 +12,11 @@ struct MainView: View {
     let casesFilterViewBuilder: CasesFilterViewBuilder
     let casesSearchViewBuilder: CasesSearchViewBuilder
     let viewCaseViewBuilder: ViewCaseViewBuilder
+    let createEditCaseViewBuilder: CreateEditCaseViewBuilder
+    let caseShareViewBuilder: CaseShareViewBuilder
+    let caseFlagsViewBuilder: CaseFlagsViewBuilder
+    let caseHistoryViewBuilder: CaseHistoryViewBuilder
+    let transferWorkTypeViewBuilder: TransferWorkTypeViewBuilder
 
     @State private var selectedTab = TopLevelDestination.cases
     var body: some View {
@@ -42,7 +47,12 @@ struct MainView: View {
                                             menuViewBuilder: menuViewBuilder,
                                             casesFilterViewBuilder: casesFilterViewBuilder,
                                             casesSearchViewBuilder: casesSearchViewBuilder,
-                                            viewCaseViewBuilder: viewCaseViewBuilder
+                                            viewCaseViewBuilder: viewCaseViewBuilder,
+                                            createEditCaseViewBuilder: createEditCaseViewBuilder,
+                                            caseShareViewBuilder: caseShareViewBuilder,
+                                            caseFlagsViewBuilder: caseFlagsViewBuilder,
+                                            caseHistoryViewBuilder: caseHistoryViewBuilder,
+                                            transferWorkTypeViewBuilder: transferWorkTypeViewBuilder
                                         )
                                     }
                                     .toolbarColorScheme(.light, for: .tabBar)
@@ -116,6 +126,11 @@ private struct MainTabs: View {
     let casesFilterViewBuilder: CasesFilterViewBuilder
     let casesSearchViewBuilder: CasesSearchViewBuilder
     let viewCaseViewBuilder: ViewCaseViewBuilder
+    let createEditCaseViewBuilder: CreateEditCaseViewBuilder
+    let caseShareViewBuilder: CaseShareViewBuilder
+    let caseFlagsViewBuilder: CaseFlagsViewBuilder
+    let caseHistoryViewBuilder: CaseHistoryViewBuilder
+    let transferWorkTypeViewBuilder: TransferWorkTypeViewBuilder
 
     var body: some View {
         TabViewContainer {
@@ -137,6 +152,19 @@ private struct MainTabs: View {
                             incidentId: incidentId,
                             worksiteId: worksiteId
                         )
+                    case .createEditCase(let incidentId, let worksiteId):
+                        createEditCaseViewBuilder.createEditCaseView(
+                            incidentId: incidentId,
+                            worksiteId: worksiteId
+                        )
+                    case .caseShare:
+                        caseShareViewBuilder.caseShareView
+                    case .caseFlags:
+                        caseFlagsViewBuilder.caseFlagsView
+                    case .caseHistory:
+                        caseHistoryViewBuilder.caseHistoryView
+                    case .caseWorkTypeTransfer:
+                        transferWorkTypeViewBuilder.transferWorkTypeView
                     default:
                         Text("Route \(route.id) needs implementing")
                     }

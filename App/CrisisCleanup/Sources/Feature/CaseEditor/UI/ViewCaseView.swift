@@ -223,6 +223,7 @@ private struct BottomNavButton: View {
 
 private struct BottomNav: View {
     @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewModel: ViewCaseViewModel
 
     var body: some View {
         HStack {
@@ -240,7 +241,10 @@ private struct BottomNav: View {
             }
             Spacer()
             BottomNavButton("ic_case_edit", "actions.edit") {
-                // TODO: Open with router passing in IDs
+                router.createEditCase(
+                    incidentId: viewModel.incidentIdIn,
+                    worksiteId: viewModel.worksiteIdIn
+                )
             }
         }
         .padding(.horizontal, 24)

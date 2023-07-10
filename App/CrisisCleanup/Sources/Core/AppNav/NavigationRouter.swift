@@ -22,15 +22,15 @@ class NavigationRouter: ObservableObject {
     }
 
     func openAuthentication() {
-        path.append(NavigationRoute.authenticate)
+        path.append(.authenticate)
     }
 
     func openFilterCases() {
-        path.append(NavigationRoute.filterCases)
+        path.append(.filterCases)
     }
 
     func openSearchCases() {
-        path.append(NavigationRoute.searchCases)
+        path.append(.searchCases)
     }
 
     func viewCase(
@@ -43,23 +43,33 @@ class NavigationRouter: ObservableObject {
                 clearNavigationStack()
             }
 
-            path.append(NavigationRoute.viewCase(
+            path.append(.viewCase(
                 incidentId: incidentId,
                 worksiteId: worksiteId
             ))
         }
     }
 
+    func createEditCase(
+        incidentId: Int64,
+        worksiteId: Int64?
+    ) {
+        path.append(.createEditCase(
+            incidentId: incidentId,
+            worksiteId: worksiteId
+        ))
+    }
+
     func openCaseShare() {
-        print("Open case share")
+        path.append(.caseShare)
     }
     func openCaseFlags() {
-        print("Open case flags")
+        path.append(.caseFlags)
     }
     func openCaseHistory() {
-        print("Open case history")
+        path.append(.caseHistory)
     }
     func openWorkTypeTransfer() {
-        print("Transfer work type")
+        path.append(.caseWorkTypeTransfer)
     }
 }

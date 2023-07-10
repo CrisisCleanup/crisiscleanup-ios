@@ -187,7 +187,10 @@ struct CasesView: View {
                     VStack {
 
                         Button {
-
+                            router.createEditCase(
+                                incidentId: viewModel.incidentsData.selectedId,
+                                worksiteId: nil
+                            )
                         } label: {
                             Image(systemName: "plus")
                                 .padding()

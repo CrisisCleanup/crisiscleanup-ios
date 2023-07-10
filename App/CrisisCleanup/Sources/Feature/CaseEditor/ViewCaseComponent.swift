@@ -31,7 +31,7 @@ class ViewCaseComponent: Component<AppDependency>, ViewCaseViewBuilder {
         _ = cancelSubscriptions(disposables)
     }
 
-    func getViewModel(incidentId: Int64, worksiteId: Int64) -> ViewCaseViewModel {
+    private func getViewModel(incidentId: Int64, worksiteId: Int64) -> ViewCaseViewModel {
         if viewModel == nil {
             viewModel = ViewCaseViewModel(
                 accountDataRepository: dependency.accountDataRepository,

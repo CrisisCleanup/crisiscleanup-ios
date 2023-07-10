@@ -6,7 +6,12 @@ public class MainComponent: BootstrapComponent,
                             IncidentSelectViewBuilder,
                             CasesFilterViewBuilder,
                             CasesSearchViewBuilder,
-                            ViewCaseViewBuilder
+                            ViewCaseViewBuilder,
+                            CreateEditCaseViewBuilder,
+                            CaseShareViewBuilder,
+                            CaseFlagsViewBuilder,
+                            CaseHistoryViewBuilder,
+                            TransferWorkTypeViewBuilder
 {
     public private(set) var appEnv: AppEnv
     public private(set) var appSettingsProvider: AppSettingsProvider
@@ -49,12 +54,17 @@ public class MainComponent: BootstrapComponent,
         MainView(
             viewModel: mainViewModel,
             router: navigationRouter,
-            authenticateViewBuilder: self,
+            authenticateViewBuilder: authenticateViewBuilder,
             casesViewBuilder: casesComponent,
             menuViewBuilder: menuComponent,
-            casesFilterViewBuilder: casesFilterViewBuilder,
-            casesSearchViewBuilder: casesSearchViewBuilder,
-            viewCaseViewBuilder: viewCaseViewBuilder
+            casesFilterViewBuilder: self,
+            casesSearchViewBuilder: self,
+            viewCaseViewBuilder: self,
+            createEditCaseViewBuilder: self,
+            caseShareViewBuilder: self,
+            caseFlagsViewBuilder: self,
+            caseHistoryViewBuilder: self,
+            transferWorkTypeViewBuilder: self
         )
     }
 
@@ -102,4 +112,52 @@ public class MainComponent: BootstrapComponent,
             worksiteId: worksiteId
         )
     }
+
+    // MARK: Create/edit Case
+
+    lazy var createEditCaseComponent: CreateEditCaseComponent = { CreateEditCaseComponent(parent: self, routerObserver: routerObserver)
+    }()
+
+    public func createEditCaseView(incidentId: Int64, worksiteId: Int64?) -> AnyView {
+        createEditCaseComponent.createEditCaseView(
+            incidentId: incidentId,
+            worksiteId: worksiteId
+        )
+    }
+
+    // MARK: Case share
+
+    lazy var caseShareComponent: CaseShareComponent = {
+        CaseShareComponent(parent: self, routerObserver: routerObserver)
+    }()
+
+    public var caseShareView: AnyView { caseShareComponent.caseShareView }
+
+    // MARK: Case flags
+
+    lazy var caseFlagsComponent: CaseFlagsComponent = {
+        CaseFlagsComponent(parent: self, routerObserver: routerObserver)
+    }()
+
+    public var caseFlagsView: AnyView { caseFlagsComponent.caseFlagsView }
+
+    // MARK: Case history
+
+    lazy var caseHistoryComponent: CaseHistoryComponent = {
+        CaseHistoryComponent(parent: self, routerObserver: routerObserver)
+    }()
+
+    public var caseHistoryView: AnyView { caseHistoryComponent.caseHistoryView }
+
+    // MARK: Transfer work type
+
+    lazy var transferWorkTypeComponent: TransferWorkTypeComponent = {
+        TransferWorkTypeComponent(
+            parent: self,
+            routerObserver: routerObserver,
+            transferWorkTypeProvider: transferWorkTypeProvider
+        )
+    }()
+
+    public var transferWorkTypeView: AnyView { transferWorkTypeComponent.transferWorkTypeView }
 }

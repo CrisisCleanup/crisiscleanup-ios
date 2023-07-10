@@ -7,6 +7,8 @@ struct CreateEditCaseView: View {
     @Environment(\.isPresented) var isPresented
     @Environment(\.translator) var t: KeyAssetTranslator
 
+    @ObservedObject var viewModel: CreateEditCaseViewModel
+
     var coordinates = CLLocation(latitude: 20, longitude: 20)
 
     @State var map = MKMapView()
@@ -14,7 +16,6 @@ struct CreateEditCaseView: View {
     @State var selectedOptions: [String] = []
     @State var temp: String = ""
 
-//    @ObservedObject var viewModel: ViewCaseViewModel
     var incident: Incident = Incident(id: 1, name: "temp", shortName: "temp", locationIds: [], activePhoneNumbers: [], formFields: [], turnOnRelease: true, disasterLiteral: "temp")
 
     var body: some View {
