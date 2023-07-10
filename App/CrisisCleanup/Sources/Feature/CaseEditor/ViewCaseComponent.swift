@@ -44,6 +44,7 @@ class ViewCaseComponent: Component<AppDependency>, ViewCaseViewBuilder {
                 languageRefresher: dependency.languageRefresher,
                 workTypeStatusRepository: dependency.workTypeStatusRepository,
                 editableWorksiteProvider: dependency.editableWorksiteProvider,
+                transferWorkTypeProvider: dependency.transferWorkTypeProvider,
                 translator: dependency.translator,
                 worksiteChangeRepository: dependency.worksiteChangeRepository,
                 syncPusher: dependency.syncPusher,

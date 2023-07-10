@@ -179,7 +179,7 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
         translations[phraseKey] ?? statusRepository.translateStatus(phraseKey)
     }
 
-    func callAsFunction(_ phraseKey: String) -> String {
+    func t(_ phraseKey: String) -> String {
         translate(phraseKey) ?? phraseKey
     }
 }

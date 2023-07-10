@@ -6,7 +6,7 @@ public protocol KeyTranslator {
 
     func translate(_ phraseKey: String) -> String?
 
-    func callAsFunction(_ phraseKey: String) -> String
+    func t(_ phraseKey: String) -> String
 }
 
 public protocol KeyAssetTranslator : KeyTranslator {
@@ -14,7 +14,7 @@ public protocol KeyAssetTranslator : KeyTranslator {
 }
 
 private class EmptyTranslator: KeyAssetTranslator {
-    func callAsFunction(_ phraseKey: String) -> String {
+    func t(_ phraseKey: String) -> String {
         translate(phraseKey) ?? phraseKey
     }
 

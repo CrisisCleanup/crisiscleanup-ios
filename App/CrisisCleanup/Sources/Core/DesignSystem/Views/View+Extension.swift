@@ -16,4 +16,18 @@ extension View {
         self.cardContainer()
             .padding()
     }
+
+    // https://www.avanderlee.com/swiftui/conditional-view-modifier/
+    @ViewBuilder func `if`<Content: View>(_ condition: @autoclosure () -> Bool, transform: (Self) -> Content) -> some View {
+        if condition() {
+            transform(self)
+        } else {
+            self
+        }
+    }
+}
+
+class EditableView: ObservableObject {
+    @Published var isEditable: Bool = false
+    var disabled: Bool { !isEditable }
 }

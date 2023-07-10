@@ -1,30 +1,29 @@
 import SwiftUI
 
-// TODO: Disable interactivity during loading or saving
 struct InfoWorkView : View {
-    @Environment(\.translator) var t: KeyAssetTranslator
     @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewModel: ViewCaseViewModel
 
     let profile: WorkTypeProfile
 
     var body: some View {
         HStack {
-            ViewCaseRowHeader(rowNum: 3, rowTitle: t("caseForm.work"))
+            ViewCaseRowHeader(rowNum: 3, rowTitle: viewModel.t("caseForm.work"))
 
             VStack (alignment: .trailing) {
                 if profile.unclaimed.isNotEmpty {
-                    WorkTypeAction(t("actions.claim_all_alt"), true) {
-                        // TODO: Claim all
+                    WorkTypeAction(viewModel.t("actions.claim_all_alt"), true) {
+                        viewModel.claimAll()
                     }
                 }
 
                 if profile.releasableCount > 0 {
-                    WorkTypeAction(t("actions.release_all"), false) {
-                        // TODO: Release all
+                    WorkTypeAction(viewModel.t("actions.release_all"), false) {
+                        viewModel.releaseAll()
                     }
                 } else if profile.requestableCount > 0 {
-                    WorkTypeAction(t("actions.request_all"), false) {
-                        // TODO: Release all
+                    WorkTypeAction(viewModel.t("actions.request_all"), false) {
+                        viewModel.requestAll()
                     }
                 }
             }
@@ -33,35 +32,17 @@ struct InfoWorkView : View {
 
         if profile.otherOrgClaims.isNotEmpty {
             ForEach(profile.otherOrgClaims) { otherOrgClaim in
-                OrganizationWorkClaims(
-                    orgClaimWorkType: otherOrgClaim,
-                    // TODO: View model callbacks
-                    updateWorkType: {_ in },
-                    requestWorkType: {_ in },
-                    releaseWorkType: {_ in }
-                )
+                OrganizationWorkClaims(orgClaimWorkType: otherOrgClaim)
             }
         }
 
         if profile.orgClaims.workTypes.isNotEmpty {
-            OrganizationWorkClaims(
-                orgClaimWorkType: profile.orgClaims,
-                // TODO: View model callbacks
-                updateWorkType: {_ in },
-                requestWorkType: {_ in },
-                releaseWorkType: {_ in }
-            )
+            OrganizationWorkClaims(orgClaimWorkType: profile.orgClaims)
         }
 
         if profile.unclaimed.isNotEmpty {
-            WorkTypeSectionTitle(t("caseView.unclaimed_work_types"))
-            ExistingWorkTypeItems(
-                summaries: profile.unclaimed,
-                // TODO: View model callbacks
-                updateWorkType: {_ in },
-                requestWorkType: {_ in },
-                releaseWorkType: {_ in }
-            )
+            WorkTypeSectionTitle(viewModel.t("caseView.unclaimed_work_types"))
+            ExistingWorkTypeItems(summaries: profile.unclaimed)
         }
 
         Rectangle()
@@ -72,6 +53,8 @@ struct InfoWorkView : View {
 }
 
 private struct WorkTypeAction: View {
+    @EnvironmentObject var editableView: EditableView
+
     private let title: String
     private let isPrimary: Bool
     private let action: () -> Void
@@ -87,30 +70,37 @@ private struct WorkTypeAction: View {
     }
 
     var body: some View {
+        let isDisabled = editableView.disabled
         Button {
             action()
         } label: {
             if isPrimary {
+                let backgroundColor = isDisabled ? .gray : appTheme.colors.themePrimaryContainer
                 Text(title)
                     .lineLimit(1)
                     .fixedSize(horizontal: false, vertical: true)
                     .minimumScaleFactor(0.5)
                     .padding()
                     .frame(minWidth: 100)
-                    .background(appTheme.colors.themePrimaryContainer)
+                    .background(backgroundColor.animation(.easeInOut))
                     .cornerRadius(appTheme.cornerRadius)
                     .tint(.black)
             } else {
+                let borderColor: Color = isDisabled ? .gray : .black
                 Text(title)
                     .lineLimit(1)
                     .padding()
                     .frame(minWidth: 100)
-                    .background(Color.white)
-                    .border(.black, width: 2)
+                    .background(.white)
                     .cornerRadius(appTheme.cornerRadius)
                     .tint(.black)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: appTheme.cornerRadius)
+                            .stroke(borderColor, lineWidth: 1)
+                    )
             }
         }
+        .disabled(isDisabled)
     }
 }
 
@@ -136,12 +126,9 @@ private struct WorkTypeSectionTitle: View {
 }
 
 private struct WorkTypeSummaryView: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
+    @EnvironmentObject var viewModel: ViewCaseViewModel
 
     var summary: WorkTypeSummary
-    var updateWorkType: (WorkType) -> Void
-    var requestWorkType: (WorkType) -> Void
-    var releaseWorkType: (WorkType) -> Void
 
     var body: some View {
         VStack {
@@ -157,9 +144,11 @@ private struct WorkTypeSummaryView: View {
 
             HStack {
                 WorkTypeStatusPicker(
-                    selectedStatus: summary.workType.status
+                    translator: viewModel,
+                    selectedStatus: summary.workType.status,
+                    statusOptions: viewModel.statusOptions
                 ) { status in
-                    updateWorkType(summary.workType.copy {
+                    viewModel.updateWorkType(summary.workType.copy {
                         $0.statusLiteral = status.literal
                     })
                 }
@@ -168,25 +157,25 @@ private struct WorkTypeSummaryView: View {
 
                 if summary.workType.isClaimed {
                     if summary.isClaimedByMyOrg {
-                        WorkTypeAction(t("actions.unclaim"), false) {
-                            updateWorkType(summary.workType.copy {
+                        WorkTypeAction(viewModel.t("actions.unclaim"), false) {
+                            viewModel.updateWorkType(summary.workType.copy {
                                 $0.orgClaim = nil
                             })
                         }
                     } else if summary.isReleasable {
-                        WorkTypeAction(t("actions.release"), false) {
-                            releaseWorkType(summary.workType)
+                        WorkTypeAction(viewModel.t("actions.release"), false) {
+                            viewModel.releaseWorkType(summary.workType)
                         }
                     } else if summary.isRequested {
-                        Text(t("caseView.requested"))
+                        Text(viewModel.t("caseView.requested"))
                     } else {
-                        WorkTypeAction(t("actions.request"), false) {
-                            requestWorkType(summary.workType)
+                        WorkTypeAction(viewModel.t("actions.request"), false) {
+                            viewModel.requestWorkType(summary.workType)
                         }
                     }
                 } else {
-                    WorkTypeAction(t("actions.claim"), true) {
-                        updateWorkType(summary.workType.copy {
+                    WorkTypeAction(viewModel.t("actions.claim"), true) {
+                        viewModel.updateWorkType(summary.workType.copy {
                             $0.orgClaim = summary.myOrgId
                         })
                     }
@@ -199,100 +188,32 @@ private struct WorkTypeSummaryView: View {
 
 private struct ExistingWorkTypeItems: View {
     var summaries: [WorkTypeSummary]
-    var updateWorkType: (WorkType) -> Void
-    var requestWorkType: (WorkType) -> Void
-    var releaseWorkType: (WorkType) -> Void
 
     var body: some View {
         ForEach(summaries) { summary in
-            WorkTypeSummaryView(
-                summary: summary,
-                updateWorkType: updateWorkType,
-                requestWorkType: requestWorkType,
-                releaseWorkType: releaseWorkType
-            )
-            .cardContainer()
-            .padding(.horizontal)
-            .padding(.top, 1.0)
+            WorkTypeSummaryView(summary: summary)
+                .cardContainer()
+                .padding(.horizontal)
+                .padding(.top, 1.0)
         }
     }
 }
 
 private struct OrganizationWorkClaims: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
+    @EnvironmentObject var viewModel: ViewCaseViewModel
 
     var orgClaimWorkType: OrgClaimWorkType
-    var updateWorkType: (WorkType) -> Void
-    var requestWorkType: (WorkType) -> Void
-    var releaseWorkType: (WorkType) -> Void
 
     var body: some View {
         if orgClaimWorkType.isMyOrg {
-            WorkTypeSectionTitle(t("caseView.claimed_by_my_org"))
+            WorkTypeSectionTitle(viewModel.t("caseView.claimed_by_my_org"))
         } else {
-            WorkTypeSectionTitle(t("caseView.claimed_by"), true)
-            WorkTypeSectionTitle(t(orgClaimWorkType.orgName))
+            WorkTypeSectionTitle(viewModel.t("caseView.claimed_by"), true)
+            WorkTypeSectionTitle(viewModel.t(orgClaimWorkType.orgName))
         }
 
         ExistingWorkTypeItems(
-            summaries: orgClaimWorkType.workTypes,
-            updateWorkType: updateWorkType,
-            requestWorkType: requestWorkType,
-            releaseWorkType: releaseWorkType
+            summaries: orgClaimWorkType.workTypes
         )
-    }
-}
-
-private struct WorkTypeStatusPicker: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
-
-    var selectedStatus: WorkTypeStatus
-    var onSelectStatus: (WorkTypeStatus) -> Void
-
-    let pickerStatusOptions: [String: Color] = [
-        "unknown": Color.black,
-        "open_assigned": Color.yellow,
-        "open_unassigned": Color.orange,
-        "open_partially-completed": Color.blue,
-        "open_needs-follow-up": Color.pink,
-        "open_unresponsive": Color.gray,
-        "closed_completed": Color.green,
-        "closed_incomplete": Color.green,
-        "closed_out-of-scope": Color.black,
-        "closed_done-by-others": Color.green,
-        "closed_no-help-wanted": Color.green,
-        "closed_duplicate": Color.green,
-        "closed_rejected": Color.black
-    ]
-
-    var body: some View {
-        //        VStack {
-        //            HStack {
-        Text(t(selectedStatus.literal))
-        //                Spacer()
-        //                Text("Close")
-        //                    .foregroundColor(Color.accentColor)
-        //                    .padding(.trailing)
-        //                    .onTapGesture {
-        //                         // TODO: Dismiss picker
-        //                    }
-        //            }
-        //            Picker("Please choose a status", selection: $selectedStatus) {
-        //                let options = Array(pickerStatusOptions.keys)
-        //                ForEach(options, id: \.self) { option in
-        //                    HStack {
-        //                        Circle()
-        //                            .foregroundColor(pickerStatusOptions[option])
-        //                        Text(option)
-        //                            .foregroundColor(Color.black)
-        //
-        //                    }
-        //                    .onTapGesture {
-        //                         // onSelectStatus(option)
-        //                    }
-        //                }
-        //            }
-        //            .pickerStyle(.wheel)
-        //        }
     }
 }

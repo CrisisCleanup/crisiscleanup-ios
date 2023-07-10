@@ -59,17 +59,14 @@ private struct TopBar: View {
                 )
 
                 let title = selectedIncident.isEmptyIncident
-                ? t(TopLevelDestination.menu.titleTranslateKey)
+                ? t.t(TopLevelDestination.menu.titleTranslateKey)
                 : selectedIncident.shortName
                 Text(title)
                     .font(.title2)
                     .padding(.leading, 8)
 
                 if !selectedIncident.isEmptyIncident {
-                    Image(systemName: "arrowtriangle.down.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 10, height: 8)
+                    DropDownIcon()
                 }
             }
             .sheet(

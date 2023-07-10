@@ -26,7 +26,7 @@ struct CasesSearchView: View {
                     }
 
                     TextField(
-                        t("actions.search"),
+                        t.t("actions.search"),
                         text: $viewModel.searchQuery
                     )
                     .autocapitalization(.none)
@@ -76,7 +76,13 @@ struct CasesSearchView: View {
                                 isEditable: isEditable
                             )
                         } else {
-                            let message = viewModel.searchResults.isShortQ ? t("info.search_query_is_short") : t("info.no_search_results").replacingOccurrences(of: "{search_string}", with: viewModel.searchResults.q)
+                            let message = viewModel.searchResults.isShortQ
+                            ? t.t("info.search_query_is_short")
+                            : t.t("info.no_search_results")
+                                .replacingOccurrences(
+                                    of: "{search_string}",
+                                    with: viewModel.searchResults.q
+                                )
                             Text(message)
                                 .padding(.horizontal)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -108,7 +114,7 @@ private struct RecentCasesView: View {
 
     var body: some View {
         if recents.isNotEmpty {
-            Text(t("casesVue.recently_viewed"))
+            Text(t.t("casesVue.recently_viewed"))
                 .padding(.horizontal)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }

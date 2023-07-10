@@ -49,6 +49,7 @@ public protocol AppDependency: Dependency {
     var editableWorksiteProvider: EditableWorksiteProvider { get }
     var incidentRefresher: IncidentRefresher { get }
     var languageRefresher: LanguageRefresher { get }
+    var transferWorkTypeProvider: TransferWorkTypeProvider { get }
 }
 
 extension MainComponent {

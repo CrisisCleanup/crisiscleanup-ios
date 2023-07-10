@@ -32,14 +32,14 @@ struct CasesView: View {
         {
             if visibleCount == totalCount || visibleCount == 0 {
                 if visibleCount == 0 {
-                    return t("info.t_of_t_cases").replacingOccurrences(of: "{visible_count}", with: "\(totalCount)")
+                    return t.t("info.t_of_t_cases").replacingOccurrences(of: "{visible_count}", with: "\(totalCount)")
                 } else if totalCount == 1 {
-                    return t("info.1_of_1_case")
+                    return t.t("info.1_of_1_case")
                 } else {
-                    return t("info.t_of_t_cases").replacingOccurrences(of: "{visible_count}", with: "\(totalCount)")
+                    return t.t("info.t_of_t_cases").replacingOccurrences(of: "{visible_count}", with: "\(totalCount)")
                 }
             } else {
-                return t("info.v_of_t_cases")
+                return t.t("info.v_of_t_cases")
                     .replacingOccurrences(of: "{visible_count}", with: "\(visibleCount)")
                     .replacingOccurrences(of: "{total_count}", with: "\(totalCount)")
             }

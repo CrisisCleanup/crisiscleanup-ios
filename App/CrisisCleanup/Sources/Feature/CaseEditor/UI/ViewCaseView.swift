@@ -3,26 +3,28 @@
 import SwiftUI
 import MapKit
 
+private let FlagColorFallback = Color(hex: 0xFF000000)
+private let FlagColors = [
+    WorksiteFlagType.highPriority: Color(hex: 0xFF367bc3),
+    WorksiteFlagType.upsetClient: Color(hex: 0xFF00b3bf),
+    WorksiteFlagType.reportAbuse: Color(hex: 0xFFd79425),
+    WorksiteFlagType.wrongLocation: Color(hex: 0xFFf77020),
+    WorksiteFlagType.wrongIncident: Color(hex: 0xFFc457e7),
+]
+
 struct ViewCaseView: View {
-    private let FlagColorFallback = Color(hex: 0xFF000000)
-    private let FlagColors = [
-        WorksiteFlagType.highPriority: Color(hex: 0xFF367bc3),
-        WorksiteFlagType.upsetClient: Color(hex: 0xFF00b3bf),
-        WorksiteFlagType.reportAbuse: Color(hex: 0xFFd79425),
-        WorksiteFlagType.wrongLocation: Color(hex: 0xFFf77020),
-        WorksiteFlagType.wrongIncident: Color(hex: 0xFFc457e7),
-    ]
 
     @Environment(\.translator) var t: KeyAssetTranslator
-    @Environment(\.isPresented) var isPresented
+    @EnvironmentObject var router: NavigationRouter
 
     @ObservedObject var viewModel: ViewCaseViewModel
-
-    @State private var offset = CGSize.zero
 
     @State private var selectedTab: ViewCaseTabs = .info
 
     var body: some View {
+        let isBusy = viewModel.isLoading || viewModel.isSaving
+        let disableMutation = viewModel.editableViewState.disabled
+
         ZStack {
             VStack {
 
@@ -79,23 +81,36 @@ struct ViewCaseView: View {
                             Text(viewModel.subTitle)
                                 .font(.subheadline)
                         }
-
                     }
 
                     ToolbarItem(placement: .navigationBarTrailing) {
                         HStack {
-                            Image(systemName: "exclamationmark.triangle.fill")
+                            Button {
+                                viewModel.toggleHighPriority()
+                            } label: {
+                                let tint = getTopIconActionColor(viewModel.referenceWorksite.hasHighPriorityFlag)
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .tint(tint)
+                            }
+                            .disabled(disableMutation)
 
-                            Image(systemName: "heart.fill")
+                            Button {
+                                viewModel.toggleFavorite()
+                            } label: {
+                                let isFavorite = viewModel.referenceWorksite.isLocalFavorite
+                                let tint = getTopIconActionColor(isFavorite)
+                                Image(systemName: isFavorite ? "heart.fill" : "heart")
+                                    .tint(tint)
+                            }
+                            .disabled(disableMutation)
                         }
-
                     }
                 }
 
                 // TODO: redraws the view when switching tabs? Change Zindex instead?
                 switch selectedTab {
                 case .info:
-                    ViewCaseInfo(viewModel: viewModel)
+                    ViewCaseInfo()
                 case .photos:
                     ViewCasePhotos()
                 case .notes:
@@ -106,17 +121,35 @@ struct ViewCaseView: View {
 
                 BottomNav()
             }
+
+            if isBusy {
+                VStack {
+                    ProgressView()
+                        .frame(alignment: .center)
+                }
+            }
         }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
+        .environmentObject(viewModel)
+        .environmentObject(viewModel.editableViewState)
+        .onReceive(viewModel.$isPendingTransfer) { isPendingTransfer in
+            let isTransferStarted = isPendingTransfer && viewModel.transferType != .none
+            if isTransferStarted {
+                router.openWorkTypeTransfer()
+            }
+        }
+    }
+
+    private func getTopIconActionColor(_ isActive: Bool) -> Color {
+        isActive ? appTheme.colors.primaryRedColor : appTheme.colors.neutralIconColor
     }
 }
 
 private struct ViewCaseInfo: View {
     @Environment(\.translator) var t: KeyAssetTranslator
     @EnvironmentObject var router: NavigationRouter
-
-    @ObservedObject var viewModel: ViewCaseViewModel
+    @EnvironmentObject var viewModel: ViewCaseViewModel
 
     var body: some View {
         ScrollView {
@@ -129,7 +162,7 @@ private struct ViewCaseInfo: View {
                     }
                 }
 
-                ViewCaseRowHeader(rowNum: 1, rowTitle: t("caseForm.property_information"))
+                ViewCaseRowHeader(rowNum: 1, rowTitle: t.t("caseForm.property_information"))
 
                 if let worksite = viewModel.caseData?.worksite {
                     PropertyInformationView(worksite: worksite)
@@ -159,6 +192,7 @@ private struct ViewCaseNotes: View {
 
 private struct BottomNavButton: View {
     @Environment(\.translator) var t: KeyAssetTranslator
+    @EnvironmentObject var editableView: EditableView
 
     private let action: () -> Void
     private let imageName: String
@@ -180,9 +214,10 @@ private struct BottomNavButton: View {
         } label: {
             VStack {
                 Image(imageName, bundle: .module)
-                Text(t(textTranslateKey))
+                Text(t.t(textTranslateKey))
             }
         }
+        .disabled(editableView.disabled)
     }
 }
 

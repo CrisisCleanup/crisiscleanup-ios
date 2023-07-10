@@ -20,7 +20,7 @@ extension View {
     ) -> some View {
         tabItem {
             NavTabView(
-                text: translator(destination.titleTranslateKey),
+                text: translator.t(destination.titleTranslateKey),
                 imageName: destination.imageName
             )
         }

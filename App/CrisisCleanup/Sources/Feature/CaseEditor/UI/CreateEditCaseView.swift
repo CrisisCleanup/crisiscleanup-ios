@@ -31,7 +31,7 @@ struct CreateEditCaseView: View {
 //                    }
 
                     HStack {
-                        ViewCaseRowHeader(rowNum: 1, rowTitle: t("caseForm.property_information"))
+                        ViewCaseRowHeader(rowNum: 1, rowTitle: t.t("caseForm.property_information"))
 
                         // TODO: add dropdown
                     }
@@ -116,7 +116,7 @@ struct CreateEditCaseView: View {
                     }
 
                     HStack {
-                        ViewCaseRowHeader(rowNum: 3, rowTitle: t("caseForm.work"))
+                        ViewCaseRowHeader(rowNum: 3, rowTitle: t.t("caseForm.work"))
 
                         // TODO: add dropdown
                     }

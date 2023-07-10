@@ -11,7 +11,7 @@ public protocol WorksiteChangeRepository {
         worksiteChange: Worksite,
         primaryWorkType: WorkType,
         organizationId: Int64
-    ) async -> Int64
+    ) async throws -> Int64
 
     func saveWorkTypeTransfer(
         worksite: Worksite,
@@ -131,9 +131,10 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         accountDataPublisher = accountDataRepository.accountData.eraseToAnyPublisher()
     }
 
-    func saveWorksiteChange(worksiteStart: Worksite, worksiteChange: Worksite, primaryWorkType: WorkType, organizationId: Int64) async -> Int64 {
+    func saveWorksiteChange(worksiteStart: Worksite, worksiteChange: Worksite, primaryWorkType: WorkType, organizationId: Int64) async throws -> Int64 {
         // TODO: Do
-        0
+        print("Save changed worksite \(worksiteChange)")
+        return 0
     }
 
     func saveWorkTypeTransfer(worksite: Worksite, organizationId: Int64, requestReason: String, requests: [String], releaseReason: String, releases: [String]) async -> Bool {

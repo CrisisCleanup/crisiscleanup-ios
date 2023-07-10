@@ -78,7 +78,7 @@ class AuthenticateViewModel: ObservableObject {
 
     private func validateInput(_ emailAddress: String, _ password: String) -> Bool {
         if emailAddress.isBlank {
-            errorMessage = translator("invitationSignup.email_error")
+            errorMessage = translator.t("invitationSignup.email_error")
             emailHasFocus = true
             return false
         }
@@ -90,7 +90,7 @@ class AuthenticateViewModel: ObservableObject {
         }
 
         if password.isBlank {
-            errorMessage = translator("invitationSignup.password_length_error")
+            errorMessage = translator.t("invitationSignup.password_length_error")
             passwordHasFocus = true
             return false
         }
@@ -112,7 +112,7 @@ class AuthenticateViewModel: ObservableObject {
             if hasError {
                 let logErrorMessage = result.errors?.condenseMessages ?? "Server error"
                 if logErrorMessage == "Unable to log in with provided credentials." {
-                    errorMessage = translator("loginForm.invalid_credentials_msg")
+                    errorMessage = translator.t("loginForm.invalid_credentials_msg")
                 } else {
                     logger.logError(GenericError(logErrorMessage))
                 }

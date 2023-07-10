@@ -7,6 +7,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     private let incidentsRepository: IncidentsRepository
     private let worksitesRepository: WorksitesRepository
     private var editableWorksiteProvider: EditableWorksiteProvider
+    private let transferWorkTypeProvider: TransferWorkTypeProvider
     private let translator: KeyAssetTranslator
     private let worksiteChangeRepository: WorksiteChangeRepository
     private let syncPusher: SyncPusher
@@ -27,9 +28,14 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
 
     @Published private(set) var isSyncing = false
 
+    let editableViewState = EditableView()
+
     private let isSavingWorksite = CurrentValueSubject<Bool, Never>(false)
     private let isSavingMedia = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isSaving = false
+
+    @Published private(set) var isPendingTransfer = false
+    lazy var transferType: WorkTypeTransferType = { transferWorkTypeProvider.transferType }()
 
     @Published private(set) var syncingWorksiteImage = 0
 
@@ -40,6 +46,8 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
 
     private let uiState: AnyPublisher<CaseEditorUiState, Never>
     @Published private(set) var caseData: CaseEditorCaseData? = nil
+
+    var referenceWorksite: Worksite { caseData?.worksite ?? EmptyWorksite }
 
     @Published private(set) var workTypeProfile: WorkTypeProfile? = nil
 
@@ -72,6 +80,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         languageRefresher: LanguageRefresher,
         workTypeStatusRepository: WorkTypeStatusRepository,
         editableWorksiteProvider: EditableWorksiteProvider,
+        transferWorkTypeProvider: TransferWorkTypeProvider,
         translator: KeyAssetTranslator,
         worksiteChangeRepository: WorksiteChangeRepository,
         syncPusher: SyncPusher,
@@ -84,6 +93,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         self.incidentsRepository = incidentsRepository
         self.worksitesRepository = worksitesRepository
         self.editableWorksiteProvider = editableWorksiteProvider
+        self.transferWorkTypeProvider = transferWorkTypeProvider
         self.translator = translator
         self.worksiteChangeRepository = worksiteChangeRepository
         self.syncPusher = syncPusher
@@ -96,7 +106,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         isValidWorksiteIds = incidentId > 0 && worksiteId > 0
 
         localTranslate = { phraseKey in
-            editableWorksiteProvider.translate(key: phraseKey) ?? translator(phraseKey)
+            editableWorksiteProvider.translate(key: phraseKey) ?? translator.t(phraseKey)
         }
 
         dataLoader = CaseEditorDataLoader(
@@ -137,12 +147,15 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         let isFirstAppear = isFirstVisible.exchange(false, ordering: .sequentiallyConsistent)
 
         if isFirstAppear {
-            self.editableWorksiteProvider.reset(incidentIdIn)
+            editableWorksiteProvider.reset(incidentIdIn)
+            transferWorkTypeProvider.clearPendingTransfer()
         }
 
         subscribeToLoading()
         subscribeToSyncing()
         subscribeToSaving()
+        subscribeToPendingTransfer()
+        subscribeToEditableState()
 
         subscribeToCaseData()
         subscribeToWorksiteChange()
@@ -188,6 +201,25 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         .map { (b0, b1) in b0 || b1 }
         .receive(on: RunLoop.main)
         .assign(to: \.isSaving, on: self)
+        .store(in: &subscriptions)
+    }
+
+    private func subscribeToPendingTransfer() {
+        transferWorkTypeProvider.isPendingTransferPublisher
+            .assign(to: \.isPendingTransfer, on: self)
+            .store(in: &subscriptions)
+    }
+
+    private func subscribeToEditableState() {
+        Publishers.CombineLatest3(
+            $isPendingTransfer.eraseToAnyPublisher(),
+            $isLoading.eraseToAnyPublisher(),
+            $isSaving.eraseToAnyPublisher()
+        )
+        .map { (b0, b1, b2) in b0 || b1 || b2 }
+        .sink { isTransient in
+            self.editableViewState.isEditable = !isTransient
+        }
         .store(in: &subscriptions)
     }
 
@@ -463,6 +495,139 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
             .store(in: &subscriptions)
     }
 
+    private var organizationId: Int64? { caseData?.orgId }
+
+    private func saveWorksiteChange(
+        _ startingWorksite: Worksite,
+        _ changedWorksite: Worksite
+    ) {
+        if startingWorksite.isNew ||
+            startingWorksite == changedWorksite {
+            return
+        }
+
+        if let orgId = organizationId {
+            self.isSavingWorksite.value = true
+            Task {
+                do {
+                    defer {
+                        Task { @MainActor in self.isSavingWorksite.value = false }
+                    }
+
+                    _ = try await self.worksiteChangeRepository.saveWorksiteChange(
+                        worksiteStart: startingWorksite,
+                        worksiteChange: changedWorksite,
+                        primaryWorkType: changedWorksite.keyWorkType!,
+                        organizationId: orgId
+                    )
+
+                    // TODO: Trigger sync worksite
+
+                } catch {
+                    self.logger.logError(error)
+                    // TODO: Show dialog save failed. Try again. If still fails seek help.
+                }
+            }
+        }
+    }
+
+    func toggleFavorite() {
+        let startingWorksite = referenceWorksite
+        let changedWorksite =
+        startingWorksite.copy { $0.isAssignedToOrgMember = !startingWorksite.isLocalFavorite }
+        saveWorksiteChange(startingWorksite, changedWorksite)
+    }
+
+    func toggleHighPriority() {
+        let startingWorksite = referenceWorksite
+        let changedWorksite = startingWorksite.toggleHighPriorityFlag()
+        saveWorksiteChange(startingWorksite, changedWorksite)
+    }
+
+    func updateWorkType(_ workType: WorkType) {
+        let startingWorksite = referenceWorksite
+        var updatedWorkTypes = startingWorksite.workTypes
+                .filter { $0.workType != workType.workType }
+        updatedWorkTypes.append(workType)
+        let changedWorksite = startingWorksite.copy { $0.workTypes = updatedWorkTypes }
+        saveWorksiteChange(startingWorksite, changedWorksite)
+    }
+
+    func requestWorkType(_ workType: WorkType) {
+        if let profile = workTypeProfile {
+            transferWorkTypeProvider.startTransfer(
+                profile.orgId,
+                WorkTypeTransferType.request,
+                profile.requestable.associate { summary in
+                    let isSelected = summary.workType.id == workType.id
+                    return (summary.workType, isSelected)
+                },
+                organizationName: profile.orgName,
+                caseNumber: profile.caseNumber
+            )
+        }
+    }
+
+    func releaseWorkType(_ workType: WorkType) {
+        if let profile = workTypeProfile {
+            transferWorkTypeProvider.startTransfer(
+                profile.orgId,
+                WorkTypeTransferType.release,
+                profile.releasable.associate { summary in
+                    let isSelected = summary.workType.id == workType.id
+                    return (summary.workType, isSelected)
+                }
+            )
+        }
+    }
+
+    func claimAll() {
+        if let orgId = organizationId {
+            let startingWorksite = referenceWorksite
+            let updatedWorkTypes =
+                startingWorksite.workTypes
+                    .map {
+                        $0.isClaimed ? $0: $0.copy { $0.orgClaim = orgId }
+                    }
+            let changedWorksite = startingWorksite.copy { $0.workTypes = updatedWorkTypes }
+            saveWorksiteChange(startingWorksite, changedWorksite)
+        }
+    }
+
+    func requestAll() {
+        if let profile = workTypeProfile {
+            transferWorkTypeProvider.startTransfer(
+                profile.orgId,
+                WorkTypeTransferType.request,
+                profile.requestable.associate { summary in (summary.workType, true) },
+                organizationName: profile.orgName,
+                caseNumber: profile.caseNumber
+            )
+        }
+    }
+
+    func releaseAll() {
+        if let profile = workTypeProfile {
+            transferWorkTypeProvider.startTransfer(
+                profile.orgId,
+                WorkTypeTransferType.release,
+                profile.releasable.associate { summary in (summary.workType, true) }
+            )
+        }
+    }
+
+    func saveNote(note: WorksiteNote) {
+        if note.note.isBlank {
+            return
+        }
+
+        let startingWorksite = referenceWorksite
+        var notes = [note]
+        notes.append(contentsOf: startingWorksite.notes)
+        let changedWorksite = startingWorksite.copy { $0.notes = notes }
+        saveWorksiteChange(startingWorksite, changedWorksite)
+    }
+
     // MARK: KeyTranslator
 
     let translationCount: any Publisher<Int, Never>
@@ -471,8 +636,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         localTranslate(phraseKey)
     }
 
-    // TODO: Redesign for specific implementors. Not all implementors need callAsFunction translate.
-    func callAsFunction(_ phraseKey: String) -> String {
+    func t(_ phraseKey: String) -> String {
         localTranslate(phraseKey)
     }
 }

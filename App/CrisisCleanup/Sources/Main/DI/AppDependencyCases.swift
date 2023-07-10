@@ -42,4 +42,10 @@ extension MainComponent {
             )
         }
     }
+
+    public var transferWorkTypeProvider: TransferWorkTypeProvider {
+        shared {
+            SingleTransferWorkTypeProvider()
+        }
+    }
 }

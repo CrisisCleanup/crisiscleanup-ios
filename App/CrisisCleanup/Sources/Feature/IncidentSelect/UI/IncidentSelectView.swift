@@ -8,8 +8,8 @@ struct IncidentSelectView: View {
 
     var body: some View{
         VStack {
-            Text(t("nav.change_incident"))
-                .frame(alignment: .bottom)
+            Text(t.t("nav.change_incident"))
+                .font(.title2)
                 .padding()
 
             let selectedId = viewModel.incidentsData.selectedId
@@ -22,6 +22,7 @@ struct IncidentSelectView: View {
                             viewModel.incidentSelector.setIncident(incident)
                             onDismiss()
                         }
+                        // TODO: Common dimensions
                         .frame(height: 48)
                 }
                 .task {
@@ -34,7 +35,7 @@ struct IncidentSelectView: View {
                 }
             }
 
-            Button(t("actions.close")) {
+            Button(t.t("actions.close")) {
                 onDismiss()
             }
         }
