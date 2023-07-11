@@ -226,7 +226,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     private func subscribeToCaseData() {
         uiState
             .throttle(
-                for: .seconds(0.15),
+                for: .seconds(0.1),
                 scheduler: RunLoop.current,
                 latest: true
             )
@@ -478,7 +478,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     }
 
     private func updateHeaderTitle(_ caseNumber: String = "") {
-        headerTitle = caseNumber.isEmpty
+        headerTitle = caseNumber.isBlank
         ? localTranslate("nav.work_view_case")
         : "\(localTranslate("actions.view")) \(caseNumber)"
     }
