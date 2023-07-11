@@ -34,6 +34,21 @@ class CreateEditCaseComponent: Component<AppDependency>, CreateEditCaseViewBuild
     private func getViewModel(incidentId: Int64, worksiteId: Int64?) -> CreateEditCaseViewModel {
         if viewModel == nil {
             viewModel = CreateEditCaseViewModel(
+                accountDataRepository: dependency.accountDataRepository,
+                incidentsRepository: dependency.incidentsRepository,
+                incidentRefresher: dependency.incidentRefresher,
+                incidentBoundsProvider: dependency.incidentBoundsProvider,
+                worksitesRepository: dependency.worksitesRepository,
+                languageRepository: dependency.languageTranslationsRepository,
+                languageRefresher: dependency.languageRefresher,
+                workTypeStatusRepository: dependency.workTypeStatusRepository,
+                editableWorksiteProvider: dependency.editableWorksiteProvider,
+                translator: dependency.translator,
+                worksiteChangeRepository: dependency.worksiteChangeRepository,
+                syncPusher: dependency.syncPusher,
+                networkMonitor: dependency.networkMonitor,
+                appEnv: dependency.appEnv,
+                loggerFactory: dependency.loggerFactory,
                 incidentId: incidentId,
                 worksiteId: worksiteId
             )

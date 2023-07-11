@@ -91,12 +91,10 @@ internal class CaseEditorDataLoader {
             .eraseToAnyPublisher()
             .map { $0.org }
             .removeDuplicates()
-            .share()
             .eraseToAnyPublisher()
 
         incidentDataStream = incidentsRepository.streamIncident(incidentIdIn)
             .eraseToAnyPublisher()
-            .share()
             .removeDuplicates()
             .map { incident in
                 let publisher: AnyPublisher<IncidentBoundsPair?, Never>
@@ -114,11 +112,9 @@ internal class CaseEditorDataLoader {
             }
             .switchToLatest()
             .removeDuplicates()
-            .share()
             .eraseToAnyPublisher()
 
         worksiteStream = worksiteIdSubject
-            .share()
             .removeDuplicates()
             .eraseToAnyPublisher()
             .map { worksiteId in
@@ -132,16 +128,12 @@ internal class CaseEditorDataLoader {
             }
             .switchToLatest()
             .removeDuplicates()
-            .share()
             .eraseToAnyPublisher()
 
         workTypeStatusStream = workTypeStatusRepository.workTypeStatusOptions
             .eraseToAnyPublisher()
-            .share()
-            .eraseToAnyPublisher()
 
         uiState = uiStateSubject
-            .share()
             .receive(on: RunLoop.main)
 
         isOnlinePublisher = networkMonitor.isOnline.eraseToAnyPublisher()
@@ -151,7 +143,7 @@ internal class CaseEditorDataLoader {
 
     func loadData(
         incidentIdIn: Int64,
-        worksiteIdIn: Int64,
+        worksiteIdIn: Int64?,
         translate: @escaping (String) -> String
     ) {
         Task {

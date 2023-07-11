@@ -136,6 +136,10 @@ struct CreateEditCaseView: View {
                 }
             }
         }
+        .onAppear { viewModel.onViewAppear() }
+        .onDisappear { viewModel.onViewDisappear() }
+        .environmentObject(viewModel)
+        .environmentObject(viewModel.editableViewState)
     }
 }
 
