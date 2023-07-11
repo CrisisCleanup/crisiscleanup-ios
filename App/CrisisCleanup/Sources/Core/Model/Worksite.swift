@@ -251,7 +251,7 @@ enum WorksiteFlagType: String, Identifiable, CaseIterable {
 
 private let flagTypeLookup = WorksiteFlagType.allCases.associateBy{ $0.literal }
 
-public struct WorksiteFlag: Equatable {
+public struct WorksiteFlag: Equatable, Hashable {
     let id: Int64
     let action: String
     let createdAt: Date
