@@ -18,6 +18,32 @@ struct WorksiteChangeRecord: Identifiable, Equatable {
     let archiveAction: String
     let saveAttemptAt: Date
 
+    init(
+        id: Int64? = nil,
+        appVersion: Int64,
+        organizationId: Int64,
+        worksiteId: Int64,
+        syncUuid: String,
+        changeModelVersion: Int,
+        changeData: String,
+        createdAt: Date = Date.now,
+        saveAttempt: Int = 0,
+        archiveAction: String = "",
+        saveAttemptAt: Date = Date(timeIntervalSince1970: 0)
+    ) {
+            self.id = id
+            self.appVersion = appVersion
+            self.organizationId = organizationId
+            self.worksiteId = worksiteId
+            self.syncUuid = syncUuid
+            self.changeModelVersion = changeModelVersion
+            self.changeData = changeData
+            self.createdAt = createdAt
+            self.saveAttempt = saveAttempt
+            self.archiveAction = archiveAction
+            self.saveAttemptAt = saveAttemptAt
+        }
+
     func asExternalModel(_ maxSyncLimit: Int = 3) -> SavedWorksiteChange {
         SavedWorksiteChange(
             id: id!,
@@ -37,7 +63,7 @@ struct WorksiteChangeRecord: Identifiable, Equatable {
 extension WorksiteChangeRecord: Codable, FetchableRecord, MutablePersistableRecord {
     static var databaseTableName: String = "worksiteChange"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    internal enum Columns: String, ColumnExpression {
         case id,
              appVersion,
              organizationId,

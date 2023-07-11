@@ -12,6 +12,16 @@ extension String {
     func trim() -> String {
         self.trimmingCharacters(in: .whitespacesAndNewlines)
     }
+
+    @inline(__always)
+    func ifBlank(_ closure: () -> String?) -> String? {
+        isBlank ? closure() : self
+    }
+
+    @inline(__always)
+    func ifBlank(_ closure: () -> String) -> String {
+        isBlank ? closure() : self
+    }
 }
 
 extension Array where Element == Optional<String> {

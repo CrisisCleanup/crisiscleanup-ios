@@ -1,4 +1,4 @@
-struct ExpiredTokenException: Error {
+struct ExpiredTokenError: Error {
     let message = "Auth token is expired"
 }
 
@@ -24,8 +24,6 @@ public struct NetworkCrisisCleanupApiError: Codable, Equatable {
         messages = values.decodeIterableString(CodingKeys.messages)
     }
 }
-
-struct ExpiredTokenError: Error {}
 
 extension Array where Element == NetworkCrisisCleanupApiError {
     func tryThrowException() throws {

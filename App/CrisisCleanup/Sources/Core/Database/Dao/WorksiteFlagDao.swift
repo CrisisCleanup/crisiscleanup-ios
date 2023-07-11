@@ -11,13 +11,7 @@ public class WorksiteFlagDao {
     }
 
     func getNetworkedIdMap(_ worksiteId: Int64) throws -> [PopulatedIdNetworkId] {
-        try reader.read { db in
-            try WorksiteFlagRecord
-                .all()
-                .selectIdNetworkIdColumns()
-                .asRequest(of: PopulatedIdNetworkId.self)
-                .fetchAll(db)
-        }
+        try reader.read { db in try db.getWorksiteFlagNetworkedIdMap(worksiteId) }
     }
 }
 
@@ -27,5 +21,14 @@ extension Database {
             .all()
             .filterByUnsynced(worksiteId)
             .fetchCount(self)
+    }
+
+    func getWorksiteFlagNetworkedIdMap(_ worksiteId: Int64) throws -> [PopulatedIdNetworkId] {
+        try WorksiteFlagRecord
+            .all()
+            .selectIdNetworkIdColumns()
+            .filter(WorksiteFlagRecord.Columns.networkId > -1)
+            .asRequest(of: PopulatedIdNetworkId.self)
+            .fetchAll(self)
     }
 }

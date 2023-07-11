@@ -9,6 +9,14 @@ public func with<T>(_ item: T, _ closure: (inout T) -> Void) -> T {
 
 @discardableResult
 @inline(__always)
+public func with<T>(_ item: T, _ closure: (inout T) throws -> Void) throws -> T {
+    var mutableItem = item
+    try closure(&mutableItem)
+    return mutableItem
+}
+
+@discardableResult
+@inline(__always)
 public func with<T>(_ item: T, _ closure: (inout T) async throws -> Void) async throws -> T {
     var mutableItem = item
     try await closure(&mutableItem)

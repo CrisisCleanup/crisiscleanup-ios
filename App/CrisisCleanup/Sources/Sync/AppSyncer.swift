@@ -128,18 +128,18 @@ class AppSyncer: SyncPuller, SyncPusher {
                             try Task.checkCancellation()
 
                             if pullIncidents {
-                                _ = self.syncLogger.log("Pulling incidents")
+                                self.syncLogger.log("Pulling incidents")
                                 try await self.incidentsRepository.pullIncidents()
-                                _ = self.syncLogger.log("Incidents pulled")
+                                self.syncLogger.log("Incidents pulled")
                             }
 
                             try Task.checkCancellation()
 
                             // TODO: Prevent multiple incidents from refreshing concurrently.
                             if pullWorksitesIncidentId > 0 {
-                                _ = self.syncLogger.log("Refreshing incident \(pullWorksitesIncidentId) worksites")
+                                self.syncLogger.log("Refreshing incident \(pullWorksitesIncidentId) worksites")
                                 try await self.worksitesRepository.refreshWorksites(pullWorksitesIncidentId)
-                                _ = self.syncLogger.log("Incident \(pullWorksitesIncidentId) worksites refreshed")
+                                self.syncLogger.log("Incident \(pullWorksitesIncidentId) worksites refreshed")
                             }
                         }
                         try await group.waitForAll()
@@ -179,11 +179,11 @@ class AppSyncer: SyncPuller, SyncPusher {
                     if let _ = try incidentsRepository.getIncident(incidentId),
                        let syncStats = try worksitesRepository.getWorksiteSyncStats(incidentId),
                        syncStats.isDeltaPull {
-                        _ = syncLogger.log("App pull \(incidentId) delta")
+                        syncLogger.log("App pull \(incidentId) delta")
                         do {
                             defer {
                                 syncLogger.log("App pull \(incidentId) delta end")
-                                    .flush()
+                                syncLogger.flush()
                             }
 
                             try await worksitesRepository.refreshWorksites(
@@ -193,7 +193,7 @@ class AppSyncer: SyncPuller, SyncPusher {
                             )
                         } catch {
                             if !(error is CancellationError) {
-                                _ = syncLogger.log("\(incidentId) delta fail \(error)")
+                                syncLogger.log("\(incidentId) delta fail \(error)")
                             }
                         }
                     }

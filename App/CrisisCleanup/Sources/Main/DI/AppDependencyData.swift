@@ -48,7 +48,13 @@ extension MainComponent {
     }
 
     var worksiteChangeDao: WorksiteChangeDao {
-        WorksiteChangeDao(appDatabase)
+        WorksiteChangeDao(
+            appDatabase,
+            uuidGenerator: uuidGenerator,
+            changeSerializer: worksiteChangeSerializer,
+            appVersionProvider: appVersionProvider,
+            syncLogger: syncLoggerFactory.getLogger("worksite-change-dao")
+        )
     }
 
     var workTypeTransferRequestDao: WorkTypeTransferRequestDao {
@@ -57,6 +63,18 @@ extension MainComponent {
 
     var personContactDao: PersonContactDao {
         PersonContactDao(appDatabase)
+    }
+
+    var syncLogDao: SyncLogDao {
+        SyncLogDao(appDatabase)
+    }
+
+    var uuidGenerator: UuidGenerator {
+        SwiftUuidGenerator()
+    }
+
+    var worksiteChangeSerializer: WorksiteChangeSerializer {
+        SnapshotWorksiteChangeSerializer()
     }
 
     public var incidentsRepository: IncidentsRepository {

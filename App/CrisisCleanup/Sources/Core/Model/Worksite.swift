@@ -251,6 +251,7 @@ enum WorksiteFlagType: String, Identifiable, CaseIterable {
 
 private let flagTypeLookup = WorksiteFlagType.allCases.associateBy{ $0.literal }
 
+// sourcery: copyBuilder, skipCopyInit
 public struct WorksiteFlag: Equatable {
     let id: Int64
     let action: String
@@ -332,6 +333,7 @@ public struct WorksiteFlag: Equatable {
     }
 }
 
+// sourcery: copyBuilder
 public struct WorksiteNote: Equatable {
     let id: Int64
     let createdAt: Date

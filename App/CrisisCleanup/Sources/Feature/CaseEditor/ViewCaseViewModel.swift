@@ -382,8 +382,6 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
                 } else {
                     localImages = []
                 }
-                // TODO: Notes are not loading proper
-                print("worksite \(worksite.notes)")
                 return (fileImages, localImages, worksite.notes)
             }
             .share()

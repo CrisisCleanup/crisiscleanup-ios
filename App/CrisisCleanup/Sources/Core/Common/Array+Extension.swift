@@ -19,6 +19,22 @@ extension Array {
         }
         return dictionary
     }
+
+    /**
+     * - Returns (trueys, falseys)
+     */
+    func split(_ predicate: (Element) -> Bool) -> ([Element], [Element]) {
+        var trueBucket: [Element] = []
+        var falseBucket: [Element] = []
+        forEach {
+            if predicate($0) {
+                trueBucket.append($0)
+            } else {
+                falseBucket.append($0)
+            }
+        }
+        return (trueBucket, falseBucket)
+    }
 }
 
 extension [String] {

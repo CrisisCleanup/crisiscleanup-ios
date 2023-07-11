@@ -46,37 +46,33 @@ extension MainComponent {
 
     public var incidentDataPullReporter: IncidentDataPullReporter { worksitesRepository as! IncidentDataPullReporter }
 
-    public var syncLoggerFactory: SyncLoggerFactory { shared { DebugSyncLoggerFactory(loggerFactory) } }
+    public var syncLoggerFactory: SyncLoggerFactory {
+        shared {
+            AppSyncLoggerFactory(
+                syncLogDao,
+                appEnv
+            )
+        }
+    }
 }
 
-// TODO: Replace when actual logger is ready
-private class DebugSyncLoggerFactory: SyncLoggerFactory {
-    private let loggerFactory: AppLoggerFactory
+private class AppSyncLoggerFactory: SyncLoggerFactory {
+    private let syncLogDao: SyncLogDao
+    private let appEnv: AppEnv
+
+    init(
+        _ syncLogDao: SyncLogDao,
+        _ appEnv: AppEnv
+    ) {
+        self.syncLogDao = syncLogDao
+        self.appEnv = appEnv
+    }
 
     func getLogger(_ type: String) -> SyncLogger {
-        return DebugSyncLogger(loggerFactory.getLogger(type))
-    }
-
-    init(_ loggerFactory: AppLoggerFactory) {
-        self.loggerFactory = loggerFactory
-    }
-}
-
-private class DebugSyncLogger: SyncLogger {
-    private var logger: AppLogger
-
-    init(_ logger: AppLogger) {
-        self.logger = logger
-    }
-
-    func clear() -> SyncLogger {
-        return self
-    }
-
-    func flush() {}
-
-    func log(_ message: String, _ details: String, _ type: String) -> SyncLogger {
-        logger.logDebug(type, message, details)
-        return self
+        return PagingSyncLogRepository(
+            syncLogDao: syncLogDao,
+            appEnv: appEnv,
+            type: type
+        )
     }
 }

@@ -56,7 +56,7 @@ extension IncidentRecord: Codable, FetchableRecord, PersistableRecord {
 
 extension DerivableRequest<IncidentRecord> {
     func isNotArchived() -> Self {
-        filter(IncidentRecord.Columns.isArchived == false)
+        filter(!IncidentRecord.Columns.isArchived)
     }
 
     func startingAt(_ startAt: Date) -> Self {

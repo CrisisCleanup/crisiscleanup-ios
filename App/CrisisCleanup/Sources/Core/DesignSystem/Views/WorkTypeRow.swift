@@ -38,7 +38,7 @@ struct WorkTypeRow: View {
                                     .background(Color.white)
                                     .border(.black, width: 2)
                                     .cornerRadius(appTheme.cornerRadius)
-                            } else if (workType.isReleaseEligible) {
+                            } else if workType.isReleaseEligible {
                                 Text("Release")
                                     .lineLimit(1)
                                     .padding()

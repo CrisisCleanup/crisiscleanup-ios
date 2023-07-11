@@ -45,7 +45,7 @@ extension AccountInfo {
         let tokenExpiry = Date(timeIntervalSince1970: Double(expirySeconds))
         let fullName = "\(firstName) \(lastName)"
         let orgData = OrgData(id: orgId, name: orgName)
-        let ppUri = profilePictureUri.isBlank ? defaultProfilePictureUri(fullName) : profilePictureUri
+        let ppUri = profilePictureUri.ifBlank { defaultProfilePictureUri(fullName) }
         return AccountData(
             id: id,
             accessToken: accessToken,

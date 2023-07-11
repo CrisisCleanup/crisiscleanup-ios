@@ -541,6 +541,57 @@ extension AppDatabase {
                     .notNull()
             }
         }
+
+        migrator.registerMigration(
+            "worksite-change-sync-log",
+            foreignKeyChecks: .immediate
+        ) { db in
+            try db.create(table: "worksiteChange") { t in
+                t.autoIncrementedPrimaryKey("id")
+                t.column("appVersion", .integer)
+                    .notNull()
+                t.column("organizationId", .integer)
+                    .notNull()
+                t.column("worksiteId", .integer)
+                    .notNull()
+                    .references("worksiteRoot", onDelete: .cascade)
+                t.column("syncUuid", .text)
+                    .notNull()
+                t.column("changeModelVersion", .integer)
+                    .notNull()
+                t.column("changeData", .text)
+                    .notNull()
+                t.column("createdAt", .date)
+                    .notNull()
+                t.column("saveAttempt", .integer)
+                    .notNull()
+                t.column("archiveAction", .text)
+                    .notNull()
+                t.column("saveAttemptAt", .date)
+                    .notNull()
+            }
+            try db.create(
+                indexOn: "worksiteChange",
+                columns: ["worksiteId", "createdAt"]
+            )
+
+            try db.create(table: "syncLog") { t in
+                t.autoIncrementedPrimaryKey("id")
+                t.column("logTime", .date)
+                    .notNull()
+                t.column("logType", .text)
+                    .notNull()
+                t.column("message", .text)
+                    .notNull()
+                t.column("details", .text)
+                    .notNull()
+            }
+            try db.create(
+                indexOn: "syncLog",
+                columns: ["logTime"]
+            )
+        }
+
         return migrator
     }
 }

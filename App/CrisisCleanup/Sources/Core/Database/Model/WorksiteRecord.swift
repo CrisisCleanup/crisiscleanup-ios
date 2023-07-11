@@ -146,6 +146,32 @@ extension WorksiteRootRecord: Codable, FetchableRecord, MutablePersistableRecord
             .fetchOne(db)
         return record?.id ?? 0
     }
+
+    static func localModifyUpdate(
+        _ db: Database,
+        id: Int64,
+        incidentId: Int64,
+        syncUuid: String,
+        localModifiedAt: Date
+    ) throws {
+        try db.execute(
+            sql:
+                """
+                UPDATE worksiteRoot
+                SET incidentId      =:incidentId,
+                    syncUuid        =:syncUuid,
+                    localModifiedAt =:localModifiedAt,
+                    isLocalModified =1
+                WHERE id=:id
+                """,
+            arguments: [
+                Columns.id.rawValue: id,
+                Columns.incidentId.rawValue: incidentId,
+                Columns.syncUuid.rawValue: syncUuid,
+                Columns.localModifiedAt.rawValue: localModifiedAt,
+            ]
+        )
+    }
 }
 
 extension DerivableRequest<WorksiteRootRecord> {
@@ -474,7 +500,7 @@ struct WorkTypeRecord : Identifiable, Equatable {
 extension WorkTypeRecord: Codable, FetchableRecord, MutablePersistableRecord {
     static var databaseTableName: String = "workType"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    internal enum Columns: String, ColumnExpression {
         case id,
              networkId,
              worksiteId,
@@ -497,7 +523,17 @@ extension WorkTypeRecord: Codable, FetchableRecord, MutablePersistableRecord {
         _ networkIds: [Int64]
     ) throws {
         try WorkTypeRecord.all()
-            .filter(Columns.worksiteId == worksiteId && networkIds.contains(Columns.networkId) == false)
+            .filter(Columns.worksiteId == worksiteId && !networkIds.contains(Columns.networkId))
+            .deleteAll(db)
+    }
+
+    static func deleteUnspecified(
+        _ db: Database,
+        _ worksiteId: Int64,
+        _ workTypes: Set<String>
+    ) throws {
+        try WorkTypeRecord.all()
+            .filter(Columns.worksiteId == worksiteId && !workTypes.contains(Columns.workType))
             .deleteAll(db)
     }
 
@@ -605,7 +641,7 @@ struct WorksiteFormDataRecord : Identifiable, Equatable {
 extension WorksiteFormDataRecord: Codable, FetchableRecord, MutablePersistableRecord {
     static var databaseTableName: String = "worksiteFormData"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    internal enum Columns: String, ColumnExpression {
         case id,
              worksiteId,
              fieldKey,
@@ -621,10 +657,10 @@ extension WorksiteFormDataRecord: Codable, FetchableRecord, MutablePersistableRe
     static func deleteUnspecifiedKeys(
         _ db: Database,
         _ worksiteId: Int64,
-        _ fieldKeys: [String]
+        _ fieldKeys: Set<String>
     ) throws {
         try WorksiteFormDataRecord.all()
-            .filter(Columns.worksiteId == worksiteId && fieldKeys.contains(Columns.fieldKey) == false)
+            .filter(Columns.worksiteId == worksiteId && !fieldKeys.contains(Columns.fieldKey))
             .deleteAll(db)
     }
 
@@ -702,7 +738,7 @@ struct WorksiteFlagRecord : Identifiable, Equatable {
 extension WorksiteFlagRecord: Codable, FetchableRecord, MutablePersistableRecord {
     static var databaseTableName: String = "worksiteFlag"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    internal enum Columns: String, ColumnExpression {
         case id,
              networkId,
              worksiteId,
@@ -724,7 +760,17 @@ extension WorksiteFlagRecord: Codable, FetchableRecord, MutablePersistableRecord
         _ reasons: [String]
     ) throws {
         try WorksiteFlagRecord.all()
-            .filter(Columns.worksiteId == worksiteId && reasons.contains(Columns.reasonT) == false)
+            .filter(Columns.worksiteId == worksiteId && !reasons.contains(Columns.reasonT))
+            .deleteAll(db)
+    }
+
+    static func deleteUnspecified(
+        _ db: Database,
+        _ worksiteId: Int64,
+        _ ids: Set<Int64>
+    ) throws {
+        try WorksiteFlagRecord.all()
+            .filter(Columns.worksiteId == worksiteId && !ids.contains(Columns.id))
             .deleteAll(db)
     }
 
@@ -805,7 +851,7 @@ struct WorksiteNoteRecord : Identifiable, Equatable {
 extension WorksiteNoteRecord: Codable, FetchableRecord, MutablePersistableRecord {
     static var databaseTableName: String = "worksiteNote"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    internal enum Columns: String, ColumnExpression {
         case id,
              localGlobalUuid,
              networkId,
@@ -848,7 +894,7 @@ extension WorksiteNoteRecord: Codable, FetchableRecord, MutablePersistableRecord
         _ networkIds: [Int64]
     ) throws {
         try WorksiteNoteRecord.all()
-            .filter(Columns.worksiteId == worksiteId && networkIds.contains(Columns.networkId) == false)
+            .filter(Columns.worksiteId == worksiteId && !networkIds.contains(Columns.networkId))
             .deleteAll(db)
     }
 

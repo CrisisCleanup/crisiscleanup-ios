@@ -11,13 +11,7 @@ public class WorkTypeDao {
     }
 
     func getNetworkedIdMap(_ worksiteId: Int64) throws -> [PopulatedIdNetworkId] {
-        try reader.read { db in
-            try WorkTypeRecord
-                .all()
-                .selectIdNetworkIdColumns()
-                .asRequest(of: PopulatedIdNetworkId.self)
-                .fetchAll(db)
-        }
+        try reader.read { db in try db.getWorkTypeNetworkedIdMap(worksiteId) }
     }
 }
 
@@ -27,5 +21,14 @@ extension Database {
             .all()
             .filterByUnsynced(worksiteId)
             .fetchCount(self)
+    }
+
+    func getWorkTypeNetworkedIdMap(_ worksiteId: Int64) throws -> [PopulatedIdNetworkId] {
+        try WorkTypeRecord
+            .all()
+            .selectIdNetworkIdColumns()
+            .filter(WorksiteFlagRecord.Columns.networkId > -1)
+            .asRequest(of: PopulatedIdNetworkId.self)
+            .fetchAll(self)
     }
 }

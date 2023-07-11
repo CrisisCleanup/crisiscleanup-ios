@@ -51,8 +51,6 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
             .eraseToAnyPublisher()
             .asyncMap { $0.org.id }
             .eraseToAnyPublisher()
-
-        Task { await loadFakeData() }
     }
 
     func streamIncidentWorksitesCount(_ id: Int64) -> any Publisher<Int, Never> {
@@ -243,11 +241,5 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     ) async throws -> Bool {
         // TODO: Do
         return false
-    }
-
-
-    private let fakeDataLoader = FakeDataLoader()
-    private func loadFakeData() async {
-        fakeDataLoader.loadData()
     }
 }

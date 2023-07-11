@@ -56,6 +56,7 @@ class WorksiteTestUtil {
 
     internal static let testTranslator = TestTranslator()
     internal static let silentSyncLogger = SilentSyncLogger()
+    internal static let testAppVersionProvider = TestAppVersionProvider()
 }
 
 internal class TestTranslator : KeyTranslator {
@@ -70,16 +71,32 @@ internal class TestTranslator : KeyTranslator {
         "\(phraseKey)-translated"
     }
 
-    func callAsFunction(_ phraseKey: String) -> String {
+    func t(_ phraseKey: String) -> String {
         translate(phraseKey)!
     }
-
 }
 
 internal class SilentSyncLogger : SyncLogger {
-    func log(_ message: String, _ details: String, _ type: String) -> SyncLogger { self }
-    func clear() -> SyncLogger { self }
+    var type: String = ""
+
+    func log(_ message: String, _ details: String, _ type: String) {}
+    func clear() {}
     func flush() {}
+}
+
+internal class TestUuidGenerator: UuidGenerator {
+    private var counter = 0
+
+    func uuid() -> String {
+        counter += 1
+        return "uuid-\(counter)"
+    }
+}
+
+internal class TestAppVersionProvider: AppVersionProvider {
+    let version: (Int64, String) = (81, "1.0.81")
+    var versionString: String { version.1 }
+    var buildNumber: Int64 { version.0 }
 }
 
 internal func testIncidentRecord(

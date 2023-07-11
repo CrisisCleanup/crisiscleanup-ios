@@ -71,7 +71,7 @@ public class WorksiteDao {
         }
 
         let worksiteFormData = unassociatedFormData.map { fd in fd.copy { $0.worksiteId = worksiteId } }
-        let fieldKeys = worksiteFormData.map { $0.fieldKey }
+        let fieldKeys = Set(worksiteFormData.map { $0.fieldKey })
         try WorksiteFormDataRecord.deleteUnspecifiedKeys(db, worksiteId, fieldKeys)
         for formData in worksiteFormData {
             var formData = formData
@@ -186,7 +186,7 @@ public class WorksiteDao {
         } else {
             // Resolving changes at this point is not worth the complexity.
             // Defer to worksite (snapshot) changes resolving successfully and completely.
-            _ = syncLogger.log("Skip sync overwriting locally modified worksite \(modifiedAt!.id) (\(worksite.networkId))")
+            syncLogger.log("Skip sync overwriting locally modified worksite \(modifiedAt!.id) (\(worksite.networkId))")
         }
 
         return false

@@ -21,7 +21,7 @@ class KeychainDataSource: SecureDataSource {
     }
 
     init(_ bundleId: String = "") {
-        self.bundleId = bundleId.isBlank ? Bundle.main.bundleIdentifier : bundleId
+        self.bundleId = bundleId.ifBlank { Bundle.main.bundleIdentifier }
     }
 
     func getAccessToken(_ emailAddress: String) -> String {

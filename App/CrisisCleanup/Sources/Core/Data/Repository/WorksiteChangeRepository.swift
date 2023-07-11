@@ -131,10 +131,23 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         accountDataPublisher = accountDataRepository.accountData.eraseToAnyPublisher()
     }
 
-    func saveWorksiteChange(worksiteStart: Worksite, worksiteChange: Worksite, primaryWorkType: WorkType, organizationId: Int64) async throws -> Int64 {
-        // TODO: Do
-        print("Save changed worksite \(worksiteChange)")
-        return 0
+    func saveWorksiteChange(
+        worksiteStart: Worksite,
+        worksiteChange: Worksite,
+        primaryWorkType: WorkType,
+        organizationId: Int64
+    ) async throws -> Int64 {
+        do {
+            return try await worksiteChangeDao.saveChange(
+                worksiteStart: worksiteStart,
+                worksiteChange: worksiteChange,
+                primaryWorkType: primaryWorkType,
+                organizationId: organizationId
+            )
+        } catch {
+            appLogger.logError(error)
+            throw error
+        }
     }
 
     func saveWorkTypeTransfer(worksite: Worksite, organizationId: Int64, requestReason: String, requests: [String], releaseReason: String, releases: [String]) async -> Bool {
@@ -165,13 +178,13 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         _ rethrowError: Bool
     ) async throws -> Bool {
         if try await isNotOnlinePublisher.asyncFirst() {
-            _ = syncLogger.log("Not syncing. No internet connection.")
+            syncLogger.log("Not syncing. No internet connection.")
             return false
         }
 
         let accountData = try await accountDataPublisher.asyncFirst()
         if accountData.isTokenInvalid {
-            _ = syncLogger.log("Not syncing. Invalid account token.")
+            syncLogger.log("Not syncing. Invalid account token.")
             return false
         }
 
@@ -187,7 +200,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
 
             let performSync = syncingWorksiteIdsLock.withLock {
                 if _syncingWorksiteIds.contains(worksiteId) {
-                    _ = syncLogger.log("Not syncing. Currently being synced.")
+                    syncLogger.log("Not syncing. Currently being synced.")
                     return false
                 }
                 _syncingWorksiteIds.insert(worksiteId)
@@ -202,8 +215,8 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
             try await self.syncWorksite(worksiteId)
         } catch {
             var unhandledException: Error? = nil
-            if error is NoInternetConnectionException {}
-            else if error is ExpiredTokenException {
+            if error is NoInternetConnectionError {}
+            else if error is ExpiredTokenError {
                 authEventBus.onExpiredToken()
             }
             else {
@@ -216,7 +229,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
                     throw endError
                 } else {
                     // TODO Indicate error visually
-                    _ = syncLogger.log("Sync failed", endError.localizedDescription)
+                    syncLogger.log("Sync failed", details: endError.localizedDescription)
                 }
             }
         }
@@ -229,36 +242,36 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
 
         var syncException: Error? = nil
 
-//        let sortedChanges = worksiteChangeDao.getOrdered(worksiteId)
-//        if sortedChanges.isNotEmpty {
-//            _ = syncLogger.log("\(sortedChanges.count) changes.")
-//
-//            let newestChange = sortedChanges.last!
-//            let newestChangeOrgId = newestChange.organizationId
-//            let accountData = try await accountDataPublisher.asyncFirst()
-//            let organizationId = accountData.org.id
-//            if newestChangeOrgId != organizationId {
-//                _ = syncLogger.log("Not syncing. Org mismatch \(organizationId) != \(newestChangeOrgId).")
-//                // TODO Insert notice that newest change of worksite was with a different organization
-//                return
-//            }
-//
-//            _ = syncLogger.log("Sync changes starting.")
-//
-//            let worksiteChanges = sortedChanges.map { $0.asExternalModel(MaxSyncTries) }
-//            do {
-//                try await self.syncWorksiteChanges(worksiteChanges)
-//            } catch {
-//                syncException = error
-//            }
-//
-//            _ = syncLogger.log("Sync changes over.")
-//        }
-//
-//        await syncPhotoChanges(worksiteId)
-//
-//        // TODO There is a possibility all changes have been synced but there is still unsynced accessory data.
-//        //      Try to sync in isolation, create a new change, or create notice with options to take action.
+        let sortedChanges = worksiteChangeDao.getOrdered(worksiteId)
+        if sortedChanges.isNotEmpty {
+            syncLogger.log("\(sortedChanges.count) changes.")
+
+            let newestChange = sortedChanges.last!
+            let newestChangeOrgId = newestChange.organizationId
+            let accountData = try await accountDataPublisher.asyncFirst()
+            let organizationId = accountData.org.id
+            if newestChangeOrgId != organizationId {
+                syncLogger.log("Not syncing. Org mismatch \(organizationId) != \(newestChangeOrgId).")
+                // TODO Insert notice that newest change of worksite was with a different organization
+                return
+            }
+
+            syncLogger.log("Sync changes starting.")
+
+            let worksiteChanges = sortedChanges.map { $0.asExternalModel(MaxSyncTries) }
+            do {
+                try await self.syncWorksiteChanges(worksiteChanges)
+            } catch {
+                syncException = error
+            }
+
+            syncLogger.log("Sync changes over.")
+        }
+
+        await syncPhotoChanges(worksiteId)
+
+        // TODO: There is a possibility all changes have been synced but there is still unsynced accessory data.
+        //       Try to sync in isolation, create a new change, or create notice with options to take action.
 
         // These fetches are split from the save later because WorksiteDaoPlus.onSyncEnd]
         // must run first as the [worksite_root.is_local_modified] value matters.
@@ -270,16 +283,16 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
                 syncNetworkWorksite = try await networkDataSource.getWorksite(networkWorksiteId)
                 incidentId = worksiteDao.getIncidentId(worksiteId)
             } catch {
-                _ = syncLogger.log("Worksite sync end fail \(error.localizedDescription)")
+                syncLogger.log("Worksite sync end fail \(error.localizedDescription)")
             }
         }
 
         let isFullySynced = try await worksiteDao.onSyncEnd(worksiteId)
         if isFullySynced {
-            _ = syncLogger.clear()
-                .log("Worksite fully synced.")
+            syncLogger.clear()
+            syncLogger.log("Worksite fully synced.")
         } else {
-            _ = syncLogger.log("Unsynced data exists.")
+            syncLogger.log("Unsynced data exists.")
         }
 
         if let syncWorksite = syncNetworkWorksite,
@@ -343,9 +356,9 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
             )
 
             appEnv.runInNonProd {
-                _ = syncLogger.log(
+                syncLogger.log(
                     "Sync change results",
-                    syncResult.getSummary(sortedChanges.count)
+                    details: syncResult.getSummary(sortedChanges.count)
                 )
             }
 
@@ -363,13 +376,13 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
             try syncResult.changeResults.map { $0.error }
                 .filter { $0 != nil }
                 .forEach {
-                    if $0 is NoInternetConnectionException ||
-                        $0 is ExpiredTokenException {
+                    if $0 is NoInternetConnectionError ||
+                        $0 is ExpiredTokenError {
                         throw $0!
                     }
                 }
         } else {
-            _ = syncLogger.log("Not syncing. Worksite \(newestChange.worksiteId) change is not syncable.")
+            syncLogger.log("Not syncing. Worksite \(newestChange.worksiteId) change is not syncable.")
             // TODO Not worth retrying at this point.
             //      How to handle gracefully?
             //      Wait for user modification, intervention, or prompt?
@@ -383,7 +396,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
 //                localImageDao.getDeletedPhotoNetworkFileIds(worksiteId)
 //            if deleteFileIds.isNotEmpty() {
 //                worksitePhotoChangeSyncer.deletePhotoFiles(networkWorksiteId, deleteFileIds)
-//                _ = syncLogger.log("Deleted photos", deleteFileIds.joinToString(", "))
+//                syncLogger.log("Deleted photos", deleteFileIds.joinToString(", "))
 //            }
 //        } catch {
 //            syncLogger.log("Delete photo error", error.localizedDescription)
@@ -396,6 +409,6 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
     }
 }
 
-struct NoInternetConnectionException : Error {
+struct NoInternetConnectionError : Error {
     let message = "No internet"
 }
