@@ -3,15 +3,6 @@
 import SwiftUI
 import MapKit
 
-private let FlagColorFallback = Color(hex: 0xFF000000)
-private let FlagColors = [
-    WorksiteFlagType.highPriority: Color(hex: 0xFF367bc3),
-    WorksiteFlagType.upsetClient: Color(hex: 0xFF00b3bf),
-    WorksiteFlagType.reportAbuse: Color(hex: 0xFFd79425),
-    WorksiteFlagType.wrongLocation: Color(hex: 0xFFf77020),
-    WorksiteFlagType.wrongIncident: Color(hex: 0xFFc457e7),
-]
-
 struct ViewCaseView: View {
 
     @Environment(\.translator) var t: KeyAssetTranslator
@@ -27,8 +18,6 @@ struct ViewCaseView: View {
 
         ZStack {
             VStack {
-
-                // TODO: Wrapping flag chips with delete actions
 
                 let tabTitles = viewModel.tabTitles
 
@@ -160,6 +149,20 @@ private struct ViewCaseInfo: View {
                             .padding([.leading, .bottom])
                         Spacer()
                     }
+                }
+
+                if let worksiteFlag = viewModel.caseData?.worksite.flags {
+                    HStack {
+                        VStack (alignment: .leading) {
+                            ForEach(worksiteFlag, id: \.self) { flag in
+                                WorksiteFlagChip(flag) {
+                                    // TODO: delete action
+                                }
+                            }
+                        }
+                        Spacer()
+                    }
+                    .padding(.leading)
                 }
 
                 ViewCaseRowHeader(rowNum: 1, rowTitle: t.t("caseForm.property_information"))
