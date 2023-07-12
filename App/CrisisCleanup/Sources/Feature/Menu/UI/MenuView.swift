@@ -1,5 +1,6 @@
-import SwiftUI
+import CachedAsyncImage
 import SVGView
+import SwiftUI
 
 struct MenuView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
@@ -91,7 +92,7 @@ private struct TopBar: View {
                             .frame(width: 48, height: 48)
                             .padding([.vertical], 8)
                     } else {
-                        AsyncImage(url: url) { image in
+                        Cached  AsyncImage(url: url) { image in
                             image.resizable()
                                 .scaledToFit()
                         } placeholder: {

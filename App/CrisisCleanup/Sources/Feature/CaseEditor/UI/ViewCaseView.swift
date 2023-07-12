@@ -183,15 +183,27 @@ private struct ViewCaseInfo: View {
 }
 
 private struct ViewCasePhotos: View {
+    @EnvironmentObject var router: NavigationRouter
+
     var body: some View {
-        Text("Photos")
+        Button {
+            router.viewImage(imageId: 0)
+        } label: {
+            Text("Photos")
+        }
     }
 }
 
 private struct ViewCaseNotes: View {
+    @EnvironmentObject var router: NavigationRouter
+
     var body: some View {
         VStack {
-            Text("Notes")
+            Button {
+                router.openCaseAddNote()
+            } label: {
+                Text("Notes")
+            }
         }
     }
 }

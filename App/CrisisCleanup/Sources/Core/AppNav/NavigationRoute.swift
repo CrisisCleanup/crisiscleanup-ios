@@ -9,7 +9,9 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
          caseShare,
          caseFlags,
          caseHistory,
-         caseWorkTypeTransfer
+         caseWorkTypeTransfer,
+         caseAddNote,
+         viewImage(imageId: Int64)
 
     public var id: Int {
         switch self {
@@ -24,6 +26,8 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
         case .caseFlags: return 8
         case .caseHistory: return 9
         case .caseWorkTypeTransfer: return 10
+        case .caseAddNote: return 11
+        case .viewImage: return 12
         }
     }
 }

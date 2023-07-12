@@ -12,11 +12,13 @@ struct MainView: View {
     let casesFilterViewBuilder: CasesFilterViewBuilder
     let casesSearchViewBuilder: CasesSearchViewBuilder
     let viewCaseViewBuilder: ViewCaseViewBuilder
+    let caseAddNoteViewBuilder: CaseAddNoteViewBuilder
     let createEditCaseViewBuilder: CreateEditCaseViewBuilder
     let caseShareViewBuilder: CaseShareViewBuilder
     let caseFlagsViewBuilder: CaseFlagsViewBuilder
     let caseHistoryViewBuilder: CaseHistoryViewBuilder
     let transferWorkTypeViewBuilder: TransferWorkTypeViewBuilder
+    let viewImageViewBuilder: ViewImageViewBuilder
 
     @State private var selectedTab = TopLevelDestination.cases
     var body: some View {
@@ -48,11 +50,13 @@ struct MainView: View {
                                             casesFilterViewBuilder: casesFilterViewBuilder,
                                             casesSearchViewBuilder: casesSearchViewBuilder,
                                             viewCaseViewBuilder: viewCaseViewBuilder,
+                                            caseAddNoteViewBuilder: caseAddNoteViewBuilder,
                                             createEditCaseViewBuilder: createEditCaseViewBuilder,
                                             caseShareViewBuilder: caseShareViewBuilder,
                                             caseFlagsViewBuilder: caseFlagsViewBuilder,
                                             caseHistoryViewBuilder: caseHistoryViewBuilder,
-                                            transferWorkTypeViewBuilder: transferWorkTypeViewBuilder
+                                            transferWorkTypeViewBuilder: transferWorkTypeViewBuilder,
+                                            viewImageViewBuilder: viewImageViewBuilder
                                         )
                                     }
                                     .toolbarColorScheme(.light, for: .tabBar)
@@ -108,8 +112,8 @@ private struct TabViewContainer<Content: View>: View {
                 if addBottomRect {
                     Rectangle()
                         .fill(backgroundColor)
-                        // TODO: Setting a positive height causes flickering in Cases tab.
-                        //       Figure out how to add space without flickering for all content.
+                    // TODO: Setting a positive height causes flickering in Cases tab.
+                    //       Figure out how to add space without flickering for all content.
                         .frame(height: bottomPadding)
                         .background(backgroundColor)
                 }
@@ -126,11 +130,13 @@ private struct MainTabs: View {
     let casesFilterViewBuilder: CasesFilterViewBuilder
     let casesSearchViewBuilder: CasesSearchViewBuilder
     let viewCaseViewBuilder: ViewCaseViewBuilder
+    let caseAddNoteViewBuilder: CaseAddNoteViewBuilder
     let createEditCaseViewBuilder: CreateEditCaseViewBuilder
     let caseShareViewBuilder: CaseShareViewBuilder
     let caseFlagsViewBuilder: CaseFlagsViewBuilder
     let caseHistoryViewBuilder: CaseHistoryViewBuilder
     let transferWorkTypeViewBuilder: TransferWorkTypeViewBuilder
+    let viewImageViewBuilder: ViewImageViewBuilder
 
     var body: some View {
         TabViewContainer {
@@ -152,6 +158,8 @@ private struct MainTabs: View {
                             incidentId: incidentId,
                             worksiteId: worksiteId
                         )
+                    case .caseAddNote:
+                        caseAddNoteViewBuilder.caseAddNoteView
                     case .createEditCase(let incidentId, let worksiteId):
                         createEditCaseViewBuilder.createEditCaseView(
                             incidentId: incidentId,
@@ -165,6 +173,8 @@ private struct MainTabs: View {
                         caseHistoryViewBuilder.caseHistoryView
                     case .caseWorkTypeTransfer:
                         transferWorkTypeViewBuilder.transferWorkTypeView
+                    case .viewImage(let imageId):
+                        viewImageViewBuilder.viewImageView(imageId)
                     default:
                         Text("Route \(route.id) needs implementing")
                     }
