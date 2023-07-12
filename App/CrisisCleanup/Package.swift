@@ -25,6 +25,7 @@ let package = Package(
         .package(url: "https://github.com/groue/GRDB.swift.git", .upToNextMajor(from: "6.15.0")),
         .package(url: "https://github.com/albertbori/TestableCombinePublishers.git", .upToNextMinor(from: "1.2.0")),
         .package(url: "https://github.com/nicklockwood/LRUCache.git", .upToNextMinor(from: "1.0.0")),
+        .package(url: "https://github.com/smyshlaevalex/FlowStackLayout.git", .upToNextMinor(from: "1.0.1"))
     ],
     targets: [
         .target(
@@ -37,6 +38,7 @@ let package = Package(
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "GRDB", package: "GRDB.swift"),
                 .product(name: "LRUCache", package: "LRUCache"),
+                .product(name: "FlowStackLayout", package: "FlowStackLayout"),
             ],
             path: "Sources"
         ),

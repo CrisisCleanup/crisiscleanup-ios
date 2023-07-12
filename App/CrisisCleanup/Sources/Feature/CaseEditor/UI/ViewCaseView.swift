@@ -1,7 +1,8 @@
 //  Created by Anthony Aguilar on 6/30/23.
 
-import SwiftUI
+import FlowStackLayout
 import MapKit
+import SwiftUI
 
 struct ViewCaseView: View {
 
@@ -146,23 +147,25 @@ private struct ViewCaseInfo: View {
                 if let caseState = viewModel.caseData {
                     HStack{
                         IncidentHeader(incident: caseState.incident)
-                            .padding([.leading, .bottom])
+                            .padding([.horizontal, .bottom])
                         Spacer()
                     }
                 }
 
                 if let worksiteFlag = viewModel.caseData?.worksite.flags {
-                    HStack {
-                        VStack (alignment: .leading) {
-                            ForEach(worksiteFlag, id: \.self) { flag in
-                                WorksiteFlagChip(flag) {
-                                    // TODO: delete action
-                                }
+                    FlowStack(
+                        alignment: .leading,
+                        horizontalSpacing: 8,
+                        verticalSpacing: 8
+                    ) {
+                        ForEach(worksiteFlag, id: \.self) { flag in
+                            WorksiteFlagChip(flag) {
+                                viewModel.removeFlag(flag)
                             }
                         }
-                        Spacer()
                     }
-                    .padding(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding([.horizontal, .bottom])
                 }
 
                 ViewCaseRowHeader(rowNum: 1, rowTitle: t.t("caseForm.property_information"))

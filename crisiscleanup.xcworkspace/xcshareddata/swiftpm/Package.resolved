@@ -28,6 +28,15 @@
       }
     },
     {
+      "identity" : "flowstacklayout",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/smyshlaevalex/FlowStackLayout.git",
+      "state" : {
+        "revision" : "4bbab09c49b53b8e07c3d17837da33a357f6be7e",
+        "version" : "1.0.1"
+      }
+    },
+    {
       "identity" : "googleappmeasurement",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/GoogleAppMeasurement.git",

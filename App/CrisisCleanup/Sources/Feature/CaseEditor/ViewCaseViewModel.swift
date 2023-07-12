@@ -529,6 +529,17 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         }
     }
 
+    func removeFlag(_ flag: WorksiteFlag) {
+        let startingWorksite = referenceWorksite
+        if let worksiteFlags = startingWorksite.flags {
+            let flagsDeleted = worksiteFlags.filter { $0.id != flag.id }
+            if flagsDeleted.count < worksiteFlags.count {
+                let changedWorksite = startingWorksite.copy { $0.flags = flagsDeleted }
+                saveWorksiteChange(startingWorksite, changedWorksite)
+            }
+        }
+    }
+
     func toggleFavorite() {
         let startingWorksite = referenceWorksite
         let changedWorksite =
