@@ -92,7 +92,7 @@ private struct TopBar: View {
                             .frame(width: 48, height: 48)
                             .padding([.vertical], 8)
                     } else {
-                        Cached  AsyncImage(url: url) { image in
+                        CachedAsyncImage(url: url) { image in
                             image.resizable()
                                 .scaledToFit()
                         } placeholder: {
