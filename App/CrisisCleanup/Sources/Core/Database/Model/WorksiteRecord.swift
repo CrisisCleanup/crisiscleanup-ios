@@ -9,6 +9,12 @@ struct WorksiteRootRecord : Identifiable, Equatable {
     static let worksiteFormData = hasMany(WorksiteFormDataRecord.self)
     static let worksiteNotes = hasMany(WorksiteNoteRecord.self)
     static let workTypes = hasMany(WorkTypeRecord.self)
+    static let networkFiles = hasMany(
+        NetworkFileRecord.self,
+        through: hasMany(WorksiteToNetworkFileRecord.self),
+        using: WorksiteToNetworkFileRecord.files
+    )
+    static let worksiteLocalImages = hasMany(WorksiteLocalImageRecord.self)
 
     private static func newRecord(
         syncedAt: Date,

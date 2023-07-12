@@ -110,7 +110,7 @@ public class WorksiteDao {
         }
     }
 
-    // TODO: Write tests
+    // TODO: Finish tests
     private func syncFiles(
         _ db: Database,
         _ worksiteId: Int64,
@@ -120,7 +120,18 @@ public class WorksiteDao {
             return
         }
 
-        // TODO: Do. Ensure there is test coverage if upserting
+        for record in files {
+            try record.upsert(db)
+        }
+        let ids = Set(files.map { $0.id })
+        try NetworkFileRecord.deleteDeleted(db, worksiteId, ids)
+        try WorksiteToNetworkFileRecord.deleteUnspecified(db, worksiteId, ids)
+        for networkFileId in ids {
+            try WorksiteToNetworkFileRecord(
+                id: worksiteId,
+                networkFileId: networkFileId
+            ).insert(db, onConflict: .ignore)
+        }
     }
 
     private func syncWorksite(
@@ -470,6 +481,9 @@ public class WorksiteDao {
             .including(all: WorksiteRootRecord.worksiteFormData)
             .including(all: WorksiteRootRecord.worksiteNotes)
             .including(all: WorksiteRootRecord.workTypes)
+            .including(all: WorksiteRootRecord.networkFiles
+                .including(optional: NetworkFileRecord.networkFileLocalImage))
+            .including(all: WorksiteRootRecord.worksiteLocalImages)
             .asRequest(of: PopulatedLocalWorksite.self)
             .fetchOne(db)
     }
@@ -565,167 +579,5 @@ extension AppDatabase {
 extension Database {
     fileprivate func setWorksiteRootUnmodified(_ worksiteId: Int64, _ syncedAt: Date) throws {
         try WorksiteRootRecord.setRootUnmodified(self, worksiteId, syncedAt)
-    }
-}
-
-// MARK: - Requests
-
-internal struct PopulatedWorksite: Equatable, Decodable, FetchableRecord {
-    let worksiteRoot: WorksiteRootRecord
-    let worksite: WorksiteRecord
-    let workTypes: [WorkTypeRecord]
-
-    func asExternalModel() -> Worksite {
-        let keyWorkType = workTypes
-            .first(where: {
-                $0.workType == worksite.keyWorkTypeType
-            })?.asExternalModel()
-        return Worksite(
-            id: worksite.id!,
-            address: worksite.address,
-            autoContactFrequencyT: worksite.autoContactFrequencyT ?? "",
-            caseNumber: worksite.caseNumber,
-            city: worksite.city,
-            county: worksite.county,
-            createdAt: worksite.createdAt,
-            email: worksite.email,
-            favoriteId: worksite.favoriteId,
-            incidentId: worksite.incidentId,
-            keyWorkType: keyWorkType,
-            latitude: worksite.latitude,
-            longitude: worksite.longitude,
-            name: worksite.name,
-            networkId: worksite.networkId,
-            phone1: worksite.phone1 ?? "",
-            phone2: worksite.phone2 ?? "",
-            postalCode: worksite.postalCode,
-            reportedBy: worksite.reportedBy,
-            state: worksite.state,
-            svi: worksite.svi,
-            updatedAt: worksite.updatedAt,
-            workTypes: workTypes.map { $0.asExternalModel() },
-            isAssignedToOrgMember: worksiteRoot.isLocalModified ? worksite.isLocalFavorite : worksite.favoriteId != nil
-        )
-    }
-}
-
-struct WorksiteLocalModifiedAt: Equatable, Decodable, FetchableRecord {
-    let id: Int64
-    let networkId: Int64
-    let localModifiedAt: Date
-    let isLocalModified: Bool
-}
-
-internal struct PopulatedLocalWorksite: Equatable, Decodable, FetchableRecord {
-    let worksiteRoot: WorksiteRootRecord
-    let worksite: WorksiteRecord
-    let worksiteFlags: [WorksiteFlagRecord]
-    let worksiteFormData: [WorksiteFormDataRecord]
-    let worksiteNotes: [WorksiteNoteRecord]
-    let workTypes: [WorkTypeRecord]
-
-    func asExternalModel(
-        _ orgId: Int64,
-        _ translator: KeyTranslator? = nil
-    ) -> LocalWorksite {
-        let keyWorkType = workTypes
-            .first(where: {
-                $0.workType == worksite.keyWorkTypeType
-            })?.asExternalModel()
-        let formDataLookup = worksiteFormData.associate { ($0.fieldKey, $0.asExternalModel()) }
-        return LocalWorksite(
-            worksite: Worksite(
-                id: worksite.id!,
-                address: worksite.address,
-                autoContactFrequencyT: worksite.autoContactFrequencyT ?? "",
-                caseNumber: worksite.caseNumber,
-                city: worksite.city,
-                county: worksite.county,
-                createdAt: worksite.createdAt,
-                email: worksite.email,
-                favoriteId: worksite.favoriteId,
-                // TODO: Do
-                // files: ,
-                flags: worksiteFlags.map { $0.asExternalModel(translator) },
-                formData: formDataLookup,
-                incidentId: worksite.incidentId,
-                keyWorkType: keyWorkType,
-                latitude: worksite.latitude,
-                longitude: worksite.longitude,
-                name: worksite.name,
-                networkId: worksite.networkId,
-                notes: worksiteNotes
-                    .filter { $0.note.isNotBlank }
-                    .sorted(by: { a, b in
-                        if a.networkId == b.networkId {
-                            return a.createdAt >= b.createdAt
-                        }
-                        return  {
-                            if a.networkId < 0 { return true }
-                            else if b.networkId < 0 { return false }
-                            else { return a.networkId > b.networkId }
-                        }()
-                    })
-                    .map { $0.asExternalModel() },
-                phone1: worksite.phone1 ?? "",
-                phone2: worksite.phone2 ?? "",
-                postalCode: worksite.postalCode,
-                reportedBy: worksite.reportedBy,
-                state: worksite.state,
-                svi: worksite.svi,
-                updatedAt: worksite.updatedAt,
-                workTypes: workTypes.map { $0.asExternalModel() },
-                // TODO: Do
-                workTypeRequests: [],
-                isAssignedToOrgMember: worksiteRoot.isLocalModified ? worksite.isLocalFavorite : worksite.favoriteId != nil
-            ),
-            // TODO: Do
-            localImages: [],
-            localChanges: LocalChange(
-                isLocalModified: worksiteRoot.isLocalModified,
-                localModifiedAt: worksiteRoot.localModifiedAt,
-                syncedAt: worksiteRoot.syncedAt
-            )
-        )
-    }
-}
-
-private let highPriorityFlagLiteral = WorksiteFlagType.highPriority.literal
-
-private struct PopulatedWorksiteMapVisual: Decodable, FetchableRecord {
-    struct WorksiteMapVisualSubset : Decodable {
-        let incidentId: Int64
-        let latitude: Double
-        let longitude: Double
-        let keyWorkTypeType: String
-        let keyWorkTypeOrgClaim: Int64?
-        let keyWorkTypeStatus: String
-        let favoriteId: Int64?
-    }
-
-    let id: Int64
-    let worksite: WorksiteMapVisualSubset
-    let workTypeCount: Int
-    let worksiteFlags: [WorksiteFlagRecord]
-
-    func asExternalModel() -> WorksiteMapMark {
-        WorksiteMapMark(
-            id: id,
-            incidentId: worksite.incidentId,
-            latitude: worksite.latitude,
-            longitude: worksite.longitude,
-            statusClaim: WorkTypeStatusClaim.make(
-                worksite.keyWorkTypeStatus,
-                worksite.keyWorkTypeOrgClaim
-            ),
-            workType: WorkTypeStatusClaim.getType(type: worksite.keyWorkTypeType),
-            workTypeCount: workTypeCount,
-            // TODO: Account for unsynced local favorite as well
-            isFavorite: worksite.favoriteId != nil,
-            isHighPriority: worksiteFlags.first { flag in
-                flag.isHighPriority == true ||
-                flag.reasonT == highPriorityFlagLiteral
-            } != nil
-        )
     }
 }

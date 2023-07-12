@@ -592,6 +592,77 @@ extension AppDatabase {
             )
         }
 
+        migrator.registerMigration(
+            "network-file-local-image",
+            foreignKeyChecks: .immediate
+        ) { db in
+            try db.create(table: "networkFile") { t in
+                t.primaryKey("id", .integer)
+                t.column("createdAt", .date)
+                    .notNull()
+                t.column("fileId", .integer)
+                    .notNull()
+                t.column("fileTypeT", .text)
+                    .notNull()
+                t.column("fullUrl", .text)
+                t.column("largeThumbnailUrl", .text)
+                t.column("mimeContentType", .text)
+                    .notNull()
+                t.column("smallThumbnailUrl", .text)
+                t.column("tag", .text)
+                t.column("title", .text)
+                t.column("url", .text)
+                    .notNull()
+            }
+
+            try db.create(table: "worksiteToNetworkFile") { t in
+                t.column("id", .integer)
+                    .notNull()
+                    .references("worksiteRoot", onDelete: .cascade)
+                t.column("networkFileId", .integer)
+                    .notNull()
+                    .references("networkFile", onDelete: .cascade)
+                t.primaryKey(["id", "networkFileId"])
+            }
+            try db.create(
+                indexOn: "worksiteToNetworkFile",
+                columns: ["networkFileId", "id"]
+            )
+
+            try db.create(table: "networkFileLocalImage") { t in
+                t.primaryKey("id", .integer)
+                    .references("networkFile", onDelete: .cascade)
+                t.column("isDeleted", .boolean)
+                    .notNull()
+                t.column("rotateDegrees", .integer)
+                    .notNull()
+            }
+            try db.create(
+                indexOn: "networkFileLocalImage",
+                columns: ["isDeleted"]
+            )
+
+            try db.create(table: "worksiteLocalImage") { t in
+                t.autoIncrementedPrimaryKey("id")
+                t.column("worksiteId", .integer)
+                    .notNull()
+                    .references("worksiteRoot", onDelete: .cascade)
+                t.column("localDocumentId", .text)
+                    .notNull()
+                t.column("uri", .text)
+                    .notNull()
+                t.column("tag", .text)
+                    .notNull()
+                t.column("rotateDegrees", .integer)
+                    .notNull()
+            }
+            try db.create(
+                indexOn: "worksiteLocalImage",
+                columns: ["worksiteId", "localDocumentId"],
+                options: .unique
+            )
+        }
+
         return migrator
     }
 }
