@@ -64,6 +64,14 @@ class NavigationRouter: ObservableObject {
         ))
     }
 
+    func openCaseSearchLocation() {
+        path.append(.caseSearchLocation)
+    }
+
+    func openCaseMoveOnMap() {
+        path.append(.caseMoveOnMap)
+    }
+
     func openCaseShare() {
         path.append(.caseShare)
     }
