@@ -19,6 +19,8 @@ struct MainView: View {
     let caseHistoryViewBuilder: CaseHistoryViewBuilder
     let transferWorkTypeViewBuilder: TransferWorkTypeViewBuilder
     let viewImageViewBuilder: ViewImageViewBuilder
+    let caseSearchLocationViewBuilder: CaseSearchLocationViewBuilder
+    let caseMoveOnMapViewBuilder: CaseMoveOnMapViewBuilder
 
     @State private var selectedTab = TopLevelDestination.cases
     var body: some View {
@@ -56,7 +58,9 @@ struct MainView: View {
                                             caseFlagsViewBuilder: caseFlagsViewBuilder,
                                             caseHistoryViewBuilder: caseHistoryViewBuilder,
                                             transferWorkTypeViewBuilder: transferWorkTypeViewBuilder,
-                                            viewImageViewBuilder: viewImageViewBuilder
+                                            viewImageViewBuilder: viewImageViewBuilder,
+                                            caseSearchLocationViewBuilder: caseSearchLocationViewBuilder,
+                                            caseMoveOnMapViewBuilder: caseMoveOnMapViewBuilder
                                         )
                                     }
                                     .toolbarColorScheme(.light, for: .tabBar)
@@ -137,6 +141,8 @@ private struct MainTabs: View {
     let caseHistoryViewBuilder: CaseHistoryViewBuilder
     let transferWorkTypeViewBuilder: TransferWorkTypeViewBuilder
     let viewImageViewBuilder: ViewImageViewBuilder
+    let caseSearchLocationViewBuilder: CaseSearchLocationViewBuilder
+    let caseMoveOnMapViewBuilder: CaseMoveOnMapViewBuilder
 
     var body: some View {
         TabViewContainer {
@@ -165,6 +171,10 @@ private struct MainTabs: View {
                             incidentId: incidentId,
                             worksiteId: worksiteId
                         )
+                    case .caseSearchLocation:
+                        caseSearchLocationViewBuilder.caseSearchLocationView
+                    case .caseMoveOnMap:
+                        caseMoveOnMapViewBuilder.caseMoveOnMapView
                     case .caseShare:
                         caseShareViewBuilder.caseShareView
                     case .caseFlags:

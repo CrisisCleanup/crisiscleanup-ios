@@ -13,7 +13,9 @@ public class MainComponent: BootstrapComponent,
                             CaseFlagsViewBuilder,
                             CaseHistoryViewBuilder,
                             TransferWorkTypeViewBuilder,
-                            ViewImageViewBuilder
+                            ViewImageViewBuilder,
+                            CaseSearchLocationViewBuilder,
+                            CaseMoveOnMapViewBuilder
 {
     public private(set) var appEnv: AppEnv
     public private(set) var appSettingsProvider: AppSettingsProvider
@@ -68,7 +70,9 @@ public class MainComponent: BootstrapComponent,
             caseFlagsViewBuilder: self,
             caseHistoryViewBuilder: self,
             transferWorkTypeViewBuilder: self,
-            viewImageViewBuilder: self
+            viewImageViewBuilder: self,
+            caseSearchLocationViewBuilder: self,
+            caseMoveOnMapViewBuilder: self
         )
     }
 
@@ -136,6 +140,22 @@ public class MainComponent: BootstrapComponent,
             worksiteId: worksiteId
         )
     }
+
+    // MARK: Case search location
+
+    lazy var caseSearchLocationComponent: CaseSearchLocationComponent = {
+        CaseSearchLocationComponent(parent: self, routerObserver: routerObserver)
+    }()
+
+    public var caseSearchLocationView: AnyView { caseSearchLocationComponent.caseSearchLocationView }
+
+    // MARK: Case move on map
+
+    lazy var caseMoveOnMapComponent: CaseMoveOnMapComponent = {
+        CaseMoveOnMapComponent(parent: self, routerObserver: routerObserver)
+    }()
+
+    public var caseMoveOnMapView: AnyView { caseMoveOnMapComponent.caseMoveOnMapView }
 
     // MARK: Case share
 

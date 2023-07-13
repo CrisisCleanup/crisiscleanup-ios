@@ -264,6 +264,9 @@ struct BottomButtons: View {
 }
 
 struct PropertyInformation: View {
+    @EnvironmentObject var router: NavigationRouter
+    @Environment(\.translator) var t: KeyAssetTranslator
+
     @ObservedObject var viewModel: CreateEditCaseViewModel
     @ObservedObject var locationManager = LocationManager()
     @State var coordinates = CLLocationCoordinate2D(latitude: 40.83834587046632,
@@ -273,7 +276,6 @@ struct PropertyInformation: View {
     @State var selected: String = ""
     @State var selectedOptions: [String] = []
     @State var temp: String = ""
-    @State var selectOnMap = false
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -302,33 +304,36 @@ struct PropertyInformation: View {
             }
             .padding(.leading)
 
-
-
             VStack(alignment: .leading) {
-                Text("Location")
+                Text(t.t("formLabels.location"))
                     .padding(.leading)
 
-                TextField("Location ", text: $temp)
-                    .textFieldBorder()
-                    .padding(.horizontal)
+                TextField(
+                    t.t("caseView.full_address"),
+                    text: $temp,
+                    onEditingChanged: { focus in
+                        if focus {
+                            router.openCaseSearchLocation()
+                        }
+                    }
+                )
+                .textFieldBorder()
+                .padding(.horizontal)
             }
 
-            CreateEditCaseMapView(map: $map, viewModel: viewModel, caseCoordinates: coordinates, toggled: false)
+            CreateEditCaseMapView(
+                map: $map,
+                caseCoordinates: coordinates,
+                toggled: false)
                 .frame(width: UIScreen.main.bounds.width, height: 200)
 
             HStack {
                 Spacer()
                 Button {
-                    selectOnMap.toggle()
+                    router.openCaseMoveOnMap()
                 } label: {
                     Image(systemName: "map.fill")
-                    Text("Select on Map")
-                }
-                .sheet(
-                    isPresented: $selectOnMap
-                ) {
-//                                    CreateEditCaseMapView(map: $map, caseCoordinates: coordinates, toggled: true)
-                    SelectOnMap(viewModel: viewModel, map: $mapSheet, caseCoordinates: $coordinates)
+                    Text(t.t("caseForm.select_on_map"))
                 }
 
                 Spacer()
@@ -336,8 +341,8 @@ struct PropertyInformation: View {
                 Button {
 
                 } label: {
-                    Image("ic_use_my_location", bundle: .module)
-                    Text("Use My Location")
+                    Image(systemName: "location.circle")
+                    Text(t.t("caseForm.use_my_location"))
                 }
 
                 Spacer()
@@ -369,54 +374,6 @@ struct PropertyInformation: View {
                 }
             }
             .padding(.leading)
-
-        }
-    }
-}
-
-struct SelectOnMap: View {
-    @ObservedObject var viewModel: CreateEditCaseViewModel
-    @Binding var map: MKMapView
-    @Binding var caseCoordinates: CLLocationCoordinate2D
-    @State var temp = ""
-
-    var body: some View {
-        VStack {
-            TextField("Full address city, state, zip *", text: $temp)
-                .textFieldBorder()
-                .padding(.horizontal)
-
-            CreateEditCaseMapView(map: $map, viewModel: viewModel, caseCoordinates: caseCoordinates, toggled: true)
-
-            Button {
-                map.showsUserLocation = true
-                map.userTrackingMode
-                map.centerCoordinate = map.userLocation.coordinate
-            } label: {
-                Image("ic_use_my_location", bundle: .module)
-                Text("Use My Location")
-            }
-
-            Text(map.centerCoordinate.latLng.description)
-
-            Text(caseCoordinates.latLng.description)
-
-            HStack{
-
-                Button {
-
-                } label: {
-                    Text("Cancel")
-                }.buttonStyle(PrimaryButtonStyle())
-
-                Button {
-                    caseCoordinates = map.centerCoordinate
-
-                } label: {
-                    Text("Save")
-                }.buttonStyle(PrimaryButtonStyle())
-            }
-            .padding(.horizontal)
 
         }
     }

@@ -45,9 +45,7 @@ class CreateEditCaseMapCoordinator: NSObject, MKMapViewDelegate {
 }
 
 struct CreateEditCaseMapView : UIViewRepresentable {
-
     @Binding var map: MKMapView
-    @ObservedObject var viewModel: CreateEditCaseViewModel
     @State var caseCoordinates: CLLocationCoordinate2D
     @State var toggled: Bool
     @State var imgView = UIImageView(image: UIImage(named: "cc_map_pin", in: .module, with: .none)!.withRenderingMode(.alwaysOriginal))
