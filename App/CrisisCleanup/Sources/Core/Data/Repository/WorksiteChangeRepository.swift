@@ -211,7 +211,6 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
                 return false
             }
 
-
             try await self.syncWorksite(worksiteId)
         } catch {
             var unhandledException: Error? = nil
@@ -303,7 +302,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         if let e = syncException { throw e }
     }
 
-    // TODO Complete test coverage
+    // TODO: Complete test coverage
     private func syncWorksiteChanges(_ sortedChanges: [SavedWorksiteChange]) async throws {
         if sortedChanges.isEmpty {
             return

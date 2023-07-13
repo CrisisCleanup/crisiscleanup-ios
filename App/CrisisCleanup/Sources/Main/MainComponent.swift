@@ -7,11 +7,13 @@ public class MainComponent: BootstrapComponent,
                             CasesFilterViewBuilder,
                             CasesSearchViewBuilder,
                             ViewCaseViewBuilder,
+                            CaseAddNoteViewBuilder,
                             CreateEditCaseViewBuilder,
                             CaseShareViewBuilder,
                             CaseFlagsViewBuilder,
                             CaseHistoryViewBuilder,
-                            TransferWorkTypeViewBuilder
+                            TransferWorkTypeViewBuilder,
+                            ViewImageViewBuilder
 {
     public private(set) var appEnv: AppEnv
     public private(set) var appSettingsProvider: AppSettingsProvider
@@ -60,11 +62,13 @@ public class MainComponent: BootstrapComponent,
             casesFilterViewBuilder: self,
             casesSearchViewBuilder: self,
             viewCaseViewBuilder: self,
+            caseAddNoteViewBuilder: self,
             createEditCaseViewBuilder: self,
             caseShareViewBuilder: self,
             caseFlagsViewBuilder: self,
             caseHistoryViewBuilder: self,
-            transferWorkTypeViewBuilder: self
+            transferWorkTypeViewBuilder: self,
+            viewImageViewBuilder: self
         )
     }
 
@@ -113,6 +117,14 @@ public class MainComponent: BootstrapComponent,
         )
     }
 
+    // MARK: Case add note
+
+    lazy var caseAddNoteComponent: CaseAddNoteComponent = {
+        CaseAddNoteComponent(parent: self, routerObserver: routerObserver)
+    }()
+
+    public var caseAddNoteView: AnyView { caseAddNoteComponent.caseAddNoteView }
+
     // MARK: Create/edit Case
 
     lazy var createEditCaseComponent: CreateEditCaseComponent = { CreateEditCaseComponent(parent: self, routerObserver: routerObserver)
@@ -160,4 +172,12 @@ public class MainComponent: BootstrapComponent,
     }()
 
     public var transferWorkTypeView: AnyView { transferWorkTypeComponent.transferWorkTypeView }
+
+    // MARK: View image
+
+    lazy var viewImageComponent: ViewImageComponent = {
+        ViewImageComponent(parent: self, routerObserver: routerObserver)
+    }()
+
+    public func viewImageView(_ imageId: Int64) -> AnyView { viewImageComponent.viewImageView(imageId) }
 }
