@@ -328,24 +328,23 @@ struct PropertyInformation: View {
                 .frame(width: UIScreen.main.bounds.width, height: 200)
 
             HStack {
-                Spacer()
                 Button {
                     router.openCaseMoveOnMap()
                 } label: {
                     Image(systemName: "map.fill")
+                        .frame(width: 24, height: 24)
                     Text(t.t("caseForm.select_on_map"))
                 }
-
-                Spacer()
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 Button {
-
+                    // TODO: My location
                 } label: {
-                    Image(systemName: "location.circle")
+                    Image("ic_use_my_location", bundle: .module)
+                        .frame(width: 24, height: 24)
                     Text(t.t("caseForm.use_my_location"))
                 }
-
-                Spacer()
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding()
 
@@ -365,10 +364,11 @@ struct PropertyInformation: View {
                 Text("Notes")
 
                 Button {
-                    // TODO: display noteUI
+                    router.openCaseAddNote()
                 } label : {
                     HStack {
                         Image("ic_note", bundle: .module)
+                            .frame(width: 24, height: 24)
                         Text("+ Add Note")
                     }
                 }
@@ -412,6 +412,7 @@ struct DisplayFormField: View {
                     CheckboxPicker(selectedOptions: $selectedOptions, options: [node.formField.label])
                     Spacer()
                 }
+                .frame(minHeight: appTheme.rowItemHeight)
             case "select":
                 HStack {
                     Text(t.t(node.formField.label))
@@ -422,6 +423,7 @@ struct DisplayFormField: View {
                         }
                     }
                 }
+                .frame(minHeight: appTheme.rowItemHeight)
             case "multiselect":
                 Text(t.t(node.formField.label))
             case "cronselect":
@@ -453,10 +455,10 @@ struct DisplayFormField: View {
                         if(childNode.parentKey == node.fieldKey)
                         {
                             HStack {
-                                Spacer()
-                                    .frame(width: UIScreen.main.bounds.size.width/8)
                                 DisplayFormField(node: childNode)
+                                    .padding(.leading)
                             }
+                            .frame(minHeight: appTheme.rowItemHeight, alignment: .leading)
                         }
                     }
                 }
