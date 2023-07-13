@@ -336,7 +336,7 @@ struct PropertyInformation: View {
                 Button {
 
                 } label: {
-                    Image(systemName: "location.circle")
+                    Image("ic_use_my_location", bundle: .module)
                     Text("Use My Location")
                 }
 
@@ -363,7 +363,7 @@ struct PropertyInformation: View {
                     // TODO: display noteUI
                 } label : {
                     HStack {
-                        Image(systemName: "note.text.badge.plus")
+                        Image("ic_note", bundle: .module)
                         Text("+ Add Note")
                     }
                 }
@@ -393,7 +393,7 @@ struct SelectOnMap: View {
                 map.userTrackingMode
                 map.centerCoordinate = map.userLocation.coordinate
             } label: {
-                Image(systemName: "location.circle")
+                Image("ic_use_my_location", bundle: .module)
                 Text("Use My Location")
             }
 
@@ -482,6 +482,7 @@ struct DisplayFormField: View {
                             HStack {
                                 Text(t.t(node.formField.label))
                                 Spacer()
+                                Image(systemName: toggled ? "chevron.up" : "chevron.down")
                             }
                         }
                     } else {
@@ -495,8 +496,9 @@ struct DisplayFormField: View {
                         if(childNode.parentKey == node.fieldKey)
                         {
                             HStack {
+                                Spacer()
+                                    .frame(width: UIScreen.main.bounds.size.width/8)
                                 DisplayFormField(node: childNode)
-                                    .padding(.leading)
                             }
                         }
                     }
