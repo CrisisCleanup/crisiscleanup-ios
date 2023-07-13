@@ -1,12 +1,12 @@
 import SwiftUI
 
-struct CaseHistoryView: View {
+struct CaseAddNoteView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    @ObservedObject var viewModel: CaseHistoryViewModel
+    @ObservedObject var viewModel: CaseAddNoteViewModel
 
     var body: some View {
-        Text("Case history under construction")
+        Text("Add note under construction")
     }
 }

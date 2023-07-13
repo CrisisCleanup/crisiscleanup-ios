@@ -50,6 +50,10 @@ class NavigationRouter: ObservableObject {
         }
     }
 
+    func openCaseAddNote() {
+        path.append(.caseAddNote)
+    }
+
     func createEditCase(
         incidentId: Int64,
         worksiteId: Int64?
@@ -71,5 +75,11 @@ class NavigationRouter: ObservableObject {
     }
     func openWorkTypeTransfer() {
         path.append(.caseWorkTypeTransfer)
+    }
+
+    func viewImage(
+        imageId: Int64
+    ) {
+        path.append(.viewImage(imageId: imageId))
     }
 }

@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct TransferWorkTypeView: View {
+    @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
-    @EnvironmentObject var router: NavigationRouter
 
     @ObservedObject var viewModel: TransferWorkTypeViewModel
 
