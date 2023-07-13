@@ -65,8 +65,11 @@ struct CreateEditCaseView: View {
                         VStack {
                             let childNodes = viewModel.detailsFormFieldNode.children
                             ForEach(childNodes, id: \.id) { node in
-                                DisplayFormField(node: node.formField)
-                                    .padding(.horizontal)
+                                if(node.parentKey == viewModel.detailsFormFieldNode.fieldKey)
+                                {
+                                    DisplayFormField(node: node)
+                                        .padding(.horizontal)
+                                }
                             }
 
                         }
@@ -89,9 +92,16 @@ struct CreateEditCaseView: View {
                     if(!sectionCollapse[2]) {
                         VStack {
                             let childNodes = viewModel.workFormFieldNode.children
+
                             ForEach(childNodes, id: \.id) { node in
-                                DisplayFormField(node: node.formField)
-                                    .padding(.horizontal)
+//                                Text(node.children.debugDescription)
+                                if(node.parentKey == viewModel.workFormFieldNode.fieldKey)
+                                {
+                                    HStack {
+                                        DisplayFormField(node: node)
+                                            .padding(.horizontal)
+                                    }
+                                }
                             }
 
                         }
@@ -114,8 +124,10 @@ struct CreateEditCaseView: View {
                         VStack {
                             let childNodes = viewModel.hazardsFormFieldNode.children
                             ForEach(childNodes, id: \.id) { node in
-                                DisplayFormField(node: node.formField)
-                                    .padding(.horizontal)
+                                if(node.parentKey == viewModel.hazardsFormFieldNode.fieldKey) {
+                                    DisplayFormField(node: node)
+                                        .padding(.horizontal)
+                                }
                             }
 
                         }
@@ -139,8 +151,10 @@ struct CreateEditCaseView: View {
                             VStack {
                                 let childNodes = viewModel.volunteerFormFieldNode.children
                                 ForEach(childNodes, id: \.id) { node in
-                                    DisplayFormField(node: node.formField)
-                                        .padding(.horizontal)
+                                    if(node.parentKey == viewModel.volunteerFormFieldNode.fieldKey) {
+                                        DisplayFormField(node: node)
+                                            .padding(.horizontal)
+                                    }
                                 }
 
                             }
@@ -410,59 +424,87 @@ struct SelectOnMap: View {
 
 struct DisplayFormField: View {
     @Environment(\.translator) var t: KeyAssetTranslator
-    @State var node: IncidentFormField
+    @State var node: FormFieldNode
 
     @State var selectedOptions: [String] = []
     @State var selected: String = ""
+    @State var toggled: Bool = false
     @State var temp: String = ""
 
     var body: some View {
+
         VStack {
-            switch node.htmlType {
+            switch node.formField.htmlType {
             case "text":
                 HStack {
-                    Text(t.t(node.label))
+                    Text(t.t(node.formField.label))
                     Spacer()
                 }
-                TextField(t.t(node.placeholder), text: $temp)
+                TextField(t.t(node.formField.placeholder), text: $temp)
                     .textFieldBorder()
                     .padding(.horizontal)
             case "textarea":
                 HStack {
-                    Text(t.t(node.label))
+                    Text(t.t(node.formField.label))
                     Spacer()
                 }
                 TextEditor(text: $temp)
                     .padding(.horizontal)
             case "checkbox":
                 HStack {
-                    CheckboxPicker(selectedOptions: $selectedOptions, options: [node.label])
+                    CheckboxPicker(selectedOptions: $selectedOptions, options: [node.formField.label])
                     Spacer()
                 }
             case "select":
                 HStack {
-                    Text(t.t(node.label))
+                    Text(t.t(node.formField.label))
                     Spacer()
                     Picker("", selection: $selected ) {
-                        ForEach(Array(node.values.keys), id: \.self) { item in
+                        ForEach(Array(node.formField.values.keys), id: \.self) { item in
                             Text(t.t(item))
                         }
                     }
                 }
             case "multiselect":
-                Text(t.t(node.label))
+                Text(t.t(node.formField.label))
             case "cronselect":
-                Text(t.t(node.label))
+                Text(t.t(node.formField.label))
             case "h4":
                 Text("h4")
-                Text(t.t(node.label))
+                Text(t.t(node.formField.label))
             case "h5":
-                Text("h5")
-                Text(t.t(node.label))
+                HStack {
+
+                    if(node.formField.isReadOnly) {
+                        Button {
+                            toggled.toggle()
+                        } label : {
+                            HStack {
+                                Text(t.t(node.formField.label))
+                                Spacer()
+                            }
+                        }
+                    } else {
+                        CheckboxPicker(selectedOptions: $selectedOptions, options: [t.t(node.formField.label)])
+                    }
+                    Spacer()
+                }
+                if(!selectedOptions.isEmpty && selectedOptions[0] == t.t(node.formField.label) || toggled){
+                    let childNodes = node.children
+                    ForEach(node.children, id: \.id) { childNode in
+                        if(childNode.parentKey == node.fieldKey)
+                        {
+                            HStack {
+                                DisplayFormField(node: childNode)
+                                    .padding(.leading)
+                            }
+                        }
+                    }
+                }
             default:
                 HStack {
                     Text("unknown node")
-                    Text(t.t(node.label))
+                    Text(t.t(node.formField.label))
                 }
             }
         }
