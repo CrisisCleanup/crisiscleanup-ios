@@ -260,9 +260,9 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
 
     private func setFormFieldNodes() {
         detailsFormFieldNode = editableWorksiteProvider.getGroupNode(DetailsFormGroupKey)
-        workFormFieldNode = editableWorksiteProvider.getGroupNode(DetailsFormGroupKey)
-        hazardsFormFieldNode = editableWorksiteProvider.getGroupNode(DetailsFormGroupKey)
-        volunteerFormFieldNode = editableWorksiteProvider.getGroupNode(DetailsFormGroupKey)
+        workFormFieldNode = editableWorksiteProvider.getGroupNode(WorkFormGroupKey)
+        hazardsFormFieldNode = editableWorksiteProvider.getGroupNode(HazardsFormGroupKey)
+        volunteerFormFieldNode = editableWorksiteProvider.getGroupNode(VolunteerReportFormGroupKey)
     }
 
     // MARK: KeyTranslator

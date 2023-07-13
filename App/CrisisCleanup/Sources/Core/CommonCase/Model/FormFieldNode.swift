@@ -1,3 +1,4 @@
+import Foundation
 
 let DetailsFormGroupKey = "property_info"
 let WorkFormGroupKey = "work_info"
@@ -20,6 +21,8 @@ fileprivate struct FormFieldKeys: Hashable {
 
 // sourcery: copyBuilder, skipCopyInit
 public struct FormFieldNode {
+    var id = UUID()
+
     static func make(
         formField: IncidentFormField,
         children: [FormFieldNode],

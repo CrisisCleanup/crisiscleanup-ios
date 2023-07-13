@@ -19,29 +19,6 @@ class CreateEditCaseMapCoordinator: NSObject, MKMapViewDelegate {
         return createPolygonRenderer(for: overlay as! MKPolygon)
     }
 
-    func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
-        let center = mapView.centerCoordinate
-//        print(center)
-        self.caseCoordinates = center
-    }
-
-    func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, didChange newState: MKAnnotationView.DragState, fromOldState oldState: MKAnnotationView.DragState) {
-        switch newState {
-           case .starting:
-               view.dragState = .dragging
-           case .ending, .canceling:
-               view.dragState = .none
-           default: break
-           }
-    }
-
-
-    func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-        let center = mapView.centerCoordinate
-//        print(center)
-        self.caseCoordinates = center
-      }
-
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         let reuseIdentifier = "reuse-identifier"
         guard let annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseIdentifier) else {
@@ -70,8 +47,10 @@ class CreateEditCaseMapCoordinator: NSObject, MKMapViewDelegate {
 struct CreateEditCaseMapView : UIViewRepresentable {
 
     @Binding var map: MKMapView
+    @ObservedObject var viewModel: CreateEditCaseViewModel
     @State var caseCoordinates: CLLocationCoordinate2D
     @State var toggled: Bool
+    @State var imgView = UIImageView(image: UIImage(named: "cc_map_pin", in: .module, with: .none)!.withRenderingMode(.alwaysOriginal))
 
     let firstHalf = [
         CLLocationCoordinate2D(latitude: -90, longitude: -180),
@@ -96,6 +75,7 @@ struct CreateEditCaseMapView : UIViewRepresentable {
     }
 
     func makeUIView(context: Context) -> MKMapView {
+
         map.overrideUserInterfaceStyle = .light
         map.mapType = .standard
         map.pointOfInterestFilter = .excludingAll
@@ -104,35 +84,11 @@ struct CreateEditCaseMapView : UIViewRepresentable {
         map.isRotateEnabled = false
         map.isPitchEnabled = false
         map.isZoomEnabled = true
-//        map.isScrollEnabled = false
 
         map.addOverlay(firstHalfOverlay, level: .aboveRoads)
         map.addOverlay(secondHalfOverlay, level: .aboveRoads)
 
         map.delegate = context.coordinator
-
-        // TODO: This image likely needs offsetting. Investigate and offset or delete comment.
-        let image = UIImage(named: "cc_map_pin", in: .module, with: .none)!.withRenderingMode(.alwaysOriginal)
-
-        let casePin = CustomPinAnnotation(caseCoordinates, image)
-        casePin.coordinate = map.centerCoordinate
-
-//        map.addSubview()
-//        var imgView = UIImageView(image: image)
-//        imgView.center = map.center //CGPoint(x: map.bounds.size.width/2, y: map.bounds.size.height/2)
-//
-//        print(imgView.center)
-//        print(map.center)
-////        print(imgView.widthAnchor.description)
-////        print(imgView.image.)
-//        map.addSubview(imgView)
-//        map.didAddSubview(imgView)
-//        map.addSubview(MyView())
-
-//        let overlay =overlay
-//        MKPinAnnotationView(annotation: <#T##MKAnnotation?#>, reuseIdentifier: <#T##String?#>)
-//        map.addAnnotation(casePin)
-//        map.showAnnotations([casePin], animated: false)
 
         return map
     }
@@ -143,56 +99,12 @@ struct CreateEditCaseMapView : UIViewRepresentable {
 
     func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<CreateEditCaseMapView>) {
 
-        if(toggled && map.center != CGPoint(x: 0, y: 0))
+        if(map.center != CGPoint(x: 0, y: 0) && !map.subviews.contains(imgView))
         {
-            let image = UIImage(named: "cc_map_pin", in: .module, with: .none)!.withRenderingMode(.alwaysOriginal)
-            var imgView = UIImageView(image: image)
-            imgView.center = map.center //CGPoint(x: map.bounds.size.width/2, y: map.bounds.size.height/2)
+            imgView.center = map.center
+            imgView.center.y = imgView.center.y - (imgView.image?.size.height ?? 0)/2
 
-            print(imgView.center)
-            print(map.center)
-            //        print(imgView.widthAnchor.description)
-            //        print(imgView.image.)
             map.addSubview(imgView)
         }
     }
 }
-
-//class MyView: UIView {
-//    // 1
-//    private var label: UILabel = {
-//        let label = UILabel()
-//        label.translatesAutoresizingMaskIntoConstraints = false
-//        label.font = UIFont.preferredFont(forTextStyle: .title1)
-//        label.text = "Hello, UIKit!"
-//        label.textAlignment = .center
-//
-//        return label
-//    }()
-//
-//    private var imageView: UIImageView {
-//        let image = UIImage(named: "cc_map_pin", in: .module, with: .none)!.withRenderingMode(.alwaysOriginal)
-//        let imageView = UIImageView(image: image)
-//        return imageView
-//    }
-//
-//    init() {
-//        super.init(frame: .zero)
-//        // 2
-//        backgroundColor = .systemPink
-//
-//        // 3
-//        addSubview(imageView)
-////        NSLayoutConstraint.activate([
-////            label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
-////            label.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
-////            label.topAnchor.constraint(equalTo: topAnchor, constant: 20),
-////            label.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -20),
-////        ])
-//
-//    }
-//
-//    required init?(coder: NSCoder) {
-//        fatalError("init(coder:) has not been implemented")
-//    }
-//}
