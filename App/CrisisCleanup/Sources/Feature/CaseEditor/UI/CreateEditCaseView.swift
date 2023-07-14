@@ -350,8 +350,7 @@ struct PropertyInformation: View {
 
             CreateEditCaseMapView(
                 map: $map,
-                caseCoordinates: coordinates,
-                toggled: false)
+                caseCoordinates: coordinates)
                 .frame(width: UIScreen.main.bounds.width, height: 200)
 
             HStack {

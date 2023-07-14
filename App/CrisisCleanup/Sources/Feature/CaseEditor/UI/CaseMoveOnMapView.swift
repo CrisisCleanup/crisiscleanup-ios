@@ -6,6 +6,7 @@ struct CaseMoveOnMapView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @ObservedObject var viewModel: CaseMoveOnMapViewModel
+    @ObservedObject var locationManager = LocationManager()
 
     @State var map = MKMapView()
     // TODO: Read initial coordinates from view model
@@ -23,29 +24,30 @@ struct CaseMoveOnMapView: View {
 
             CreateEditCaseMapView(
                 map: $map,
-                caseCoordinates: caseCoordinates,
-                toggled: true
+                caseCoordinates: caseCoordinates
             )
 
-            Button {
-                map.showsUserLocation = true
-                map.userTrackingMode
-                map.centerCoordinate = map.userLocation.coordinate
-            } label: {
-                Image(systemName: "location.circle")
-                Text(t.t("caseForm.use_my_location"))
+            HStack {
+                Button {
+                    map.centerCoordinate = map.userLocation.coordinate
+                } label: {
+                    Image("ic_use_my_location", bundle: .module)
+                    Text(t.t("caseForm.use_my_location"))
+                }
+                .padding(.leading)
+                Spacer()
             }
 
-            Text(map.centerCoordinate.latLng.description)
-
-            Text(caseCoordinates.latLng.description)
+            // For debugging
+//            Text(map.centerCoordinate.latLng.description)
+//            Text(caseCoordinates.latLng.description)
 
             HStack{
                 Button {
                     dismiss()
                 } label: {
                     Text(t.t("actions.cancel"))
-                }.buttonStyle(PrimaryButtonStyle())
+                }.buttonStyle(CancelButtonStyle())
 
                 Button {
                     caseCoordinates = map.centerCoordinate
@@ -55,6 +57,13 @@ struct CaseMoveOnMapView: View {
             }
             .padding(.horizontal)
 
+        }
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                VStack {
+                    Text(t.t("caseForm.select_on_map"))
+                }
+            }
         }
     }
 }

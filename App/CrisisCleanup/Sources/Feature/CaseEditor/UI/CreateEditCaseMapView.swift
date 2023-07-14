@@ -8,11 +8,14 @@ import SwiftUI
 class CreateEditCaseMapCoordinator: NSObject, MKMapViewDelegate {
 
     @Binding var caseCoordinates: CLLocationCoordinate2D
+    @Binding var imgView: UIImageView
 
     init(
-        _ caseCoordinates: Binding<CLLocationCoordinate2D>
+        _ caseCoordinates: Binding<CLLocationCoordinate2D>,
+        _ imgView: Binding<UIImageView>
     ) {
         self._caseCoordinates = caseCoordinates
+        self._imgView = imgView
     }
 
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
@@ -34,6 +37,13 @@ class CreateEditCaseMapCoordinator: NSObject, MKMapViewDelegate {
         return annotationView
     }
 
+    func mapViewDidFinishLoadingMap(_ mapView: MKMapView) {
+        imgView.center = mapView.center
+        imgView.center.y = imgView.center.y - (imgView.image?.size.height ?? 0)/2
+
+        mapView.addSubview(imgView)
+    }
+
     func createPolygonRenderer(for polygon: MKPolygon) -> MKPolygonRenderer {
         let renderer = MKPolygonRenderer(polygon: polygon)
         renderer.alpha = 0.5
@@ -47,7 +57,6 @@ class CreateEditCaseMapCoordinator: NSObject, MKMapViewDelegate {
 struct CreateEditCaseMapView : UIViewRepresentable {
     @Binding var map: MKMapView
     @State var caseCoordinates: CLLocationCoordinate2D
-    @State var toggled: Bool
     @State var imgView = UIImageView(image: UIImage(named: "cc_map_pin", in: .module, with: .none)!.withRenderingMode(.alwaysOriginal))
 
     let firstHalf = [
@@ -78,7 +87,7 @@ struct CreateEditCaseMapView : UIViewRepresentable {
         map.mapType = .standard
         map.pointOfInterestFilter = .excludingAll
         map.camera.centerCoordinateDistance = 20
-        map.showsUserLocation = false
+        map.showsUserLocation = true
         map.isRotateEnabled = false
         map.isPitchEnabled = false
         map.isZoomEnabled = true
@@ -92,17 +101,9 @@ struct CreateEditCaseMapView : UIViewRepresentable {
     }
 
     func makeCoordinator() -> CreateEditCaseMapCoordinator {
-        CreateEditCaseMapCoordinator($caseCoordinates)
+        CreateEditCaseMapCoordinator($caseCoordinates, $imgView)
     }
 
     func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<CreateEditCaseMapView>) {
-
-        if(map.center != CGPoint(x: 0, y: 0) && !map.subviews.contains(imgView))
-        {
-            imgView.center = map.center
-            imgView.center.y = imgView.center.y - (imgView.image?.size.height ?? 0)/2
-
-            map.addSubview(imgView)
-        }
     }
 }
