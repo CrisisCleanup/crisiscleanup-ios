@@ -86,9 +86,17 @@ class MenuViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
+    func clearRefreshToken() {
+        if isDebuggable {
+            accountDataRepository.clearAccountTokens()
+        }
+    }
+
     func expireToken() {
         if isDebuggable {
-            authEventBus.onExpiredToken()
+            if let repository = accountDataRepository as? CrisisCleanupAccountDataRepository {
+                repository.expireAccessToken()
+            }
         }
     }
 }

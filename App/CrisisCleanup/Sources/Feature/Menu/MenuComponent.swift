@@ -2,7 +2,7 @@ import NeedleFoundation
 import SwiftUI
 
 protocol MenuViewBuilder {
-    var menuView: AnyView { get }
+    func menuView(openAuthScreen: @escaping () -> Void) -> AnyView
 }
 
 class MenuComponent: Component<AppDependency>, MenuViewBuilder {
@@ -18,11 +18,12 @@ class MenuComponent: Component<AppDependency>, MenuViewBuilder {
         )
     }()
 
-    var menuView: AnyView {
+    func menuView(openAuthScreen: @escaping () -> Void) -> AnyView {
         AnyView(
             MenuView(
                 viewModel: menuViewModel,
-                incidentSelectViewBuilder: dependency.incidentSelectViewBuilder
+                incidentSelectViewBuilder: dependency.incidentSelectViewBuilder,
+                openAuthScreen: openAuthScreen
             )
         )
     }

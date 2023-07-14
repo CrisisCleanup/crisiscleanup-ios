@@ -52,10 +52,20 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
     private let locationSearchFieldsQ: String
 
     init(
-        appEnv: AppEnv,
-        networkRequestProvider: NetworkRequestProvider
+        networkRequestProvider: NetworkRequestProvider,
+        accountDataRepository: AccountDataRepository,
+        authApiClient: CrisisCleanupAuthApi,
+        authEventBus: AuthEventBus,
+        appEnv: AppEnv
     ) {
-        self.networkClient = AFNetworkingClient(appEnv)
+        self.networkClient = AFNetworkingClient(
+            appEnv,
+            interceptor: AccessTokenInterceptor(
+                accountDataRepository: accountDataRepository,
+                authApiClient: authApiClient,
+                authEventBus: authEventBus
+            )
+        )
         requestProvider = networkRequestProvider
 
         jsonDecoder = JsonDecoderFactory().decoder()

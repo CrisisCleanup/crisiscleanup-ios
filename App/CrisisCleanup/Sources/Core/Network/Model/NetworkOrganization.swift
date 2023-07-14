@@ -10,15 +10,15 @@ public struct NetworkIncidentOrganization: Codable, Equatable {
     let affiliates: [Int64]
     let primaryLocation: Int64?
     let typeT: String?
-    let primaryContacts: [NetworkPersonContact]
+    let primaryContacts: [NetworkPersonContact]?
 
     enum CodingKeys: String, CodingKey {
-        case id
-        case name
-        case affiliates
-        case primaryLocation = "primary_location"
-        case typeT = "type_t"
-        case primaryContacts = "primary_contacts"
+        case id,
+             name,
+             affiliates,
+             primaryLocation = "primary_location",
+             typeT = "type_t",
+             primaryContacts = "primary_contacts"
     }
 }
 

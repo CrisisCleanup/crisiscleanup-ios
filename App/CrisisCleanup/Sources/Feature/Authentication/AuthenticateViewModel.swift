@@ -60,13 +60,14 @@ class AuthenticateViewModel: ObservableObject {
     private func subscribeAccountData() {
         accountDataRepository.accountData
             .eraseToAnyPublisher()
-            .receive(on: RunLoop.main)
-            .sink { data in
-                self.viewData = AuthenticateViewData(
+            .map {
+                AuthenticateViewData(
                     state: .ready,
-                    accountData: data
+                    accountData: $0
                 )
             }
+            .receive(on: RunLoop.main)
+            .assign(to: \.viewData, on: self)
             .store(in: &subscriptions)
     }
 
@@ -108,18 +109,26 @@ class AuthenticateViewModel: ObservableObject {
             guard let result = try await authApi.login(emailAddress, password) else {
                 throw GenericError("Server not found")
             }
-            let hasError = result.errors?.isNotEmpty == true
+            guard let oauthResult = try await authApi.oauthLogin(emailAddress, password) else { throw GenericError("OAuth fail") }
+
+            let hasError = result.errors?.isNotEmpty == true || oauthResult.error?.isNotBlank == true
             if hasError {
-                let logErrorMessage = result.errors?.condenseMessages ?? "Server error"
-                if logErrorMessage == "Unable to log in with provided credentials." {
+                let loginError = result.errors?.condenseMessages
+                if loginError == "Unable to log in with provided credentials." {
                     errorMessage = translator.t("loginForm.invalid_credentials_msg")
                 } else {
+                    let logErrorMessage = [
+                        loginError,
+                        oauthResult.error,
+                    ]
+                        .combineTrimText("\n")
+                        .ifBlank { "Server error" }
                     logger.logError(GenericError(logErrorMessage))
                 }
             } else {
-                let accessToken = result.accessToken!
-
-                let expirySeconds = try Int64(accessTokenDecoder.decode(accessToken).expiresAt.timeIntervalSince1970)
+                let refreshToken = oauthResult.refreshToken!
+                let accessToken = oauthResult.accessToken!
+                let expirySeconds = Int64(Date().timeIntervalSince1970) + Int64(oauthResult.expiresIn!)
 
                 let claims = result.claims!
                 let profilePicUri = claims.files?.filter { $0.isProfilePicture }.firstOrNil?.largeThumbnailUrl ?? ""
@@ -139,6 +148,7 @@ class AuthenticateViewModel: ObservableObject {
                     claims: claims,
                     orgData: orgData,
                     profilePictureUri: profilePicUri,
+                    refreshToken: refreshToken,
                     accessToken: accessToken,
                     expirySeconds: expirySeconds
                 )
@@ -175,8 +185,9 @@ class AuthenticateViewModel: ObservableObject {
             if let result = loginResult.success {
                 with(result) { r in
                     accountDataRepository.setAccount(
-                        id: r.claims.id,
+                        refreshToken: r.refreshToken,
                         accessToken: r.accessToken,
+                        id: r.claims.id,
                         email: r.claims.email,
                         firstName: r.claims.firstName,
                         lastName: r.claims.lastName,
@@ -188,7 +199,9 @@ class AuthenticateViewModel: ObservableObject {
 
                 Task { @MainActor in self.isAuthenticateSuccessful = true }
             } else {
-                errorMessage = loginResult.errorMessage
+                Task { @MainActor in
+                    errorMessage = loginResult.errorMessage
+                }
             }
         }
     }
@@ -202,6 +215,7 @@ fileprivate struct LoginSuccess {
     let claims: NetworkAuthUserClaims
     let orgData: OrgData
     let profilePictureUri: String
+    let refreshToken: String
     let accessToken: String
     let expirySeconds: Int64
 }

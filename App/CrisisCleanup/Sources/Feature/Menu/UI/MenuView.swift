@@ -7,6 +7,7 @@ struct MenuView: View {
 
     @ObservedObject var viewModel: MenuViewModel
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
+    let openAuthScreen: () -> Void
 
     var body: some View {
         let hasNoIncidents = viewModel.incidentsData.incidents.isEmpty
@@ -15,6 +16,7 @@ struct MenuView: View {
             TopBar(
                 viewModel: viewModel,
                 incidentSelectViewBuilder: incidentSelectViewBuilder,
+                openAuthScreen: openAuthScreen,
                 hasNoIncidents: hasNoIncidents
             )
             .tint(.black)
@@ -38,10 +40,10 @@ struct MenuView: View {
 
 private struct TopBar: View {
     @Environment(\.translator) var t: KeyAssetTranslator
-    @EnvironmentObject var router: NavigationRouter
 
     @ObservedObject var viewModel: MenuViewModel
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
+    let openAuthScreen: () -> Void
     let hasNoIncidents: Bool
 
     @State var showIncidentSelect = false
@@ -84,7 +86,7 @@ private struct TopBar: View {
 
             Spacer()
             Button {
-                router.openAuthentication()
+                openAuthScreen()
             } label: {
                 if let url = viewModel.profilePicture?.url {
                     if viewModel.profilePicture?.isSvg == true {
@@ -119,11 +121,19 @@ private struct MenuScreenDebugView: View {
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            Button("Expire token") {
-                viewModel.expireToken()
+            HStack {
+                Button("Clear refresh token") {
+                    viewModel.clearRefreshToken()
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                Button("Expire token") {
+                    viewModel.expireToken()
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }

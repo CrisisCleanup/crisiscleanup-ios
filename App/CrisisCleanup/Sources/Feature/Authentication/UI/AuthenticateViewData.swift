@@ -7,17 +7,8 @@ struct AuthenticateViewData {
     let state: AuthenticateViewState
     let accountData: AccountData
 
-    var hasAccessToken: Bool {
-        get {
-            return accountData.accessToken.isNotBlank
-        }
-    }
-
-    var isTokenInvalid: Bool {
-        get {
-            return accountData.isTokenInvalid
-        }
-    }
+    let hasAuthenticated: Bool
+    let isAccountValid: Bool
 
     init(
         state: AuthenticateViewState = .loading,
@@ -25,5 +16,8 @@ struct AuthenticateViewData {
     ) {
         self.state = state
         self.accountData = accountData
+
+        hasAuthenticated = accountData.hasAuthenticated()
+        isAccountValid = accountData.areTokensValid
     }
 }

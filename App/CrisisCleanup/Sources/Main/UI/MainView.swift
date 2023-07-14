@@ -22,6 +22,8 @@ struct MainView: View {
     let caseSearchLocationViewBuilder: CaseSearchLocationViewBuilder
     let caseMoveOnMapViewBuilder: CaseMoveOnMapViewBuilder
 
+    @State var showAuthScreen = false
+
     @State private var selectedTab = TopLevelDestination.cases
     var body: some View {
         Group {
@@ -30,7 +32,14 @@ struct MainView: View {
                 // TODO: Show actual splash screen (or loading animation)
                 Text("Splash/loading")
             case .ready:
-                if viewModel.viewData.showMainContent {
+                let hideAuthScreen = {
+                    showAuthScreen = false
+
+                }
+                if showAuthScreen || !viewModel.viewData.showMainContent {
+                    authenticateViewBuilder.authenticateView(dismissScreen: hideAuthScreen)
+                        .navigationBarHidden(true)
+                } else {
                     let navColor = appTheme.colors.navigationContainerColor
                     NavigationStack(path: $router.path) {
                         ZStack {
@@ -44,9 +53,12 @@ struct MainView: View {
 
                                 TabView(selection: $selectedTab) {
                                     Group {
+                                        let openAuthScreen = {
+                                            showAuthScreen = true
+                                        }
                                         MainTabs(
                                             viewModel: viewModel,
-                                            authenticateViewBuilder: authenticateViewBuilder,
+                                            openAuthScreen: openAuthScreen,
                                             casesViewBuilder: casesViewBuilder,
                                             menuViewBuilder: menuViewBuilder,
                                             casesFilterViewBuilder: casesFilterViewBuilder,
@@ -73,10 +85,6 @@ struct MainView: View {
                         .toolbarBackground(.visible, for: .navigationBar)
                         .toolbarColorScheme(.light, for: .navigationBar)
                     }
-                } else {
-                    authenticateViewBuilder.authenticateView
-                        .navigationBarTitle("")
-                        .navigationBarHidden(true)
                 }
             }
         }
@@ -128,7 +136,7 @@ private struct TabViewContainer<Content: View>: View {
 
 private struct MainTabs: View {
     @ObservedObject var viewModel: MainViewModel
-    let authenticateViewBuilder: AuthenticateViewBuilder
+    let openAuthScreen: () -> Void
     let casesViewBuilder: CasesViewBuilder
     let menuViewBuilder: MenuViewBuilder
     let casesFilterViewBuilder: CasesFilterViewBuilder
@@ -149,11 +157,6 @@ private struct MainTabs: View {
             casesViewBuilder.casesView
                 .navigationDestination(for: NavigationRoute.self) { route in
                     switch route {
-                    case .authenticate:
-                        authenticateViewBuilder.authenticateView
-                            .navigationBarHidden(true)
-                            .onAppear { viewModel.onViewDisappear() }
-                            .onDisappear { viewModel.onViewAppear() }
                     case .filterCases:
                         casesFilterViewBuilder.casesFilterView
                     case .searchCases:
@@ -197,8 +200,7 @@ private struct MainTabs: View {
             bottomPadding: 0,
             addBottomRect: true
         ) {
-            menuViewBuilder.menuView
-            // Prior routes are used
+            menuViewBuilder.menuView(openAuthScreen: openAuthScreen)
         }
         .navTabItem(.menu, viewModel.translator)
         .tag(TopLevelDestination.menu)

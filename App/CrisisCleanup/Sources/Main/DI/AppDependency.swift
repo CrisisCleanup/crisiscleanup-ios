@@ -68,16 +68,23 @@ extension MainComponent {
     }
 
     public var authApi: CrisisCleanupAuthApi {
-        AuthApiClient(
-            appEnv: appEnv,
-            networkRequestProvider: networkRequestProvider
-        )
+        shared {
+            AuthApiClient(
+                appEnv: appEnv,
+                networkRequestProvider: networkRequestProvider
+            )
+        }
     }
     public var networkDataSource: CrisisCleanupNetworkDataSource {
-        DataApiClient(
-            appEnv: appEnv,
-            networkRequestProvider: networkRequestProvider
-        )
+        shared {
+            DataApiClient(
+                networkRequestProvider: networkRequestProvider,
+                accountDataRepository: accountDataRepository,
+                authApiClient: authApi,
+                authEventBus: authEventBus,
+                appEnv: appEnv
+            )
+        }
     }
 
     public var appPreferences: AppPreferencesDataStore { shared { AppPreferencesUserDefaults() } }

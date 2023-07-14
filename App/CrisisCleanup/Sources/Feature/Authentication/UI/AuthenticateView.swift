@@ -1,27 +1,33 @@
 import SwiftUI
 
 struct AuthenticateView: View {
-    @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @ObservedObject var viewModel: AuthenticateViewModel
+    let dismiss: () -> Void
 
     var body: some View {
         let dismissScreen = { dismiss() }
         ZStack {
-            if viewModel.viewData.isTokenInvalid {
-                LoginView(
-                    viewModel: viewModel,
-                    dismissScreen: dismissScreen,
-                    emailAddress: viewModel.viewData.accountData.emailAddress
-                )
+            let viewData = viewModel.viewData
+            if viewData.state == .loading {
+                ProgressView()
+                    .frame(alignment: .center)
             } else {
-                let logout = { viewModel.logout() }
-                LogoutView(
-                    viewModel: viewModel,
-                    logout: logout,
-                    dismissScreen: dismissScreen
-                )
+                if viewData.isAccountValid {
+                    let logout = { viewModel.logout() }
+                    LogoutView(
+                        viewModel: viewModel,
+                        logout: logout,
+                        dismissScreen: dismiss
+                    )
+                } else {
+                    LoginView(
+                        viewModel: viewModel,
+                        dismissScreen: dismiss,
+                        emailAddress: viewData.accountData.emailAddress
+                    )
+                }
             }
         }
         .onAppear { viewModel.onViewAppear() }
@@ -100,7 +106,7 @@ struct LoginView: View {
             .padding([.vertical])
             .disabled(disabled)
 
-            if viewModel.viewData.hasAccessToken {
+            if viewModel.viewData.hasAuthenticated {
                 Button {
                     dismissScreen()
                 } label:  {
@@ -147,19 +153,17 @@ struct LogoutView: View {
             .padding([.vertical])
             .disabled(disabled)
 
-            if viewModel.viewData.hasAccessToken {
-                Button {
-                    dismissScreen()
-                } label:  {
-                    BusyButtonContent(
-                        isBusy: viewModel.isAuthenticating,
-                        text: t.translate("actions.cancel", "Cancel action")
-                    )
-                }
-                .buttonStyle(buttonStyle)
-                .padding([.vertical])
-                .disabled(disabled)
+            Button {
+                dismissScreen()
+            } label:  {
+                BusyButtonContent(
+                    isBusy: viewModel.isAuthenticating,
+                    text: t.translate("actions.cancel", "Cancel action")
+                )
             }
+            .buttonStyle(buttonStyle)
+            .padding([.vertical])
+            .disabled(disabled)
         }
         .padding()
     }

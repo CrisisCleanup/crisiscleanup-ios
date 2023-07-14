@@ -78,9 +78,11 @@ public class MainComponent: BootstrapComponent,
 
     // MARK: Authenticate
 
-    var authenticateComponent: AuthenticateComponent { AuthenticateComponent(parent: self) }
+    lazy var authenticateComponent: AuthenticateComponent = { AuthenticateComponent(parent: self) }()
 
-    public var authenticateView: AnyView { authenticateComponent.authenticateView }
+    public func authenticateView(dismissScreen: @escaping () -> Void) -> AnyView {
+        authenticateComponent.authenticateView(dismissScreen: dismissScreen)
+    }
 
     // MARK: Incident select
 
@@ -98,7 +100,7 @@ public class MainComponent: BootstrapComponent,
 
     // MARK: Cases filter
 
-    lazy var casesFilterComponent: CasesFilterComponent = { CasesFilterComponent(parent: self) }()
+    lazy var casesFilterComponent: CasesFilterComponent = { CasesFilterComponent(parent: self, routerObserver: routerObserver) }()
 
     public var casesFilterView: AnyView { casesFilterComponent.casesFilterView }
 

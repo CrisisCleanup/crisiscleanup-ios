@@ -6,7 +6,8 @@ protocol AccountInfoDataSource {
 
     func setAccount(_ info: AccountInfo)
     func clearAccount()
-    func expireToken()
+    func updateExpiry(_ expirySeconds: Int64)
+    func expireAccessToken()
 }
 
 fileprivate let jsonDecoder = JsonDecoderFactory().decoder()
@@ -37,15 +38,19 @@ class AccountInfoUserDefaults: AccountInfoDataSource {
         setAccount(AccountInfo())
     }
 
-    func expireToken() {
+    func updateExpiry(_ expirySeconds: Int64) {
         let info = UserDefaults.standard.accountInfo
         if info.id > 0 {
             setAccount(
                 info.copy {
-                    $0.expirySeconds = 0
+                    $0.expirySeconds = expirySeconds
                 }
             )
         }
+    }
+
+    func expireAccessToken() {
+        updateExpiry(0)
     }
 }
 

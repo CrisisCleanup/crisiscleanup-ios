@@ -1,7 +1,6 @@
 public enum NavigationRoute: Identifiable, Hashable, Codable {
     case work,
          menu,
-         authenticate,
          searchCases,
          filterCases,
          viewCase(incidentId: Int64, worksiteId: Int64),
@@ -19,7 +18,6 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
         switch self {
         case .work:         return 0
         case .menu:         return 1
-        case .authenticate: return 2
         case .searchCases:  return 3
         case .filterCases:  return 4
         case .viewCase:     return 5

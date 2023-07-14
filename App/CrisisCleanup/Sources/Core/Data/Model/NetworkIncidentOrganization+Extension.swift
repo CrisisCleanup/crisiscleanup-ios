@@ -7,7 +7,7 @@ extension NetworkIncidentOrganization {
     }
 
     func primaryContactCrossReferences() -> [OrganizationToPrimaryContactRecord] {
-        primaryContacts.map { OrganizationToPrimaryContactRecord(id: id, contactId: $0.id) }
+        primaryContacts?.map { OrganizationToPrimaryContactRecord(id: id, contactId: $0.id) } ?? []
     }
 
     func affiliateOrganizationCrossReferences() -> [OrganizationAffiliateRecord] {
@@ -26,7 +26,7 @@ extension Array where Element == NetworkIncidentOrganization {
         getReferences: Bool
     ) -> OrganizationRecords {
         let organizations = map { $0.asRecord() }
-        let primaryContacts = getContacts ? flatten2DArray(map { $0.primaryContacts.map { contact in contact.asRecord() } }) : []
+        let primaryContacts = getContacts ? flatten2DArray(map { $0.primaryContacts?.map { contact in contact.asRecord() } ?? [] }) : []
         let organizationToContacts = getReferences ? flatten2DArray( map {$0.primaryContactCrossReferences() }) : []
         let organizationAffiliates = getReferences ? flatten2DArray(map { $0.affiliateOrganizationCrossReferences() }) : []
         return OrganizationRecords(

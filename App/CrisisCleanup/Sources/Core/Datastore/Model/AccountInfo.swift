@@ -2,7 +2,6 @@ import Foundation
 
 // sourcery: copyBuilder
 struct AccountInfo: Codable {
-    // TODO: Move access token into credentials manager
     let id: Int64
     let email: String
     let firstName: String
@@ -48,12 +47,13 @@ extension AccountInfo {
         let ppUri = profilePictureUri.ifBlank { defaultProfilePictureUri(fullName) }
         return AccountData(
             id: id,
-            accessToken: accessToken,
             tokenExpiry: tokenExpiry,
             fullName: fullName,
             emailAddress: email,
             profilePictureUri: ppUri,
-            org: orgData
+            org: orgData,
+            // Overwrite downstream
+            areTokensValid: tokenExpiry > Date()
         )
     }
 }

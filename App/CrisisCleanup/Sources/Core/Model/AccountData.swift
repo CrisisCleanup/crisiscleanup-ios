@@ -8,24 +8,25 @@ public struct OrgData: Equatable {
 // sourcery: copyBuilder
 public struct AccountData {
     let id: Int64
-    let accessToken: String
     let tokenExpiry: Date
     let fullName: String
     let emailAddress: String
     let profilePictureUri: String
     let org: OrgData
+    let areTokensValid: Bool
 
-    var isTokenExpired: Bool { tokenExpiry <= Date() }
-    var isTokenInvalid: Bool { accessToken.isEmpty || isTokenExpired }
+    func hasAuthenticated() -> Bool { id > 0 }
+
+    func isAccessTokenExpired() -> Bool { tokenExpiry <= Date().addingTimeInterval(-10.minutes) }
 }
 
 let emptyOrgData = OrgData(id: 0, name: "")
 let emptyAccountData = AccountData(
     id: 0,
-    accessToken: "",
     tokenExpiry: Date(timeIntervalSince1970: 0),
     fullName: "",
     emailAddress: "",
     profilePictureUri: "",
-    org: emptyOrgData
+    org: emptyOrgData,
+    areTokensValid: false
 )
