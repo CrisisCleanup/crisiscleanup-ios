@@ -71,6 +71,9 @@ struct ViewCaseView: View {
                             Text(viewModel.subTitle)
                                 .font(.subheadline)
                         }
+                        .onLongPressGesture {
+                            UIPasteboard.general.string = viewModel.headerTitle
+                        }
                     }
 
                     ToolbarItem(placement: .navigationBarTrailing) {
@@ -285,6 +288,11 @@ private struct PropertyInformationView: View {
                 Image(systemName: "person.fill")
                     .frame(width: iconSize, height: iconSize)
                 Text(worksite.name)
+
+
+            }
+            .onLongPressGesture {
+                UIPasteboard.general.string = worksite.name
             }
             .horizontalVerticalPadding(horizontalPadding, verticalPadding)
 
@@ -296,6 +304,9 @@ private struct PropertyInformationView: View {
                     .frame(width: iconSize, height: iconSize)
                 Text(phoneText)
             }
+            .onLongPressGesture {
+                UIPasteboard.general.string = phoneText
+            }
             .horizontalVerticalPadding(horizontalPadding, verticalPadding)
 
             if worksite.email?.isNotBlank == true {
@@ -303,6 +314,9 @@ private struct PropertyInformationView: View {
                     Image(systemName: "envelope.fill")
                         .frame(width: iconSize, height: iconSize)
                     Text(worksite.email!)
+                }
+                .onLongPressGesture {
+                    UIPasteboard.general.string = worksite.email!
                 }
                 .horizontalVerticalPadding(horizontalPadding, verticalPadding)
             }
@@ -317,6 +331,9 @@ private struct PropertyInformationView: View {
                 Image(systemName: "mappin.circle.fill")
                     .frame(width: iconSize, height: iconSize)
                 Text(fullAddress)
+            }
+            .onLongPressGesture {
+                UIPasteboard.general.string = fullAddress
             }
             .horizontalVerticalPadding(horizontalPadding, verticalPadding)
 

@@ -29,38 +29,35 @@ struct WorksiteFlagChip: View {
     var body: some View {
         if let flagType = worksiteFlag.flagType {
             let isDisabled = editableView.disabled
-            Button {
-                action()
-            } label: {
-                if isDisabled {
-                    HStack {
-                        Image(systemName: "xmark")
-                            .bold()
-                        Text(t.t(flagType.literal))
-                            .bold()
-                    }
-                    .padding()
-                    .background(.gray)
-                    .foregroundColor(.white)
-                    .cornerRadius(40)
-                } else {
-                    let backgroundColor = flagColors.keys.contains(flagType) ? flagColors[flagType] : flagColorFallback
-                    HStack {
-                        Image(systemName: "xmark")
-                            .bold()
-                        Text(t.t(flagType.literal))
-                            .bold()
-                    }
-                    .padding()
-                    .background(backgroundColor)
-                    .foregroundColor(.white)
-                    .cornerRadius(40)
+            if isDisabled {
+                HStack {
+                    Image(systemName: "xmark")
+                        .bold()
+                    Text(t.t(flagType.literal))
+                        .bold()
                 }
+                .padding()
+                .background(.gray)
+                .foregroundColor(.white)
+                .cornerRadius(40)
+            } else {
+                let backgroundColor = flagColors.keys.contains(flagType) ? flagColors[flagType] : flagColorFallback
+                HStack {
+                    Button {
+                        action()
+                    } label :{
+                        Image(systemName: "xmark")
+                            .bold()
+                    }.disabled(isDisabled)
 
-
-
+                    Text(t.t(flagType.literal))
+                        .bold()
+                }
+                .padding()
+                .background(backgroundColor)
+                .foregroundColor(.white)
+                .cornerRadius(40)
             }
-            .disabled(isDisabled)
         }
     }
 }
