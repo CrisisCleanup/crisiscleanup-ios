@@ -177,7 +177,6 @@ internal class CaseEditorDataLoader {
                             self.isRefreshingWorksite.value = true
                             let isSynced = await self.worksiteChangeRepository.trySyncWorksite(worksite.id)
                             if isSynced && networkId > 0 {
-                                // TODO: Is unfinished. See method for task once work type requests are in progress.
                                 try await self.worksitesRepository.pullWorkTypeRequests(networkId)
                             }
                         }

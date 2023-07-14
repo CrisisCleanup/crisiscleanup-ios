@@ -663,7 +663,55 @@ extension AppDatabase {
             )
         }
 
-        // TODO: Add new indexes for worksite change
+        migrator.registerMigration(
+            "worksiteWorkTypeRequest",
+            foreignKeyChecks: .immediate
+        ) { db in
+            try db.create(table: "worksiteWorkTypeRequest") { t in
+                t.autoIncrementedPrimaryKey("id")
+                t.column("networkId", .integer)
+                    .notNull()
+                t.column("worksiteId", .integer)
+                    .notNull()
+                    .references("worksiteRoot", onDelete: .cascade)
+                t.column("workType", .text)
+                    .notNull()
+                t.column("reason", .text)
+                    .notNull()
+                t.column("byOrg", .integer)
+                    .notNull()
+                t.column("toOrg", .integer)
+                    .notNull()
+                t.column("createdAt", .date)
+                    .notNull()
+                t.column("approvedAt", .date)
+                t.column("rejectedAt", .date)
+                t.column("approvedRejectedReason", .text)
+                    .notNull()
+            }
+            try db.create(
+                indexOn: "worksiteWorkTypeRequest",
+                columns: ["worksiteId", "workType", "byOrg"],
+                options: .unique
+            )
+            try db.create(
+                indexOn: "worksiteWorkTypeRequest",
+                columns: ["networkId"]
+            )
+            try db.create(
+                indexOn: "worksiteWorkTypeRequest",
+                columns: ["worksiteId", "byOrg"]
+            )
+
+            try db.create(
+                indexOn: "worksiteChange",
+                columns: ["worksiteId", "saveAttempt"]
+            )
+            try db.create(
+                indexOn: "worksiteChange",
+                columns: ["worksiteId", "saveAttemptAt", "createdAt"]
+            )
+        }
 
         return migrator
     }

@@ -127,6 +127,7 @@ extension MainComponent {
                 worksiteSyncStatDao: worksiteSyncStatDao,
                 worksiteDao: worksiteDao,
                 recentWorksiteDao: recentWorksiteDao,
+                workTypeTransferRequestDao: workTypeTransferRequestDao,
                 accountDataRepository: accountDataRepository,
                 languageTranslationsRepository: languageTranslationsRepository,
                 appVersionProvider: appVersionProvider,

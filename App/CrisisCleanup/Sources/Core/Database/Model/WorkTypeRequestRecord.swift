@@ -1,10 +1,9 @@
 import Foundation
 import GRDB
 
-// TODO: Create database tables and related
-
+// sourcery: copyBuilder
 struct WorkTypeRequestRecord : Identifiable, Equatable {
-    let id: Int64
+    var id: Int64?
     let networkId: Int64
     /**
      * Local ID. Use [WorksiteDao.getWorksiteId] to find local ID from incident and network ID.
@@ -18,10 +17,22 @@ struct WorkTypeRequestRecord : Identifiable, Equatable {
     let approvedAt: Date?
     let rejectedAt: Date?
     let approvedRejectedReason: String
+
+    func asExternalModel() -> WorkTypeRequest {
+        WorkTypeRequest(
+            workType: workType,
+            byOrg: byOrg,
+            createdAt: createdAt,
+            approvedAt: approvedAt,
+            rejectedAt: rejectedAt,
+            approvedRejectedReason: approvedRejectedReason
+        )
+    }
 }
 
-extension WorkTypeRequestRecord: Codable, FetchableRecord, PersistableRecord {
-    fileprivate enum Columns: String, ColumnExpression {
+extension WorkTypeRequestRecord: Codable, FetchableRecord, MutablePersistableRecord {
+    static var databaseTableName: String = "worksiteWorkTypeRequest"
+    internal enum Columns: String, ColumnExpression {
         case id,
              networkId,
              worksiteId,
@@ -33,6 +44,22 @@ extension WorkTypeRequestRecord: Codable, FetchableRecord, PersistableRecord {
              approvedAt,
              rejectedAt,
              approvedRejectedReason
+    }
+
+    mutating func didInsert(_ inserted: InsertionSuccess) {
+        id = inserted.rowID
+    }
+
+    static func syncDeleteUnspecified(
+        _ db: Database,
+        _ worksiteId: Int64,
+        _ keepWorkTypes: Set<String>
+    ) throws {
+        try WorkTypeRequestRecord
+            .filter(WorkTypeRequestRecord.Columns.worksiteId == worksiteId &&
+                    WorkTypeRequestRecord.Columns.networkId>0 &&
+                    !keepWorkTypes.contains(WorkTypeRequestRecord.Columns.workType))
+            .deleteAll(db)
     }
 
     static func deleteUnsynced(_ db: Database, _ worksiteId: Int64) throws {

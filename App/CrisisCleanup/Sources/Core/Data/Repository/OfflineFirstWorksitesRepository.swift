@@ -7,6 +7,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     private let worksiteSyncStatDao: WorksiteSyncStatDao
     private let worksiteDao: WorksiteDao
     private let recentWorksiteDao: RecentWorksiteDao
+    private let workTypeTransferRequestDao: WorkTypeTransferRequestDao
     private let accountDataRepository: AccountDataRepository
     private let languageTranslationsRepository: LanguageTranslationsRepository
     private let appVersionProvider: AppVersionProvider
@@ -28,6 +29,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         worksiteSyncStatDao: WorksiteSyncStatDao,
         worksiteDao: WorksiteDao,
         recentWorksiteDao: RecentWorksiteDao,
+        workTypeTransferRequestDao: WorkTypeTransferRequestDao,
         accountDataRepository: AccountDataRepository,
         languageTranslationsRepository: LanguageTranslationsRepository,
         appVersionProvider: AppVersionProvider,
@@ -40,6 +42,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         self.recentWorksiteDao = recentWorksiteDao
         self.accountDataRepository = accountDataRepository
         self.languageTranslationsRepository = languageTranslationsRepository
+        self.workTypeTransferRequestDao = workTypeTransferRequestDao
         self.appVersionProvider = appVersionProvider
         logger = loggerFactory.getLogger("worksites-repository")
 
@@ -200,9 +203,8 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
             let workTypeRequests = try await dataSource.getWorkTypeRequests(networkWorksiteId)
             if workTypeRequests.isNotEmpty {
                 let worksiteId = try worksiteDao.getWorksiteId(networkWorksiteId)
-                // TODO: Finish when work type requests are blocked
-                // let records = workTypeRequests.map { $0.asRecord(worksiteId) }
-                // workTypeTransferRequestDao.syncUpsert(records)
+                let records = workTypeRequests.map { $0.asRecord(worksiteId) }
+                try await workTypeTransferRequestDao.syncUpsert(records)
             }
         } catch {
             logger.logError(error)
