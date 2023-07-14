@@ -12,6 +12,20 @@ extension NetworkRequestProvider {
         )
     }
 
+    var oauthLogin: NetworkRequest {
+        NetworkRequest(
+            apiUrl("api-mobile-auth"),
+            method: .post
+        )
+    }
+
+    var refreshAccountTokens: NetworkRequest {
+        NetworkRequest(
+            apiUrl("api-mobile-refresh-token"),
+            method: .post
+        )
+    }
+
     var languages: NetworkRequest {
         NetworkRequest(apiUrl("languages"))
     }

@@ -72,8 +72,7 @@ class AppSyncer: SyncPuller, SyncPusher {
     }
 
     private func isValidAccountToken() async throws -> Bool {
-        let isInvalid = try await accountData.asyncFirst().isTokenInvalid
-        return !isInvalid
+        try await accountData.asyncFirst().areTokensValid
     }
 
     private func isSyncPossible() async throws -> Bool { try await isValidAccountToken() }

@@ -2,33 +2,44 @@ import AuthenticationServices
 import Foundation
 
 protocol SecureDataSource {
-    func getAccessToken(_ emailAddress: String) -> String
+    func getAuthTokens(_ userId: Int64) -> (String, String)
 
-    func saveAccessToken(
-        _ emailAddress: String,
+    func saveAuthTokens(
+        _ userId: Int64,
+        _ refreshToken: String,
         _ accessToken: String
     ) throws
 
-    func deleteAccessToken(_ emailAddress: String)
+    func deleteAuthTokens(_ userId: Int64)
 }
 
 class KeychainDataSource: SecureDataSource {
+    private let jsonEncoder: JSONEncoder
+    private let jsonDecoder: JSONDecoder
+
     private let bundleId: String?
 
     private var serviceAttribute: String {
         let bundle = bundleId ?? "crisis-cleanup"
-        return "\(bundle)-account"
+        return "\(bundle)-account-data"
     }
 
     init(_ bundleId: String = "") {
+        jsonEncoder = JsonEncoderFactory().encoder()
+        jsonDecoder = JsonDecoderFactory().decoder()
+
         self.bundleId = bundleId.ifBlank { Bundle.main.bundleIdentifier }
     }
 
-    func getAccessToken(_ emailAddress: String) -> String {
+    private func getAccountIdentifier(_ userId: Int64) -> String {
+        "crisis-cleanup-account-\(userId)"
+    }
+
+    func getAuthTokens(_ userId: Int64) -> (String, String) {
         let query = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: serviceAttribute,
-            kSecAttrAccount: emailAddress,
+            kSecAttrAccount: getAccountIdentifier(userId),
             kSecReturnData: true
         ] as [CFString : Any]
 
@@ -36,35 +47,45 @@ class KeychainDataSource: SecureDataSource {
         let status = SecItemCopyMatching(query as CFDictionary, &result)
         if status == errSecSuccess,
            let data = result as? Data {
-            return String(decoding: data, as: UTF8.self)
+            let accountData = try? jsonDecoder.decode(PrivateAccountData.self, from: data)
+            return (
+                accountData?.refreshToken ?? "",
+                accountData?.accessToken ?? ""
+            )
         }
 
-        return ""
+        return ("", "")
     }
 
-    func saveAccessToken(
-        _ emailAddress: String,
+    func saveAuthTokens(
+        _ userId: Int64,
+        _ refreshToken: String,
         _ accessToken: String
     ) throws {
-        guard emailAddress.isNotBlank else {
+        guard userId > 0 else {
             return
         }
 
-        guard let encodedToken = accessToken.data(using: .utf8) else {
+        guard let encodedData = try? jsonEncoder.encode(
+            PrivateAccountData(
+                refreshToken: refreshToken,
+                accessToken: accessToken
+            )
+        ) else {
             throw GenericError("Unable to encode access token for secure storage")
         }
 
         var query = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: serviceAttribute,
-            kSecAttrAccount: emailAddress
+            kSecAttrAccount: getAccountIdentifier(userId)
         ] as [CFString : Any]
 
         let status = SecItemCopyMatching(query as CFDictionary, nil)
         switch status {
         case errSecSuccess:
             let attributesToUpdate = [
-                String(kSecValueData): encodedToken
+                String(kSecValueData): encodedData
             ]
 
             let updateStatus = SecItemUpdate(
@@ -76,7 +97,7 @@ class KeychainDataSource: SecureDataSource {
             }
 
         case errSecItemNotFound:
-            query[String(kSecValueData) as CFString] = encodedToken
+            query[String(kSecValueData) as CFString] = encodedData
 
             let insertStatus = SecItemAdd(query as CFDictionary, nil)
             if insertStatus != errSecSuccess {
@@ -87,11 +108,11 @@ class KeychainDataSource: SecureDataSource {
         }
     }
 
-    func deleteAccessToken(_ emailAddress: String) {
+    func deleteAuthTokens(_ userId: Int64) {
         let query = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: serviceAttribute,
-            kSecAttrAccount: emailAddress
+            kSecAttrAccount: getAccountIdentifier(userId)
         ] as [CFString : Any]
         SecItemDelete(query as CFDictionary)
     }
@@ -101,4 +122,9 @@ extension OSStatus {
     var message: String {
         (SecCopyErrorMessageString(self, nil) ?? "" as CFString) as String
     }
+}
+
+private struct PrivateAccountData: Codable {
+    let refreshToken: String
+    let accessToken: String
 }

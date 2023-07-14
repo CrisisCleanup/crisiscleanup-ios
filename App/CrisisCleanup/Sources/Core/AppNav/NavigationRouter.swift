@@ -21,10 +21,6 @@ class NavigationRouter: ObservableObject {
         path.removeAll()
     }
 
-    func openAuthentication() {
-        path.append(.authenticate)
-    }
-
     func openFilterCases() {
         path.append(.filterCases)
     }

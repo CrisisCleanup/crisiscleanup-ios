@@ -3,13 +3,15 @@ import Combine
 public protocol AccountDataRepository {
     var accountData: any Publisher<AccountData, Never> { get }
 
-    var accessTokenCached: String { get }
-
     var isAuthenticated: any Publisher<Bool, Never> { get }
 
+    var refreshToken: String { get}
+    var accessToken: String { get }
+
     func setAccount(
-        id: Int64,
+        refreshToken: String,
         accessToken: String,
+        id: Int64,
         email: String,
         firstName: String,
         lastName: String,
@@ -17,15 +19,28 @@ public protocol AccountDataRepository {
         profilePictureUri: String,
         org: OrgData
     )
+
+    func updateAccountTokens(
+        refreshToken: String,
+        accessToken: String,
+        expirySeconds: Int64
+    )
+
+    func clearAccountTokens()
 }
 
 class CrisisCleanupAccountDataRepository: AccountDataRepository {
-    private let accountDataSubject = CurrentValueSubject<AccountData, Never>(emptyAccountData)
+    internal let accountDataSubject = CurrentValueSubject<AccountData, Never>(emptyAccountData)
     let accountData: any Publisher<AccountData, Never>
 
-    private(set) var accessTokenCached: String = ""
-
     let isAuthenticated: any Publisher<Bool, Never>
+
+    var refreshToken: String {
+        let userId = accountDataSubject.value.id
+        return secureDataSource.getAuthTokens(userId).0
+    }
+
+    private(set) var accessToken: String = ""
 
     private let accountDataSource: AccountInfoDataSource
     private let secureDataSource: SecureDataSource
@@ -49,86 +64,96 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
             .eraseToAnyPublisher()
 
         isAuthenticated = accountDataShare
-            .map { $0.accessToken.isNotBlank }
-
-        accountDataShare
-            .sink { data in
-                self.accessTokenCached = data.accessToken
-            }
-            .store(in: &disposables)
+            .map { $0.hasAuthenticated() }
 
         accountDataSource.accountData
             .eraseToAnyPublisher()
-            .map { sourceData in
-                let email = sourceData.emailAddress
-                if email.isNotBlank {
-                    let accessToken = secureDataSource.getAccessToken(email)
-                    return sourceData.copy {
-                        $0.accessToken = accessToken
-                    }
+            .sink(receiveValue: { sourceData in
+                let authTokens = self.secureDataSource.getAuthTokens(sourceData.id)
+                self.accessToken = authTokens.1
+                self.accountDataSubject.value = sourceData.copy {
+                    $0.areTokensValid = authTokens.0.isNotBlank
                 }
-                return sourceData
-            }
-            .sink(receiveCompletion: { completion in
-            }, receiveValue: { sourceData in
-                self.accountDataSubject.value = sourceData
             })
             .store(in: &disposables)
 
         authEventBus.logouts
             .eraseToAnyPublisher()
-            .filter({ b in b })
-            .sink { [weak self] _ in
-                await self?.onLogout()
-            }
-            .store(in: &disposables)
-        authEventBus.expiredTokens
-            .eraseToAnyPublisher()
-            .filter({ b in b })
-            .sink { [weak self] _ in
-                await self?.onExpiredToken()
-            }
+            .sink(receiveValue: { _ in
+                self.onLogout()
+            })
             .store(in: &disposables)
     }
 
     func setAccount(
-        id: Int64,
+        refreshToken: String,
         accessToken: String,
+        id: Int64,
         email: String,
         firstName: String,
         lastName: String,
         expirySeconds: Int64,
         profilePictureUri: String,
-        org: OrgData) {
-            do {
-                try secureDataSource.saveAccessToken(email, accessToken)
-                accountDataSource.setAccount(AccountInfo(
-                    id: id,
-                    email: email,
-                    firstName: firstName,
-                    lastName: lastName,
-                    expirySeconds: expirySeconds,
-                    profilePictureUri: profilePictureUri,
-                    accessToken: "",
-                    orgId: org.id,
-                    orgName: org.name
-                ))
-            } catch {
-                logger.logError(error)
-            }
+        org: OrgData
+    ) {
+        do {
+            try secureDataSource.saveAuthTokens(id, refreshToken, accessToken)
+            accountDataSource.setAccount(AccountInfo(
+                id: id,
+                email: email,
+                firstName: firstName,
+                lastName: lastName,
+                expirySeconds: expirySeconds,
+                profilePictureUri: profilePictureUri,
+                accessToken: "",
+                orgId: org.id,
+                orgName: org.name
+            ))
+        } catch {
+            logger.logError(error)
         }
-
-    private func clearAccount() {
-        accessTokenCached = ""
-        accountDataSource.clearAccount()
     }
 
-    private func onLogout() async {
+    func updateAccountTokens(
+        refreshToken: String,
+        accessToken: String,
+        expirySeconds: Int64
+    ) {
+        let isClearing = refreshToken.isBlank
+        do {
+            let userId = accountDataSubject.value.id
+            try secureDataSource.saveAuthTokens(
+                userId,
+                refreshToken,
+                isClearing ? "" : accessToken
+            )
+            accountDataSource.updateExpiry(isClearing ? 0 : expirySeconds)
+        } catch {
+            logger.logError(error)
+        }
+    }
+
+    func clearAccountTokens() {
+        updateAccountTokens(
+            refreshToken: "",
+            accessToken: "",
+            expirySeconds: 0
+        )
+    }
+
+    private func clearAccount() {
+        let userId = accountDataSubject.value.id
+        accountDataSource.clearAccount()
+        accessToken = ""
+        secureDataSource.deleteAuthTokens(userId)
+    }
+
+    private func onLogout() {
         clearAccount()
     }
 
-    private func onExpiredToken() async {
-        accessTokenCached = ""
-        accountDataSource.expireToken()
+    internal func expireAccessToken() {
+        accessToken = ""
+        accountDataSource.expireAccessToken()
     }
 }

@@ -67,7 +67,7 @@ class MainViewModel: ObservableObject {
                 accountData: accountData
             )
 
-            if !accountData.isTokenInvalid {
+            if accountData.areTokensValid {
                 self.sync(false)
 
                 let data = self.incidentsData

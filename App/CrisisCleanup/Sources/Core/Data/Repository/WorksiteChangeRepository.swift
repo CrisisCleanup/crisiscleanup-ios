@@ -178,13 +178,13 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         _ rethrowError: Bool
     ) async throws -> Bool {
         if try await isNotOnlinePublisher.asyncFirst() {
-            syncLogger.log("Not syncing. No internet connection.")
+            syncLogger.log("Not attempting. No internet connection.")
             return false
         }
 
         let accountData = try await accountDataPublisher.asyncFirst()
-        if accountData.isTokenInvalid {
-            syncLogger.log("Not syncing. Invalid account token.")
+        if accountData.areTokensValid {
+            syncLogger.log("Not attempting. Invalid account token.")
             return false
         }
 
@@ -215,9 +215,6 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         } catch {
             var unhandledException: Error? = nil
             if error is NoInternetConnectionError {}
-            else if error is ExpiredTokenError {
-                authEventBus.onExpiredToken()
-            }
             else {
                 unhandledException = error
             }

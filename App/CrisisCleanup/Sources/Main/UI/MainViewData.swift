@@ -16,8 +16,7 @@ struct MainViewData {
     ) {
         self.state = state
         self.accountData = accountData
-        isAuthenticated = !accountData.isTokenInvalid
-        self.showMainContent = state == .ready &&
-        accountData.accessToken.isNotBlank
+        isAuthenticated = accountData.hasAuthenticated()
+        self.showMainContent = state == .ready && isAuthenticated
     }
 }
