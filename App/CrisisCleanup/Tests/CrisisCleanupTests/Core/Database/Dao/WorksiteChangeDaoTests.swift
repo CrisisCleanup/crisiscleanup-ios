@@ -229,7 +229,11 @@ class WorksiteChangeDaoTests: XCTestCase {
         }
     }
 
-    private func insertWorksite(_ worksite: Worksite) async throws -> EditWorksiteRecords {
+    internal static func insertWorksite(
+        _ dbQueue: DatabaseQueue,
+        _ uuidGenerator: UuidGenerator,
+        _ now: Date,
+        _ worksite: Worksite) async throws -> EditWorksiteRecords {
         let records = worksite.asRecords(
             uuidGenerator,
             worksite.workTypes[0],
@@ -238,9 +242,9 @@ class WorksiteChangeDaoTests: XCTestCase {
             workTypeIdLookup: [:]
         )
 
-        let inserted = try await WorksiteTestUtil.insertWorksites(dbQueue!, now, [records.core])
+        let inserted = try await WorksiteTestUtil.insertWorksites(dbQueue, now, [records.core])
         let worksiteId = inserted[0].id!
-        return try await dbQueue!.write { db in
+        return try await dbQueue.write { db in
             let flags = records.flags.map { f in f.copy { $0.worksiteId = worksiteId } }
             for record in flags {
                 var record = record
@@ -271,6 +275,10 @@ class WorksiteChangeDaoTests: XCTestCase {
                 workTypes: workTypes
             )
         }
+    }
+
+    private func insertWorksite(_ worksite: Worksite) async throws -> EditWorksiteRecords {
+        try await WorksiteChangeDaoTests.insertWorksite(dbQueue!, uuidGenerator, now, worksite)
     }
 
     private func expectedFormData(
@@ -306,7 +314,7 @@ class WorksiteChangeDaoTests: XCTestCase {
 
         let worksiteEntity = entityData.core
         let worksiteId = worksiteEntity.id!
-        let actualWorksite = try await dbQueue?.read { db in
+        let actualWorksite = try await dbQueue!.read { db in
             try WorksiteRecord
                 .filter(id: worksiteId)
                 .fetchOne(db)
@@ -322,12 +330,12 @@ class WorksiteChangeDaoTests: XCTestCase {
             }
             return flag
         }
-        let actualFlags = try await dbQueue!.selectWorksiteFlags(worksiteId)
+        let actualFlags = try dbQueue!.selectWorksiteFlags(worksiteId)
         XCTAssertEqual(expectedFlags, actualFlags)
 
         entityIndex = 1
         let expectedFormData = expectedFormData(entityData.formData)
-        let actualFormData = try await dbQueue!.selectWorksiteFormData(worksiteId)
+        let actualFormData = try dbQueue!.selectWorksiteFormData(worksiteId)
         XCTAssertEqual(expectedFormData, actualFormData)
 
         entityIndex = 1
@@ -339,7 +347,7 @@ class WorksiteChangeDaoTests: XCTestCase {
             }
             return note
         }
-        let actualNotes = try await dbQueue!.selectWorksiteNotes(worksiteId)
+        let actualNotes = try dbQueue!.selectWorksiteNotes(worksiteId)
             .sorted(by: { a, b in a.id! < b.id! })
         XCTAssertEqual(expectedNotes, actualNotes)
 
@@ -352,54 +360,10 @@ class WorksiteChangeDaoTests: XCTestCase {
             }
             return workType
         }
-        let actualWorkTypes = try await dbQueue!.selectWorksiteWorkTypes(worksiteId)
+        let actualWorkTypes = try dbQueue!.selectWorksiteWorkTypes(worksiteId)
         XCTAssertEqual(expectedWorkTypes, actualWorkTypes)
 
         XCTAssertFalse(changeSerializer.serializeCalled)
-    }
-
-    func setSerializerMockClosure(
-        _ isDataChangedExpected: Bool,
-        _ worksiteStartExpected: Worksite,
-        _ worksiteChangeExpected: Worksite,
-        _ flagIdLookupExpected: [Int64: Int64]?,
-        _ noteIdLookupExpected: [Int64: Int64]?,
-        _ workTypeIdLookupExpected: [Int64: Int64]?,
-        requestReasonExpected: String? = nil,
-        requestWorkTypesExpected: [String]? = nil,
-        releaseReasonExpected: String? = nil,
-        releaseWorkTypesExpected: [String]? = nil,
-        mockReturn: (Int, String)
-    ) {
-        changeSerializer.serializeClosure = { (
-            isDataChanged: Bool,
-            worksiteStart: Worksite,
-            worksiteChange: Worksite,
-            flagIdLookup: [Int64: Int64],
-            noteIdLookup: [Int64: Int64],
-            workTypeIdLookup: [Int64: Int64],
-            requestReason: String,
-            requestWorkTypes: [String],
-            releaseReason: String,
-            releaseWorkTypes: [String]
-        ) in
-            if isDataChanged == isDataChangedExpected,
-               worksiteStart == worksiteStartExpected,
-               worksiteChange == worksiteChangeExpected,
-               flagIdLookupExpected == nil || flagIdLookup == flagIdLookupExpected!,
-               noteIdLookupExpected == nil || noteIdLookup == noteIdLookupExpected!,
-               workTypeIdLookupExpected == nil || workTypeIdLookup == workTypeIdLookupExpected!,
-               requestReasonExpected == nil || requestReason == requestReasonExpected!,
-               requestWorkTypesExpected == nil || requestWorkTypes == requestWorkTypesExpected!,
-               releaseReasonExpected == nil || releaseReason == releaseReasonExpected!,
-               releaseWorkTypesExpected == nil || releaseWorkTypes == releaseWorkTypesExpected!
-            {
-                return mockReturn
-            }
-
-            print("Unexpected invocation of serializer start \(worksiteStart==worksiteStartExpected) change \(worksiteChange==worksiteChangeExpected) flag \(flagIdLookup==flagIdLookupExpected) note \(noteIdLookup==noteIdLookupExpected) work type \(workTypeIdLookup==workTypeIdLookupExpected)")
-            throw GenericError("Unxpected invocation of serializer")
-        }
     }
 
     func testNewWorksite() async throws {
@@ -424,7 +388,7 @@ class WorksiteChangeDaoTests: XCTestCase {
             workTypeIdLookup: [:]
         )
 
-        setSerializerMockClosure(
+        changeSerializer.mockClosure(
             true,
             EmptyWorksite,
             newWorksite.copy {
@@ -450,7 +414,7 @@ class WorksiteChangeDaoTests: XCTestCase {
         let worksiteRecord = records.core.copy { $0.id = 1 }
         let worksiteId = worksiteRecord.id!
 
-        let actualRoot = try await dbQueue!.selectWorksiteRoot(worksiteId)
+        let actualRoot = try dbQueue!.selectWorksiteRoot(worksiteId)
         let expectedRoot = WorksiteRootRecord(
             id: 1,
             syncUuid: "uuid-5",
@@ -464,7 +428,7 @@ class WorksiteChangeDaoTests: XCTestCase {
         )
         XCTAssertEqual(expectedRoot, actualRoot)
 
-        let actualWorksite = try await dbQueue!.selectWorksite(worksiteId)
+        let actualWorksite = try dbQueue!.selectWorksite(worksiteId)
         XCTAssertEqual(worksiteRecord, actualWorksite)
 
         var recordIndex: Int64 = 1
@@ -476,12 +440,12 @@ class WorksiteChangeDaoTests: XCTestCase {
                 $0.worksiteId = 1
             }
         }
-        let actualFlags = try await dbQueue!.selectWorksiteFlags(worksiteId)
+        let actualFlags = try dbQueue!.selectWorksiteFlags(worksiteId)
         XCTAssertEqual(expectedFlags, actualFlags)
 
         recordIndex = 1
         let expectedFormData = expectedFormData(records.formData, worksiteId: 1)
-        let actualFormData = try await dbQueue!.selectWorksiteFormData(worksiteId)
+        let actualFormData = try dbQueue!.selectWorksiteFormData(worksiteId)
         XCTAssertEqual(expectedFormData, actualFormData)
 
         recordIndex = 1
@@ -495,7 +459,7 @@ class WorksiteChangeDaoTests: XCTestCase {
                 localGlobalIndex += 1
             }
         }
-        let actualNotes = try await dbQueue!.selectWorksiteNotes(worksiteId)
+        let actualNotes = try dbQueue!.selectWorksiteNotes(worksiteId)
             .sorted(by: { a, b in a.createdAt < b.createdAt })
         XCTAssertEqual(expectedNotes, actualNotes)
 
@@ -508,10 +472,10 @@ class WorksiteChangeDaoTests: XCTestCase {
                 $0.worksiteId = 1
             }
         }
-        let actualWorkTypes = try await dbQueue!.selectWorksiteWorkTypes(worksiteId)
+        let actualWorkTypes = try dbQueue!.selectWorksiteWorkTypes(worksiteId)
         XCTAssertEqual(expectedWorkTypes, actualWorkTypes)
 
-        let actualChanges = try await dbQueue!.selectWorksiteChanges(worksiteId)
+        let actualChanges = try dbQueue!.selectWorksiteChanges(worksiteId)
         let expectedWorksiteChange = WorksiteChangeRecord(
             id: 1,
             appVersion: 81,
@@ -528,11 +492,11 @@ class WorksiteChangeDaoTests: XCTestCase {
 
     private func editWorksiteRecords(_ worksiteId: Int64) async throws -> EditWorksiteRecords {
         let dbQueue = dbQueue!
-        let savedWorksite = try await dbQueue.selectWorksite(worksiteId)
-        let flags = try await dbQueue.selectWorksiteFlags(worksiteId)
-        let formData = try await dbQueue.selectWorksiteFormData(worksiteId)
-        let notes = try await dbQueue.selectWorksiteNotes(worksiteId)
-        let workTypes = try await dbQueue.selectWorksiteWorkTypes(worksiteId)
+        let savedWorksite = try dbQueue.selectWorksite(worksiteId)
+        let flags = try dbQueue.selectWorksiteFlags(worksiteId)
+        let formData = try dbQueue.selectWorksiteFormData(worksiteId)
+        let notes = try dbQueue.selectWorksiteNotes(worksiteId)
+        let workTypes = try dbQueue.selectWorksiteWorkTypes(worksiteId)
 
         return EditWorksiteRecords(
             core: savedWorksite!,
@@ -714,7 +678,7 @@ class WorksiteChangeDaoTests: XCTestCase {
         let worksiteChanged = changeFullWorksite()
         let worksiteModified = worksiteChanged.copy { $0.networkId = worksiteSynced.networkId }
 
-        setSerializerMockClosure(
+        changeSerializer.mockClosure(
             true,
             worksiteSynced,
             worksiteModified.copy { copy in
@@ -766,7 +730,7 @@ class WorksiteChangeDaoTests: XCTestCase {
         let worksiteRecord = records.core
         let worksiteId = worksiteRecord.id!
 
-        let actualRoot = try await dbQueue!.selectWorksiteRoot(worksiteId)
+        let actualRoot = try dbQueue!.selectWorksiteRoot(worksiteId)
         let expectedRoot = WorksiteRootRecord(
             id: 56,
             syncUuid: "uuid-11",
@@ -780,7 +744,7 @@ class WorksiteChangeDaoTests: XCTestCase {
         )
         XCTAssertEqual(expectedRoot, actualRoot)
 
-        let actualWorksite = try await dbQueue!.selectWorksite(worksiteId)
+        let actualWorksite = try dbQueue!.selectWorksite(worksiteId)
         XCTAssertEqual(worksiteRecord, actualWorksite)
 
         func expectedFlagRecord(
@@ -807,7 +771,7 @@ class WorksiteChangeDaoTests: XCTestCase {
             expectedFlagRecord(11, 211, "reason-c"),
             expectedFlagRecord(34, -1, "reason-d"),
         ]
-        let actualFlags = try await dbQueue!.selectWorksiteFlags(worksiteId)
+        let actualFlags = try dbQueue!.selectWorksiteFlags(worksiteId)
             .sorted(by: { a, b in a.id! < b.id! })
         XCTAssertEqual(expectedFlags, actualFlags)
 
@@ -831,7 +795,7 @@ class WorksiteChangeDaoTests: XCTestCase {
             a.fieldKey.localizedCompare(b.fieldKey) == .orderedAscending
         })
         .map { f in f.copy { $0.worksiteId = 56 } }
-        let actualFormData = try await dbQueue!.selectWorksiteFormData(worksiteId)
+        let actualFormData = try dbQueue!.selectWorksiteFormData(worksiteId)
             .sorted(by: { a, b in
                 a.fieldKey.localizedCompare(b.fieldKey) == .orderedAscending
             })
@@ -868,7 +832,7 @@ class WorksiteChangeDaoTests: XCTestCase {
             expectedNote(65, -1, "note-c", createdAtC, "uuid-9"),
             expectedNote(66, -1, "note-d", createdAtC, "uuid-10"),
         ]
-        let actualNotes = try await dbQueue!.selectWorksiteNotes(worksiteId)
+        let actualNotes = try dbQueue!.selectWorksiteNotes(worksiteId)
             .sorted(by: { a, b in a.id! < b.id! })
         XCTAssertEqual(expectedNotes, actualNotes)
 
@@ -901,11 +865,11 @@ class WorksiteChangeDaoTests: XCTestCase {
             expectedWorkType(1, 301, "work-type-a", "status-a-change", nil, createdAt: createdAtA),
             expectedWorkType(58, -1, "work-type-d", "status-d"),
         ]
-        let actualWorkTypes = try await dbQueue!.selectWorksiteWorkTypes(worksiteId)
+        let actualWorkTypes = try dbQueue!.selectWorksiteWorkTypes(worksiteId)
             .sorted(by: { a, b in a.id! < b.id! })
         XCTAssertEqual(expectedWorkTypes, actualWorkTypes)
 
-        let actualChanges = try await dbQueue!.selectWorksiteChanges(worksiteId)
+        let actualChanges = try dbQueue!.selectWorksiteChanges(worksiteId)
         let expectedWorksiteChange = WorksiteChangeRecord(
             id: 1,
             appVersion: 81,
@@ -978,7 +942,7 @@ class WorksiteChangeDaoTests: XCTestCase {
             }
         }
 
-        setSerializerMockClosure(
+        changeSerializer.mockClosure(
             true,
             worksiteSynced,
             worksiteModified,
@@ -1012,7 +976,7 @@ class WorksiteChangeDaoTests: XCTestCase {
         let worksiteRecord = records.core
         let worksiteId = worksiteRecord.id!
 
-        let actualRoot = try await dbQueue!.selectWorksiteRoot(worksiteId)
+        let actualRoot = try dbQueue!.selectWorksiteRoot(worksiteId)
         let expectedRoot = WorksiteRootRecord(
             id: 56,
             syncUuid: "uuid-7",
@@ -1026,29 +990,29 @@ class WorksiteChangeDaoTests: XCTestCase {
         )
         XCTAssertEqual(expectedRoot, actualRoot)
 
-        let actualWorksite = try await dbQueue!.selectWorksite(worksiteId)
+        let actualWorksite = try dbQueue!.selectWorksite(worksiteId)
         XCTAssertEqual(worksiteRecord, actualWorksite)
 
-        let actualFlags = try await dbQueue!.selectWorksiteFlags(worksiteId)
+        let actualFlags = try dbQueue!.selectWorksiteFlags(worksiteId)
         XCTAssertEqual([WorksiteFlagRecord](), actualFlags)
 
         let expectedFormData = initialRecords.formData
             .map { f in f.copy { $0.worksiteId = 56 } }
-        let actualFormData = try await dbQueue!.selectWorksiteFormData(worksiteId)
+        let actualFormData = try dbQueue!.selectWorksiteFormData(worksiteId)
         XCTAssertEqual(expectedFormData, actualFormData)
 
         let expectedNotes = initialRecords.notes
-        let actualNotes = try await dbQueue!.selectWorksiteNotes(worksiteId)
+        let actualNotes = try dbQueue!.selectWorksiteNotes(worksiteId)
         XCTAssertEqual(expectedNotes, actualNotes)
 
         let expectedWorkTypes = initialRecords.workTypes
             .map { w in w.copy { $0.worksiteId = 56 } }
             .sorted { a, b in a.id! < b.id! }
-        let actualWorkTypes = try await dbQueue!.selectWorksiteWorkTypes(worksiteId)
+        let actualWorkTypes = try dbQueue!.selectWorksiteWorkTypes(worksiteId)
             .sorted { a, b in a.id! < b.id! }
         XCTAssertEqual(expectedWorkTypes, actualWorkTypes)
 
-        let actualChanges = try await dbQueue!.selectWorksiteChanges(worksiteId)
+        let actualChanges = try dbQueue!.selectWorksiteChanges(worksiteId)
         let expectedWorksiteChange = WorksiteChangeRecord(
             id: 1,
             appVersion: 81,
@@ -1131,16 +1095,16 @@ extension DerivableRequest<WorksiteFormDataRecord> {
 }
 
 extension DatabaseQueue {
-    internal func selectWorksiteFlags(_ worksiteId: Int64) async throws -> [WorksiteFlagRecord] {
-        try await read { db in
+    internal func selectWorksiteFlags(_ worksiteId: Int64) throws -> [WorksiteFlagRecord] {
+        try read { db in
             try WorksiteFlagRecord
                 .filter(WorksiteFlagRecord.Columns.worksiteId == worksiteId)
                 .fetchAll(db)
         }
     }
 
-    internal func selectWorksiteFormData(_ worksiteId: Int64) async throws -> [WorksiteFormDataRecord] {
-        try await read { db in
+    internal func selectWorksiteFormData(_ worksiteId: Int64) throws -> [WorksiteFormDataRecord] {
+        try read { db in
             try WorksiteFormDataRecord
                 .filter(WorksiteFormDataRecord.Columns.worksiteId == worksiteId)
                 .order(WorksiteFormDataRecord.Columns.id.asc)
@@ -1148,40 +1112,40 @@ extension DatabaseQueue {
         }
     }
 
-    internal func selectWorksiteNotes(_ worksiteId: Int64) async throws -> [WorksiteNoteRecord] {
-        try await read { db in
+    internal func selectWorksiteNotes(_ worksiteId: Int64) throws -> [WorksiteNoteRecord] {
+        try read { db in
             try WorksiteNoteRecord
                 .filter(WorksiteNoteRecord.Columns.worksiteId == worksiteId)
                 .fetchAll(db)
         }
     }
 
-    internal func selectWorksiteWorkTypes(_ worksiteId: Int64) async throws -> [WorkTypeRecord] {
-        try await read { db in
+    internal func selectWorksiteWorkTypes(_ worksiteId: Int64) throws -> [WorkTypeRecord] {
+        try read { db in
             try WorkTypeRecord
                 .filter(WorkTypeRecord.Columns.worksiteId == worksiteId)
                 .fetchAll(db)
         }
     }
 
-    internal func selectWorksiteRoot(_ worksiteId: Int64) async throws -> WorksiteRootRecord? {
-        try await read { db in
+    internal func selectWorksiteRoot(_ worksiteId: Int64) throws -> WorksiteRootRecord? {
+        try read { db in
             try WorksiteRootRecord
                 .filter(id: worksiteId)
                 .fetchOne(db)
         }
     }
 
-    internal func selectWorksite(_ worksiteId: Int64) async throws -> WorksiteRecord? {
-        try await read { db in
+    internal func selectWorksite(_ worksiteId: Int64) throws -> WorksiteRecord? {
+        try read { db in
             try WorksiteRecord
                 .filter(id: worksiteId)
                 .fetchOne(db)
         }
     }
 
-    internal func selectWorksiteChanges(_ worksiteId: Int64) async throws -> [WorksiteChangeRecord] {
-        try await read { db in
+    internal func selectWorksiteChanges(_ worksiteId: Int64) throws -> [WorksiteChangeRecord] {
+        try read { db in
             try WorksiteChangeRecord
                 .filter(WorksiteChangeRecord.Columns.worksiteId == worksiteId)
                 .fetchAll(db)
@@ -1235,5 +1199,51 @@ extension Database {
         _ networkId: Int64
     ) throws {
         try updateNetworkId("workType", id, networkId)
+    }
+}
+
+extension WorksiteChangeSerializerMock {
+    func mockClosure(
+        _ isDataChangedExpected: Bool,
+        _ worksiteStartExpected: Worksite,
+        _ worksiteChangeExpected: Worksite,
+        _ flagIdLookupExpected: [Int64: Int64]?,
+        _ noteIdLookupExpected: [Int64: Int64]?,
+        _ workTypeIdLookupExpected: [Int64: Int64]?,
+        requestReasonExpected: String? = nil,
+        requestWorkTypesExpected: [String]? = nil,
+        releaseReasonExpected: String? = nil,
+        releaseWorkTypesExpected: [String]? = nil,
+        mockReturn: (Int, String)
+    ) {
+        serializeClosure = { (
+            isDataChanged: Bool,
+            worksiteStart: Worksite,
+            worksiteChange: Worksite,
+            flagIdLookup: [Int64: Int64],
+            noteIdLookup: [Int64: Int64],
+            workTypeIdLookup: [Int64: Int64],
+            requestReason: String,
+            requestWorkTypes: [String],
+            releaseReason: String,
+            releaseWorkTypes: [String]
+        ) in
+            if isDataChanged == isDataChangedExpected,
+               worksiteStart == worksiteStartExpected,
+               worksiteChange == worksiteChangeExpected,
+               flagIdLookupExpected == nil || flagIdLookup == flagIdLookupExpected!,
+               noteIdLookupExpected == nil || noteIdLookup == noteIdLookupExpected!,
+               workTypeIdLookupExpected == nil || workTypeIdLookup == workTypeIdLookupExpected!,
+               requestReasonExpected == nil || requestReason == requestReasonExpected!,
+               requestWorkTypesExpected == nil || requestWorkTypes == requestWorkTypesExpected!,
+               releaseReasonExpected == nil || releaseReason == releaseReasonExpected!,
+               releaseWorkTypesExpected == nil || releaseWorkTypes == releaseWorkTypesExpected!
+            {
+                return mockReturn
+            }
+
+            print("Unexpected invocation of serializer start \(worksiteStart==worksiteStartExpected) change \(worksiteChange==worksiteChangeExpected) flag \(flagIdLookup==flagIdLookupExpected) note \(noteIdLookup==noteIdLookupExpected) work type \(workTypeIdLookup==workTypeIdLookupExpected)")
+            throw GenericError("Unxpected invocation of serializer")
+        }
     }
 }

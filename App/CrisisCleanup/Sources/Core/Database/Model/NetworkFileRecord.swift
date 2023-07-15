@@ -59,7 +59,6 @@ extension NetworkFileRecord: Codable, FetchableRecord, PersistableRecord {
 
         let deleteIdSet = Set(deleteIds)
         try NetworkFileRecord
-            .all()
             .filter(deleteIdSet.contains(Columns.id))
             .deleteAll(db)
     }

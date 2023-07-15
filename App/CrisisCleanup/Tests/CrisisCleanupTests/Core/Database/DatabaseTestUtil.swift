@@ -24,7 +24,18 @@ class WorksiteTestUtil {
         return try await dbQueue.write { db in
             var records = [WorksiteRecord]()
             for worksite in worksites {
-                let id = try WorksiteRootRecord.insertOrRollback(db, syncedAt, worksite.networkId, worksite.incidentId)
+                let id: Int64
+                if worksite.id == nil {
+                    id = try WorksiteRootRecord.insertOrRollback(db, syncedAt, worksite.networkId, worksite.incidentId)
+                } else {
+                    id = try WorksiteRootRecord.create(
+                        syncedAt: syncedAt,
+                        networkId: worksite.networkId,
+                        incidentId: worksite.incidentId,
+                        id: worksite.id!
+                    )
+                    .insertAndFetch(db, onConflict: .rollback)!.id!
+                }
                 var updated = worksite.copy { $0.id = id }
                 try updated.insert(db)
                 records.append(updated)

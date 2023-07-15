@@ -1,3 +1,4 @@
+import Atomics
 import Combine
 import Foundation
 
@@ -20,7 +21,7 @@ public protocol WorksiteChangeRepository {
         requests: [String],
         releaseReason: String,
         releases: [String]
-    ) async -> Bool
+    ) async throws -> Bool
 
     /**
      * - Returns: TRUE if sync was attempted or FALSE otherwise
@@ -42,8 +43,8 @@ extension WorksiteChangeRepository {
         requests: [String] = [],
         releaseReason: String = "",
         releases: [String] = []
-    ) async -> Bool {
-        await saveWorkTypeTransfer(
+    ) async throws -> Bool {
+        try await saveWorkTypeTransfer(
             worksite: worksite,
             organizationId: organizationId,
             requestReason: requestReason,
@@ -84,6 +85,8 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
     private var _syncingWorksiteIds = Set<Int64>()
     private let syncingWorksiteIdsSubject = CurrentValueSubject<Set<Int64>, Never>([])
     let syncingWorksiteIds: any Publisher<Set<Int64>, Never>
+
+    private let syncWorksiteGuard = ManagedAtomic(false)
 
     private let streamWorksitesPendingSyncSubject = CurrentValueSubject<[Worksite], Never>([])
     let streamWorksitesPendingSync: any Publisher<[Worksite], Never>
@@ -150,9 +153,32 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         }
     }
 
-    func saveWorkTypeTransfer(worksite: Worksite, organizationId: Int64, requestReason: String, requests: [String], releaseReason: String, releases: [String]) async -> Bool {
-        // TODO: Do
-        false
+    func saveWorkTypeTransfer(worksite: Worksite, organizationId: Int64, requestReason: String, requests: [String], releaseReason: String, releases: [String]) async throws -> Bool {
+        guard !worksite.isNew && organizationId > 0 else {
+            return false
+        }
+
+        if requestReason.isNotBlank && requests.isNotEmpty {
+            try await worksiteChangeDao.saveWorkTypeRequests(
+                worksite,
+                organizationId,
+                requestReason,
+                requests
+            )
+            return true
+        }
+
+        if releaseReason.isNotBlank && releases.isNotEmpty {
+            try await worksiteChangeDao.saveWorkTypeReleases(
+                worksite,
+                organizationId,
+                releaseReason,
+                releases
+            )
+            return true
+        }
+
+        return false
     }
 
     func syncWorksites(_ syncWorksiteCount: Int) async -> Bool {

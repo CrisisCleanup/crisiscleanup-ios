@@ -368,7 +368,7 @@ func testWorksiteFullRecord(
     _ networkId: Int64,
     _ incidentId: Int64,
     _ createdAt: Date,
-    id: Int64 = 0
+    id: Int64? = nil
 ) -> WorksiteRecord {
     WorksiteRecord(
         id: id,
@@ -407,7 +407,7 @@ func testWorksiteShortRecord(
     _ networkId: Int64,
     _ incidentId: Int64,
     _ createdAt: Date,
-    id: Int64 = 0
+    id: Int64? = nil
 ) -> WorksiteRecord {
     WorksiteRecord(
         id: id,

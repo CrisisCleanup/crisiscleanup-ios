@@ -38,7 +38,6 @@ public class IncidentOrganizationDao {
 
     private func fetchOrganizations(_ db: Database) throws -> [PopulatedIncidentOrganization] {
         return try IncidentOrganizationRecord
-            .all()
             .including(all: IncidentOrganizationRecord.primaryContacts)
             .including(all: IncidentOrganizationRecord.organizationAffiliates)
             .asRequest(of: PopulatedIncidentOrganization.self)
@@ -73,7 +72,6 @@ public class IncidentOrganizationDao {
     func getOrganizations(_ organizationIds: [Int64]) throws -> [PopulatedIncidentOrganization] {
         try reader.read { db in
             try IncidentOrganizationRecord
-                .all()
                 .select(IncidentOrganizationRecord.inIds(ids: organizationIds))
                 .fetchAll(db)
         }

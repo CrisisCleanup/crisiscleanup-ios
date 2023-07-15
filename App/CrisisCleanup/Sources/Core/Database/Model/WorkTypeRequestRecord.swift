@@ -18,6 +18,28 @@ struct WorkTypeRequestRecord : Identifiable, Equatable {
     let rejectedAt: Date?
     let approvedRejectedReason: String
 
+    static func create(
+        worksite: Worksite,
+        workType: String,
+        reason: String,
+        byOrg: Int64,
+        toOrg: Int64,
+        createdAt: Date
+    ) -> WorkTypeRequestRecord {
+        WorkTypeRequestRecord(
+            networkId: -1,
+            worksiteId: worksite.id,
+            workType: workType,
+            reason: reason,
+            byOrg: byOrg,
+            toOrg: toOrg,
+            createdAt: createdAt,
+            approvedAt: nil,
+            rejectedAt: nil,
+            approvedRejectedReason: ""
+        )
+    }
+
     func asExternalModel() -> WorkTypeRequest {
         WorkTypeRequest(
             workType: workType,
@@ -64,7 +86,6 @@ extension WorkTypeRequestRecord: Codable, FetchableRecord, MutablePersistableRec
 
     static func deleteUnsynced(_ db: Database, _ worksiteId: Int64) throws {
         try WorkTypeRequestRecord
-            .all()
             .filter(
                 WorkTypeRequestRecord.Columns.worksiteId == worksiteId &&
                 WorkTypeRequestRecord.Columns.networkId <= 0
