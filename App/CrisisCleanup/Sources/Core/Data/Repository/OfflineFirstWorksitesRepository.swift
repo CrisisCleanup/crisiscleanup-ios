@@ -137,7 +137,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
             incidentId: incidentId,
             syncStart: syncStart,
             dataCount: worksitesCount,
-            // TODO Preserve previous attempt metrics (if used)
+            // TODO: Preserve previous attempt metrics (if used)
             syncAttempt: SyncAttempt(
                 successfulSeconds: 0,
                 attemptedSeconds: 0,
@@ -230,8 +230,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     }
 
     func getUnsyncedCounts(_ worksiteId: Int64) throws -> [Int] {
-        // TODO: Do
-        return []
+        try worksiteDao.getUnsyncedChangeCount(worksiteId)
     }
 
     func shareWorksite(

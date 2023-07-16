@@ -512,6 +512,30 @@ public class WorksiteDao {
         try await database.onSyncEnd(worksiteId, syncedAt)
     }
 
+    func getLocallyModifiedWorksites(_ limit: Int) throws -> [Int64] {
+        try reader.read { db in
+            try WorksiteRootRecord
+                .all()
+                .selectIdColumn()
+                .filterLocalModified()
+                .orderedByLocalModifiedAtDesc()
+                .limit(limit)
+                .asRequest(of: Int64.self)
+                .fetchAll(db)
+        }
+    }
+
+    func getUnsyncedChangeCount(_ worksiteId: Int64) throws -> [Int] {
+        try reader.read { db in
+            return [
+                try WorksiteFlagRecord.getUnsyncedCount(db, worksiteId),
+                try WorksiteNoteRecord.getUnsyncedCount(db, worksiteId),
+                try WorkTypeRecord.getUnsyncedCount(db, worksiteId),
+                try WorksiteChangeRecord.getUnsyncedCount(db, worksiteId),
+            ]
+        }
+    }
+
     // MARK: - Test access
 
     internal func getLocalWorksite(_ id: Int64) throws -> PopulatedLocalWorksite? {

@@ -233,7 +233,8 @@ class WorksiteChangeDaoTests: XCTestCase {
         _ dbQueue: DatabaseQueue,
         _ uuidGenerator: UuidGenerator,
         _ now: Date,
-        _ worksite: Worksite) async throws -> EditWorksiteRecords {
+        _ worksite: Worksite
+    ) async throws -> EditWorksiteRecords {
         let records = worksite.asRecords(
             uuidGenerator,
             worksite.workTypes[0],
@@ -1028,6 +1029,90 @@ class WorksiteChangeDaoTests: XCTestCase {
     }
 
     // TODO: Edit unsynced worksite
+
+    func testGetWorksitesPendingSync() async throws {
+        let worksites = [
+            testWorksiteShortRecord(-1, testIncidentId, createdAtA),
+            testWorksiteShortRecord(23, testIncidentId, createdAtA),
+            testWorksiteShortRecord(18, testIncidentId, createdAtA),
+        ]
+        let inserted = try await WorksiteTestUtil.insertWorksites(dbQueue!, now, worksites)
+
+        let worksiteIdA = inserted[0].id!
+        let worksiteIdB = inserted[1].id!
+        let worksiteIdC = inserted[2].id!
+
+        func testWorksiteChange(
+            _ change: String,
+            createdAt: Date,
+            attemptAt: Date,
+            worksiteId: Int64 = worksiteIdA
+        ) -> WorksiteChangeRecord {
+            WorksiteChangeRecord(
+                appVersion: 41,
+                organizationId: 15,
+                worksiteId: worksiteId,
+                syncUuid: "",
+                changeModelVersion: 0,
+                changeData: change,
+                createdAt: createdAt,
+                saveAttemptAt: attemptAt
+            )
+        }
+
+        func insertChanges(_ changes: [WorksiteChangeRecord]) async throws {
+            try await dbQueue!.write { db in
+                for record in changes {
+                    var record = record
+                    try record.insert(db)
+                }
+            }
+        }
+
+        let dateA = now.addingTimeInterval(-3.hours)
+        let dateB = dateA.addingTimeInterval(3.minutes)
+        let dateC = dateB.addingTimeInterval(3.minutes)
+        let dateD = dateC.addingTimeInterval(3.minutes)
+        let dateE = dateD.addingTimeInterval(3.minutes)
+
+        // Same min attempt at, different max created at
+        let changes = [
+            testWorksiteChange(
+                "change-a",
+                createdAt: dateC,
+                attemptAt: dateB,
+                worksiteId: worksiteIdB
+            ),
+            testWorksiteChange(
+                "change-b",
+                createdAt: dateD,
+                attemptAt: dateB
+            ),
+            testWorksiteChange(
+                "change-c",
+                createdAt: dateE,
+                attemptAt: dateB,
+                worksiteId: worksiteIdB
+            )
+        ]
+        try await insertChanges(changes)
+
+        let actualA = try worksiteChangeDao?.getWorksitesPendingSync(5)
+        let expectedA = [worksiteIdA, worksiteIdB]
+        XCTAssertEqual(actualA, expectedA)
+
+        try await insertChanges([
+            testWorksiteChange(
+                "change-d",
+                createdAt: dateA,
+                attemptAt: dateA,
+                worksiteId: worksiteIdC
+            )
+        ])
+        let actualB = try worksiteChangeDao?.getWorksitesPendingSync(5)
+        let expectedB = [worksiteIdC, worksiteIdA, worksiteIdB]
+        XCTAssertEqual(actualB, expectedB)
+    }
 }
 
 private func testWorksiteFlag(

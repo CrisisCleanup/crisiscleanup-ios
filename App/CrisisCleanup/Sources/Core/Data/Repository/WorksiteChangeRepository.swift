@@ -182,8 +182,44 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
     }
 
     func syncWorksites(_ syncWorksiteCount: Int) async -> Bool {
-        // TODO: Do
-        false
+        if !syncWorksiteGuard.exchange(true, ordering: .sequentiallyConsistent) {
+            var worksiteId: Int64
+            do {
+                defer { syncWorksiteGuard.store(false, ordering: .sequentiallyConsistent) }
+
+                var previousWorksiteId: Int64 = 0
+                var syncCounter = 0
+                let syncCountLimit = syncWorksiteCount < 1 ? 20 : syncWorksiteCount
+                while syncCounter < syncCountLimit {
+                    syncCounter += 1
+
+                    var worksiteIds = try worksiteDao.getLocallyModifiedWorksites(1)
+                    if worksiteIds.isEmpty {
+                        worksiteIds = try worksiteChangeDao.getWorksitesPendingSync(1)
+                        if worksiteIds.isEmpty {
+                            break
+                        }
+                    }
+                    worksiteId = worksiteIds.first!
+
+                    if worksiteId == previousWorksiteId {
+                        let saveFailCount = try worksiteChangeDao.getSaveFailCount(worksiteId)
+                        if saveFailCount > 0
+                        {
+                            break
+                        }
+                    }
+                    previousWorksiteId = worksiteId
+
+                    _ = try await trySyncWorksite(worksiteId, true)
+
+                    try Task.checkCancellation()
+                }
+            } catch {
+
+            }
+        }
+        return false
     }
 
     func saveDeletePhoto(_ fileId: Int64) async -> Int64 {
@@ -250,7 +286,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
                 if rethrowError {
                     throw endError
                 } else {
-                    // TODO Indicate error visually
+                    // TODO: Indicate error visually
                     syncLogger.log("Sync failed", details: endError.localizedDescription)
                 }
             }
@@ -274,7 +310,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
             let organizationId = accountData.org.id
             if newestChangeOrgId != organizationId {
                 syncLogger.log("Not syncing. Org mismatch \(organizationId) != \(newestChangeOrgId).")
-                // TODO Insert notice that newest change of worksite was with a different organization
+                // TODO: Insert notice that newest change of worksite was with a different organization
                 return
             }
 
@@ -405,9 +441,9 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
                 }
         } else {
             syncLogger.log("Not syncing. Worksite \(newestChange.worksiteId) change is not syncable.")
-            // TODO Not worth retrying at this point.
-            //      How to handle gracefully?
-            //      Wait for user modification, intervention, or prompt?
+            // Complexity is not worth retrying at this point.
+            // TODO: How to handle gracefully?
+            //       Wait for user modification, intervention, or prompt?
         }
     }
 

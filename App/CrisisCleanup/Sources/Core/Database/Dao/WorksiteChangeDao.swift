@@ -231,6 +231,27 @@ class WorksiteChangeDao {
             }
         }
     }
+
+    func getWorksitesPendingSync(_ limit: Int) throws -> [Int64] {
+        try reader.read { db in
+            try WorksiteChangeRecord
+                .all()
+                .worksiteIdAttemptCreated()
+                .limit(limit)
+                .asRequest(of: WorksiteChangeSaveCreated.self)
+                .fetchAll(db)
+        }
+        .map { $0.worksiteId }
+    }
+
+    func getSaveFailCount(_ worksiteId: Int64) throws -> Int {
+        try reader.read { db in
+            try WorksiteChangeRecord
+                .all()
+                .selectSaveAttempted(worksiteId)
+                .fetchCount(db)
+        }
+    }
 }
 
 extension Database {
@@ -572,4 +593,10 @@ fileprivate struct IdNetworkIdMaps {
         self.note = note
         self.workType = workType
     }
+}
+
+fileprivate struct WorksiteChangeSaveCreated: Decodable, FetchableRecord {
+    let worksiteId: Int64
+    let minAttemptAt: Date
+    let maxCreatedAt: Date
 }

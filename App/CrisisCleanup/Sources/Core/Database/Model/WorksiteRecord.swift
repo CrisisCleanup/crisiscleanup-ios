@@ -195,7 +195,7 @@ extension DerivableRequest<WorksiteRootRecord> {
     }
 
     func orderedByLocalModifiedAtDesc() -> Self {
-        order(WorksiteRootRecord.Columns.localModifiedAt.desc)
+        order(RootColumns.localModifiedAt.desc)
     }
 
     func byIncidentId(_ id: Int64) -> Self {
@@ -204,6 +204,10 @@ extension DerivableRequest<WorksiteRootRecord> {
 
     func selectIdColumn() -> Self {
         select(RootColumns.id)
+    }
+
+    func filterLocalModified() -> Self {
+        filter(RootColumns.isLocalModified == true)
     }
 }
 
@@ -617,6 +621,15 @@ extension WorkTypeRecord: Codable, FetchableRecord, MutablePersistableRecord {
             .filter(Columns.worksiteId == worksiteId)
             .fetchAll(db)
     }
+
+    static func getUnsyncedCount(
+        _ db: Database,
+        _ worksiteId: Int64
+    ) throws -> Int {
+        try WorkTypeRecord
+            .filter(Columns.worksiteId == worksiteId && Columns.networkId <= 0)
+            .fetchCount(db)
+    }
 }
 
 extension DerivableRequest<WorkTypeRecord> {
@@ -819,6 +832,15 @@ extension WorksiteFlagRecord: Codable, FetchableRecord, MutablePersistableRecord
             .filter(Columns.worksiteId == worksiteId)
             .fetchAll(db)
     }
+
+    static func getUnsyncedCount(
+        _ db: Database,
+        _ worksiteId: Int64
+    ) throws -> Int {
+        try WorksiteFlagRecord
+            .filter(Columns.worksiteId == worksiteId && Columns.networkId <= 0)
+            .fetchCount(db)
+    }
 }
 
 extension DerivableRequest<WorksiteFlagRecord> {
@@ -944,11 +966,19 @@ extension WorksiteNoteRecord: Codable, FetchableRecord, MutablePersistableRecord
             .fetchAll(db)
     }
 
-
     internal static func getNoteRecords(_ db: Database, _ worksiteId: Int64) throws -> [WorksiteNoteRecord] {
         try WorksiteNoteRecord
             .filter(Columns.worksiteId == worksiteId)
             .fetchAll(db)
+    }
+
+    static func getUnsyncedCount(
+        _ db: Database,
+        _ worksiteId: Int64
+    ) throws -> Int {
+        try WorksiteNoteRecord
+            .filter(Columns.worksiteId == worksiteId && Columns.networkId <= 0)
+            .fetchCount(db)
     }
 }
 
