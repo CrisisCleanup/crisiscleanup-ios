@@ -409,7 +409,23 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         .assign(to: \.tabTitles, on: self)
         .store(in: &subscriptions)
 
-        // TODO: Before and after photos when ready
+        filesNotes.map { (files, localFiles, _) in
+            let beforeImages = Array([
+                localFiles.filter { !$0.isAfter },
+                files.filter { !$0.isAfter }
+            ].joined())
+            let afterImages = Array([
+                localFiles.filter { $0.isAfter },
+                files.filter { $0.isAfter }
+            ].joined())
+            return [
+                ImageCategory.before: beforeImages,
+                ImageCategory.after: afterImages
+            ]
+        }
+        .receive(on: RunLoop.main)
+        .assign(to: \.beforeAfterPhotos, on: self)
+        .store(in: &subscriptions)
     }
 
     private func getWorkTypeSummaries(
