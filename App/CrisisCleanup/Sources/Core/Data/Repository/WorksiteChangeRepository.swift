@@ -32,6 +32,8 @@ public protocol WorksiteChangeRepository {
 
     func trySyncWorksite(_ worksiteId: Int64) async -> Bool
 
+    func syncUnattemptedWorksite(_ worksiteId: Int64) async
+
     func syncWorksiteMedia() async -> Bool
 }
 
@@ -235,6 +237,15 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         return false
     }
 
+    func syncUnattemptedWorksite(_ worksiteId: Int64) async {
+        do {
+            if try worksiteChangeDao.getSaveFailCount(worksiteId) == 0 {
+                _ = try await trySyncWorksite(worksiteId, false)
+            }
+        }
+        catch {}
+    }
+
     private func trySyncWorksite(
         _ worksiteId: Int64,
         _ rethrowError: Bool
@@ -245,7 +256,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         }
 
         let accountData = try await accountDataPublisher.asyncFirst()
-        if accountData.areTokensValid {
+        if !accountData.areTokensValid {
             syncLogger.log("Not attempting. Invalid account token.")
             return false
         }

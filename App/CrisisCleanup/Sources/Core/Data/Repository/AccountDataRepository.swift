@@ -1,4 +1,6 @@
+import Atomics
 import Combine
+import Foundation
 
 public protocol AccountDataRepository {
     var accountData: any Publisher<AccountData, Never> { get }
@@ -26,6 +28,8 @@ public protocol AccountDataRepository {
         expirySeconds: Int64
     )
 
+    func updateAccountTokens() async
+
     func clearAccountTokens()
 }
 
@@ -44,7 +48,9 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
 
     private let accountDataSource: AccountInfoDataSource
     private let secureDataSource: SecureDataSource
+    private let authApi: CrisisCleanupAuthApi
     private let logger: AppLogger
+    private let appEnv: AppEnv
 
     private var disposables = Set<AnyCancellable>()
 
@@ -52,11 +58,15 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
         _ accountDataSource: AccountInfoDataSource,
         _ secureDataSource: SecureDataSource,
         _ authEventBus: AuthEventBus,
-        _ loggerFactory: AppLoggerFactory
+        _ authApi: CrisisCleanupAuthApi,
+        _ loggerFactory: AppLoggerFactory,
+        _ appEnv: AppEnv
     ) {
         self.accountDataSource = accountDataSource
         self.secureDataSource = secureDataSource
+        self.authApi = authApi
         logger = loggerFactory.getLogger("account")
+        self.appEnv = appEnv
 
         accountData = accountDataSubject
 
@@ -133,6 +143,30 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
         }
     }
 
+    func updateAccountTokens() async
+    {
+        do {
+            let accountData = accountDataSubject.value
+            let now = Date.now
+            if accountData.areTokensValid &&
+                accountData.tokenExpiry < now.addingTimeInterval(10.minutes) {
+                if let refreshResult = try await authApi.refreshTokens(refreshToken),
+                   refreshResult.error == nil {
+                    let expiresSeconds = Double(refreshResult.expiresIn!)
+                    let expiryDate = now.addingTimeInterval(expiresSeconds)
+                    updateAccountTokens(
+                        refreshToken: refreshResult.refreshToken!,
+                        accessToken: refreshResult.accessToken!,
+                        expirySeconds: Int64(expiryDate.timeIntervalSince1970)
+                    )
+                    logger.logDebug("Refreshed soon/expiring account tokens")
+                }
+            }
+        } catch {
+            logger.logError(error)
+        }
+    }
+
     func clearAccountTokens() {
         updateAccountTokens(
             refreshToken: "",
@@ -152,8 +186,12 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
         clearAccount()
     }
 
+    private let skipChangeGuard = ManagedAtomic(false)
     internal func expireAccessToken() {
-        accessToken = ""
-        accountDataSource.expireAccessToken()
+        if appEnv.isNotProduction {
+            skipChangeGuard.store(true, ordering: .sequentiallyConsistent)
+            accessToken = ""
+            accountDataSource.expireAccessToken()
+        }
     }
 }

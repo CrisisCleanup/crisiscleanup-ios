@@ -3,6 +3,7 @@ import GRDB
 
 private let epoch0 = Date(timeIntervalSince1970: 0)
 
+// sourcery: copyBuilder
 struct WorksiteRootRecord : Identifiable, Equatable {
     static let worksite = hasOne(WorksiteRecord.self)
     static let worksiteFlags = hasMany(WorksiteFlagRecord.self)

@@ -26,7 +26,7 @@ public class IncidentRefresher {
             }
 
             try await incidentsRepository.pullIncident(id)
-            try await incidentsRepository.pullIncidentOrganizations(id)
+            await incidentsRepository.pullIncidentOrganizations(id)
         } catch {
             logger.logDebug(error.localizedDescription)
         }

@@ -24,9 +24,15 @@ struct CreateEditCaseView: View {
                 VStack {
                     if let caseState = viewModel.caseData {
                         HStack{
-                            IncidentHeader(incident: caseState.incident)
-                                .padding([.horizontal, .bottom])
-                            Spacer()
+                            CaseIncidentView(
+                                incident: caseState.incident,
+                                isPendingSync: caseState.isPendingSync,
+                                isSyncing: viewModel.isSyncing,
+                                scheduleSync: {
+                                    // viewModel.scheduleSync()
+                                }
+                            )
+                            .padding([.horizontal, .bottom])
                         }
                     }
                     Group {

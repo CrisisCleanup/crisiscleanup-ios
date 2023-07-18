@@ -52,6 +52,8 @@ struct WorkTypeRequestRecord : Identifiable, Equatable {
     }
 }
 
+private typealias RequestColumns = WorkTypeRequestRecord.Columns
+
 extension WorkTypeRequestRecord: Codable, FetchableRecord, MutablePersistableRecord {
     static var databaseTableName: String = "worksiteWorkTypeRequest"
     internal enum Columns: String, ColumnExpression {
@@ -78,17 +80,17 @@ extension WorkTypeRequestRecord: Codable, FetchableRecord, MutablePersistableRec
         _ keepWorkTypes: Set<String>
     ) throws {
         try WorkTypeRequestRecord
-            .filter(WorkTypeRequestRecord.Columns.worksiteId == worksiteId &&
-                    WorkTypeRequestRecord.Columns.networkId>0 &&
-                    !keepWorkTypes.contains(WorkTypeRequestRecord.Columns.workType))
+            .filter(RequestColumns.worksiteId == worksiteId &&
+                    RequestColumns.networkId>0 &&
+                    !keepWorkTypes.contains(RequestColumns.workType))
             .deleteAll(db)
     }
 
     static func deleteUnsynced(_ db: Database, _ worksiteId: Int64) throws {
         try WorkTypeRequestRecord
             .filter(
-                WorkTypeRequestRecord.Columns.worksiteId == worksiteId &&
-                WorkTypeRequestRecord.Columns.networkId <= 0
+                RequestColumns.worksiteId == worksiteId &&
+                RequestColumns.networkId <= 0
             )
             .deleteAll(db)
     }
@@ -114,5 +116,11 @@ extension WorkTypeRequestRecord: Codable, FetchableRecord, MutablePersistableRec
                 "networkId": networkId
             ]
         )
+    }
+}
+
+extension DerivableRequest<WorkTypeRequestRecord> {
+    func selectIdNetworkIdColumns() -> Self {
+        select(RequestColumns.id, RequestColumns.networkId)
     }
 }

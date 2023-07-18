@@ -19,19 +19,23 @@ extension SyncPuller {
 }
 
 public protocol SyncPusher {
+    func appPushWorksite(_ worksiteId: Int64)
 
+    func scheduleSyncMedia()
 }
 
 class AppSyncer: SyncPuller, SyncPusher {
     private let pullLanguageGuard = ManagedAtomic<Bool>(false)
 
-    private var accountData: AnyPublisher<AccountData, Never>
-    private var appPreferences: AnyPublisher<AppPreferences, Never>
+    private let accountData: AnyPublisher<AccountData, Never>
+    private let appPreferences: AnyPublisher<AppPreferences, Never>
 
+    private let accountDataRepository: AccountDataRepository
     private let incidentsRepository: IncidentsRepository
     private let languageRepository: LanguageTranslationsRepository
     private let statusRepository: WorkTypeStatusRepository
     private let worksitesRepository: WorksitesRepository
+    private let worksiteChangeRepository: WorksiteChangeRepository
     private let syncLogger: SyncLogger
     private let authEventBus: AuthEventBus
 
@@ -49,16 +53,17 @@ class AppSyncer: SyncPuller, SyncPusher {
         languageRepository: LanguageTranslationsRepository,
         statusRepository: WorkTypeStatusRepository,
         worksitesRepository: WorksitesRepository,
+        worksiteChangeRepository: WorksiteChangeRepository,
         appPreferencesDataStore: AppPreferencesDataStore,
         syncLoggerFactory: SyncLoggerFactory,
-        authEventBus: AuthEventBus,
-        // TODO: isOnline signal is not reliable. Find a better way or do without.
-        networkMonitor: NetworkMonitor
+        authEventBus: AuthEventBus
     ) {
+        self.accountDataRepository = accountDataRepository
         self.incidentsRepository = incidentsRepository
         self.languageRepository = languageRepository
         self.statusRepository = statusRepository
         self.worksitesRepository = worksitesRepository
+        self.worksiteChangeRepository = worksiteChangeRepository
         syncLogger = syncLoggerFactory.getLogger("app-syncer")
         self.authEventBus = authEventBus
 
@@ -71,11 +76,10 @@ class AppSyncer: SyncPuller, SyncPusher {
         }
     }
 
-    private func isValidAccountToken() async throws -> Bool {
-        try await accountData.asyncFirst().areTokensValid
+    private func validateAccountTokens() async throws -> Bool {
+        await accountDataRepository.updateAccountTokens()
+        return try await accountData.asyncFirst().areTokensValid
     }
-
-    private func isSyncPossible() async throws -> Bool { try await isValidAccountToken() }
 
     private func pull(_ task: BgPullTask) {
         // TODO: Do
@@ -115,33 +119,32 @@ class AppSyncer: SyncPuller, SyncPusher {
 
             pullTask = Task {
                 do {
+                    if try await !validateAccountTokens() {
+                        return
+                    }
+
+                    try Task.checkCancellation()
+
                     let (pullIncidents, pullWorksitesIncidentId) = try await getSyncPlan()
                     if !pullIncidents && pullWorksitesIncidentId <= 0 {
                         return
                     }
 
-                    // TODO: Wait for account token and skip if token is invalid
+                    try Task.checkCancellation()
 
-                    try await withThrowingTaskGroup(of: Void.self) { group -> Void in
-                        group.addTask {
-                            try Task.checkCancellation()
+                    if pullIncidents {
+                        self.syncLogger.log("Pulling incidents")
+                        try await self.incidentsRepository.pullIncidents()
+                        self.syncLogger.log("Incidents pulled")
+                    }
 
-                            if pullIncidents {
-                                self.syncLogger.log("Pulling incidents")
-                                try await self.incidentsRepository.pullIncidents()
-                                self.syncLogger.log("Incidents pulled")
-                            }
+                    try Task.checkCancellation()
 
-                            try Task.checkCancellation()
-
-                            // TODO: Prevent multiple incidents from refreshing concurrently.
-                            if pullWorksitesIncidentId > 0 {
-                                self.syncLogger.log("Refreshing incident \(pullWorksitesIncidentId) worksites")
-                                try await self.worksitesRepository.refreshWorksites(pullWorksitesIncidentId)
-                                self.syncLogger.log("Incident \(pullWorksitesIncidentId) worksites refreshed")
-                            }
-                        }
-                        try await group.waitForAll()
+                    // TODO: Prevent multiple incidents from refreshing concurrently.
+                    if pullWorksitesIncidentId > 0 {
+                        self.syncLogger.log("Refreshing incident \(pullWorksitesIncidentId) worksites")
+                        try await self.worksitesRepository.refreshWorksites(pullWorksitesIncidentId)
+                        self.syncLogger.log("Incident \(pullWorksitesIncidentId) worksites refreshed")
                     }
                 } catch {
                     // TODO: Handle proper
@@ -236,6 +239,33 @@ class AppSyncer: SyncPuller, SyncPusher {
 
     private func pullStatuses() async {
         await statusRepository.loadStatuses()
+    }
+
+    // MARK: SyncPusher
+
+    func appPushWorksite(_ worksiteId: Int64) {
+        Task {
+            do {
+                if try await !validateAccountTokens() {
+                    return
+                }
+
+                try Task.checkCancellation()
+
+                let isSyncAttempted = await worksiteChangeRepository.trySyncWorksite(worksiteId)
+                if isSyncAttempted {
+                    await worksiteChangeRepository.syncUnattemptedWorksite(worksiteId)
+                }
+
+            } catch {
+                // TODO: Handle proper
+                print(error)
+            }
+        }
+    }
+
+    func scheduleSyncMedia() {
+        // TODO: Sync media
     }
 }
 

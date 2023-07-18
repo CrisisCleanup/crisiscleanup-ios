@@ -109,7 +109,9 @@ extension MainComponent {
                 accountDataSource,
                 secureDataSource,
                 authEventBus,
-                loggerFactory
+                authApi,
+                loggerFactory,
+                appEnv
             )
         }
     }

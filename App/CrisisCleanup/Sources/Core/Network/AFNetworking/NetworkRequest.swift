@@ -82,7 +82,7 @@ struct NetworkRequest: URLRequestConvertible {
 
             request.method = method
             headers?.forEach { h in
-                request.setValue(h.name, forHTTPHeaderField: h.value)
+                request.setValue(h.value, forHTTPHeaderField: h.name)
             }
             if let q = queryParameters {
                 url = url.appending(queryItems: q)
