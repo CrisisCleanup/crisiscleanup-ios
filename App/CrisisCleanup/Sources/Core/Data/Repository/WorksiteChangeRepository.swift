@@ -1,3 +1,4 @@
+import Atomics
 import Combine
 import Foundation
 
@@ -20,7 +21,7 @@ public protocol WorksiteChangeRepository {
         requests: [String],
         releaseReason: String,
         releases: [String]
-    ) async -> Bool
+    ) async throws -> Bool
 
     /**
      * - Returns: TRUE if sync was attempted or FALSE otherwise
@@ -30,6 +31,8 @@ public protocol WorksiteChangeRepository {
     func saveDeletePhoto(_ fileId: Int64) async -> Int64
 
     func trySyncWorksite(_ worksiteId: Int64) async -> Bool
+
+    func syncUnattemptedWorksite(_ worksiteId: Int64) async
 
     func syncWorksiteMedia() async -> Bool
 }
@@ -42,8 +45,8 @@ extension WorksiteChangeRepository {
         requests: [String] = [],
         releaseReason: String = "",
         releases: [String] = []
-    ) async -> Bool {
-        await saveWorkTypeTransfer(
+    ) async throws -> Bool {
+        try await saveWorkTypeTransfer(
             worksite: worksite,
             organizationId: organizationId,
             requestReason: requestReason,
@@ -84,6 +87,8 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
     private var _syncingWorksiteIds = Set<Int64>()
     private let syncingWorksiteIdsSubject = CurrentValueSubject<Set<Int64>, Never>([])
     let syncingWorksiteIds: any Publisher<Set<Int64>, Never>
+
+    private let syncWorksiteGuard = ManagedAtomic(false)
 
     private let streamWorksitesPendingSyncSubject = CurrentValueSubject<[Worksite], Never>([])
     let streamWorksitesPendingSync: any Publisher<[Worksite], Never>
@@ -150,14 +155,73 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         }
     }
 
-    func saveWorkTypeTransfer(worksite: Worksite, organizationId: Int64, requestReason: String, requests: [String], releaseReason: String, releases: [String]) async -> Bool {
-        // TODO: Do
-        false
+    func saveWorkTypeTransfer(worksite: Worksite, organizationId: Int64, requestReason: String, requests: [String], releaseReason: String, releases: [String]) async throws -> Bool {
+        guard !worksite.isNew && organizationId > 0 else {
+            return false
+        }
+
+        if requestReason.isNotBlank && requests.isNotEmpty {
+            try await worksiteChangeDao.saveWorkTypeRequests(
+                worksite,
+                organizationId,
+                requestReason,
+                requests
+            )
+            return true
+        }
+
+        if releaseReason.isNotBlank && releases.isNotEmpty {
+            try await worksiteChangeDao.saveWorkTypeReleases(
+                worksite,
+                organizationId,
+                releaseReason,
+                releases
+            )
+            return true
+        }
+
+        return false
     }
 
     func syncWorksites(_ syncWorksiteCount: Int) async -> Bool {
-        // TODO: Do
-        false
+        if !syncWorksiteGuard.exchange(true, ordering: .sequentiallyConsistent) {
+            var worksiteId: Int64
+            do {
+                defer { syncWorksiteGuard.store(false, ordering: .sequentiallyConsistent) }
+
+                var previousWorksiteId: Int64 = 0
+                var syncCounter = 0
+                let syncCountLimit = syncWorksiteCount < 1 ? 20 : syncWorksiteCount
+                while syncCounter < syncCountLimit {
+                    syncCounter += 1
+
+                    var worksiteIds = try worksiteDao.getLocallyModifiedWorksites(1)
+                    if worksiteIds.isEmpty {
+                        worksiteIds = try worksiteChangeDao.getWorksitesPendingSync(1)
+                        if worksiteIds.isEmpty {
+                            break
+                        }
+                    }
+                    worksiteId = worksiteIds.first!
+
+                    if worksiteId == previousWorksiteId {
+                        let saveFailCount = try worksiteChangeDao.getSaveFailCount(worksiteId)
+                        if saveFailCount > 0
+                        {
+                            break
+                        }
+                    }
+                    previousWorksiteId = worksiteId
+
+                    _ = try await trySyncWorksite(worksiteId, true)
+
+                    try Task.checkCancellation()
+                }
+            } catch {
+
+            }
+        }
+        return false
     }
 
     func saveDeletePhoto(_ fileId: Int64) async -> Int64 {
@@ -173,6 +237,15 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         return false
     }
 
+    func syncUnattemptedWorksite(_ worksiteId: Int64) async {
+        do {
+            if try worksiteChangeDao.getSaveFailCount(worksiteId) == 0 {
+                _ = try await trySyncWorksite(worksiteId, false)
+            }
+        }
+        catch {}
+    }
+
     private func trySyncWorksite(
         _ worksiteId: Int64,
         _ rethrowError: Bool
@@ -183,7 +256,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         }
 
         let accountData = try await accountDataPublisher.asyncFirst()
-        if accountData.areTokensValid {
+        if !accountData.areTokensValid {
             syncLogger.log("Not attempting. Invalid account token.")
             return false
         }
@@ -214,8 +287,11 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
             try await self.syncWorksite(worksiteId)
         } catch {
             var unhandledException: Error? = nil
-            if error is NoInternetConnectionError {}
-            else {
+            if let genericError = error as? GenericError {
+                if genericError != NoInternetConnectionError {
+                    unhandledException = genericError
+                }
+            } else {
                 unhandledException = error
             }
             if let endError = unhandledException {
@@ -224,7 +300,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
                 if rethrowError {
                     throw endError
                 } else {
-                    // TODO Indicate error visually
+                    // TODO: Indicate error visually
                     syncLogger.log("Sync failed", details: endError.localizedDescription)
                 }
             }
@@ -238,7 +314,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
 
         var syncException: Error? = nil
 
-        let sortedChanges = worksiteChangeDao.getOrdered(worksiteId)
+        let sortedChanges = try worksiteChangeDao.getOrdered(worksiteId)
         if sortedChanges.isNotEmpty {
             syncLogger.log("\(sortedChanges.count) changes.")
 
@@ -248,7 +324,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
             let organizationId = accountData.org.id
             if newestChangeOrgId != organizationId {
                 syncLogger.log("Not syncing. Org mismatch \(organizationId) != \(newestChangeOrgId).")
-                // TODO Insert notice that newest change of worksite was with a different organization
+                // TODO: Insert notice that newest change of worksite was with a different organization
                 return
             }
 
@@ -358,30 +434,31 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
                 )
             }
 
-            worksiteChangeDao.updateSyncIds(
+            try await worksiteChangeDao.updateSyncIds(
                 worksiteId: worksiteId,
                 organizationId: organizationId,
                 ids: syncResult.changeIds
             )
-            worksiteChangeDao.updateSyncChanges(
+            try await worksiteChangeDao.updateSyncChanges(
                 worksiteId: worksiteId,
                 changeResults: syncResult.changeResults,
                 maxSyncAttempts: MaxSyncTries
             )
 
-            try syncResult.changeResults.map { $0.error }
-                .filter { $0 != nil }
+            try syncResult.changeResults
+                .compactMap { $0.error }
                 .forEach {
-                    if $0 is NoInternetConnectionError ||
-                        $0 is ExpiredTokenError {
-                        throw $0!
+                    if let genericError = $0 as? GenericError,
+                       genericError == NoInternetConnectionError ||
+                        genericError == ExpiredTokenError {
+                        throw genericError
                     }
                 }
         } else {
             syncLogger.log("Not syncing. Worksite \(newestChange.worksiteId) change is not syncable.")
-            // TODO Not worth retrying at this point.
-            //      How to handle gracefully?
-            //      Wait for user modification, intervention, or prompt?
+            // Complexity is not worth retrying at this point.
+            // TODO: How to handle gracefully?
+            //       Wait for user modification, intervention, or prompt?
         }
     }
 
@@ -403,8 +480,4 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         // TODO: Do
         false
     }
-}
-
-struct NoInternetConnectionError : Error {
-    let message = "No internet"
 }

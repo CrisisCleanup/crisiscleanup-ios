@@ -10,9 +10,9 @@ class WorkTypeDaoTests: XCTestCase {
     private var updatedAtA: Date = Date.now
     private var updatedAtB: Date = Date.now
 
-    private var dbQueue: DatabaseQueue? = nil
-    private var appDb: AppDatabase? = nil
-    private var worksiteDao: WorksiteDao? = nil
+    private var dbQueue: DatabaseQueue!
+    private var appDb: AppDatabase!
+    private var worksiteDao: WorksiteDao!
 
     override func setUp() async throws {
         previousSyncedAt = now.addingTimeInterval(-999_999.0.seconds)
@@ -23,23 +23,23 @@ class WorkTypeDaoTests: XCTestCase {
         let initialized = try initializeTestDb()
         dbQueue = initialized.0
         appDb = initialized.1
-        worksiteDao = WorksiteDao(appDb!, WorksiteTestUtil.silentSyncLogger)
+        worksiteDao = WorksiteDao(appDb, WorksiteTestUtil.silentSyncLogger)
 
-        try await dbQueue!.write { db in
+        try await dbQueue.write { db in
             for incident in WorksiteTestUtil.testIncidents {
                 try incident.upsert(db)
             }
 
         }
         let worksite = testWorksiteRecord(1, 1, "address", updatedAtA)
-        _ = try await WorksiteTestUtil.insertWorksites(dbQueue!, now, [worksite])
+        _ = try await WorksiteTestUtil.insertWorksites(dbQueue, now, [worksite])
     }
 
     /**
      * Updates short work type data with full network data
      */
     func testSyncWorkTypeFullFromShort() async throws {
-        try await dbQueue!.write({ db in
+        try await dbQueue.write({ db in
             for workType in [
                 testWorkTypeRecord(111),
                 testWorkTypeRecord(112, workType: "work-type-b"),
@@ -53,7 +53,7 @@ class WorkTypeDaoTests: XCTestCase {
             createdAt: now,
             workType: "work-type-a"
         )
-        try await dbQueue!.write({ db in
+        try await dbQueue.write({ db in
             try workTypeFull.syncUpsert(db)
         })
         let expected = [
@@ -62,7 +62,7 @@ class WorkTypeDaoTests: XCTestCase {
             // Unchanged
             testWorkTypeRecord(112, workType: "work-type-b").copy { $0.id = 2},
         ]
-        let actual = try await dbQueue!.write({ db in
+        let actual = try await dbQueue.write({ db in
             try WorkTypeRecord
                 .fetchAll(db)
         })
@@ -83,7 +83,7 @@ class WorkTypeDaoTests: XCTestCase {
             createdAt: now,
             workType: "work-type-a"
         )
-        try await dbQueue!.write({ db in
+        try await dbQueue.write({ db in
             for workType in [
                 workTypeFull,
                 testWorkTypeRecord(112, workType: "work-type-b"),
@@ -92,7 +92,7 @@ class WorkTypeDaoTests: XCTestCase {
             }
         })
 
-        try await dbQueue!.write({ db in
+        try await dbQueue.write({ db in
             for workType in [
                 testWorkTypeRecord(111, status: "s", workType: "work-type-a"),
                 testWorkTypeRecord(350, status: "sa", workType: "wa"),
@@ -112,7 +112,7 @@ class WorkTypeDaoTests: XCTestCase {
             // Inserts
             testWorkTypeRecord(350, status: "sa", workType: "wa").copy { $0.id = 4 },
         ]
-        let actual = try await dbQueue!.write({ db in
+        let actual = try await dbQueue.write({ db in
             try WorkTypeRecord
                 .fetchAll(db)
         })

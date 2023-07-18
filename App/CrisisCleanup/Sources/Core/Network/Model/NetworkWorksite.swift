@@ -68,6 +68,64 @@ public struct NetworkWorksiteFull: Codable, Equatable {
         case workTypes = "work_types"
     }
 
+    init(
+        id: Int64,
+        address: String,
+        autoContactFrequencyT: String,
+        caseNumber: String,
+        city: String,
+        county: String,
+        email: String?,
+        events: [NetworkEvent],
+        favorite: NetworkType?,
+        files: [NetworkFile],
+        flags: [NetworkFlag],
+        formData: [KeyDynamicValuePair],
+        incident: Int64,
+        keyWorkType: NetworkWorkType?,
+        location: Location,
+        name: String,
+        notes: [NetworkNote],
+        phone1: String,
+        phone2: String?,
+        plusCode: String?,
+        postalCode: String?,
+        reportedBy: Int64?,
+        state: String,
+        svi: Float?,
+        updatedAt: Date,
+        what3words: String?,
+        workTypes: [NetworkWorkType]
+    ) {
+        self.id = id
+        self.address = address
+        self.autoContactFrequencyT = autoContactFrequencyT
+        self.caseNumber = caseNumber
+        self.city = city
+        self.county = county
+        self.email = email
+        self.events = events
+        self.favorite = favorite
+        self.files = files
+        self.flags = flags
+        self.formData = formData
+        self.incident = incident
+        self.keyWorkType = keyWorkType
+        self.location = location
+        self.name = name
+        self.notes = notes
+        self.phone1 = phone1
+        self.phone2 = phone2
+        self.plusCode = plusCode
+        self.postalCode = postalCode
+        self.reportedBy = reportedBy
+        _svi = .init(value: svi)
+        self.state = state
+        self.updatedAt = updatedAt
+        self.what3words = what3words
+        self.workTypes = workTypes
+    }
+
     internal static func getNewestWorkTypeMap(_ workTypes: [NetworkWorkType]) -> [String: (Int, NetworkWorkType)] {
         var newMap: [String: (Int, NetworkWorkType)] = [:]
         workTypes.enumerated().forEach { (index, workType) in
@@ -477,5 +535,9 @@ struct FloatStringOptional: Codable, Equatable {
         } else {
             wrappedValue = nil
         }
+    }
+
+    init(value: Float?) {
+        wrappedValue = value
     }
 }

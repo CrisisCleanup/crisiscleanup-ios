@@ -32,11 +32,11 @@ struct NetworkRequest: URLRequestConvertible {
         self.addTokenHeader = addTokenHeader
     }
 
-    func addPaths(_ paths: String...) -> NetworkRequest {
-        return copy { $0.additionalPaths = paths }
+    func addPaths(_ paths: String...) -> Self {
+        copy { $0.additionalPaths = paths }
     }
 
-    func addQueryItems(_ pairs: String?...) -> NetworkRequest {
+    func addQueryItems(_ pairs: String?...) -> Self {
         var qs: [URLQueryItem] = []
         for i in stride(from: 0, to: pairs.count, by: 2) {
             let name = pairs[i]
@@ -47,6 +47,27 @@ struct NetworkRequest: URLRequestConvertible {
         }
 
         return qs.isEmpty ? self : copy { $0.queryParameters = qs }
+    }
+
+    func addHeaders(_ headers: [String: String]) -> Self {
+        if headers.isEmpty {
+            return self
+        }
+
+        var tempHeaders = self.headers ?? HTTPHeaders()
+        for (key, value) in headers {
+            tempHeaders.add(name: key, value: value)
+        }
+
+        return copy { $0.headers = tempHeaders }
+    }
+
+    func setBody(_ body: Encodable) -> Self {
+        copy { $0.bodyParameters = body }
+    }
+
+    func setForm(_ form: Encodable) -> Self {
+        copy { $0.formParameters = form }
     }
 
     func asURLRequest() throws -> URLRequest {
@@ -61,7 +82,7 @@ struct NetworkRequest: URLRequestConvertible {
 
             request.method = method
             headers?.forEach { h in
-                request.setValue(h.name, forHTTPHeaderField: h.value)
+                request.setValue(h.value, forHTTPHeaderField: h.name)
             }
             if let q = queryParameters {
                 url = url.appending(queryItems: q)

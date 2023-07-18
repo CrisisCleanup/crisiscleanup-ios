@@ -7,10 +7,10 @@ extension MainComponent {
                 languageRepository: languageTranslationsRepository,
                 statusRepository: workTypeStatusRepository,
                 worksitesRepository: worksitesRepository,
+                worksiteChangeRepository: worksiteChangeRepository,
                 appPreferencesDataStore: appPreferences,
                 syncLoggerFactory: syncLoggerFactory,
-                authEventBus: authEventBus,
-                networkMonitor: networkMonitor
+                authEventBus: authEventBus
             )
         }
     }

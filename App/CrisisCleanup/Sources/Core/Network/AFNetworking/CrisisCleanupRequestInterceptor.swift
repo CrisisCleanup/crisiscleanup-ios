@@ -1,4 +1,3 @@
-import Atomics
 import Alamofire
 import Combine
 import Foundation
@@ -10,8 +9,6 @@ class AccessTokenInterceptor: RequestInterceptor {
     private let accountDataPublisher: AnyPublisher<AccountData, Never>
     private let authApiClient: CrisisCleanupAuthApi
     private let authEventBus: AuthEventBus
-
-    private let refreshTokensGuard = ManagedAtomic(false)
 
     private let invalidRefreshTokenErrorMessages: Set<String> = [
         "refresh_token_already_revoked",
@@ -53,21 +50,12 @@ class AccessTokenInterceptor: RequestInterceptor {
     private func setRequestAuthorization(_ urlRequest: URLRequest) async throws -> URLRequest {
         let accountData = try await accountDataPublisher.asyncFirst()
         if !accountData.areTokensValid {
-            throw ExpiredTokenError()
+            throw ExpiredTokenError
         }
 
-        if accountData.isAccessTokenExpired() {
-            if !refreshTokensGuard.exchange(true, ordering: .sequentiallyConsistent) {
-                do {
-                    defer { refreshTokensGuard.store(false, ordering: .sequentiallyConsistent)}
-
-                    if try await !refreshTokens() {
-                        throw ExpiredTokenError()
-                    }
-                }
-            } else {
-                throw ExpiredTokenError()
-            }
+        if accountData.isAccessTokenExpired(),
+           try await !refreshTokens() {
+            throw ExpiredTokenError
         }
 
         let accessToken = accountDataRepository.accessToken

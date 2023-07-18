@@ -24,21 +24,30 @@ class WorksiteChangeDao {
         self.syncLogger = syncLogger
     }
 
-    func getOrdered(_ worksiteId: Int64) -> [WorksiteChangeRecord] {
-        // TODO: Do
-        return []
+    func getOrdered(_ worksiteId: Int64) throws -> [WorksiteChangeRecord] {
+        try reader.read { db in try WorksiteChangeRecord.getOrdered(db, worksiteId) }
     }
 
-    func updateSyncIds(worksiteId: Int64, organizationId: Int64, ids: WorksiteSyncResult.ChangeIds) {
-        // TODO: Do
+    func updateSyncIds(
+        worksiteId: Int64,
+        organizationId: Int64,
+        ids: WorksiteSyncResult.ChangeIds
+    ) async throws {
+        try await database.updateSyncedWorksiteIds(
+            worksiteId: worksiteId,
+            organizationId: organizationId,
+            ids: ids
+        )
     }
 
     func updateSyncChanges(
         worksiteId: Int64,
         changeResults: [WorksiteSyncResult.ChangeResult],
         maxSyncAttempts: Int = 3
-    ) {
-        // TODO: Do
+    ) async throws {
+        try await database.updateSyncChangeResults(changeResults)
+
+        try await database.deleteSuccessfulSyncedChanges(worksiteId, maxSyncAttempts)
     }
 
     func saveChange(
@@ -63,6 +72,192 @@ class WorksiteChangeDao {
             organizationId: organizationId,
             localModifiedAt: localModifiedAt
         )
+    }
+
+    private func saveWorkTypeTransfer(
+        _ worksite: Worksite,
+        _ transferType: String,
+        _ localModifiedAt: Date,
+        _ saveBlock: @escaping (
+            Database,
+            [String: WorkType],
+            @escaping () throws -> IdNetworkIdMaps
+        ) throws -> Void
+    ) async throws {
+        let logPostfix = localModifiedAt.timeIntervalSince1970.rounded()
+        var syncLogger = syncLogger
+        syncLogger.type = "worksite-\(transferType)-\(worksite.id)-\(logPostfix)"
+
+        try await database.saveWorkTypeTransfer(
+            worksite,
+            transferType,
+            localModifiedAt,
+            syncLogger,
+            saveBlock
+        )
+    }
+
+    func saveWorkTypeRequests(
+        _ worksite: Worksite,
+        _ organizationId: Int64,
+        _ reason: String,
+        _ requests: [String],
+        localModifiedAt: Date = Date()
+    ) async throws {
+        try await saveWorkTypeTransfer(
+            worksite,
+            "request",
+            localModifiedAt
+        ) { db, workTypeLookup, idMappingProvider in
+            let requestRecords = requests.compactMap {
+                if let workType = workTypeLookup[$0] {
+                    return workType.orgClaim == nil
+                    ? nil
+                    : WorkTypeRequestRecord.create(
+                        worksite: worksite,
+                        workType: $0,
+                        reason: reason,
+                        byOrg: organizationId,
+                        toOrg: workType.orgClaim!,
+                        createdAt: localModifiedAt
+                    )
+                }
+                return nil
+            }
+
+            if requestRecords.isNotEmpty {
+                for record in requestRecords {
+                    var record = record
+                    try record.insert(db, onConflict: .replace)
+                }
+
+                let requestedWorkTypes = requestRecords.map { $0.workType }
+                self.syncLogger.log(
+                    "Requested \(requestRecords.count) work types.",
+                    details: requestedWorkTypes.joined(separator: ", ")
+                )
+
+                try db.saveWorksiteTransferChange(
+                    self.changeSerializer,
+                    self.uuidGenerator,
+                    self.appVersionProvider,
+                    worksite,
+                    idMappingProvider(),
+                    organizationId,
+                    requestReason: reason,
+                    requests: requestedWorkTypes
+                )
+            }
+        }
+    }
+
+    func saveWorkTypeReleases(
+        _ worksite: Worksite,
+        _ organizationId: Int64,
+        _ reason: String,
+        _ requests: [String],
+        localModifiedAt: Date = Date()
+    ) async throws {
+        try await saveWorkTypeTransfer(
+            worksite,
+            "release",
+            localModifiedAt
+        ) { db, workTypeLookup, idMappingProvider in
+            let releaseWorkTypes = requests.filter {
+                workTypeLookup[$0]?.orgClaim != nil
+            }
+
+            if releaseWorkTypes.isNotEmpty {
+                let worksiteId = worksite.id
+                try WorkTypeRecord.deleteSpecified(db, worksiteId, Set(releaseWorkTypes))
+
+                let workTypeStatusLookup = worksite.workTypes.associate { ($0.workTypeLiteral, $0.statusLiteral)
+                }
+                let workTypeRecords = releaseWorkTypes.map {
+                    let statusLiteral = workTypeStatusLookup[$0] ?? WorkTypeStatus.openUnassigned.literal
+                    return WorkTypeRecord.create(
+                        worksiteId: worksiteId,
+                        createdAt: localModifiedAt,
+                        status: statusLiteral,
+                        workType: $0
+                    )
+                }
+                var insertIds = [Int64]()
+                for record in workTypeRecords {
+                    var record = record
+                    try record.insert(db, onConflict: .ignore)
+                    insertIds.append(record.id!)
+                }
+
+                let workTypeInsertIdLookup = workTypeRecords.enumerated().map { (index, workType) in
+                    (workType.workType, insertIds[index])
+                }
+                    .associate { $0 }
+                let updatedWorkTypes = worksite.workTypes.map { workType in
+                    let workTypeLiteral = workType.workTypeLiteral
+                    let statusLiteral = workTypeStatusLookup[workTypeLiteral] ?? WorkTypeStatus.openUnassigned.literal
+                    if let insertId = workTypeInsertIdLookup[workTypeLiteral] {
+                        return WorkType(
+                            id: insertId,
+                            createdAt: localModifiedAt,
+                            statusLiteral: statusLiteral,
+                            workTypeLiteral: workTypeLiteral
+                        )
+                    }
+                    return workType
+                }
+                let updatedWorksite = worksite.copy {
+                    $0.keyWorkType = {
+                        if let keyWorkType = worksite.keyWorkType {
+                            if let matchingWorkType = updatedWorkTypes.first(where: { $0.workTypeLiteral == keyWorkType.workTypeLiteral
+                            }) {
+                                return matchingWorkType
+                            }
+                            return keyWorkType
+                        }
+                        return nil
+                    }()
+                    $0.workTypes = updatedWorkTypes
+                }
+
+                self.syncLogger.log(
+                    "Released \(releaseWorkTypes.count) work types.",
+                    details: releaseWorkTypes.joined(separator: ", ")
+                )
+
+                try db.saveWorksiteTransferChange(
+                    self.changeSerializer,
+                    self.uuidGenerator,
+                    self.appVersionProvider,
+                    updatedWorksite,
+                    idMappingProvider(),
+                    organizationId,
+                    releaseReason: reason,
+                    releases: releaseWorkTypes
+                )
+            }
+        }
+    }
+
+    func getWorksitesPendingSync(_ limit: Int) throws -> [Int64] {
+        try reader.read { db in
+            try WorksiteChangeRecord
+                .all()
+                .worksiteIdAttemptCreated()
+                .limit(limit)
+                .asRequest(of: WorksiteChangeSaveCreated.self)
+                .fetchAll(db)
+        }
+        .map { $0.worksiteId }
+    }
+
+    func getSaveFailCount(_ worksiteId: Int64) throws -> Int {
+        try reader.read { db in
+            try WorksiteChangeRecord
+                .all()
+                .selectSaveAttempted(worksiteId)
+                .fetchCount(db)
+        }
     }
 }
 
@@ -91,7 +286,7 @@ extension Database {
             noteIdLookup: idMapping.note,
             workTypeIdLookup: idMapping.workType
         )
-        var changeEntity = WorksiteChangeRecord(
+        var changeRecord = WorksiteChangeRecord(
             appVersion: appVersion,
             organizationId: organizationId,
             worksiteId: worksiteChange.id,
@@ -99,7 +294,42 @@ extension Database {
             changeModelVersion: changeVersion,
             changeData: serializedChange
         )
-        _ = try changeEntity.insert(self, onConflict: .rollback)
+        _ = try changeRecord.insert(self, onConflict: .rollback)
+    }
+
+    fileprivate func saveWorksiteTransferChange(
+        _ changeSerializer: WorksiteChangeSerializer,
+        _ uuidGenerator: UuidGenerator,
+        _ appVersionProvider: AppVersionProvider,
+        _ worksite: Worksite,
+        _ idMapping: IdNetworkIdMaps,
+        _ organizationId: Int64,
+        requestReason: String = "",
+        requests: [String] = [],
+        releaseReason: String = "",
+        releases: [String] = []
+    ) throws {
+        let (changeVersion, serializedChange) = try changeSerializer.serialize(
+            false,
+            worksiteStart: EmptyWorksite,
+            worksiteChange: worksite,
+            flagIdLookup: idMapping.flag,
+            noteIdLookup: idMapping.note,
+            workTypeIdLookup: idMapping.workType,
+            requestReason: requestReason,
+            requestWorkTypes: requests,
+            releaseReason: releaseReason,
+            releaseWorkTypes: releases
+        )
+        var changeRecord = WorksiteChangeRecord(
+            appVersion: appVersionProvider.buildNumber,
+            organizationId: organizationId,
+            worksiteId: worksite.id,
+            syncUuid: uuidGenerator.uuid(),
+            changeModelVersion: changeVersion,
+            changeData: serializedChange
+        )
+        _ = try changeRecord.insert(self, onConflict: .rollback)
     }
 }
 
@@ -210,7 +440,7 @@ extension AppDatabase {
                     try WorksiteFlagRecord.deleteUnspecified(
                         db,
                         worksiteId,
-                        Set(flags.filter { $0.id != nil }.map { $0.id! })
+                        Set(flags.compactMap { $0.id })
                     )
                     try WorksiteFormDataRecord.deleteUnspecifiedKeys(
                         db,
@@ -235,12 +465,11 @@ extension AppDatabase {
                         insertIds.append(record.id!)
                     }
                     let unsyncedLookup = inserts.enumerated()
-                        .map { (index, f) in
+                        .compactMap { (index, f) in
                             let id = insertIds[index]
                             return id > 0 ? (f.reasonT, id) : nil
                         }
-                        .filter { $0 != nil}
-                        .associate { ($0!.0, $0!.1) }
+                        .associate { $0 }
                     if unsyncedLookup.isNotEmpty {
                         if let updatedFlags = worksiteUpdatedIds.flags {
                             let updatedIds = updatedFlags.map { f in
@@ -298,12 +527,11 @@ extension AppDatabase {
                         insertIds.append(record.id!)
                     }
                     let unsyncedLookup = inserts.enumerated()
-                        .map { (index, w) in
+                        .compactMap { (index, w) in
                             let id = insertIds[index]
                             return id > 0 ? (w.workType, id) : nil
                         }
-                        .filter { $0 != nil}
-                        .associate { ($0!.0, $0!.1) }
+                        .associate { $0 }
                     if unsyncedLookup.isNotEmpty {
                         let updatedIds = worksiteUpdatedIds.workTypes.map { w in
                             let localId = unsyncedLookup[w.workTypeLiteral]
@@ -333,8 +561,118 @@ extension AppDatabase {
             }
         }
     }
-}
 
+    fileprivate func saveWorkTypeTransfer(
+        _ worksite: Worksite,
+        _ transferType: String,
+        _ localModifiedAt: Date,
+        _ syncLogger: SyncLogger,
+        _ saveBlock: @escaping (
+            Database,
+            [String: WorkType],
+            @escaping () throws -> IdNetworkIdMaps
+        ) throws -> Void
+    ) async throws {
+        let workTypeLookup = worksite.workTypes.associateBy { $0.workTypeLiteral }
+        try await dbWriter.write { db in
+            do {
+                defer { syncLogger.flush() }
+                let idMappingProvider = { try getLocalNetworkIdMap(db, worksite) }
+                try saveBlock(db, workTypeLookup, idMappingProvider)
+            }
+        }
+    }
+
+    fileprivate func updateSyncChangeResults(_ changeResults: [WorksiteSyncResult.ChangeResult]) async throws {
+        try await dbWriter.write { db in
+            for result in changeResults {
+                if result.isFail {
+                    try WorksiteChangeRecord.updateSyncAttempt(db, result.id)
+                } else if result.isSuccessful || result.isPartiallySuccessful {
+                    let action: WorksiteChangeArchiveAction = result.isSuccessful ? .synced : .partiallySynced
+                    try WorksiteChangeRecord.updateAction(db, result.id, action.literal)
+                }
+            }
+        }
+    }
+
+    fileprivate func deleteSuccessfulSyncedChanges(
+        _ worksiteId: Int64,
+        _ maxSyncAttempts: Int
+    ) async throws {
+        try await dbWriter.write { db in
+            let syncChanges = try WorksiteChangeRecord.getOrdered(db, worksiteId)
+                .map { $0.asExternalModel(maxSyncAttempts) }
+            if syncChanges.isNotEmpty {
+                var deleteIds: Set<Int64> = []
+                if syncChanges.last!.isSynced {
+                    deleteIds = Set(syncChanges.map { $0.id })
+                } else {
+                    var lastSyncedIndex = syncChanges.count
+                    for index in stride(from: syncChanges.count-1, through: 0, by: -1 ) {
+                        if syncChanges[index].isSynced {
+                            lastSyncedIndex = index
+                            break
+                        }
+                    }
+
+                    if lastSyncedIndex < syncChanges.count {
+                        deleteIds = Set(
+                            Array(syncChanges[0..<lastSyncedIndex+1])
+                                .map { $0.id }
+                        )
+                    }
+                }
+
+                if !deleteIds.isEmpty {
+                    try WorksiteChangeRecord.delete(db, deleteIds)
+                }
+            }
+        }
+    }
+
+    fileprivate func updateSyncedWorksiteIds(
+        worksiteId: Int64,
+        organizationId: Int64,
+        ids: WorksiteSyncResult.ChangeIds
+    ) async throws {
+        try await dbWriter.write { db in
+            let networkId = ids.networkWorksiteId
+            if (networkId > 0) {
+                try WorksiteRootRecord.updateWorksiteNetworkId(
+                    db, worksiteId, ids.networkWorksiteId
+                )
+                try db.updateWorksiteNetworkId(worksiteId, ids.networkWorksiteId)
+            }
+
+            let flagIds = ids.flagIdMap.filter { $0.value > 0 }
+            for (key, value) in flagIds {
+                try WorksiteFlagRecord.updateNetworkId(db, key, value)
+            }
+
+            let noteIds = ids.noteIdMap.filter { $0.value > 0 }
+            for (key, value) in noteIds {
+                try WorksiteNoteRecord.updateNetworkId(db, key, value)
+            }
+
+            let workTypeIds = ids.workTypeIdMap.filter { $0.value > 0 }
+            for (key, value) in workTypeIds {
+                try WorkTypeRecord.updateNetworkId(db, key, value)
+            }
+            let workTypeKeyIds = ids.workTypeKeyMap.filter { $0.value > 0 }
+            for (key, value) in workTypeKeyIds {
+                try WorkTypeRecord.updateNetworkId(db, worksiteId, key, value)
+            }
+
+            let workTypeRequestIds = ids.workTypeRequestIdMap.filter { $0.value > 0 }
+            for (key, value) in workTypeRequestIds {
+                try WorkTypeRequestRecord.updateNetworkId(
+                    db, worksiteId, key, organizationId, value
+                )
+            }
+        }
+    }
+}
 
 fileprivate struct IdNetworkIdMaps {
     let flag: [Int64: Int64]
@@ -342,12 +680,18 @@ fileprivate struct IdNetworkIdMaps {
     let workType: [Int64: Int64]
 
     init(
-        flag: [Int64 : Int64] = [:],
-        note: [Int64 : Int64] = [:],
-        workType: [Int64 : Int64] = [:]
+        flag: [Int64: Int64] = [:],
+        note: [Int64: Int64] = [:],
+        workType: [Int64: Int64] = [:]
     ) {
         self.flag = flag
         self.note = note
         self.workType = workType
     }
+}
+
+fileprivate struct WorksiteChangeSaveCreated: Decodable, FetchableRecord {
+    let worksiteId: Int64
+    let minAttemptAt: Date
+    let maxCreatedAt: Date
 }

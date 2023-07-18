@@ -12,9 +12,9 @@ class WorksiteSyncFillTests: XCTestCase {
     private var updatedAtA: Date = Date.now
     private var updatedAtB: Date = Date.now
 
-    private var dbQueue: DatabaseQueue? = nil
-    private var appDb: AppDatabase? = nil
-    private var worksiteDao: WorksiteDao? = nil
+    private var dbQueue: DatabaseQueue!
+    private var appDb: AppDatabase!
+    private var worksiteDao: WorksiteDao!
 
     override func setUp() async throws {
         previousSyncedAt = now.addingTimeInterval(-999_999.0.seconds)
@@ -25,16 +25,16 @@ class WorksiteSyncFillTests: XCTestCase {
         let initialized = try initializeTestDb()
         dbQueue = initialized.0
         appDb = initialized.1
-        worksiteDao = WorksiteDao(appDb!, WorksiteTestUtil.silentSyncLogger)
+        worksiteDao = WorksiteDao(appDb, WorksiteTestUtil.silentSyncLogger)
 
-        try await dbQueue!.write { db in
+        try await dbQueue.write { db in
             for incident in WorksiteTestUtil.testIncidents {
                 try incident.upsert(db)
             }
 
         }
         let worksite = testWorksiteRecord(1, 1, "address", updatedAtA)
-        _ = try await WorksiteTestUtil.insertWorksites(dbQueue!, now, [worksite])
+        _ = try await WorksiteTestUtil.insertWorksites(dbQueue, now, [worksite])
     }
 
     func testSyncFillWorksite() async throws {
@@ -42,7 +42,7 @@ class WorksiteSyncFillTests: XCTestCase {
         let rootA = testWorksiteRootRecord(25, incidentId)
         let rootB = testWorksiteRootRecord(26, incidentId)
         let rootD = testWorksiteRootRecord(27, incidentId)
-        try await dbQueue!.write({ db in
+        try await dbQueue.write({ db in
             for record in [rootA, rootB, rootD] {
                 var record = record
                 try record.insert(db)
@@ -70,14 +70,14 @@ class WorksiteSyncFillTests: XCTestCase {
             $0.caseNumber = coreA.caseNumber
             $0.phone1 = "0"
         }
-        try await dbQueue!.write({ db in
+        try await dbQueue.write({ db in
             for record in [coreA, coreB, coreD] {
                 var record = record
                 try record.insert(db)
             }
         })
 
-        try await dbQueue!.write { db in
+        try await dbQueue.write { db in
             for flag in [
                 self.testWorksiteFlagRecord("reason-a", rootA.id!, 34),
                 self.testWorksiteFlagRecord("reason-b", rootB.id!, 35),
@@ -231,28 +231,28 @@ class WorksiteSyncFillTests: XCTestCase {
             $0.networkId = coreD.networkId
         }
 
-        let actualA = try await dbQueue!.write({ db in
-            try self.worksiteDao!.syncFillWorksite(db, recordsA)
+        let actualA = try await dbQueue.write({ db in
+            try self.worksiteDao.syncFillWorksite(db, recordsA)
         })
         XCTAssertTrue(actualA)
 
-        let actualCoreA = try await dbQueue!.write({ db in try WorksiteRecord.filter(id: rootA.id!).fetchOne(db) })
+        let actualCoreA = try await dbQueue.write({ db in try WorksiteRecord.filter(id: rootA.id!).fetchOne(db) })
         XCTAssertEqual(coreA, actualCoreA)
 
-        let actualB = try await dbQueue!.write({ db in
-            try self.worksiteDao!.syncFillWorksite(db, recordsB)
+        let actualB = try await dbQueue.write({ db in
+            try self.worksiteDao.syncFillWorksite(db, recordsB)
         })
         XCTAssertTrue(actualB)
 
-        let actualCoreB = try await dbQueue!.write({ db in try WorksiteRecord.filter(id: rootB.id!).fetchOne(db) })
+        let actualCoreB = try await dbQueue.write({ db in try WorksiteRecord.filter(id: rootB.id!).fetchOne(db) })
         XCTAssertEqual(expectedCoreUpdate, actualCoreB)
 
-        let actualD = try await dbQueue!.write({ db in
-            try self.worksiteDao!.syncFillWorksite(db, recordsD)
+        let actualD = try await dbQueue.write({ db in
+            try self.worksiteDao.syncFillWorksite(db, recordsD)
         })
         XCTAssertTrue(actualD)
 
-        let actualCoreD = try await dbQueue!.write({ db in try WorksiteRecord.filter(id: rootD.id!).fetchOne(db) })
+        let actualCoreD = try await dbQueue.write({ db in try WorksiteRecord.filter(id: rootD.id!).fetchOne(db) })
         XCTAssertEqual(expectedCoreD, actualCoreD)
 
         let expectedFlagsA = [
@@ -268,12 +268,12 @@ class WorksiteSyncFillTests: XCTestCase {
             ),
         ]
 
-        let actualFlagsA = try await dbQueue!.write({ db in try WorksiteFlagRecord.getFlags(db, rootA.id!) })
+        let actualFlagsA = try await dbQueue.write({ db in try WorksiteFlagRecord.getFlags(db, rootA.id!) })
             .sorted(by: { a, b in a.id! <= b.id! })
         XCTAssertEqual(expectedFlagsA, actualFlagsA)
 
         let expectedFlagsB = [testWorksiteFlagRecord("reason-b", rootB.id!, 35)]
-        let actualFlagsB = try await dbQueue!.write({ db in try WorksiteFlagRecord.getFlags(db, rootB.id!) })
+        let actualFlagsB = try await dbQueue.write({ db in try WorksiteFlagRecord.getFlags(db, rootB.id!) })
         XCTAssertEqual(expectedFlagsB, actualFlagsB)
 
         let expectedFormDataA = [
@@ -281,10 +281,10 @@ class WorksiteSyncFillTests: XCTestCase {
             testWorksiteFormDataRecord(rootA.id!, "field-b", "value-b", id: 2),
             testWorksiteFormDataRecord(rootA.id!, "field-c", "value-c-change", id: 4),
         ]
-        let actualFormDataA = try await dbQueue!.write({ db in try WorksiteFormDataRecord.getFormData(db, rootA.id!) })
+        let actualFormDataA = try await dbQueue.write({ db in try WorksiteFormDataRecord.getFormData(db, rootA.id!) })
         XCTAssertEqual(expectedFormDataA, actualFormDataA)
 
-        let actualFormDataB = try await dbQueue!.write({ db in try WorksiteFormDataRecord.getFormData(db, rootB.id!) })
+        let actualFormDataB = try await dbQueue.write({ db in try WorksiteFormDataRecord.getFormData(db, rootB.id!) })
         let expectedFormDataB = [
             testWorksiteFormDataRecord(rootB.id!, "field-c", "value-c", id: 3),
         ]
@@ -299,7 +299,7 @@ class WorksiteSyncFillTests: XCTestCase {
             testWorksiteNoteRecord("note-e", rootA.id!, 79, 9.hours, 21),
             testWorksiteNoteRecord("note-f", rootA.id!, 80, 9.hours, 22),
         ]
-        let actualNotesA = try await dbQueue!.write({ db in try WorksiteNoteRecord.getNoteRecords(db, rootA.id!) })
+        let actualNotesA = try await dbQueue.write({ db in try WorksiteNoteRecord.getNoteRecords(db, rootA.id!) })
             .sorted(by: { a, b in a.id! <= b.id! })
         XCTAssertEqual(expectedNotesA, actualNotesA)
 
@@ -307,7 +307,7 @@ class WorksiteSyncFillTests: XCTestCase {
             testWorksiteNoteRecord("note-e", rootB.id!, 61, (-1).hours, 17),
             testWorksiteNoteRecord("note-f", rootB.id!, 62, 1.hours, 18),
         ]
-        let actualNotesB = try await dbQueue!.write({ db in try WorksiteNoteRecord.getNoteRecords(db, rootB.id!) })
+        let actualNotesB = try await dbQueue.write({ db in try WorksiteNoteRecord.getNoteRecords(db, rootB.id!) })
         XCTAssertEqual(expectedNotesB, actualNotesB)
 
         let expectedWorkTypesA = [
@@ -316,13 +316,13 @@ class WorksiteSyncFillTests: XCTestCase {
             testWorkTypeRecord(37, "status-c", "type-c", 26, rootA.id!, id: 3),
             testWorkTypeRecord(73, "status-d-change", "type-d", 25, rootA.id!, id: 5),
         ]
-        let actualWorkTypesA = try await dbQueue!.write({ db in try WorkTypeRecord.getWorkTypeRecords(db, rootA.id!) })
+        let actualWorkTypesA = try await dbQueue.write({ db in try WorkTypeRecord.getWorkTypeRecords(db, rootA.id!) })
         XCTAssertEqual(expectedWorkTypesA, actualWorkTypesA)
 
         let expectedWorkTypesB = [
             testWorkTypeRecord(38, "status-d", "type-d", 25, rootB.id!, id: 4),
         ]
-        let actualWorkTypesB = try await dbQueue!.write({ db in try WorkTypeRecord.getWorkTypeRecords(db, rootB.id!) })
+        let actualWorkTypesB = try await dbQueue.write({ db in try WorkTypeRecord.getWorkTypeRecords(db, rootB.id!) })
         XCTAssertEqual(expectedWorkTypesB, actualWorkTypesB)
     }
 

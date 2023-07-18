@@ -150,37 +150,38 @@ private struct ViewCaseInfo: View {
         ScrollView {
             VStack {
                 if let caseState = viewModel.caseData {
-                    HStack{
-                        IncidentHeader(incident: caseState.incident)
-                            .padding([.horizontal, .bottom])
-                        Spacer()
-                    }
-                }
+                    CaseIncidentView(
+                        incident: caseState.incident,
+                        isPendingSync: caseState.isPendingSync,
+                        isSyncing: viewModel.isSyncing,
+                        scheduleSync: { viewModel.scheduleSync() }
+                    )
+                    .padding([.horizontal, .bottom])
 
-                if let worksiteFlag = viewModel.caseData?.worksite.flags {
-                    FlowStack(
-                        alignment: .leading,
-                        horizontalSpacing: 8,
-                        verticalSpacing: 8
-                    ) {
-                        ForEach(worksiteFlag, id: \.self) { flag in
-                            WorksiteFlagChip(flag) {
-                                viewModel.removeFlag(flag)
+                    if let worksiteFlags = caseState.worksite.flags,
+                       worksiteFlags.isNotEmpty {
+                        FlowStack(
+                            alignment: .leading,
+                            horizontalSpacing: 8,
+                            verticalSpacing: 8
+                        ) {
+                            ForEach(worksiteFlags, id: \.self) { flag in
+                                WorksiteFlagChip(flag) {
+                                    viewModel.removeFlag(flag)
+                                }
                             }
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding([.horizontal, .bottom])
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding([.horizontal, .bottom])
-                }
 
-                ViewCaseRowHeader(rowNum: 1, rowTitle: t.t("caseForm.property_information"))
+                    ViewCaseRowHeader(rowNum: 1, rowTitle: t.t("caseForm.property_information"))
 
-                if let worksite = viewModel.caseData?.worksite {
-                    PropertyInformationView(worksite: worksite)
-                }
+                    PropertyInformationView(worksite: caseState.worksite)
 
-                if let workTypeProfile = viewModel.workTypeProfile {
-                    InfoWorkView(profile: workTypeProfile)
+                    if let workTypeProfile = viewModel.workTypeProfile {
+                        InfoWorkView(profile: workTypeProfile)
+                    }
                 }
             }
         }

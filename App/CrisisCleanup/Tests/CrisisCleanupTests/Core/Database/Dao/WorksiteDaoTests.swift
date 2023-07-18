@@ -13,9 +13,9 @@ class WorksiteDaoTests: XCTestCase {
     private var createdAtB: Date = Date.now
     private var updatedAtB: Date = Date.now
 
-    private var dbQueue: DatabaseQueue? = nil
-    private var appDb: AppDatabase? = nil
-    private var worksiteDao: WorksiteDao? = nil
+    private var dbQueue: DatabaseQueue!
+    private var appDb: AppDatabase!
+    private var worksiteDao: WorksiteDao!
 
     override func setUp() async throws {
         previousSyncedAt = now.addingTimeInterval(-9999.seconds)
@@ -27,9 +27,9 @@ class WorksiteDaoTests: XCTestCase {
         let initialized = try initializeTestDb()
         dbQueue = initialized.0
         appDb = initialized.1
-        worksiteDao = WorksiteDao(appDb!, WorksiteTestUtil.silentSyncLogger)
+        worksiteDao = WorksiteDao(appDb, WorksiteTestUtil.silentSyncLogger)
 
-        try await dbQueue!.write { db in
+        try await dbQueue.write { db in
             for incident in WorksiteTestUtil.testIncidents {
                 try incident.upsert(db)
             }
@@ -61,7 +61,7 @@ class WorksiteDaoTests: XCTestCase {
             existingRecord(2),
             existingRecord(3, incidentId: 23, address: "test-address-23"),
         ]
-        existingWorksites = try await WorksiteTestUtil.insertWorksites(dbQueue!, previousSyncedAt, existingWorksites)
+        existingWorksites = try await WorksiteTestUtil.insertWorksites(dbQueue, previousSyncedAt, existingWorksites)
 
         // Sync
         let syncingWorksites = [
@@ -75,15 +75,15 @@ class WorksiteDaoTests: XCTestCase {
         let syncingWorkTypes = syncingWorksites.map { _ in [WorkTypeRecord]() }
         // Sync new and existing
         let syncedAt = previousSyncedAt.addingTimeInterval(487.seconds)
-        try await worksiteDao!.syncWorksites(syncingWorksites, syncingWorkTypes, syncedAt)
+        try await worksiteDao.syncWorksites(syncingWorksites, syncingWorkTypes, syncedAt)
 
         // Assert
 
         var expected = [existingWorksites[2]]
-        var actual = try worksiteDao!.getWorksites(23).map { $0.worksite }
+        var actual = try worksiteDao.getWorksites(23).map { $0.worksite }
         XCTAssertEqual(expected, actual)
 
-        actual = try worksiteDao!.getWorksites(1).map { $0.worksite }
+        actual = try worksiteDao.getWorksites(1).map { $0.worksite }
 
         // Order by updated_at desc id desc
         // updatedA > updatedB > fullA.updated_at
@@ -129,7 +129,7 @@ class WorksiteDaoTests: XCTestCase {
             existingRecord(6, createdAt: createdAtA),
             existingRecord(7)
         ]
-        existingWorksites = try await WorksiteTestUtil.insertWorksites(dbQueue!, previousSyncedAt, existingWorksites)
+        existingWorksites = try await WorksiteTestUtil.insertWorksites(dbQueue, previousSyncedAt, existingWorksites)
 
         // Sync
         let syncingWorksites = [
@@ -150,16 +150,16 @@ class WorksiteDaoTests: XCTestCase {
         let syncingWorkTypes = syncingWorksites.map { _ in [WorkTypeRecord]() }
         // Sync new and existing
         let syncedAt = previousSyncedAt.addingTimeInterval(487.seconds)
-        try await worksiteDao!.syncWorksites(syncingWorksites, syncingWorkTypes, syncedAt)
+        try await worksiteDao.syncWorksites(syncingWorksites, syncingWorkTypes, syncedAt)
 
         // Assert
 
         var expected = [existingWorksites[2]]
-        var actual = try worksiteDao!.getWorksites(23).map { $0.worksite }
+        var actual = try worksiteDao.getWorksites(23).map { $0.worksite }
 
         XCTAssertEqual(expected, actual)
 
-        actual = try worksiteDao!.getWorksites(1).map { $0.worksite }
+        actual = try worksiteDao.getWorksites(1).map { $0.worksite }
 
         // Order by updated_at desc id desc
         // updatedA > updatedB > fullA.updated_at
@@ -242,10 +242,10 @@ class WorksiteDaoTests: XCTestCase {
         var existingWorksites = [
             testWorksiteShortRecord(1, 1, createdAtA),
         ]
-        existingWorksites = try await WorksiteTestUtil.insertWorksites(dbQueue!, previousSyncedAt, existingWorksites)
+        existingWorksites = try await WorksiteTestUtil.insertWorksites(dbQueue, previousSyncedAt, existingWorksites)
 
         let expected = [existingWorksites[0].copy { $0.id = 1 }]
-        let actual = try worksiteDao!.getWorksites(1).map { $0.worksite }
+        let actual = try worksiteDao.getWorksites(1).map { $0.worksite }
         XCTAssertEqual(expected, actual)
     }
 
@@ -258,7 +258,7 @@ class WorksiteDaoTests: XCTestCase {
             testWorksiteShortRecord(1, 1, createdAtA),
             testWorksiteFullRecord(2, 1, createdAtA),
         ]
-        existingWorksites = try await WorksiteTestUtil.insertWorksites(dbQueue!, previousSyncedAt, existingWorksites)
+        existingWorksites = try await WorksiteTestUtil.insertWorksites(dbQueue, previousSyncedAt, existingWorksites)
         let existingWorksite = existingWorksites[1]
 
         // Sync
@@ -288,7 +288,7 @@ class WorksiteDaoTests: XCTestCase {
         let syncingWorkTypes = syncingWorksites.map { _ in [WorkTypeRecord]() }
         // Sync
         let syncedAt = previousSyncedAt.addingTimeInterval(487.seconds)
-        try await worksiteDao!.syncWorksites(syncingWorksites, syncingWorkTypes, syncedAt)
+        try await worksiteDao.syncWorksites(syncingWorksites, syncingWorkTypes, syncedAt)
 
         // Assert
         let expected = [
@@ -317,7 +317,7 @@ class WorksiteDaoTests: XCTestCase {
                 $0.updatedAt = existingWorksite.updatedAt.addingTimeInterval(11.seconds)
             },
         ]
-        let actual = try worksiteDao!.getWorksites(1).map { $0.worksite }
+        let actual = try worksiteDao.getWorksites(1).map { $0.worksite }
         XCTAssertEqual(expected, actual)
     }
 
@@ -368,7 +368,7 @@ func testWorksiteFullRecord(
     _ networkId: Int64,
     _ incidentId: Int64,
     _ createdAt: Date,
-    id: Int64 = 0
+    id: Int64? = nil
 ) -> WorksiteRecord {
     WorksiteRecord(
         id: id,
@@ -407,7 +407,7 @@ func testWorksiteShortRecord(
     _ networkId: Int64,
     _ incidentId: Int64,
     _ createdAt: Date,
-    id: Int64 = 0
+    id: Int64? = nil
 ) -> WorksiteRecord {
     WorksiteRecord(
         id: id,

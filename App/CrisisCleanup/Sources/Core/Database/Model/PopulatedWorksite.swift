@@ -71,9 +71,7 @@ struct PopulatedLocalWorksite: Equatable, Decodable, FetchableRecord {
             })?.asExternalModel()
         let formDataLookup = worksiteFormData.associate { ($0.fieldKey, $0.asExternalModel()) }
         let files = networkFiles.map { $0.networkFile }
-        let networkFileLocalImages = networkFiles
-            .filter { $0.networkFileLocalImage != nil }
-            .map { $0.networkFileLocalImage! }
+        let networkFileLocalImages = networkFiles.compactMap { $0.networkFileLocalImage }
         let localFileImageLookup = networkFileLocalImages.associateBy { $0.id }
         let hasImagesPendingDelete = networkFileLocalImages.first { $0.isDeleted } != nil
         return LocalWorksite(

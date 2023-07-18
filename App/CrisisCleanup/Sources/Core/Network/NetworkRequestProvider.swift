@@ -127,6 +127,136 @@ extension NetworkRequestProvider {
             addTokenHeader: true
         )
     }
+
+    // MARK: Write requests
+
+    var newWorksite: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites"),
+            method: .post,
+            addTokenHeader: true
+        )
+    }
+
+    var updateWorksite: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites"),
+            method: .post,
+            addTokenHeader: true
+        )
+    }
+
+    var favorite: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites"),
+            method: .post,
+            addTokenHeader: true
+        )
+    }
+
+    var unfavorite: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites"),
+            method: .delete,
+            addTokenHeader: true
+        )
+    }
+
+    var addFlag: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites"),
+            method: .post,
+            addTokenHeader: true
+        )
+    }
+
+    var deleteFlag: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites"),
+            method: .delete,
+            addTokenHeader: true
+        )
+    }
+
+    var addNote: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites"),
+            method: .post,
+            addTokenHeader: true
+        )
+    }
+
+    var updateWorkTypeStatus: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksite_work_types"),
+            method: .patch,
+            addTokenHeader: true
+        )
+    }
+
+    var claimWorkTypes: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites"),
+            method: .post,
+            addTokenHeader: true
+        )
+    }
+
+    var unclaimWorkTypes: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites"),
+            method: .post,
+            addTokenHeader: true
+        )
+    }
+
+    var requestWorkTypes: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites"),
+            method: .post,
+            addTokenHeader: true
+        )
+    }
+
+    var releaseWorkTypes: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites"),
+            method: .post,
+            addTokenHeader: true
+        )
+    }
+
+    var deleteFile: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites"),
+            method: .delete,
+            addTokenHeader: true
+        )
+    }
+
+    var startFileUpload: NetworkRequest {
+        NetworkRequest(
+            apiUrl("files"),
+            method: .post,
+            addTokenHeader: true
+        )
+    }
+
+    var addUploadedFile: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites"),
+            method: .post,
+            addTokenHeader: true
+        )
+    }
+
+    var shareWorksite: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites"),
+            method: .post,
+            addTokenHeader: true
+        )
+    }
 }
 
 class CrisisCleanupNetworkRequestProvider: NetworkRequestProvider {

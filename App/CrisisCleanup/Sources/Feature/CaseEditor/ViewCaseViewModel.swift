@@ -519,8 +519,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
                         organizationId: orgId
                     )
 
-                    // TODO: Trigger sync worksite
-
+                    syncPusher.appPushWorksite(worksiteIdIn)
                 } catch {
                     self.logger.logError(error)
                     // TODO: Show dialog save failed. Try again. If still fails seek help.
@@ -635,6 +634,13 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         notes.append(contentsOf: startingWorksite.notes)
         let changedWorksite = startingWorksite.copy { $0.notes = notes }
         saveWorksiteChange(startingWorksite, changedWorksite)
+    }
+
+    func scheduleSync() {
+        if !isSyncing {
+            syncPusher.appPushWorksite(worksiteIdIn)
+            syncPusher.scheduleSyncMedia()
+        }
     }
 
     // MARK: KeyTranslator

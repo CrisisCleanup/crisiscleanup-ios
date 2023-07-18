@@ -1,3 +1,4 @@
+import Atomics
 import Foundation
 
 class AuthApiClient : CrisisCleanupAuthApi {
@@ -5,6 +6,8 @@ class AuthApiClient : CrisisCleanupAuthApi {
     let requestProvider: NetworkRequestProvider
 
     private let jsonDecoder: JSONDecoder
+
+    private let refreshTokensGuard = ManagedAtomic(false)
 
     init(
         appEnv: AppEnv,
@@ -18,9 +21,8 @@ class AuthApiClient : CrisisCleanupAuthApi {
 
     func login(_ email: String, _ password: String) async throws -> NetworkAuthResult? {
         let payload = NetworkAuthPayload(email: email, password: password)
-        let authRequest = requestProvider.login.copy {
-            $0.bodyParameters = payload
-        }
+        let authRequest = requestProvider.login
+            .setBody(payload)
         return await networkClient.callbackContinue(
             requestConvertible: authRequest,
             type: NetworkAuthResult.self
@@ -29,23 +31,32 @@ class AuthApiClient : CrisisCleanupAuthApi {
 
     func oauthLogin(_ email: String, _ password: String) async throws -> NetworkOAuthResult? {
         let payload = NetworkOAuthPayload(username: email, password: password)
-        let authRequest = requestProvider.oauthLogin.copy {
-            $0.bodyParameters = payload
-        }
+        let authRequest = requestProvider.oauthLogin
+            .setBody(payload)
         return await networkClient.callbackContinue(
             requestConvertible: authRequest,
             type: NetworkOAuthResult.self
         ).value
     }
 
+    /**
+     * - Returns nil if the network call was not attempted (due to onging call) or the result otherwise
+     */
     func refreshTokens(_ refreshToken: String) async throws -> NetworkOAuthResult? {
-        let payload = NetworkRefreshToken(refreshToken: refreshToken)
-        let refreshRequest = requestProvider.refreshAccountTokens.copy {
-            $0.bodyParameters = payload
+        if !refreshTokensGuard.exchange(true, ordering: .sequentiallyConsistent) {
+            do {
+                defer { refreshTokensGuard.store(false, ordering: .sequentiallyConsistent)}
+
+                let payload = NetworkRefreshToken(refreshToken: refreshToken)
+                let refreshRequest = requestProvider.refreshAccountTokens
+                    .setBody(payload)
+                return await networkClient.callbackContinue(
+                    requestConvertible: refreshRequest,
+                    type: NetworkOAuthResult.self
+                ).value
+            }
         }
-        return await networkClient.callbackContinue(
-            requestConvertible: refreshRequest,
-            type: NetworkOAuthResult.self
-        ).value
+
+        return nil
     }
 }

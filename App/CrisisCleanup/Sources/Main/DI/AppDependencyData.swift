@@ -163,7 +163,13 @@ extension MainComponent {
                 worksiteFlagDao: worksiteFlagDao,
                 worksiteNoteDao: worksiteNoteDao,
                 workTypeDao: workTypeDao,
-                worksiteChangeSyncer: NetworkWorksiteChangeSyncer(),
+                worksiteChangeSyncer: NetworkWorksiteChangeSyncer(
+                    changeSetOperator: WorksiteChangeSetOperator(),
+                    networkDataSource: networkDataSource,
+                    writeApiClient: writeApi,
+                    networkMonitor: networkMonitor,
+                    appEnv: appEnv
+                ),
                 accountDataRepository: accountDataRepository,
                 networkDataSource: networkDataSource,
                 worksitesRepository: worksitesRepository,

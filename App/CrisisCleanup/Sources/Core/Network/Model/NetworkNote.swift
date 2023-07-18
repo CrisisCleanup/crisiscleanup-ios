@@ -13,6 +13,18 @@ public struct NetworkNote: Codable, Equatable {
         case isSurvivor = "is_survivor"
         case note
     }
+
+    init(
+        _ id: Int64?,
+        _ createdAt: Date,
+        _ isSurvivor: Bool,
+        _ note: String?
+    ) {
+        self.id = id
+        self.createdAt = createdAt
+        self.isSurvivor = isSurvivor
+        self.note = note
+    }
 }
 
 public struct NetworkNoteNote: Codable, Equatable {

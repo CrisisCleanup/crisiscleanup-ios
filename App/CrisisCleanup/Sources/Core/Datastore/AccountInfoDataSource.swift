@@ -50,7 +50,7 @@ class AccountInfoUserDefaults: AccountInfoDataSource {
     }
 
     func expireAccessToken() {
-        updateExpiry(0)
+        updateExpiry(1)
     }
 }
 

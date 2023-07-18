@@ -1,6 +1,6 @@
 import Foundation
 
-struct NetworkFile: Codable, Equatable {
+public struct NetworkFile: Codable, Equatable {
     let id: Int64
     let blogUrl: String?
     let createdAt: Date
@@ -44,6 +44,16 @@ public struct NetworkFilePush: Codable, Equatable {
     ) {
         self.file = file
         self.tag = tag
+    }
+}
+
+public struct NetworkFileUploadPayload: Codable {
+    let fileName: String
+    let contentType: String
+
+    enum CodingKeys: String, CodingKey {
+        case fileName = "filename",
+             contentType = "content_type"
     }
 }
 

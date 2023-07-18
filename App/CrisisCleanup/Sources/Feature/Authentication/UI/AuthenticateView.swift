@@ -7,7 +7,6 @@ struct AuthenticateView: View {
     let dismiss: () -> Void
 
     var body: some View {
-        let dismissScreen = { dismiss() }
         ZStack {
             let viewData = viewModel.viewData
             if viewData.state == .loading {

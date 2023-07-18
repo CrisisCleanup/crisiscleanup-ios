@@ -3,6 +3,7 @@ import GRDB
 
 private let epoch0 = Date(timeIntervalSince1970: 0)
 
+// sourcery: copyBuilder
 struct WorksiteRootRecord : Identifiable, Equatable {
     static let worksite = hasOne(WorksiteRecord.self)
     static let worksiteFlags = hasMany(WorksiteFlagRecord.self)
@@ -16,13 +17,14 @@ struct WorksiteRootRecord : Identifiable, Equatable {
     )
     static let worksiteLocalImages = hasMany(WorksiteLocalImageRecord.self)
 
-    private static func newRecord(
+    internal static func create(
         syncedAt: Date,
         networkId: Int64,
-        incidentId: Int64
+        incidentId: Int64,
+        id: Int64? = nil
     ) -> WorksiteRootRecord {
         WorksiteRootRecord(
-            id: nil,
+            id: id,
             syncUuid: "",
             localModifiedAt: epoch0,
             syncedAt: epoch0,
@@ -72,7 +74,7 @@ extension WorksiteRootRecord: Codable, FetchableRecord, MutablePersistableRecord
         _ networkId: Int64,
         _ incidentId: Int64
     ) throws -> Int64 {
-        let rootRecord = WorksiteRootRecord.newRecord(
+        let rootRecord = WorksiteRootRecord.create(
             syncedAt: syncedAt,
             networkId: networkId,
             incidentId: incidentId
@@ -89,7 +91,6 @@ extension WorksiteRootRecord: Codable, FetchableRecord, MutablePersistableRecord
         incidentId: Int64
     ) throws {
         let record = try WorksiteRootRecord
-            .all()
             .filter(Columns.id == id && Columns.networkId == networkId && Columns.localModifiedAt == expectedLocalModifiedAt)
             .fetchOne(db)
         if record == nil {
@@ -109,11 +110,11 @@ extension WorksiteRootRecord: Codable, FetchableRecord, MutablePersistableRecord
                       localModifiedAt=:expectedLocalModifiedAt
                 """,
             arguments: [
-                Columns.id.rawValue: id,
+                "id": id,
                 "expectedLocalModifiedAt": expectedLocalModifiedAt,
-                Columns.syncedAt.rawValue: syncedAt,
-                Columns.networkId.rawValue: networkId,
-                Columns.incidentId.rawValue: incidentId,
+                "syncedAt": syncedAt,
+                "networkId": networkId,
+                "incidentId": incidentId,
             ]
         )
     }
@@ -133,8 +134,8 @@ extension WorksiteRootRecord: Codable, FetchableRecord, MutablePersistableRecord
                 WHERE id=:id
                 """,
             arguments: [
-                Columns.id.rawValue: id,
-                Columns.syncedAt.rawValue: syncedAt,
+                "id": id,
+                "syncedAt": syncedAt,
             ]
         )
     }
@@ -147,7 +148,6 @@ extension WorksiteRootRecord: Codable, FetchableRecord, MutablePersistableRecord
 
     static func getWorksiteId(_ db: Database, _ networkId: Int64) throws -> Int64 {
         let record = try WorksiteRootRecord
-            .all()
             .filter(Columns.networkId == networkId && Columns.localGlobalUuid == "")
             .fetchOne(db)
         return record?.id ?? 0
@@ -171,10 +171,30 @@ extension WorksiteRootRecord: Codable, FetchableRecord, MutablePersistableRecord
                 WHERE id=:id
                 """,
             arguments: [
-                Columns.id.rawValue: id,
-                Columns.incidentId.rawValue: incidentId,
-                Columns.syncUuid.rawValue: syncUuid,
-                Columns.localModifiedAt.rawValue: localModifiedAt,
+                "id": id,
+                "incidentId": incidentId,
+                "syncUuid": syncUuid,
+                "localModifiedAt": localModifiedAt,
+            ]
+        )
+    }
+
+    static func updateWorksiteNetworkId(
+        _ db: Database,
+        _ id: Int64,
+        _ networkId: Int64
+    ) throws {
+        try db.execute(
+            sql:
+                """
+                UPDATE worksiteRoot
+                SET networkId=:networkId,
+                    localGlobalUuid=''
+                WHERE id=:id
+                """,
+            arguments: [
+                "id": id,
+                "networkId": networkId
             ]
         )
     }
@@ -196,7 +216,7 @@ extension DerivableRequest<WorksiteRootRecord> {
     }
 
     func orderedByLocalModifiedAtDesc() -> Self {
-        order(WorksiteRootRecord.Columns.localModifiedAt.desc)
+        order(RootColumns.localModifiedAt.desc)
     }
 
     func byIncidentId(_ id: Int64) -> Self {
@@ -206,9 +226,55 @@ extension DerivableRequest<WorksiteRootRecord> {
     func selectIdColumn() -> Self {
         select(RootColumns.id)
     }
+
+    func filterLocalModified() -> Self {
+        filter(RootColumns.isLocalModified == true)
+    }
 }
 
 fileprivate typealias RootColumns = WorksiteRootRecord.Columns
+
+extension Database {
+    private func updateNetworkId(
+        _ tableName: String,
+        _ id: Int64,
+        _ networkId: Int64
+    ) throws {
+        try execute(
+            sql:
+                """
+                UPDATE \(tableName)
+                SET networkId   =:networkId
+                WHERE id        =:id
+                """,
+            arguments: [
+                "id": id,
+                "networkId": networkId,
+            ]
+        )
+    }
+
+    func updateWorksiteNetworkId(
+        _ id: Int64,
+        _ networkId: Int64
+    ) throws {
+        try updateNetworkId("worksite", id, networkId)
+    }
+
+    fileprivate func updateWorksiteFlagNetworkId(
+        _ id: Int64,
+        _ networkId: Int64
+    ) throws {
+        try updateNetworkId("worksiteFlag", id, networkId)
+    }
+
+    fileprivate func updateWorkTypeNetworkId(
+        _ id: Int64,
+        _ networkId: Int64
+    ) throws {
+        try updateNetworkId("workType", id, networkId)
+    }
+}
 
 // sourcery: copyBuilder
 struct WorksiteRecord : Identifiable, Equatable {
@@ -400,7 +466,7 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
         _ db: Database,
         _ networkId: Int64
     ) throws -> Int64? {
-        try WorksiteRecord.all()
+        try WorksiteRecord
             .filter(Columns.networkId == networkId)
             .fetchAll(db)
             .first!
@@ -489,6 +555,25 @@ struct WorkTypeRecord : Identifiable, Equatable {
     let status: String
     let workType: String
 
+    static func create(
+        worksiteId: Int64,
+        createdAt: Date,
+        status: String,
+        workType: String
+    ) -> WorkTypeRecord {
+        WorkTypeRecord(
+            networkId: -1,
+            worksiteId: worksiteId,
+            createdAt: createdAt,
+            orgClaim: nil,
+            nextRecurAt: nil,
+            phase: nil,
+            recur: nil,
+            status: status,
+            workType: workType
+        )
+    }
+
     func asExternalModel() -> WorkType {
         WorkType(
             id: id!,
@@ -528,7 +613,7 @@ extension WorkTypeRecord: Codable, FetchableRecord, MutablePersistableRecord {
         _ worksiteId: Int64,
         _ networkIds: [Int64]
     ) throws {
-        try WorkTypeRecord.all()
+        try WorkTypeRecord
             .filter(Columns.worksiteId == worksiteId && !networkIds.contains(Columns.networkId))
             .deleteAll(db)
     }
@@ -536,10 +621,20 @@ extension WorkTypeRecord: Codable, FetchableRecord, MutablePersistableRecord {
     static func deleteUnspecified(
         _ db: Database,
         _ worksiteId: Int64,
+        _ keepWorkTypes: Set<String>
+    ) throws {
+        try WorkTypeRecord
+            .filter(Columns.worksiteId == worksiteId && !keepWorkTypes.contains(Columns.workType))
+            .deleteAll(db)
+    }
+
+    static func deleteSpecified(
+        _ db: Database,
+        _ worksiteId: Int64,
         _ workTypes: Set<String>
     ) throws {
-        try WorkTypeRecord.all()
-            .filter(Columns.worksiteId == worksiteId && !workTypes.contains(Columns.workType))
+        try WorkTypeRecord
+            .filter(Columns.worksiteId == worksiteId && workTypes.contains(Columns.workType))
             .deleteAll(db)
     }
 
@@ -579,7 +674,6 @@ extension WorkTypeRecord: Codable, FetchableRecord, MutablePersistableRecord {
         _ worksiteId: Int64
     ) throws -> [String] {
         return try WorkTypeRecord
-            .all()
             .select(Columns.workType, as: String.self)
             .filter(Columns.worksiteId == worksiteId)
             .fetchAll(db)
@@ -587,9 +681,46 @@ extension WorkTypeRecord: Codable, FetchableRecord, MutablePersistableRecord {
 
     internal static func getWorkTypeRecords(_ db: Database, _ worksiteId: Int64) throws -> [WorkTypeRecord] {
         try WorkTypeRecord
-            .all()
             .filter(Columns.worksiteId == worksiteId)
             .fetchAll(db)
+    }
+
+    static func getUnsyncedCount(
+        _ db: Database,
+        _ worksiteId: Int64
+    ) throws -> Int {
+        try WorkTypeRecord
+            .filter(Columns.worksiteId == worksiteId && Columns.networkId <= 0)
+            .fetchCount(db)
+    }
+
+    static func updateNetworkId(
+        _ db: Database,
+        _ id: Int64,
+        _ networkId: Int64
+    ) throws {
+        try db.updateWorkTypeNetworkId(id, networkId)
+    }
+
+    static func updateNetworkId(
+        _ db: Database,
+        _ worksiteId: Int64,
+        _ workType: String,
+        _ networkId: Int64
+    ) throws {
+        try db.execute(
+            sql:
+                """
+                UPDATE OR IGNORE workType
+                SET networkId =:networkId
+                WHERE worksiteId=:worksiteId AND workType=:workType
+                """,
+            arguments: [
+                "worksiteId": worksiteId,
+                "workType": workType,
+                "networkId": networkId
+            ]
+        )
     }
 }
 
@@ -665,7 +796,7 @@ extension WorksiteFormDataRecord: Codable, FetchableRecord, MutablePersistableRe
         _ worksiteId: Int64,
         _ fieldKeys: Set<String>
     ) throws {
-        try WorksiteFormDataRecord.all()
+        try WorksiteFormDataRecord
             .filter(Columns.worksiteId == worksiteId && !fieldKeys.contains(Columns.fieldKey))
             .deleteAll(db)
     }
@@ -675,7 +806,6 @@ extension WorksiteFormDataRecord: Codable, FetchableRecord, MutablePersistableRe
         _ worksiteId: Int64
     ) throws -> [String] {
         return try WorksiteFormDataRecord
-            .all()
             .select(Columns.fieldKey, as: String.self)
             .filter(Columns.worksiteId == worksiteId)
             .fetchAll(db)
@@ -683,7 +813,6 @@ extension WorksiteFormDataRecord: Codable, FetchableRecord, MutablePersistableRe
 
     internal static func getFormData(_ db: Database, _ worksiteId: Int64) throws -> [WorksiteFormDataRecord] {
         try WorksiteFormDataRecord
-            .all()
             .filter(Columns.worksiteId == worksiteId)
             .fetchAll(db)
     }
@@ -765,7 +894,7 @@ extension WorksiteFlagRecord: Codable, FetchableRecord, MutablePersistableRecord
         _ worksiteId: Int64,
         _ reasons: [String]
     ) throws {
-        try WorksiteFlagRecord.all()
+        try WorksiteFlagRecord
             .filter(Columns.worksiteId == worksiteId && !reasons.contains(Columns.reasonT))
             .deleteAll(db)
     }
@@ -775,7 +904,7 @@ extension WorksiteFlagRecord: Codable, FetchableRecord, MutablePersistableRecord
         _ worksiteId: Int64,
         _ ids: Set<Int64>
     ) throws {
-        try WorksiteFlagRecord.all()
+        try WorksiteFlagRecord
             .filter(Columns.worksiteId == worksiteId && !ids.contains(Columns.id))
             .deleteAll(db)
     }
@@ -785,7 +914,6 @@ extension WorksiteFlagRecord: Codable, FetchableRecord, MutablePersistableRecord
         _ worksiteId: Int64
     ) throws -> [String] {
         return try WorksiteFlagRecord
-            .all()
             .select(Columns.reasonT, as: String.self)
             .filter(Columns.worksiteId == worksiteId)
             .fetchAll(db)
@@ -793,9 +921,25 @@ extension WorksiteFlagRecord: Codable, FetchableRecord, MutablePersistableRecord
 
     internal static func getFlags(_ db: Database, _ worksiteId: Int64) throws -> [WorksiteFlagRecord] {
         try WorksiteFlagRecord
-            .all()
             .filter(Columns.worksiteId == worksiteId)
             .fetchAll(db)
+    }
+
+    static func getUnsyncedCount(
+        _ db: Database,
+        _ worksiteId: Int64
+    ) throws -> Int {
+        try WorksiteFlagRecord
+            .filter(Columns.worksiteId == worksiteId && Columns.networkId <= 0)
+            .fetchCount(db)
+    }
+
+    static func updateNetworkId(
+        _ db: Database,
+        _ id: Int64,
+        _ networkId: Int64
+    ) throws {
+        try db.updateWorksiteFlagNetworkId(id, networkId)
     }
 }
 
@@ -884,11 +1028,11 @@ extension WorksiteNoteRecord: Codable, FetchableRecord, MutablePersistableRecord
                     WHERE worksiteId=:worksiteId AND networkId=:networkId AND localGlobalUuid=''
                     """,
                 arguments: [
-                    Columns.worksiteId.rawValue: worksiteId,
-                    Columns.networkId.rawValue: networkId,
-                    Columns.createdAt.rawValue: createdAt,
-                    Columns.isSurvivor.rawValue: isSurvivor,
-                    Columns.note.rawValue: note,
+                    "worksiteId": worksiteId,
+                    "networkId": networkId,
+                    "createdAt": createdAt,
+                    "isSurvivor": isSurvivor,
+                    "note": note,
                 ]
             )
         }
@@ -899,7 +1043,7 @@ extension WorksiteNoteRecord: Codable, FetchableRecord, MutablePersistableRecord
         _ worksiteId: Int64,
         _ networkIds: [Int64]
     ) throws {
-        try WorksiteNoteRecord.all()
+        try WorksiteNoteRecord
             .filter(Columns.worksiteId == worksiteId && !networkIds.contains(Columns.networkId))
             .deleteAll(db)
     }
@@ -917,18 +1061,44 @@ extension WorksiteNoteRecord: Codable, FetchableRecord, MutablePersistableRecord
         _ createdAt: Date
     ) throws -> [String] {
         return try WorksiteNoteRecord
-            .all()
             .select(Columns.note, as: String.self)
             .filter(Columns.worksiteId == worksiteId && Columns.createdAt > createdAt)
             .fetchAll(db)
     }
 
-
     internal static func getNoteRecords(_ db: Database, _ worksiteId: Int64) throws -> [WorksiteNoteRecord] {
         try WorksiteNoteRecord
-            .all()
             .filter(Columns.worksiteId == worksiteId)
             .fetchAll(db)
+    }
+
+    static func getUnsyncedCount(
+        _ db: Database,
+        _ worksiteId: Int64
+    ) throws -> Int {
+        try WorksiteNoteRecord
+            .filter(Columns.worksiteId == worksiteId && Columns.networkId <= 0)
+            .fetchCount(db)
+    }
+
+    static func updateNetworkId(
+        _ db: Database,
+        _ id: Int64,
+        _ networkId: Int64
+    ) throws {
+        try db.execute(
+            sql:
+                """
+                UPDATE OR IGNORE worksiteNote
+                SET networkId       =:networkId,
+                    localGlobalUuid =''
+                WHERE id=:id
+                """,
+            arguments: [
+                "id": id,
+                "networkId": networkId
+            ]
+        )
     }
 }
 

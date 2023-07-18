@@ -18,6 +18,28 @@ struct WorkTypeRequestRecord : Identifiable, Equatable {
     let rejectedAt: Date?
     let approvedRejectedReason: String
 
+    static func create(
+        worksite: Worksite,
+        workType: String,
+        reason: String,
+        byOrg: Int64,
+        toOrg: Int64,
+        createdAt: Date
+    ) -> WorkTypeRequestRecord {
+        WorkTypeRequestRecord(
+            networkId: -1,
+            worksiteId: worksite.id,
+            workType: workType,
+            reason: reason,
+            byOrg: byOrg,
+            toOrg: toOrg,
+            createdAt: createdAt,
+            approvedAt: nil,
+            rejectedAt: nil,
+            approvedRejectedReason: ""
+        )
+    }
+
     func asExternalModel() -> WorkTypeRequest {
         WorkTypeRequest(
             workType: workType,
@@ -29,6 +51,8 @@ struct WorkTypeRequestRecord : Identifiable, Equatable {
         )
     }
 }
+
+private typealias RequestColumns = WorkTypeRequestRecord.Columns
 
 extension WorkTypeRequestRecord: Codable, FetchableRecord, MutablePersistableRecord {
     static var databaseTableName: String = "worksiteWorkTypeRequest"
@@ -56,19 +80,47 @@ extension WorkTypeRequestRecord: Codable, FetchableRecord, MutablePersistableRec
         _ keepWorkTypes: Set<String>
     ) throws {
         try WorkTypeRequestRecord
-            .filter(WorkTypeRequestRecord.Columns.worksiteId == worksiteId &&
-                    WorkTypeRequestRecord.Columns.networkId>0 &&
-                    !keepWorkTypes.contains(WorkTypeRequestRecord.Columns.workType))
+            .filter(RequestColumns.worksiteId == worksiteId &&
+                    RequestColumns.networkId>0 &&
+                    !keepWorkTypes.contains(RequestColumns.workType))
             .deleteAll(db)
     }
 
     static func deleteUnsynced(_ db: Database, _ worksiteId: Int64) throws {
         try WorkTypeRequestRecord
-            .all()
             .filter(
-                WorkTypeRequestRecord.Columns.worksiteId == worksiteId &&
-                WorkTypeRequestRecord.Columns.networkId <= 0
+                RequestColumns.worksiteId == worksiteId &&
+                RequestColumns.networkId <= 0
             )
             .deleteAll(db)
+    }
+
+    static func updateNetworkId(
+        _ db: Database,
+        _ worksiteId: Int64,
+        _ workType: String,
+        _ orgId: Int64,
+        _ networkId: Int64
+    ) throws {
+        try db.execute(
+            sql:
+                """
+                UPDATE OR IGNORE worksiteWorkTypeRequest
+                SET networkId =:networkId
+                WHERE worksiteId=:worksiteId AND workType=:workType AND byOrg=:orgId
+                """,
+            arguments: [
+                "worksiteId": worksiteId,
+                "workType": workType,
+                "orgId": orgId,
+                "networkId": networkId
+            ]
+        )
+    }
+}
+
+extension DerivableRequest<WorkTypeRequestRecord> {
+    func selectIdNetworkIdColumns() -> Self {
+        select(RequestColumns.id, RequestColumns.networkId)
     }
 }

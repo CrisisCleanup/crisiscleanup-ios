@@ -17,7 +17,7 @@ class PagingSyncLogRepository: SyncLogger, SyncLogRepository {
     private let logEntriesLock = NSLock()
     private var logEntries = [SyncLog]()
 
-    private var disableLoging: Bool { appEnv.isNotProduction }
+    private var disableLogging: Bool { appEnv.isProduction }
 
     init(
         syncLogDao: SyncLogDao,
@@ -36,7 +36,7 @@ class PagingSyncLogRepository: SyncLogger, SyncLogRepository {
         _ details: String,
         _ type: String
     ) {
-        if disableLoging { return }
+        if disableLogging { return }
 
         // TODO: Enable logging only if dev mode/sync logging is enabled
         let logType = type.ifBlank { self.type }
@@ -53,11 +53,11 @@ class PagingSyncLogRepository: SyncLogger, SyncLogRepository {
         }
 
         // TODO: Delete when logs can be inspected
-        print("\(logType) \(message) \(details)")
+        print("synclog \(logType) \(message) \(details)")
     }
 
     func clear() {
-        if disableLoging { return }
+        if disableLogging { return }
 
         logEntriesLock.withLock {
             logEntries = []
@@ -65,7 +65,7 @@ class PagingSyncLogRepository: SyncLogger, SyncLogRepository {
     }
 
     func flush() {
-        if disableLoging { return }
+        if disableLogging { return }
 
         Task {
             var entries: [SyncLog] = []

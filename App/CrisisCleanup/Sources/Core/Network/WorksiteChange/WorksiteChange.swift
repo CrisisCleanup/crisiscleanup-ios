@@ -9,6 +9,7 @@ struct WorkTypeTransfer: Codable {
     func hasValue() -> Bool { reason.isNotBlank && workTypes.isNotEmpty }
 }
 
+// sourcery: copyBuilder
 struct WorksiteChange: Codable {
     // v4
     let isWorksiteDataChange: Bool?
