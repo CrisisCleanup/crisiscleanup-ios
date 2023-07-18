@@ -109,11 +109,11 @@ extension WorksiteRootRecord: Codable, FetchableRecord, MutablePersistableRecord
                       localModifiedAt=:expectedLocalModifiedAt
                 """,
             arguments: [
-                Columns.id.rawValue: id,
+                "id": id,
                 "expectedLocalModifiedAt": expectedLocalModifiedAt,
-                Columns.syncedAt.rawValue: syncedAt,
-                Columns.networkId.rawValue: networkId,
-                Columns.incidentId.rawValue: incidentId,
+                "syncedAt": syncedAt,
+                "networkId": networkId,
+                "incidentId": incidentId,
             ]
         )
     }
@@ -133,8 +133,8 @@ extension WorksiteRootRecord: Codable, FetchableRecord, MutablePersistableRecord
                 WHERE id=:id
                 """,
             arguments: [
-                Columns.id.rawValue: id,
-                Columns.syncedAt.rawValue: syncedAt,
+                "id": id,
+                "syncedAt": syncedAt,
             ]
         )
     }
@@ -170,10 +170,30 @@ extension WorksiteRootRecord: Codable, FetchableRecord, MutablePersistableRecord
                 WHERE id=:id
                 """,
             arguments: [
-                Columns.id.rawValue: id,
-                Columns.incidentId.rawValue: incidentId,
-                Columns.syncUuid.rawValue: syncUuid,
-                Columns.localModifiedAt.rawValue: localModifiedAt,
+                "id": id,
+                "incidentId": incidentId,
+                "syncUuid": syncUuid,
+                "localModifiedAt": localModifiedAt,
+            ]
+        )
+    }
+
+    static func updateWorksiteNetworkId(
+        _ db: Database,
+        _ id: Int64,
+        _ networkId: Int64
+    ) throws {
+        try db.execute(
+            sql:
+                """
+                UPDATE worksiteRoot
+                SET networkId=:networkId,
+                    localGlobalUuid=''
+                WHERE id=:id
+                """,
+            arguments: [
+                "id": id,
+                "networkId": networkId
             ]
         )
     }
@@ -212,6 +232,48 @@ extension DerivableRequest<WorksiteRootRecord> {
 }
 
 fileprivate typealias RootColumns = WorksiteRootRecord.Columns
+
+extension Database {
+    private func updateNetworkId(
+        _ tableName: String,
+        _ id: Int64,
+        _ networkId: Int64
+    ) throws {
+        try execute(
+            sql:
+                """
+                UPDATE \(tableName)
+                SET networkId   =:networkId
+                WHERE id        =:id
+                """,
+            arguments: [
+                "id": id,
+                "networkId": networkId,
+            ]
+        )
+    }
+
+    func updateWorksiteNetworkId(
+        _ id: Int64,
+        _ networkId: Int64
+    ) throws {
+        try updateNetworkId("worksite", id, networkId)
+    }
+
+    fileprivate func updateWorksiteFlagNetworkId(
+        _ id: Int64,
+        _ networkId: Int64
+    ) throws {
+        try updateNetworkId("worksiteFlag", id, networkId)
+    }
+
+    fileprivate func updateWorkTypeNetworkId(
+        _ id: Int64,
+        _ networkId: Int64
+    ) throws {
+        try updateNetworkId("workType", id, networkId)
+    }
+}
 
 // sourcery: copyBuilder
 struct WorksiteRecord : Identifiable, Equatable {
@@ -630,6 +692,35 @@ extension WorkTypeRecord: Codable, FetchableRecord, MutablePersistableRecord {
             .filter(Columns.worksiteId == worksiteId && Columns.networkId <= 0)
             .fetchCount(db)
     }
+
+    static func updateNetworkId(
+        _ db: Database,
+        _ id: Int64,
+        _ networkId: Int64
+    ) throws {
+        try db.updateWorkTypeNetworkId(id, networkId)
+    }
+
+    static func updateNetworkId(
+        _ db: Database,
+        _ worksiteId: Int64,
+        _ workType: String,
+        _ networkId: Int64
+    ) throws {
+        try db.execute(
+            sql:
+                """
+                UPDATE OR IGNORE workType
+                SET networkId =:networkId
+                WHERE worksiteId=:worksiteId AND workType=:workType
+                """,
+            arguments: [
+                "worksiteId": worksiteId,
+                "workType": workType,
+                "networkId": networkId
+            ]
+        )
+    }
 }
 
 extension DerivableRequest<WorkTypeRecord> {
@@ -841,6 +932,14 @@ extension WorksiteFlagRecord: Codable, FetchableRecord, MutablePersistableRecord
             .filter(Columns.worksiteId == worksiteId && Columns.networkId <= 0)
             .fetchCount(db)
     }
+
+    static func updateNetworkId(
+        _ db: Database,
+        _ id: Int64,
+        _ networkId: Int64
+    ) throws {
+        try db.updateWorksiteFlagNetworkId(id, networkId)
+    }
 }
 
 extension DerivableRequest<WorksiteFlagRecord> {
@@ -928,11 +1027,11 @@ extension WorksiteNoteRecord: Codable, FetchableRecord, MutablePersistableRecord
                     WHERE worksiteId=:worksiteId AND networkId=:networkId AND localGlobalUuid=''
                     """,
                 arguments: [
-                    Columns.worksiteId.rawValue: worksiteId,
-                    Columns.networkId.rawValue: networkId,
-                    Columns.createdAt.rawValue: createdAt,
-                    Columns.isSurvivor.rawValue: isSurvivor,
-                    Columns.note.rawValue: note,
+                    "worksiteId": worksiteId,
+                    "networkId": networkId,
+                    "createdAt": createdAt,
+                    "isSurvivor": isSurvivor,
+                    "note": note,
                 ]
             )
         }
@@ -979,6 +1078,26 @@ extension WorksiteNoteRecord: Codable, FetchableRecord, MutablePersistableRecord
         try WorksiteNoteRecord
             .filter(Columns.worksiteId == worksiteId && Columns.networkId <= 0)
             .fetchCount(db)
+    }
+
+    static func updateNetworkId(
+        _ db: Database,
+        _ id: Int64,
+        _ networkId: Int64
+    ) throws {
+        try db.execute(
+            sql:
+                """
+                UPDATE OR IGNORE worksiteNote
+                SET networkId       =:networkId,
+                    localGlobalUuid =''
+                WHERE id=:id
+                """,
+            arguments: [
+                "id": id,
+                "networkId": networkId
+            ]
+        )
     }
 }
 

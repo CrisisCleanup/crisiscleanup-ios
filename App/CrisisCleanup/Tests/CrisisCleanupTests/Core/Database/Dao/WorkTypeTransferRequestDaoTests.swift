@@ -8,9 +8,9 @@ class WorkTypeTransferRequestDaoTests: XCTestCase {
     private var createdAtA: Date = Date.now
     private var updatedAtA: Date = Date.now
 
-    private var dbQueue: DatabaseQueue? = nil
-    private var appDb: AppDatabase? = nil
-    private var worksiteDao: WorksiteDao? = nil
+    private var dbQueue: DatabaseQueue!
+    private var appDb: AppDatabase!
+    private var worksiteDao: WorksiteDao!
     private var requestDao: WorkTypeTransferRequestDao? = nil
 
     override func setUp() async throws {
@@ -20,17 +20,17 @@ class WorkTypeTransferRequestDaoTests: XCTestCase {
         let initialized = try initializeTestDb()
         dbQueue = initialized.0
         appDb = initialized.1
-        worksiteDao = WorksiteDao(appDb!, WorksiteTestUtil.silentSyncLogger)
-        requestDao = WorkTypeTransferRequestDao(appDb!)
+        worksiteDao = WorksiteDao(appDb, WorksiteTestUtil.silentSyncLogger)
+        requestDao = WorkTypeTransferRequestDao(appDb)
 
-        try await dbQueue!.write { db in
+        try await dbQueue.write { db in
             for incident in WorksiteTestUtil.testIncidents {
                 try incident.upsert(db)
             }
 
         }
         let worksite = testWorksiteRecord(1, 1, "address", createdAtA)
-        _ = try await WorksiteTestUtil.insertWorksites(dbQueue!, now, [worksite])
+        _ = try await WorksiteTestUtil.insertWorksites(dbQueue, now, [worksite])
     }
 
     func testSyncRequests() async throws {
@@ -40,7 +40,7 @@ class WorkTypeTransferRequestDaoTests: XCTestCase {
             testWorkTypeTransferRequestRecord("work-type-c", 331, createdAtA, networkId: 93),
             testWorkTypeTransferRequestRecord("work-type-d", 331, createdAtA),
         ]
-        try await dbQueue!.write { db in
+        try await dbQueue.write { db in
             for record in existingRequests {
                 var record = record
                 try record.insert(db, onConflict: .ignore)
@@ -106,7 +106,7 @@ class WorkTypeTransferRequestDaoTests: XCTestCase {
                 .joined()
                 .sorted { (a, b) in a.id! < b.id! }
         }()
-        let actual = try await dbQueue!.read { db in
+        let actual = try await dbQueue.read { db in
             try WorkTypeRequestRecord.filter(WorkTypeRequestRecord.Columns.worksiteId == 1)
                 .fetchAll(db)
         }

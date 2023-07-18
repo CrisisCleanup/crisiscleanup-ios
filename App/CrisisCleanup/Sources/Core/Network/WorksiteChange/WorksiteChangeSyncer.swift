@@ -16,9 +16,27 @@ public protocol WorksiteChangeSyncer {
 }
 
 class NetworkWorksiteChangeSyncer: WorksiteChangeSyncer {
+    private let changeSetOperator: WorksiteChangeSetOperator
+    private let networkDataSource: CrisisCleanupNetworkDataSource
+    private let writeApiClient: CrisisCleanupWriteApi
+    private let networkMonitor: NetworkMonitor
+    private let appEnv: AppEnv
+
     private let jsonDecoder: JSONDecoder
 
-    init() {
+    init(
+        changeSetOperator: WorksiteChangeSetOperator,
+        networkDataSource: CrisisCleanupNetworkDataSource,
+        writeApiClient: CrisisCleanupWriteApi,
+        networkMonitor: NetworkMonitor,
+        appEnv: AppEnv
+    ) {
+        self.changeSetOperator = changeSetOperator
+        self.networkDataSource = networkDataSource
+        self.writeApiClient = writeApiClient
+        self.networkMonitor = networkMonitor
+        self.appEnv = appEnv
+
         jsonDecoder = JsonDecoderFactory().decoder()
     }
 
@@ -55,27 +73,25 @@ class NetworkWorksiteChangeSyncer: WorksiteChangeSyncer {
     ) async throws -> WorksiteSyncResult {
         let changes = try sortedChanges.map { try deserializeChanges($0) }
 
-        print("Sync \(changes.count) worksite changes")
-
-        // TODO: Do
-        return WorksiteSyncResult(
-            changeResults: [
-                WorksiteSyncResult.ChangeResult(
-                    id: 0,
-                    isSuccessful: false,
-                    isPartiallySuccessful: false,
-                    isFail: true,
-                    error: GenericError("Sync not yet implemented")
-                )
-            ],
-            changeIds: WorksiteSyncResult.ChangeIds(
-                networkWorksiteId: networkWorksiteId,
-                flagIdMap: [:],
-                noteIdMap: [:],
-                workTypeIdMap: [:],
-                workTypeKeyMap: [:],
-                workTypeRequestIdMap: [:]
-            )
+        let syncManager = WorksiteChangeProcessor(
+            changeSetOperator: changeSetOperator,
+            networkDataSource: networkDataSource,
+            writeApiClient: writeApiClient,
+            accountData: accountData,
+            networkMonitor: networkMonitor,
+            appEnv: appEnv,
+            syncLogger: syncLogger,
+            hasPriorUnsyncedChanges: hasPriorUnsyncedChanges,
+            networkWorksiteId: networkWorksiteId,
+            affiliateOrganizations: affiliateOrganizations,
+            flagIdLookup: flagIdLookup,
+            noteIdLookup: noteIdLookup,
+            workTypeIdLookup: workTypeIdLookup
         )
+        try await syncManager.process(
+            startingReferenceChange: deserializeChanges(startingReferenceChange),
+            sortedChanges: changes
+        )
+        return syncManager.syncResult()
     }
 }

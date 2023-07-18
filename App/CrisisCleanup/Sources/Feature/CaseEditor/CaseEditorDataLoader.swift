@@ -337,14 +337,10 @@ internal class CaseEditorDataLoader {
                 let workTypeGroups = Set(
                     updatedFormData.keys
                         .filter { incident.workTypeLookup[$0] != nil }
-                        .map { incident.formFieldLookup[$0]?.parentKey }
+                        .compactMap { incident.formFieldLookup[$0]?.parentKey }
                 )
-                if !workTypeGroups.isEmpty {
-                    workTypeGroups.forEach { groupKey in
-                        if groupKey != nil {
-                            updatedFormData[groupKey!] = WorksiteFormValue.trueValue
-                        }
-                    }
+                workTypeGroups.forEach {
+                    updatedFormData[$0] = WorksiteFormValue.trueValue
                 }
                 worksiteState.workTypes.forEach { workType in
                     if let formField = self.workTypeGroupFormFields[workType.workTypeLiteral] {

@@ -53,7 +53,7 @@ class AccessTokenInterceptor: RequestInterceptor {
     private func setRequestAuthorization(_ urlRequest: URLRequest) async throws -> URLRequest {
         let accountData = try await accountDataPublisher.asyncFirst()
         if !accountData.areTokensValid {
-            throw ExpiredTokenError()
+            throw ExpiredTokenError
         }
 
         if accountData.isAccessTokenExpired() {
@@ -62,11 +62,11 @@ class AccessTokenInterceptor: RequestInterceptor {
                     defer { refreshTokensGuard.store(false, ordering: .sequentiallyConsistent)}
 
                     if try await !refreshTokens() {
-                        throw ExpiredTokenError()
+                        throw ExpiredTokenError
                     }
                 }
             } else {
-                throw ExpiredTokenError()
+                throw ExpiredTokenError
             }
         }
 

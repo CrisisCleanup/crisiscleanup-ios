@@ -276,8 +276,11 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
             try await self.syncWorksite(worksiteId)
         } catch {
             var unhandledException: Error? = nil
-            if error is NoInternetConnectionError {}
-            else {
+            if let genericError = error as? GenericError {
+                if genericError != NoInternetConnectionError {
+                    unhandledException = genericError
+                }
+            } else {
                 unhandledException = error
             }
             if let endError = unhandledException {
@@ -300,7 +303,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
 
         var syncException: Error? = nil
 
-        let sortedChanges = worksiteChangeDao.getOrdered(worksiteId)
+        let sortedChanges = try worksiteChangeDao.getOrdered(worksiteId)
         if sortedChanges.isNotEmpty {
             syncLogger.log("\(sortedChanges.count) changes.")
 
@@ -420,23 +423,24 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
                 )
             }
 
-            worksiteChangeDao.updateSyncIds(
+            try await worksiteChangeDao.updateSyncIds(
                 worksiteId: worksiteId,
                 organizationId: organizationId,
                 ids: syncResult.changeIds
             )
-            worksiteChangeDao.updateSyncChanges(
+            try await worksiteChangeDao.updateSyncChanges(
                 worksiteId: worksiteId,
                 changeResults: syncResult.changeResults,
                 maxSyncAttempts: MaxSyncTries
             )
 
-            try syncResult.changeResults.map { $0.error }
-                .filter { $0 != nil }
+            try syncResult.changeResults
+                .compactMap { $0.error }
                 .forEach {
-                    if $0 is NoInternetConnectionError ||
-                        $0 is ExpiredTokenError {
-                        throw $0!
+                    if let genericError = $0 as? GenericError,
+                       genericError == NoInternetConnectionError ||
+                        genericError == ExpiredTokenError {
+                        throw genericError
                     }
                 }
         } else {
@@ -465,8 +469,4 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         // TODO: Do
         false
     }
-}
-
-struct NoInternetConnectionError : Error {
-    let message = "No internet"
 }

@@ -10,9 +10,9 @@ class WorksiteFormDataFlagNoteTests: XCTestCase {
     private var updatedAtA: Date = Date.now
     private var updatedAtB: Date = Date.now
 
-    private var dbQueue: DatabaseQueue? = nil
-    private var appDb: AppDatabase? = nil
-    private var worksiteDao: WorksiteDao? = nil
+    private var dbQueue: DatabaseQueue!
+    private var appDb: AppDatabase!
+    private var worksiteDao: WorksiteDao!
 
     override func setUp() async throws {
         previousSyncedAt = now.addingTimeInterval(-999_999.0.seconds)
@@ -23,9 +23,9 @@ class WorksiteFormDataFlagNoteTests: XCTestCase {
         let initialized = try initializeTestDb()
         dbQueue = initialized.0
         appDb = initialized.1
-        worksiteDao = WorksiteDao(appDb!, WorksiteTestUtil.silentSyncLogger)
+        worksiteDao = WorksiteDao(appDb, WorksiteTestUtil.silentSyncLogger)
 
-        try await dbQueue!.write { db in
+        try await dbQueue.write { db in
             for incident in WorksiteTestUtil.testIncidents {
                 try incident.upsert(db)
             }
@@ -37,7 +37,7 @@ class WorksiteFormDataFlagNoteTests: XCTestCase {
         _ syncedAt: Date
     ) async throws -> [WorksiteRecord] {
         try await WorksiteTestUtil.insertWorksites(
-            dbQueue!,
+            dbQueue,
             syncedAt,
             worksites
         )
@@ -73,15 +73,15 @@ class WorksiteFormDataFlagNoteTests: XCTestCase {
             syncingNotes,
             []
         )
-        let actual = try await dbQueue!.write({ db in
-            try self.worksiteDao!.syncWorksite(db, records, syncedAt)
+        let actual = try await dbQueue.write({ db in
+            try self.worksiteDao.syncWorksite(db, records, syncedAt)
         })
         XCTAssertEqual(true, actual.0)
         XCTAssertEqual(1, actual.1)
 
         // Assert
 
-        let actualPopulatedWorksite = try worksiteDao!.getLocalWorksite(1)
+        let actualPopulatedWorksite = try worksiteDao.getLocalWorksite(1)
         XCTAssertEqual(
             testWorksiteRecord(1, 1, "sync-address", updatedAtA, id: 1),
             actualPopulatedWorksite?.worksite
@@ -162,7 +162,7 @@ class WorksiteFormDataFlagNoteTests: XCTestCase {
         ]
         existingWorksites = try await insertWorksites(existingWorksites, previousSyncedAt)
 
-        try await dbQueue!.write({ db in
+        try await dbQueue.write({ db in
             for formData in [
                 testFormDataRecord(1, "form-field-a"),
                 testFormDataRecord(1, "form-field-b"),
@@ -239,13 +239,13 @@ class WorksiteFormDataFlagNoteTests: XCTestCase {
             []
         )
         let expectedSyncedWorksiteId = existingWorksites[0].id
-        let actual = try await dbQueue!.write({ db in
-            try self.worksiteDao!.syncWorksite(db, records, syncedAt)
+        let actual = try await dbQueue.write({ db in
+            try self.worksiteDao.syncWorksite(db, records, syncedAt)
         })
         XCTAssertEqual(true, actual.0)
         XCTAssertEqual(expectedSyncedWorksiteId, actual.1)
 
-        let actualPopulatedWorksite = try worksiteDao!.getLocalWorksite(1)!
+        let actualPopulatedWorksite = try worksiteDao.getLocalWorksite(1)!
         XCTAssertEqual(
             existingWorksites[0].copy {
                 $0.address = "sync-address"
@@ -315,7 +315,7 @@ class WorksiteFormDataFlagNoteTests: XCTestCase {
             testWorksiteRecord(2, 1, "address", updatedAtA),
         ]
         existingWorksites = try await insertWorksites(existingWorksites, previousSyncedAt)
-        try await WorksiteTestUtil.setModifiedAt(dbQueue!, 2, updatedAtA)
+        try await WorksiteTestUtil.setModifiedAt(dbQueue, 2, updatedAtA)
 
         // Sync
 
@@ -344,8 +344,8 @@ class WorksiteFormDataFlagNoteTests: XCTestCase {
             syncingNotes,
             []
         )
-        let actualSyncWorksite = try await dbQueue!.write({ db in
-            try self.worksiteDao!.syncWorksite(db, records, syncedAt)
+        let actualSyncWorksite = try await dbQueue.write({ db in
+            try self.worksiteDao.syncWorksite(db, records, syncedAt)
         })
 
         // Sync locally changed
@@ -367,8 +367,8 @@ class WorksiteFormDataFlagNoteTests: XCTestCase {
             syncingNotesB,
             []
         )
-        let actualSyncChangeWorksite = try await dbQueue!.write({ db in
-            try self.worksiteDao!.syncWorksite(db, recordsB, syncedAt)
+        let actualSyncChangeWorksite = try await dbQueue.write({ db in
+            try self.worksiteDao.syncWorksite(db, recordsB, syncedAt)
         })
 
         // Assert
@@ -376,7 +376,7 @@ class WorksiteFormDataFlagNoteTests: XCTestCase {
         XCTAssertEqual(true, actualSyncWorksite.0)
         XCTAssertEqual(existingWorksites[0].id, actualSyncWorksite.1)
 
-        let actualPopulatedWorksite = try worksiteDao!.getLocalWorksite(1)!
+        let actualPopulatedWorksite = try worksiteDao.getLocalWorksite(1)!
         XCTAssertEqual(
             existingWorksites[0].copy {
                 $0.address = "sync-address"
@@ -419,7 +419,7 @@ class WorksiteFormDataFlagNoteTests: XCTestCase {
         XCTAssertEqual(false, actualSyncChangeWorksite.0)
         XCTAssertEqual(-1, actualSyncChangeWorksite.1)
 
-        let actualPopulatedWorksiteB = try worksiteDao!.getLocalWorksite(2)!
+        let actualPopulatedWorksiteB = try worksiteDao.getLocalWorksite(2)!
         XCTAssertEqual(existingWorksites[1], actualPopulatedWorksiteB.worksite)
         let actualWorksiteB =
             actualPopulatedWorksiteB.asExternalModel(myOrgId, WorksiteTestUtil.testTranslator)

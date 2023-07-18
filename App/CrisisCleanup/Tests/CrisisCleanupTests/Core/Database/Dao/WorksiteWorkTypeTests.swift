@@ -13,9 +13,9 @@ class WorksiteWorkTypeTests: XCTestCase {
     private var updatedAtA: Date = Date.now
     private var updatedAtB: Date = Date.now
 
-    private var dbQueue: DatabaseQueue? = nil
-    private var appDb: AppDatabase? = nil
-    private var worksiteDao: WorksiteDao? = nil
+    private var dbQueue: DatabaseQueue!
+    private var appDb: AppDatabase!
+    private var worksiteDao: WorksiteDao!
 
     override func setUp() async throws {
         previousSyncedAt = now.addingTimeInterval(-999_999.0.seconds)
@@ -26,9 +26,9 @@ class WorksiteWorkTypeTests: XCTestCase {
         let initialized = try initializeTestDb()
         dbQueue = initialized.0
         appDb = initialized.1
-        worksiteDao = WorksiteDao(appDb!, WorksiteTestUtil.silentSyncLogger)
+        worksiteDao = WorksiteDao(appDb, WorksiteTestUtil.silentSyncLogger)
 
-        try await dbQueue!.write { db in
+        try await dbQueue.write { db in
             for incident in WorksiteTestUtil.testIncidents {
                 try incident.upsert(db)
             }
@@ -40,7 +40,7 @@ class WorksiteWorkTypeTests: XCTestCase {
         _ syncedAt: Date
     ) async throws -> [WorksiteRecord] {
         try await WorksiteTestUtil.insertWorksites(
-            dbQueue!,
+            dbQueue,
             syncedAt,
             worksites
         )
@@ -52,7 +52,7 @@ class WorksiteWorkTypeTests: XCTestCase {
             testWorksiteShortRecord(111, 1, createdAtA),
         ]
         do {
-            try await worksiteDao!.syncWorksites(syncingWorksites, [], syncedAt)
+            try await worksiteDao.syncWorksites(syncingWorksites, [], syncedAt)
             XCTFail("Expecting test to error")
         } catch is GenericError {
             XCTAssertTrue(true)
@@ -71,7 +71,7 @@ class WorksiteWorkTypeTests: XCTestCase {
             testWorksiteRecord(2, 1, "address", updatedAtA),
         ]
         existingWorksites = try await insertWorksites(existingWorksites, previousSyncedAt)
-        try await dbQueue!.write({ db in
+        try await dbQueue.write({ db in
             for workType in [
                 testWorkTypeRecord(1, workType: "work-type-a", worksiteId: 1),
                 testWorkTypeRecord(11, workType: "work-type-b", worksiteId: 1),
@@ -124,11 +124,11 @@ class WorksiteWorkTypeTests: XCTestCase {
         ]
         // Sync new and existing
         let syncedAt = previousSyncedAt.addingTimeInterval(499_999.seconds)
-        try await worksiteDao!.syncWorksites(syncingWorksites, syncingWorkTypes, syncedAt)
+        try await worksiteDao.syncWorksites(syncingWorksites, syncingWorkTypes, syncedAt)
 
         // Assert
 
-        var actual = try worksiteDao!.getWorksite(1)!
+        var actual = try worksiteDao.getWorksite(1)!
         XCTAssertEqual(
             existingWorksites[0].copy {
                 $0.address = "sync-address"
@@ -207,7 +207,7 @@ class WorksiteWorkTypeTests: XCTestCase {
             a.id - b.id <= 0
         }))
 
-        actual = try worksiteDao!.getWorksite(2)!
+        actual = try worksiteDao.getWorksite(2)!
         let expectedWorkTypesB = [
             testWorkTypeRecord(24, worksiteId: 2).copy {
                 $0.id = 6
@@ -238,9 +238,9 @@ class WorksiteWorkTypeTests: XCTestCase {
             testWorksiteRecord(2, 1, "address", updatedAtA),
         ]
         existingWorksites = try await insertWorksites(existingWorksites, previousSyncedAt)
-        try await WorksiteTestUtil.setModifiedAt(dbQueue!, 2, updatedAtA)
+        try await WorksiteTestUtil.setModifiedAt(dbQueue, 2, updatedAtA)
 
-        try await dbQueue!.write({ db in
+        try await dbQueue.write({ db in
             for workType in [
                 testWorkTypeRecord(1, workType: "work-type-a", worksiteId: 1),
                 testWorkTypeRecord(11, workType: "work-type-b", worksiteId: 1),
@@ -292,12 +292,12 @@ class WorksiteWorkTypeTests: XCTestCase {
         ]
         // Sync new and existing
         let syncedAt = previousSyncedAt.addingTimeInterval(499_999.seconds)
-        try await worksiteDao!.syncWorksites(syncingWorksites, syncingWorkTypes, syncedAt)
+        try await worksiteDao.syncWorksites(syncingWorksites, syncingWorkTypes, syncedAt)
 
         // Assert
 
         // Worksite synced
-        var actual = try worksiteDao!.getWorksite(1)!
+        var actual = try worksiteDao.getWorksite(1)!
         XCTAssertEqual(
             existingWorksites[0].copy {
                 $0.address = "sync-address"
@@ -319,7 +319,7 @@ class WorksiteWorkTypeTests: XCTestCase {
         XCTAssertEqual(expectedWorkTypes, actual.workTypes)
 
         // Worksite not synced
-        actual = try worksiteDao!.getWorksite(2)!
+        actual = try worksiteDao.getWorksite(2)!
         expectedWorkTypes = [
             testWorkTypeRecord(22, workType: "work-type-a", worksiteId: 2).copy { $0.id = 3 },
             testWorkTypeRecord(24, workType: "work-type-b", worksiteId: 2).copy { $0.id = 4 },

@@ -89,6 +89,68 @@ extension WorksiteChangeRecord: Codable, FetchableRecord, MutablePersistableReco
             .filter(Columns.worksiteId == worksiteId)
             .fetchCount(db)
     }
+
+    static func updateSyncAttempt(
+        _ db: Database,
+        _ id: Int64,
+        _ savedAt: Date = Date.now
+    ) throws {
+        try db.execute(
+            sql:
+            """
+            UPDATE worksiteChange
+            SET saveAttempt     =saveAttempt+1,
+                saveAttemptAt   =:attemptAt
+            WHERE id=:id
+            """,
+            arguments: [
+                "id": id,
+                "attemptAt": savedAt
+            ]
+        )
+    }
+
+    static func updateAction(
+        _ db: Database,
+        _ id: Int64,
+        _ action: String,
+        _ savedAt: Date = Date.now
+    ) throws {
+        try db.execute(
+            sql:
+            """
+            UPDATE worksiteChange
+            SET archiveAction   =:action,
+                saveAttempt     =saveAttempt+1,
+                saveAttemptAt   =:attemptAt
+            WHERE id=:id
+            """,
+            arguments: [
+                "id": id,
+                "action": action,
+                "attemptAt": savedAt
+            ]
+        )
+    }
+
+    static func getOrdered(
+        _ db: Database,
+        _ worksiteId: Int64
+    ) throws -> [WorksiteChangeRecord] {
+        try WorksiteChangeRecord
+            .filter(Columns.worksiteId == worksiteId)
+            .order(Columns.createdAt)
+            .fetchAll(db)
+    }
+
+    static func delete(
+        _ db: Database,
+        _ deleteIds: Set<Int64>
+    ) throws {
+        try WorksiteChangeRecord
+            .filter(deleteIds.contains(Columns.id))
+            .deleteAll(db)
+    }
 }
 
 private typealias ChangeColumns = WorksiteChangeRecord.Columns

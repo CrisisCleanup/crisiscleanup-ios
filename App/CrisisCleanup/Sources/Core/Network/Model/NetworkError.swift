@@ -1,5 +1,22 @@
-struct ExpiredTokenError: Error {
-    let message = "Auth token is expired"
+let ExpiredTokenError = GenericError("Auth token is expired")
+
+// TODO: Integrate into network layer for use by syncing pipeline
+class CrisisCleanupNetworkError: GenericError {
+    let url: String
+    let statusCode: Int
+    let errors: [NetworkCrisisCleanupApiError]
+
+    init(
+        message: String,
+        url: String,
+        statusCode: Int,
+        errors: [NetworkCrisisCleanupApiError]
+    ) {
+        self.url = url
+        self.statusCode = statusCode
+        self.errors = errors
+        super.init(message)
+    }
 }
 
 public struct NetworkCrisisCleanupApiError: Codable, Equatable {
@@ -29,9 +46,7 @@ extension Array where Element == NetworkCrisisCleanupApiError {
     func tryThrowException() throws {
         if isNotEmpty {
             let isExpiredToken = first { $0.isExpiredToken } != nil
-            let error: Error = isExpiredToken ? ExpiredTokenError()
-            : GenericError(condenseMessages)
-            throw error
+            throw isExpiredToken ? ExpiredTokenError : GenericError(condenseMessages)
         }
     }
 

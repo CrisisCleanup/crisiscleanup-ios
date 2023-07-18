@@ -52,12 +52,12 @@ extension WorksiteSyncStatRecord: Codable, FetchableRecord, PersistableRecord {
             sql: """
                 UPDATE OR IGNORE worksiteSyncStat
                 SET pagedCount=:pagedCount
-                WHERE id=:incidentId AND syncStart=:syncStart
+                WHERE id=:id AND syncStart=:syncStart
                 """,
             arguments: [
-                Columns.pagedCount.rawValue: pagedCount,
-                Columns.id.rawValue: incidentId,
-                Columns.syncStart.rawValue: syncStart
+                "pagedCount": pagedCount,
+                "id": incidentId,
+                "syncStart": syncStart
             ]
         )
     }
@@ -84,13 +84,13 @@ extension WorksiteSyncStatRecord: Codable, FetchableRecord, PersistableRecord {
             WHERE id=:id AND syncStart=:syncStart
             """,
             arguments: [
-                Columns.pagedCount.rawValue: pagedCount,
-                Columns.successfulSync.rawValue: successfulSync,
-                Columns.attemptedSync.rawValue: attemptedSync,
-                Columns.attemptedCounter.rawValue: attemptedCounter,
-                Columns.appBuildVersionCode.rawValue: appBuildVersionCode,
-                Columns.id.rawValue: incidentId,
-                Columns.syncStart.rawValue: syncStart
+                "pagedCount": pagedCount,
+                "successfulSync": successfulSync,
+                "attemptedSync": attemptedSync,
+                "attemptedCounter": attemptedCounter,
+                "appBuildVersionCode": appBuildVersionCode,
+                "id": incidentId,
+                "syncStart": syncStart
             ]
         )
     }

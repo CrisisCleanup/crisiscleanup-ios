@@ -9,8 +9,8 @@ class WorksiteRootRecordTests: XCTestCase {
     private var createdAtA: Date = Date.now
     private var updatedAtA: Date = Date.now
 
-    private var dbQueue: DatabaseQueue? = nil
-    private var appDb: AppDatabase? = nil
+    private var dbQueue: DatabaseQueue!
+    private var appDb: AppDatabase!
 
     override func setUp() async throws {
         previousSyncedAt = now.addingTimeInterval(-999_999.0.seconds)
@@ -21,7 +21,7 @@ class WorksiteRootRecordTests: XCTestCase {
         dbQueue = initialized.0
         appDb = initialized.1
 
-        try await dbQueue!.write { db in
+        try await dbQueue.write { db in
             for incident in WorksiteTestUtil.testIncidents {
                 try incident.upsert(db)
             }
@@ -29,11 +29,11 @@ class WorksiteRootRecordTests: XCTestCase {
     }
 
     func testWorksiteRootSyncUpdate() async throws {
-        let worksiteId = try await dbQueue!.write({ db in
+        let worksiteId = try await dbQueue.write({ db in
             try WorksiteRootRecord.insertOrRollback(db, self.previousSyncedAt, 41, 1)
         })
 
-        let inserted = try await dbQueue!.write({ db in
+        let inserted = try await dbQueue.write({ db in
             try WorksiteRootRecord
                 .all()
                 .filter(id: worksiteId)
@@ -42,7 +42,7 @@ class WorksiteRootRecordTests: XCTestCase {
         XCTAssertEqual(41, inserted.networkId)
         XCTAssertEqual(1, inserted.incidentId)
 
-        try await dbQueue!.write({ db in
+        try await dbQueue.write({ db in
             do {
                 try WorksiteRootRecord.syncUpdate(
                     db,
@@ -60,7 +60,7 @@ class WorksiteRootRecordTests: XCTestCase {
             }
         })
 
-        let fetchedA = try await dbQueue!.write({ db in
+        let fetchedA = try await dbQueue.write({ db in
             let root = try WorksiteRootRecord
                 .all()
                 .filter(id: worksiteId)
@@ -74,7 +74,7 @@ class WorksiteRootRecordTests: XCTestCase {
         XCTAssertEqual(inserted, fetchedA.0)
         XCTAssertEqual(nil, fetchedA.1)
 
-        try await dbQueue!.write({ db in
+        try await dbQueue.write({ db in
             try WorksiteRootRecord.syncUpdate(
                 db,
                 id: worksiteId,
@@ -88,7 +88,7 @@ class WorksiteRootRecordTests: XCTestCase {
                 .copy { $0.id = worksiteId }
             _ = try worksite.insertAndFetch(db)
         })
-        let fetchedB = try await dbQueue!.write({ db in
+        let fetchedB = try await dbQueue.write({ db in
             let root = try WorksiteRootRecord
                 .all()
                 .filter(id: worksiteId)

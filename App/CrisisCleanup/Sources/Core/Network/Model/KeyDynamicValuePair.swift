@@ -6,6 +6,14 @@ public struct KeyDynamicValuePair: Codable, Equatable {
         case key = "field_key"
         case value = "field_value"
     }
+
+    init(
+        _ key: String,
+        _ value: DynamicValue
+    ) {
+        self.key = key
+        self.value = value
+    }
 }
 
 public struct DynamicValue: Codable, Equatable {
@@ -20,6 +28,18 @@ public struct DynamicValue: Codable, Equatable {
     ) {
         self.valueString = valueString
         self.isBool = isBool
+        self.valueBool = valueBool
+    }
+
+    init(_ valueString: String) {
+        self.valueString = valueString
+        isBool = false
+        valueBool = false
+    }
+
+    init(_ valueBool: Bool) {
+        self.valueString = ""
+        isBool = true
         self.valueBool = valueBool
     }
 
@@ -43,11 +63,11 @@ public struct DynamicValue: Codable, Equatable {
 
     var isBoolTrue: Bool { isBool && valueBool }
 
-    func isBoolEqual(other: DynamicValue) -> Bool {
+    func isBoolEqual(_ other: DynamicValue) -> Bool {
         isBool && other.isBool && valueBool == other.valueBool
     }
 
-    func isStringEqual(other: DynamicValue) -> Bool {
+    func isStringEqual(_ other: DynamicValue) -> Bool {
         !isBool && !other.isBool && valueString.trim() == other.valueString.trim()
     }
 }

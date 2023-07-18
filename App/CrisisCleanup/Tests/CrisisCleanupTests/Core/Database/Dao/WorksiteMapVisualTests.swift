@@ -11,9 +11,9 @@ class WorksiteMapVisualTests: XCTestCase {
     private var createdAtA: Date = Date.now
     private var updatedAtA: Date = Date.now
 
-    private var dbQueue: DatabaseQueue? = nil
-    private var appDb: AppDatabase? = nil
-    private var worksiteDao: WorksiteDao? = nil
+    private var dbQueue: DatabaseQueue!
+    private var appDb: AppDatabase!
+    private var worksiteDao: WorksiteDao!
 
     override func setUp() async throws {
         previousSyncedAt = now.addingTimeInterval(-9999.seconds)
@@ -23,9 +23,9 @@ class WorksiteMapVisualTests: XCTestCase {
         let initialized = try initializeTestDb()
         dbQueue = initialized.0
         appDb = initialized.1
-        worksiteDao = WorksiteDao(appDb!, WorksiteTestUtil.silentSyncLogger)
+        worksiteDao = WorksiteDao(appDb, WorksiteTestUtil.silentSyncLogger)
 
-        try await dbQueue!.write { db in
+        try await dbQueue.write { db in
             for incident in WorksiteTestUtil.testIncidents {
                 try incident.upsert(db)
             }
@@ -62,9 +62,9 @@ class WorksiteMapVisualTests: XCTestCase {
             updatedAt: updatedAtA,
             isLocalFavorite: false
         )
-        _ = try await WorksiteTestUtil.insertWorksites(dbQueue!, now, [worksite])
+        _ = try await WorksiteTestUtil.insertWorksites(dbQueue, now, [worksite])
 
-        try await dbQueue!.write({ db in
+        try await dbQueue.write({ db in
             for workType in [
                 testWorkTypeRecord(1, workType: "work-type-a", worksiteId: 1),
                 testWorkTypeRecord(11, workType: "work-type-b", worksiteId: 1),
@@ -82,7 +82,7 @@ class WorksiteMapVisualTests: XCTestCase {
             }
         })
 
-        let actual = try worksiteDao!.getWorksitesMapVisual(
+        let actual = try worksiteDao.getWorksitesMapVisual(
             1,
             south: -90,
             north: 90,

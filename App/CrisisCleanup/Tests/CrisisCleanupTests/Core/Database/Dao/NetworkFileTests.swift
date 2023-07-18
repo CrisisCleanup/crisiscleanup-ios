@@ -7,16 +7,16 @@ class NetworkFileTests: XCTestCase {
     private var now: Date = dateNowRoundedSeconds
     private var epoch0 = Date(timeIntervalSince1970: 0)
 
-    private var dbQueue: DatabaseQueue? = nil
-    private var appDb: AppDatabase? = nil
-    private var worksiteDao: WorksiteDao? = nil
+    private var dbQueue: DatabaseQueue!
+    private var appDb: AppDatabase!
+    private var worksiteDao: WorksiteDao!
 
     override func setUp() async throws {
         let initialized = try initializeTestDb()
         dbQueue = initialized.0
         appDb = initialized.1
 
-        try await dbQueue!.write { db in
+        try await dbQueue.write { db in
             for incident in WorksiteTestUtil.testIncidents {
                 try incident.upsert(db)
             }
@@ -28,7 +28,7 @@ class NetworkFileTests: XCTestCase {
         _ syncedAt: Date
     ) async throws -> [WorksiteRecord] {
         try await WorksiteTestUtil.insertWorksites(
-            dbQueue!,
+            dbQueue,
             syncedAt,
             worksites
         )
@@ -92,7 +92,7 @@ class NetworkFileTests: XCTestCase {
             networkFileLocalImage(3, true),
         ]
 
-        try await dbQueue!.write{ db in
+        try await dbQueue.write{ db in
             for record in networkFiles {
                 try record.insert(db)
             }
@@ -105,7 +105,7 @@ class NetworkFileTests: XCTestCase {
         }
 
         func getFileIds() async throws -> [[Int64]] {
-            try await dbQueue!.read { db in
+            try await dbQueue.read { db in
                 let fileIds = try NetworkFileRecord
                     .select(NetworkFileRecord.Columns.id)
                     .asRequest(of: Int64.self)
@@ -128,7 +128,7 @@ class NetworkFileTests: XCTestCase {
             }
         }
 
-        try await dbQueue!.write { db in
+        try await dbQueue.write { db in
             try NetworkFileRecord.deleteDeleted(
                 db, worksiteIdC, Set([1, 2, 3, 4, 5, 6, 7, 8])
             )
@@ -140,7 +140,7 @@ class NetworkFileTests: XCTestCase {
             actualNotDeleted.map { $0.count }
         )
 
-        try await dbQueue!.write { db in
+        try await dbQueue.write { db in
             try NetworkFileRecord.deleteDeleted(
                 db, worksiteIdB, Set([3, 4, 6, 7, 8])
             )

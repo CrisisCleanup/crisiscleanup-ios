@@ -55,6 +55,15 @@ class AFNetworkingClient {
         }
         return result
     }
+
+    func callbackContinue(_ convertible: URLRequestConvertible) async -> DataResponse<Data?, AFError> {
+        let result = await withCheckedContinuation { continuation in
+            request(convertible).response(completionHandler: { response in
+                continuation.resume(returning: response)
+            })
+        }
+        return result
+    }
 }
 
 private class LogEventMonitor : EventMonitor {

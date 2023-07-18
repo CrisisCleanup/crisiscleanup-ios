@@ -92,4 +92,27 @@ extension WorkTypeRequestRecord: Codable, FetchableRecord, MutablePersistableRec
             )
             .deleteAll(db)
     }
+
+    static func updateNetworkId(
+        _ db: Database,
+        _ worksiteId: Int64,
+        _ workType: String,
+        _ orgId: Int64,
+        _ networkId: Int64
+    ) throws {
+        try db.execute(
+            sql:
+                """
+                UPDATE OR IGNORE worksiteWorkTypeRequest
+                SET networkId =:networkId
+                WHERE worksiteId=:worksiteId AND workType=:workType AND byOrg=:orgId
+                """,
+            arguments: [
+                "worksiteId": worksiteId,
+                "workType": workType,
+                "orgId": orgId,
+                "networkId": networkId
+            ]
+        )
+    }
 }

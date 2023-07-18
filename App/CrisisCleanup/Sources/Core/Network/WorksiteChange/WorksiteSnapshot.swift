@@ -1,6 +1,6 @@
 import Foundation
 
-struct WorksiteSnapshot: Codable {
+struct WorksiteSnapshot: Codable, Equatable {
     let core: CoreSnapshot
     let flags: [FlagSnapshot]
     let notes: [NoteSnapshot]
@@ -19,10 +19,10 @@ struct WorksiteSnapshot: Codable {
                 return (
                     entry.localId,
                     NetworkNote(
-                        id: nil,
-                        createdAt: n.createdAt,
-                        isSurvivor: n.isSurvivor,
-                        note: n.note
+                        nil,
+                        n.createdAt,
+                        n.isSurvivor,
+                        n.note
                     )
                 )
             }
@@ -48,7 +48,8 @@ struct WorksiteSnapshot: Codable {
     }
 }
 
-struct CoreSnapshot: Codable {
+// sourcery: copyBuilder
+struct CoreSnapshot: Codable, Equatable {
     let id: Int64
     let address: String
     let autoContactFrequencyT: String
@@ -79,10 +80,7 @@ struct CoreSnapshot: Codable {
 
     func networkFormData() -> [KeyDynamicValuePair] {
         formData.map {
-            KeyDynamicValuePair(
-                key: $0.key,
-                value: $0.value
-            )
+            KeyDynamicValuePair($0.key, $0.value)
         }
     }
 
@@ -94,11 +92,13 @@ struct CoreSnapshot: Codable {
     }
 }
 
-struct FlagSnapshot: Codable {
+// sourcery: copyBuilder
+struct FlagSnapshot: Codable, Equatable {
     let localId: Int64
     let flag: Flag
 
-    struct Flag: Codable {
+    // sourcery: copyBuilder
+    struct Flag: Codable, Equatable {
         let id: Int64
         let action: String
         let createdAt: Date
@@ -123,11 +123,11 @@ struct FlagSnapshot: Codable {
     }
 }
 
-struct NoteSnapshot: Codable {
+struct NoteSnapshot: Codable, Equatable {
     let localId: Int64
     let note: Note
 
-    struct Note: Codable {
+    struct Note: Codable, Equatable {
         let id: Int64
         let createdAt: Date
         let isSurvivor: Bool
@@ -135,11 +135,13 @@ struct NoteSnapshot: Codable {
     }
 }
 
-struct WorkTypeSnapshot: Codable {
+// sourcery: copyBuilder
+struct WorkTypeSnapshot: Codable, Equatable {
     let localId: Int64
     let workType: WorkType
 
-    struct WorkType: Codable {
+    // sourcery: copyBuilder, skipCopyInit
+    struct WorkType: Codable, Equatable {
         let id: Int64
         let createdAt: Date?
         let orgClaim: Int64?
@@ -190,7 +192,8 @@ struct WorkTypeSnapshot: Codable {
     }
 }
 
-struct WorkTypeChange: Codable {
+// sourcery: copyBuilder
+struct WorkTypeChange: Codable, Equatable {
     let localId: Int64
     let networkId: Int64
     let workType: WorkTypeSnapshot.WorkType

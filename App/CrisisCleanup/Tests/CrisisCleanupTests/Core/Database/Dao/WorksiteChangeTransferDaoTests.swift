@@ -8,9 +8,9 @@ class WorksiteChangeTransferDaoTests: XCTestCase {
     private var createdAtA = Date.now
     private var updatedAtA = Date.now
 
-    private var dbQueue: DatabaseQueue? = nil
-    private var appDb: AppDatabase? = nil
-    private var worksiteChangeDao: WorksiteChangeDao? = nil
+    private var dbQueue: DatabaseQueue!
+    private var appDb: AppDatabase!
+    private var worksiteChangeDao: WorksiteChangeDao!
 
     private var testIncidentId: Int64 = 0
 
@@ -18,7 +18,7 @@ class WorksiteChangeTransferDaoTests: XCTestCase {
     private var changeSerializer: WorksiteChangeSerializerMock!
 
     private func insertWorksite(_ worksite: Worksite) async throws -> EditWorksiteRecords {
-        try await WorksiteChangeDaoTests.insertWorksite(dbQueue!, uuidGenerator, now, worksite)
+        try await WorksiteChangeDaoTests.insertWorksite(dbQueue, uuidGenerator, now, worksite)
     }
 
     private func makeTestWorksite() -> Worksite {
@@ -97,14 +97,14 @@ class WorksiteChangeTransferDaoTests: XCTestCase {
         uuidGenerator = TestUuidGenerator()
         changeSerializer = .init()
         worksiteChangeDao = WorksiteChangeDao(
-            appDb!,
+            appDb,
             uuidGenerator: uuidGenerator,
             changeSerializer: changeSerializer,
             appVersionProvider: WorksiteTestUtil.testAppVersionProvider,
             syncLogger: WorksiteTestUtil.silentSyncLogger
         )
 
-        try await dbQueue!.write { db in
+        try await dbQueue.write { db in
             for incident in WorksiteTestUtil.testIncidents {
                 try incident.upsert(db)
             }
@@ -113,7 +113,7 @@ class WorksiteChangeTransferDaoTests: XCTestCase {
 
         let testWorksite = self.makeTestWorksite()
         _ = try await insertWorksite(testWorksite)
-        try await dbQueue!.write { db in
+        try await dbQueue.write { db in
             var flagRecord = WorksiteFlagRecord(
                 id: 5,
                 networkId: 55,
@@ -171,7 +171,7 @@ class WorksiteChangeTransferDaoTests: XCTestCase {
             ["work-type-a", "work-type-c", "work-type-none"]
         )
 
-        let requestCount = try dbQueue!.getWorkTypeRequestCount()
+        let requestCount = try dbQueue.getWorkTypeRequestCount()
         XCTAssertEqual(0, requestCount)
 
         XCTAssertEqual(0, changeSerializer.serializeCallsCount)
@@ -219,10 +219,10 @@ class WorksiteChangeTransferDaoTests: XCTestCase {
                 createdAt: saveDate
             ),
         ]
-        let actual = try dbQueue!.selectWorkTypeRequests()
+        let actual = try dbQueue.selectWorkTypeRequests()
         XCTAssertEqual(expected, actual)
 
-        let actualChanges = try dbQueue!.selectWorksiteChanges(testWorksite.id)
+        let actualChanges = try dbQueue.selectWorksiteChanges(testWorksite.id)
         let expectedWorksiteChange = WorksiteChangeRecord(
             id: 1,
             appVersion: 81,
@@ -252,7 +252,7 @@ class WorksiteChangeTransferDaoTests: XCTestCase {
             ["work-type-a", "work-type-c", "work-type-none"]
         )
 
-        let requestCount = try dbQueue!.getWorkTypeRequestCount()
+        let requestCount = try dbQueue.getWorkTypeRequestCount()
         XCTAssertEqual(0, requestCount)
 
         XCTAssertEqual(0, changeSerializer.serializeCallsCount)
@@ -365,13 +365,13 @@ class WorksiteChangeTransferDaoTests: XCTestCase {
                 phase: 2
             ),
         ]
-        let actualWorkTypes = try dbQueue!.selectWorksiteWorkTypes(testWorksite.id)
+        let actualWorkTypes = try dbQueue.selectWorksiteWorkTypes(testWorksite.id)
             .sorted(by: { a, b in
                 a.workType.localizedCompare(b.workType) == .orderedAscending
             })
         XCTAssertEqual(expectedWorkTypes, actualWorkTypes)
 
-        let actualChanges = try dbQueue!.selectWorksiteChanges(testWorksite.id)
+        let actualChanges = try dbQueue.selectWorksiteChanges(testWorksite.id)
         let expectedWorksiteChange = WorksiteChangeRecord(
             id: 1,
             appVersion: 81,

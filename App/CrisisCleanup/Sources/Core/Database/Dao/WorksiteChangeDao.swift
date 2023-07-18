@@ -24,21 +24,30 @@ class WorksiteChangeDao {
         self.syncLogger = syncLogger
     }
 
-    func getOrdered(_ worksiteId: Int64) -> [WorksiteChangeRecord] {
-        // TODO: Do
-        return []
+    func getOrdered(_ worksiteId: Int64) throws -> [WorksiteChangeRecord] {
+        try reader.read { db in try WorksiteChangeRecord.getOrdered(db, worksiteId) }
     }
 
-    func updateSyncIds(worksiteId: Int64, organizationId: Int64, ids: WorksiteSyncResult.ChangeIds) {
-        // TODO: Do
+    func updateSyncIds(
+        worksiteId: Int64,
+        organizationId: Int64,
+        ids: WorksiteSyncResult.ChangeIds
+    ) async throws {
+        try await database.updateSyncedWorksiteIds(
+            worksiteId: worksiteId,
+            organizationId: organizationId,
+            ids: ids
+        )
     }
 
     func updateSyncChanges(
         worksiteId: Int64,
         changeResults: [WorksiteSyncResult.ChangeResult],
         maxSyncAttempts: Int = 3
-    ) {
-        // TODO: Do
+    ) async throws {
+        try await database.updateSyncChangeResults(changeResults)
+
+        try await database.deleteSuccessfulSyncedChanges(worksiteId, maxSyncAttempts)
     }
 
     func saveChange(
@@ -100,7 +109,7 @@ class WorksiteChangeDao {
             "request",
             localModifiedAt
         ) { db, workTypeLookup, idMappingProvider in
-            let requestRecords = requests.map {
+            let requestRecords = requests.compactMap {
                 if let workType = workTypeLookup[$0] {
                     return workType.orgClaim == nil
                     ? nil
@@ -115,8 +124,6 @@ class WorksiteChangeDao {
                 }
                 return nil
             }
-                .filter { $0 != nil }
-                .map { $0! }
 
             if requestRecords.isNotEmpty {
                 for record in requestRecords {
@@ -433,7 +440,7 @@ extension AppDatabase {
                     try WorksiteFlagRecord.deleteUnspecified(
                         db,
                         worksiteId,
-                        Set(flags.filter { $0.id != nil }.map { $0.id! })
+                        Set(flags.compactMap { $0.id })
                     )
                     try WorksiteFormDataRecord.deleteUnspecifiedKeys(
                         db,
@@ -458,12 +465,11 @@ extension AppDatabase {
                         insertIds.append(record.id!)
                     }
                     let unsyncedLookup = inserts.enumerated()
-                        .map { (index, f) in
+                        .compactMap { (index, f) in
                             let id = insertIds[index]
                             return id > 0 ? (f.reasonT, id) : nil
                         }
-                        .filter { $0 != nil}
-                        .associate { ($0!.0, $0!.1) }
+                        .associate { $0 }
                     if unsyncedLookup.isNotEmpty {
                         if let updatedFlags = worksiteUpdatedIds.flags {
                             let updatedIds = updatedFlags.map { f in
@@ -521,12 +527,11 @@ extension AppDatabase {
                         insertIds.append(record.id!)
                     }
                     let unsyncedLookup = inserts.enumerated()
-                        .map { (index, w) in
+                        .compactMap { (index, w) in
                             let id = insertIds[index]
                             return id > 0 ? (w.workType, id) : nil
                         }
-                        .filter { $0 != nil}
-                        .associate { ($0!.0, $0!.1) }
+                        .associate { $0 }
                     if unsyncedLookup.isNotEmpty {
                         let updatedIds = worksiteUpdatedIds.workTypes.map { w in
                             let localId = unsyncedLookup[w.workTypeLiteral]
@@ -574,6 +579,96 @@ extension AppDatabase {
                 defer { syncLogger.flush() }
                 let idMappingProvider = { try getLocalNetworkIdMap(db, worksite) }
                 try saveBlock(db, workTypeLookup, idMappingProvider)
+            }
+        }
+    }
+
+    fileprivate func updateSyncChangeResults(_ changeResults: [WorksiteSyncResult.ChangeResult]) async throws {
+        try await dbWriter.write { db in
+            for result in changeResults {
+                if result.isFail {
+                    try WorksiteChangeRecord.updateSyncAttempt(db, result.id)
+                } else if result.isSuccessful || result.isPartiallySuccessful {
+                    let action: WorksiteChangeArchiveAction = result.isSuccessful ? .synced : .partiallySynced
+                    try WorksiteChangeRecord.updateAction(db, result.id, action.literal)
+                }
+            }
+        }
+    }
+
+    fileprivate func deleteSuccessfulSyncedChanges(
+        _ worksiteId: Int64,
+        _ maxSyncAttempts: Int
+    ) async throws {
+        try await dbWriter.write { db in
+            let syncChanges = try WorksiteChangeRecord.getOrdered(db, worksiteId)
+                .map { $0.asExternalModel(maxSyncAttempts) }
+            if syncChanges.isNotEmpty {
+                var deleteIds: Set<Int64> = []
+                if syncChanges.last!.isSynced {
+                    deleteIds = Set(syncChanges.map { $0.id })
+                } else {
+                    var lastSyncedIndex = syncChanges.count
+                    for index in stride(from: syncChanges.count-1, through: 0, by: -1 ) {
+                        if syncChanges[index].isSynced {
+                            lastSyncedIndex = index
+                            break
+                        }
+                    }
+
+                    if lastSyncedIndex < syncChanges.count {
+                        deleteIds = Set(
+                            Array(syncChanges[0..<lastSyncedIndex+1])
+                                .map { $0.id }
+                        )
+                    }
+                }
+
+                if !deleteIds.isEmpty {
+                    try WorksiteChangeRecord.delete(db, deleteIds)
+                }
+            }
+        }
+    }
+
+    fileprivate func updateSyncedWorksiteIds(
+        worksiteId: Int64,
+        organizationId: Int64,
+        ids: WorksiteSyncResult.ChangeIds
+    ) async throws {
+        try await dbWriter.write { db in
+            let networkId = ids.networkWorksiteId
+            if (networkId > 0) {
+                try WorksiteRootRecord.updateWorksiteNetworkId(
+                    db, worksiteId, ids.networkWorksiteId
+                )
+                try db.updateWorksiteNetworkId(worksiteId, ids.networkWorksiteId)
+            }
+
+            let flagIds = ids.flagIdMap.filter { $0.value > 0 }
+            for (key, value) in flagIds {
+                try WorksiteFlagRecord.updateNetworkId(db, key, value)
+            }
+
+            let noteIds = ids.noteIdMap.filter { $0.value > 0 }
+            for (key, value) in noteIds {
+                try WorksiteNoteRecord.updateNetworkId(db, key, value)
+            }
+
+            let workTypeIds = ids.workTypeIdMap.filter { $0.value > 0 }
+            for (key, value) in workTypeIds {
+                try WorkTypeRecord.updateNetworkId(db, key, value)
+            }
+            let workTypeKeyIds = ids.workTypeKeyMap.filter { $0.value > 0 }
+            for (key, value) in workTypeKeyIds {
+                try WorkTypeRecord.updateNetworkId(db, worksiteId, key, value)
+            }
+
+            let workTypeRequestIds = ids.workTypeRequestIdMap.filter { $0.value > 0 }
+            for (key, value) in workTypeRequestIds {
+                try WorkTypeRequestRecord.updateNetworkId(
+                    db, worksiteId, key, organizationId, value
+                )
             }
         }
     }

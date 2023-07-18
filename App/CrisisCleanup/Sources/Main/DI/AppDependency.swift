@@ -13,6 +13,7 @@ public protocol AppDependency: Dependency {
     var networkRequestProvider: NetworkRequestProvider { get }
     var authApi: CrisisCleanupAuthApi { get }
     var networkDataSource: CrisisCleanupNetworkDataSource { get }
+    var writeApi: CrisisCleanupWriteApi { get }
 
     var appPreferences: AppPreferencesDataStore { get }
 
@@ -78,6 +79,17 @@ extension MainComponent {
     public var networkDataSource: CrisisCleanupNetworkDataSource {
         shared {
             DataApiClient(
+                networkRequestProvider: networkRequestProvider,
+                accountDataRepository: accountDataRepository,
+                authApiClient: authApi,
+                authEventBus: authEventBus,
+                appEnv: appEnv
+            )
+        }
+    }
+    public var writeApi: CrisisCleanupWriteApi {
+        shared {
+            WriteApiClient(
                 networkRequestProvider: networkRequestProvider,
                 accountDataRepository: accountDataRepository,
                 authApiClient: authApi,

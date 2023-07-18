@@ -12,9 +12,9 @@ class WorksiteChangeDaoTests: XCTestCase {
     private var updatedAtB = Date.now
     private var createdAtC = Date.now
 
-    private var dbQueue: DatabaseQueue? = nil
-    private var appDb: AppDatabase? = nil
-    private var worksiteChangeDao: WorksiteChangeDao? = nil
+    private var dbQueue: DatabaseQueue!
+    private var appDb: AppDatabase!
+    private var worksiteChangeDao: WorksiteChangeDao!
 
     private var testIncidentId: Int64 = 0
 
@@ -34,14 +34,14 @@ class WorksiteChangeDaoTests: XCTestCase {
         uuidGenerator = TestUuidGenerator()
         changeSerializer = .init()
         worksiteChangeDao = WorksiteChangeDao(
-            appDb!,
+            appDb,
             uuidGenerator: uuidGenerator,
             changeSerializer: changeSerializer,
             appVersionProvider: WorksiteTestUtil.testAppVersionProvider,
             syncLogger: WorksiteTestUtil.silentSyncLogger
         )
 
-        try await dbQueue!.write { db in
+        try await dbQueue.write { db in
             for incident in WorksiteTestUtil.testIncidents {
                 try incident.upsert(db)
             }
@@ -279,7 +279,7 @@ class WorksiteChangeDaoTests: XCTestCase {
     }
 
     private func insertWorksite(_ worksite: Worksite) async throws -> EditWorksiteRecords {
-        try await WorksiteChangeDaoTests.insertWorksite(dbQueue!, uuidGenerator, now, worksite)
+        try await WorksiteChangeDaoTests.insertWorksite(dbQueue, uuidGenerator, now, worksite)
     }
 
     private func expectedFormData(
@@ -315,7 +315,7 @@ class WorksiteChangeDaoTests: XCTestCase {
 
         let worksiteEntity = entityData.core
         let worksiteId = worksiteEntity.id!
-        let actualWorksite = try await dbQueue!.read { db in
+        let actualWorksite = try await dbQueue.read { db in
             try WorksiteRecord
                 .filter(id: worksiteId)
                 .fetchOne(db)
@@ -331,12 +331,12 @@ class WorksiteChangeDaoTests: XCTestCase {
             }
             return flag
         }
-        let actualFlags = try dbQueue!.selectWorksiteFlags(worksiteId)
+        let actualFlags = try dbQueue.selectWorksiteFlags(worksiteId)
         XCTAssertEqual(expectedFlags, actualFlags)
 
         entityIndex = 1
         let expectedFormData = expectedFormData(entityData.formData)
-        let actualFormData = try dbQueue!.selectWorksiteFormData(worksiteId)
+        let actualFormData = try dbQueue.selectWorksiteFormData(worksiteId)
         XCTAssertEqual(expectedFormData, actualFormData)
 
         entityIndex = 1
@@ -348,7 +348,7 @@ class WorksiteChangeDaoTests: XCTestCase {
             }
             return note
         }
-        let actualNotes = try dbQueue!.selectWorksiteNotes(worksiteId)
+        let actualNotes = try dbQueue.selectWorksiteNotes(worksiteId)
             .sorted(by: { a, b in a.id! < b.id! })
         XCTAssertEqual(expectedNotes, actualNotes)
 
@@ -361,7 +361,7 @@ class WorksiteChangeDaoTests: XCTestCase {
             }
             return workType
         }
-        let actualWorkTypes = try dbQueue!.selectWorksiteWorkTypes(worksiteId)
+        let actualWorkTypes = try dbQueue.selectWorksiteWorkTypes(worksiteId)
         XCTAssertEqual(expectedWorkTypes, actualWorkTypes)
 
         XCTAssertFalse(changeSerializer.serializeCalled)
@@ -415,7 +415,7 @@ class WorksiteChangeDaoTests: XCTestCase {
         let worksiteRecord = records.core.copy { $0.id = 1 }
         let worksiteId = worksiteRecord.id!
 
-        let actualRoot = try dbQueue!.selectWorksiteRoot(worksiteId)
+        let actualRoot = try dbQueue.selectWorksiteRoot(worksiteId)
         let expectedRoot = WorksiteRootRecord(
             id: 1,
             syncUuid: "uuid-5",
@@ -429,7 +429,7 @@ class WorksiteChangeDaoTests: XCTestCase {
         )
         XCTAssertEqual(expectedRoot, actualRoot)
 
-        let actualWorksite = try dbQueue!.selectWorksite(worksiteId)
+        let actualWorksite = try dbQueue.selectWorksite(worksiteId)
         XCTAssertEqual(worksiteRecord, actualWorksite)
 
         var recordIndex: Int64 = 1
@@ -441,12 +441,12 @@ class WorksiteChangeDaoTests: XCTestCase {
                 $0.worksiteId = 1
             }
         }
-        let actualFlags = try dbQueue!.selectWorksiteFlags(worksiteId)
+        let actualFlags = try dbQueue.selectWorksiteFlags(worksiteId)
         XCTAssertEqual(expectedFlags, actualFlags)
 
         recordIndex = 1
         let expectedFormData = expectedFormData(records.formData, worksiteId: 1)
-        let actualFormData = try dbQueue!.selectWorksiteFormData(worksiteId)
+        let actualFormData = try dbQueue.selectWorksiteFormData(worksiteId)
         XCTAssertEqual(expectedFormData, actualFormData)
 
         recordIndex = 1
@@ -460,7 +460,7 @@ class WorksiteChangeDaoTests: XCTestCase {
                 localGlobalIndex += 1
             }
         }
-        let actualNotes = try dbQueue!.selectWorksiteNotes(worksiteId)
+        let actualNotes = try dbQueue.selectWorksiteNotes(worksiteId)
             .sorted(by: { a, b in a.createdAt < b.createdAt })
         XCTAssertEqual(expectedNotes, actualNotes)
 
@@ -473,10 +473,10 @@ class WorksiteChangeDaoTests: XCTestCase {
                 $0.worksiteId = 1
             }
         }
-        let actualWorkTypes = try dbQueue!.selectWorksiteWorkTypes(worksiteId)
+        let actualWorkTypes = try dbQueue.selectWorksiteWorkTypes(worksiteId)
         XCTAssertEqual(expectedWorkTypes, actualWorkTypes)
 
-        let actualChanges = try dbQueue!.selectWorksiteChanges(worksiteId)
+        let actualChanges = try dbQueue.selectWorksiteChanges(worksiteId)
         let expectedWorksiteChange = WorksiteChangeRecord(
             id: 1,
             appVersion: 81,
@@ -492,7 +492,6 @@ class WorksiteChangeDaoTests: XCTestCase {
     }
 
     private func editWorksiteRecords(_ worksiteId: Int64) async throws -> EditWorksiteRecords {
-        let dbQueue = dbQueue!
         let savedWorksite = try dbQueue.selectWorksite(worksiteId)
         let flags = try dbQueue.selectWorksiteFlags(worksiteId)
         let formData = try dbQueue.selectWorksiteFormData(worksiteId)
@@ -514,7 +513,7 @@ class WorksiteChangeDaoTests: XCTestCase {
         worksiteLocalGlobalUuid: String = ""
     ) async throws -> EditWorksiteRecords {
         let core = records.core
-        try await dbQueue!.write { db in
+        try await dbQueue.write { db in
             _ = try WorksiteRootRecord(
                 id: core.id,
                 syncUuid: "sync-uuid",
@@ -731,7 +730,7 @@ class WorksiteChangeDaoTests: XCTestCase {
         let worksiteRecord = records.core
         let worksiteId = worksiteRecord.id!
 
-        let actualRoot = try dbQueue!.selectWorksiteRoot(worksiteId)
+        let actualRoot = try dbQueue.selectWorksiteRoot(worksiteId)
         let expectedRoot = WorksiteRootRecord(
             id: 56,
             syncUuid: "uuid-11",
@@ -745,7 +744,7 @@ class WorksiteChangeDaoTests: XCTestCase {
         )
         XCTAssertEqual(expectedRoot, actualRoot)
 
-        let actualWorksite = try dbQueue!.selectWorksite(worksiteId)
+        let actualWorksite = try dbQueue.selectWorksite(worksiteId)
         XCTAssertEqual(worksiteRecord, actualWorksite)
 
         func expectedFlagRecord(
@@ -772,7 +771,7 @@ class WorksiteChangeDaoTests: XCTestCase {
             expectedFlagRecord(11, 211, "reason-c"),
             expectedFlagRecord(34, -1, "reason-d"),
         ]
-        let actualFlags = try dbQueue!.selectWorksiteFlags(worksiteId)
+        let actualFlags = try dbQueue.selectWorksiteFlags(worksiteId)
             .sorted(by: { a, b in a.id! < b.id! })
         XCTAssertEqual(expectedFlags, actualFlags)
 
@@ -796,7 +795,7 @@ class WorksiteChangeDaoTests: XCTestCase {
             a.fieldKey.localizedCompare(b.fieldKey) == .orderedAscending
         })
         .map { f in f.copy { $0.worksiteId = 56 } }
-        let actualFormData = try dbQueue!.selectWorksiteFormData(worksiteId)
+        let actualFormData = try dbQueue.selectWorksiteFormData(worksiteId)
             .sorted(by: { a, b in
                 a.fieldKey.localizedCompare(b.fieldKey) == .orderedAscending
             })
@@ -833,7 +832,7 @@ class WorksiteChangeDaoTests: XCTestCase {
             expectedNote(65, -1, "note-c", createdAtC, "uuid-9"),
             expectedNote(66, -1, "note-d", createdAtC, "uuid-10"),
         ]
-        let actualNotes = try dbQueue!.selectWorksiteNotes(worksiteId)
+        let actualNotes = try dbQueue.selectWorksiteNotes(worksiteId)
             .sorted(by: { a, b in a.id! < b.id! })
         XCTAssertEqual(expectedNotes, actualNotes)
 
@@ -866,11 +865,11 @@ class WorksiteChangeDaoTests: XCTestCase {
             expectedWorkType(1, 301, "work-type-a", "status-a-change", nil, createdAt: createdAtA),
             expectedWorkType(58, -1, "work-type-d", "status-d"),
         ]
-        let actualWorkTypes = try dbQueue!.selectWorksiteWorkTypes(worksiteId)
+        let actualWorkTypes = try dbQueue.selectWorksiteWorkTypes(worksiteId)
             .sorted(by: { a, b in a.id! < b.id! })
         XCTAssertEqual(expectedWorkTypes, actualWorkTypes)
 
-        let actualChanges = try dbQueue!.selectWorksiteChanges(worksiteId)
+        let actualChanges = try dbQueue.selectWorksiteChanges(worksiteId)
         let expectedWorksiteChange = WorksiteChangeRecord(
             id: 1,
             appVersion: 81,
@@ -977,7 +976,7 @@ class WorksiteChangeDaoTests: XCTestCase {
         let worksiteRecord = records.core
         let worksiteId = worksiteRecord.id!
 
-        let actualRoot = try dbQueue!.selectWorksiteRoot(worksiteId)
+        let actualRoot = try dbQueue.selectWorksiteRoot(worksiteId)
         let expectedRoot = WorksiteRootRecord(
             id: 56,
             syncUuid: "uuid-7",
@@ -991,29 +990,29 @@ class WorksiteChangeDaoTests: XCTestCase {
         )
         XCTAssertEqual(expectedRoot, actualRoot)
 
-        let actualWorksite = try dbQueue!.selectWorksite(worksiteId)
+        let actualWorksite = try dbQueue.selectWorksite(worksiteId)
         XCTAssertEqual(worksiteRecord, actualWorksite)
 
-        let actualFlags = try dbQueue!.selectWorksiteFlags(worksiteId)
+        let actualFlags = try dbQueue.selectWorksiteFlags(worksiteId)
         XCTAssertEqual([WorksiteFlagRecord](), actualFlags)
 
         let expectedFormData = initialRecords.formData
             .map { f in f.copy { $0.worksiteId = 56 } }
-        let actualFormData = try dbQueue!.selectWorksiteFormData(worksiteId)
+        let actualFormData = try dbQueue.selectWorksiteFormData(worksiteId)
         XCTAssertEqual(expectedFormData, actualFormData)
 
         let expectedNotes = initialRecords.notes
-        let actualNotes = try dbQueue!.selectWorksiteNotes(worksiteId)
+        let actualNotes = try dbQueue.selectWorksiteNotes(worksiteId)
         XCTAssertEqual(expectedNotes, actualNotes)
 
         let expectedWorkTypes = initialRecords.workTypes
             .map { w in w.copy { $0.worksiteId = 56 } }
             .sorted { a, b in a.id! < b.id! }
-        let actualWorkTypes = try dbQueue!.selectWorksiteWorkTypes(worksiteId)
+        let actualWorkTypes = try dbQueue.selectWorksiteWorkTypes(worksiteId)
             .sorted { a, b in a.id! < b.id! }
         XCTAssertEqual(expectedWorkTypes, actualWorkTypes)
 
-        let actualChanges = try dbQueue!.selectWorksiteChanges(worksiteId)
+        let actualChanges = try dbQueue.selectWorksiteChanges(worksiteId)
         let expectedWorksiteChange = WorksiteChangeRecord(
             id: 1,
             appVersion: 81,
@@ -1036,7 +1035,7 @@ class WorksiteChangeDaoTests: XCTestCase {
             testWorksiteShortRecord(23, testIncidentId, createdAtA),
             testWorksiteShortRecord(18, testIncidentId, createdAtA),
         ]
-        let inserted = try await WorksiteTestUtil.insertWorksites(dbQueue!, now, worksites)
+        let inserted = try await WorksiteTestUtil.insertWorksites(dbQueue, now, worksites)
 
         let worksiteIdA = inserted[0].id!
         let worksiteIdB = inserted[1].id!
@@ -1061,7 +1060,7 @@ class WorksiteChangeDaoTests: XCTestCase {
         }
 
         func insertChanges(_ changes: [WorksiteChangeRecord]) async throws {
-            try await dbQueue!.write { db in
+            try await dbQueue.write { db in
                 for record in changes {
                     var record = record
                     try record.insert(db)
@@ -1239,43 +1238,19 @@ extension DatabaseQueue {
 }
 
 extension Database {
-    private func updateNetworkId(
-        _ tableName: String,
-        _ id: Int64,
-        _ networkId: Int64
-    ) throws {
-        try execute(
-            sql:
-                """
-                UPDATE \(tableName)
-                SET networkId = :networkId
-                WHERE id = :id
-                """,
-            arguments: [
-                "tableName": tableName,
-                "id": id,
-                "networkId": networkId,
-            ]
-        )
-    }
-
     internal func updateWorksiteFlagNetworkId(
         _ id: Int64,
         _ networkId: Int64
     ) throws {
-        try updateNetworkId("worksiteFlag", id, networkId)
+        try WorksiteFlagRecord.updateNetworkId(self, id, networkId)
     }
 
     internal func updateWorksiteNoteNetworkId(
         _ id: Int64,
         _ networkId: Int64
     ) throws {
-        try updateNetworkId("worksiteNote", id, networkId)
         if networkId > 0 {
-            try execute(
-                sql: "UPDATE worksiteNote SET localGlobalUuid = '' WHERE id=:id",
-                arguments: ["id": id]
-            )
+            try WorksiteNoteRecord.updateNetworkId(self, id, networkId)
         }
     }
 
@@ -1283,7 +1258,7 @@ extension Database {
         _ id: Int64,
         _ networkId: Int64
     ) throws {
-        try updateNetworkId("workType", id, networkId)
+        try WorkTypeRecord.updateNetworkId(self, id, networkId)
     }
 }
 
