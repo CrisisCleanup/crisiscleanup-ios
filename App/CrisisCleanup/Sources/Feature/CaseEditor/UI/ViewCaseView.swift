@@ -3,6 +3,8 @@
 import FlowStackLayout
 import MapKit
 import SwiftUI
+import PhotosUI
+import CachedAsyncImage
 
 struct ViewCaseView: View {
 
@@ -187,12 +189,124 @@ private struct ViewCaseInfo: View {
 
 private struct ViewCasePhotos: View {
     @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewModel: ViewCaseViewModel
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @State var photoDetents: Bool = false
+    @State var results: [PhotosPickerItem] = []
+    @State var testImages: [Image] = []
 
     var body: some View {
-        Button {
-            router.viewImage(imageId: 0)
-        } label: {
-            Text("Photos")
+        HStack {
+            VStack (alignment: .leading) {
+                Text(t.t("caseForm.before_photos"))
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack {
+                        ZStack {
+                            RoundedRectangle(cornerSize: CGSize(width: 2, height: 2))
+                                .fill(Color.blue.opacity(0.5))
+                                .frame(width: 200, height: 200)
+                                .overlay {
+                                    RoundedRectangle(cornerSize: CGSize(width: 2, height: 2))
+                                        .stroke(Color.blue, style: StrokeStyle(lineWidth: 2, dash: [5]))
+
+                                }
+
+                            VStack {
+                                Image(systemName: "plus")
+                                    .foregroundColor(Color.blue)
+                                Text("~~Add Media")
+                                    .foregroundColor(Color.blue)
+                            }
+                        }
+                        .onTapGesture {
+                            photoDetents.toggle()
+                        }
+                        .onChange(of: results) { _ in
+                            photoDetents = false
+                            Task {
+                                for result in results {
+                                    if let data = try? await result.loadTransferable(type: Data.self) {
+                                        if let uiImage = UIImage(data: data) {
+                                            testImages.append(Image(uiImage: uiImage))
+
+                                        }
+                                    } else {
+                                        print("failed")
+                                    }
+                                }
+
+                                results = []
+                            }
+                        }
+
+                        ForEach(0..<testImages.count, id: \.self) { imageIndex in
+                            testImages[imageIndex]
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 200)
+                                .cornerRadius(appTheme.cornerRadius)
+                        }
+                        Text(Array(viewModel.beforeAfterPhotos.keys).description)
+                        Text(Array(viewModel.beforeAfterPhotos.values).description)
+                        Text(viewModel.beforeAfterPhotos[.before]?.description ?? "none found")
+                        let beforeImages = viewModel.beforeAfterPhotos[.before] ?? []
+                        ForEach(beforeImages, id: \.id) { caseImage in
+                            CachedAsyncImage(url: URL(string: caseImage.thumbnailUri))
+
+                        }
+
+                    }
+                }
+
+                Text(t.t("caseForm.after_photos"))
+                ZStack {
+                    RoundedRectangle(cornerSize: CGSize(width: 2, height: 2))
+                        .fill(Color.blue.opacity(0.5))
+                        .frame(width: 200, height: 200)
+                        .overlay {
+                            RoundedRectangle(cornerSize: CGSize(width: 2, height: 2))
+                                .stroke(Color.blue, style: StrokeStyle(lineWidth: 2, dash: [5]))
+
+                        }
+
+                    VStack {
+                        Image(systemName: "plus")
+                            .foregroundColor(Color.blue)
+                        Text("~~Add Media")
+                            .foregroundColor(Color.blue)
+                    }
+                }
+                .onTapGesture {
+                    photoDetents.toggle()
+                }
+
+                Button {
+                    router.viewImage(imageId: 0)
+                } label: {
+                    Text("Photos")
+                }
+                Spacer()
+            }
+            .padding(.leading)
+            Spacer()
+
+        }
+        .sheet(isPresented: $photoDetents) {
+            ZStack {
+                VStack {
+                    Text(t.t("actions.take_photo"))
+                        .padding()
+                    PhotosPicker(selection: $results,
+                                 matching: .images,
+                                 photoLibrary: .shared()) {
+                        Text(t.t("fileUpload.select_file_upload"))
+                            .padding()
+                    }
+
+                }
+            }
+            .presentationDetents([.medium, .fraction(0.25)])
         }
     }
 }
