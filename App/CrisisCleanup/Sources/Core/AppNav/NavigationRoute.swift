@@ -12,7 +12,8 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
          caseHistory,
          caseWorkTypeTransfer,
          caseAddNote,
-         viewImage(imageId: Int64)
+         viewImage(imageId: Int64),
+         syncInsights
 
     public var id: Int {
         switch self {
@@ -30,6 +31,7 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
         case .viewImage:    return 12
         case .caseSearchLocation: return 13
         case .caseMoveOnMap: return 14
+        case .syncInsights: return 77
         }
     }
 }

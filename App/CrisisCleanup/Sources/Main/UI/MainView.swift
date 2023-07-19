@@ -21,6 +21,7 @@ struct MainView: View {
     let viewImageViewBuilder: ViewImageViewBuilder
     let caseSearchLocationViewBuilder: CaseSearchLocationViewBuilder
     let caseMoveOnMapViewBuilder: CaseMoveOnMapViewBuilder
+    let syncInsightsViewBuilder: SyncInsightsViewBuilder
 
     @State var showAuthScreen = false
 
@@ -72,7 +73,8 @@ struct MainView: View {
                                             transferWorkTypeViewBuilder: transferWorkTypeViewBuilder,
                                             viewImageViewBuilder: viewImageViewBuilder,
                                             caseSearchLocationViewBuilder: caseSearchLocationViewBuilder,
-                                            caseMoveOnMapViewBuilder: caseMoveOnMapViewBuilder
+                                            caseMoveOnMapViewBuilder: caseMoveOnMapViewBuilder,
+                                            syncInsightsViewBuilder: syncInsightsViewBuilder
                                         )
                                     }
                                     .toolbarColorScheme(.light, for: .tabBar)
@@ -151,6 +153,7 @@ private struct MainTabs: View {
     let viewImageViewBuilder: ViewImageViewBuilder
     let caseSearchLocationViewBuilder: CaseSearchLocationViewBuilder
     let caseMoveOnMapViewBuilder: CaseMoveOnMapViewBuilder
+    let syncInsightsViewBuilder: SyncInsightsViewBuilder
 
     var body: some View {
         TabViewContainer {
@@ -188,6 +191,10 @@ private struct MainTabs: View {
                         transferWorkTypeViewBuilder.transferWorkTypeView
                     case .viewImage(let imageId):
                         viewImageViewBuilder.viewImageView(imageId)
+                    case .syncInsights:
+                        if viewModel.isNotProduction {
+                            syncInsightsViewBuilder.syncInsightsView
+                        }
                     default:
                         Text("Route \(route.id) needs implementing")
                     }

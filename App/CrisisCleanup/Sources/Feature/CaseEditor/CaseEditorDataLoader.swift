@@ -257,6 +257,7 @@ internal class CaseEditorDataLoader {
             var worksiteState = loadedWorksite ?? EmptyWorksite.copy {
                 $0.incidentId = incidentIdIn
                 $0.autoContactFrequencyT = AutoContactFrequency.often.literal
+                // TODO: Toggle address input rather than set wrong location flag
                 $0.flags = isOnline ? EmptyWorksite.flags : [WorksiteFlag.wrongLocation()]
             }
 

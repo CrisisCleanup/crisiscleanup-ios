@@ -24,10 +24,10 @@ class WorksiteChangeSetOperator {
             email: coreB.email,
             // New does not have favorite. Member of my org makes a followup request.
             favorite: nil,
-            formData: coreB.networkFormData(),
+            formData: coreB.networkFormData,
             incident: coreB.incidentId,
             keyWorkType: nil,
-            location: coreB.pointLocation(),
+            location: coreB.pointLocation,
             name: coreB.name,
             // Notes are followup requests.
             phone1: coreB.phone1,
@@ -131,7 +131,7 @@ extension NetworkWorksiteFull {
 
         let isLocationChange = coreA.latitude != coreB.latitude ||
         coreA.longitude != coreB.longitude
-        let locationPush = isLocationChange ? coreB.pointLocation() : location
+        let locationPush = isLocationChange ? coreB.pointLocation : location
 
         return NetworkWorksitePush(
             id: id,
@@ -303,7 +303,7 @@ extension NetworkWorksiteFull {
         _ changedAt: Date,
         _ workTypeIdLookup: [Int64: Int64] = [:]
     ) -> ([(Int64, WorkTypeSnapshot.WorkType)], [WorkTypeChange], [Int64]) {
-        let existingWorkTypes = newestWorkTypes().associate {
+        let existingWorkTypes = newestWorkTypes.associate {
             let workTypeCopy = WorkTypeSnapshot.WorkType(
                 // Incoming network ID is always defined
                 id: $0.id!,
@@ -375,7 +375,7 @@ extension NetworkWorksiteFull {
                 }
                 return nil
             }
-            .compactMap { $0?.hasChange() == true ? $0 : nil }
+            .compactMap { $0?.hasChange == true ? $0 : nil }
 
         if (newWorkTypes.isEmpty && deletedWorkTypes.isEmpty && changedWorkTypes.isEmpty) {
             return ([], [], [])
@@ -411,7 +411,7 @@ extension NetworkWorksiteFull {
 
                 return nil
             }
-            .filter { $0.hasChange() }
+            .filter { $0.hasChange }
         }()
         let create = modified.filter { $0.networkId <= 0 }
             .map { ($0.localId, $0.workType) }

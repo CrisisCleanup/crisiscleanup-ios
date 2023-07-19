@@ -21,6 +21,8 @@ extension SyncPuller {
 public protocol SyncPusher {
     func appPushWorksite(_ worksiteId: Int64)
 
+    func syncPushWorksitesAsync() async
+
     func scheduleSyncMedia()
 }
 
@@ -70,10 +72,11 @@ class AppSyncer: SyncPuller, SyncPusher {
         accountData = accountDataRepository.accountData.eraseToAnyPublisher()
         appPreferences = appPreferencesDataStore.preferences.eraseToAnyPublisher()
 
-        let scheduler = BGTaskScheduler.shared
-        scheduler.register(forTaskWithIdentifier: BackgroundTaskType.pull.rawValue, using: nil) { task in
-            self.pull(task as! BgPullTask)
-        }
+        // TODO: This must be registered before application finishes launching. Move into app delegate.
+//        let scheduler = BGTaskScheduler.shared
+//        scheduler.register(forTaskWithIdentifier: BackgroundTaskType.pull.rawValue, using: nil) { task in
+//            self.pull(task as! BgPullTask)
+//        }
     }
 
     private func validateAccountTokens() async throws -> Bool {
@@ -262,6 +265,24 @@ class AppSyncer: SyncPuller, SyncPusher {
                 print(error)
             }
         }
+    }
+
+    func syncPushWorksitesAsync() async {
+        // TODO: Move/call this in background task
+//        Task {
+        do {
+            if try await !validateAccountTokens() {
+                return
+            }
+
+            try Task.checkCancellation()
+
+            _ = await worksiteChangeRepository.syncWorksites()
+        } catch {
+            // TODO: Handle proper
+            print(error)
+        }
+//        }
     }
 
     func scheduleSyncMedia() {

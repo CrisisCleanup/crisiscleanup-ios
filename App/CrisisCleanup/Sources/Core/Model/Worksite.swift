@@ -365,3 +365,10 @@ public struct WorksiteNote: Equatable {
 extension [WorksiteNote] {
     var hasSurvivorNote: Bool { contains { $0.isSurvivor } }
 }
+
+public struct WorksitePendingSync: Equatable {
+    let id: Int64
+    let caseNumber: String
+    let incidentId: Int64
+    let networkId: Int64
+}

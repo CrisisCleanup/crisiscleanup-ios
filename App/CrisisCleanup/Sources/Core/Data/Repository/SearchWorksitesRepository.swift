@@ -65,7 +65,7 @@ class MemorySearchWorksitesRepository: SearchWorksitesRepository {
             if results.isNotEmpty {
                 let searchResult = results.map { networkWorksite in
                     var workType: WorkType? = nil
-                    if let keyWorkType = networkWorksite.newestKeyWorkType() {            workType = WorkType(
+                    if let keyWorkType = networkWorksite.newestKeyWorkType {            workType = WorkType(
                             id: 0,
                             statusLiteral: keyWorkType.status,
                             workTypeLiteral: keyWorkType.workType

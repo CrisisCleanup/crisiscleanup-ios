@@ -15,9 +15,9 @@ extension NetworkWorksiteFull {
             createdAt: nil,
             email: email,
             favoriteId: favorite?.id,
-            keyWorkTypeType: newestKeyWorkType()?.workType ?? "",
-            keyWorkTypeOrgClaim: newestKeyWorkType()?.orgClaim,
-            keyWorkTypeStatus: newestKeyWorkType()?.status ?? "",
+            keyWorkTypeType: newestKeyWorkType?.workType ?? "",
+            keyWorkTypeOrgClaim: newestKeyWorkType?.orgClaim,
+            keyWorkTypeStatus: newestKeyWorkType?.status ?? "",
             latitude: location.coordinates[1],
             longitude: location.coordinates[0],
             name: name,
@@ -72,7 +72,7 @@ extension NetworkWorksiteCoreData {
 
 extension NetworkWorksitePage {
     func asRecord() -> WorksiteRecord {
-        let keyWorkType = newestKeyWorkType()
+        let keyWorkType = newestKeyWorkType
         return WorksiteRecord(
             id: nil,
             networkId: id,
@@ -186,7 +186,7 @@ extension NetworkNote {
 extension NetworkWorksiteFull {
     func asRecords() -> WorksiteRecords {
         let core = asRecord()
-        let workTypes = newestWorkTypes().map { $0.asRecord() }
+        let workTypes = newestWorkTypes.map { $0.asRecord() }
         let formData = formData.map { $0.asWorksiteRecord() }
         let flags = flags.map { $0.asRecord() }
         let notes = notes.map { $0.asRecord() }

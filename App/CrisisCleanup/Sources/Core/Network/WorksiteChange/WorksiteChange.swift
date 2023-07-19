@@ -6,7 +6,7 @@ struct WorkTypeTransfer: Codable {
     let reason: String
     let workTypes: [String]
 
-    func hasValue() -> Bool { reason.isNotBlank && workTypes.isNotEmpty }
+    var hasValue: Bool { reason.isNotBlank && workTypes.isNotEmpty }
 }
 
 // sourcery: copyBuilder
@@ -21,8 +21,8 @@ struct WorksiteChange: Codable {
     let releaseWorkTypes: WorkTypeTransfer?
 
     // v4
-    func isWorkTypeTransferChange() -> Bool {
-        requestWorkTypes?.hasValue() == true || releaseWorkTypes?.hasValue() == true
+    var isWorkTypeTransferChange: Bool {
+        requestWorkTypes?.hasValue == true || releaseWorkTypes?.hasValue == true
     }
 }
 

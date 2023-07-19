@@ -11,6 +11,8 @@ Reset package caches whenever modules are not found.
 1. Configure scheme for local development.
    - Duplicate the App scheme and change the Run > Info > Build Configuration = Debug.
    - The app installed on the simulator/devices should have an black background for the app icon.
+1. After the first project build when App/Sources/NeedleGenerated.swift is generated.
+   - Add `import CrisisCleanup` at the top of the file.
 
 ## Building and archiving
 - Be sure to build from a completely clean state or run the build command twice on the scheme/configuration as Xcode uses cached files unexpectedly...

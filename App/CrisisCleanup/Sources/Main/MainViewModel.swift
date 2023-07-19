@@ -10,6 +10,8 @@ class MainViewModel: ObservableObject {
 
     @Published var viewData: MainViewData = MainViewData()
 
+    let isNotProduction: Bool
+
     private var incidentsData: IncidentsData = LoadingIncidentsData
 
     private var subscriptions = Set<AnyCancellable>()
@@ -19,13 +21,16 @@ class MainViewModel: ObservableObject {
         translationsRepository: LanguageTranslationsRepository,
         incidentSelector: IncidentSelector,
         syncPuller: SyncPuller,
-        logger: AppLogger
+        logger: AppLogger,
+        appEnv: AppEnv
     ) {
         self.accountDataRepository = accountDataRepository
         translator = translationsRepository
         self.incidentSelector = incidentSelector
         self.syncPuller = syncPuller
         self.logger = logger
+
+        isNotProduction = appEnv.isNotProduction
 
         syncPuller.pullUnauthenticatedData()
     }

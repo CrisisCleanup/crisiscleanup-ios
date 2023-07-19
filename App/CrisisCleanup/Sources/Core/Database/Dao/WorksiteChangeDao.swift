@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import GRDB
 
@@ -237,6 +238,33 @@ class WorksiteChangeDao {
                 )
             }
         }
+    }
+
+    func streamWorksitesPendingSync() -> AnyPublisher<[WorksitePendingSync], Never> {
+        ValueObservation
+            .tracking(fetchWorksitesPendingSync(_:))
+            .removeDuplicates()
+            .map { $0.map { p in p.asExternalModel() } }
+            .publisher(in: reader)
+            .assertNoFailure()
+            .share()
+            .eraseToAnyPublisher()
+    }
+
+    private func fetchWorksitesPendingSync(_ db: Database) throws -> [PopulatedWorksitePendingSync] {
+        let pendingSyncIds = try WorksiteChangeRecord
+            .all()
+            .selectIdColumn()
+            .distinct()
+            .asRequest(of: Int64.self)
+            .fetchAll(db)
+
+        return try WorksiteRecord
+            .all()
+            .selectPendingSyncColumns()
+            .filter(ids: pendingSyncIds)
+            .asRequest(of: PopulatedWorksitePendingSync.self)
+            .fetchAll(db)
     }
 
     func getWorksitesPendingSync(_ limit: Int) throws -> [Int64] {

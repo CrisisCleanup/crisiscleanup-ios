@@ -78,13 +78,13 @@ struct CoreSnapshot: Codable, Equatable {
     let what3Words: String?
     let isAssignedToOrgMember: Bool
 
-    func networkFormData() -> [KeyDynamicValuePair] {
+    var networkFormData: [KeyDynamicValuePair] {
         formData.map {
             KeyDynamicValuePair($0.key, $0.value)
         }
     }
 
-    func pointLocation() -> NetworkWorksiteFull.Location {
+    var pointLocation: NetworkWorksiteFull.Location {
         NetworkWorksiteFull.Location(
             type: "Point",
             coordinates: [longitude, latitude]
@@ -201,7 +201,7 @@ struct WorkTypeChange: Codable, Equatable {
     let isClaimChange: Bool
     let isStatusChange: Bool
 
-    func hasChange() -> Bool {
+    var hasChange: Bool {
         isClaimChange || isStatusChange
     }
 }

@@ -92,6 +92,6 @@ class NetworkWorksiteChangeSyncer: WorksiteChangeSyncer {
             startingReferenceChange: deserializeChanges(startingReferenceChange),
             sortedChanges: changes
         )
-        return syncManager.syncResult()
+        return syncManager.syncResult
     }
 }

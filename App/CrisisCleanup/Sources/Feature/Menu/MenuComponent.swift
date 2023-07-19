@@ -10,6 +10,7 @@ class MenuComponent: Component<AppDependency>, MenuViewBuilder {
         MenuViewModel(
             appEnv: dependency.appEnv,
             accountDataRepository: dependency.accountDataRepository,
+            syncLogRepository: dependency.syncLogRepository,
             incidentSelector: dependency.incidentSelector,
             appVersionProvider: dependency.appVersionProvider,
             databaseVersionProvider: dependency.databaseVersionProvider,

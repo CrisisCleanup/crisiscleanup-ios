@@ -50,6 +50,7 @@ extension MainComponent {
         shared {
             AppSyncLoggerFactory(
                 syncLogDao,
+                pagingSyncLogRepository,
                 appEnv
             )
         }
@@ -58,21 +59,20 @@ extension MainComponent {
 
 private class AppSyncLoggerFactory: SyncLoggerFactory {
     private let syncLogDao: SyncLogDao
+    private let syncLogger: SyncLogger
     private let appEnv: AppEnv
 
     init(
         _ syncLogDao: SyncLogDao,
+        _ syncLogRepository: PagingSyncLogRepository,
         _ appEnv: AppEnv
     ) {
         self.syncLogDao = syncLogDao
+        self.syncLogger = syncLogRepository
         self.appEnv = appEnv
     }
 
     func getLogger(_ type: String) -> SyncLogger {
-        return PagingSyncLogRepository(
-            syncLogDao: syncLogDao,
-            appEnv: appEnv,
-            type: type
-        )
+        syncLogger
     }
 }

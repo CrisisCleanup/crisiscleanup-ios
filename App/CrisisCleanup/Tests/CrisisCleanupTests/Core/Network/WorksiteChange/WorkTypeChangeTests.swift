@@ -33,7 +33,7 @@ class WorkTypeChangeTests: XCTestCase {
             workType: "work-type",
             orgClaim: nil
         )
-        XCTAssertFalse(workTypeB.changeFrom(workTypeA, 2, ChangeTestUtil.createdAtA)!.hasChange())
+        XCTAssertFalse(workTypeB.changeFrom(workTypeA, 2, ChangeTestUtil.createdAtA)!.hasChange)
     }
 
     func testWorkTypeChangeFrom_allChanges() {
