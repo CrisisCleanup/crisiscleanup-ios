@@ -20,8 +20,7 @@ public class IncidentRefresher {
 
     func pullIncident(_ id: Int64) async {
         do {
-            if try await networkMonitor.isNotOnline.eraseToAnyPublisher().asyncFirst() ||
-                recentlyRefreshedIncident.exchange(id, ordering: .releasing) == id {
+            if recentlyRefreshedIncident.exchange(id, ordering: .releasing) == id {
                 return
             }
 
@@ -50,17 +49,10 @@ public class LanguageRefresher {
     private let lastLoadTime = ManagedAtomic<AtomicDouble>(AtomicDouble(Date(timeIntervalSince1970: 0).timeIntervalSince1970))
 
     func pullLanguages() async {
-        do {
-            let isOnline = try await networkMonitor.isOnline.eraseToAnyPublisher().asyncFirst()
-            if isOnline {
-                let now = Date.now.timeIntervalSince1970
-                if now - lastLoadTime.load(ordering: .acquiring).value > 6.hours {
-                    await languageRepository.loadLanguages()
-                    lastLoadTime.store(AtomicDouble(now), ordering: .relaxed)
-                }
-            }
-        } catch {
-            logger.logDebug(error.localizedDescription)
+        let now = Date.now.timeIntervalSince1970
+        if now - lastLoadTime.load(ordering: .acquiring).value > 6.hours {
+            await languageRepository.loadLanguages()
+            lastLoadTime.store(AtomicDouble(now), ordering: .relaxed)
         }
     }
 }
