@@ -334,13 +334,71 @@ private struct MediaDisplay: View {
 
 private struct ViewCaseNotes: View {
     @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewModel: ViewCaseViewModel
+    @Environment(\.translator) var t: KeyAssetTranslator
 
     var body: some View {
-        VStack {
-            Button {
-                router.openCaseAddNote()
-            } label: {
-                Text("Notes")
+        ZStack {
+            ScrollView {
+                VStack {
+                    if(viewModel.caseData?.worksite.notes.hasSurvivorNote ?? false) {
+                        HStack {
+                            Spacer()
+                            Image(systemName: "circle.fill")
+                                .foregroundColor(appTheme.colors.survivorNoteColor)
+                            Text(t.t("formLabels.survivor_notes"))
+                        }
+                        .padding()
+                    }
+
+                    if let notes = viewModel.caseData?.worksite.notes {
+                        ForEach(notes, id: \.id) { note in
+                            VStack(alignment: .leading) {
+                                HStack {
+                                    Text(note.createdAt.relativeTime)
+                                    Spacer()
+                                }
+                                Text(note.note)
+                            }
+                            .padding()
+                            .background(note.isSurvivor ? appTheme.colors.survivorNoteColor : Color.white)
+                            .cornerRadius(appTheme.cornerRadius)
+                            .shadow(radius: 2)
+                            .padding(.horizontal)
+
+                        }
+
+                        Image("ic_note", bundle: .module)
+                            .frame(width: 50, height: 50)
+                            .background(appTheme.colors.attentionBackgroundColor)
+                            .tint(.black)
+                            .clipShape(Circle())
+                            .padding()
+                            .hidden()
+                    }
+
+                }
+                .padding(.bottom)
+            }
+
+            VStack{
+                Spacer()
+                HStack{
+                    Spacer()
+                    Button {
+                        router.openCaseAddNote()
+                    } label: {
+                        Image("ic_note", bundle: .module)
+                            .frame(width: 50, height: 50)
+                            .background(appTheme.colors.attentionBackgroundColor)
+                            .tint(.black)
+                            .clipShape(Circle())
+                            .shadow(radius: 3)
+                            .padding()
+
+                    }
+
+                }
             }
         }
     }
