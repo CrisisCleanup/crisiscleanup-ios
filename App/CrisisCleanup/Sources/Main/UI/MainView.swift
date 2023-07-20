@@ -26,6 +26,7 @@ struct MainView: View {
     @State var showAuthScreen = false
 
     @State private var selectedTab = TopLevelDestination.cases
+
     var body: some View {
         Group {
             switch viewModel.viewData.state {
@@ -77,11 +78,11 @@ struct MainView: View {
                                             syncInsightsViewBuilder: syncInsightsViewBuilder
                                         )
                                     }
-                                    .toolbarColorScheme(.light, for: .tabBar)
                                 }
-                                // TODO: Tinting here will cause all downstream views to reverse the tint...
-                                //       Find a more targeted solution
-                                //.tint(.white)
+                                .tabViewStyle(
+                                    backgroundColor: appTheme.colors.navigationContainerColor,
+                                    selectedItemColor: .white
+                                )
                             }
                         }
                         .toolbarBackground(.visible, for: .navigationBar)

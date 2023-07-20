@@ -122,6 +122,7 @@ struct ViewCaseView: View {
                 }
             }
         }
+        .hideNavBarUnderSpace()
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)
