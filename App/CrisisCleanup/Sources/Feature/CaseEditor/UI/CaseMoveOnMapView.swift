@@ -47,13 +47,15 @@ struct CaseMoveOnMapView: View {
                     dismiss()
                 } label: {
                     Text(t.t("actions.cancel"))
-                }.buttonStyle(CancelButtonStyle())
+                }
+                .styleCancel()
 
                 Button {
                     caseCoordinates = map.centerCoordinate
                 } label: {
                     Text(t.t("actions.save"))
-                }.buttonStyle(PrimaryButtonStyle())
+                }
+                .stylePrimary()
             }
             .padding(.horizontal)
 

@@ -203,3 +203,19 @@ extension WorksiteLocalImageRecord {
         )
     }
 }
+
+struct PopulatedWorksitePendingSync: Equatable, Decodable, FetchableRecord {
+    let id: Int64
+    let caseNumber: String
+    let incidentId: Int64
+    let networkId: Int64
+
+    func asExternalModel() -> WorksitePendingSync {
+        WorksitePendingSync(
+            id: id,
+            caseNumber: caseNumber,
+            incidentId: incidentId,
+            networkId: networkId
+        )
+    }
+}

@@ -27,7 +27,10 @@ extension Database {
         try WorksiteFlagRecord
             .all()
             .selectIdNetworkIdColumns()
-            .filter(WorksiteFlagRecord.Columns.networkId > -1)
+            .filter(
+                WorksiteFlagRecord.Columns.worksiteId == worksiteId &&
+                WorksiteFlagRecord.Columns.networkId > -1
+            )
             .asRequest(of: PopulatedIdNetworkId.self)
             .fetchAll(self)
     }

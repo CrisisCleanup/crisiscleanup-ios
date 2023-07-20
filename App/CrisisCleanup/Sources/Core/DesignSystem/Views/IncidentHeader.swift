@@ -9,6 +9,7 @@ struct IncidentHeader: View {
         HStack {
             IncidentDisasterImage(incident)
             Text(incident.name)
+                .font(.title2)
         }
     }
 }

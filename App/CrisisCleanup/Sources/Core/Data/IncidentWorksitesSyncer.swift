@@ -153,7 +153,7 @@ class IncidentWorksitesSyncer: WorksitesSyncer {
                             .map { f in f.asRecord() }
                     }
                     let workTypes = $0.map { wt in
-                        wt.newestWorkTypes()
+                        wt.newestWorkTypes
                             .map { n in n.asRecord() }
                     }
                     _ = try await saveToDb(

@@ -19,6 +19,11 @@ enum AutoContactFrequency: String, Identifiable, CaseIterable {
 }
 
 private let autoContactFrequencyLookup = AutoContactFrequency.allCases.associateBy{ $0.literal }
+let autoContactFrequencyOptions = [
+    AutoContactFrequency.often,
+    AutoContactFrequency.notOften,
+    AutoContactFrequency.never,
+]
 
 // sourcery: copyBuilder, skipCopyInit
 public struct Worksite: Equatable {
@@ -364,4 +369,11 @@ public struct WorksiteNote: Equatable {
 
 extension [WorksiteNote] {
     var hasSurvivorNote: Bool { contains { $0.isSurvivor } }
+}
+
+public struct WorksitePendingSync: Equatable {
+    let id: Int64
+    let caseNumber: String
+    let incidentId: Int64
+    let networkId: Int64
 }

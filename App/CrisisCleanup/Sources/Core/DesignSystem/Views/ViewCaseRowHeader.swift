@@ -4,7 +4,7 @@ import SwiftUI
 
 struct ViewCaseRowHeader: View {
 
-    var rowNum: Int64
+    var rowNum: Int
     var rowTitle: String
 
     private let shapeSize = 32.0
@@ -17,9 +17,6 @@ struct ViewCaseRowHeader: View {
                 .background(appTheme.colors.attentionBackgroundColor)
                 .clipShape(Circle())
             Text(rowTitle)
-
-            Spacer()
         }
-        .padding(.leading)
     }
 }

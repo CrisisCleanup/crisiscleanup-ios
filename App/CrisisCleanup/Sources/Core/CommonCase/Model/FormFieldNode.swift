@@ -108,6 +108,9 @@ public struct FormFieldNode {
                 let translated = keyTranslator.translate(phraseKey) ?? phraseKey
                 translatedOptions[key] = translated
             }
+            if translatedOptions.isNotEmpty && formField.isSelectOption {
+                translatedOptions[""] = ""
+            }
             return FormFieldNode.make(
                 formField: formField,
                 children: children,

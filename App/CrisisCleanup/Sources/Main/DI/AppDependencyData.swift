@@ -182,4 +182,18 @@ extension MainComponent {
             )
         }
     }
+
+    var pagingSyncLogRepository: PagingSyncLogRepository {
+        shared {
+            PagingSyncLogRepository(
+                syncLogDao: syncLogDao,
+                appEnv: appEnv,
+                type: "sync-insights"
+            )
+        }
+    }
+
+    public var syncLogRepository: SyncLogRepository {
+        pagingSyncLogRepository
+    }
 }

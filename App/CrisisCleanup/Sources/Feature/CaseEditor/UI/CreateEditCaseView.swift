@@ -5,12 +5,12 @@ import MapKit
 import FlowStackLayout
 
 struct CreateEditCaseView: View {
-    @Environment(\.isPresented) var isPresented
     @Environment(\.translator) var t: KeyAssetTranslator
+    @EnvironmentObject var editableView: EditableView
 
     @ObservedObject var viewModel: CreateEditCaseViewModel
 
-    @State var sectionCollapse: [Bool] = [
+    @State var sectionCollapse = [
         false,
         false,
         false,
@@ -18,7 +18,13 @@ struct CreateEditCaseView: View {
         false
     ]
 
+    @State var isKeyboardOpen = false
+
+    private let ignoreFormFieldKeys = Set(["cross_street", "email"])
+
     var body: some View {
+        let disableMutation = viewModel.editableViewState.disabled
+        let editSections = viewModel.editSections
         VStack {
             ScrollView {
                 VStack {
@@ -28,176 +34,70 @@ struct CreateEditCaseView: View {
                                 incident: caseState.incident,
                                 isPendingSync: caseState.isPendingSync,
                                 isSyncing: viewModel.isSyncing,
-                                scheduleSync: {
-                                    // viewModel.scheduleSync()
-                                }
+                                scheduleSync: { viewModel.scheduleSync() }
                             )
-                            .padding([.horizontal, .bottom])
-                        }
-                    }
-                    Group {
-                        Button  {
-                            sectionCollapse[0].toggle()
-                        } label : {
-                            HStack {
-                                ViewCaseRowHeader(rowNum: 1, rowTitle: t.t("caseForm.property_information"))
-
-                                Spacer()
-
-                                Image(systemName: sectionCollapse[0] ? "chevron.up" : "chevron.down")
-                                    .padding(.trailing)
-                            }
-                            .tint(.black)
-                        }
-
-                        if(!sectionCollapse[0]) {
-                            PropertyInformation(viewModel: viewModel)
-                        }
-                    }
-                    Divider()
-                        .frame(height: 25)
-                        .overlay(Color(UIColor.systemGray5))
-                    Group {
-                        Button {
-                            sectionCollapse[1].toggle()
-                        } label: {
-                            HStack {
-                                ViewCaseRowHeader(rowNum: 2, rowTitle: "t.tCase Details")
-                                if(viewModel.detailsFormFieldNode.formField.help.isNotBlank) {
-                                    HelpIcon(viewModel.detailsFormFieldNode.formField.help)
-                                }
-                                Spacer()
-
-                                Image(systemName: sectionCollapse[1] ? "chevron.up" : "chevron.down")
-                                    .padding(.trailing)
-                            }
-                        }
-                        .tint(.black)
-                        if(!sectionCollapse[1]) {
-                            VStack {
-                                let childNodes = viewModel.detailsFormFieldNode.children
-                                ForEach(childNodes, id: \.id) { node in
-                                    if(node.parentKey == viewModel.detailsFormFieldNode.fieldKey)
-                                    {
-                                        DisplayFormField(node: node)
-                                            .padding(.horizontal)
-                                    }
-                                }
-
-                            }
+                            .padding()
                         }
                     }
 
-                    Divider()
-                        .frame(height: 25)
-                        .overlay(Color(UIColor.systemGray5))
-
-                    Group {
-                        Button {
-                            sectionCollapse[2].toggle()
-                        } label: {
-                            HStack {
-                                ViewCaseRowHeader(rowNum: 3, rowTitle: t.t("caseForm.work"))
-                                if(viewModel.workFormFieldNode.formField.help.isNotBlank) {
-                                    HelpIcon(viewModel.workFormFieldNode.formField.help)
-                                }
-
-                                Spacer()
-
-                                Image(systemName: sectionCollapse[2] ? "chevron.up" : "chevron.down")
-                                    .padding(.trailing)
-                            }
-                        }
-                        .tint(.black)
-
-                        if(!sectionCollapse[2]) {
-                            VStack {
-                                let childNodes = viewModel.workFormFieldNode.children
-
-                                ForEach(childNodes, id: \.id) { node in
-                                    if(node.parentKey == viewModel.workFormFieldNode.fieldKey)
-                                    {
-                                        HStack {
-                                            DisplayFormField(node: node)
-                                                .padding(.horizontal)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
+                    CreateEditCaseSectionHeaderView (
+                        isCollapsed: $sectionCollapse[0],
+                        titleNumber: 1,
+                        titleTranslateKey: editSections.get(0, "")
+                    )
+                    if !sectionCollapse[0] {
+                        PropertyInformation(viewModel: viewModel)
                     }
 
-                    Divider()
-                        .frame(height: 25)
-                        .overlay(Color(UIColor.systemGray5))
+                    let nodes = Array(viewModel.groupFormFieldNodes.enumerated())
+                    ForEach(nodes, id: \.offset) { offset, node in
+                        Divider()
+                            .frame(height: 24)
+                            .overlay(Color(UIColor.systemGray5))
 
-                    Group {
-                        Button {
-                            sectionCollapse[3].toggle()
-                        } label : {
-                            HStack {
-                                ViewCaseRowHeader(rowNum: 4, rowTitle: "t.tHazards")
+                        let sectionIndex = offset + 1
+                        CreateEditCaseSectionHeaderView (
+                            isCollapsed: $sectionCollapse[sectionIndex],
+                            titleNumber: sectionIndex + 1,
+                            titleTranslateKey: editSections.get(sectionIndex, ""),
+                            helpText: node.formField.help
+                        )
 
-                                Spacer()
-
-                                Image(systemName: sectionCollapse[3] ? "chevron.up" : "chevron.down")
-                                    .padding(.trailing)
-                            }
-                        }
-                        .tint(.black)
-                        if(!sectionCollapse[3]) {
-                            VStack {
-                                let childNodes = viewModel.hazardsFormFieldNode.children
-                                ForEach(childNodes, id: \.id) { node in
-                                    if(node.parentKey == viewModel.hazardsFormFieldNode.fieldKey) {
-                                        DisplayFormField(node: node)
-                                            .padding(.horizontal)
-                                    }
+                        if !sectionCollapse[sectionIndex] {
+                            let children = node.children
+                                .filter { !ignoreFormFieldKeys.contains($0.fieldKey) }
+                            ForEach(children, id: \.id) { child in
+                                if child.parentKey == node.fieldKey {
+                                    DisplayFormField(
+                                        checkedData: $viewModel.binaryFormData,
+                                        contentData: $viewModel.contentFormData,
+                                        node: child
+                                    )
+                                    .padding(.horizontal)
                                 }
-
-                            }
-                        }
-                    }
-
-                    Divider()
-                        .frame(height: 25)
-                        .overlay(Color(UIColor.systemGray5))
-
-                    Group {
-                        Button {
-                            sectionCollapse[4].toggle()
-                        } label: {
-                            HStack {
-                                ViewCaseRowHeader(rowNum: 5, rowTitle: "t.tVolunteer Report")
-
-                                Spacer()
-
-                                Image(systemName: sectionCollapse[4] ? "chevron.up" : "chevron.down")
-                                    .padding(.trailing)
-                            }
-                        }
-                        .tint(.black)
-
-                        if(!sectionCollapse[4]) {
-                            VStack {
-                                let childNodes = viewModel.volunteerFormFieldNode.children
-                                ForEach(childNodes, id: \.id) { node in
-                                    if(node.parentKey == viewModel.volunteerFormFieldNode.fieldKey) {
-                                        DisplayFormField(node: node)
-                                            .padding(.horizontal)
-                                    }
-                                }
-
                             }
                         }
                     }
                 }
             }
+            .scrollDismissesKeyboard(.immediately)
 
-            BottomButtons()
-
+            if isKeyboardOpen {
+                OpenKeyboardActionsView()
+            } else {
+                CreateEditCaseSaveActions()
+                    .disabled(disableMutation)
+            }
         }
+        .onReceive(keyboardPublisher) { isVisible in
+            isKeyboardOpen = isVisible
+        }
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text(viewModel.headerTitle)
+            }
+        }
+        .hideNavBarUnderSpace()
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)
@@ -205,135 +105,99 @@ struct CreateEditCaseView: View {
     }
 }
 
-struct RadioPicker: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
-    @Binding var selected: String
-    var options: [String]
-
-    var body: some View {
-        VStack (alignment: .leading){
-
-            ForEach(options, id: \.self) {option in
-                Button {
-                    selected = option
-                } label: {
-                    HStack{
-                        let ifSelected = option == selected
-                        let radioImg = ifSelected ? "circle.fill" : "circle"
-                        Image(systemName: radioImg)
-                            .foregroundColor(ifSelected ? Color.black : Color.gray)
-                        Text(t.t(option))
-                            .foregroundColor(Color.black)
-
-                    }
-                    .padding(.bottom)
-                }
-
-            }
-        }
-    }
+private func collapseIconName(_ isCollapsed: Bool) -> String {
+    isCollapsed ? "chevron.up" : "chevron.down"
 }
 
-struct CheckboxPicker: View {
+private struct CreateEditCaseSectionHeaderView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
-    @Binding var selectedOptions: [String]
-    var options: [String]
 
-    var body: some View {
-        VStack (alignment: .leading){
+    @Binding var isCollapsed: Bool
 
-            ForEach(options, id: \.self) {option in
-                Button {
-                    if(selectedOptions.contains(option))
-                    {
-                        selectedOptions.remove(at: selectedOptions.firstIndex(of: option)!)
-                    } else {
-                        selectedOptions.append(option)
-                    }
-                } label: {
-                    HStack{
-                        let ifSelected = selectedOptions.contains(option)
-                        let radioImg = ifSelected ? "checkmark.square.fill" : "square"
-                        Image(systemName: radioImg)
-                            .foregroundColor(ifSelected ? Color.black : Color.gray)
-                        Text(t.t(option))
-                            .foregroundColor(Color.black)
-
-                    }
-                    .padding(.bottom)
-                }
-
-            }
-        }
-    }
-}
-
-struct BottomButtons: View {
+    let titleNumber: Int
+    let titleTranslateKey: String
+    var helpText = ""
 
     var body: some View {
         HStack {
             Button {
+                isCollapsed.toggle()
+            } label: {
+                ViewCaseRowHeader(rowNum: titleNumber, rowTitle: t.t(titleTranslateKey))
 
-            } label : {
-                Text("t.tCancel")
+                if helpText.isNotBlank {
+                    HelpIcon(helpText)
+                        .padding(.horizontal)
+                }
+
+                Spacer()
+
+                Image(systemName: collapseIconName(isCollapsed))
             }
-            .buttonStyle(CancelButtonStyle())
-
-            Button {
-
-            } label : {
-                Text("t.tClaim & Save")
-            }
-            .buttonStyle(PrimaryButtonStyle())
-
-            Button {
-
-            } label : {
-                Text("t.tSave")
-            }
-            .buttonStyle(PrimaryButtonStyle())
         }
+        .padding()
+        .tint(.black)
     }
 }
 
 struct PropertyInformation: View {
-    @EnvironmentObject var router: NavigationRouter
     @Environment(\.translator) var t: KeyAssetTranslator
+    @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var editableView: EditableView
 
     @ObservedObject var viewModel: CreateEditCaseViewModel
     @ObservedObject var locationManager = LocationManager()
-    @State var coordinates = CLLocationCoordinate2D(latitude: 40.83834587046632,
-                                longitude: 14.254053016537693)
+    @State var coordinates = CLLocationCoordinate2D(
+        latitude: 40.83834587046632,
+        longitude: 14.254053016537693
+    )
     @State var map = MKMapView()
-    @State var mapSheet = MKMapView()
-    @State var selected: String = ""
-    @State var selectedOptions: [String] = []
-    @State var temp: String = ""
+
+    @State var residentName: String = ""
+    @State var phone1: String = ""
+    @State var phone2: String = ""
+    @State var email: String = ""
+    @State var autoContactFrequency: String = ""
+
+    @State var fullAddressPlaceholder: String = ""
+    @State var crossStreetLandmark: String = ""
+
+    @State var activeFlags: [String] = []
 
     var body: some View {
+        let disabled = editableView.disabled
         VStack(alignment: .leading) {
             VStack{
-                TextField("t.tResident Name *", text: $temp)
+                TextField(t.t("formLabels.name"), text: $residentName)
                     .textFieldBorder()
-                    .padding(.horizontal)
+                    .disabled(disabled)
+                    .padding([.horizontal, .bottom])
 
-                TextField("t.tPhone #s *", text: $temp)
+                TextField(t.t("formLabels.phone1"), text: $phone1)
                     .textFieldBorder()
-                    .padding(.horizontal)
+                    .disabled(disabled)
+                    .padding([.horizontal, .bottom])
 
-                TextField("t.tPhone 2", text: $temp)
+                TextField(t.t("formLabels.phone2"), text: $phone2)
                     .textFieldBorder()
-                    .padding(.horizontal)
+                    .disabled(disabled)
+                    .padding([.horizontal, .bottom])
 
-                TextField("t.tEmail", text: $temp)
+                TextField(t.t("formLabels.email"), text: $email)
+                    .keyboardType(.emailAddress)
                     .textFieldBorder()
-                    .padding(.horizontal)
+                    .disabled(disabled)
+                    .padding([.horizontal, .bottom])
             }
             VStack(alignment: .leading) {
-                Text("t.tAuto Contact Frequency")
+                Text(t.t("casesVue.auto_contact_frequency"))
 
-                RadioPicker(selected: $selected, options: ["t.tOften (Twice a week)", "t.tNot Often (Once a week)", "t.tNever"])
-                    .padding()
+                RadioButtons(
+                    selected: $autoContactFrequency,
+                    options: autoContactFrequencyOptions.map { t.t($0.literal) }
+                )
+                .disabled(disabled)
+                .padding()
             }
             .padding(.leading)
 
@@ -343,7 +207,7 @@ struct PropertyInformation: View {
 
                 TextField(
                     t.t("caseView.full_address"),
-                    text: $temp,
+                    text: $fullAddressPlaceholder,
                     onEditingChanged: { focus in
                         if focus {
                             router.openCaseSearchLocation()
@@ -351,13 +215,15 @@ struct PropertyInformation: View {
                     }
                 )
                 .textFieldBorder()
+                .disabled(disabled)
                 .padding(.horizontal)
             }
 
             CreateEditCaseMapView(
                 map: $map,
                 caseCoordinates: coordinates)
-                .frame(width: UIScreen.main.bounds.width, height: 200)
+            // TODO: Cap maximum height based on screen height (1/3?)
+                .frame(width: UIScreen.main.bounds.width, height: 240)
 
             HStack {
                 Button {
@@ -368,33 +234,46 @@ struct PropertyInformation: View {
                     Text(t.t("caseForm.select_on_map"))
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .disabled(disabled)
 
                 Button {
-                    coordinates = map.userLocation.coordinate
-                    map.centerCoordinate = coordinates
+                    if locationManager.hasLocationAccess {
+                        coordinates = map.userLocation.coordinate
+                        map.centerCoordinate = coordinates
+                    } else if locationManager.isDeniedLocationAccess {
+                        // TODO: Show dialog to grant access from settings
+                        print("Location access was previously denied")
+                    } else {
+                        locationManager.requestLocationAccess()
+                    }
                 } label: {
                     Image("ic_use_my_location", bundle: .module)
                         .frame(width: 24, height: 24)
                     Text(t.t("caseForm.use_my_location"))
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .disabled(disabled)
             }
             .padding()
 
-            TextField("Cross Street or Nearby Landmark", text: $temp)
+            TextField(t.t("formLabels.cross_street"), text: $crossStreetLandmark)
                 .textFieldBorder()
+                .disabled(disabled)
                 .padding([.horizontal, .bottom])
 
             VStack(alignment: .leading) {
-
-                CheckboxPicker(selectedOptions: $selectedOptions, options: ["t.tAddress Problems", "t.tFlag as high priority", "t.tMember of My Organization"])
-
+                let flagOptions = viewModel.flagTranslateKeys
+                CheckboxViews(
+                    selectedOptions: $activeFlags,
+                    options: flagOptions.map { ($0, t.t($0)) }
+                )
             }
+            .disabled(disabled)
             .padding(.leading)
 
             VStack(alignment: .leading)
             {
-                Text("t.tNotes")
+                Text(t.t("formLabels.notes"))
 
                 Button {
                     router.openCaseAddNote()
@@ -402,9 +281,10 @@ struct PropertyInformation: View {
                     HStack {
                         Image("ic_note", bundle: .module)
                             .frame(width: 24, height: 24)
-                        Text("+t.tAdd Note")
+                        Text(t.t("caseView.add_note"))
                     }
                 }
+                .disabled(disabled)
             }
             .padding(.leading)
 
@@ -414,46 +294,51 @@ struct PropertyInformation: View {
 
 struct DisplayFormField: View {
     @Environment(\.translator) var t: KeyAssetTranslator
-    @State var node: FormFieldNode
+    @EnvironmentObject var editableView: EditableView
 
-    @State var selectedOptions: [String] = []
-    @State var selected: String = ""
-    @State var toggled: Bool = false
-    @State var temp: String = ""
-    @State var helpSheet: Bool = false
+    @Binding var checkedData: ObservableBoolDictionary
+    @Binding var contentData: ObservableStringDictionary
+
+    let node: FormFieldNode
 
     var body: some View {
+        let disabled = editableView.disabled
 
         VStack {
             switch node.formField.htmlType {
             case "text":
                 HStack {
                     Text(t.t(node.formField.label))
-                    if(node.formField.help.isNotBlank)
+                    if node.formField.help.isNotBlank
                     {
                         HelpIcon(node.formField.help)
                     }
                     Spacer()
                 }
-                TextField(t.t(node.formField.placeholder), text: $temp)
+                TextField(t.t(node.formField.placeholder), text: $contentData[node.fieldKey])
                     .textFieldBorder()
-                    .padding(.horizontal)
+                    .disabled(disabled)
+                    .padding(.bottom)
             case "textarea":
                 HStack {
                     Text(t.t(node.formField.label))
-                    if(node.formField.help.isNotBlank)
-                    {
+                    if node.formField.help.isNotBlank {
                        HelpIcon(node.formField.help)
                     }
-                    Spacer()
                 }
-                TextEditor(text: $temp)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                TextEditor(text: $contentData[node.fieldKey])
                     .frame(minHeight: appTheme.rowItemHeight*2)
                     .textFieldBorder()
-                    .padding(.horizontal)
+                    .disabled(disabled)
+                    .padding(.bottom)
             case "checkbox":
                 HStack {
-                    CheckboxPicker(selectedOptions: $selectedOptions, options: [node.formField.label])
+                    CheckboxView(
+                        checked: $checkedData[node.fieldKey],
+                        text: node.formField.label
+                    )
+                    .disabled(disabled)
                     if(node.formField.help.isNotBlank)
                     {
                         HelpIcon(node.formField.help)
@@ -463,103 +348,158 @@ struct DisplayFormField: View {
                 .frame(minHeight: appTheme.rowItemHeight)
             case "select":
                 HStack {
-                    Text(t.t(node.formField.label))
+                    let label = t.t(node.formField.label)
+                    Text(label)
                     if(node.formField.help.isNotBlank)
                     {
                         HelpIcon(node.formField.help)
                     }
                     Spacer()
-                    Picker("", selection: $selected ) {
-                        ForEach(Array(node.formField.values.keys), id: \.self) { item in
-                            Text(t.t(item))
+                    let options = node.options
+                    let sortedOptions = options
+                        .map { $0 }
+                        .sorted { a, b in
+                            a.value.localizedCompare(b.value) == .orderedAscending
+                        }
+                    Picker("", selection: $contentData[node.fieldKey]) {
+                        ForEach(sortedOptions, id: \.key) { (key, value) in
+                            let text = t.t(options[key]!)
+                            Text(text)
                         }
                     }
+                    .disabled(disabled)
                 }
                 .frame(minHeight: appTheme.rowItemHeight)
             case "multiselect":
                 HStack {
                     Text(t.t(node.formField.label))
-                    if(node.formField.help.isNotBlank)
-                    {
+                    if node.formField.help.isNotBlank {
                         HelpIcon(node.formField.help)
                     }
-                    Spacer()
                 }
                 FlowStack(
                     alignment: .leading,
                     horizontalSpacing: 8,
                     verticalSpacing: 8
                 ) {
+                    // TODO: Test
+                    let selectOptions = Array(contentData[node.fieldKey].split(separator: ","))
+                        .map { String($0) }
+                        .filter { $0.isNotBlank }
+                    var selected = Set(selectOptions)
                     ForEach(Array(node.options.keys), id: \.self) { option in
+                        let isSelected = selected.contains(option)
                         Button {
-                            if(selectedOptions.contains(option)) {
-                                selectedOptions.remove(at: selectedOptions.firstIndex(of: option)!)
-                            } else {
-                                selectedOptions.append(option)
-                            }
+                            let newSelection = {
+                                if isSelected {
+                                    selected.remove(option)
+                                } else {
+                                    selected.insert(option)
+                                }
+                                return selected.joined(separator: ",")
+                            }()
+                            contentData[node.fieldKey] = newSelection
                         } label : {
                             Text(t.t(option))
+                            // TODO: Common styles
                                 .padding()
-                                .background(selectedOptions.contains(option) ? Color.yellow : Color.white)
+                                .background( isSelected ? Color.yellow : Color.white)
                                 .cornerRadius(40)
                                 .overlay(
                                     Capsule(style: .continuous)
-                                        .strokeBorder(Color.black, lineWidth: selectedOptions.contains(option) ? 0 : 1)
+                                        .strokeBorder(
+                                            Color.black,
+                                            lineWidth: isSelected ? 0 : 1
+                                        )
                                 )
-
                         }
                         .tint(.black)
-
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding([ .bottom])
+                .disabled(disabled)
+                .padding([.bottom])
             case "cronselect":
                 Text(t.t(node.formField.label))
             case "h4":
                 Text("h4")
                 Text(t.t(node.formField.label))
             case "h5":
+                let isChecked = checkedData[node.fieldKey]
                 HStack {
-
-                    if(node.formField.isReadOnly) {
+                    if node.formField.isReadOnly {
                         Button {
-                            toggled.toggle()
+                            checkedData[node.fieldKey] = !isChecked
                         } label : {
                             HStack {
                                 Text(t.t(node.formField.label))
-                                if(node.formField.help.isNotBlank)
-                                {
+                                if node.formField.help.isNotBlank {
                                     HelpIcon(node.formField.help)
                                 }
                                 Spacer()
-                                Image(systemName: toggled ? "chevron.up" : "chevron.down")
+                                Image(systemName: collapseIconName(!isChecked))
                             }
                         }
                     } else {
-                        CheckboxPicker(selectedOptions: $selectedOptions, options: [t.t(node.formField.label)])
+                        CheckboxView(
+                            checked: $checkedData[node.fieldKey],
+                            text: t.t(node.formField.label)
+                        )
+                        .disabled(disabled)
                     }
                     Spacer()
                 }
-                if(!selectedOptions.isEmpty && selectedOptions[0] == t.t(node.formField.label) || toggled){
-                    let childNodes = node.children
+                if isChecked {
                     ForEach(node.children, id: \.id) { childNode in
-                        if(childNode.parentKey == node.fieldKey)
-                        {
-                            HStack {
-                                DisplayFormField(node: childNode)
-                                    .padding(.leading)
-                            }
-                            .frame(minHeight: appTheme.rowItemHeight, alignment: .leading)
+                        HStack {
+                            DisplayFormField(
+                                checkedData: $checkedData,
+                                contentData: $contentData,
+                                node: childNode
+                            )
+                            .padding(.leading)
                         }
+                        .frame(minHeight: appTheme.rowItemHeight, alignment: .leading)
                     }
                 }
             default:
                 HStack {
-                    Text("unknown node")
                     Text(t.t(node.formField.label))
                 }
             }
+        }
+    }
+}
+
+private struct CreateEditCaseSaveActions: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+    @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var editableView: EditableView
+
+    var body: some View {
+        let disabled = editableView.disabled
+        HStack {
+            Button {
+                dismiss()
+            } label : {
+                Text(t.t("actions.cancel"))
+            }
+            .styleCancel()
+
+            Button {
+
+            } label : {
+                Text(t.t("actions.save_claim"))
+            }
+            .stylePrimary()
+            .frame(maxWidth: .infinity)
+
+            Button {
+
+            } label : {
+                Text(t.t("actions.save"))
+            }
+            .stylePrimary()
         }
     }
 }

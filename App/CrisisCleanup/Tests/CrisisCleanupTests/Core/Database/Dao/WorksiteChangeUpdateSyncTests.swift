@@ -596,7 +596,7 @@ extension DatabaseQueue {
             try WorkTypeRequestRecord
                 .all()
                 .selectIdNetworkIdColumns()
-                .filter(WorksiteFlagRecord.Columns.networkId > -1)
+                .filter(WorkTypeRequestRecord.Columns.networkId > -1)
                 .asRequest(of: PopulatedIdNetworkId.self)
                 .fetchAll(db)
         }

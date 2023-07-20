@@ -8,7 +8,9 @@ class MainViewModel: ObservableObject {
     private let syncPuller: SyncPuller
     private let logger: AppLogger
 
-    @Published var viewData: MainViewData = MainViewData()
+    @Published private(set) var viewData: MainViewData = MainViewData()
+
+    let isNotProduction: Bool
 
     private var incidentsData: IncidentsData = LoadingIncidentsData
 
@@ -19,13 +21,16 @@ class MainViewModel: ObservableObject {
         translationsRepository: LanguageTranslationsRepository,
         incidentSelector: IncidentSelector,
         syncPuller: SyncPuller,
-        logger: AppLogger
+        logger: AppLogger,
+        appEnv: AppEnv
     ) {
         self.accountDataRepository = accountDataRepository
         translator = translationsRepository
         self.incidentSelector = incidentSelector
         self.syncPuller = syncPuller
         self.logger = logger
+
+        isNotProduction = appEnv.isNotProduction
 
         syncPuller.pullUnauthenticatedData()
     }

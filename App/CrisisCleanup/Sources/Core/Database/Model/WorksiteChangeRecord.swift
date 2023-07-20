@@ -177,4 +177,8 @@ extension DerivableRequest<WorksiteChangeRecord> {
         select(ChangeColumns.worksiteId == worksiteId &&
                ChangeColumns.saveAttempt > 0)
     }
+
+    func selectIdColumn() -> Self {
+        select(ChangeColumns.id)
+    }
 }

@@ -51,9 +51,6 @@ class PagingSyncLogRepository: SyncLogger, SyncLogRepository {
                 )
             )
         }
-
-        // TODO: Delete when logs can be inspected
-        print("synclog \(logType) \(message) \(details)")
     }
 
     func clear() {

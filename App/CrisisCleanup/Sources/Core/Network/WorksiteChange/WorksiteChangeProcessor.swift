@@ -77,15 +77,15 @@ class WorksiteChangeProcessor {
         _ forceQueryWorksite: Bool
     ) async throws {
         let networkWorksite = try await getNetworkWorksite(forceQueryWorksite)
-        networkWorksite.newestWorkTypes().forEach { networkWorkType in
+        networkWorksite.newestWorkTypes.forEach { networkWorkType in
             if let localId = lookup[networkWorkType.workType] {
                 workTypeIdMap[localId] = networkWorkType.id!
             }
         }
     }
 
-    func syncResult() -> WorksiteSyncResult {
-        let workTypeKeyMap = _networkWorksite?.newestWorkTypes()
+    var syncResult: WorksiteSyncResult {
+        let workTypeKeyMap = _networkWorksite?.newestWorkTypes
             .associate { ($0.workType, $0.id!) } ?? [:]
         return WorksiteSyncResult(
             changeResults: syncChangeResults,
@@ -113,14 +113,14 @@ class WorksiteChangeProcessor {
             : syncChange.worksiteChange
 
             let syncResult = try await syncChangeDelta(syncChange, changes)
-            let hasError = syncResult.hasError()
+            let hasError = syncResult.hasError
             syncChangeResults.append(
                 WorksiteSyncResult.ChangeResult(
                     id: syncChange.id,
                     isSuccessful: !hasError && syncResult.isFullySynced,
                     isPartiallySuccessful: syncResult.isPartiallySynced,
                     isFail: hasError,
-                    error: syncResult.primaryException()
+                    error: syncResult.primaryException
                 )
             )
 
@@ -130,13 +130,13 @@ class WorksiteChangeProcessor {
             }
 
             appEnv.runInNonProd {
-                let syncExceptionSummary = syncResult.exceptionSummary()
+                let syncExceptionSummary = syncResult.exceptionSummary
                 if syncExceptionSummary.isNotBlank {
                     syncLogger.log("Sync change exceptions.", details: syncExceptionSummary)
                 }
             }
 
-            if !syncResult.canContinueSyncing() {
+            if !syncResult.canContinueSyncing {
                 return
             }
 
@@ -153,7 +153,7 @@ class WorksiteChangeProcessor {
         _ syncChange: SyncWorksiteChange,
         _ deltaChange: WorksiteChange
     ) async throws -> SyncChangeSetResult {
-        if deltaChange.isWorkTypeTransferChange() {
+        if deltaChange.isWorkTypeTransferChange {
             return try await syncWorkTypeTransfer(
                 syncChange,
                 deltaChange
@@ -195,13 +195,13 @@ class WorksiteChangeProcessor {
     ) async throws -> SyncChangeSetResult {
         var result = SyncChangeSetResult(isPartiallySynced: false, isFullySynced: false)
         let changeCreatedAt = syncChange.createdAt
-        if deltaChange.requestWorkTypes?.hasValue() == true {
+        if deltaChange.requestWorkTypes?.hasValue == true {
             result = try await syncRequestWorkTypes(
                 changeCreatedAt,
                 deltaChange.requestWorkTypes!,
                 result
             )
-        } else if deltaChange.releaseWorkTypes?.hasValue() == true {
+        } else if deltaChange.releaseWorkTypes?.hasValue == true {
             result = try await syncReleaseWorkTypes(
                 changeCreatedAt,
                 deltaChange.change,
@@ -394,7 +394,7 @@ class WorksiteChangeProcessor {
         }
 
         var hasClaimChange = false
-        let workTypeOrgLookup = try await getNetworkWorksite().newestWorkTypes()
+        let workTypeOrgLookup = try await getNetworkWorksite().newestWorkTypes
             .compactMap { $0.orgClaim == nil ? nil : ($0.workType, $0.orgClaim!) }
             .associate { $0 }
 
@@ -508,9 +508,10 @@ class WorksiteChangeProcessor {
     }
 
     private func ensureSyncConditions() async throws {
-        if try await networkMonitor.isNotOnline.eraseToAnyPublisher().asyncFirst() {
-            throw NoInternetConnectionError
-        }
+        // TODO: Find a reliable signal for offline state
+//        if try await networkMonitor.isNotOnline.eraseToAnyPublisher().asyncFirst() {
+//            throw NoInternetConnectionError
+//        }
         if !accountData.areTokensValid {
             throw ExpiredTokenError
         }
@@ -523,7 +524,7 @@ extension NetworkWorksiteFull {
         _ affiliateOrganizations: Set<Int64>
     ) -> [String] {
         let otherOrgClaimed = Set(
-            newestWorkTypes()
+            newestWorkTypes
                 .filter { $0.orgClaim != nil && !affiliateOrganizations.contains($0.orgClaim!) }
                 .map { $0.workType }
         )
@@ -613,7 +614,7 @@ internal struct SyncChangeSetResult {
         self.workTypeReleaseException = workTypeReleaseException
     }
 
-    private func dataException() -> Error?
+    private var dataException: Error?
     {
         [
             exception,
@@ -631,14 +632,14 @@ internal struct SyncChangeSetResult {
             .first
     }
 
-    func primaryException() -> Error?
+    var primaryException: Error?
     {
         if !isConnectedToInternet { return NoInternetConnectionError }
         if !isValidToken { return ExpiredTokenError }
-        return dataException()
+        return dataException
     }
 
-    func hasError() -> Bool{ dataException() != nil }
+    var hasError: Bool { dataException != nil }
 
     private func summarizeExceptions(_ key: String, _ exceptions: [Int64: Error]) -> String {
         if exceptions.isNotEmpty {
@@ -650,7 +651,7 @@ internal struct SyncChangeSetResult {
         return ""
     }
 
-    func exceptionSummary() -> String {
+    var exceptionSummary: String {
         [
             exception == nil ? nil : "Overall \(exception!.localizedDescription)",
             favoriteException?.prefixMessage("Favorite"),
@@ -667,17 +668,17 @@ internal struct SyncChangeSetResult {
             .joined(separator: "\n")
     }
 
-    func canContinueSyncing() -> Bool {
+    var canContinueSyncing: Bool {
         isConnectedToInternet && isValidToken
     }
 }
 
 extension Error {
-    fileprivate func errorMessage() -> String {
+    fileprivate var errorMessage: String {
         (self as? CrisisCleanupNetworkError)?.errors.first?.messages?.joined(separator: ", ") ?? localizedDescription
     }
 
     fileprivate func prefixMessage(_ prefix: String) -> String {
-        "\(prefix): \(errorMessage())"
+        "\(prefix): \(errorMessage)"
     }
 }

@@ -16,8 +16,9 @@ struct HelpIcon: View {
             }
             .sheet(isPresented: $helpSheet) {
             ZStack {
-                HStack{
-                    Text(t.t(helpText))
+                HStack {
+                    // TODO: Help text may contain HTML. Markup as necessary.
+                    HtmlTextView(htmlContent: t.t(helpText))
                 }.padding()
             }
             .presentationDetents([.medium, .fraction(0.25)])

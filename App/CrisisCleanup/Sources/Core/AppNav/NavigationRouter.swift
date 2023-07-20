@@ -86,4 +86,8 @@ class NavigationRouter: ObservableObject {
     ) {
         path.append(.viewImage(imageId: imageId))
     }
+
+    func openSyncInsights() {
+        path.append(.syncInsights)
+    }
 }

@@ -15,7 +15,8 @@ public class MainComponent: BootstrapComponent,
                             TransferWorkTypeViewBuilder,
                             ViewImageViewBuilder,
                             CaseSearchLocationViewBuilder,
-                            CaseMoveOnMapViewBuilder
+                            CaseMoveOnMapViewBuilder,
+                            SyncInsightsViewBuilder
 {
     public private(set) var appEnv: AppEnv
     public private(set) var appSettingsProvider: AppSettingsProvider
@@ -27,7 +28,8 @@ public class MainComponent: BootstrapComponent,
             translationsRepository: languageTranslationsRepository,
             incidentSelector: incidentSelector,
             syncPuller: syncPuller,
-            logger: loggerFactory.getLogger("main")
+            logger: loggerFactory.getLogger("main"),
+            appEnv: appEnv
         )
     }
 
@@ -72,7 +74,8 @@ public class MainComponent: BootstrapComponent,
             transferWorkTypeViewBuilder: self,
             viewImageViewBuilder: self,
             caseSearchLocationViewBuilder: self,
-            caseMoveOnMapViewBuilder: self
+            caseMoveOnMapViewBuilder: self,
+            syncInsightsViewBuilder: self
         )
     }
 
@@ -202,4 +205,12 @@ public class MainComponent: BootstrapComponent,
     }()
 
     public func viewImageView(_ imageId: Int64) -> AnyView { viewImageComponent.viewImageView(imageId) }
+
+    // MARK: Sync insights
+
+    lazy var syncInsightsComponent: SyncInsightsComponent = {
+        SyncInsightsComponent(parent: self, routerObserver: routerObserver)
+    }()
+
+    public var syncInsightsView: AnyView { syncInsightsComponent.syncInsightsView }
 }

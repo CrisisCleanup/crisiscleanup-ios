@@ -5,7 +5,7 @@ import Foundation
 public protocol WorksiteChangeRepository {
     var syncingWorksiteIds: any Publisher<Set<Int64>, Never> { get }
 
-    var streamWorksitesPendingSync: any Publisher<[Worksite], Never> { get }
+    var streamWorksitesPendingSync: any Publisher<[WorksitePendingSync], Never> { get }
 
     func saveWorksiteChange(
         worksiteStart: Worksite,
@@ -90,10 +90,10 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
 
     private let syncWorksiteGuard = ManagedAtomic(false)
 
-    private let streamWorksitesPendingSyncSubject = CurrentValueSubject<[Worksite], Never>([])
-    let streamWorksitesPendingSync: any Publisher<[Worksite], Never>
+    var streamWorksitesPendingSync: any Publisher<[WorksitePendingSync], Never> {
+        worksiteChangeDao.streamWorksitesPendingSync()
+    }
 
-    private let isNotOnlinePublisher: AnyPublisher<Bool, Never>
     private let accountDataPublisher: AnyPublisher<AccountData, Never>
 
     init(
@@ -130,9 +130,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         appLogger = loggerFactory.getLogger("worksite-sync")
 
         syncingWorksiteIds = syncingWorksiteIdsSubject
-        streamWorksitesPendingSync = streamWorksitesPendingSyncSubject
 
-        isNotOnlinePublisher = networkMonitor.isNotOnline.eraseToAnyPublisher()
         accountDataPublisher = accountDataRepository.accountData.eraseToAnyPublisher()
     }
 
@@ -250,11 +248,6 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         _ worksiteId: Int64,
         _ rethrowError: Bool
     ) async throws -> Bool {
-        if try await isNotOnlinePublisher.asyncFirst() {
-            syncLogger.log("Not attempting. No internet connection.")
-            return false
-        }
-
         let accountData = try await accountDataPublisher.asyncFirst()
         if !accountData.areTokensValid {
             syncLogger.log("Not attempting. Invalid account token.")

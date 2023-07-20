@@ -100,6 +100,7 @@ public struct IncidentFormField: Equatable {
     let isDivEnd: Bool
     let isHidden: Bool
     let isFrequency: Bool
+    let isSelectOption: Bool
     // sourcery:end
 
     init(
@@ -147,5 +148,6 @@ public struct IncidentFormField: Equatable {
         isDivEnd = htmlTypeLower == "divend"
         isHidden = htmlTypeLower == "hidden"
         isFrequency = htmlTypeLower == "cronselect"
+        isSelectOption = htmlType.lowercased() == "select"
     }
 }

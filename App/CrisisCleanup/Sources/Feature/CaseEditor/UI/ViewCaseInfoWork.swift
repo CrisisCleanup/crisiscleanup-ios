@@ -7,8 +7,10 @@ struct InfoWorkView : View {
     let profile: WorkTypeProfile
 
     var body: some View {
-        HStack {
+        HStack(alignment: .center) {
             ViewCaseRowHeader(rowNum: 3, rowTitle: viewModel.t("caseForm.work"))
+
+            Spacer()
 
             VStack (alignment: .trailing) {
                 if profile.unclaimed.isNotEmpty {
@@ -27,8 +29,9 @@ struct InfoWorkView : View {
                     }
                 }
             }
-            .padding(.trailing)
+            .padding(.bottom)
         }
+        .padding(.horizontal)
 
         if profile.otherOrgClaims.isNotEmpty {
             ForEach(profile.otherOrgClaims) { otherOrgClaim in

@@ -164,22 +164,22 @@ public struct NetworkWorksiteFull: Codable, Equatable {
         return nil
     }
 
-    private func newestWorkTypeMap() -> [String: (Int, NetworkWorkType)] {
-        return NetworkWorksiteFull.getNewestWorkTypeMap(workTypes)
+    private var newestWorkTypeMap: [String: (Int, NetworkWorkType)] {
+        NetworkWorksiteFull.getNewestWorkTypeMap(workTypes)
     }
 
-    func newestWorkTypes() -> [NetworkWorkType] {
-        return NetworkWorksiteFull.getNewestWorkTypes(
+    var newestWorkTypes: [NetworkWorkType] {
+        NetworkWorksiteFull.getNewestWorkTypes(
             workTypes,
-            newestWorkTypeMap()
+            newestWorkTypeMap
         )
     }
 
-    func newestKeyWorkType() -> NetworkWorkType? {
-        return NetworkWorksiteFull.getKeyWorkType(
+    var newestKeyWorkType: NetworkWorkType? {
+        NetworkWorksiteFull.getKeyWorkType(
             keyWorkType,
             workTypes,
-            newestWorkTypeMap()
+            newestWorkTypeMap
         )
     }
 
@@ -346,22 +346,22 @@ public struct NetworkWorksiteShort: Codable, Equatable {
         return nil
     }
 
-    private func newsetWorkTypeMap() -> [String: (Int, NetworkWorkTypeShort)] {
-        return NetworkWorksiteShort.getNewestWorkTypeMap(workTypes)
+    private var newsetWorkTypeMap: [String: (Int, NetworkWorkTypeShort)] {
+        NetworkWorksiteShort.getNewestWorkTypeMap(workTypes)
     }
 
-    func newestWorkTypes() -> [NetworkWorkTypeShort] {
-        return NetworkWorksiteShort.getNewestWorkTypes(
+    var newestWorkTypes: [NetworkWorkTypeShort] {
+        NetworkWorksiteShort.getNewestWorkTypes(
             workTypes,
-            newsetWorkTypeMap()
+            newsetWorkTypeMap
         )
     }
 
-    func newestKeyWorkType() -> NetworkKeyWorkTypeShort? {
-        return NetworkWorksiteShort.getKeyWorkType(
+    var newestKeyWorkType: NetworkKeyWorkTypeShort? {
+        NetworkWorksiteShort.getKeyWorkType(
             keyWorkType,
             workTypes,
-            newsetWorkTypeMap()
+            newsetWorkTypeMap
         )
     }
 }
@@ -429,22 +429,22 @@ public struct NetworkWorksitePage: Codable, Equatable {
         case workTypes = "work_types"
     }
 
-    private func newsetWorkTypeMap() -> [String: (Int, NetworkWorkTypeShort)] {
-        return NetworkWorksiteShort.getNewestWorkTypeMap(workTypes)
+    private var newsetWorkTypeMap: [String: (Int, NetworkWorkTypeShort)] {
+        NetworkWorksiteShort.getNewestWorkTypeMap(workTypes)
     }
 
-     func newestWorkTypes() -> [NetworkWorksiteFull.WorkTypeShort] {
-        return NetworkWorksiteShort.getNewestWorkTypes(
+    var newestWorkTypes: [NetworkWorksiteFull.WorkTypeShort] {
+        NetworkWorksiteShort.getNewestWorkTypes(
             workTypes,
-            newsetWorkTypeMap()
+            newsetWorkTypeMap
         )
     }
 
-    func newestKeyWorkType() -> NetworkWorksiteFull.KeyWorkTypeShort? {
-        return NetworkWorksiteShort.getKeyWorkType(
+    var newestKeyWorkType: NetworkWorksiteFull.KeyWorkTypeShort? {
+        NetworkWorksiteShort.getKeyWorkType(
             keyWorkType,
             workTypes,
-            newsetWorkTypeMap()
+            newsetWorkTypeMap
         )
     }
 }
@@ -510,14 +510,14 @@ public struct NetworkWorksiteCoreData: Codable, Equatable {
         case workTypes = "work_types"
     }
 
-    private func newestWorkTypeMap() -> [String: (Int, NetworkWorkType)] {
-        return NetworkWorksiteFull.getNewestWorkTypeMap(workTypes)
+    private var newestWorkTypeMap: [String: (Int, NetworkWorkType)] {
+        NetworkWorksiteFull.getNewestWorkTypeMap(workTypes)
     }
 
-    func newestWorkTypes() -> [NetworkWorkType] {
-        return NetworkWorksiteFull.getNewestWorkTypes(
+    var newestWorkTypes: [NetworkWorkType] {
+        NetworkWorksiteFull.getNewestWorkTypes(
             workTypes,
-            newestWorkTypeMap()
+            newestWorkTypeMap
         )
     }
 }

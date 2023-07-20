@@ -26,8 +26,8 @@ struct MenuView: View {
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            if viewModel.isDebuggable {
-                MenuScreenDebugView(viewModel: viewModel)
+            if !viewModel.isProduction {
+                MenuScreenNonProductionView(viewModel: viewModel)
             }
 
             Spacer()
@@ -49,7 +49,6 @@ private struct TopBar: View {
     @State var showIncidentSelect = false
 
     var body: some View {
-
         HStack {
             Button {
                 showIncidentSelect.toggle()
@@ -112,27 +111,39 @@ private struct TopBar: View {
     }
 }
 
-private struct MenuScreenDebugView: View {
+private struct MenuScreenNonProductionView: View {
+    @EnvironmentObject var router: NavigationRouter
+
     @ObservedObject var viewModel: MenuViewModel
 
     var body: some View {
         VStack {
-            Text(viewModel.databaseVersionText)
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
+            Button {
+                router.openSyncInsights()
+            } label: {
+                Text("See sync logs")
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
 
-            HStack {
-                Button("Clear refresh token") {
-                    viewModel.clearRefreshToken()
-                }
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
+            if viewModel.isDebuggable {
+                Text(viewModel.databaseVersionText)
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-                Button("Expire token") {
-                    viewModel.expireToken()
+                HStack {
+                    Button("Clear refresh token") {
+                        viewModel.clearRefreshToken()
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Button("Expire token") {
+                        viewModel.expireToken()
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
     }

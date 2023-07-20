@@ -536,6 +536,15 @@ extension DerivableRequest<WorksiteRecord> {
     func selectIncidentId() -> Self {
         select(WorksiteColumns.incidentId)
     }
+
+    func selectPendingSyncColumns() -> Self {
+        select(
+            WorksiteColumns.id,
+            WorksiteColumns.caseNumber,
+            WorksiteColumns.incidentId,
+            WorksiteColumns.networkId
+        )
+    }
 }
 
 // MARK: - Work type

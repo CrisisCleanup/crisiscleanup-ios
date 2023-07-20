@@ -13,7 +13,7 @@ class MenuViewModel: ObservableObject {
     let isDebuggable: Bool
     let isProduction: Bool
 
-    @Published var profilePicture: AccountProfilePicture? = nil
+    @Published private(set) var profilePicture: AccountProfilePicture? = nil
 
     @Published private(set) var incidentsData = LoadingIncidentsData
 
@@ -31,6 +31,7 @@ class MenuViewModel: ObservableObject {
     init(
         appEnv: AppEnv,
         accountDataRepository: AccountDataRepository,
+        syncLogRepository: SyncLogRepository,
         incidentSelector: IncidentSelector,
         appVersionProvider: AppVersionProvider,
         databaseVersionProvider: DatabaseVersionProvider,
@@ -47,6 +48,10 @@ class MenuViewModel: ObservableObject {
 
         isDebuggable = appEnv.isDebuggable
         isProduction = appEnv.isProduction
+
+        Task {
+            syncLogRepository.trimOldLogs()
+        }
     }
 
     func onViewAppear() {

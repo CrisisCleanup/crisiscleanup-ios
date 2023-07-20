@@ -73,7 +73,7 @@ private class LogEventMonitor : EventMonitor {
 //        if let headers = request.response?.headers {
 //            print(headers)
 //        }
-        print(request.description)
+//        print(request.description)
     }
 
     func request<Value>(
