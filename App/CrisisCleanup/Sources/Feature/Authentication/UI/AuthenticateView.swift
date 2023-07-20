@@ -55,7 +55,6 @@ struct LoginView: View {
 
     var body: some View {
         let disabled = viewModel.isAuthenticating
-        let buttonStyle = PrimaryButtonStyle(disabled)
 
         VStack {
             let errorMessage = $viewModel.errorMessage.wrappedValue
@@ -88,7 +87,7 @@ struct LoginView: View {
                     password = viewModel.appSettings.debugAccountPassword
                     authenticate()
                 }
-                .buttonStyle(buttonStyle)
+                .stylePrimary()
                 .padding([.vertical])
                 .disabled(disabled)
             }
@@ -101,7 +100,7 @@ struct LoginView: View {
                     text: t.translate("actions.login", "Login action")
                 )
             }
-            .buttonStyle(buttonStyle)
+            .stylePrimary()
             .padding([.vertical])
             .disabled(disabled)
 
@@ -114,7 +113,7 @@ struct LoginView: View {
                         text: t.translate("actions.cancel", "Cancel action")
                     )
                 }
-                .buttonStyle(buttonStyle)
+                .stylePrimary()
                 .padding([.vertical])
                 .disabled(disabled)
             }
@@ -131,7 +130,6 @@ struct LogoutView: View {
 
     var body: some View {
         let disabled = viewModel.isAuthenticating
-        let buttonStyle = PrimaryButtonStyle(disabled)
 
         VStack {
             let errorMessage = $viewModel.errorMessage.wrappedValue
@@ -148,7 +146,7 @@ struct LogoutView: View {
                     text: t.translate("actions.logout", "Logout action")
                 )
             }
-            .buttonStyle(buttonStyle)
+            .stylePrimary()
             .padding([.vertical])
             .disabled(disabled)
 
@@ -160,7 +158,7 @@ struct LogoutView: View {
                     text: t.translate("actions.cancel", "Cancel action")
                 )
             }
-            .buttonStyle(buttonStyle)
+            .stylePrimary()
             .padding([.vertical])
             .disabled(disabled)
         }

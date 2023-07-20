@@ -35,6 +35,10 @@ extension Array {
         }
         return (trueBucket, falseBucket)
     }
+
+    func get(_ index: Int, _ defaultValue: Element) -> Element {
+        0 <= index && index < count ? self[index] : defaultValue
+    }
 }
 
 extension [String] {

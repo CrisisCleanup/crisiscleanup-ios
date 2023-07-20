@@ -18,6 +18,13 @@ struct PrimaryButtonStyle: ButtonStyle {
     }
 }
 
+struct PrimaryButtonSytleModifier: ViewModifier {
+    @Environment(\.isEnabled) var isEnabled
+    func body(content: Content) -> some View {
+        return content.buttonStyle(PrimaryButtonStyle(!isEnabled))
+    }
+}
+
 struct CancelButtonStyle: ButtonStyle {
     let disabled: Bool
     var textSidePadding = 16.0
@@ -36,6 +43,13 @@ struct CancelButtonStyle: ButtonStyle {
     }
 }
 
+struct CancelButtonSytleModifier: ViewModifier {
+    @Environment(\.isEnabled) var isEnabled
+    func body(content: Content) -> some View {
+        return content.buttonStyle(CancelButtonStyle(!isEnabled))
+    }
+}
+
 struct BusyButtonContent: View {
     var isBusy: Bool
     var text: String
@@ -46,5 +60,15 @@ struct BusyButtonContent: View {
         } else {
             Text(text)
         }
+    }
+}
+
+extension Button {
+    func stylePrimary() -> some View {
+        ModifiedContent(content: self, modifier: PrimaryButtonSytleModifier())
+    }
+
+    func styleCancel() -> some View {
+        ModifiedContent(content: self, modifier: CancelButtonSytleModifier())
     }
 }

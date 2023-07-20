@@ -39,6 +39,12 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     @Published private(set) var workFormFieldNode: FormFieldNode = EmptyFormFieldNode
     @Published private(set) var hazardsFormFieldNode: FormFieldNode = EmptyFormFieldNode
     @Published private(set) var volunteerFormFieldNode: FormFieldNode = EmptyFormFieldNode
+    @Published private(set) var groupFormFieldNodes: [FormFieldNode] = []
+
+    @Published private(set) var flagTranslateKeys: [String] = []
+
+    @Published var binaryFormData = ObservableBoolDictionary()
+    @Published var contentFormData = ObservableStringDictionary()
 
     private let isSavingWorksite = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isSaving = false
@@ -200,6 +206,15 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
                 if stateData != nil {
                     self.setFormFieldNodes()
                 }
+
+                var flagOptionTranslationKeys = [
+                    "caseForm.address_problems",
+                    "flag.flag_high_priority"
+                ]
+                if self.isCreateWorksite {
+                    flagOptionTranslationKeys.append("actions.member_of_my_org")
+                }
+                self.flagTranslateKeys = flagOptionTranslationKeys
             })
             .store(in: &subscriptions)
 
@@ -263,6 +278,19 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         workFormFieldNode = editableWorksiteProvider.getGroupNode(WorkFormGroupKey)
         hazardsFormFieldNode = editableWorksiteProvider.getGroupNode(HazardsFormGroupKey)
         volunteerFormFieldNode = editableWorksiteProvider.getGroupNode(VolunteerReportFormGroupKey)
+        groupFormFieldNodes = [
+            detailsFormFieldNode,
+            workFormFieldNode,
+            hazardsFormFieldNode,
+            volunteerFormFieldNode
+        ]
+    }
+
+    func scheduleSync() {
+        if !isSyncing,
+           let worksiteId = worksiteIdIn {
+            syncPusher.appPushWorksite(worksiteId)
+        }
     }
 
     // MARK: KeyTranslator

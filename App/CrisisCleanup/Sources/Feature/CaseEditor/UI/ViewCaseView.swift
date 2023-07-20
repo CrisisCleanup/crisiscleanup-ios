@@ -63,42 +63,6 @@ struct ViewCaseView: View {
                             .background(selectedTab == .notes ? Color.orange : Color.gray)
                     }
                 }
-                .toolbar {
-                    ToolbarItem(placement: .principal) {
-                        VStack {
-                            Text(viewModel.headerTitle)
-                                .font(.headline)
-                            Text(viewModel.subTitle)
-                                .font(.subheadline)
-                        }
-                        .onLongPressGesture {
-                            UIPasteboard.general.string = viewModel.headerTitle
-                        }
-                    }
-
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        HStack {
-                            Button {
-                                viewModel.toggleHighPriority()
-                            } label: {
-                                let tint = getTopIconActionColor(viewModel.referenceWorksite.hasHighPriorityFlag)
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .tint(tint)
-                            }
-                            .disabled(disableMutation)
-
-                            Button {
-                                viewModel.toggleFavorite()
-                            } label: {
-                                let isFavorite = viewModel.referenceWorksite.isLocalFavorite
-                                let tint = getTopIconActionColor(isFavorite)
-                                Image(systemName: isFavorite ? "heart.fill" : "heart")
-                                    .tint(tint)
-                            }
-                            .disabled(disableMutation)
-                        }
-                    }
-                }
 
                 // TODO: redraws the view when switching tabs? Change Zindex instead?
                 switch selectedTab {
@@ -119,6 +83,42 @@ struct ViewCaseView: View {
                 VStack {
                     ProgressView()
                         .frame(alignment: .center)
+                }
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                VStack {
+                    Text(viewModel.headerTitle)
+                        .font(.headline)
+                    Text(viewModel.subTitle)
+                        .font(.subheadline)
+                }
+                .onLongPressGesture {
+                    UIPasteboard.general.string = viewModel.headerTitle
+                }
+            }
+
+            ToolbarItem(placement: .navigationBarTrailing) {
+                HStack {
+                    Button {
+                        viewModel.toggleHighPriority()
+                    } label: {
+                        let tint = getTopIconActionColor(viewModel.referenceWorksite.hasHighPriorityFlag)
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .tint(tint)
+                    }
+                    .disabled(disableMutation)
+
+                    Button {
+                        viewModel.toggleFavorite()
+                    } label: {
+                        let isFavorite = viewModel.referenceWorksite.isLocalFavorite
+                        let tint = getTopIconActionColor(isFavorite)
+                        Image(systemName: isFavorite ? "heart.fill" : "heart")
+                            .tint(tint)
+                    }
+                    .disabled(disableMutation)
                 }
             }
         }
@@ -174,6 +174,8 @@ private struct ViewCaseInfo: View {
                     }
 
                     ViewCaseRowHeader(rowNum: 1, rowTitle: t.t("caseForm.property_information"))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
 
                     PropertyInformationView(worksite: caseState.worksite)
 

@@ -10,6 +10,8 @@ struct InfoWorkView : View {
         HStack {
             ViewCaseRowHeader(rowNum: 3, rowTitle: viewModel.t("caseForm.work"))
 
+            Spacer()
+
             VStack (alignment: .trailing) {
                 if profile.unclaimed.isNotEmpty {
                     WorkTypeAction(viewModel.t("actions.claim_all_alt"), true) {
@@ -27,8 +29,9 @@ struct InfoWorkView : View {
                     }
                 }
             }
-            .padding(.trailing)
+            .padding(.bottom)
         }
+        .padding(.horizontal)
 
         if profile.otherOrgClaims.isNotEmpty {
             ForEach(profile.otherOrgClaims) { otherOrgClaim in
