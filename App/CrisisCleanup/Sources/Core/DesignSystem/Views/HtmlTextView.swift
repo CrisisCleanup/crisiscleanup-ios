@@ -4,6 +4,7 @@ import SwiftUI
 // https://developer.apple.com/forums/thread/653935
 struct HtmlTextView: UIViewRepresentable {
     let htmlContent: String
+    var fontSize = 16.0
 
     // TODO: Configure links to open in browser
     func makeUIView(context: UIViewRepresentableContext<Self>) -> UITextView {
@@ -19,7 +20,7 @@ struct HtmlTextView: UIViewRepresentable {
             ) {
                 label.isEditable = false
                 label.attributedText = attributedString
-                label.font = .systemFont(ofSize: 16)
+                label.font = .systemFont(ofSize: fontSize)
             }
         }
 

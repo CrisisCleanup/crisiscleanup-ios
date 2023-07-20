@@ -46,7 +46,7 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
     let errorMessageReason = CurrentValueSubject<String, Never>("")
     let errorMessageWorkType = CurrentValueSubject<String, Never>("")
 
-    @Published private(set) var requestWorkTypesState = RequestWorkTypeState()
+    @Published private var requestWorkTypesState = RequestWorkTypeState()
 
     @Published private(set) var requestDescription = ""
 
