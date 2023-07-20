@@ -176,7 +176,13 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
     }
 
     func translate(_ phraseKey: String) -> String? {
-        translations[phraseKey] ?? statusRepository.translateStatus(phraseKey)
+        if let translated = translations[phraseKey] {
+            return translated
+        }
+        if let statusTranslated = statusRepository.translateStatus(phraseKey) {
+            return statusTranslated.contains(phraseKey) == true ? translations[statusTranslated] : statusTranslated
+        }
+        return nil
     }
 
     func t(_ phraseKey: String) -> String {
