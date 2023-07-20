@@ -36,7 +36,7 @@ struct CreateEditCaseView: View {
                                 isSyncing: viewModel.isSyncing,
                                 scheduleSync: { viewModel.scheduleSync() }
                             )
-                            .padding([.horizontal, .bottom])
+                            .padding()
                         }
                     }
 

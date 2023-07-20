@@ -154,7 +154,7 @@ private struct ViewCaseInfo: View {
                         isSyncing: viewModel.isSyncing,
                         scheduleSync: { viewModel.scheduleSync() }
                     )
-                    .padding([.horizontal, .bottom])
+                    .padding()
 
                     if let worksiteFlags = caseState.worksite.flags,
                        worksiteFlags.isNotEmpty {

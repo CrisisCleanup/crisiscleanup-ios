@@ -7,7 +7,7 @@ struct InfoWorkView : View {
     let profile: WorkTypeProfile
 
     var body: some View {
-        HStack {
+        HStack(alignment: .center) {
             ViewCaseRowHeader(rowNum: 3, rowTitle: viewModel.t("caseForm.work"))
 
             Spacer()
