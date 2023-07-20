@@ -83,15 +83,7 @@ struct CreateEditCaseView: View {
             .scrollDismissesKeyboard(.immediately)
 
             if isKeyboardOpen {
-                HStack {
-                    Spacer()
-                    Button {
-                        hideKeyboard()
-                    } label: {
-                        Image(systemName: "keyboard.chevron.compact.down.fill")
-                    }
-                    .padding()
-                }
+                OpenKeyboardActionsView()
             } else {
                 CreateEditCaseSaveActions()
                     .disabled(disableMutation)

@@ -27,8 +27,10 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
         }
     }
 
-    let isTransferred = CurrentValueSubject<Bool, Never>(false)
-    let isTransferring = CurrentValueSubject<Bool, Never>(false)
+    private let isTransferredSubject = CurrentValueSubject<Bool, Never>(false)
+    @Published private(set) var isTransferred = false
+    private let isTransferringSubject = CurrentValueSubject<Bool, Never>(false)
+    @Published private(set) var isTransferring = false
 
     var transferWorkTypesState: [WorkType: Bool] { transferWorkTypeProvider.workTypes }
     @Published var workTypesState = [Int64: Bool]()
@@ -80,12 +82,25 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
             transferWorkTypeProvider.clearPendingTransfer()
         }
 
+        subscribeToTransferState()
         subscribeToWorkTypesState()
         subscribeToContactList()
     }
 
     func onViewDisappear() {
         subscriptions = cancelSubscriptions(subscriptions)
+    }
+
+    private func subscribeToTransferState() {
+        isTransferringSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.isTransferring, on: self)
+            .store(in: &subscriptions)
+
+        isTransferredSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.isTransferred, on: self)
+            .store(in: &subscriptions)
     }
 
     private func subscribeToWorkTypesState() {
@@ -182,7 +197,7 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
 
     private func transferWorkTypes() {
         Task {
-            isTransferring.value = true
+            isTransferringSubject.value = true
             let isRequest = transferType == .request
             let workTypeIdLookup = transferWorkTypesState.keys
                 .map { ($0.id, $0.workTypeLiteral) }
@@ -193,7 +208,7 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
             let worksite = editableWorksiteProvider.editableWorksite.value
             do {
                 defer {
-                    Task { @MainActor in self.isTransferring.value = false }
+                    Task { self.isTransferringSubject.value = false }
                 }
 
                 let isSaved = try await worksiteChangeRepository.saveWorkTypeTransfer(
@@ -208,7 +223,7 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
                 if isSaved {
                     syncPusher.appPushWorksite(worksite.id)
 
-                    Task { @MainActor in self.isTransferred.value = true }
+                    Task { self.isTransferredSubject.value = true }
                 }
             } catch {
                 // TODO Show error
