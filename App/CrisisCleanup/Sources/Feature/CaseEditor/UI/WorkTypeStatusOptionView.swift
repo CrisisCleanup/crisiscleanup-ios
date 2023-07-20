@@ -87,6 +87,7 @@ struct WorkTypeStatusPicker: View {
             } label: {
                 Text(translator.t("actions.cancel"))
             }
+            .padding()
         }
     }
 }

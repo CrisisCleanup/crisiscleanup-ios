@@ -9,13 +9,13 @@ class SyncInsightsViewModel: ObservableObject {
     private let syncPusher: SyncPusher
     private let logger: AppLogger
 
-    @Published var worksitesPendingSync = [(Int64, String)]()
+    @Published private(set) var worksitesPendingSync = [(Int64, String)]()
 
-    @Published var isSyncing = false
+    @Published private(set) var isSyncing = false
 
     private let queryLogState = CurrentValueSubject<(Int, Int), Never>((0, 0))
 
-    @Published var syncLogs = [SyncLogItem]()
+    @Published private(set) var syncLogs = [SyncLogItem]()
 
     private var subscriptions = Set<AnyCancellable>()
 
@@ -44,7 +44,7 @@ class SyncInsightsViewModel: ObservableObject {
         subscriptions = cancelSubscriptions(subscriptions)
     }
 
-    func subscribeToSyncing() {
+    private func subscribeToSyncing() {
         worksiteChangeRepository.syncingWorksiteIds.eraseToAnyPublisher()
             .map { !$0.isEmpty }
             .receive(on: RunLoop.main)
@@ -52,7 +52,7 @@ class SyncInsightsViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
-    func subscribeToLogCount() {
+    private func subscribeToLogCount() {
         syncLogRepository.streamLogCount()
             .eraseToAnyPublisher()
             .receive(on: RunLoop.main)
@@ -62,7 +62,7 @@ class SyncInsightsViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
-    func subscribeToPendingSync() {
+    private func subscribeToPendingSync() {
         worksiteChangeRepository.streamWorksitesPendingSync
             .eraseToAnyPublisher()
             .map {
@@ -78,7 +78,7 @@ class SyncInsightsViewModel: ObservableObject {
         .store(in: &subscriptions)
     }
 
-    func subscribeToSyncLogs() {
+    private func subscribeToSyncLogs() {
         queryLogState
             .map { (startIndex, totalCount) in
                 let logs = self.syncLogRepository.getLogs(100, 0)

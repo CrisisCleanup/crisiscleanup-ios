@@ -34,6 +34,13 @@ class TransferWorkTypeComponent: Component<AppDependency>, TransferWorkTypeViewB
     private func getViewModel() -> TransferWorkTypeViewModel {
         if viewModel == nil {
             viewModel = TransferWorkTypeViewModel(
+                organizationsRepository: dependency.organizationsRepository,
+                worksiteChangeRepository: dependency.worksiteChangeRepository,
+                editableWorksiteProvider: dependency.editableWorksiteProvider,
+                transferWorkTypeProvider: dependency.transferWorkTypeProvider,
+                translator: dependency.translator,
+                syncPusher: dependency.syncPusher,
+                loggerFactory: dependency.loggerFactory
             )
         }
         return viewModel!

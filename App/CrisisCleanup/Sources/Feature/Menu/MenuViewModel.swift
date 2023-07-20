@@ -13,7 +13,7 @@ class MenuViewModel: ObservableObject {
     let isDebuggable: Bool
     let isProduction: Bool
 
-    @Published var profilePicture: AccountProfilePicture? = nil
+    @Published private(set) var profilePicture: AccountProfilePicture? = nil
 
     @Published private(set) var incidentsData = LoadingIncidentsData
 

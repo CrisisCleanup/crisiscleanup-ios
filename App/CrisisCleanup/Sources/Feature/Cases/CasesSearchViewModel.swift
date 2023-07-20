@@ -13,16 +13,16 @@ class CasesSearchViewModel: ObservableObject {
     private let isInitialLoading = CurrentValueSubject<Bool, Never>(true)
     private let isSearching = CurrentValueSubject<Bool, Never>(false)
     private let isSelectingResultSubject = CurrentValueSubject<Bool, Never>(false)
-    @Published var isLoading = false
-    @Published var isSelectingResult = false
+    @Published private(set) var isLoading = false
+    @Published private(set) var isSelectingResult = false
 
-    @Published var selectedWorksite = (EmptyIncident.id, EmptyWorksite.id)
+    @Published private(set) var selectedWorksite = (EmptyIncident.id, EmptyWorksite.id)
 
-    @Published var recentWorksites: [CaseSummaryResult] = []
+    @Published private(set) var recentWorksites: [CaseSummaryResult] = []
 
     @Published var searchQuery = ""
 
-    @Published var searchResults = CasesSearchResults()
+    @Published private(set) var searchResults = CasesSearchResults()
 
     private let emptyResults = [CaseSummaryResult]()
 

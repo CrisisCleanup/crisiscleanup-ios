@@ -14,14 +14,14 @@ class AuthenticateViewModel: ObservableObject {
 
     let isDebuggable: Bool
 
-    @Published var viewData: AuthenticateViewData = AuthenticateViewData()
+    @Published private(set) var viewData: AuthenticateViewData = AuthenticateViewData()
 
     @Published var errorMessage: String = ""
-    @Published var passwordHasFocus: Bool = false
-    @Published var emailHasFocus: Bool = false
+    @Published private(set) var passwordHasFocus: Bool = false
+    @Published private(set) var emailHasFocus: Bool = false
 
-    @Published var isAuthenticating: Bool = false
-    @Published var isAuthenticateSuccessful: Bool = false
+    @Published private(set) var isAuthenticating: Bool = false
+    @Published private(set) var isAuthenticateSuccessful: Bool = false
 
     private var subscriptions = Set<AnyCancellable>()
 

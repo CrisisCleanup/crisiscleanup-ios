@@ -8,7 +8,7 @@ class MainViewModel: ObservableObject {
     private let syncPuller: SyncPuller
     private let logger: AppLogger
 
-    @Published var viewData: MainViewData = MainViewData()
+    @Published private(set) var viewData: MainViewData = MainViewData()
 
     let isNotProduction: Bool
 
