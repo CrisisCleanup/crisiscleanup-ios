@@ -154,7 +154,10 @@ private struct ViewCaseInfo: View {
                         incident: caseState.incident,
                         isPendingSync: caseState.isPendingSync,
                         isSyncing: viewModel.isSyncing,
-                        scheduleSync: { viewModel.scheduleSync() }
+                        scheduleSync: {
+//                            viewModel.scheduleSync()
+
+                        }
                     )
                     .padding([.horizontal, .bottom])
 
@@ -193,104 +196,118 @@ private struct ViewCasePhotos: View {
     @EnvironmentObject var viewModel: ViewCaseViewModel
     @Environment(\.translator) var t: KeyAssetTranslator
 
+
+
+    var body: some View {
+        HStack {
+            VStack (alignment: .leading) {
+
+                Text(t.t("caseForm.before_photos"))
+                ScrollView(.horizontal, showsIndicators: false) {
+                    MediaDisplay(category: .before)
+                }
+
+                Text(t.t("caseForm.after_photos"))
+                ScrollView(.horizontal, showsIndicators: false) {
+                    MediaDisplay(category: .after)
+                }
+
+            }
+            .padding(.leading)
+            Spacer()
+
+        }
+
+    }
+}
+
+private struct MediaDisplay: View {
+    @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewModel: ViewCaseViewModel
+    @Environment(\.translator) var t: KeyAssetTranslator
+    var category: ImageCategory
     @State var photoDetents: Bool = false
+
     @State var results: [PhotosPickerItem] = []
     @State var testImages: [Image] = []
 
     var body: some View {
         HStack {
-            VStack (alignment: .leading) {
-                Text(t.t("caseForm.before_photos"))
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack {
-                        ZStack {
-                            RoundedRectangle(cornerSize: CGSize(width: 2, height: 2))
-                                .fill(Color.blue.opacity(0.5))
-                                .frame(width: 200, height: 200)
-                                .overlay {
-                                    RoundedRectangle(cornerSize: CGSize(width: 2, height: 2))
-                                        .stroke(Color.blue, style: StrokeStyle(lineWidth: 2, dash: [5]))
+            ZStack {
+                RoundedRectangle(cornerSize: CGSize(width: 2, height: 2))
+                    .fill(Color.blue.opacity(0.5))
+                    .frame(width: 200, height: 200)
+                    .overlay {
+                        RoundedRectangle(cornerSize: CGSize(width: 2, height: 2))
+                            .stroke(Color.blue, style: StrokeStyle(lineWidth: 2, dash: [5]))
 
-                                }
+                    }
 
-                            VStack {
-                                Image(systemName: "plus")
-                                    .foregroundColor(Color.blue)
-                                Text("~~Add Media")
-                                    .foregroundColor(Color.blue)
+                VStack {
+                    Image(systemName: "plus")
+                        .foregroundColor(Color.blue)
+                    Text("~~Add Media")
+                        .foregroundColor(Color.blue)
+                }
+            }
+            .onTapGesture {
+                photoDetents.toggle()
+            }
+            .onChange(of: results) { _ in
+                photoDetents = false
+                Task {
+                    for result in results {
+                        if let data = try? await result.loadTransferable(type: Data.self) {
+                            if let uiImage = UIImage(data: data) {
+                                testImages.append(Image(uiImage: uiImage))
+
                             }
+                        } else {
+                            print("failed")
                         }
-                        .onTapGesture {
-                            photoDetents.toggle()
-                        }
-                        .onChange(of: results) { _ in
-                            photoDetents = false
-                            Task {
-                                for result in results {
-                                    if let data = try? await result.loadTransferable(type: Data.self) {
-                                        if let uiImage = UIImage(data: data) {
-                                            testImages.append(Image(uiImage: uiImage))
+                    }
 
-                                        }
-                                    } else {
-                                        print("failed")
-                                    }
-                                }
+                    results = []
+                }
+            }
 
-                                results = []
-                            }
-                        }
+            ForEach(0..<testImages.count, id: \.self) { imageIndex in
+                testImages[imageIndex]
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 200)
+                    .cornerRadius(appTheme.cornerRadius)
+            }
 
-                        ForEach(0..<testImages.count, id: \.self) { imageIndex in
-                            testImages[imageIndex]
+            let beforeAfterImages = viewModel.beforeAfterPhotos[category] ?? []
+            ForEach(beforeAfterImages, id: \.id) { caseImage in
+                NavigationLink (destination: ViewImageView(imageUri: caseImage.imageUri)
+                    .navigationBarHidden(true)
+                    .statusBarHidden(true)) {
+                    CachedAsyncImage(url: URL(string: caseImage.thumbnailUri)) { phase in
+                        if let image = phase.image {
+                            image // Displays the loaded image.
                                 .resizable()
                                 .scaledToFit()
                                 .frame(height: 200)
                                 .cornerRadius(appTheme.cornerRadius)
+                                .onTapGesture {
+                                    router.viewImage(imageId: caseImage.id)
+                                }
+                        } else if phase.error != nil {
+                            Color.red // Indicates an error.
+                        } else {
+                            Color.blue // Acts as a placeholder.
                         }
-                        Text(Array(viewModel.beforeAfterPhotos.keys).description)
-                        Text(Array(viewModel.beforeAfterPhotos.values).description)
-                        Text(viewModel.beforeAfterPhotos[.before]?.description ?? "none found")
-                        let beforeImages = viewModel.beforeAfterPhotos[.before] ?? []
-                        ForEach(beforeImages, id: \.id) { caseImage in
-                            CachedAsyncImage(url: URL(string: caseImage.thumbnailUri))
-
-                        }
-
                     }
                 }
 
-                Text(t.t("caseForm.after_photos"))
-                ZStack {
-                    RoundedRectangle(cornerSize: CGSize(width: 2, height: 2))
-                        .fill(Color.blue.opacity(0.5))
-                        .frame(width: 200, height: 200)
-                        .overlay {
-                            RoundedRectangle(cornerSize: CGSize(width: 2, height: 2))
-                                .stroke(Color.blue, style: StrokeStyle(lineWidth: 2, dash: [5]))
 
-                        }
 
-                    VStack {
-                        Image(systemName: "plus")
-                            .foregroundColor(Color.blue)
-                        Text("~~Add Media")
-                            .foregroundColor(Color.blue)
-                    }
-                }
-                .onTapGesture {
-                    photoDetents.toggle()
-                }
 
-                Button {
-                    router.viewImage(imageId: 0)
-                } label: {
-                    Text("Photos")
-                }
-                Spacer()
+
+
             }
-            .padding(.leading)
-            Spacer()
 
         }
         .sheet(isPresented: $photoDetents) {
