@@ -240,23 +240,27 @@ private struct MediaDisplay: View {
         let rowHeight = 160.0
 
         HStack {
+            let r = appTheme.cornerRadius
             ZStack {
-                RoundedRectangle(cornerSize: CGSize(width: 2, height: 2))
-                    .fill(Color.blue.opacity(0.5))
+                let strokeColor = appTheme.colors.primaryBlueColor
+                let cornerSize = CGSize(width: r, height: r)
+                RoundedRectangle(cornerSize: cornerSize)
+                    .fill(appTheme.colors.addMediaBackgroundColor)
                     .frame(width: 120, height: rowHeight)
                     .overlay {
-                        RoundedRectangle(cornerSize: CGSize(width: 2, height: 2))
-                            .stroke(Color.blue, style: StrokeStyle(lineWidth: 2, dash: [5]))
+                        RoundedRectangle(cornerSize: cornerSize)
+                            .stroke(strokeColor, style: StrokeStyle(lineWidth: 2, dash: [5]))
                     }
 
                 // TODO: Common styles
                 VStack {
                     Image(systemName: "plus")
-                        .foregroundColor(Color.blue)
+                        .foregroundColor(strokeColor)
                     Text(t.t("actions.add_media"))
-                        .foregroundColor(Color.blue)
+                        .foregroundColor(strokeColor)
                 }
             }
+            .padding(.all, r * 0.55)
             .onTapGesture {
                 photoDetents.toggle()
             }

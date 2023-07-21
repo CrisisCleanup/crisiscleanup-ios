@@ -9,11 +9,6 @@ struct CaseAddNoteView: View {
 
     var body: some View {
         VStack {
-            HStack {
-                Text(t.t("caseView.add_note"))
-                    .font(.title)
-            }
-
             TextEditor(text: $note)
                 .frame(height: appTheme.rowItemHeight*5)
                 .textFieldBorder()
@@ -23,15 +18,15 @@ struct CaseAddNoteView: View {
             HStack {
                 Spacer()
                 Button {
-                    dismiss.callAsFunction()
+                    dismiss()
                 } label: {
                     Text(t.t("actions.cancel"))
                 }
                 .tint(.black)
-                .padding(.trailing)
 
                 Button {
-                    // TODO: handle note addition
+                    viewModel.onAddNote(note)
+                    dismiss()
                 } label: {
                     Text(t.t("actions.add"))
                 }
@@ -39,8 +34,14 @@ struct CaseAddNoteView: View {
                 .padding(.horizontal)
 
             }
-            .padding()
+            .padding(.horizontal)
+
             Spacer()
+        }
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text(t.t("caseView.add_note"))
+            }
         }
     }
 }

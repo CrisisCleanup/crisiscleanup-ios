@@ -21,6 +21,9 @@ public protocol EditableWorksiteProvider {
     func setAddressChanged(_ worksite: Worksite)
     func takeAddressChanged() -> Bool
 
+    func addNote(_ note: String)
+    func takeNote() -> WorksiteNote?
+
     // TODO: Do
 //    var incidentIdChange: any Publisher<Int64, Never> { get }
 //    var peekIncidentChange: IncidentChangeData? { get }
@@ -103,6 +106,27 @@ class SingleEditableWorksiteProvider: EditableWorksiteProvider, WorksiteLocation
 
     func takeAddressChanged() -> Bool {
         _isAddressChanged.exchange(false, ordering: .acquiring)
+    }
+
+    private let addNoteLock = NSLock()
+    private var uncommitedNote: WorksiteNote? = nil
+
+    func addNote(_ note: String) {
+        if note.isNotBlank {
+            addNoteLock.withLock {
+                uncommitedNote = WorksiteNote.create().copy { $0.note = note }
+            }
+        }
+    }
+
+    func takeNote() -> WorksiteNote? {
+        return addNoteLock.withLock {
+            if let note = uncommitedNote {
+                uncommitedNote = nil
+                return note
+            }
+            return nil
+        }
     }
 
     func resetIncidentChange() {

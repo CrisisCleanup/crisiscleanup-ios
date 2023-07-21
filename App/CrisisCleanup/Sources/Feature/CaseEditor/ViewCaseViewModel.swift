@@ -169,6 +169,10 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
                 translate: localTranslate
             )
         }
+
+        if let note = editableWorksiteProvider.takeNote() {
+            saveNote(note)
+        }
     }
 
     func onViewDisappear() {
@@ -640,7 +644,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         }
     }
 
-    func saveNote(note: WorksiteNote) {
+    func saveNote(_ note: WorksiteNote) {
         if note.note.isBlank {
             return
         }

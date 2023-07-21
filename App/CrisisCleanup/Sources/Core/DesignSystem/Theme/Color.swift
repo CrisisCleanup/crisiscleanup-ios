@@ -38,6 +38,8 @@ struct ThemeColor {
     let neutralIconColor: Color
     let unfocusedBorderColor: Color
 
+    let addMediaBackgroundColor: Color
+
     init(
         themePrimary: Color = Color(hex: 0xFF2D2D2D),
         themePrimaryContainer: Color = Color(hex: 0xFFFECE09),
@@ -78,5 +80,8 @@ struct ThemeColor {
         self.neutralIconColor = neutralIconColor
         self.navigationContainerColor = navigationContainerColor
         self.unfocusedBorderColor = unfocusedBorderColor
+
+        let primaryBlueOneTenthColor = primaryBlueColor.opacity(0.1)
+        addMediaBackgroundColor = primaryBlueOneTenthColor
     }
 }
