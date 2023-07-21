@@ -163,6 +163,7 @@ struct ImageNav: View {
             }
             .padding()
             .background(
+                // TODO: Improve the smoothness of the gradient
                 LinearGradient(
                     gradient: Gradient(colors: [.black.opacity(0.5), .black.opacity(0.0)]),
                     startPoint: .top,

@@ -65,6 +65,7 @@ struct ViewCaseView: View {
                             .background(selectedTab == .notes ? Color.orange : Color.gray)
                     }
                 }
+                .padding(.top)
 
                 // TODO: redraws the view when switching tabs? Change Zindex instead?
                 switch selectedTab {
@@ -337,7 +338,7 @@ private struct ViewCaseNotes: View {
                         HStack {
                             Spacer()
                             Image(systemName: "circle.fill")
-                                .foregroundColor(appTheme.colors.survivorNoteColor)
+                                .foregroundColor(appTheme.colors.survivorNoteColorNoTransparency)
                             Text(t.t("formLabels.survivor_notes"))
                         }
                         .padding()
@@ -346,29 +347,26 @@ private struct ViewCaseNotes: View {
                     if let notes = viewModel.caseData?.worksite.notes {
                         ForEach(notes, id: \.id) { note in
                             VStack(alignment: .leading) {
-                                HStack {
-                                    Text(note.createdAt.relativeTime)
-                                    Spacer()
-                                }
+                                Text(note.createdAt.relativeTime)
+                                    .font(.caption)
+                                    .padding(.bottom, 4)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                                 Text(note.note)
                             }
                             .padding()
-                            .background(note.isSurvivor ? appTheme.colors.survivorNoteColor : Color.white)
+                            .background(note.isSurvivor ? appTheme.colors.survivorNoteColorNoTransparency : Color.white)
                             .cornerRadius(appTheme.cornerRadius)
-                            .shadow(radius: 2)
+                            .shadow(radius: appTheme.shadowRadius)
                             .padding(.horizontal)
-
                         }
 
+                        // Spacing
                         Image("ic_note", bundle: .module)
+                        // TODO: Common dimensions
                             .frame(width: 50, height: 50)
-                            .background(appTheme.colors.attentionBackgroundColor)
-                            .tint(.black)
-                            .clipShape(Circle())
                             .padding()
                             .hidden()
                     }
-
                 }
                 .padding(.bottom)
             }
@@ -381,6 +379,7 @@ private struct ViewCaseNotes: View {
                         router.openCaseAddNote()
                     } label: {
                         Image("ic_note", bundle: .module)
+                        // TODO: Common dimensions
                             .frame(width: 50, height: 50)
                             .background(appTheme.colors.attentionBackgroundColor)
                             .tint(.black)
