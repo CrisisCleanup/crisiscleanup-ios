@@ -57,6 +57,15 @@ public struct Incident: Equatable {
         lhs.turnOnRelease == rhs.turnOnRelease &&
         lhs.disasterLiteral == rhs.disasterLiteral
     }
+
+    func asIdNameType() -> IncidentIdNameType {
+        IncidentIdNameType(
+            id: id,
+            name: name,
+            shortName: shortName,
+            disasterLiteral: disasterLiteral
+        )
+    }
 }
 
 let EmptyIncident = Incident(
@@ -150,4 +159,11 @@ public struct IncidentFormField: Equatable {
         isFrequency = htmlTypeLower == "cronselect"
         isSelectOption = htmlType.lowercased() == "select"
     }
+}
+
+public struct IncidentIdNameType {
+    let id: Int64
+    let name: String
+    let shortName: String
+    let disasterLiteral: String
 }

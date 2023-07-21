@@ -1,12 +1,13 @@
 import Foundation
 
 struct ConfigProperties: Codable {
-    var isDebuggable: String
-    var isProduction: String
-    var apiBaseUrl: String
-    var baseUrl: String
-    var debugEmailAddress: String
-    var debugAccountPassword: String
+    let isDebuggable: String
+    let isProduction: String
+    let apiBaseUrl: String
+    let baseUrl: String
+    let googleMapsApiKey: String
+    let debugEmailAddress: String
+    let debugAccountPassword: String
 }
 
 func loadConfigProperties() -> ConfigProperties {
@@ -20,6 +21,7 @@ func loadConfigProperties() -> ConfigProperties {
         isProduction: "YES",
         apiBaseUrl: "",
         baseUrl: "",
+        googleMapsApiKey: "",
         debugEmailAddress: "",
         debugAccountPassword: ""
     )

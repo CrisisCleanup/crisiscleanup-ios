@@ -2,15 +2,19 @@ import Atomics
 import CoreLocation
 
 public struct LatLng: Equatable, CustomStringConvertible {
-    let latitude: Double
-    let longitude: Double
+    public let latitude: Double
+    public let longitude: Double
 
-    init(_ latitude: Double, _ longitude: Double) {
+    public init(_ latitude: Double, _ longitude: Double) {
         self.latitude = latitude
         self.longitude = longitude
     }
 
     public var description: String { "lat/lng \(latitude)/\(longitude)" }
+
+    public var location: CLLocation {
+        CLLocation(latitude: latitude, longitude: longitude)
+    }
 }
 
 extension CLLocation {
