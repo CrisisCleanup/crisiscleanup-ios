@@ -26,6 +26,8 @@ public protocol AppDependency: Dependency {
     var organizationsRepository: OrganizationsRepository { get }
     var worksiteChangeRepository: WorksiteChangeRepository  { get }
     var syncLogRepository: SyncLogRepository  { get }
+    var addressSearchRepository: AddressSearchRepository { get }
+    var databaseManagementRepository: DatabaseManagementRepository { get }
 
     var translator: KeyAssetTranslator { get }
 

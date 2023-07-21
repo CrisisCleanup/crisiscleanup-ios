@@ -212,4 +212,9 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
             logger.logError(error)
         }
     }
+
+    func getMatchingIncidents(_ q: String) async -> [IncidentIdNameType] {
+        // TODO: Do
+        []
+    }
 }

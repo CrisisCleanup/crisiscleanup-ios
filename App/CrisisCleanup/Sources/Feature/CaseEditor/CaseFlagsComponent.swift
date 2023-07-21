@@ -33,6 +33,17 @@ class CaseFlagsComponent: Component<AppDependency>, CaseFlagsViewBuilder {
     private func getViewModel() -> CaseFlagsViewModel {
         if viewModel == nil {
             viewModel = CaseFlagsViewModel(
+                editableWorksiteProvider: dependency.editableWorksiteProvider,
+                organizationsRepository: dependency.organizationsRepository,
+                incidentsRepository: dependency.incidentsRepository,
+                databaseManagementRepository: dependency.databaseManagementRepository,
+                accountDataRepository: dependency.accountDataRepository,
+                addressSearchRepository: dependency.addressSearchRepository,
+                worksiteChangeRepository: dependency.worksiteChangeRepository,
+                incidentSelectManager: dependency.incidentSelector,
+                syncPusher: dependency.syncPusher,
+                translator: dependency.translator,
+                loggerFactory: dependency.loggerFactory
             )
         }
         return viewModel!

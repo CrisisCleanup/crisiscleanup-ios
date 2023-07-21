@@ -5,7 +5,7 @@ public struct IncidentOrganization {
     let affiliateIds: Set<Int64>
 }
 
-struct OrganizationIdName {
+public struct OrganizationIdName {
     let id: Int64
     let name: String
 }

@@ -30,7 +30,7 @@ extension Array where Element == Optional<String> {
             .map { $0!.trim() }
     }
 
-    func combineTrimText(_ separator: String = ", ") -> String {
+    public func combineTrimText(_ separator: String = ", ") -> String {
         filterNotBlankTrim()
             .joined(separator: separator)
     }

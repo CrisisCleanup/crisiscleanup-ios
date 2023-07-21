@@ -18,9 +18,10 @@ public class MainComponent: BootstrapComponent,
                             CaseMoveOnMapViewBuilder,
                             SyncInsightsViewBuilder
 {
-    public private(set) var appEnv: AppEnv
-    public private(set) var appSettingsProvider: AppSettingsProvider
-    public private(set) var loggerFactory: AppLoggerFactory
+    public let appEnv: AppEnv
+    public let appSettingsProvider: AppSettingsProvider
+    public let loggerFactory: AppLoggerFactory
+    public let addressSearchRepository: AddressSearchRepository
 
     var mainViewModel: MainViewModel {
         MainViewModel(
@@ -46,11 +47,13 @@ public class MainComponent: BootstrapComponent,
     public init(
         appEnv: AppEnv,
         appSettingsProvider: AppSettingsProvider,
-        loggerFactory: AppLoggerFactory
+        loggerFactory: AppLoggerFactory,
+        addressSearchRepository: AddressSearchRepository
     ) {
         self.appEnv = appEnv
         self.appSettingsProvider = appSettingsProvider
         self.loggerFactory = loggerFactory
+        self.addressSearchRepository = addressSearchRepository
     }
 
     var casesComponent: CasesComponent { CasesComponent(parent: self) }
@@ -81,7 +84,7 @@ public class MainComponent: BootstrapComponent,
 
     // MARK: Authenticate
 
-    lazy var authenticateComponent: AuthenticateComponent = { AuthenticateComponent(parent: self) }()
+    lazy var authenticateComponent: AuthenticateComponent = AuthenticateComponent(parent: self)
 
     public func authenticateView(dismissScreen: @escaping () -> Void) -> AnyView {
         authenticateComponent.authenticateView(dismissScreen: dismissScreen)
@@ -89,9 +92,7 @@ public class MainComponent: BootstrapComponent,
 
     // MARK: Incident select
 
-    lazy var incidentSelectComponent: IncidentSelectComponent = {
-        IncidentSelectComponent(parent: self)
-    }()
+    lazy var incidentSelectComponent: IncidentSelectComponent = IncidentSelectComponent(parent: self)
 
     public func incidentSelectView(onDismiss: @escaping () -> Void ) -> AnyView {
         incidentSelectComponent.incidentSelectView(onDismiss: onDismiss)
@@ -103,21 +104,19 @@ public class MainComponent: BootstrapComponent,
 
     // MARK: Cases filter
 
-    lazy var casesFilterComponent: CasesFilterComponent = { CasesFilterComponent(parent: self, routerObserver: routerObserver) }()
+    lazy var casesFilterComponent: CasesFilterComponent = CasesFilterComponent(parent: self, routerObserver: routerObserver)
 
     public var casesFilterView: AnyView { casesFilterComponent.casesFilterView }
 
     // MARK: Cases search
 
-    lazy var casesSearchComponent: CasesSearchComponent = { CasesSearchComponent(parent: self, routerObserver: routerObserver)
-    }()
+    lazy var casesSearchComponent: CasesSearchComponent = CasesSearchComponent(parent: self, routerObserver: routerObserver)
 
     public var casesSearchView: AnyView { casesSearchComponent.casesSearchView }
 
     // MARK: View Case
 
-    lazy var viewCaseComponent: ViewCaseComponent = { ViewCaseComponent(parent: self, routerObserver: routerObserver)
-    }()
+    lazy var viewCaseComponent: ViewCaseComponent = ViewCaseComponent(parent: self, routerObserver: routerObserver)
 
     public func viewCaseView(incidentId: Int64, worksiteId: Int64) -> AnyView {
         viewCaseComponent.viewCaseView(
@@ -128,16 +127,13 @@ public class MainComponent: BootstrapComponent,
 
     // MARK: Case add note
 
-    lazy var caseAddNoteComponent: CaseAddNoteComponent = {
-        CaseAddNoteComponent(parent: self, routerObserver: routerObserver)
-    }()
+    lazy var caseAddNoteComponent: CaseAddNoteComponent = CaseAddNoteComponent(parent: self, routerObserver: routerObserver)
 
     public var caseAddNoteView: AnyView { caseAddNoteComponent.caseAddNoteView }
 
     // MARK: Create/edit Case
 
-    lazy var createEditCaseComponent: CreateEditCaseComponent = { CreateEditCaseComponent(parent: self, routerObserver: routerObserver)
-    }()
+    lazy var createEditCaseComponent: CreateEditCaseComponent = CreateEditCaseComponent(parent: self, routerObserver: routerObserver)
 
     public func createEditCaseView(incidentId: Int64, worksiteId: Int64?) -> AnyView {
         createEditCaseComponent.createEditCaseView(
@@ -148,69 +144,53 @@ public class MainComponent: BootstrapComponent,
 
     // MARK: Case search location
 
-    lazy var caseSearchLocationComponent: CaseSearchLocationComponent = {
-        CaseSearchLocationComponent(parent: self, routerObserver: routerObserver)
-    }()
+    lazy var caseSearchLocationComponent: CaseSearchLocationComponent = CaseSearchLocationComponent(parent: self, routerObserver: routerObserver)
 
     public var caseSearchLocationView: AnyView { caseSearchLocationComponent.caseSearchLocationView }
 
     // MARK: Case move on map
 
-    lazy var caseMoveOnMapComponent: CaseMoveOnMapComponent = {
-        CaseMoveOnMapComponent(parent: self, routerObserver: routerObserver)
-    }()
+    lazy var caseMoveOnMapComponent: CaseMoveOnMapComponent = CaseMoveOnMapComponent(parent: self, routerObserver: routerObserver)
 
     public var caseMoveOnMapView: AnyView { caseMoveOnMapComponent.caseMoveOnMapView }
 
     // MARK: Case share
 
-    lazy var caseShareComponent: CaseShareComponent = {
-        CaseShareComponent(parent: self, routerObserver: routerObserver)
-    }()
+    lazy var caseShareComponent: CaseShareComponent = CaseShareComponent(parent: self, routerObserver: routerObserver)
 
     public var caseShareView: AnyView { caseShareComponent.caseShareView }
 
     // MARK: Case flags
 
-    lazy var caseFlagsComponent: CaseFlagsComponent = {
-        CaseFlagsComponent(parent: self, routerObserver: routerObserver)
-    }()
+    lazy var caseFlagsComponent: CaseFlagsComponent = CaseFlagsComponent(parent: self, routerObserver: routerObserver)
 
     public var caseFlagsView: AnyView { caseFlagsComponent.caseFlagsView }
 
     // MARK: Case history
 
-    lazy var caseHistoryComponent: CaseHistoryComponent = {
-        CaseHistoryComponent(parent: self, routerObserver: routerObserver)
-    }()
+    lazy var caseHistoryComponent: CaseHistoryComponent = CaseHistoryComponent(parent: self, routerObserver: routerObserver)
 
     public var caseHistoryView: AnyView { caseHistoryComponent.caseHistoryView }
 
     // MARK: Transfer work type
 
-    lazy var transferWorkTypeComponent: TransferWorkTypeComponent = {
-        TransferWorkTypeComponent(
-            parent: self,
-            routerObserver: routerObserver,
-            transferWorkTypeProvider: transferWorkTypeProvider
-        )
-    }()
+    lazy var transferWorkTypeComponent: TransferWorkTypeComponent = TransferWorkTypeComponent(
+        parent: self,
+        routerObserver: routerObserver,
+        transferWorkTypeProvider: transferWorkTypeProvider
+    )
 
     public var transferWorkTypeView: AnyView { transferWorkTypeComponent.transferWorkTypeView }
 
     // MARK: View image
 
-    lazy var viewImageComponent: ViewImageComponent = {
-        ViewImageComponent(parent: self, routerObserver: routerObserver)
-    }()
+    lazy var viewImageComponent: ViewImageComponent = ViewImageComponent(parent: self, routerObserver: routerObserver)
 
     public func viewImageView(_ imageId: Int64) -> AnyView { viewImageComponent.viewImageView(imageId) }
 
     // MARK: Sync insights
 
-    lazy var syncInsightsComponent: SyncInsightsComponent = {
-        SyncInsightsComponent(parent: self, routerObserver: routerObserver)
-    }()
+    lazy var syncInsightsComponent: SyncInsightsComponent = SyncInsightsComponent(parent: self, routerObserver: routerObserver)
 
     public var syncInsightsView: AnyView { syncInsightsComponent.syncInsightsView }
 }

@@ -1,14 +1,18 @@
 import CrisisCleanup
 
 struct AppBuildEnv : AppEnv {
-    var isDebuggable: Bool
-    var isProduction: Bool
-    var isNotProduction: Bool
+    let isDebuggable: Bool
+    let isProduction: Bool
+    var isNotProduction: Bool { !isProduction }
 
     init(_ config: ConfigProperties) {
         self.isDebuggable = config.isDebuggable=="YES"
         self.isProduction = config.isProduction=="YES"
-        self.isNotProduction = !self.isProduction
+    }
+
+    init() {
+        isDebuggable = false
+        isProduction = true
     }
 
     func runInNonProd(block: () -> Void) {

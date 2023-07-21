@@ -183,6 +183,13 @@ extension MainComponent {
         }
     }
 
+    public var databaseManagementRepository: DatabaseManagementRepository {
+        shared {
+            CrisisCleanupDatabaseManagementRepository(
+            )
+        }
+    }
+
     var pagingSyncLogRepository: PagingSyncLogRepository {
         shared {
             PagingSyncLogRepository(

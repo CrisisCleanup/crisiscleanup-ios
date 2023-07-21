@@ -12,8 +12,7 @@ public protocol OrganizationsRepository {
         _ longitude: Double
     ) async -> [IncidentOrganization]
 
-    // TODO: When flags are developed
-    // func getMatchingOrganizations(q: String) -> [OrganizationIdName]
+    func getMatchingOrganizations(_ q: String) async -> [OrganizationIdName]
 }
 
 class OfflineFirstOrganizationsRepository: OrganizationsRepository {
@@ -73,5 +72,10 @@ class OfflineFirstOrganizationsRepository: OrganizationsRepository {
             logger.logError(error)
         }
         return []
+    }
+
+    func getMatchingOrganizations(_ q: String) async -> [OrganizationIdName] {
+        // TODO: Do
+        []
     }
 }

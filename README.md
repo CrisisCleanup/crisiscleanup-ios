@@ -3,6 +3,9 @@
 ## Setup
 Reset package caches whenever modules are not found.
 
+1. Select App in project hierarcy.
+   - In the Identity and Type pane > Project Document > Project Format=Xcode 12.0-compatible
+   - `Pod install` from the project root dir.
 1. `brew install needle`
 1. Install git hook(s) to prevent commits of unintended files and poor line spacing.
    - Xcode > Settings... > Text Editing > Editing > check While Editing checkboxes.
