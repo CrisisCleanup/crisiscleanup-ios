@@ -231,7 +231,9 @@ private struct MediaDisplay: View {
     @State var photoDetents: Bool = false
 
     @State var results: [PhotosPickerItem] = []
-     @State var testImages: [Image] = []
+    @State var testImages: [Image] = []
+    @State var presentCamera: Bool = false
+    @State var selectedImage: UIImage = UIImage()
 
     var body: some View {
         // TODO: Size relative to screen height
@@ -309,14 +311,24 @@ private struct MediaDisplay: View {
         .sheet(isPresented: $photoDetents) {
             ZStack {
                 VStack {
-                    Text(t.t("actions.take_photo"))
-                        .padding()
+                    Button {
+                        presentCamera.toggle()
+                    } label : {
+                        Text(t.t("actions.take_photo"))
+                            .padding()
+                    }
+                    .tint(.black)
+                    .sheet(isPresented: $presentCamera) {
+                        ImagePickerCamera(selectedImage: $selectedImage)
+                    }
+
                     PhotosPicker(selection: $results,
                                  matching: .images,
                                  photoLibrary: .shared()) {
                         Text(t.t("fileUpload.select_file_upload"))
                             .padding()
                     }
+                    .tint(.black)
 
                 }
             }
