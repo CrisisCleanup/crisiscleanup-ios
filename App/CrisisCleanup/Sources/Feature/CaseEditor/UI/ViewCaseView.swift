@@ -156,8 +156,7 @@ private struct ViewCaseInfo: View {
                         isPendingSync: caseState.isPendingSync,
                         isSyncing: viewModel.isSyncing,
                         scheduleSync: {
-//                            viewModel.scheduleSync()
-
+                            viewModel.scheduleSync()
                         }
                     )
                     .padding()
@@ -199,8 +198,6 @@ private struct ViewCasePhotos: View {
     @EnvironmentObject var viewModel: ViewCaseViewModel
     @Environment(\.translator) var t: KeyAssetTranslator
 
-
-
     var body: some View {
         HStack {
             VStack (alignment: .leading) {
@@ -228,28 +225,32 @@ private struct MediaDisplay: View {
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var viewModel: ViewCaseViewModel
     @Environment(\.translator) var t: KeyAssetTranslator
+
     var category: ImageCategory
     @State var photoDetents: Bool = false
 
     @State var results: [PhotosPickerItem] = []
-    @State var testImages: [Image] = []
+     @State var testImages: [Image] = []
 
     var body: some View {
+        // TODO: Size relative to screen height
+        let rowHeight = 160.0
+
         HStack {
             ZStack {
                 RoundedRectangle(cornerSize: CGSize(width: 2, height: 2))
                     .fill(Color.blue.opacity(0.5))
-                    .frame(width: 200, height: 200)
+                    .frame(width: 120, height: rowHeight)
                     .overlay {
                         RoundedRectangle(cornerSize: CGSize(width: 2, height: 2))
                             .stroke(Color.blue, style: StrokeStyle(lineWidth: 2, dash: [5]))
-
                     }
 
+                // TODO: Common styles
                 VStack {
                     Image(systemName: "plus")
                         .foregroundColor(Color.blue)
-                    Text("~~Add Media")
+                    Text(t.t("actions.add_media"))
                         .foregroundColor(Color.blue)
                 }
             }
@@ -278,40 +279,31 @@ private struct MediaDisplay: View {
                 testImages[imageIndex]
                     .resizable()
                     .scaledToFit()
-                    .frame(height: 200)
+                    .frame(height: rowHeight)
                     .cornerRadius(appTheme.cornerRadius)
             }
 
             let beforeAfterImages = viewModel.beforeAfterPhotos[category] ?? []
             ForEach(beforeAfterImages, id: \.id) { caseImage in
-                NavigationLink (destination: ViewImageView(imageUri: caseImage.imageUri)
-                    .navigationBarHidden(true)
-                    .statusBarHidden(true)) {
-                    CachedAsyncImage(url: URL(string: caseImage.thumbnailUri)) { phase in
-                        if let image = phase.image {
-                            image // Displays the loaded image.
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height: 200)
-                                .cornerRadius(appTheme.cornerRadius)
-                                .onTapGesture {
-                                    router.viewImage(imageId: caseImage.id)
-                                }
-                        } else if phase.error != nil {
-                            Color.red // Indicates an error.
-                        } else {
-                            Color.blue // Acts as a placeholder.
-                        }
+                CachedAsyncImage(url: URL(string: caseImage.thumbnailUri)) { phase in
+                    if let image = phase.image {
+                        image
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: rowHeight)
+                            .cornerRadius(appTheme.cornerRadius)
+                            .onTapGesture {
+                                router.viewImage(imageId: caseImage.id)
+                            }
+                    } else if phase.error != nil {
+                        // TODO: Error view
+                        Color.red // Indicates an error.
+                    } else {
+                        // TODO: Actual placeholder
+                        Color.blue // Acts as a placeholder.
                     }
                 }
-
-
-
-
-
-
             }
-
         }
         .sheet(isPresented: $photoDetents) {
             ZStack {

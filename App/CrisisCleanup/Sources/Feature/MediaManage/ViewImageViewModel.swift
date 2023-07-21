@@ -10,4 +10,8 @@ class ViewImageViewModel: ObservableObject {
     ) {
         self.imageId = imageId
     }
+
+    func deleteImage() {
+        // TODO: Do
+    }
 }

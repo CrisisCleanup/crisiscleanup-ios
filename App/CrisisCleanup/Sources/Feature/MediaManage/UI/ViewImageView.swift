@@ -5,18 +5,18 @@ struct ViewImageView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
     @EnvironmentObject var router: NavigationRouter
 
-        @ObservedObject var viewModel: ViewImageViewModel
-    var imageUri: String
+    @ObservedObject var viewModel: ViewImageViewModel
+
+    var imageUri: String = ""
     @State private var scale: CGFloat = 1.0
     @State var offset = CGPoint(x: 0, y: 0)
     @State var offsetCache = CGPoint(x: 0, y: 0)
     @State var imgSize: CGSize = CGSizeZero
     @State var screenSize: CGSize = CGSizeZero
-    @State var showNavBar: Bool = false
+    @State var showNavBar: Bool = true
 
     var body: some View {
-
-        ZStack{
+        ZStack {
             Color.black.ignoresSafeArea(.all)
                 .overlay(
                     GeometryReader { proxy in
@@ -32,7 +32,7 @@ struct ViewImageView: View {
                     if let image = phase.image {
                         VStack
                         {
-                            image // Displays the loaded image.
+                            image
                                 .resizable()
                                 .scaledToFit()
                                 .onTapGesture(count: 2) {
@@ -106,16 +106,20 @@ struct ViewImageView: View {
                         )
 
                     } else if phase.error != nil {
+                        // TODO: Show error
                         Color.red // Indicates an error.
                     } else {
+                        // TODO: Show loading
                         Color.blue // Acts as a placeholder.
                     }
                 }
+                .edgesIgnoringSafeArea(.all)
             }
 
-
             if(showNavBar) {
-                ImageNav()
+                ImageNav(
+                    deleteImage: { viewModel.deleteImage() }
+                )
             }
         }
         .onTapGesture(count: 2) {
@@ -127,39 +131,43 @@ struct ViewImageView: View {
             }
         }
         .onTapGesture(count: 1) {
+            // TODO: Animate
             showNavBar.toggle()
         }
-
     }
 }
 
 struct ImageNav: View {
     @Environment(\.dismiss) var dismiss
 
+    let deleteImage: () -> Void
+
     var body: some View {
         VStack {
             HStack {
                 Button {
-                    dismiss.callAsFunction()
+                    dismiss()
                 } label: {
                     Image(systemName: "chevron.left")
-                        .font(.title)
                         .foregroundColor(Color.white)
-                        .padding(.leading)
                 }
+
                 Spacer()
 
                 Button {
-
+                    deleteImage()
                 } label: {
                     Image(systemName: "trash.fill")
-                        .font(.title)
                         .foregroundColor(Color.white)
-                        .padding(.trailing)
                 }
             }
+            .padding()
             .background(
-                LinearGradient(gradient: Gradient(colors: [.black, .clear]), startPoint: .top, endPoint: .bottom)
+                LinearGradient(
+                    gradient: Gradient(colors: [.black.opacity(0.5), .black.opacity(0.0)]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
             )
             Spacer()
         }

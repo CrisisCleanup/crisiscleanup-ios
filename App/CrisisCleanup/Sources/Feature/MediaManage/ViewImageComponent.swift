@@ -45,6 +45,8 @@ class ViewImageComponent: Component<AppDependency>, ViewImageViewBuilder {
             ViewImageView(
                 viewModel: getViewModel(imageId)
             )
+            .navigationBarHidden(true)
+            .statusBarHidden(true)
         )
     }
 }
