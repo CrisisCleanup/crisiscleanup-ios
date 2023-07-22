@@ -12,7 +12,7 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
          caseHistory,
          caseWorkTypeTransfer,
          caseAddNote,
-         viewImage(imageId: Int64),
+         viewImage(_ imageId: Int64, _ isNetworkImage: Bool, _ screenTitle: String),
          syncInsights
 
     public var id: Int {

@@ -82,9 +82,11 @@ class NavigationRouter: ObservableObject {
     }
 
     func viewImage(
-        imageId: Int64
+        _ imageId: Int64,
+        _ isNetworkImage: Bool,
+        _ screenTitle: String
     ) {
-        path.append(.viewImage(imageId: imageId))
+        path.append(.viewImage(imageId, isNetworkImage, screenTitle))
     }
 
     func openSyncInsights() {

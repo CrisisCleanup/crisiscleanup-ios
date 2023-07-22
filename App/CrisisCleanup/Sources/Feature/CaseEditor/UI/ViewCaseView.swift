@@ -300,14 +300,16 @@ private struct MediaDisplay: View {
                             .frame(height: rowHeight)
                             .cornerRadius(appTheme.cornerRadius)
                             .onTapGesture {
-                                router.viewImage(imageId: caseImage.id)
+                                router.viewImage(caseImage.id, caseImage.isNetworkImage, viewModel.headerTitle)
                             }
                     } else if phase.error != nil {
-                        // TODO: Error view
-                        Color.red // Indicates an error.
+                        Image(systemName: "exclamationmark.circle")
+                            .foregroundColor(appTheme.colors.primaryRedColor)
+                            .font(.system(size: rowHeight * 0.8))
                     } else {
-                        // TODO: Actual placeholder
-                        Color.blue // Acts as a placeholder.
+                        Image(systemName: "photo.circle")
+                            .foregroundColor(.gray)
+                            .font(.system(size: rowHeight * 0.6))
                     }
                 }
             }

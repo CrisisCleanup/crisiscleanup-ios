@@ -186,7 +186,13 @@ public class MainComponent: BootstrapComponent,
 
     lazy var viewImageComponent: ViewImageComponent = ViewImageComponent(parent: self, routerObserver: routerObserver)
 
-    public func viewImageView(_ imageId: Int64) -> AnyView { viewImageComponent.viewImageView(imageId) }
+    public func viewImageView(
+        _ imageId: Int64,
+        _ isNetworkImage: Bool,
+        _ screenTitle: String
+    ) -> AnyView {
+        viewImageComponent.viewImageView(imageId, isNetworkImage, screenTitle)
+    }
 
     // MARK: Sync insights
 

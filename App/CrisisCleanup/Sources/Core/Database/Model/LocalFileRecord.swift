@@ -22,4 +22,42 @@ extension WorksiteLocalImageRecord: Codable, FetchableRecord, PersistableRecord 
              tag,
              rotateDegrees
     }
+
+    static func updateLocalImageRotation(
+        _ db: Database,
+        _ id: Int64,
+        _ rotationDegrees: Int
+    ) throws {
+        try db.execute(
+            sql:
+            """
+            UPDATE OR IGNORE worksiteLocalImage
+            SET rotateDegrees=:rotationDegrees
+            WHERE id=:id
+            """,
+            arguments: [
+                "id": id,
+                "rotationDegrees": rotationDegrees,
+            ]
+        )
+    }
+
+    func insertOrUpdateTag(_ db: Database) throws {
+        let inserted = try insertAndFetch(db, onConflict: .ignore)
+        if inserted == nil {
+            try db.execute(
+                sql:
+                    """
+                    UPDATE worksiteLocalImage
+                    SET tag=:tag
+                    WHERE worksiteId=:worksiteId AND local_document_id=:localDocumentId
+                    """,
+                arguments: [
+                    "worksiteId": worksiteId,
+                    "localDocumentId": localDocumentId,
+                    "tag": tag,
+                ]
+            )
+        }
+    }
 }

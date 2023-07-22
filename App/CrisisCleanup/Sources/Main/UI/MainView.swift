@@ -190,8 +190,8 @@ private struct MainTabs: View {
                         caseHistoryViewBuilder.caseHistoryView
                     case .caseWorkTypeTransfer:
                         transferWorkTypeViewBuilder.transferWorkTypeView
-                    case .viewImage(let imageId):
-                        viewImageViewBuilder.viewImageView(imageId)
+                    case .viewImage(let imageId, let isNetworkImage, let screenTitle):
+                        viewImageViewBuilder.viewImageView(imageId, isNetworkImage, screenTitle)
                     case .syncInsights:
                         if viewModel.isNotProduction {
                             syncInsightsViewBuilder.syncInsightsView
