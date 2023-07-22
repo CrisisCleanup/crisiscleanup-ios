@@ -85,6 +85,7 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
         subscribeToTransferState()
         subscribeToWorkTypesState()
         subscribeToContactList()
+        subscribeToRequestDescription()
     }
 
     func onViewDisappear() {

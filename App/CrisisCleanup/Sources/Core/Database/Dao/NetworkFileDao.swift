@@ -14,9 +14,9 @@ public class NetworkFileDao {
         ValueObservation
             .tracking({ db in try self.fetchNetworkImageUrl(db, id) })
             .removeDuplicates()
-            .publisher(in: reader)
+            .shared(in: reader)
+            .publisher()
             .assertNoFailure()
-            .share()
             .eraseToAnyPublisher()
     }
 

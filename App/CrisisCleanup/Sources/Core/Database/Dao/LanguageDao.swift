@@ -19,9 +19,9 @@ public class LanguageDao {
         ValueObservation
             .tracking(fetchLanguages(_:))
             .removeDuplicates()
-            .publisher(in: reader)
+            .shared(in: reader)
+            .publisher()
             .map { $0.map { r in r.asExternalModel() } }
-            .share()
             .eraseToAnyPublisher()
     }
     private func fetchLanguages(_ db: Database) throws -> [LanguageRecord] {
@@ -38,9 +38,9 @@ public class LanguageDao {
         ValueObservation
             .tracking { try self.fetchLanguageTranslations($0, key) }
             .removeDuplicates()
-            .publisher(in: reader)
+            .shared(in: reader)
+            .publisher()
             .map { $0?.asExternalModel() }
-            .share()
             .eraseToAnyPublisher()
     }
     private func fetchLanguageTranslations(_ db: Database, _ key: DatabaseValueConvertible) throws -> LanguageTranslationRecord? {

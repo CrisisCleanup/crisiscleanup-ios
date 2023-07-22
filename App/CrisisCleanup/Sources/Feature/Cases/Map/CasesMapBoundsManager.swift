@@ -26,7 +26,6 @@ internal class CasesMapBoundsManager {
         self.incidentBoundsProvider = incidentBoundsProvider
 
         mapCameraBoundsPublisher = mapCameraBoundsSubject
-            .share()
 
         let incidentIdPublisher = incidentSelector.incidentId.eraseToAnyPublisher()
         let incidentPublisher = incidentSelector.incident.eraseToAnyPublisher()
@@ -39,7 +38,6 @@ internal class CasesMapBoundsManager {
         .map { id, ids in
             ids.contains(id)
         }
-        .share()
 
         incidentPublisher
             .map { incident in

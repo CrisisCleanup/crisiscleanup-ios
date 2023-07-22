@@ -19,8 +19,8 @@ public class RecentWorksiteDao {
         ValueObservation
             .tracking { db in try self.fetchRecents(db, incidentId, limit, offset) }
             .map { $0.map { p in p.asSummary() } }
-            .publisher(in: reader)
-            .share()
+            .shared(in: reader)
+            .publisher()
             .eraseToAnyPublisher()
     }
 

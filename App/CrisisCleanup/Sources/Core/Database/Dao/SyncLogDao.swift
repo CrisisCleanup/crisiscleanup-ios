@@ -15,9 +15,9 @@ public class SyncLogDao {
         ValueObservation
             .tracking(fetchLogCount(_:))
             .removeDuplicates()
-            .publisher(in: reader)
+            .shared(in: reader)
+            .publisher()
             .assertNoFailure()
-            .share()
     }
 
     private func fetchLogCount(_ db: Database) throws -> Int {

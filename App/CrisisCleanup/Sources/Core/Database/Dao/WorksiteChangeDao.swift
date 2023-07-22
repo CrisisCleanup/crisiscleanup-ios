@@ -245,9 +245,9 @@ class WorksiteChangeDao {
             .tracking(fetchWorksitesPendingSync(_:))
             .removeDuplicates()
             .map { $0.map { p in p.asExternalModel() } }
-            .publisher(in: reader)
+            .shared(in: reader)
+            .publisher()
             .assertNoFailure()
-            .share()
             .eraseToAnyPublisher()
     }
 

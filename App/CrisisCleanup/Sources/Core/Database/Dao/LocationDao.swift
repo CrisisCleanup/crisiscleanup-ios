@@ -44,8 +44,8 @@ public class LocationDao {
             .tracking({ db in self.fetchLocations(db, ids) })
             .removeDuplicates()
             .map { locations in locations.map { $0.asExternalModel() } }
-            .publisher(in: reader)
-            .share()
+            .shared(in: reader)
+            .publisher()
             .eraseToAnyPublisher()
     }
 

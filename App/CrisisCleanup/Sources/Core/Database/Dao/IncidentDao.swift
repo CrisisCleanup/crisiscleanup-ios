@@ -52,9 +52,9 @@ public class IncidentDao {
             .tracking(fetchIncidents(_:))
             .removeDuplicates()
             .map { $0.map { p in p.asExternalModel() } }
-            .publisher(in: reader)
+            .shared(in: reader)
+            .publisher()
             .assertNoFailure()
-            .share()
             .eraseToAnyPublisher()
     }
 
@@ -73,8 +73,8 @@ public class IncidentDao {
             .tracking({ db in try self.fetchFormFieldsIncident(db, id) })
             .removeDuplicates()
             .map { p in p?.asExternalModel() }
-            .publisher(in: reader)
-            .share()
+            .shared(in: reader)
+            .publisher()
             .eraseToAnyPublisher()
     }
 

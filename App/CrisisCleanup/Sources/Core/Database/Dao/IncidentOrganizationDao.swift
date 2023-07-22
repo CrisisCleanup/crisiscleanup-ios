@@ -15,11 +15,11 @@ public class IncidentOrganizationDao {
         ValueObservation
             .tracking(fetchOrganizationsIdName(_:))
             .removeDuplicates()
-            .publisher(in: reader)
+            .shared(in: reader)
+            .publisher()
             .map {
                 $0.map { record in OrganizationIdName(id: record.id, name: record.name) }
             }
-            .share()
             .eraseToAnyPublisher()
     }
 
@@ -31,8 +31,8 @@ public class IncidentOrganizationDao {
         ValueObservation
             .tracking(fetchOrganizations(_:))
             .removeDuplicates()
-            .publisher(in: reader)
-            .share()
+            .shared(in: reader)
+            .publisher()
             .eraseToAnyPublisher()
     }
 

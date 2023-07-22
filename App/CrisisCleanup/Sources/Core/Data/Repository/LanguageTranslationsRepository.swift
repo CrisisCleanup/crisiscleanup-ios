@@ -79,17 +79,14 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
                 return (lookup, selectedLanguage)
             }
             .assertNoFailure()
-            .share()
 
         translationCount = languageData.map { (lookup, _) in
             lookup.count
         }
-        .share()
 
         currentLanguage = languageData.map { (_, language)  in
             language
         }
-        .share()
 
         appPreferencesDataStore.preferences
             .assign(to: \.appPreferences, on: self)

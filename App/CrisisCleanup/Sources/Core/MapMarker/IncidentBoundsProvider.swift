@@ -33,7 +33,6 @@ class MapsIncidentBoundsProvider: IncidentBoundsProvider {
         self.cache = [Int64: CacheEntry]()
 
         mappingBoundsIncidentIds = incidentIdsPublisher
-            .share()
     }
 
     func getIncidentBounds(_ incidentId: Int64) -> IncidentBounds? { cache[incidentId]?.bounds }

@@ -391,7 +391,6 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
                 }
                 return (fileImages, localImages, worksite.notes)
             }
-            .share()
 
         filesNotes.map { (fileImages, localImages, notes) in
             let fileCount = fileImages.count + localImages.count

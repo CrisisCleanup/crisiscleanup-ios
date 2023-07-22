@@ -390,8 +390,8 @@ public class WorksiteDao {
         ValueObservation
             .tracking({ db in try self.fetchIncidentWorksitesCount(db, id) })
             .removeDuplicates()
-            .publisher(in: reader)
-            .share()
+            .shared(in: reader)
+            .publisher()
             .eraseToAnyPublisher()
     }
 
@@ -468,8 +468,8 @@ public class WorksiteDao {
         ValueObservation
             .tracking({ db in try self.fetchLocalWorksite(db, id) })
             .removeDuplicates()
-            .publisher(in: reader)
-            .share()
+            .shared(in: reader)
+            .publisher()
             .eraseToAnyPublisher()
     }
 
