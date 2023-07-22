@@ -96,7 +96,7 @@ struct ViewCaseView: View {
                         .foregroundColor(Color.white)
                         .padding()
                 }
-                .background(viewModel.alert ? Color.black : Color.clear)
+                .background(viewModel.alert ? appTheme.colors.navigationContainerColor : Color.clear)
                 .cornerRadius(appTheme.cornerRadius)
                 .animation(.easeInOut(duration: 0.25), value: viewModel.alert)
                 Spacer()
@@ -249,7 +249,7 @@ private struct MediaDisplay: View {
     @State var selectedImage: UIImage = UIImage()
 
     var body: some View {
-        // TODO: Size relative to screen height
+        // TODO: Size relative to remaining screen height
         let rowHeight = 160.0
 
         HStack {
@@ -265,7 +265,6 @@ private struct MediaDisplay: View {
                             .stroke(strokeColor, style: StrokeStyle(lineWidth: 2, dash: [5]))
                     }
 
-                // TODO: Common styles
                 VStack {
                     Image(systemName: "plus")
                         .foregroundColor(strokeColor)
@@ -366,7 +365,7 @@ private struct ViewCaseNotes: View {
         ZStack {
             ScrollView {
                 VStack {
-                    if(viewModel.caseData?.worksite.notes.hasSurvivorNote ?? false) {
+                    if viewModel.caseData?.worksite.notes.hasSurvivorNote == true {
                         HStack {
                             Spacer()
                             Image(systemName: "circle.fill")
@@ -374,6 +373,11 @@ private struct ViewCaseNotes: View {
                             Text(t.t("formLabels.survivor_notes"))
                         }
                         .padding()
+                    } else {
+                        Rectangle()
+                            .fill(.clear)
+                            .background(.clear)
+                            .frame(height: 8.0)
                     }
 
                     if let notes = viewModel.caseData?.worksite.notes {
@@ -393,12 +397,13 @@ private struct ViewCaseNotes: View {
                         }
 
                         // Spacing
-                        Image("ic_note", bundle: .module)
+                        Rectangle()
+                            .fill(.clear)
+                            .background(.clear)
                         // TODO: Common dimensions
-                            .frame(width: 50, height: 50)
-                            .padding()
-                            .hidden()
-                    }
+                            .frame(height: 50.0)
+                            .padding(.vertical)
+}
                 }
                 .padding(.bottom)
             }
