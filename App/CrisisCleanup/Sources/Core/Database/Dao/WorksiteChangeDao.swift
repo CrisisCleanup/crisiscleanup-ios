@@ -287,6 +287,10 @@ class WorksiteChangeDao {
                 .fetchCount(db)
         }
     }
+
+    func saveDeletePhoto(_ fileId: Int64) throws -> Int64 {
+        try database.saveDeleteNetworkFile(fileId)
+    }
 }
 
 extension Database {
@@ -698,6 +702,16 @@ extension AppDatabase {
                     db, worksiteId, key, organizationId, value
                 )
             }
+        }
+    }
+
+    fileprivate func saveDeleteNetworkFile(_ id: Int64) throws -> Int64 {
+        return try dbWriter.write { db in
+            if let worksiteId = try WorksiteToNetworkFileRecord.getWorksiteFromFile(db, id) {
+                try NetworkFileLocalImageRecord.markForDelete(db, id)
+                return worksiteId
+            }
+            return -1
         }
     }
 }

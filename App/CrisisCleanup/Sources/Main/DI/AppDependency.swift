@@ -27,6 +27,7 @@ public protocol AppDependency: Dependency {
     var worksiteChangeRepository: WorksiteChangeRepository  { get }
     var syncLogRepository: SyncLogRepository  { get }
     var addressSearchRepository: AddressSearchRepository { get }
+    var localImageRepository: LocalImageRepository { get }
     var databaseManagementRepository: DatabaseManagementRepository { get }
 
     var translator: KeyAssetTranslator { get }

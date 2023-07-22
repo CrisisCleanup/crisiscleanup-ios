@@ -57,6 +57,14 @@ extension MainComponent {
         )
     }
 
+    var networkFileDao: NetworkFileDao {
+        NetworkFileDao(appDatabase)
+    }
+
+    var localImageDao: LocalImageDao {
+        LocalImageDao(appDatabase)
+    }
+
     var workTypeTransferRequestDao: WorkTypeTransferRequestDao {
         WorkTypeTransferRequestDao(appDatabase)
     }
@@ -163,6 +171,7 @@ extension MainComponent {
                 worksiteFlagDao: worksiteFlagDao,
                 worksiteNoteDao: worksiteNoteDao,
                 workTypeDao: workTypeDao,
+                localImageDao: localImageDao,
                 worksiteChangeSyncer: NetworkWorksiteChangeSyncer(
                     changeSetOperator: WorksiteChangeSetOperator(),
                     networkDataSource: networkDataSource,
@@ -170,14 +179,31 @@ extension MainComponent {
                     networkMonitor: networkMonitor,
                     appEnv: appEnv
                 ),
+                worksitePhotoChangeSyncer: WorksitePhotoChangeSyncer(
+                    writeApiClient: writeApi
+                ),
                 accountDataRepository: accountDataRepository,
                 networkDataSource: networkDataSource,
                 worksitesRepository: worksitesRepository,
                 organizationsRepository: organizationsRepository,
+                localImageRepository: localImageRepository,
                 authEventBus: authEventBus,
                 networkMonitor: networkMonitor,
                 appEnv: appEnv,
                 syncLoggerFactory: syncLoggerFactory,
+                loggerFactory: loggerFactory
+            )
+        }
+    }
+
+    public var localImageRepository: LocalImageRepository {
+        shared {
+            CrisisCleanupLocalImageRepository(
+                worksiteDao: worksiteDao,
+                networkFileDao: networkFileDao,
+                localImageDao: localImageDao,
+                writeApi: writeApi,
+                syncLogger: syncLoggerFactory.getLogger("local-image"),
                 loggerFactory: loggerFactory
             )
         }

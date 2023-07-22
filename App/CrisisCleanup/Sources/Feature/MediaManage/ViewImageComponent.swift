@@ -3,7 +3,11 @@ import NeedleFoundation
 import SwiftUI
 
 public protocol ViewImageViewBuilder {
-    func viewImageView(_ imageId: Int64) -> AnyView
+    func viewImageView(
+        _ imageId: Int64,
+        _ isNetworkImage: Bool,
+        _ screenTitle: String
+    ) -> AnyView
 }
 
 class ViewImageComponent: Component<AppDependency>, ViewImageViewBuilder {
@@ -17,7 +21,7 @@ class ViewImageComponent: Component<AppDependency>, ViewImageViewBuilder {
     ) {
         super.init(parent: parent)
 
-        let viewImagePathId = NavigationRoute.viewImage(imageId: 0).id
+        let viewImagePathId = NavigationRoute.viewImage(0, false, "").id
         routerObserver.pathIds
             .sink { pathIds in
                 if !pathIds.contains(viewImagePathId) {
@@ -31,19 +35,36 @@ class ViewImageComponent: Component<AppDependency>, ViewImageViewBuilder {
         _ = cancelSubscriptions(disposables)
     }
 
-    private func getViewModel(_ imageId: Int64) -> ViewImageViewModel {
+    private func getViewModel(
+        _ imageId: Int64,
+        _ isNetworkImage: Bool,
+        _ screenTitle: String
+    ) -> ViewImageViewModel {
         if viewModel == nil {
             viewModel = ViewImageViewModel(
-                imageId: imageId
+                localImageRepository: dependency.localImageRepository,
+                worksiteChangeRepository: dependency.worksiteChangeRepository,
+                translator: dependency.translator,
+                accountDataRepository: dependency.accountDataRepository,
+                syncPusher: dependency.syncPusher,
+                networkMonitor: dependency.networkMonitor,
+                loggerFactory: dependency.loggerFactory,
+                imageId: imageId,
+                isNetworkImage: isNetworkImage,
+                screenTitle: screenTitle
             )
         }
         return viewModel!
     }
 
-    func viewImageView(_ imageId: Int64) -> AnyView {
+    func viewImageView(
+        _ imageId: Int64,
+        _ isNetworkImage: Bool,
+        _ screenTitle: String
+    ) -> AnyView {
         AnyView(
             ViewImageView(
-                viewModel: getViewModel(imageId)
+                viewModel: getViewModel(imageId, isNetworkImage, screenTitle)
             )
             .navigationBarHidden(true)
             .statusBarHidden(true)

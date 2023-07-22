@@ -9,7 +9,6 @@ class NetworkFileTests: XCTestCase {
 
     private var dbQueue: DatabaseQueue!
     private var appDb: AppDatabase!
-    private var worksiteDao: WorksiteDao!
 
     override func setUp() async throws {
         let initialized = try initializeTestDb()
@@ -34,7 +33,7 @@ class NetworkFileTests: XCTestCase {
         )
     }
 
-    func testDeleteDeletedFiles() async throws {
+    private func seedData() async throws -> (Int64, Int64, Int64) {
         let incidentId = WorksiteTestUtil.testIncidents.first!.id
         let worksites = [
             testWorksiteRecord(52, incidentId, "incident-address", now),
@@ -104,6 +103,20 @@ class NetworkFileTests: XCTestCase {
             }
         }
 
+        return (
+            worksiteIdA,
+            worksiteIdB,
+            worksiteIdC
+        )
+    }
+
+    func testDeleteDeletedFiles() async throws {
+        let (
+            worksiteIdA,
+            worksiteIdB,
+            worksiteIdC
+        ) = try await seedData()
+
         func getFileIds() async throws -> [[Int64]] {
             try await dbQueue.read { db in
                 let fileIds = try NetworkFileRecord
@@ -164,6 +177,29 @@ class NetworkFileTests: XCTestCase {
             ],
             actualDeleted
         )
+    }
+
+    func testGetDeletedFileIds() async throws {
+        let (
+            worksiteIdA,
+            worksiteIdB,
+            worksiteIdC
+        ) = try await seedData()
+
+        let localImageDao = LocalImageDao(appDb)
+
+        let deletedA = try localImageDao.getDeletedPhotoFileIds(worksiteIdA)
+        let expectedA = [Int64]()
+        XCTAssertEqual(deletedA, expectedA)
+
+        let deletedB = try localImageDao.getDeletedPhotoFileIds(worksiteIdB)
+            .sorted(by: { a, b in a < b })
+        let expectedB: [Int64] = [13, 15, 18]
+        XCTAssertEqual(deletedB, expectedB)
+
+        let deletedC = try localImageDao.getDeletedPhotoFileIds(worksiteIdC)
+        let expectedC = [Int64]()
+        XCTAssertEqual(deletedC, expectedC)
     }
 }
 

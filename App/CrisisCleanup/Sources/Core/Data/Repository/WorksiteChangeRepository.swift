@@ -28,7 +28,10 @@ public protocol WorksiteChangeRepository {
      */
     func syncWorksites(_ syncWorksiteCount: Int) async -> Bool
 
-    func saveDeletePhoto(_ fileId: Int64) async -> Int64
+    /**
+     * - Returns: Worksite ID containing the photo if found or -1 otherwise
+     */
+    func saveDeletePhoto(_ fileId: Int64) throws -> Int64
 
     func trySyncWorksite(_ worksiteId: Int64) async -> Bool
 
@@ -69,14 +72,14 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
     private let worksiteFlagDao: WorksiteFlagDao
     private let worksiteNoteDao: WorksiteNoteDao
     private let workTypeDao: WorkTypeDao
-    // private let localImageDao: LocalImageDao
+    private let localImageDao: LocalImageDao
     private let worksiteChangeSyncer: WorksiteChangeSyncer
-    // private let worksitePhotoChangeSyncer: WorksitePhotoChangeSyncer
+    private let worksitePhotoChangeSyncer: WorksitePhotoChangeSyncer
     private let accountDataRepository: AccountDataRepository
     private let networkDataSource: CrisisCleanupNetworkDataSource
     private let worksitesRepository: WorksitesRepository
-     private let organizationsRepository: OrganizationsRepository
-    // private let localImageRepository: LocalImageRepository
+    private let organizationsRepository: OrganizationsRepository
+    private let localImageRepository: LocalImageRepository
     private let authEventBus: AuthEventBus
     private let appEnv: AppEnv
     private let syncLoggerFactory: SyncLoggerFactory
@@ -102,11 +105,14 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         worksiteFlagDao: WorksiteFlagDao,
         worksiteNoteDao: WorksiteNoteDao,
         workTypeDao: WorkTypeDao,
+        localImageDao: LocalImageDao,
         worksiteChangeSyncer: WorksiteChangeSyncer,
+        worksitePhotoChangeSyncer: WorksitePhotoChangeSyncer,
         accountDataRepository: AccountDataRepository,
         networkDataSource: CrisisCleanupNetworkDataSource,
         worksitesRepository: WorksitesRepository,
         organizationsRepository: OrganizationsRepository,
+        localImageRepository: LocalImageRepository,
         authEventBus: AuthEventBus,
         networkMonitor: NetworkMonitor,
         appEnv: AppEnv,
@@ -118,11 +124,14 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         self.worksiteFlagDao = worksiteFlagDao
         self.worksiteNoteDao = worksiteNoteDao
         self.workTypeDao = workTypeDao
+        self.localImageDao = localImageDao
         self.worksiteChangeSyncer = worksiteChangeSyncer
+        self.worksitePhotoChangeSyncer = worksitePhotoChangeSyncer
         self.accountDataRepository = accountDataRepository
         self.networkDataSource = networkDataSource
         self.worksitesRepository = worksitesRepository
         self.organizationsRepository = organizationsRepository
+        self.localImageRepository = localImageRepository
         self.authEventBus = authEventBus
         self.appEnv = appEnv
         self.syncLoggerFactory = syncLoggerFactory
@@ -222,9 +231,8 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         return false
     }
 
-    func saveDeletePhoto(_ fileId: Int64) async -> Int64 {
-        // TODO: Do
-        0
+    func saveDeletePhoto(_ fileId: Int64) throws -> Int64 {
+        try worksiteChangeDao.saveDeletePhoto(fileId)
     }
 
     func trySyncWorksite(_ worksiteId: Int64) async -> Bool {
@@ -456,17 +464,16 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
     }
 
     private func syncPhotoChanges(_ worksiteId: Int64) async {
-        // TODO: Finish
-//        do {
-//            let (networkWorksiteId, deleteFileIds) =
-//                localImageDao.getDeletedPhotoNetworkFileIds(worksiteId)
-//            if deleteFileIds.isNotEmpty() {
-//                worksitePhotoChangeSyncer.deletePhotoFiles(networkWorksiteId, deleteFileIds)
-//                syncLogger.log("Deleted photos", deleteFileIds.joinToString(", "))
-//            }
-//        } catch {
-//            syncLogger.log("Delete photo error", error.localizedDescription)
-//        }
+        do {
+            let deleteFileIds = try localImageDao.getDeletedPhotoFileIds(worksiteId)
+            if deleteFileIds.isNotEmpty {
+                let networkWorksiteId = worksiteDao.getWorksiteNetworkId(worksiteId)
+                try await worksitePhotoChangeSyncer.deletePhotoFiles(networkWorksiteId, deleteFileIds)
+                syncLogger.log("Deleted photos", details: deleteFileIds.map { String($0) }.joined(separator: ", "))
+            }
+        } catch {
+            syncLogger.log("Delete photo error", details: error.localizedDescription)
+        }
     }
 
     func syncWorksiteMedia() async -> Bool {

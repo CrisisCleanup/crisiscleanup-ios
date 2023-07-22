@@ -1,4 +1,4 @@
-struct WorksiteLocalImage: Equatable {
+public struct WorksiteLocalImage: Equatable {
     let id: Int64
     let worksiteId: Int64
     let documentId: String

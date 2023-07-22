@@ -3,6 +3,7 @@ import GRDB
 
 struct NetworkFileRecord : Identifiable, Equatable {
     static let networkFileLocalImage = hasOne(NetworkFileLocalImageRecord.self)
+    static let networkFileToWorksite = hasOne(WorksiteToNetworkFileRecord.self)
 
     let id: Int64
     let createdAt: Date
@@ -64,6 +65,27 @@ extension NetworkFileRecord: Codable, FetchableRecord, PersistableRecord {
     }
 }
 
+extension DerivableRequest<NetworkFileRecord> {
+    func selectImageUrl() -> Self {
+        select(NetworkFileRecord.Columns.fullUrl)
+    }
+
+    func selectFileId() -> Self {
+        select(NetworkFileRecord.Columns.fileId)
+    }
+
+    func byWorksiteIdNotDeleted(
+        _ fiAlias: TableAlias,
+        _ wfAlias: TableAlias,
+        _ worksiteId: Int64
+    ) -> Self {
+        filter(
+            wfAlias[WorksiteToNetworkFileRecord.Columns.id] == worksiteId &&
+            fiAlias[NetworkFileLocalImageRecord.Columns.isDeleted]
+        )
+    }
+}
+
 // MARK: Worksite to network file
 
 struct WorksiteToNetworkFileRecord : Identifiable, Equatable {
@@ -90,6 +112,17 @@ extension WorksiteToNetworkFileRecord: Codable, FetchableRecord, PersistableReco
             .filter(Columns.id == worksiteId && !ids.contains(Columns.networkFileId))
             .deleteAll(db)
     }
+
+    static func getWorksiteFromFile(
+        _ db: Database,
+        _ fileRecordId: Int64
+    ) throws -> Int64? {
+        try WorksiteToNetworkFileRecord
+            .select(Columns.id)
+            .filter(Columns.networkFileId == fileRecordId)
+            .asRequest(of: Int64.self)
+            .fetchOne(db)
+    }
 }
 
 // MARK: Network file local image
@@ -109,5 +142,32 @@ extension NetworkFileLocalImageRecord: Codable, FetchableRecord, PersistableReco
         case id,
              isDeleted,
              rotateDegrees
+    }
+
+    static func updateRotation(
+        _ db: Database,
+        _ id: Int64,
+        _ rotationDegrees: Int
+    ) throws {
+        try db.execute(
+            sql:
+                """
+                UPDATE networkFileLocalImage
+                SET rotateDegrees=:rotationDegrees
+                WHERE id=:id
+                """,
+            arguments: [
+                "id": id,
+                "rotationDegrees": rotationDegrees,
+            ]
+        )
+    }
+
+    static func markForDelete(
+        _ db: Database,
+        _ id: Int64
+    ) throws {
+        try NetworkFileLocalImageRecord(id: id, isDeleted: true, rotateDegrees: 0)
+            .upsert(db)
     }
 }
