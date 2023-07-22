@@ -28,6 +28,9 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
 
     @Published private(set) var isSyncing = false
 
+    @Published private(set) var alert = false
+    @Published private(set) var alertMessage = ""
+
     let editableViewState = EditableView()
 
     private let isSavingWorksite = CurrentValueSubject<Bool, Never>(false)
@@ -557,6 +560,16 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
                 saveWorksiteChange(startingWorksite, changedWorksite)
             }
         }
+    }
+
+    func toggleAlert(message: String) {
+        alert = true
+        alertMessage = message
+    }
+
+    func clearAlert() {
+        alert = false
+        alertMessage = ""
     }
 
     func toggleFavorite() {

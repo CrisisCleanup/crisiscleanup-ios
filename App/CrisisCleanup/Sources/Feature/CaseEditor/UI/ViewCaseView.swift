@@ -14,6 +14,7 @@ struct ViewCaseView: View {
     @ObservedObject var viewModel: ViewCaseViewModel
 
     @State private var selectedTab: ViewCaseTabs = .info
+    @State private var titlePressed: Bool = false
 
     var body: some View {
         let isBusy = viewModel.isLoading || viewModel.isSaving
@@ -88,6 +89,19 @@ struct ViewCaseView: View {
                         .frame(alignment: .center)
                 }
             }
+
+            VStack {
+                HStack {
+                    Text(viewModel.alertMessage)
+                        .foregroundColor(Color.white)
+                        .padding()
+                }
+                .background(viewModel.alert ? Color.black : Color.clear)
+                .cornerRadius(appTheme.cornerRadius)
+                .animation(.easeInOut(duration: 0.25), value: viewModel.alert)
+                Spacer()
+            }
+            .padding(.top)
         }
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -97,9 +111,8 @@ struct ViewCaseView: View {
                     Text(viewModel.subTitle)
                         .font(.subheadline)
                 }
-                .onLongPressGesture {
-                    UIPasteboard.general.string = viewModel.headerTitle
-                }
+                .modifier(CopyWithAnimation(pressed: $titlePressed, copy: viewModel.headerTitle))
+
             }
 
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -268,6 +281,7 @@ private struct MediaDisplay: View {
                 photoDetents = false
                 Task {
                     for result in results {
+                        // TODO: Save as a file.
                         if let data = try? await result.loadTransferable(type: Data.self) {
                             if let uiImage = UIImage(data: data) {
                                 testImages.append(Image(uiImage: uiImage))
@@ -475,77 +489,112 @@ private struct BottomNav: View {
 }
 
 private struct PropertyInformationView: View {
+    @EnvironmentObject var viewModel: ViewCaseViewModel
     let worksite: Worksite
+    @State private var namePressed: Bool = false
+    @State private var phonePressed: Bool = false
+    @State private var emailPressed: Bool = false
+    @State private var addressPressed: Bool = false
     @State var map = MKMapView()
 
     var body: some View {
-        VStack(alignment: .leading) {
-            // TODO: Common dimensions
-            let horizontalPadding = 8.0
-            let verticalPadding = 4.0
-            let iconSize = 36.0
-            HStack {
-                Image(systemName: "person.fill")
-                    .frame(width: iconSize, height: iconSize)
-                Text(worksite.name)
-
-
-            }
-            .onLongPressGesture {
-                UIPasteboard.general.string = worksite.name
-            }
-            .horizontalVerticalPadding(horizontalPadding, verticalPadding)
-
-            let phoneText = [worksite.phone1, worksite.phone2]
-                .filter { $0?.isNotBlank == true }
-                .joined(separator: "; ")
-            HStack {
-                Image(systemName: "phone.fill")
-                    .frame(width: iconSize, height: iconSize)
-                Text(phoneText)
-            }
-            .onLongPressGesture {
-                UIPasteboard.general.string = phoneText
-            }
-            .horizontalVerticalPadding(horizontalPadding, verticalPadding)
-
-            if worksite.email?.isNotBlank == true {
+        ZStack {
+            VStack(alignment: .leading) {
+                // TODO: Common dimensions
+                let horizontalPadding = 8.0
+                let verticalPadding = 4.0
+                let iconSize = 36.0
                 HStack {
-                    Image(systemName: "envelope.fill")
+                    Image(systemName: "person.fill")
                         .frame(width: iconSize, height: iconSize)
-                    Text(worksite.email!)
+                    Text(worksite.name)
+                    Spacer()
+
                 }
-                .onLongPressGesture {
-                    UIPasteboard.general.string = worksite.email!
-                }
+                .modifier(CopyWithAnimation(pressed: $namePressed, copy: worksite.name))
                 .horizontalVerticalPadding(horizontalPadding, verticalPadding)
-            }
 
-            let fullAddress = [
-                worksite.address,
-                worksite.city,
-                worksite.state,
-                worksite.postalCode,
-            ].combineTrimText()
-            HStack {
-                Image(systemName: "mappin.circle.fill")
-                    .frame(width: iconSize, height: iconSize)
-                Text(fullAddress)
-            }
-            .onLongPressGesture {
-                UIPasteboard.general.string = fullAddress
-            }
-            .horizontalVerticalPadding(horizontalPadding, verticalPadding)
+                let phoneText = [worksite.phone1, worksite.phone2]
+                    .filter { $0?.isNotBlank == true }
+                    .joined(separator: "; ")
+                HStack {
+                    Image(systemName: "phone.fill")
+                        .frame(width: iconSize, height: iconSize)
+                    Text(phoneText)
+                    Spacer()
+                }
+                .modifier(CopyWithAnimation(pressed: $phonePressed, copy: phoneText))
+                .horizontalVerticalPadding(horizontalPadding, verticalPadding)
 
-            ViewCaseMapView(
-                map: $map,
-                caseCoordinates: CLLocationCoordinate2D(
-                    latitude: worksite.latitude,
-                    longitude: worksite.longitude
+                if worksite.email?.isNotBlank == true {
+                    HStack {
+                        Image(systemName: "envelope.fill")
+                            .frame(width: iconSize, height: iconSize)
+                        Text(worksite.email!)
+                        Spacer()
+                    }
+                    .modifier(CopyWithAnimation(pressed: $emailPressed, copy: worksite.email!))
+                    .horizontalVerticalPadding(horizontalPadding, verticalPadding)
+                }
+
+                let fullAddress = [
+                    worksite.address,
+                    worksite.city,
+                    worksite.state,
+                    worksite.postalCode,
+                ].combineTrimText()
+                HStack {
+                    Image(systemName: "mappin.circle.fill")
+                        .frame(width: iconSize, height: iconSize)
+                    Text(fullAddress)
+                    Spacer()
+                }
+                .modifier(CopyWithAnimation(pressed: $addressPressed, copy: fullAddress))
+                .horizontalVerticalPadding(horizontalPadding, verticalPadding)
+
+                ViewCaseMapView(
+                    map: $map,
+                    caseCoordinates: CLLocationCoordinate2D(
+                        latitude: worksite.latitude,
+                        longitude: worksite.longitude
+                    )
                 )
-            )
-            .frame(maxWidth: .infinity, minHeight: 200, maxHeight: 200)
+                .frame(maxWidth: .infinity, minHeight: 200, maxHeight: 200)
+            }
+            .cardContainerPadded()
         }
-        .cardContainerPadded()
+    }
+}
+
+struct CopyWithAnimation: ViewModifier {
+    @Environment(\.translator) var t: KeyAssetTranslator
+    @EnvironmentObject var viewModel: ViewCaseViewModel
+    @Binding var pressed: Bool
+    var copy: String
+
+    func body(content: Content) -> some View {
+        content
+            .background {
+                Color.gray.opacity(pressed ? 0.5 : 0)
+                    .animation(.easeInOut(duration: 0.25), value: pressed)
+                    .cornerRadius(appTheme.cornerRadius)
+            }
+            .gesture(
+                LongPressGesture()
+                    .onEnded { _ in
+                        pressed.toggle()
+                        let message = t.t("info.copied_value").replacingOccurrences(of: "{copied_string}", with: copy)
+                        viewModel.toggleAlert(message: message)
+                        UIPasteboard.general.string = copy
+                        let impactLight = UIImpactFeedbackGenerator(style: .light)
+                        impactLight.impactOccurred()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            pressed.toggle()
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            viewModel.clearAlert()
+                        }
+                    }
+            )
     }
 }
