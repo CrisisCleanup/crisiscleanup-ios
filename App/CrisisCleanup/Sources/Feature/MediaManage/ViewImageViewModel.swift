@@ -113,11 +113,13 @@ class ViewImageViewModel: ObservableObject {
 
         isDeletingSubject
             .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
             .assign(to: \.isDeleting, on: self)
             .store(in: &subscriptions)
 
         isDeletedSubject
             .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
             .assign(to: \.isDeleted, on: self)
             .store(in: &subscriptions)
     }
