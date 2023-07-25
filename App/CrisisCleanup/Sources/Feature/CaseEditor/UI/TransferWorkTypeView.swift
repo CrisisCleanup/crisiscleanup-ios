@@ -140,11 +140,8 @@ struct RequestView: View {
                 .foregroundColor(appTheme.colors.primaryRedColor)
         }
 
-        TextEditor(text: $tempString)
-            .frame(height: appTheme.rowItemHeight*5)
-            .textFieldBorder()
+        LargeTextEditor(text: $tempString)
             .padding(.vertical)
-            .tint(.black)
 
     }
 }
