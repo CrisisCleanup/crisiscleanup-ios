@@ -6,7 +6,44 @@ struct CaseShareView: View {
 
     @ObservedObject var viewModel: CaseShareViewModel
 
+    @State var tempString = ""
+
     var body: some View {
-        Text("Case share under construction")
+        VStack(alignment: .leading) {
+            HStack {
+                Text(t.t("casesVue.please_claim_if_share"))
+                Spacer()
+            }
+
+            LargeTextEditor(text: $tempString)
+                .padding(.bottom, 4)
+
+            Button {
+                // share without claiming
+            } label: {
+                Text(t.t("actions.share_no_claim"))
+            }
+            .stylePrimary()
+            .disabled(tempString.isBlank)
+            .padding(.bottom, 4)
+
+            Button {
+                // share without claiming
+            } label: {
+                Text(t.t("actions.claim_and_share"))
+            }
+            .stylePrimary()
+            .padding(.bottom, 4)
+
+            Button {
+                // share without claiming
+            } label: {
+                Text(t.t("actions.cancel"))
+            }
+            .styleCancel()
+
+            Spacer()
+        }
+        .padding(.horizontal)
     }
 }
