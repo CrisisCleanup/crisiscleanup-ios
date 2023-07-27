@@ -64,6 +64,10 @@ struct RequestView: View {
 
     @State var tempString = ""
     @State var tempWorkTypeState: [WorkType: Bool] = [:]
+
+    @State var reqtDescAS: AttributedString = AttributedString()
+    @State var respNoteAS: AttributedString = AttributedString()
+
     var fakeContacts: [PersonContact] = [
         PersonContact(id: 1, firstName: "John", lastName: "Doe", email: "John@Doe.com", mobile: "123456789"),
         PersonContact(id: 2, firstName: "John", lastName: "Doe", email: "John@Doe.com", mobile: "123456789"),
@@ -71,16 +75,33 @@ struct RequestView: View {
     ]
 
     private func binding(key: WorkType) -> Binding<Bool> {
-            return .init(
-                get: { self.tempWorkTypeState[key, default: false] },
-                set: { self.tempWorkTypeState[key] = $0 })
-        }
+        return .init(
+            get: { self.tempWorkTypeState[key, default: false] },
+            set: { self.tempWorkTypeState[key] = $0 })
+    }
 
     var body: some View {
-        HtmlTextView(htmlContent: viewModel.requestDescription)
-        .frame(maxWidth: UIScreen.main.bounds.size.width)
 
-        Text("t.tContacts")
+//        HtmlAS(htmlContent: viewModel.requestDescription) // for some reason this doesn't work
+
+        Text(reqtDescAS)
+            .onReceive(viewModel.$requestDescription) { desc in
+                DispatchQueue.main.async {
+                    let data = Data(desc.utf8)
+                    if let attributedString = try? NSMutableAttributedString(
+                        data: data,
+                        options: [
+                            .documentType: NSMutableAttributedString.DocumentType.html
+                        ],
+                        documentAttributes: nil
+                    ) {
+                        attributedString.replaceFont(font: .systemFont(ofSize: 16), size: 16)
+                        reqtDescAS = AttributedString(attributedString)
+                    }
+                }
+            }
+
+        Text(t.t("workTypeRequestModal.contacts"))
             .bold()
             .padding(.bottom, 4)
             .onAppear {
@@ -124,24 +145,41 @@ struct RequestView: View {
 
         }
 
-        HtmlTextView(htmlContent: t.t("workTypeRequestModal.please_add_respectful_note"))
-            .frame(maxWidth: UIScreen.main.bounds.size.width)
-            .padding(.bottom)
+        Group {
+            Text(respNoteAS)
+                .onAppear {
+                    DispatchQueue.main.async {
+                        let desc = t.t("workTypeRequestModal.please_add_respectful_note")
+                        let data = Data(desc.utf8)
+                        if let attributedString = try? NSMutableAttributedString(
+                            data: data,
+                            options: [
+                                .documentType: NSMutableAttributedString.DocumentType.html
+                            ],
+                            documentAttributes: nil
+                        ) {
 
-        VStack(alignment: .leading) {
-            Text("\u{2022} " + t.t("workTypeRequestModal.reason_member_of_faith_community"))
-            Text("\u{2022} " + t.t("workTypeRequestModal.reason_working_next_door"))
-            Text("\u{2022} " + t.t("workTypeRequestModal.reason_we_did_the_work"))
+                            attributedString.replaceFont(font: .systemFont(ofSize: 16), size: 16)
+                            respNoteAS = AttributedString(attributedString)
+                        }
+                    }
+                }
+
+            VStack(alignment: .leading) {
+                Text("\u{2022} " + t.t("workTypeRequestModal.reason_member_of_faith_community"))
+                Text("\u{2022} " + t.t("workTypeRequestModal.reason_working_next_door"))
+                Text("\u{2022} " + t.t("workTypeRequestModal.reason_we_did_the_work"))
+            }
+            .padding([.bottom, .leading])
+
+            if(viewModel.errorMessageReason.value.isNotBlank && tempString.isBlank) {
+                Text(t.t(viewModel.errorMessageReason.value))
+                    .foregroundColor(appTheme.colors.primaryRedColor)
+            }
+
+            LargeTextEditor(text: $tempString)
+                .padding(.vertical)
         }
-        .padding([.bottom, .leading])
-
-        if(viewModel.errorMessageReason.value.isNotBlank && tempString.isBlank) {
-            Text(t.t(viewModel.errorMessageReason.value))
-                .foregroundColor(appTheme.colors.primaryRedColor)
-        }
-
-        LargeTextEditor(text: $tempString)
-            .padding(.vertical)
 
     }
 }
@@ -205,16 +243,17 @@ struct TransferWorkTypeActions: View {
             Button {
                 dismiss.callAsFunction()
             } label: {
-                Text("t.tcancel")
+                Text(t.t("actions.cancel"))
             }
             .buttonStyle(CancelButtonStyle())
 
             Button {
                 viewModel.commitTransfer()
             } label: {
-                Text("t.tOK")
+                Text(t.t("actions.ok"))
             }
             .buttonStyle(PrimaryButtonStyle())
         }
+        .padding(.horizontal)
     }
 }
