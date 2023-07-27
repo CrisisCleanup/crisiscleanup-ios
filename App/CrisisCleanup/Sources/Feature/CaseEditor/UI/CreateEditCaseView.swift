@@ -26,61 +26,158 @@ struct CreateEditCaseView: View {
         let disableMutation = viewModel.editableViewState.disabled
         let editSections = viewModel.editSections
         VStack {
-            ScrollView {
-                VStack {
-                    if let caseState = viewModel.caseData {
-                        HStack{
-                            CaseIncidentView(
-                                incident: caseState.incident,
-                                isPendingSync: caseState.isPendingSync,
-                                isSyncing: viewModel.isSyncing,
-                                scheduleSync: { viewModel.scheduleSync() }
-                            )
-                            .padding()
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false ) {
+                    HStack {
+                        Text("scrollBar1")
+                            .padding(.leading)
+                            .id("scrollBar1")
+                            .onTapGesture {
+                                withAnimation {
+                                    proxy.scrollTo("section1", anchor: .top)
+                                    proxy.scrollTo("scrollBar1", anchor: .leading)
+                                }
+                            }
+                        Text("scrollBar2")
+                            .padding(.leading)
+                            .id("scrollBar2")
+                            .onTapGesture {
+                                withAnimation {
+                                    proxy.scrollTo("section2", anchor: .top)
+                                    proxy.scrollTo("scrollBar2", anchor: .leading)
+                                }
+                            }
+                        Text("scrollBar3")
+                            .padding(.leading)
+                            .id("scrollBar3")
+                            .onTapGesture {
+                                withAnimation {
+                                    proxy.scrollTo("section3", anchor: .top)
+                                    proxy.scrollTo("scrollBar3", anchor: .leading)
+                                }
+                            }
+                        Text("scrollBar4")
+                            .padding(.leading)
+                            .id("scrollBar4")
+                            .onTapGesture {
+                                withAnimation {
+                                    proxy.scrollTo("section4", anchor: .top)
+                                    proxy.scrollTo("scrollBar4", anchor: .leading)
+                                }
+                            }
+                        Text("scrollBar5")
+                            .padding(.leading)
+                            .id("scrollBar5")
+                            .onTapGesture {
+                                withAnimation {
+                                    proxy.scrollTo("section5", anchor: .top)
+                                    proxy.scrollTo("scrollBar5", anchor: .leading)
+                                }
+                            }
+
+                        Group {
+                            Text("scrollBar1")
+
+                            Text("scrollBar2")
+
+                            Text("scrollBar3")
+
+                            Text("scrollBar4")
+
+                            Text("scrollBar5")
                         }
+                        .hidden()
+
                     }
+                }
+                ScrollView {
+                    VStack {
+                        if let caseState = viewModel.caseData {
+                            HStack{
+                                CaseIncidentView(
+                                    incident: caseState.incident,
+                                    isPendingSync: caseState.isPendingSync,
+                                    isSyncing: viewModel.isSyncing,
+                                    scheduleSync: { viewModel.scheduleSync() }
+                                )
+                                .padding()
+                            }
+                        }
 
-                    CreateEditCaseSectionHeaderView (
-                        isCollapsed: $sectionCollapse[0],
-                        titleNumber: 1,
-                        titleTranslateKey: editSections.get(0, "")
-                    )
-                    if !sectionCollapse[0] {
-                        PropertyInformation(viewModel: viewModel)
-                    }
-
-                    let nodes = Array(viewModel.groupFormFieldNodes.enumerated())
-                    ForEach(nodes, id: \.offset) { offset, node in
-                        Divider()
-                            .frame(height: 24)
-                            .overlay(Color(UIColor.systemGray5))
-
-                        let sectionIndex = offset + 1
                         CreateEditCaseSectionHeaderView (
-                            isCollapsed: $sectionCollapse[sectionIndex],
-                            titleNumber: sectionIndex + 1,
-                            titleTranslateKey: editSections.get(sectionIndex, ""),
-                            helpText: node.formField.help
+                            isCollapsed: $sectionCollapse[0],
+                            titleNumber: 1,
+                            titleTranslateKey: editSections.get(0, "")
                         )
+                        .id("section1")
+                        .background(GeometryReader {
+                            let frame = $0.frame(in: .named("scrollForm"))
+                            Color.red.preference(key: ViewOffsetKey.self,
+                                                 value: (-frame.minY))
+                        })
+                        .onPreferenceChange(ViewOffsetKey.self) {
+                            print("offset section1 >> \($0)")
+                            let offset = $0
+                            if(offset < 3 && offset > -3) {
+                                withAnimation {
+                                    proxy.scrollTo("scrollBar1", anchor: .leading)
+                                }
+                            }
+                        }
 
-                        if !sectionCollapse[sectionIndex] {
-                            let children = node.children
-                                .filter { !ignoreFormFieldKeys.contains($0.fieldKey) }
-                            ForEach(children, id: \.id) { child in
-                                if child.parentKey == node.fieldKey {
-                                    DisplayFormField(
-                                        checkedData: $viewModel.binaryFormData,
-                                        contentData: $viewModel.contentFormData,
-                                        node: child
-                                    )
-                                    .padding(.horizontal)
+                        if !sectionCollapse[0] {
+                            PropertyInformation(viewModel: viewModel)
+                        }
+
+                        let nodes = Array(viewModel.groupFormFieldNodes.enumerated())
+                        ForEach(nodes, id: \.offset) { offset, node in
+                            Divider()
+                                .frame(height: 24)
+                                .overlay(Color(UIColor.systemGray5))
+
+                            let sectionIndex = offset + 1
+                            CreateEditCaseSectionHeaderView (
+                                isCollapsed: $sectionCollapse[sectionIndex],
+                                titleNumber: sectionIndex + 1,
+                                titleTranslateKey: editSections.get(sectionIndex, ""),
+                                helpText: node.formField.help
+                            )
+                            .id("section\(sectionIndex+1)")
+                            .background(GeometryReader {
+                                let frame = $0.frame(in: .named("scrollForm"))
+                                Color.red.preference(key: ViewOffsetKey.self,
+                                                     value: (-frame.minY))
+                            })
+                            .onPreferenceChange(ViewOffsetKey.self) {
+                                print("offset section\(sectionIndex+1) >> \($0)")
+                                let offset = $0
+                                if(offset < 3 && offset > -3) {
+                                    withAnimation {
+                                        proxy.scrollTo("scrollBar\(sectionIndex+1)", anchor: .leading)
+                                    }
+                                }
+                            }
+
+                            if !sectionCollapse[sectionIndex] {
+                                let children = node.children
+                                    .filter { !ignoreFormFieldKeys.contains($0.fieldKey) }
+                                ForEach(children, id: \.id) { child in
+                                    if child.parentKey == node.fieldKey {
+                                        DisplayFormField(
+                                            checkedData: $viewModel.binaryFormData,
+                                            contentData: $viewModel.contentFormData,
+                                            node: child
+                                        )
+                                        .padding(.horizontal)
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                .coordinateSpace(name: "scrollForm")
+                .scrollDismissesKeyboard(.immediately)
             }
-            .scrollDismissesKeyboard(.immediately)
 
             if isKeyboardOpen {
                 OpenKeyboardActionsView()
@@ -501,5 +598,13 @@ private struct CreateEditCaseSaveActions: View {
             }
             .stylePrimary()
         }
+    }
+}
+
+struct ViewOffsetKey: PreferenceKey {
+    typealias Value = CGFloat
+    static var defaultValue = CGFloat.zero
+    static func reduce(value: inout Value, nextValue: () -> Value) {
+        value += nextValue()
     }
 }
