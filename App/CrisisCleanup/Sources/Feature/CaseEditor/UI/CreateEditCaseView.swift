@@ -18,6 +18,8 @@ struct CreateEditCaseView: View {
         false
     ]
 
+    @State var sectionScrollCache = "section1"
+
     @State var isKeyboardOpen = false
 
     private let ignoreFormFieldKeys = Set(["cross_street", "email"])
@@ -29,7 +31,7 @@ struct CreateEditCaseView: View {
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false ) {
                     HStack {
-                        Text("scrollBar1")
+                        Text("1. " + t.t("caseForm.property_information"))
                             .padding(.leading)
                             .id("scrollBar1")
                             .onTapGesture {
@@ -38,7 +40,7 @@ struct CreateEditCaseView: View {
                                     proxy.scrollTo("scrollBar1", anchor: .leading)
                                 }
                             }
-                        Text("scrollBar2")
+                        Text("2. " + t.t("scrollBar2"))
                             .padding(.leading)
                             .id("scrollBar2")
                             .onTapGesture {
@@ -47,7 +49,7 @@ struct CreateEditCaseView: View {
                                     proxy.scrollTo("scrollBar2", anchor: .leading)
                                 }
                             }
-                        Text("scrollBar3")
+                        Text("3. " + t.t("scrollBar3"))
                             .padding(.leading)
                             .id("scrollBar3")
                             .onTapGesture {
@@ -56,7 +58,7 @@ struct CreateEditCaseView: View {
                                     proxy.scrollTo("scrollBar3", anchor: .leading)
                                 }
                             }
-                        Text("scrollBar4")
+                        Text("4. " + t.t("scrollBar4"))
                             .padding(.leading)
                             .id("scrollBar4")
                             .onTapGesture {
@@ -65,7 +67,7 @@ struct CreateEditCaseView: View {
                                     proxy.scrollTo("scrollBar4", anchor: .leading)
                                 }
                             }
-                        Text("scrollBar5")
+                        Text("5. " + t.t("scrollBar5"))
                             .padding(.leading)
                             .id("scrollBar5")
                             .onTapGesture {
@@ -112,21 +114,33 @@ struct CreateEditCaseView: View {
                         .id("section1")
                         .background(GeometryReader {
                             let frame = $0.frame(in: .named("scrollForm"))
-                            Color.red.preference(key: ViewOffsetKey.self,
+                            Color.clear.preference(key: ViewOffsetKey.self,
                                                  value: (-frame.minY))
-                        })
-                        .onPreferenceChange(ViewOffsetKey.self) {
-                            print("offset section1 >> \($0)")
-                            let offset = $0
-                            if(offset < 3 && offset > -3) {
-                                withAnimation {
-                                    proxy.scrollTo("scrollBar1", anchor: .leading)
+                            .onPreferenceChange(ViewOffsetKey.self) {
+                                if($0 < frame.height && $0 > 0) {
+                                    print("section1 in view")
+                                    withAnimation {
+                                        proxy.scrollTo("scrollBar1", anchor: .leading)
+                                    }
                                 }
                             }
-                        }
+                        })
 
                         if !sectionCollapse[0] {
                             PropertyInformation(viewModel: viewModel)
+                                .background(GeometryReader {
+                                    let frame = $0.frame(in: .named("scrollForm"))
+                                    Color.clear.preference(key: ViewOffsetKey.self,
+                                                         value: (-frame.minY))
+                                    .onPreferenceChange(ViewOffsetKey.self) {
+                                        if($0 < frame.height && $0 > 0) {
+                                            print("section1 in view")
+                                            withAnimation {
+                                                proxy.scrollTo("scrollBar1", anchor: .leading)
+                                            }
+                                        }
+                                    }
+                                })
                         }
 
                         let nodes = Array(viewModel.groupFormFieldNodes.enumerated())
@@ -145,33 +159,49 @@ struct CreateEditCaseView: View {
                             .id("section\(sectionIndex+1)")
                             .background(GeometryReader {
                                 let frame = $0.frame(in: .named("scrollForm"))
-                                Color.red.preference(key: ViewOffsetKey.self,
+                                Color.clear.preference(key: ViewOffsetKey.self,
                                                      value: (-frame.minY))
+                                .onPreferenceChange(ViewOffsetKey.self) {
+                                    if($0 < frame.height && $0 > 0) {
+                                        print("section\(sectionIndex+1) in view")
+                                        withAnimation {
+                                            proxy.scrollTo("scrollBar\(sectionIndex+1)", anchor: .leading)
+                                        }
+                                    }
+                                }
                             })
-                            .onPreferenceChange(ViewOffsetKey.self) {
-                                print("offset section\(sectionIndex+1) >> \($0)")
-                                let offset = $0
-                                if(offset < 3 && offset > -3) {
-                                    withAnimation {
-                                        proxy.scrollTo("scrollBar\(sectionIndex+1)", anchor: .leading)
-                                    }
-                                }
-                            }
+                            VStack {
+                                if !sectionCollapse[sectionIndex] {
+                                    let children = node.children
+                                        .filter { !ignoreFormFieldKeys.contains($0.fieldKey) }
+                                    ForEach(children, id: \.id) { child in
+                                        if child.parentKey == node.fieldKey {
+                                            DisplayFormField(
+                                                checkedData: $viewModel.binaryFormData,
+                                                contentData: $viewModel.contentFormData,
+                                                node: child
+                                            )
+                                            .padding(.horizontal)
 
-                            if !sectionCollapse[sectionIndex] {
-                                let children = node.children
-                                    .filter { !ignoreFormFieldKeys.contains($0.fieldKey) }
-                                ForEach(children, id: \.id) { child in
-                                    if child.parentKey == node.fieldKey {
-                                        DisplayFormField(
-                                            checkedData: $viewModel.binaryFormData,
-                                            contentData: $viewModel.contentFormData,
-                                            node: child
-                                        )
-                                        .padding(.horizontal)
+                                        }
                                     }
                                 }
                             }
+                            .background(GeometryReader {
+                                let frame = $0.frame(in: .named("scrollForm"))
+                                Color.clear.preference(key: ViewOffsetKey.self,
+                                                     value: -frame.minY
+                                )
+                                .onPreferenceChange(ViewOffsetKey.self) {
+                                    if($0 < frame.height && $0 > 0) {
+                                        print("section\(sectionIndex+1) in view")
+                                        withAnimation {
+                                            proxy.scrollTo("scrollBar\(sectionIndex+1)", anchor: .leading)
+                                        }
+                                    }
+                                }
+                            })
+
                         }
                     }
                 }
