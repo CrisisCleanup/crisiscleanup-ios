@@ -527,7 +527,11 @@ private struct PropertyInformationView: View {
                 HStack {
                     Image(systemName: "phone.fill")
                         .frame(width: iconSize, height: iconSize)
+
+                    // TODO: Custom link won't work with the two numbers combined into one text
                     Text(phoneText)
+                        .customLink(urlString: "tel:\(phoneText)")
+
                     Spacer()
                 }
                 .modifier(CopyWithAnimation(pressed: $phonePressed, copy: phoneText))
@@ -538,6 +542,7 @@ private struct PropertyInformationView: View {
                         Image(systemName: "envelope.fill")
                             .frame(width: iconSize, height: iconSize)
                         Text(worksite.email!)
+                            .customLink(urlString: worksite.email!)
                         Spacer()
                     }
                     .modifier(CopyWithAnimation(pressed: $emailPressed, copy: worksite.email!))
@@ -553,7 +558,10 @@ private struct PropertyInformationView: View {
                 HStack {
                     Image(systemName: "mappin.circle.fill")
                         .frame(width: iconSize, height: iconSize)
-                    Text(fullAddress)
+
+                    let perFullAddress = "maps://?address=" + (fullAddress.addingPercentEncoding(withAllowedCharacters: .afURLQueryAllowed) ?? fullAddress)
+                        Text(fullAddress)
+                        .customLink(urlString: perFullAddress)
                     Spacer()
                 }
                 .modifier(CopyWithAnimation(pressed: $addressPressed, copy: fullAddress))
@@ -570,38 +578,5 @@ private struct PropertyInformationView: View {
             }
             .cardContainerPadded()
         }
-    }
-}
-
-struct CopyWithAnimation: ViewModifier {
-    @Environment(\.translator) var t: KeyAssetTranslator
-    @EnvironmentObject var viewModel: ViewCaseViewModel
-    @Binding var pressed: Bool
-    var copy: String
-
-    func body(content: Content) -> some View {
-        content
-            .background {
-                Color.gray.opacity(pressed ? 0.5 : 0)
-                    .animation(.easeInOut(duration: 0.25), value: pressed)
-                    .cornerRadius(appTheme.cornerRadius)
-            }
-            .gesture(
-                LongPressGesture()
-                    .onEnded { _ in
-                        pressed.toggle()
-                        let message = t.t("info.copied_value").replacingOccurrences(of: "{copied_string}", with: copy)
-                        viewModel.toggleAlert(message: message)
-                        UIPasteboard.general.string = copy
-                        let impactLight = UIImpactFeedbackGenerator(style: .light)
-                        impactLight.impactOccurred()
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            pressed.toggle()
-                        }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                            viewModel.clearAlert()
-                        }
-                    }
-            )
     }
 }
