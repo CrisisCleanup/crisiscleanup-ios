@@ -27,71 +27,16 @@ struct CreateEditCaseView: View {
     var body: some View {
         let disableMutation = viewModel.editableViewState.disabled
         let editSections = viewModel.editSections
+
         VStack {
             ScrollViewReader { proxy in
-                ScrollView(.horizontal, showsIndicators: false ) {
-                    HStack {
-                        Text("1. " + t.t("caseForm.property_information"))
-                            .padding(.leading)
-                            .id("scrollBar1")
-                            .onTapGesture {
-                                withAnimation {
-                                    proxy.scrollTo("section1", anchor: .top)
-                                    proxy.scrollTo("scrollBar1", anchor: .leading)
-                                }
-                            }
-                        Text("2. " + t.t("scrollBar2"))
-                            .padding(.leading)
-                            .id("scrollBar2")
-                            .onTapGesture {
-                                withAnimation {
-                                    proxy.scrollTo("section2", anchor: .top)
-                                    proxy.scrollTo("scrollBar2", anchor: .leading)
-                                }
-                            }
-                        Text("3. " + t.t("scrollBar3"))
-                            .padding(.leading)
-                            .id("scrollBar3")
-                            .onTapGesture {
-                                withAnimation {
-                                    proxy.scrollTo("section3", anchor: .top)
-                                    proxy.scrollTo("scrollBar3", anchor: .leading)
-                                }
-                            }
-                        Text("4. " + t.t("scrollBar4"))
-                            .padding(.leading)
-                            .id("scrollBar4")
-                            .onTapGesture {
-                                withAnimation {
-                                    proxy.scrollTo("section4", anchor: .top)
-                                    proxy.scrollTo("scrollBar4", anchor: .leading)
-                                }
-                            }
-                        Text("5. " + t.t("scrollBar5"))
-                            .padding(.leading)
-                            .id("scrollBar5")
-                            .onTapGesture {
-                                withAnimation {
-                                    proxy.scrollTo("section5", anchor: .top)
-                                    proxy.scrollTo("scrollBar5", anchor: .leading)
-                                }
-                            }
+                FocusSectionSlider(
+                    sectionTitles: editSections,
+                    proxy: proxy
+                )
+                // TODO: Common dimensions
+                .padding(.vertical, 8)
 
-                        Group {
-                            Text("scrollBar1")
-
-                            Text("scrollBar2")
-
-                            Text("scrollBar3")
-
-                            Text("scrollBar4")
-
-                            Text("scrollBar5")
-                        }
-                        .hidden()
-
-                    }
-                }
                 ScrollView {
                     VStack {
                         if let caseState = viewModel.caseData {
@@ -106,102 +51,59 @@ struct CreateEditCaseView: View {
                             }
                         }
 
-                        CreateEditCaseSectionHeaderView (
-                            isCollapsed: $sectionCollapse[0],
-                            titleNumber: 1,
-                            titleTranslateKey: editSections.get(0, "")
-                        )
-                        .id("section1")
-                        .background(GeometryReader {
-                            let frame = $0.frame(in: .named("scrollForm"))
-                            Color.clear.preference(key: ViewOffsetKey.self,
-                                                 value: (-frame.minY))
-                            .onPreferenceChange(ViewOffsetKey.self) {
-                                if($0 < frame.height && $0 > 0) {
-                                    print("section1 in view")
-                                    withAnimation {
-                                        proxy.scrollTo("scrollBar1", anchor: .leading)
-                                    }
-                                }
-                            }
-                        })
+                        Group {
+                            CreateEditCaseSectionHeaderView (
+                                isCollapsed: $sectionCollapse[0],
+                                titleNumber: 1,
+                                titleTranslateKey: editSections.get(0, "")
+                            )
+                            .id("section0")
 
-                        if !sectionCollapse[0] {
-                            PropertyInformation(viewModel: viewModel)
-                                .background(GeometryReader {
-                                    let frame = $0.frame(in: .named("scrollForm"))
-                                    Color.clear.preference(key: ViewOffsetKey.self,
-                                                         value: (-frame.minY))
-                                    .onPreferenceChange(ViewOffsetKey.self) {
-                                        if($0 < frame.height && $0 > 0) {
-                                            print("section1 in view")
-                                            withAnimation {
-                                                proxy.scrollTo("scrollBar1", anchor: .leading)
-                                            }
-                                        }
-                                    }
-                                })
+                            if !sectionCollapse[0] {
+                                PropertyInformation(viewModel: viewModel)
+                            }
                         }
+                        .onScrollSectionFocus(
+                            proxy,
+                            scrollToId: "scrollBar0"
+                        )
 
                         let nodes = Array(viewModel.groupFormFieldNodes.enumerated())
                         ForEach(nodes, id: \.offset) { offset, node in
-                            Divider()
-                                .frame(height: 24)
-                                .overlay(Color(UIColor.systemGray5))
+                            FormListSectionSeparator()
 
                             let sectionIndex = offset + 1
-                            CreateEditCaseSectionHeaderView (
-                                isCollapsed: $sectionCollapse[sectionIndex],
-                                titleNumber: sectionIndex + 1,
-                                titleTranslateKey: editSections.get(sectionIndex, ""),
-                                helpText: node.formField.help
-                            )
-                            .id("section\(sectionIndex+1)")
-                            .background(GeometryReader {
-                                let frame = $0.frame(in: .named("scrollForm"))
-                                Color.clear.preference(key: ViewOffsetKey.self,
-                                                     value: (-frame.minY))
-                                .onPreferenceChange(ViewOffsetKey.self) {
-                                    if($0 < frame.height && $0 > 0) {
-                                        print("section\(sectionIndex+1) in view")
-                                        withAnimation {
-                                            proxy.scrollTo("scrollBar\(sectionIndex+1)", anchor: .leading)
-                                        }
-                                    }
-                                }
-                            })
-                            VStack {
-                                if !sectionCollapse[sectionIndex] {
-                                    let children = node.children
-                                        .filter { !ignoreFormFieldKeys.contains($0.fieldKey) }
-                                    ForEach(children, id: \.id) { child in
-                                        if child.parentKey == node.fieldKey {
-                                            DisplayFormField(
-                                                checkedData: $viewModel.binaryFormData,
-                                                contentData: $viewModel.contentFormData,
-                                                node: child
-                                            )
-                                            .padding(.horizontal)
+                            Group {
+                                CreateEditCaseSectionHeaderView (
+                                    isCollapsed: $sectionCollapse[sectionIndex],
+                                    titleNumber: sectionIndex + 1,
+                                    titleTranslateKey: editSections.get(sectionIndex, ""),
+                                    helpText: node.formField.help
+                                )
+                                .id("section\(sectionIndex)")
 
+                                VStack {
+                                    if !sectionCollapse[sectionIndex] {
+                                        let children = node.children
+                                            .filter { !ignoreFormFieldKeys.contains($0.fieldKey) }
+                                        ForEach(children, id: \.id) { child in
+                                            if child.parentKey == node.fieldKey {
+                                                DisplayFormField(
+                                                    checkedData: $viewModel.binaryFormData,
+                                                    contentData: $viewModel.contentFormData,
+                                                    node: child
+                                                )
+                                                .padding(.horizontal)
+
+                                            }
                                         }
                                     }
                                 }
                             }
-                            .background(GeometryReader {
-                                let frame = $0.frame(in: .named("scrollForm"))
-                                Color.clear.preference(key: ViewOffsetKey.self,
-                                                     value: -frame.minY
-                                )
-                                .onPreferenceChange(ViewOffsetKey.self) {
-                                    if($0 < frame.height && $0 > 0) {
-                                        print("section\(sectionIndex+1) in view")
-                                        withAnimation {
-                                            proxy.scrollTo("scrollBar\(sectionIndex+1)", anchor: .leading)
-                                        }
-                                    }
-                                }
-                            })
-
+                            .onScrollSectionFocus(
+                                proxy,
+                                scrollToId: "scrollBar\(sectionIndex)"
+                            )
                         }
                     }
                 }
@@ -604,7 +506,6 @@ private struct CreateEditCaseSaveActions: View {
     @EnvironmentObject var editableView: EditableView
 
     var body: some View {
-        let disabled = editableView.disabled
         HStack {
             Button {
                 dismiss()
@@ -614,7 +515,7 @@ private struct CreateEditCaseSaveActions: View {
             .styleCancel()
 
             Button {
-
+                // TODO: Do
             } label : {
                 Text(t.t("actions.save_claim"))
             }
@@ -622,7 +523,7 @@ private struct CreateEditCaseSaveActions: View {
             .frame(maxWidth: .infinity)
 
             Button {
-
+                // TODO: Do
             } label : {
                 Text(t.t("actions.save"))
             }
