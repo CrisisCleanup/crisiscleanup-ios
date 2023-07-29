@@ -21,46 +21,43 @@ struct CaseFlagsView: View {
                 }
                 Spacer()
 
-                }
             }
-        .padding(.horizontal)
-
-        switch selected {
-        case WorksiteFlagType.highPriority:
-            HighPriority()
-                .environmentObject(viewModel)
-
-        case WorksiteFlagType.upsetClient:
-            UpsetClient()
-                .environmentObject(viewModel)
-
-        case WorksiteFlagType.markForDeletion:
-            Spacer()
-            ActionButtons {
-                viewModel.onAddFlag(flagType: .markForDeletion)
-            }
-
-        case WorksiteFlagType.reportAbuse:
-            ReportAbuse()
-                .environmentObject(viewModel)
-
-        case WorksiteFlagType.duplicate:
-            Spacer()
-            ActionButtons {
-                viewModel.onAddFlag(flagType: .duplicate)
-            }
-
-        case WorksiteFlagType.wrongLocation:
-            WrongLocation()
-                .environmentObject(viewModel)
-
-        case WorksiteFlagType.wrongIncident:
-            WrongIncident()
-                .environmentObject(viewModel)
-
         }
+        .padding(.horizontal)
+        .onAppear { viewModel.onViewAppear() }
+        .onDisappear { viewModel.onViewDisappear() }
 
+        Group {
+            switch selected {
+            case WorksiteFlagType.highPriority:
+                HighPriority()
 
+            case WorksiteFlagType.upsetClient:
+                UpsetClient()
+
+            case WorksiteFlagType.markForDeletion:
+                Spacer()
+                ActionButtons {
+                    viewModel.onAddFlag(.markForDeletion)
+                }
+
+            case WorksiteFlagType.reportAbuse:
+                ReportAbuse()
+
+            case WorksiteFlagType.duplicate:
+                Spacer()
+                ActionButtons {
+                    viewModel.onAddFlag(.duplicate)
+                }
+
+            case WorksiteFlagType.wrongLocation:
+                WrongLocation()
+
+            case WorksiteFlagType.wrongIncident:
+                WrongIncident()
+            }
+        }
+        .environmentObject(viewModel)
     }
 }
 
@@ -124,7 +121,7 @@ struct HighPriority: View {
         IncidentOrganization(id: 1, name: "Orginization Name Here", primaryContacts: [
             PersonContact(id: 1, firstName: "first", lastName: "last", email: "temp@temp.com", mobile: "1234567890"),
             PersonContact(id: 2, firstName: "John", lastName: "Doe", email: "John@Doe.com", mobile: "1234567890")
-                                ], affiliateIds: Set(arrayLiteral: 1)),
+        ], affiliateIds: Set(arrayLiteral: 1)),
 
     ]
 
@@ -140,36 +137,34 @@ struct HighPriority: View {
             Text(t.t("flag.please_describe_why_high_priority"))
 
             LargeTextEditor(text: $tempString)
-//                .padding()
+            //                .padding()
 
-            Text(viewModel.nearbyOrganizations?.debugDescription ?? "nil")
-
-//            if let nearbyOrganizations = viewModel.nearbyOrganizations {
-                Text(t.t("flag.nearby_organizations"))
+            //            if let nearbyOrganizations = viewModel.nearbyOrganizations {
+            Text(t.t("flag.nearby_organizations"))
                 .bold()
                 .padding(.bottom, 4)
 
-                Text(t.t("caseHistory.do_not_share_contact_warning"))
+            Text(t.t("caseHistory.do_not_share_contact_warning"))
                 .bold()
                 .padding(.bottom, 4)
 
-                Text(t.t("caseHistory.do_not_share_contact_explanation"))
+            Text(t.t("caseHistory.do_not_share_contact_explanation"))
                 .padding(.bottom)
 
-                ForEach(nearbyOrganizations, id:\.id) { org in
+            ForEach(nearbyOrganizations, id:\.id) { org in
 
-                    Button {
-                        showContactSheet = true
-                    } label : {
-                        Text(t.t(org.name))
-                    }
-                    .padding(.vertical)
-                    .sheet(isPresented: $showContactSheet) {
-                        ContactSheet(org: org)
-                    }
+                Button {
+                    showContactSheet = true
+                } label : {
+                    Text(t.t(org.name))
                 }
+                .padding(.vertical)
+                .sheet(isPresented: $showContactSheet) {
+                    ContactSheet(org: org)
+                }
+            }
 
-//            }
+            //            }
         }
         .padding(.horizontal)
 
@@ -210,7 +205,7 @@ struct UpsetClient: View {
 
             Text(t.t("flag.please_share_other_orgs"))
 
-            TextField("t.tOrganization Name", text: $tempString)
+            TextField(t.t("profileOrg.organization_name"), text: $tempString)
                 .textFieldBorder()
         }
         .padding(.horizontal)
@@ -244,7 +239,7 @@ struct ReportAbuse: View {
                     .padding(.vertical)
 
                 HStack {
-                    Text(t.t(" flag.have_you_contacted_org_first"))
+                    Text(t.t("flag.have_you_contacted_org"))
                     Spacer ()
                 }
 
@@ -319,7 +314,7 @@ struct WrongLocation: View {
                 .padding(.bottom, 4)
 
             Button {
-                viewModel.onAddFlag(flagType: WorksiteFlagType.wrongLocation)
+                viewModel.onAddFlag(.wrongLocation)
             } label: {
                 Text(t.t("flag.location_unknown"))
             }

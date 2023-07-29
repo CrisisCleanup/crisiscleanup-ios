@@ -324,7 +324,7 @@ class CaseFlagsViewModel: ObservableObject {
     }
 
     func onAddFlag(
-        flagType: WorksiteFlagType,
+        _ flagType: WorksiteFlagType,
         notes: String = "",
         overwrite: Bool = false
     ) {
