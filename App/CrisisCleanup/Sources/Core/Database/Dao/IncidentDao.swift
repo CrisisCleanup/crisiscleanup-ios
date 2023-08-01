@@ -101,6 +101,31 @@ public class IncidentDao {
     ) async throws {
         try await database.updateFormFields(incidentData)
     }
+
+    func getMatchingIncidents(_ q: String) -> [IncidentIdNameType] {
+        try! reader.read { db in
+            let sql = """
+                SELECT i.*
+                FROM incident i
+                JOIN incident_ft fts
+                    ON fts.rowid = i.rowid
+                    AND incident_ft MATCH ?
+                """
+            let pattern = FTS3Pattern(matchingAllPrefixesIn: q)
+            return try IncidentRecord.fetchAll(
+                db,
+                sql: sql,
+                arguments: [pattern]
+            )
+        }
+        .map {
+            IncidentIdNameType(
+                id: $0.id,
+                name: $0.name,
+                shortName: $0.shortName,
+                disasterLiteral: $0.type)
+        }
+    }
 }
 
 extension AppDatabase {

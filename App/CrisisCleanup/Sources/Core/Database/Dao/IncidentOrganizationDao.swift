@@ -93,6 +93,27 @@ public class IncidentOrganizationDao {
     func upsertStats(_ stats: IncidentOrganizationSyncStatRecord) async throws {
         try await database.upsertIncidentOrganizationSyncStats(stats)
     }
+
+    func getMatchingOrganizations(_ q: String) -> [OrganizationIdName] {
+        try! reader.read { db in
+            let sql = """
+                SELECT o.id, o.name
+                FROM incidentOrganization o
+                JOIN incidentOrganization_ft fts
+                    ON fts.rowid = o.rowid
+                    AND incidentOrganization_ft MATCH ?
+                """
+            let pattern = FTS3Pattern(matchingAllPrefixesIn: q)
+            return try IncidentOrganizationRecord.fetchAll(
+                db,
+                sql: sql,
+                arguments: [pattern]
+            )
+        }
+        .map {
+            OrganizationIdName(id: $0.id, name: $0.name)
+        }
+    }
 }
 
 extension AppDatabase {

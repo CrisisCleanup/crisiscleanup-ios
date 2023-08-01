@@ -713,6 +713,25 @@ extension AppDatabase {
             )
         }
 
+        migrator.registerMigration(
+            "incident-organization-fts",
+            foreignKeyChecks: .immediate
+        ) { db in
+            try db.create(virtualTable: "incident_ft", using: FTS4()) { t in
+                t.synchronize(withTable: "incident")
+                t.tokenizer = .porter
+                t.column("name")
+                t.column("shortName")
+                t.column("type")
+            }
+
+            try db.create(virtualTable: "incidentOrganization_ft", using: FTS4()) { t in
+                t.synchronize(withTable: "incidentOrganization")
+                t.tokenizer = .porter
+                t.column("name")
+            }
+        }
+
         return migrator
     }
 }

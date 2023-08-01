@@ -201,15 +201,16 @@ struct UpsetClient: View {
 
     @EnvironmentObject var viewModel: CaseFlagsViewModel
 
-    @State var tempString = ""
-    @State var tempSelected = ""
+    @State var upsetReason = ""
+    @State var isMyOrgInvolved = ""
+    @State var selectedOrg: OrganizationIdName? = nil
 
     var body: some View {
         VStack(alignment: .leading) {
 
             Text(t.t("flag.explain_why_client_upset"))
 
-            LargeTextEditor(text: $tempString)
+            LargeTextEditor(text: $upsetReason)
                 .padding(.vertical)
 
             HStack {
@@ -217,23 +218,29 @@ struct UpsetClient: View {
                 Spacer ()
             }
 
-            let options = [t.t("formOptions.yes"), t.t("formOptions.no") ]
-
-            RadioButtons(selected: $tempSelected, options: options)
+            let options = [
+                t.t("formOptions.yes"),
+                t.t("formOptions.no")
+            ]
+            RadioButtons(selected: $isMyOrgInvolved, options: options)
                 .padding()
 
             Text(t.t("flag.please_share_other_orgs"))
 
-            TextField(t.t("profileOrg.organization_name"), text: $tempString)
+            TextField(t.t("profileOrg.organization_name"), text: $viewModel.otherOrgQ)
                 .textFieldBorder()
         }
         .padding(.horizontal)
 
         Spacer()
 
-        // TODO: replace placeholders
         ActionButtons {
-            viewModel.onUpsetClient(notes: tempString, isMyOrgInvolved: true, otherOrgQuery: tempString, otherOrganizationsInvolved: [OrganizationIdName(id: 1, name: "temp")])
+            viewModel.onUpsetClient(
+                notes: upsetReason,
+                isMyOrgInvolved: isMyOrgInvolved,
+                otherOrgQuery: viewModel.otherOrgQ,
+                otherOrganizationInvolved: selectedOrg
+            )
         }
     }
 }
@@ -356,8 +363,8 @@ struct WrongIncident: View {
 
     @EnvironmentObject var viewModel: CaseFlagsViewModel
 
-    @State var tempString = ""
-    @State var tempChecked = false
+    @State var isNotListed = false
+    @State var selectedIncident: IncidentIdNameType? = nil
 
     var body: some View {
         VStack (alignment: .leading ) {
@@ -366,10 +373,10 @@ struct WrongIncident: View {
                 Spacer()
             }
 
-            TextField(t.t("casesVue.incident"), text: $tempString)
+            TextField(t.t("casesVue.incident"), text: viewModel.incidentQ)
                 .textFieldBorder()
 
-            CheckboxView(checked: $tempChecked, text: t.t("flag.incident_not_listed"))
+            CheckboxView(checked: $isNotListed, text: t.t("flag.incident_not_listed"))
 
         }
         .padding(.horizontal)
@@ -378,7 +385,11 @@ struct WrongIncident: View {
 
         // TODO: replace placeholders
         ActionButtons {
-            viewModel.onWrongIncident(isIncidentListed: true, incidentQuery: tempString, selectedIncident: nil)
+            viewModel.onWrongIncident(
+                isIncidentListed: !isNotListed,
+                incidentQuery: viewModel.incidentQ.wrappedValue,
+                selectedIncident: selectedIncident
+            )
         }
     }
 }

@@ -17,7 +17,7 @@ public protocol IncidentsRepository {
 
     func pullIncidentOrganizations(_ incidentId: Int64, _ force: Bool) async
 
-    func getMatchingIncidents(_ q: String) async -> [IncidentIdNameType]
+    func getMatchingIncidents(_ q: String) -> [IncidentIdNameType]
 }
 
 extension IncidentsRepository {

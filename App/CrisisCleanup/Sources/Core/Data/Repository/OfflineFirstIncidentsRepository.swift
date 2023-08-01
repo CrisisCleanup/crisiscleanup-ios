@@ -213,8 +213,7 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         }
     }
 
-    func getMatchingIncidents(_ q: String) async -> [IncidentIdNameType] {
-        // TODO: Do
-        []
+    func getMatchingIncidents(_ q: String) -> [IncidentIdNameType] {
+        incidentDao.getMatchingIncidents(q)
     }
 }

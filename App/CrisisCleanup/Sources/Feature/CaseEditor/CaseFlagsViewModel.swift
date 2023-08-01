@@ -60,7 +60,7 @@ class CaseFlagsViewModel: ObservableObject {
     @Published private(set) var validCoordinates: LocationAddress? = nil
 
     private let queryIncidentsManager: QueryIncidentsManager
-    @Published private(set) var incidentQ = ""
+    let incidentQ: Binding<String>
     @Published private(set) var isLoadingIncidents = false
     @Published private(set) var incidentResults: (String, [IncidentIdNameType]) = ("", [])
 
@@ -98,7 +98,13 @@ class CaseFlagsViewModel: ObservableObject {
 
         wrongLocationManager = WrongLocationFlagManager(addressSearchRepository, logger)
 
-        queryIncidentsManager = QueryIncidentsManager(incidentsRepository)
+        let qim = QueryIncidentsManager(incidentsRepository)
+        queryIncidentsManager = qim
+
+        incidentQ = Binding<String>(
+            get: { qim.incidentQ.value },
+            set: { qim.incidentQ.value = $0 }
+        )
 
         let existingSingularFlags = Set(flagsIn.filter { singleExistingFlags.contains($0) })
         flagFlows = allFlags.filter { !existingSingularFlags.contains($0) }
@@ -156,11 +162,6 @@ class CaseFlagsViewModel: ObservableObject {
     }
 
     private func subscribeToQueryIncidentManager() {
-        queryIncidentsManager.incidentQ.eraseToAnyPublisher()
-            .receive(on: RunLoop.main)
-            .assign(to: \.incidentQ, on: self)
-            .store(in: &subscriptions)
-
         queryIncidentsManager.isLoading.eraseToAnyPublisher()
             .receive(on: RunLoop.main)
             .assign(to: \.isLoadingIncidents, on: self)
@@ -192,10 +193,10 @@ class CaseFlagsViewModel: ObservableObject {
                       scheduler: RunLoop.current,
                       latest: true
             )
-            .asyncMap {
+            .map {
                 $0.isBlank || $0.trim().count < 2
                 ? []
-                : await self.organizationsRepository.getMatchingOrganizations($0.trim())
+                : self.organizationsRepository.getMatchingOrganizations($0.trim())
             }
             .receive(on: RunLoop.main)
             .assign(to: \.otherOrgResults, on: self)
@@ -266,7 +267,7 @@ class CaseFlagsViewModel: ObservableObject {
         }
     }
 
-    // TODO Test coverage. Especially overwriting
+    // TODO: Test coverage. Especially overwriting
     private func saveFlag(
         _ flag: WorksiteFlag,
         _ flagType: WorksiteFlagType
@@ -303,18 +304,14 @@ class CaseFlagsViewModel: ObservableObject {
         commitFlag(highPriorityFlag)
     }
 
-    func onOrgQueryChange(query: String) {
-        otherOrgQ = query
-    }
-
     func onUpsetClient(
         notes: String,
-        isMyOrgInvolved: Bool?,
+        isMyOrgInvolved: String,
         otherOrgQuery: String,
-        otherOrganizationsInvolved: [OrganizationIdName]
+        otherOrganizationInvolved: OrganizationIdName?
     ) {
-        let isQueryMatchingOrg = otherOrganizationsInvolved.isNotEmpty &&
-        otherOrgQuery.trim() == otherOrganizationsInvolved.first!.name.trim()
+        let isQueryMatchingOrg = otherOrganizationInvolved != nil &&
+        otherOrgQuery.trim() == otherOrganizationInvolved!.name.trim()
 
         let upsetClientFlag = WorksiteFlag.flag(
             flag: WorksiteFlagType.upsetClient,
@@ -375,10 +372,6 @@ class CaseFlagsViewModel: ObservableObject {
                 }
             }
         }
-    }
-
-    func onIncidentQueryChange(_ query: String) {
-        queryIncidentsManager.incidentQ.value = query
     }
 
     func onWrongIncident(

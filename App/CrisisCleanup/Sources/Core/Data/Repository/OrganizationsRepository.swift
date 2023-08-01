@@ -12,7 +12,7 @@ public protocol OrganizationsRepository {
         _ longitude: Double
     ) async -> [IncidentOrganization]
 
-    func getMatchingOrganizations(_ q: String) async -> [OrganizationIdName]
+    func getMatchingOrganizations(_ q: String) -> [OrganizationIdName]
 }
 
 class OfflineFirstOrganizationsRepository: OrganizationsRepository {
@@ -74,8 +74,7 @@ class OfflineFirstOrganizationsRepository: OrganizationsRepository {
         return []
     }
 
-    func getMatchingOrganizations(_ q: String) async -> [OrganizationIdName] {
-        // TODO: Do
-        []
+    func getMatchingOrganizations(_ q: String) -> [OrganizationIdName] {
+        incidentOrganizationDao.getMatchingOrganizations(q)
     }
 }

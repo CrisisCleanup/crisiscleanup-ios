@@ -47,8 +47,8 @@ class QueryIncidentsManager {
                 scheduler: RunLoop.current,
                 latest: true
             )
-            .asyncMap { q in
-                let incidents = await q.isEmpty
+            .map { q in
+                let incidents = q.isEmpty
                 ? [IncidentIdNameType]()
                 : {
                     if let cached = resultCache.value(forKey: q) {
@@ -57,7 +57,7 @@ class QueryIncidentsManager {
                     isQuerying.value = true
                     do {
                         defer { isQuerying.value = false }
-                        let results = await incidentsRepository.getMatchingIncidents(q)
+                        let results = incidentsRepository.getMatchingIncidents(q)
                         resultCache.setValue(results, forKey: q)
                         return results
                     }
