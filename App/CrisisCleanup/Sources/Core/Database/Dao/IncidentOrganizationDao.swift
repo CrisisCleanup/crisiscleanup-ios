@@ -72,7 +72,11 @@ public class IncidentOrganizationDao {
     func getOrganizations(_ organizationIds: [Int64]) throws -> [PopulatedIncidentOrganization] {
         try reader.read { db in
             try IncidentOrganizationRecord
-                .select(IncidentOrganizationRecord.inIds(ids: organizationIds))
+                .all()
+                .inIds(organizationIds)
+                .including(all: IncidentOrganizationRecord.primaryContacts)
+                .including(all: IncidentOrganizationRecord.organizationAffiliates)
+                .asRequest(of: PopulatedIncidentOrganization.self)
                 .fetchAll(db)
         }
     }

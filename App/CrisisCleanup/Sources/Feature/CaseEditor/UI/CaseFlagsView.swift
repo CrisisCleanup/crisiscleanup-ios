@@ -6,7 +6,7 @@ struct CaseFlagsView: View {
 
     @ObservedObject var viewModel: CaseFlagsViewModel
 
-    @State var selected: WorksiteFlagType = .highPriority
+    @State var selected: WorksiteFlagType? = nil
 
     var body: some View {
         VStack {
@@ -15,49 +15,59 @@ struct CaseFlagsView: View {
 
                 let options = viewModel.flagFlows
                 Picker("", selection: $selected) {
+                    if selected == nil {
+                        Text(t.t("flag.choose_problem")).tag(Optional<WorksiteFlagType>(nil))
+                    }
                     ForEach(options, id: \.self) { option in
-                        Text(t.t(option.literal))
+                        Text(t.t(option.literal)).tag(Optional(option))
                     }
                 }
-                Spacer()
+            }
+            .padding(.horizontal)
+            .frame(maxWidth: .infinity, alignment: .leading)
 
+            switch selected {
+            case .some (let unwrapped):
+                switch unwrapped {
+                case WorksiteFlagType.highPriority:
+                    HighPriority()
+
+                case WorksiteFlagType.upsetClient:
+                    UpsetClient()
+
+                case WorksiteFlagType.markForDeletion:
+                    Spacer()
+                    ActionButtons {
+                        viewModel.onAddFlag(.markForDeletion)
+                    }
+
+                case WorksiteFlagType.reportAbuse:
+                    ReportAbuse()
+
+                case WorksiteFlagType.duplicate:
+                    Spacer()
+                    ActionButtons {
+                        viewModel.onAddFlag(.duplicate)
+                    }
+
+                case WorksiteFlagType.wrongLocation:
+                    WrongLocation()
+
+                case WorksiteFlagType.wrongIncident:
+                    WrongIncident()
+                }
+            default:
+                Spacer()
             }
         }
-        .padding(.horizontal)
-        .onAppear { viewModel.onViewAppear() }
-        .onDisappear { viewModel.onViewDisappear() }
-
-        Group {
-            switch selected {
-            case WorksiteFlagType.highPriority:
-                HighPriority()
-
-            case WorksiteFlagType.upsetClient:
-                UpsetClient()
-
-            case WorksiteFlagType.markForDeletion:
-                Spacer()
-                ActionButtons {
-                    viewModel.onAddFlag(.markForDeletion)
-                }
-
-            case WorksiteFlagType.reportAbuse:
-                ReportAbuse()
-
-            case WorksiteFlagType.duplicate:
-                Spacer()
-                ActionButtons {
-                    viewModel.onAddFlag(.duplicate)
-                }
-
-            case WorksiteFlagType.wrongLocation:
-                WrongLocation()
-
-            case WorksiteFlagType.wrongIncident:
-                WrongIncident()
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text(t.t("nav.flag"))
             }
         }
         .environmentObject(viewModel)
+        .onAppear { viewModel.onViewAppear() }
+        .onDisappear { viewModel.onViewDisappear() }
     }
 }
 
@@ -115,63 +125,72 @@ struct HighPriority: View {
     @EnvironmentObject var viewModel: CaseFlagsViewModel
     @State var showContactSheet: Bool = false
 
-    @State var highPriority: Bool = false
-    @State var tempString = ""
-    var nearbyOrganizations: [IncidentOrganization] = [
-        IncidentOrganization(id: 1, name: "Orginization Name Here", primaryContacts: [
-            PersonContact(id: 1, firstName: "first", lastName: "last", email: "temp@temp.com", mobile: "1234567890"),
-            PersonContact(id: 2, firstName: "John", lastName: "Doe", email: "John@Doe.com", mobile: "1234567890")
-        ], affiliateIds: Set(arrayLiteral: 1)),
-
-    ]
+    @State var isHighPriority: Bool = false
+    @State var flagDescription = ""
+    @State var selectedOrg = EmptyIncidentOrganization
 
     var body: some View {
+        ScrollView {
+            VStack(alignment: .leading) {
+                CheckboxView(
+                    checked: $isHighPriority,
+                    text: t.t("flag.flag_high_priority")
+                )
 
-        VStack(alignment: .leading) {
+                Text(t.t("flag.please_describe_why_high_priority"))
+                LargeTextEditor(text: $flagDescription)
+                    .padding(.bottom)
 
-            CheckboxView(
-                checked: $highPriority,
-                text: t.t("flag.flag_high_priority")
-            )
+                if let nearbyOrganizations = viewModel.nearbyOrganizations {
+                    if nearbyOrganizations.isNotEmpty {
+                        Text(t.t("flag.nearby_organizations"))
+                            .bold()
+                            .padding(.bottom, 4)
 
-            Text(t.t("flag.please_describe_why_high_priority"))
+                        Text(t.t("caseHistory.do_not_share_contact_warning"))
+                            .bold()
+                            .padding(.bottom, 4)
 
-            LargeTextEditor(text: $tempString)
-            //                .padding()
+                        Text(t.t("caseHistory.do_not_share_contact_explanation"))
+                            .padding(.bottom)
 
-            //            if let nearbyOrganizations = viewModel.nearbyOrganizations {
-            Text(t.t("flag.nearby_organizations"))
-                .bold()
-                .padding(.bottom, 4)
-
-            Text(t.t("caseHistory.do_not_share_contact_warning"))
-                .bold()
-                .padding(.bottom, 4)
-
-            Text(t.t("caseHistory.do_not_share_contact_explanation"))
-                .padding(.bottom)
-
-            ForEach(nearbyOrganizations, id:\.id) { org in
-
-                Button {
-                    showContactSheet = true
-                } label : {
-                    Text(t.t(org.name))
+                        Group {
+                            ForEach(nearbyOrganizations, id:\.id) { org in
+                                Button {
+                                    selectedOrg = org
+                                } label : {
+                                    Text(t.t(org.name))
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .multilineTextAlignment(.leading)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                .padding(.vertical)
+                            }
+                        }
+                        .onChange(of: selectedOrg, perform: { org in
+                            if org.id != EmptyIncident.id {
+                                showContactSheet = true
+                            }
+                        })
+                        .sheet(isPresented: $showContactSheet) {
+                            ContactSheet(org: selectedOrg)
+                                .presentationDetents([.medium, .large])
+                        }
+                    }
                 }
-                .padding(.vertical)
-                .sheet(isPresented: $showContactSheet) {
-                    ContactSheet(org: org)
+                else {
+                    ProgressView()
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
-
-            //            }
+            .padding(.horizontal)
         }
-        .padding(.horizontal)
 
         Spacer()
 
         ActionButtons {
-            viewModel.onHighPriority(highPriority, tempString)
+            viewModel.onHighPriority(isHighPriority, flagDescription)
         }
     }
 }

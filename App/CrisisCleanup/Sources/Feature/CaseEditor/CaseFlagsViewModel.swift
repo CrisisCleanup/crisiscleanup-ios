@@ -22,7 +22,7 @@ class CaseFlagsViewModel: ObservableObject {
     @Published private(set) var incidentWorksiteChange = (0, 0)
     private let incidentWorksiteChangeSubject = CurrentValueSubject<(Int64, Int64), Never>((0, 0))
 
-    private let allFlags: Set<WorksiteFlagType> = [
+    private let allFlags = [
         WorksiteFlagType.highPriority,
         WorksiteFlagType.upsetClient,
         WorksiteFlagType.markForDeletion,

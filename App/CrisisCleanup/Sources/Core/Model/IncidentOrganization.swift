@@ -1,9 +1,20 @@
-public struct IncidentOrganization {
+public struct IncidentOrganization: Equatable {
+    public static func == (lhs: IncidentOrganization, rhs: IncidentOrganization) -> Bool {
+        lhs.id == rhs.id
+    }
+
     let id: Int64
     let name: String
     let primaryContacts: [PersonContact]
     let affiliateIds: Set<Int64>
 }
+
+let EmptyIncidentOrganization = IncidentOrganization(
+    id: EmptyIncident.id,
+    name: "",
+    primaryContacts: [],
+    affiliateIds: []
+)
 
 public struct OrganizationIdName {
     let id: Int64

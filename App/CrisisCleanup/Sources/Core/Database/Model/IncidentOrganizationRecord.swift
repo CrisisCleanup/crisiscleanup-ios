@@ -20,9 +20,11 @@ extension IncidentOrganizationRecord: Codable, FetchableRecord, PersistableRecor
         case id,
              name
     }
+}
 
-    static func inIds(ids: [Int64]) -> SQLSpecificExpressible {
-        ids.contains(Columns.id)
+extension DerivableRequest<IncidentOrganizationRecord> {
+    func inIds(_ ids: [Int64]) -> Self {
+        filter(ids.contains(IncidentOrganizationRecord.Columns.id))
     }
 }
 

@@ -8,7 +8,7 @@ struct IncidentHeader: View {
     var body: some View {
         HStack {
             IncidentDisasterImage(incident)
-            Text(incident.name)
+            Text(incident.shortName)
                 .font(.title2)
         }
     }
