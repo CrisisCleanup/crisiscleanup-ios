@@ -10,12 +10,13 @@ struct CasesFilterView: View {
     var tempSections = ["Distance", "General", "Personal Info", "Flags", "Work", "Dates"]
 
     @State var tempVul = 100.0
-    @State var tempDate = Date()
-    @State var dates: Set<DateComponents> = []
-    @State var datesCache: Set<DateComponents> = []
-    @State var start: DateComponents?
-    @State var end: DateComponents?
-    @State var datesFilled = false
+
+    @State var createdStart: Date?
+    @State var createdEnd: Date?
+
+    @State var updatedStart: Date?
+    @State var updatedEnd: Date?
+
     @State var updated = 0.0
     var maxUpdated = 193
     var recentUpdated = 3
@@ -92,75 +93,11 @@ struct CasesFilterView: View {
                             VStack {
                                 Text("Dates")
 
-                                MultiDatePicker("Select your preferred dates", selection: $dates)
+                                CalendarFormField(title: "t.tCreated", start: $createdStart, end: $createdEnd)
+                                    .padding([.horizontal, .bottom])
 
-                                    .onChange(of: dates) { change in
-//                                        print(change.description)
-                                        if(datesFilled) {
-                                            for date in dates {
-                                                if !datesCache.contains(date) {
-                                                    print(date)
-                                                    datesFilled = false
-                                                    dates = [date]
-                                                    datesCache = []
-
-                                                    break
-                                                }
-                                            }
-                                            if(datesFilled) {
-                                                print(datesFilled.description)
-                                                for date in datesCache {
-                                                    print("new date within range")
-
-                                                    if(!dates.contains(date)) {
-                                                        print(date)
-                                                        datesFilled = false
-                                                        dates = [date]
-                                                        datesCache = []
-
-                                                        break
-                                                    }
-                                                }
-                                            }
-//
-                                        } else if (dates.count == 2) {
-                                            print("adding to dates")
-                                            var date1 = Calendar.current.date(from: DateComponents(year: 2023, month: 08, day: 15))!
-                                            var date2 = Calendar.current.date(from: DateComponents(year: 2023, month: 08, day: 18))!
-
-                                            var count = 0
-                                            for comp in dates {
-                                                if(count == 0) {
-                                                    date1 = Calendar.current.date(from: comp)!
-                                                } else {
-                                                    date2 = Calendar.current.date(from: comp)!
-                                                }
-                                                count += 1
-                                            }
-                                            var fromDate = Date()
-                                            var toDate = Date()
-                                            if date1 < date2 {
-                                                fromDate = date1
-                                                toDate = date2
-                                            } else {
-                                                fromDate = date2
-                                                toDate = date1
-                                            }
-
-                                            for date in stride(from:fromDate, to:toDate, by: TimeInterval(86400)) {
-//                                                print(date)
-                                                let comps = Calendar.current.dateComponents([.calendar, .era, .year, .month, .day], from: date)
-
-                                                dates.insert(comps)
-                                            }
-
-                                            datesFilled = true
-                                            datesCache = dates
-                                        }
-//                                        print(change.description)
-//                                        print(dates.description)
-
-                                    }
+                                CalendarFormField(title: "t.tUpdated", start: $updatedStart, end: $updatedEnd)
+                                    .padding(.horizontal)
                             }
                         }
 
@@ -173,5 +110,153 @@ struct CasesFilterView: View {
         }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
+    }
+}
+
+struct CalendarFormField: View {
+
+    var title: String
+    @Binding var start: Date?
+    @Binding var end: Date?
+    @State var showCalendar: Bool = false
+
+    var body: some View {
+        VStack {
+            HStack {
+                Text(title)
+                Spacer()
+            }
+            HStack {
+                if let start = start, let end = end {
+                    let text1 = start.formatted(.dateTime.day().month().year())
+                    let text2 = end.formatted(.dateTime.day().month().year())
+                    Text(text1 + " - " + text2)
+                    Spacer()
+                    Image(systemName: "xmark")
+                        .padding(.trailing)
+                        .onTapGesture {
+                            self.start = nil
+                            self.end = nil
+                        }
+                } else {
+                    Text(" ") // Here for padding purposes
+                        .hidden()
+                    Spacer()
+                }
+                Image(systemName: "calendar")
+            }
+            .textFieldBorder()
+            .onTapGesture {
+                showCalendar.toggle()
+            }
+            .sheet(isPresented: $showCalendar) {
+                CalendarSelectView(
+                    start: $start,
+                    end: $end,
+                    showCalendar: $showCalendar
+                )
+            }
+        }
+    }
+}
+
+struct CalendarSelectView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @State var dates: Set<DateComponents> = []
+    @State var datesCache: Set<DateComponents> = []
+    @State var firstDateSelect: DateComponents = DateComponents()
+    @Binding var start: Date?
+    @Binding var end: Date?
+    @State var datesFilled = false
+    @Binding var showCalendar: Bool
+
+    var body: some View {
+        VStack(alignment:.leading) {
+            let text1 = start?.formatted(.dateTime.day().month().year()) ?? "t.tStart Date"
+            let text2 = end?.formatted(.dateTime.day().month().year()) ?? "t.tEnd Date"
+            HStack {
+                Text(text1 + " - " + text2)
+                    .font(.title2)
+                Spacer()
+                Button {
+                    showCalendar = false
+                } label: {
+                    Text("t.tSave")
+                }
+                .disabled(end == nil)
+            }
+            .padding()
+            MultiDatePicker("Select your preferred dates", selection: $dates)
+                .onAppear {
+                    if let start = start, let end = end, dates.isEmpty {
+                        let startComps = Calendar.current.dateComponents([.calendar, .era, .year, .month, .day], from: start)
+                        dates.insert(startComps)
+
+                        let endComps = Calendar.current.dateComponents([.calendar, .era, .year, .month, .day], from: end)
+                        dates.insert(endComps)
+                    }
+                }
+                .onChange(of: dates) { change in
+                    if(datesFilled) {
+                        for date in dates {
+                            if !datesCache.contains(date) {
+                                datesFilled = false
+                                dates = [date]
+                                datesCache = []
+                                end = nil
+                                break
+                            }
+                        }
+                        // This determines if a date was selected in
+                        // between the existing range
+                        if(datesFilled) {
+                            print(datesFilled.description)
+                            for date in datesCache {
+                                if(!dates.contains(date)) {
+                                    datesFilled = false
+                                    dates = [date]
+                                    datesCache = []
+                                    end = nil
+                                    break
+                                }
+                            }
+                        }
+                    } else if (dates.count == 1) {
+                        firstDateSelect = dates.first!
+                        start = Calendar.current.date(from: firstDateSelect)!
+                    } else if (dates.count == 2) {
+
+                        // Determining if the second selected date
+                        // is after or before the first selected
+                        for comp in dates {
+                            if (comp != firstDateSelect) {
+                                let otherDate = Calendar.current.date(from: comp)!
+                                let firstDate = Calendar.current.date(from: firstDateSelect)!
+                                if otherDate > firstDate {
+                                    end = otherDate
+                                } else {
+                                    dates = [comp]
+                                    end = nil
+                                    return
+                                }
+                            }
+                        }
+
+                        // Insert the other dates in between
+                        for date in stride(from:start!, to:end!, by: TimeInterval(86400)) {
+                            let comps = Calendar.current.dateComponents([.calendar, .era, .year, .month, .day], from: date)
+                            dates.insert(comps)
+                        }
+
+                        datesFilled = true
+                        datesCache = dates
+                    }
+
+                }
+
+            Spacer()
+        }
+        .presentationDetents([.medium, .large])
     }
 }
