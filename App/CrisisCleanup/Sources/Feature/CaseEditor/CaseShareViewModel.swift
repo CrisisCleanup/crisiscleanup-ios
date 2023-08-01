@@ -9,7 +9,6 @@ class CaseShareViewModel: ObservableObject {
     private let organizationsRepository: OrganizationsRepository
     private let accountDataRepository: AccountDataRepository
     private let worksitesRepository: WorksitesRepository
-    // TODO: Disable actions if not online
     private let networkMonitor: NetworkMonitor
     private let inputValidator: InputValidator
     private let translator: KeyTranslator
@@ -25,22 +24,20 @@ class CaseShareViewModel: ObservableObject {
     @Published private(set) var receiverContacts = [ShareContactInfo]()
     @Published private(set) var receiverContactManual = ""
     @Published private(set) var receiverContactSuggestion = ""
-    @Published private(set) var receiverMessage = ""
 
-    @Published private(set) var organizationId: Int64 = 0
+    private let organizationId: AnyPublisher<Int64, Never>
 
     @Published private(set) var hasClaimedWorkType: Bool? = nil
 
     @Published private(set) var isLoading = true
     @Published private(set) var showShareScreen = false
 
-    @Published private(set) var isSharable = true
+    @Published private var isSharable = true
     @Published private(set) var notSharableMessage = ""
 
-    // TODO: Disable actions if not online
     @Published private(set) var isShareEnabled = false
 
-    @Published private(set) var contactQuery = ""
+    @Published private var contactQuery = ""
 
     @Published private(set) var contactOptions = [ShareContactInfo]()
 
@@ -68,6 +65,11 @@ class CaseShareViewModel: ObservableObject {
         self.translator = translator
 
         worksiteIn = editableWorksiteProvider.editableWorksite.value
+
+        organizationId = accountDataRepository.accountData
+            .eraseToAnyPublisher()
+            .map { $0.org.id }
+            .eraseToAnyPublisher()
     }
 
     func onViewAppear() {
@@ -97,16 +99,7 @@ class CaseShareViewModel: ObservableObject {
     }
 
     private func subscribeToOrganization() {
-        accountDataRepository.accountData
-            .eraseToAnyPublisher()
-            .map { $0.org.id }
-            .receive(on: RunLoop.main)
-            .sink { id in
-                self.organizationId = id
-            }
-            .store(in: &subscriptions)
-
-        $organizationId
+        organizationId
             .map { orgId in
                 let affiliatedOrgIds = self.organizationsRepository.getOrganizationAffiliateIds(orgId)
                 let claimedBys = Set(self.worksiteIn.workTypes.compactMap { $0.orgClaim })
@@ -145,7 +138,7 @@ class CaseShareViewModel: ObservableObject {
             .store(in: &subscriptions)
 
         Publishers.CombineLatest(
-            $organizationId,
+            organizationId,
             $contactQuery
         )
         .filter { (_, q) in
@@ -264,8 +257,7 @@ class CaseShareViewModel: ObservableObject {
         }
     }
 
-    func onShare() {
-        let shareMessage = receiverMessage
+    func onShare(_ shareMessage: String) {
         let noClaimReason = unclaimedShareReason
         let contacts = receiverContacts
         let emails = contacts.filter { $0.isEmail }

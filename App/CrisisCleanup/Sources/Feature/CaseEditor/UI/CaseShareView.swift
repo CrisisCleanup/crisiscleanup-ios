@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CaseShareView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
+    @Environment(\.dismiss) var dismiss
     @EnvironmentObject var router: NavigationRouter
 
     @ObservedObject var viewModel: CaseShareViewModel
@@ -36,7 +37,7 @@ struct CaseShareView: View {
             .padding(.bottom, 4)
 
             Button {
-                // share without claiming
+                dismiss()
             } label: {
                 Text(t.t("actions.cancel"))
             }

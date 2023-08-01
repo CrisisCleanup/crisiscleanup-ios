@@ -131,6 +131,7 @@ extension MainComponent {
         shared {
             OfflineFirstWorksitesRepository(
                 dataSource: networkDataSource,
+                writeApi: writeApi,
                 worksitesSyncer: worksitesSyncer,
                 worksiteSyncStatDao: worksiteSyncStatDao,
                 worksiteDao: worksiteDao,
