@@ -216,6 +216,15 @@ extension MainComponent {
         }
     }
 
+    public var usersRepository: UsersRepository {
+        shared {
+            OfflineFirstUsersRepository(
+                networkDataSource: networkDataSource,
+                loggerFactory: loggerFactory
+            )
+        }
+    }
+
     var pagingSyncLogRepository: PagingSyncLogRepository {
         shared {
             PagingSyncLogRepository(

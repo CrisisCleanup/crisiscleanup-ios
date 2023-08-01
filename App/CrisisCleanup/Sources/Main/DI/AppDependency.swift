@@ -29,6 +29,7 @@ public protocol AppDependency: Dependency {
     var addressSearchRepository: AddressSearchRepository { get }
     var localImageRepository: LocalImageRepository { get }
     var databaseManagementRepository: DatabaseManagementRepository { get }
+    var usersRepository: UsersRepository { get }
 
     var translator: KeyAssetTranslator { get }
 

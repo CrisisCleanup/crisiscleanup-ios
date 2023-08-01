@@ -239,7 +239,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         phoneNumbers: [String],
         shareMessage: String,
         noClaimReason: String?
-    ) async throws -> Bool {
+    ) async -> Bool {
         // TODO: Do
         return false
     }

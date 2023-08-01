@@ -80,6 +80,12 @@ public protocol CrisisCleanupNetworkDataSource {
         _ latitude: Double,
         _ longitude: Double
     ) async throws -> [NetworkIncidentOrganization]
+
+    func searchUsers(
+        _ q: String,
+        _ organization: Int64,
+        limit: Int
+    ) async throws -> [NetworkPersonContact]
 }
 
 extension CrisisCleanupNetworkDataSource {
@@ -88,5 +94,12 @@ extension CrisisCleanupNetworkDataSource {
         _ after: Date?
     ) async throws -> [NetworkIncident] {
         return try await getIncidents(fields: fields, limit: 250, ordering: "-start_at", after: after)
+    }
+
+    func searchUsers(
+        _ q: String,
+        _ organization: Int64
+    ) async throws -> [NetworkPersonContact] {
+        try await searchUsers(q, organization, limit: 10)
     }
 }

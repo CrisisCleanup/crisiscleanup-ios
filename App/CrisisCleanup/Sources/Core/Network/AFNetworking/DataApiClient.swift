@@ -353,4 +353,26 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         }
         throw response.error ?? networkError
     }
+
+    func searchUsers(
+        _ q: String,
+        _ organization: Int64,
+        limit: Int
+    ) async throws -> [NetworkPersonContact] {
+        let request = requestProvider.searchUsers
+            .addQueryItems(
+                "search", q,
+                "organization", "\(organization)",
+                "limit", "\(limit)"
+            )
+        let response = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkUsersResult.self
+        )
+        if let result = response.value {
+            try result.errors?.tryThrowException()
+            return result.results ?? [NetworkPersonContact]()
+        }
+        throw response.error ?? networkError
+    }
 }

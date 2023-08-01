@@ -8,6 +8,7 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
          caseSearchLocation,
          caseMoveOnMap,
          caseShare,
+         caseShareStep2,
          caseFlags,
          caseHistory,
          caseWorkTypeTransfer,
@@ -22,15 +23,17 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
         case .searchCases:  return 3
         case .filterCases:  return 4
         case .viewCase:     return 5
-        case .createEditCase: return 6
+        case .createEditCase:       return 6
         case .caseShare:    return 7
         case .caseFlags:    return 8
         case .caseHistory:  return 9
         case .caseWorkTypeTransfer: return 10
         case .caseAddNote:  return 11
         case .viewImage:    return 12
-        case .caseSearchLocation: return 13
-        case .caseMoveOnMap: return 14
+        case .caseSearchLocation:   return 13
+        case .caseMoveOnMap:return 14
+        case .caseShareStep2:       return 15
+
         case .syncInsights: return 77
         }
     }

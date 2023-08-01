@@ -63,7 +63,7 @@ public protocol WorksitesRepository {
         phoneNumbers: [String],
         shareMessage: String,
         noClaimReason: String?
-    ) async throws -> Bool
+    ) async -> Bool
 }
 
 extension WorksitesRepository {

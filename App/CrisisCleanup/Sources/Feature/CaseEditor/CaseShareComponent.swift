@@ -4,6 +4,7 @@ import SwiftUI
 
 public protocol CaseShareViewBuilder {
     var caseShareView: AnyView { get }
+    var caseShareStep2View: AnyView { get }
 }
 
 class CaseShareComponent: Component<AppDependency>, CaseShareViewBuilder {
@@ -33,6 +34,14 @@ class CaseShareComponent: Component<AppDependency>, CaseShareViewBuilder {
     private func getViewModel() -> CaseShareViewModel {
         if viewModel == nil {
             viewModel = CaseShareViewModel(
+                editableWorksiteProvider: dependency.editableWorksiteProvider,
+                usersRepository: dependency.usersRepository,
+                organizationsRepository: dependency.organizationsRepository,
+                accountDataRepository: dependency.accountDataRepository,
+                worksitesRepository: dependency.worksitesRepository,
+                networkMonitor: dependency.networkMonitor,
+                inputValidator: dependency.inputValidator,
+                translator: dependency.translator
             )
         }
         return viewModel!
@@ -41,6 +50,14 @@ class CaseShareComponent: Component<AppDependency>, CaseShareViewBuilder {
     var caseShareView: AnyView {
         AnyView(
             CaseShareView(
+                viewModel: getViewModel()
+            )
+        )
+    }
+
+    var caseShareStep2View: AnyView {
+        AnyView(
+            CaseShareStep2View(
                 viewModel: getViewModel()
             )
         )
