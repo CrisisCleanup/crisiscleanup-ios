@@ -128,6 +128,13 @@ extension NetworkRequestProvider {
         )
     }
 
+    var searchUsers: NetworkRequest {
+        NetworkRequest(
+            apiUrl("users"),
+            addTokenHeader: true
+        )
+    }
+
     // MARK: Write requests
 
     var newWorksite: NetworkRequest {

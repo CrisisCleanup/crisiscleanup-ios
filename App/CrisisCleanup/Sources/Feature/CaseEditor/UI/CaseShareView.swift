@@ -1,34 +1,35 @@
 import SwiftUI
 
 struct CaseShareView: View {
-    @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
+    @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var router: NavigationRouter
 
     @ObservedObject var viewModel: CaseShareViewModel
 
-    @State var tempString = ""
-
     var body: some View {
+        // TODO: Disable actions if not online
         VStack(alignment: .leading) {
             HStack {
                 Text(t.t("casesVue.please_claim_if_share"))
                 Spacer()
             }
 
-            LargeTextEditor(text: $tempString)
+            LargeTextEditor(text: $viewModel.unclaimedShareReason)
                 .padding(.bottom, 4)
 
             Button {
-                // share without claiming
+                // Guarded by disabled below
+                router.openCaseShareStep2()
             } label: {
                 Text(t.t("actions.share_no_claim"))
             }
             .stylePrimary()
-            .disabled(tempString.isBlank)
+            .disabled(viewModel.unclaimedShareReason.isBlank)
             .padding(.bottom, 4)
 
             Button {
-                // share without claiming
+                router.openCaseShareStep2()
             } label: {
                 Text(t.t("actions.claim_and_share"))
             }
@@ -36,7 +37,7 @@ struct CaseShareView: View {
             .padding(.bottom, 4)
 
             Button {
-                // share without claiming
+                dismiss()
             } label: {
                 Text(t.t("actions.cancel"))
             }
@@ -45,5 +46,7 @@ struct CaseShareView: View {
             Spacer()
         }
         .padding(.horizontal)
+        .onAppear { viewModel.onViewAppear() }
+        .onDisappear { viewModel.onViewDisappear() }
     }
 }

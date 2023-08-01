@@ -131,6 +131,7 @@ extension MainComponent {
         shared {
             OfflineFirstWorksitesRepository(
                 dataSource: networkDataSource,
+                writeApi: writeApi,
                 worksitesSyncer: worksitesSyncer,
                 worksiteSyncStatDao: worksiteSyncStatDao,
                 worksiteDao: worksiteDao,
@@ -212,6 +213,15 @@ extension MainComponent {
     public var databaseManagementRepository: DatabaseManagementRepository {
         shared {
             CrisisCleanupDatabaseManagementRepository(
+            )
+        }
+    }
+
+    public var usersRepository: UsersRepository {
+        shared {
+            OfflineFirstUsersRepository(
+                networkDataSource: networkDataSource,
+                loggerFactory: loggerFactory
             )
         }
     }

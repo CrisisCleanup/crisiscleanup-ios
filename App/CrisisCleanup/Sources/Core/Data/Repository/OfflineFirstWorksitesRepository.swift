@@ -3,6 +3,7 @@ import Foundation
 
 class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullReporter {
     private let dataSource: CrisisCleanupNetworkDataSource
+    private let writeApi: CrisisCleanupWriteApi
     private let worksitesSyncer: WorksitesSyncer
     private let worksiteSyncStatDao: WorksiteSyncStatDao
     private let worksiteDao: WorksiteDao
@@ -25,6 +26,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
 
     init(
         dataSource: CrisisCleanupNetworkDataSource,
+        writeApi: CrisisCleanupWriteApi,
         worksitesSyncer: WorksitesSyncer,
         worksiteSyncStatDao: WorksiteSyncStatDao,
         worksiteDao: WorksiteDao,
@@ -36,6 +38,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         loggerFactory: AppLoggerFactory
     ) {
         self.dataSource = dataSource
+        self.writeApi = writeApi
         self.worksitesSyncer = worksitesSyncer
         self.worksiteSyncStatDao = worksiteSyncStatDao
         self.worksiteDao = worksiteDao
@@ -239,8 +242,20 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         phoneNumbers: [String],
         shareMessage: String,
         noClaimReason: String?
-    ) async throws -> Bool {
-        // TODO: Do
+    ) async -> Bool {
+        do {
+            try await writeApi.shareWorksite(
+                worksiteId,
+                emails,
+                phoneNumbers,
+                shareMessage,
+                noClaimReason
+            )
+
+            return true
+        } catch {
+            logger.logError(error)
+        }
         return false
     }
 }

@@ -184,6 +184,8 @@ private struct MainTabs: View {
                         caseMoveOnMapViewBuilder.caseMoveOnMapView
                     case .caseShare:
                         caseShareViewBuilder.caseShareView
+                    case .caseShareStep2:
+                        caseShareViewBuilder.caseShareStep2View
                     case .caseFlags:
                         caseFlagsViewBuilder.caseFlagsView
                     case .caseHistory:

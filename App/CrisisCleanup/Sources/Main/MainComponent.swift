@@ -160,6 +160,8 @@ public class MainComponent: BootstrapComponent,
 
     public var caseShareView: AnyView { caseShareComponent.caseShareView }
 
+    public var caseShareStep2View: AnyView { caseShareComponent.caseShareStep2View }
+
     // MARK: Case flags
 
     lazy var caseFlagsComponent: CaseFlagsComponent = CaseFlagsComponent(parent: self, routerObserver: routerObserver)
