@@ -44,16 +44,6 @@ struct CasesSearchView: View {
                         }
                         .disabled(disable)
                     }
-
-                    Button {
-                        router.openFilterCases()
-                    } label: {
-                        Image("ic_dials", bundle: .module)
-                            .background(Color.white)
-                            .foregroundColor(Color.black)
-                            .cornerRadius(appTheme.cornerRadius)
-                            .disabled(disable)
-                    }
                 }
                 .overlay(
                     RoundedRectangle(cornerRadius: appTheme.cornerRadius)
