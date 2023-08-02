@@ -95,7 +95,8 @@ extension Worksite {
                 isAssignedToOrgMember: isAssignedToOrgMember
             ),
             flags: flags?.map { flag in
-                FlagSnapshot(
+                let attr = flag.attr
+                return FlagSnapshot(
                     localId: flag.id,
                     flag: FlagSnapshot.Flag(
                         id: flagIdLookup[flag.id] ?? -1,
@@ -105,7 +106,10 @@ extension Worksite {
                         notes: flag.notes,
                         reasonT: flag.reasonT,
                         reason: flag.reason,
-                        requestedAction: flag.requestedAction
+                        requestedAction: flag.requestedAction,
+                        involvesMyOrg: attr?.involvesMyOrg,
+                        haveContactedOtherOrg: attr?.haveContactedOtherOrg,
+                        organizationIds: attr?.organizations ?? []
                     )
                 )
             } ?? [],

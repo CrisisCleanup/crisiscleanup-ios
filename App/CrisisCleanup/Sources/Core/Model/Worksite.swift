@@ -266,6 +266,7 @@ public struct WorksiteFlag: Hashable {
     let reasonT: String
     let reason: String
     let requestedAction: String
+    let attr: FlagAttributes?
 
     internal static func flag(
         reasonT: String,
@@ -321,7 +322,8 @@ public struct WorksiteFlag: Hashable {
         notes: String,
         reasonT: String,
         reason: String,
-        requestedAction: String
+        requestedAction: String,
+        attr: FlagAttributes? = nil
     ) {
         self.id = id
         self.action = action
@@ -331,10 +333,21 @@ public struct WorksiteFlag: Hashable {
         self.reasonT = reasonT
         self.reason = reason
         self.requestedAction = requestedAction
+        self.attr = attr
 
         isHighPriorityFlag = reasonT == WorksiteFlagType.highPriority.literal
         isWrongLocationFlag = reasonT == WorksiteFlagType.wrongLocation.literal
         flagType = flagTypeLookup[reasonT]
+    }
+
+    public struct FlagAttributes: Hashable {
+        // Upset client
+        let involvesMyOrg: Bool?
+        // Report abuse
+        let haveContactedOtherOrg: Bool?
+        // Upset client or report abuse
+        let organizations: [Int64]
+
     }
 }
 

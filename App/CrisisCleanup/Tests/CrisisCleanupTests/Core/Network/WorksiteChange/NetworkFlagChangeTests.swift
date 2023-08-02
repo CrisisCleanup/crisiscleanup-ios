@@ -255,7 +255,10 @@ private func testFlagSnapshot(
             notes: "",
             reasonT: reason,
             reason: reason,
-            requestedAction: ""
+            requestedAction: "",
+            involvesMyOrg: nil,
+            haveContactedOtherOrg: nil,
+            organizationIds: []
         )
     )
 }
@@ -276,6 +279,7 @@ private func testNetworkFlag(
         isHighPriority: isHighPriority,
         notes: notes,
         reasonT: reason,
-        requestedAction: requestedAction
+        requestedAction: requestedAction,
+        attr: nil
     )
 }

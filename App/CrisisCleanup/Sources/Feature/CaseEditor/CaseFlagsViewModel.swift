@@ -43,7 +43,7 @@ class CaseFlagsViewModel: ObservableObject {
 
     @Published private(set) var isSaving = false
     private let isSavingSubject = CurrentValueSubject<Bool, Never>(false)
-    @Published private(set) var isSavingWorksite = false
+    @Published private var isSavingWorksite = false
     private let isSavingWorksiteSubject = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isSaved = false
     private let isSavedSubject = CurrentValueSubject<Bool, Never>(false)
@@ -56,7 +56,7 @@ class CaseFlagsViewModel: ObservableObject {
 
     private let wrongLocationManager: WrongLocationFlagManager
     @Published private(set) var isProcessingLocation = false
-    @Published private(set) var wrongLocationText = ""
+    let wrongLocationText: Binding<String>
     @Published private(set) var validCoordinates: LocationAddress? = nil
 
     private let queryIncidentsManager: QueryIncidentsManager
@@ -96,10 +96,16 @@ class CaseFlagsViewModel: ObservableObject {
         worksiteIn = editableWorksiteProvider.editableWorksite.value
         flagsIn = Set(worksiteIn.flags?.compactMap { $0.flagType } ?? [])
 
-        wrongLocationManager = WrongLocationFlagManager(addressSearchRepository, logger)
+        let wlm = WrongLocationFlagManager(addressSearchRepository, logger)
+        wrongLocationManager = wlm
 
         let qim = QueryIncidentsManager(incidentsRepository)
         queryIncidentsManager = qim
+
+        wrongLocationText = Binding<String>(
+            get: { wlm.wrongLocationText.value },
+            set: { wlm.wrongLocationText.value = $0 }
+        )
 
         incidentQ = Binding<String>(
             get: { qim.incidentQ.value },
@@ -118,6 +124,7 @@ class CaseFlagsViewModel: ObservableObject {
             }
         }
 
+        subscribeToSaveState()
         subscribeToEditable()
         subscribeToWrongLocationManager()
         subscribeToQueryIncidentManager()
@@ -129,11 +136,26 @@ class CaseFlagsViewModel: ObservableObject {
         subscriptions = cancelSubscriptions(subscriptions)
     }
 
+    private func subscribeToSaveState() {
+        isSavingSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.isSaving, on: self)
+            .store(in: &subscriptions)
+        isSavingWorksiteSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.isSavingWorksite, on: self)
+            .store(in: &subscriptions)
+        isSavedSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.isSaved, on: self)
+            .store(in: &subscriptions)
+    }
+
     private func subscribeToEditable() {
         Publishers.CombineLatest3(
-            isSavingSubject.eraseToAnyPublisher(),
-            isSavingWorksiteSubject.eraseToAnyPublisher(),
-            isSavedSubject.eraseToAnyPublisher()
+            $isSaving,
+            $isSavingWorksite,
+            $isSaved
         )
         .map { (b0, b1, b2) in !(b0 || b1 || b2) }
         .receive(on: RunLoop.main)
@@ -144,14 +166,12 @@ class CaseFlagsViewModel: ObservableObject {
     private func subscribeToWrongLocationManager() {
         wrongLocationManager.isProcessingLocation
             .eraseToAnyPublisher()
+            .debounce(
+                for: .seconds(0.15),
+                scheduler: RunLoop.current
+            )
             .receive(on: RunLoop.main)
             .assign(to: \.isProcessingLocation, on: self)
-            .store(in: &subscriptions)
-
-        wrongLocationManager.wrongLocationText
-            .eraseToAnyPublisher()
-            .receive(on: RunLoop.main)
-            .assign(to: \.wrongLocationText, on: self)
             .store(in: &subscriptions)
 
         wrongLocationManager.validCoordinates
@@ -304,19 +324,35 @@ class CaseFlagsViewModel: ObservableObject {
         commitFlag(highPriorityFlag)
     }
 
+    private func getSelectedOrganizations(
+        _ otherOrgQuery: String,
+        _ otherOrganizationsInvolved: OrganizationIdName?
+    ) -> [Int64] {
+        if let orgName = otherOrganizationsInvolved?.name,
+           otherOrgQuery.trim() == orgName.trim() {
+            return [otherOrganizationsInvolved!.id]
+        }
+        return []
+    }
+
     func onUpsetClient(
         notes: String,
-        isMyOrgInvolved: String,
+        isMyOrgInvolved: Bool?,
         otherOrgQuery: String,
         otherOrganizationInvolved: OrganizationIdName?
     ) {
-        let isQueryMatchingOrg = otherOrganizationInvolved != nil &&
-        otherOrgQuery.trim() == otherOrganizationInvolved!.name.trim()
+        let organizations = getSelectedOrganizations(otherOrgQuery, otherOrganizationInvolved)
 
         let upsetClientFlag = WorksiteFlag.flag(
             flag: WorksiteFlagType.upsetClient,
             notes: notes
-        )
+        ).copy {
+            $0.attr = WorksiteFlag.FlagAttributes(
+                involvesMyOrg: isMyOrgInvolved,
+                haveContactedOtherOrg: nil,
+                organizations:organizations
+            )
+        }
         commitFlag(upsetClientFlag)
     }
 
@@ -336,18 +372,24 @@ class CaseFlagsViewModel: ObservableObject {
         isContacted: Bool?,
         contactOutcome: String,
         notes: String,
-        action: String
+        action: String,
+        otherOrgQuery: String,
+        otherOrganizationInvolved: OrganizationIdName?
     ) {
+        let organizations = getSelectedOrganizations(otherOrgQuery, otherOrganizationInvolved)
+
         let reportAbuseFlag = WorksiteFlag.flag(
             flag: WorksiteFlagType.reportAbuse,
             notes: notes,
             requestedAction: action
-        )
+        ).copy {
+            $0.attr = WorksiteFlag.FlagAttributes(
+                involvesMyOrg: nil,
+                haveContactedOtherOrg: isContacted,
+                organizations:organizations
+            )
+        }
         commitFlag(reportAbuseFlag)
-    }
-
-    func onWrongLocationTextChange(text: String) {
-        wrongLocationText = text
     }
 
     func updateLocation(location: LocationAddress?) {

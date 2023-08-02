@@ -1,5 +1,8 @@
 import SwiftUI
 
+// TODO: Move into common dimensions
+private let maxButtonHeight = 56.0
+
 struct PrimaryButtonStyle: ButtonStyle {
     let disabled: Bool
     var textSidePadding = 16.0
@@ -11,9 +14,9 @@ struct PrimaryButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .frame(maxWidth: .infinity, maxHeight: 56)
+            .frame(maxWidth: .infinity, maxHeight: maxButtonHeight)
             .background(disabled ? .gray.disabledAlpha() : appTheme.colors.themePrimaryContainer)
-            .foregroundColor(.black)
+            .foregroundColor(disabled ? .black.disabledAlpha() : .black)
             .cornerRadius(appTheme.cornerRadius)
     }
 }
@@ -36,9 +39,9 @@ struct CancelButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .frame(maxWidth: .infinity, maxHeight: 56)
+            .frame(maxWidth: .infinity, maxHeight: maxButtonHeight)
             .background(disabled ? .gray.disabledAlpha() : appTheme.colors.cancelButtonContainerColor)
-            .foregroundColor(.black)
+            .foregroundColor(disabled ? .black.disabledAlpha() : .black)
             .cornerRadius(appTheme.cornerRadius)
     }
 }
@@ -61,9 +64,9 @@ struct BlackButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .frame(maxWidth: .infinity, maxHeight: 56)
+            .frame(maxWidth: .infinity, maxHeight: maxButtonHeight)
             .background(disabled ? .gray.disabledAlpha() : appTheme.colors.navigationContainerColor)
-            .foregroundColor(.white)
+            .foregroundColor(disabled ? .white.disabledAlpha() : .white)
             .cornerRadius(appTheme.cornerRadius)
     }
 }
@@ -81,7 +84,7 @@ struct BusyButtonContent: View {
 
     var body: some View {
         if isBusy {
-            ProgressView(value: 0.0).circularProgress()
+            ProgressView().circularProgress()
         } else {
             Text(text)
         }

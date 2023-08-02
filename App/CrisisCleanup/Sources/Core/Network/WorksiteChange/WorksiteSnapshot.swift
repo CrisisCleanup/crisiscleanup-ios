@@ -107,18 +107,37 @@ struct FlagSnapshot: Codable, Equatable {
         let reasonT: String
         let reason: String
         let requestedAction: String
+        // TODO: Test coverage for all related flag attr
+        // Attrs
+        let involvesMyOrg: Bool?
+        let haveContactedOtherOrg: Bool?
+        let organizationIds: [Int64]
+    }
+
+    private func yesNo(_ b: Bool?) -> String? {
+        b == nil ? nil : (b! ? "Yes" : "No")
     }
 
     func asNetworkFlag() -> NetworkFlag {
         let f = flag
-        return NetworkFlag(
+        let addAttributes = f.involvesMyOrg != nil ||
+        f.haveContactedOtherOrg != nil ||
+        f.organizationIds.isNotEmpty
+        let attr = addAttributes ? NetworkFlag.FlagAttributes(
+            involvesYou: yesNo(f.involvesMyOrg),
+            haveContactedOtherOrg: yesNo(f.haveContactedOtherOrg),
+            organizations: f.organizationIds
+        )
+        : nil
+            return NetworkFlag(
             id: f.id > 0 ? f.id : nil,
             action: f.action.ifBlank { nil },
             createdAt: f.createdAt,
             isHighPriority: f.isHighPriority,
             notes: f.notes.ifBlank { nil },
             reasonT: f.reasonT,
-            requestedAction: f.requestedAction.ifBlank { nil }
+            requestedAction: f.requestedAction.ifBlank { nil },
+            attr: attr
         )
     }
 }

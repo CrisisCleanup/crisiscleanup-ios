@@ -14,6 +14,9 @@ extension FlagSnapshot.Flag {
 		reasonT: String,
 		reason: String,
 		requestedAction: String,
+		involvesMyOrg: Bool?,
+		haveContactedOtherOrg: Bool?,
+		organizationIds: [Int64],
 		// This is to prevent overriding the default init if it exists already
 		forCopyInit: Void? = nil
 	) {
@@ -25,6 +28,9 @@ extension FlagSnapshot.Flag {
 		self.reasonT = reasonT
 		self.reason = reason
 		self.requestedAction = requestedAction
+		self.involvesMyOrg = involvesMyOrg
+		self.haveContactedOtherOrg = haveContactedOtherOrg
+		self.organizationIds = organizationIds
 	}
 
 	// struct copy, lets you overwrite specific variables retaining the value of the rest
@@ -44,6 +50,9 @@ extension FlagSnapshot.Flag {
 		var reasonT: String
 		var reason: String
 		var requestedAction: String
+		var involvesMyOrg: Bool?
+		var haveContactedOtherOrg: Bool?
+		var organizationIds: [Int64]
 
 		fileprivate init(original: FlagSnapshot.Flag) {
 			self.id = original.id
@@ -54,6 +63,9 @@ extension FlagSnapshot.Flag {
 			self.reasonT = original.reasonT
 			self.reason = original.reason
 			self.requestedAction = original.requestedAction
+			self.involvesMyOrg = original.involvesMyOrg
+			self.haveContactedOtherOrg = original.haveContactedOtherOrg
+			self.organizationIds = original.organizationIds
 		}
 
 		fileprivate func toFlag() -> FlagSnapshot.Flag {
@@ -65,7 +77,10 @@ extension FlagSnapshot.Flag {
 				notes: notes,
 				reasonT: reasonT,
 				reason: reason,
-				requestedAction: requestedAction
+				requestedAction: requestedAction,
+				involvesMyOrg: involvesMyOrg,
+				haveContactedOtherOrg: haveContactedOtherOrg,
+				organizationIds: organizationIds
 			)
 		}
 	}

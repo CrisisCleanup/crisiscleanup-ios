@@ -21,6 +21,7 @@ extension WorksiteFlag {
 		var reasonT: String
 		var reason: String
 		var requestedAction: String
+		var attr: FlagAttributes?
 
 		fileprivate init(original: WorksiteFlag) {
 			self.id = original.id
@@ -31,6 +32,7 @@ extension WorksiteFlag {
 			self.reasonT = original.reasonT
 			self.reason = original.reason
 			self.requestedAction = original.requestedAction
+			self.attr = original.attr
 		}
 
 		fileprivate func toWorksiteFlag() -> WorksiteFlag {
@@ -42,7 +44,8 @@ extension WorksiteFlag {
 				notes: notes,
 				reasonT: reasonT,
 				reason: reason,
-				requestedAction: requestedAction
+				requestedAction: requestedAction,
+				attr: attr
 			)
 		}
 	}
