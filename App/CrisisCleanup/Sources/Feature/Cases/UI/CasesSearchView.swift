@@ -43,6 +43,7 @@ struct CasesSearchView: View {
                                 .foregroundColor(Color.black)
                         }
                         .disabled(disable)
+                        .padding()
                     }
                 }
                 .overlay(

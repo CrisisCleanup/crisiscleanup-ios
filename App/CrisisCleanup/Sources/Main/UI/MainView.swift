@@ -94,6 +94,7 @@ struct MainView: View {
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .environment(\.translator, viewModel.translator)
+        .environment(\.font, .bodyLarge)
         .environmentObject(router)
     }
 }

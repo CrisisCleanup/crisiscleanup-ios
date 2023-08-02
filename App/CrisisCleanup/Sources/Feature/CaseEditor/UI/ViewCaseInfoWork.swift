@@ -88,6 +88,7 @@ private struct WorkTypeAction: View {
                     .background(backgroundColor.animation(.easeInOut))
                     .cornerRadius(appTheme.cornerRadius)
                     .tint(.black)
+                    .fontHeader4()
             } else {
                 let borderColor: Color = isDisabled ? .gray : .black
                 Text(title)
@@ -97,6 +98,7 @@ private struct WorkTypeAction: View {
                     .background(.white)
                     .cornerRadius(appTheme.cornerRadius)
                     .tint(.black)
+                    .fontHeader4()
                     .overlay(
                         RoundedRectangle(cornerRadius: appTheme.cornerRadius)
                             .stroke(borderColor, lineWidth: 1)
@@ -120,7 +122,7 @@ private struct WorkTypeSectionTitle: View {
     }
 
     var body: some View {
-        let font = isSmallTitle ? Font.caption : Font.body
+        let font = isSmallTitle ? Font.bodySmall : Font.bodyLarge
         Text(title)
             .font(font)
             .padding(.horizontal)
@@ -136,13 +138,13 @@ private struct WorkTypeSummaryView: View {
     var body: some View {
         VStack {
             Text(summary.name)
-                .font(.body)
                 .frame(maxWidth: .infinity, alignment: .leading)
             if summary.jobSummary.isNotBlank {
                 Text(summary.jobSummary)
                     .font(.callout)
                     .padding(.vertical, 1.0)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .fontBodySmall()
             }
 
             HStack {

@@ -21,7 +21,8 @@ private struct WorkTypeStatusOption : View {
 
     var translator: KeyTranslator
     var status: WorkTypeStatus
-    var showOpenIcon: Bool = false
+    var showOpenIcon = false
+    var isSelected = false
 
     private let dotSize = 16.0
 
@@ -34,6 +35,8 @@ private struct WorkTypeStatusOption : View {
                 .tint(.blue)
                 // TODO: Common dimensions
                 .frame(height: 48)
+                .fontBodySmall()
+                .fontWeight(isSelected ? Font.Weight.bold : nil)
             if showOpenIcon {
                 DropDownIcon()
             }
@@ -65,14 +68,13 @@ struct WorkTypeStatusPicker: View {
             showOptions.toggle()
         }
         .disabled(editableView.disabled)
-        .sheet(
-            isPresented: $showOptions
-        ) {
+        .sheet(isPresented: $showOptions) {
             List {
                 ForEach(statusOptions) { status in
                     WorkTypeStatusOption(
                         translator: translator,
-                        status: status
+                        status: status,
+                        isSelected: selectedStatus == status
                     )
                     .onTapGesture {
                         onSelectStatus(status)

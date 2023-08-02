@@ -16,6 +16,12 @@ struct ViewCaseView: View {
     @State private var selectedTab: ViewCaseTabs = .info
     @State private var titlePressed: Bool = false
 
+    private let infoTabs = Array([
+        ViewCaseTabs.info,
+        ViewCaseTabs.photos,
+        ViewCaseTabs.notes
+    ].enumerated())
+
     var body: some View {
         let isBusy = viewModel.isLoading || viewModel.isSaving
         let disableMutation = viewModel.editableViewState.disabled
@@ -26,44 +32,21 @@ struct ViewCaseView: View {
                 let tabTitles = viewModel.tabTitles
 
                 HStack {
-                    VStack {
-                        HStack{
-                            Spacer()
-                            Text(tabTitles[.info] ?? "")
-                                .onTapGesture {
-                                    selectedTab = .info
-                                }
-                            Spacer()
+                    ForEach(infoTabs, id: \.offset) { (index, tab) in
+                        VStack {
+                            HStack{
+                                Spacer()
+                                Text(tabTitles[tab] ?? "")
+                                    .fontHeader4()
+                                    .onTapGesture {
+                                        selectedTab = tab
+                                    }
+                                Spacer()
+                            }
+                            Divider()
+                                .frame(height: 2)
+                                .background(selectedTab == tab ? Color.orange : Color.gray)
                         }
-                        Divider()
-                            .frame(height: 2)
-                            .background(selectedTab == .info ? Color.orange : Color.gray)
-                    }
-                    VStack {
-                        HStack {
-                            Spacer()
-                            Text(tabTitles[.photos] ?? "")
-                                .onTapGesture {
-                                    selectedTab = .photos
-                                }
-                            Spacer()
-                        }
-                        Divider()
-                            .frame(height: 2)
-                            .background(selectedTab == .photos ? Color.orange : Color.gray)
-                    }
-                    VStack {
-                        HStack{
-                            Spacer()
-                            Text(tabTitles[.notes] ?? "")
-                                .onTapGesture {
-                                    selectedTab = .notes
-                                }
-                            Spacer()
-                        }
-                        Divider()
-                            .frame(height: 2)
-                            .background(selectedTab == .notes ? Color.orange : Color.gray)
                     }
                 }
                 .padding(.top)
@@ -107,9 +90,9 @@ struct ViewCaseView: View {
             ToolbarItem(placement: .principal) {
                 VStack {
                     Text(viewModel.headerTitle)
-                        .font(.headline)
+                        .fontHeader3()
                     Text(viewModel.subTitle)
-                        .font(.subheadline)
+                        .fontBodySmall()
                 }
                 .modifier(CopyWithAnimation(pressed: $titlePressed, copy: viewModel.headerTitle))
 

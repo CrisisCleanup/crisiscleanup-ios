@@ -16,7 +16,9 @@ struct ViewCaseRowHeader: View {
                 .foregroundColor(Color.black)
                 .background(appTheme.colors.attentionBackgroundColor)
                 .clipShape(Circle())
+                .fontHeader3()
             Text(rowTitle)
+                .fontHeader3()
         }
     }
 }

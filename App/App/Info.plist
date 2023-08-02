@@ -8,6 +8,13 @@
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Fonts/NunitoSans_10pt-Regular</string>
+		<string>Fonts/NunitoSans_10pt-Italic</string>
+		<string>Fonts/NunitoSans_10pt-Bold</string>
+		<string>Fonts/NunitoSans_10pt-Light</string>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
