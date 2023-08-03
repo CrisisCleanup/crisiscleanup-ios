@@ -9,7 +9,7 @@ struct IncidentSelectView: View {
     var body: some View{
         VStack {
             Text(t.t("nav.change_incident"))
-                .font(.title2)
+                .fontHeader3()
                 .padding()
 
             let selectedId = viewModel.incidentsData.selectedId
