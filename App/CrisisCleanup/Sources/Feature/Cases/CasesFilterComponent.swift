@@ -28,7 +28,14 @@ class CasesFilterComponent: Component<AppDependency>, CasesFilterViewBuilder {
 
     private var casesFilterViewModel: CasesFilterViewModel {
         if viewModel == nil {
-            viewModel = CasesFilterViewModel(
+            viewModel =
+            CasesFilterViewModel(
+                workTypeStatusRepository: dependency.workTypeStatusRepository,
+                casesFilterRepository: dependency.casesFilterRepository,
+                incidentSelector: dependency.incidentSelector,
+                incidentsRepository: dependency.incidentsRepository,
+                languageRepository: dependency.languageTranslationsRepository,
+                translator: dependency.translator,
                 loggerFactory: dependency.loggerFactory
             )
         }

@@ -7,9 +7,8 @@ struct CasesFilterView: View {
 
     @ObservedObject var viewModel: CasesFilterViewModel
 
-    var tempSections = ["Distance", "General", "Personal Info", "Flags", "Work", "Dates"]
-
-    @State var tempVul = 100.0
+    @State var svi = 100.0
+    @State var daysAgo = Double(CasesFilterMaxDaysAgo)
 
     @State var createdStart: Date?
     @State var createdEnd: Date?
@@ -17,101 +16,197 @@ struct CasesFilterView: View {
     @State var updatedStart: Date?
     @State var updatedEnd: Date?
 
-    @State var updated = 0.0
-    var maxUpdated = 193
-    var recentUpdated = 3
-
     var body: some View {
-        ZStack {
+        ScrollViewReader { proxy in
+            FocusSectionSlider(
+                sectionTitles: viewModel.filterSectionTitles,
+                proxy: proxy
+            )
+            .padding(.vertical)
+
             VStack {
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        FocusSectionSlider(
-                            sectionTitles: tempSections,
-                            proxy: proxy
-                        )
-                        .padding(.vertical)
+                ScrollView {
+                    FilterSlidersSection(
+                        svi: $svi,
+                        daysAgo: $daysAgo
+                    )
 
-                        HStack {
-                            VStack(alignment: .leading) {
-                                HStack {
-                                    Text("Vulnerability")
-                                    Spacer()
-                                }
-                                Slider(
-                                    value: $tempVul,
-                                    in: 0...100
+                    ForEach(viewModel.indexedTitles, id: \.0) { (index, sectionTitle) in
+                        FormListSectionSeparator()
+
+                        let sectionTitle = viewModel.filterSectionTitles[index]
+                        VStack(alignment: .leading) {
+                            FilterSectionTitle(title: sectionTitle)
+
+                            switch index {
+                            case 0:
+                                FilterDistanceSection(
+                                    distances: viewModel.distanceOptions
                                 )
-                                .tint(.black)
-                                HStack {
-                                    Text("Most Vulnerable")
-                                        .font(.caption)
-
-                                    Spacer()
-
-                                    Text("Everyone")
-                                        .font(.caption)
-                                }
-                            }.padding(.horizontal)
-                        }
-
-                        FormListSectionSeparator()
-
-                        HStack {
-                            VStack(alignment: .leading) {
-                                HStack {
-                                    Text("Updated \(maxUpdated)")
-                                    Spacer()
-                                }
-                                Slider(
-                                    value: $updated,
-                                    in: Double(recentUpdated)...Double(maxUpdated),
-                                    step: 1
+                            case 1:
+                                FilterGeneralSection(
                                 )
-                                .tint(.black)
+                            case 2:
+                                FilterPersonalInfoSection(
+                                )
+                            case 3:
+                                FilterFlagsSection(
+                                    flags: viewModel.worksiteFlags
+                                )
+                            case 4:
+                                FilterWorkSection(
+                                    workTypes: viewModel.workTypes
+                                )
+                            case 5:
+                                CalendarFormField(
+                                    title: t.t("worksiteFilters.created"),
+                                    start: $createdStart,
+                                    end: $createdEnd
+                                )
+                                .padding([.horizontal, .bottom])
 
-                                HStack {
-                                    Text("\(recentUpdated)")
-                                        .font(.caption)
-
-                                    Spacer()
-
-                                    Text("\(maxUpdated)")
-                                        .font(.caption)
-                                }
-                            }.padding(.horizontal)
-                        }
-
-                        FormListSectionSeparator()
-
-                        HStack {
-                            Text("placeholder for section")
-                        }
-
-                        FormListSectionSeparator()
-
-                        HStack {
-                            VStack {
-                                Text("Dates")
-
-                                CalendarFormField(title: "t.tCreated", start: $createdStart, end: $createdEnd)
-                                    .padding([.horizontal, .bottom])
-
-                                CalendarFormField(title: "t.tUpdated", start: $updatedStart, end: $updatedEnd)
-                                    .padding(.horizontal)
+                                CalendarFormField(
+                                    title: t.t("worksiteFilters.updated"),
+                                    start: $updatedStart,
+                                    end: $updatedEnd
+                                )
+                                .padding([.horizontal, .bottom])
+                            default:
+                                Text("Filter section not implemented")
                             }
                         }
-
-                        Spacer()
+                        .id("section\(index)")
+                        .onScrollSectionFocus(
+                            proxy,
+                            scrollToId: "scrollBar\(index)"
+                        )
                     }
-                    .coordinateSpace(name: "scrollForm")
-                    .scrollDismissesKeyboard(.immediately)
                 }
+                .coordinateSpace(name: "scrollForm")
+                .scrollDismissesKeyboard(.immediately)
             }
         }
         .hideNavBarUnderSpace()
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
+    }
+}
+
+private struct FilterSectionTitle: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .fontHeader3()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+    }
+}
+
+private struct FilterSlidersSection: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @Binding var svi: Double
+    @Binding var daysAgo: Double
+
+    private let minDaysAgo = Double(CasesFilterMinDaysAgo)
+    private let maxDaysAgo = Double(CasesFilterMaxDaysAgo)
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text(t.t("svi.vulnerability"))
+
+            Slider(
+                value: $svi,
+                in: 0...100
+            )
+            .tint(.black)
+            HStack {
+                Text(t.t("svi.most_vulnerable"))
+                    .fontBodySmall()
+
+                Spacer()
+
+                Text(t.t("svi.everyone"))
+                    .fontBodySmall()
+            }
+        }
+        .padding(.horizontal)
+
+        FormListSectionSeparator()
+
+        VStack(alignment: .leading) {
+            let updatedText = t.t("worksiteFilters.updated")
+            Text("\(updatedText) (\(Int(daysAgo)))")
+
+            Slider(
+                value: $daysAgo,
+                in: minDaysAgo...maxDaysAgo,
+                step: 1
+            )
+            .tint(.black)
+
+            HStack {
+                Text(t.t("worksiteFilters.days_ago").replacingOccurrences(of: "{days}", with: "\(CasesFilterMinDaysAgo)"))
+                    .fontBodySmall()
+
+                Spacer()
+
+                Text(t.t("worksiteFilters.days_ago").replacingOccurrences(of: "{days}", with: "\(CasesFilterMaxDaysAgo)"))
+                    .fontBodySmall()
+            }
+        }
+        .padding(.horizontal)
+    }
+}
+
+struct FilterDistanceSection: View {
+    let distances: [(Double, String)]
+
+    var body: some View {
+        ForEach(distances, id: \.1) { (distance, text) in
+            Text(text)
+                .padding()
+        }
+    }
+}
+
+struct FilterGeneralSection: View {
+    var body: some View {
+        Text("General")
+    }
+}
+
+struct FilterPersonalInfoSection: View {
+    var body: some View {
+        Text("Personal information")
+    }
+}
+
+struct FilterFlagsSection: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    let flags: [WorksiteFlagType]
+
+    var body: some View {
+        ForEach(flags, id: \.id) { flag in
+            Text(t.t(flag.literal))
+                .padding()
+        }
+    }
+}
+
+struct FilterWorkSection: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    let workTypes: [String]
+
+    var body: some View {
+        ForEach(workTypes, id: \.self) { workTypeKey in
+            let workTypeText = t.t("workType.\(workTypeKey)")
+            Text(workTypeText)
+                .padding()
+        }
     }
 }
 
@@ -175,21 +270,21 @@ struct CalendarSelectView: View {
 
     var body: some View {
         VStack(alignment:.leading) {
-            let text1 = start?.formatted(.dateTime.day().month().year()) ?? "t.tStart Date"
-            let text2 = end?.formatted(.dateTime.day().month().year()) ?? "t.tEnd Date"
+            let text1 = start?.formatted(.dateTime.day().month().year()) ?? t.t("worksiteFilters.start_date")
+            let text2 = end?.formatted(.dateTime.day().month().year()) ?? t.t("worksiteFilters.end_date")
             HStack {
-                Text(text1 + " - " + text2)
-                    .font(.title2)
+                Text("\(text1) - \(text2)")
+                    .fontHeader3()
                 Spacer()
                 Button {
                     showCalendar = false
                 } label: {
-                    Text("t.tSave")
+                    Text(t.t("actions.save"))
                 }
                 .disabled(end == nil)
             }
             .padding()
-            MultiDatePicker("Select your preferred dates", selection: $dates)
+            MultiDatePicker("~~Select a date range", selection: $dates)
                 .onAppear {
                     if let start = start, let end = end, dates.isEmpty {
                         let startComps = Calendar.current.dateComponents([.calendar, .era, .year, .month, .day], from: start)

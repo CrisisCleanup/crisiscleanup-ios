@@ -226,6 +226,17 @@ extension MainComponent {
         }
     }
 
+    public var casesFilterRepository: CasesFilterRepository {
+        shared {
+            CrisisCleanupCasesFilterRepository(
+                dataSource: CasesFiltersUserDefaults(),
+                networkMonitor: networkMonitor,
+                accountDataRepository: accountDataRepository,
+                networkDataSource: networkDataSource
+            )
+        }
+    }
+
     var pagingSyncLogRepository: PagingSyncLogRepository {
         shared {
             PagingSyncLogRepository(

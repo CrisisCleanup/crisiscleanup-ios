@@ -255,6 +255,7 @@ enum WorksiteFlagType: String, Identifiable, CaseIterable {
 }
 
 private let flagTypeLookup = WorksiteFlagType.allCases.associateBy{ $0.literal }
+func flagFromLiteral(_ literal: String) -> WorksiteFlagType? { flagTypeLookup[literal] }
 
 // sourcery: copyBuilder, skipCopyInit
 public struct WorksiteFlag: Hashable {

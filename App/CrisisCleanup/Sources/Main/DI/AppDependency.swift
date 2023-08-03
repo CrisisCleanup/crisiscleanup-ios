@@ -30,6 +30,7 @@ public protocol AppDependency: Dependency {
     var localImageRepository: LocalImageRepository { get }
     var databaseManagementRepository: DatabaseManagementRepository { get }
     var usersRepository: UsersRepository { get }
+    var casesFilterRepository: CasesFilterRepository { get }
 
     var translator: KeyAssetTranslator { get }
 
