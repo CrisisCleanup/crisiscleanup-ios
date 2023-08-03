@@ -30,6 +30,7 @@ struct CasesFilterView: View {
                             sectionTitles: tempSections,
                             proxy: proxy
                         )
+                        .padding(.vertical)
 
                         HStack {
                             VStack(alignment: .leading) {
@@ -108,6 +109,7 @@ struct CasesFilterView: View {
                 }
             }
         }
+        .hideNavBarUnderSpace()
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
     }

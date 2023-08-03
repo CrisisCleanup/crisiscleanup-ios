@@ -76,7 +76,7 @@ class WorksiteCoreChangeTests: XCTestCase {
         favorite: NetworkType(id: 38, typeT: "favorite", createdAt: ChangeTestUtil.createdAtA),
         files: [],
         flags: [
-            NetworkFlag(id: 53853, action: "action", createdAt: ChangeTestUtil.createdAtA, isHighPriority: false, notes: "notes", reasonT: "reason", requestedAction: nil)
+            NetworkFlag(id: 53853, action: "action", createdAt: ChangeTestUtil.createdAtA, isHighPriority: false, notes: "notes", reasonT: "reason", requestedAction: nil, attr: nil)
         ],
         formData: [
             KeyDynamicValuePair("key", DynamicValue("dynamic-value"))

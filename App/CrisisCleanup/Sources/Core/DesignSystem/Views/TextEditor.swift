@@ -4,12 +4,10 @@ struct LargeTextEditor: View {
     @Binding var text: String
 
     var body: some View {
-        HStack {
-            TextEditor(text: $text)
-                .frame(height: appTheme.rowItemHeight*2)
-                .lineLimit(5)
-                .textFieldBorder()
-                .tint(.black)
-        }
+        TextEditor(text: $text)
+            .frame(height: appTheme.rowItemHeight*2)
+            .lineLimit(5)
+            .textFieldBorder()
+            .tint(.black)
     }
 }

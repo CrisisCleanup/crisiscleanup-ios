@@ -8,6 +8,8 @@ struct CaseFlagsView: View {
 
     @State var selected: WorksiteFlagType? = nil
 
+    private let keyboardVisibilityProvider = KeyboardVisibilityProvider()
+
     var body: some View {
         VStack {
             HStack {
@@ -22,9 +24,16 @@ struct CaseFlagsView: View {
                         Text(t.t(option.literal)).tag(Optional(option))
                     }
                 }
+
+                // TODO: Animate visibility
+                if viewModel.isSaving {
+                    ProgressView()
+                }
             }
             .padding(.horizontal)
             .frame(maxWidth: .infinity, alignment: .leading)
+
+            let isEditable = viewModel.isEditable
 
             switch selected {
             case .some (let unwrapped):
@@ -37,7 +46,7 @@ struct CaseFlagsView: View {
 
                 case WorksiteFlagType.markForDeletion:
                     Spacer()
-                    ActionButtons {
+                    AddFlagSaveActionBar {
                         viewModel.onAddFlag(.markForDeletion)
                     }
 
@@ -46,19 +55,27 @@ struct CaseFlagsView: View {
 
                 case WorksiteFlagType.duplicate:
                     Spacer()
-                    ActionButtons {
+                    AddFlagSaveActionBar {
                         viewModel.onAddFlag(.duplicate)
                     }
 
                 case WorksiteFlagType.wrongLocation:
-                    WrongLocation()
+                    WrongLocation(isEditable: isEditable)
 
                 case WorksiteFlagType.wrongIncident:
-                    WrongIncident()
+                    WrongIncident(isEditable: isEditable)
                 }
             default:
                 Spacer()
             }
+        }
+        .onReceive(viewModel.$isSaved) { isSaved in
+            if isSaved {
+                dismiss()
+            }
+        }
+        .onReceive(keyboardPublisher) { isVisible in
+            keyboardVisibilityProvider.isKeyboardVisible = isVisible
         }
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -66,6 +83,7 @@ struct CaseFlagsView: View {
             }
         }
         .environmentObject(viewModel)
+        .environmentObject(keyboardVisibilityProvider)
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
     }
@@ -79,46 +97,46 @@ struct ContactSheet: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            HStack {
-                Text(org.name)
-                    .font(.title)
-                    .padding(.top)
-                Spacer()
-            }
+            Text(org.name)
+                .font(.title)
+                .padding(.top)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
             Text(t.t("flag.primary_contacts"))
                 .font(.title2)
                 .padding(.bottom)
 
-
             ForEach(org.primaryContacts, id: \.id) { contact in
-
                 Text(contact.fullName)
                     .bold()
                     .padding(.bottom, 4)
 
-                if contact.email.isNotBlank {
+                if contact.email.isNotBlank,
+                   let emailUri = URL(string: "mailto:\(contact.email)") {
                     HStack {
                         Image(systemName: "envelope.fill")
-                        Link(contact.email, destination: URL(string: "mailto:\(contact.email)")!)
+                        Link(contact.email, destination: emailUri)
                     }
                     .padding(.bottom, 4)
                 }
 
-                HStack {
-                    Image(systemName: "phone.fill")
-                    Link(contact.mobile, destination: URL(string: "tel:\(contact.mobile)")!)
+                if contact.mobile.isNotBlank,
+                   let phoneUri = URL(string: "tel:\(contact.mobile)") {
+                    HStack {
+                        Image(systemName: "phone.fill")
+                        Link(contact.mobile, destination: phoneUri)
+                    }
+                    .padding(.bottom, 8)
                 }
-                .padding(.bottom, 8)
             }
 
             Spacer()
         }
         .padding(.horizontal)
-
     }
 }
 
-struct HighPriority: View {
+private struct HighPriority: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
@@ -186,16 +204,27 @@ struct HighPriority: View {
             }
             .padding(.horizontal)
         }
+        .scrollDismissesKeyboard(.immediately)
 
         Spacer()
 
-        ActionButtons {
+        AddFlagSaveActionBar(
+            observeKeyboard: true
+        ) {
             viewModel.onHighPriority(isHighPriority, flagDescription)
         }
     }
 }
 
-struct UpsetClient: View {
+private func getBoolOptional(
+    _ s: String,
+    yesOption: String,
+    noOption: String
+) -> Bool? {
+    s == yesOption ? true : (s == noOption ? false : nil)
+}
+
+private struct UpsetClient: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
@@ -206,38 +235,50 @@ struct UpsetClient: View {
     @State var selectedOrg: OrganizationIdName? = nil
 
     var body: some View {
-        VStack(alignment: .leading) {
+        let yesOption = t.t("formOptions.yes")
+        let noOption = t.t("formOptions.no")
 
-            Text(t.t("flag.explain_why_client_upset"))
+        ScrollView {
+            VStack(alignment: .leading) {
 
-            LargeTextEditor(text: $upsetReason)
-                .padding(.vertical)
+                Text(t.t("flag.explain_why_client_upset"))
+                    .padding(.top)
+                LargeTextEditor(text: $upsetReason)
 
-            HStack {
                 Text(t.t("flag.does_issue_involve_you"))
-                Spacer ()
-            }
+                let options = [
+                    yesOption,
+                    noOption
+                ]
+                RadioButtons(selected: $isMyOrgInvolved, options: options)
+                    .padding()
 
-            let options = [
-                t.t("formOptions.yes"),
-                t.t("formOptions.no")
-            ]
-            RadioButtons(selected: $isMyOrgInvolved, options: options)
-                .padding()
-
-            Text(t.t("flag.please_share_other_orgs"))
-
-            TextField(t.t("profileOrg.organization_name"), text: $viewModel.otherOrgQ)
+                Text(t.t("flag.please_share_other_orgs"))
+                    .padding(.top)
+                TextField(
+                    t.t("profileOrg.organization_name"),
+                    text: $viewModel.otherOrgQ
+                )
                 .textFieldBorder()
+            }
+            .padding(.horizontal)
         }
-        .padding(.horizontal)
+        .scrollDismissesKeyboard(.immediately)
+
 
         Spacer()
 
-        ActionButtons {
+        AddFlagSaveActionBar(
+            observeKeyboard: true
+        ) {
+            let isInvolved = getBoolOptional(
+                isMyOrgInvolved,
+                yesOption: yesOption,
+                noOption: noOption
+            )
             viewModel.onUpsetClient(
                 notes: upsetReason,
-                isMyOrgInvolved: isMyOrgInvolved,
+                isMyOrgInvolved: isInvolved,
                 otherOrgQuery: viewModel.otherOrgQ,
                 otherOrganizationInvolved: selectedOrg
             )
@@ -245,94 +286,121 @@ struct UpsetClient: View {
     }
 }
 
-struct ReportAbuse: View {
+private struct ReportAbuse: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewModel: CaseFlagsViewModel
 
-    @State var tempString = ""
-    @State var tempSelected = ""
+    @State var isOrganizationContacted = ""
+    @State var outcome = ""
+    @State var flagNotes = ""
+    @State var flagAction = ""
+    @State var selectedOrg: OrganizationIdName? = nil
 
     var body: some View {
+        let yesOption = t.t("formOptions.yes")
+        let noOption = t.t("formOptions.no")
+
         ScrollView {
             VStack(alignment: .leading) {
                 Text(t.t("flag.organizations_complaining_about"))
+                TextField(
+                    t.t("profileOrg.organization_name"),
+                    text: $viewModel.otherOrgQ
+                )
+                .textFieldBorder()
+                .padding(.bottom)
 
                 Text(t.t("flag.must_contact_org_first"))
+                    .padding(.bottom)
 
-                LargeTextEditor(text: $tempString)
-                    .padding(.vertical)
-
-                HStack {
-                    Text(t.t("flag.have_you_contacted_org"))
-                    Spacer ()
-                }
-
-                let options = [t.t("formOptions.yes"), t.t("formOptions.no") ]
-
-                RadioButtons(selected: $tempSelected, options: options)
+                Text(t.t("flag.have_you_contacted_org"))
+                let options = [
+                    yesOption,
+                    noOption
+                ]
+                RadioButtons(selected: $isOrganizationContacted, options: options)
                     .padding()
 
                 Group {
                     Text(t.t("flag.outcome_of_contact"))
-
-                    LargeTextEditor(text: $tempString)
-                        .padding(.vertical)
+                        .padding(.top)
+                    LargeTextEditor(text: $outcome)
 
                     Text(t.t("flag.describe_problem"))
-
-                    LargeTextEditor(text: $tempString)
-                        .padding(.vertical)
+                        .padding(.top)
+                    LargeTextEditor(text: $flagNotes)
 
                     Text(t.t("flag.suggested_outcome"))
-
-                    LargeTextEditor(text: $tempString)
-                        .padding(.vertical)
+                        .padding(.top)
+                    LargeTextEditor(text: $flagAction)
 
                     Text(t.t("flag.warning_ccu_cannot_do_much"))
+                        .padding(.vertical)
                 }
             }
             .padding(.horizontal)
         }
+        .scrollDismissesKeyboard(.immediately)
 
         Spacer()
 
-        // TODO: replace placeholders
-        ActionButtons {
-            viewModel.onReportAbuse(isContacted: true, contactOutcome: tempString, notes: tempString, action: tempString)
+        AddFlagSaveActionBar(
+            observeKeyboard: true
+        ) {
+            viewModel.onReportAbuse(
+                isContacted: getBoolOptional(
+                    isOrganizationContacted,
+                    yesOption: yesOption,
+                    noOption: noOption
+                ),
+                contactOutcome: outcome,
+                notes: flagNotes,
+                action: flagAction,
+                otherOrgQuery: viewModel.otherOrgQ,
+                otherOrganizationInvolved: selectedOrg
+            )
         }
-
     }
 }
 
-struct WrongLocation: View {
+// TODO: Why does observing the keyboard here fail to work?
+private struct WrongLocation: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewModel: CaseFlagsViewModel
 
-    @State var tempString = ""
+    @State var isEditable = false
+
+    private let stepTranslateKeys = Array(
+        [
+            "flag.find_correct_google_maps",
+            "flag.zoom_in_completely",
+            "flag.copy_paste_url"
+        ]
+            .enumerated()
+    )
 
     var body: some View {
         VStack(alignment: .leading) {
             HStack {
                 Text(t.t("flag.move_case_pin"))
                     .padding(.vertical)
-                Spacer()
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             VStack(alignment: .leading) {
-                Text("1. " + t.t("flag.find_correct_google_maps"))
-                    .padding(.bottom, 4)
-                Text("2. " + t.t("flag.zoom_in_completely"))
-                    .padding(.bottom, 4)
-                Text("3. " + t.t("flag.copy_paste_url"))
-                    .padding(.bottom, 4)
+                ForEach(stepTranslateKeys, id: \.offset) { (index, key) in
+                    Text("\(index+1). \(t.t(key))")
+                    // TODO: Common dimensions
+                        .padding(.bottom, 4)
+                }
             }
             .padding(.bottom)
 
-            TextField(t.t("flag.google_map_url"), text: $tempString)
+            TextField(t.t("flag.google_map_url"), text: viewModel.wrongLocationText)
                 .textFieldBorder()
                 .padding(.bottom)
 
@@ -350,28 +418,30 @@ struct WrongLocation: View {
 
         Spacer()
 
-        // TODO: replace placeholders
-        ActionButtons {
-            viewModel.updateLocation(location: nil)
+        AddFlagSaveActionBar(
+            isBusy: viewModel.isProcessingLocation,
+            enabled: isEditable,
+            enableSave: viewModel.validCoordinates != nil
+        ) {
+            viewModel.updateLocation(location: viewModel.validCoordinates)
         }
     }
 }
 
-struct WrongIncident: View {
+private struct WrongIncident: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewModel: CaseFlagsViewModel
+
+    let isEditable: Bool
 
     @State var isNotListed = false
     @State var selectedIncident: IncidentIdNameType? = nil
 
     var body: some View {
         VStack (alignment: .leading ) {
-            HStack {
-                Text(t.t("flag.choose_correct_incident"))
-                Spacer()
-            }
+            Text(t.t("flag.choose_correct_incident"))
 
             TextField(t.t("casesVue.incident"), text: viewModel.incidentQ)
                 .textFieldBorder()
@@ -383,8 +453,8 @@ struct WrongIncident: View {
 
         Spacer()
 
-        // TODO: replace placeholders
-        ActionButtons {
+        let isSelected = isNotListed || selectedIncident?.name == viewModel.incidentQ.wrappedValue
+        AddFlagSaveActionBar(enabled: isEditable && isSelected) {
             viewModel.onWrongIncident(
                 isIncidentListed: !isNotListed,
                 incidentQuery: viewModel.incidentQ.wrappedValue,
@@ -394,30 +464,43 @@ struct WrongIncident: View {
     }
 }
 
-struct ActionButtons: View {
+private struct AddFlagSaveActionBar: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    @EnvironmentObject var viewModel: CaseFlagsViewModel
+    @EnvironmentObject var keyboardVisibilityProvider: KeyboardVisibilityProvider
+
+    var isBusy = false
+    var enabled = true
+    var enableSave = true
+    var observeKeyboard = false
 
     var save: () -> Void
 
     var body: some View {
-        HStack {
-            Button {
-                dismiss.callAsFunction()
-            } label: {
-                Text(t.t("actions.cancel"))
-            }
-            .styleCancel()
+        if observeKeyboard && keyboardVisibilityProvider.isKeyboardVisible {
+            OpenKeyboardActionsView()
+        } else {
+            HStack {
+                Button {
+                    dismiss.callAsFunction()
+                } label: {
+                    Text(t.t("actions.cancel"))
+                }
+                .styleCancel()
 
-            Button {
-                save()
-            } label: {
-                Text(t.t("actions.save"))
+                Button {
+                    save()
+                } label: {
+                    BusyButtonContent(
+                        isBusy: isBusy,
+                        text: t.t("actions.save")
+                    )
+                }
+                .stylePrimary()
+                .disabled(!(enabled && enableSave))
             }
-            .stylePrimary()
+            .padding(.horizontal)
         }
-        .padding(.horizontal)
     }
 }

@@ -43,16 +43,7 @@ struct CasesSearchView: View {
                                 .foregroundColor(Color.black)
                         }
                         .disabled(disable)
-                    }
-
-                    Button {
-                        router.openFilterCases()
-                    } label: {
-                        Image("ic_dials", bundle: .module)
-                            .background(Color.white)
-                            .foregroundColor(Color.black)
-                            .cornerRadius(appTheme.cornerRadius)
-                            .disabled(disable)
+                        .padding()
                     }
                 }
                 .overlay(

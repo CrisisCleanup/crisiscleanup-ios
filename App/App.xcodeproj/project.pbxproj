@@ -13,6 +13,12 @@
 		4E0CCF032A19889B00EC6906 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 4E0CCF022A19889B00EC6906 /* FirebaseCrashlytics */; };
 		4E0CCF052A19889B00EC6906 /* FirebasePerformance in Frameworks */ = {isa = PBXBuildFile; productRef = 4E0CCF042A19889B00EC6906 /* FirebasePerformance */; };
 		4E0CCF082A1989FB00EC6906 /* AppLoggerProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0CCF072A1989FB00EC6906 /* AppLoggerProvider.swift */; };
+		4E342A4D2A7A0CA600B55713 /* AppFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E342A4C2A7A0CA600B55713 /* AppFont.swift */; };
+		4E342A4F2A7A0F2600B55713 /* FontBlaster.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E342A4E2A7A0F2600B55713 /* FontBlaster.swift */; };
+		4E342A592A7A1B4C00B55713 /* NunitoSans_10pt-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4E342A572A7A1AA600B55713 /* NunitoSans_10pt-Bold.ttf */; };
+		4E342A5A2A7A1B4C00B55713 /* NunitoSans_10pt-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4E342A582A7A1B4800B55713 /* NunitoSans_10pt-Italic.ttf */; };
+		4E342A5B2A7A1B4C00B55713 /* NunitoSans_10pt-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4E342A552A7A1AA600B55713 /* NunitoSans_10pt-Regular.ttf */; };
+		4E342A5C2A7A1B4C00B55713 /* NunitoSans_10pt-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4E342A542A7A1AA600B55713 /* NunitoSans_10pt-Light.ttf */; };
 		4E46478A29EEE23B0062147F /* CrisisCleanupApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */; };
 		4E46478E29EEE23D0062147F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E46478D29EEE23D0062147F /* Assets.xcassets */; };
 		4E46479229EEE23D0062147F /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E46479129EEE23D0062147F /* Preview Assets.xcassets */; };
@@ -85,6 +91,12 @@
 		4E0CCEF42A196D4F00EC6906 /* AppBuildEnv.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBuildEnv.swift; sourceTree = "<group>"; };
 		4E0CCEF82A1970E200EC6906 /* ConfigProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigProperties.swift; sourceTree = "<group>"; };
 		4E0CCF072A1989FB00EC6906 /* AppLoggerProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLoggerProvider.swift; sourceTree = "<group>"; };
+		4E342A4C2A7A0CA600B55713 /* AppFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFont.swift; sourceTree = "<group>"; };
+		4E342A4E2A7A0F2600B55713 /* FontBlaster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontBlaster.swift; sourceTree = "<group>"; };
+		4E342A542A7A1AA600B55713 /* NunitoSans_10pt-Light.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NunitoSans_10pt-Light.ttf"; sourceTree = "<group>"; };
+		4E342A552A7A1AA600B55713 /* NunitoSans_10pt-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NunitoSans_10pt-Regular.ttf"; sourceTree = "<group>"; };
+		4E342A572A7A1AA600B55713 /* NunitoSans_10pt-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NunitoSans_10pt-Bold.ttf"; sourceTree = "<group>"; };
+		4E342A582A7A1B4800B55713 /* NunitoSans_10pt-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NunitoSans_10pt-Italic.ttf"; sourceTree = "<group>"; };
 		4E46478629EEE23B0062147F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrisisCleanupApp.swift; sourceTree = "<group>"; };
 		4E46478D29EEE23D0062147F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -160,9 +172,21 @@
 			path = Config;
 			sourceTree = "<group>";
 		};
+		4E342A432A7A0B6600B55713 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				4E342A572A7A1AA600B55713 /* NunitoSans_10pt-Bold.ttf */,
+				4E342A542A7A1AA600B55713 /* NunitoSans_10pt-Light.ttf */,
+				4E342A552A7A1AA600B55713 /* NunitoSans_10pt-Regular.ttf */,
+				4E342A582A7A1B4800B55713 /* NunitoSans_10pt-Italic.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
 		4E46477D29EEE23B0062147F = {
 			isa = PBXGroup;
 			children = (
+				4E342A432A7A0B6600B55713 /* Fonts */,
 				4E59A3352A117993006F2130 /* Packages */,
 				4E46478829EEE23B0062147F /* App */,
 				4E46479A29EEE23E0062147F /* AppTests */,
@@ -266,6 +290,8 @@
 				4E0CCF072A1989FB00EC6906 /* AppLoggerProvider.swift */,
 				4E0CCEEB2A1966EE00EC6906 /* AppSettings.swift */,
 				4E0CCEF82A1970E200EC6906 /* ConfigProperties.swift */,
+				4E342A4C2A7A0CA600B55713 /* AppFont.swift */,
+				4E342A4E2A7A0F2600B55713 /* FontBlaster.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -405,9 +431,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				4ED625982A25160800C33EAB /* AppConfig.xcconfig in Resources */,
+				4E342A592A7A1B4C00B55713 /* NunitoSans_10pt-Bold.ttf in Resources */,
+				4E342A5A2A7A1B4C00B55713 /* NunitoSans_10pt-Italic.ttf in Resources */,
 				4E46479229EEE23D0062147F /* Preview Assets.xcassets in Resources */,
+				4E342A5C2A7A1B4C00B55713 /* NunitoSans_10pt-Light.ttf in Resources */,
 				4E59A32F2A117606006F2130 /* Localizable.strings in Resources */,
 				4E46478E29EEE23D0062147F /* Assets.xcassets in Resources */,
+				4E342A5B2A7A1B4C00B55713 /* NunitoSans_10pt-Regular.ttf in Resources */,
 				4ED625932A25160800C33EAB /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -562,9 +592,11 @@
 				4E0CCF082A1989FB00EC6906 /* AppLoggerProvider.swift in Sources */,
 				4E70C53B2A6A1BE300A6C59B /* Address+Extension.swift in Sources */,
 				4E4975C22A4E266000EEC7A2 /* LerpGrayscaleToColorKernel.ci.metal in Sources */,
+				4E342A4F2A7A0F2600B55713 /* FontBlaster.swift in Sources */,
 				4E646A002A1916BB009148E0 /* NeedleGenerated.swift in Sources */,
 				4E46478A29EEE23B0062147F /* CrisisCleanupApp.swift in Sources */,
 				4E0CCEF52A196D4F00EC6906 /* AppBuildEnv.swift in Sources */,
+				4E342A4D2A7A0CA600B55713 /* AppFont.swift in Sources */,
 				4E0CCEF92A1970E200EC6906 /* ConfigProperties.swift in Sources */,
 				4E0CCEEC2A1966EE00EC6906 /* AppSettings.swift in Sources */,
 				4E70C5392A69F89500A6C59B /* GooglePlaceAddressSearchRepository.swift in Sources */,
@@ -797,7 +829,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = App/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = CCU;
+				INFOPLIST_KEY_CFBundleDisplayName = ccu;
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = CCU;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "~~Allow access to camera to take pictures";
@@ -993,7 +1025,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = App/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = CCU;
+				INFOPLIST_KEY_CFBundleDisplayName = ccu;
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = CCU;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "~~Allow access to camera to take pictures";

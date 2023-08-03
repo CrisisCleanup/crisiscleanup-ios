@@ -10,6 +10,8 @@ public struct NetworkFlag: Codable, Equatable {
     let reasonT: String
     let requestedAction: String?
 
+    let attr: FlagAttributes?
+
     enum CodingKeys: String, CodingKey {
         case id
         case action
@@ -18,6 +20,19 @@ public struct NetworkFlag: Codable, Equatable {
         case notes
         case reasonT = "reason_t"
         case requestedAction = "requested_action"
+        case attr
+    }
+
+    public struct FlagAttributes: Codable, Equatable {
+        let involvesYou: String?
+        let haveContactedOtherOrg: String?
+        let organizations: [Int64]?
+
+        enum CodingKeys: String, CodingKey {
+            case involvesYou = "involves_you",
+                 haveContactedOtherOrg = "have_you_contacted_org",
+                 organizations
+        }
     }
 }
 
