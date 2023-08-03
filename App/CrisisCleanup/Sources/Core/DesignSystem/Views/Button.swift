@@ -78,6 +78,33 @@ struct BlackButtonSytleModifier: ViewModifier {
     }
 }
 
+struct RoundedRectangleButtonStyle: ButtonStyle {
+    let disabled: Bool
+
+    init(_ disabled: Bool = false) {
+        self.disabled = disabled
+    }
+
+    func makeBody(configuration: Configuration) -> some View {
+        let backgroundColor = appTheme.colors.attentionBackgroundColor
+        let foregroundColor = Color.black
+        let buttonSize = appTheme.buttonSize
+        configuration.label
+            .background(disabled ? backgroundColor.disabledAlpha() : backgroundColor)
+            .foregroundColor(disabled ? foregroundColor.disabledAlpha() : foregroundColor)
+            .frame(width: buttonSize, height: buttonSize)
+            .cornerRadius(appTheme.cornerRadius)
+            .shadow(radius: appTheme.shadowRadius)
+    }
+}
+
+struct RoundedRectangleStyleModifier: ViewModifier {
+    @Environment(\.isEnabled) var isEnabled
+    func body(content: Content) -> some View {
+        return content.buttonStyle(RoundedRectangleButtonStyle(!isEnabled))
+    }
+}
+
 struct BusyButtonContent: View {
     var isBusy: Bool
     var text: String
@@ -102,5 +129,9 @@ extension Button {
 
     func styleBlack() -> some View {
         ModifiedContent(content: self, modifier: BlackButtonSytleModifier())
+    }
+
+    func styleRoundedRectanglePrimary() -> some View {
+        ModifiedContent(content: self, modifier: RoundedRectangleStyleModifier())
     }
 }
