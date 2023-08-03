@@ -29,9 +29,8 @@ struct ViewCaseView: View {
         ZStack {
             VStack {
 
-                let tabTitles = viewModel.tabTitles
-
                 HStack {
+                    let tabTitles = viewModel.tabTitles
                     ForEach(infoTabs, id: \.offset) { (index, tab) in
                         VStack {
                             HStack{
@@ -440,6 +439,7 @@ private struct BottomNavButton: View {
             VStack {
                 Image(imageName, bundle: .module)
                 Text(t.t(textTranslateKey))
+                    .fontBodySmall()
             }
         }
         .disabled(editableView.disabled)

@@ -39,6 +39,9 @@ extension View {
                 appearance.backgroundColor = uiBackgroundColor
             }
 
+            itemAppearance.normal.titleTextAttributes[.font] = UIFont.bodySmall
+            itemAppearance.selected.titleTextAttributes[.font] = UIFont.bodySmall
+
             appearance.stackedLayoutAppearance = itemAppearance
             appearance.inlineLayoutAppearance = itemAppearance
             appearance.compactInlineLayoutAppearance = itemAppearance

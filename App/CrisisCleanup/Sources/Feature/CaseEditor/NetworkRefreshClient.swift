@@ -56,13 +56,3 @@ public class LanguageRefresher {
         }
     }
 }
-
-private class AtomicDouble: AtomicValue {
-    typealias AtomicRepresentation = AtomicReferenceStorage<AtomicDouble>
-
-    let value: Double
-
-    init(_ value: Double = 0.0) {
-        self.value = value
-    }
-}

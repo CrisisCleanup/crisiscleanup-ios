@@ -3,13 +3,14 @@ import SwiftUI
 private let fontBaseName = "NunitoSans10pt"
 private let appFontRegularName = "\(fontBaseName)-Regular"
 private let appFontBoldName = "\(fontBaseName)-Bold"
+private let smallFontSize = 14.0
 extension Font {
     static var bodyLarge: Font {
         Font.custom(appFontRegularName, size: 16.0)
     }
 
     static var bodySmall: Font {
-        Font.custom(appFontRegularName, size: 14.0)
+        Font.custom(appFontRegularName, size: smallFontSize)
     }
 
     static var header1: Font {
@@ -30,6 +31,12 @@ extension Font {
 
     static var header5: Font {
         Font.custom(appFontBoldName, size: 14.0)
+    }
+}
+
+extension UIFont {
+    static var bodySmall: UIFont {
+        UIFont(name: appFontRegularName, size: smallFontSize)!
     }
 }
 

@@ -11,7 +11,7 @@ protocol AccountInfoDataSource {
 }
 
 fileprivate let jsonDecoder = JsonDecoderFactory().decoder()
-fileprivate let jsonEncoder = JSONEncoder()
+fileprivate let jsonEncoder = JsonEncoderFactory().encoder()
 
 class AccountInfoUserDefaults: AccountInfoDataSource {
     let accountData: any Publisher<AccountData, Never>

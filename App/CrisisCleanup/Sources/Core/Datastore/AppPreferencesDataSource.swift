@@ -1,6 +1,7 @@
 import Combine
 import Foundation
 
+// Should be named *DataSource. Minor transgression. Correction not necessary.
 public protocol AppPreferencesDataStore {
     var preferences: any Publisher<AppPreferences, Never> { get }
 
@@ -20,7 +21,7 @@ extension AppPreferencesDataStore {
 }
 
 fileprivate let jsonDecoder = JsonDecoderFactory().decoder()
-fileprivate let jsonEncoder = JSONEncoder()
+fileprivate let jsonEncoder = JsonEncoderFactory().encoder()
 
 class AppPreferencesUserDefaults: AppPreferencesDataStore {
     let preferences: any Publisher<AppPreferences, Never>
