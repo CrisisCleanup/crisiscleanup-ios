@@ -19,11 +19,11 @@ class CaseShareViewModel: ObservableObject {
     @Published private(set) var isShared = false
 
     @Published var unclaimedShareReason = ""
-    @Published private(set) var isEmailContactMethod = true
+    @Published var isEmailContactMethod = true
     @Published private(set) var contactErrorMessage = ""
     @Published private(set) var receiverContacts = [ShareContactInfo]()
-    @Published private(set) var receiverContactManual = ""
-    @Published private(set) var receiverContactSuggestion = ""
+    @Published var receiverContactManual = ""
+    @Published var receiverContactSuggestion = ""
 
     private let organizationId: AnyPublisher<Int64, Never>
 
@@ -36,8 +36,6 @@ class CaseShareViewModel: ObservableObject {
     @Published private(set) var notSharableMessage = ""
 
     @Published private(set) var isShareEnabled = false
-
-    @Published private var contactQuery = ""
 
     @Published private(set) var contactOptions = [ShareContactInfo]()
 
@@ -129,22 +127,20 @@ class CaseShareViewModel: ObservableObject {
             })
             .store(in: &subscriptions)
 
-        $receiverContactSuggestion
+        let contactQuery = $receiverContactSuggestion
             .map { $0.trim() }
             .removeDuplicates()
-            .filter { $0.count > 1 }
-            .receive(on: RunLoop.main)
-            .assign(to: \.contactQuery, on: self)
-            .store(in: &subscriptions)
+            .eraseToAnyPublisher()
 
         Publishers.CombineLatest(
             organizationId,
-            $contactQuery
+            contactQuery
         )
-        .filter { (_, q) in
-            q.isNotBlank
-        }
         .asyncMap { orgId, query in
+            if query.count < 2 {
+                return []
+            }
+
             let isEmailContact = self.isEmailContactMethod
             let contacts = await self.usersRepository.getMatchingUsers(query, orgId).map {
                 let contactValue = isEmailContact ? $0.email : $0.mobile
@@ -200,7 +196,7 @@ class CaseShareViewModel: ObservableObject {
             $receiverContacts
         )
         .map { (sharable, loading, sharing, contacts) in
-            return sharable &&
+            sharable &&
             !loading &&
             !sharing &&
             contacts.isNotEmpty
@@ -287,7 +283,7 @@ class CaseShareViewModel: ObservableObject {
     }
 }
 
-struct ShareContactInfo: Equatable {
+struct ShareContactInfo: Hashable {
     let name: String
     let contactValue: String
     let isEmail: Bool

@@ -6,11 +6,8 @@ struct CaseShareStep2View: View {
 
     @ObservedObject var viewModel: CaseShareViewModel
 
-    @State var selected = ""
-    @State var manual = ""
-    @State var search = ""
-    @State var field = ""
-    @State var selectedContact = ShareContactInfo(name: "", contactValue: "", isEmail: false)
+    @State var shareMessage = ""
+
     @State var origin  = CGPointZero
     @State var boxY: CGFloat = 0
     @State var suggBoxSize = CGSize()
@@ -19,6 +16,8 @@ struct CaseShareStep2View: View {
     @State var offset: CGFloat = 0
 
     var body: some View {
+        let shareByEmail = viewModel.isEmailContactMethod
+        let shareByEmailOption = t.t("shareWorksite.email")
         GeometryReader { vstackReader in
             ScrollView {
                 ZStack {
@@ -35,46 +34,31 @@ struct CaseShareStep2View: View {
                             Spacer()
                         }
 
-                        RadioButtons(
-                            selected: $selected,
-                            options: [t.t("shareWorksite.email"), t.t("shareWorksite.sms_text_message")]
-                        )
-                        .onAppear() {
-                            selected = t.t("shareWorksite.email")
-                        }
-                        .onChange(of: selected) { _ in
-                            viewModel.isEmailContactMethod = selected == t.t("shareWorksite.email")
+                        Group {
+                            RadioButton(text: shareByEmailOption, isSelected: shareByEmail) {
+                                viewModel.isEmailContactMethod = true
+                            }
+                            RadioButton(text: t.t("shareWorksite.sms_text_message"), isSelected: !shareByEmail) {
+                                viewModel.isEmailContactMethod = false
+                            }
                         }
                         .padding()
 
-                        Text(offset.description)
+                        // Text(offset.description)
 
-                        FlowStack(
-                            alignment: .leading,
-                            horizontalSpacing: 8,
-                            verticalSpacing: 8
-                        ) {
-                            let contacts = viewModel.receiverContacts
-                            ForEach(contacts, id: \.self) { contact in
-                                let index = Int(contacts.firstIndex(of: contact)!.magnitude)
-                                ContactChip(contact: contact.contactValue, index: index)
-                                    .environmentObject(viewModel)
-                            }
-                        }
-                        .padding(.bottom, 4)
+                        ShareReceiverContactList()
 
-                        let manualTitle = viewModel.isEmailContactMethod ? t.t("shareWorksite.manually_enter_emails") : t.t("shareWorksite.manually_enter_phones")
-                        TextField(manualTitle, text: $manual)
+                        // TODO: Show error message if not empty
+                        // TODO: Add checkbox at tend to submit as well
+                        let manualKey = viewModel.isEmailContactMethod ? "shareWorksite.manually_enter_emails" : "shareWorksite.manually_enter_phones"
+                        TextField(t.t(manualKey), text: $viewModel.receiverContactManual)
                         .textFieldBorder()
                         .onSubmit {
-                            viewModel.onAddContact(manual)
+                            viewModel.onAddContact(viewModel.receiverContactManual)
                         }
 
-                        let searchTitle = viewModel.isEmailContactMethod ? t.t("shareWorksite.search_emails") : t.t("shareWorksite.search_phones")
-                        TextField(searchTitle, text: $search)
-                        .onChange(of: search) { _ in
-                            viewModel.receiverContactSuggestion = search
-                        }
+                        let searchTitleKey = viewModel.isEmailContactMethod ? "shareWorksite.search_emails" : "shareWorksite.search_phones"
+                        TextField(t.t(searchTitleKey), text: $viewModel.receiverContactSuggestion)
                         .textFieldBorder()
                         .background(
                             GeometryReader { reader in
@@ -94,27 +78,26 @@ struct CaseShareStep2View: View {
 
                         Group {
                             Text(t.t("shareWorksite.add_message"))
+                                .padding(.top)
                                 .fixedSize(horizontal: false, vertical: true)
 
-                            LargeTextEditor(text: $field)
+                            LargeTextEditor(text: $shareMessage)
                         }
+                        .padding(.bottom)
 
                         Spacer()
 
-                        ShareNav(message: field)
-                            .environmentObject(viewModel)
+                        CaseShareBottomActions(message: $shareMessage)
 
                     }
                     .padding(.horizontal)
-
 
                     if(viewModel.contactOptions.isNotEmpty) {
 
                         VStack {
                             HStack {
                                 Spacer()
-                                SuggestionsBox(search: $search)
-                                    .environmentObject(viewModel)
+                                SuggestionsBox(search: $viewModel.receiverContactSuggestion)
                                     .background(
                                         GeometryReader { reader in
                                             Color.clear
@@ -185,7 +168,7 @@ struct CaseShareStep2View: View {
                     }
 
                 }
-
+                .environmentObject(viewModel)
 
             }
 
@@ -193,18 +176,18 @@ struct CaseShareStep2View: View {
     }
 }
 
-struct ShareNav: View {
+struct CaseShareBottomActions: View {
     @Environment(\.translator) var t: KeyAssetTranslator
     @Environment(\.dismiss) var dismiss
 
     @EnvironmentObject var viewModel: CaseShareViewModel
 
-    var message: String
+    @Binding var message: String
 
     var body: some View {
         HStack {
             Button {
-                dismiss.callAsFunction()
+                dismiss()
             } label: {
                 Text(t.t("actions.cancel"))
                     .padding()
@@ -218,21 +201,40 @@ struct ShareNav: View {
                     .padding()
             }
             .stylePrimary()
-            .disabled(viewModel.isShareEnabled)
+            .disabled(!viewModel.isShareEnabled)
         }
     }
 }
 
-struct ContactChip: View {
+private struct ShareReceiverContactList: View {
     @EnvironmentObject var viewModel: CaseShareViewModel
 
-    var contact: String
-    var index: Int
+    var body: some View {
+        FlowStack(
+            alignment: .leading,
+            // TODO: Common dimensions
+            horizontalSpacing: 8,
+            verticalSpacing: 8
+        ) {
+            let contacts = viewModel.receiverContacts
+            ForEach(Array(contacts.enumerated()), id: \.offset) { (index, contact) in
+                ShareReceiverContactChip(contact: contact.contactValue) {
+                    viewModel.deleteContact(index)
+                }
+            }
+        }
+        .padding(.bottom, 4)
+    }
+}
+
+private struct ShareReceiverContactChip: View {
+    let contact: String
+    let onDelete: () -> Void
 
     var body: some View {
         HStack {
             Button {
-                viewModel.deleteContact(index)
+                onDelete()
             } label: {
                 Image(systemName: "xmark")
             }
@@ -287,7 +289,6 @@ struct SuggestionsBox: View {
                         }
                         .onTapGesture {
                             viewModel.onAddContact(contact)
-                            viewModel.contactOptions = []
                             search = ""
                         }
                     }

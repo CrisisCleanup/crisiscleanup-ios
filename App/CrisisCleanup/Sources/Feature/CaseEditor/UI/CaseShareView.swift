@@ -8,7 +8,7 @@ struct CaseShareView: View {
     @ObservedObject var viewModel: CaseShareViewModel
 
     var body: some View {
-        // TODO: Disable actions if not online
+        // TODO: Show message and disable actions if not online
         VStack(alignment: .leading) {
             HStack {
                 Text(t.t("casesVue.please_claim_if_share"))

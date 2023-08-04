@@ -8,18 +8,32 @@ struct RadioButtons: View {
 
     var body: some View {
         ForEach(options, id: \.self) {option in
-            Button {
+            RadioButton(
+                text: t.t(option),
+                isSelected: option == selected
+            ) {
                 selected = option
-            } label: {
-                HStack{
-                    let isSelected = option == selected
-                    let radioImg = isSelected ? "circle.inset.filled" : "circle"
-                    Image(systemName: radioImg)
-                        .foregroundColor(isSelected ? Color.black : Color.gray)
-                    Text(t.t(option))
-                        .foregroundColor(Color.black)
+            }
+        }
+    }
+}
 
-                }
+struct RadioButton: View {
+    let text: String
+    let isSelected: Bool
+    let onSelect: () -> Void
+
+    var body: some View {
+        Button {
+            onSelect()
+        } label: {
+            HStack{
+                let radioImg = isSelected ? "circle.inset.filled" : "circle"
+                Image(systemName: radioImg)
+                    .foregroundColor(isSelected ? Color.black : Color.gray)
+                Text(text)
+                    .foregroundColor(Color.black)
+
             }
         }
     }
