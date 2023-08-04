@@ -19,6 +19,8 @@ class CasesViewModel: ObservableObject {
 
     private let qsm: CasesQueryStateManager
 
+    @Published var isTableView = false
+
     private let mapBoundsManager: CasesMapBoundsManager
 
     @Published private(set) var incidentLocationBounds = MapViewCameraBoundsDefault

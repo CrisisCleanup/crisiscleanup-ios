@@ -12,11 +12,6 @@ struct CasesView: View {
 
     @State var map = MKMapView()
 
-    @State var openIncidentSelect = false
-
-    let buttonSize = 48.0
-    let buttonSizeDoublePlus1 = 97.0
-
     func animateToSelectedIncidentBounds(_ bounds: LatLngBounds) {
         let latDelta = bounds.northEast.latitude - bounds.southWest.latitude
         let longDelta = bounds.northEast.longitude - bounds.southWest.longitude
@@ -27,6 +22,83 @@ struct CasesView: View {
         let region = map.regionThatFits(regionCenter)
         map.setRegion(region, animated: true)
     }
+
+    var body: some View {
+        ZStack {
+
+            if viewModel.isTableView {
+                CasesTableView()
+            } else {
+                MapView(
+                    map: $map,
+                    viewModel: viewModel,
+                    onSelectWorksite: { worksiteId in
+                        let incidentId = viewModel.incidentsData.selectedId
+                        router.viewCase(incidentId: incidentId, worksiteId: worksiteId)
+                    }
+                )
+                .onReceive(viewModel.$incidentLocationBounds) { bounds in
+                    animateToSelectedIncidentBounds(bounds.bounds)
+                }
+                .onReceive(viewModel.$incidentMapMarkers) { incidentAnnotations in
+                    let annotations = map.annotations
+                    if incidentAnnotations.annotationIdSet.isEmpty || annotations.count > 1500 {
+                        map.removeAnnotations(annotations)
+                    }
+                    map.addAnnotations(incidentAnnotations.newAnnotations)
+                    if map.annotations.isEmpty && !incidentAnnotations.annotationIdSet.isEmpty {
+                        viewModel.onMissingMapMarkers()
+                    }
+                }
+            }
+
+            if viewModel.showDataProgress {
+                VStack {
+                    ProgressView(value: viewModel.dataProgress, total: 1)
+                        .progressViewStyle(
+                            LinearProgressViewStyle(tint: appTheme.colors.primaryOrangeColor)
+                        )
+
+                    Spacer()
+                }
+            }
+
+            if viewModel.isMapBusy {
+                VStack {
+                    ProgressView()
+                        .frame(alignment: .center)
+                }
+            }
+
+            CasesOverlayElements(
+                map: $map,
+                incidentSelectViewBuilder: incidentSelectViewBuilder,
+                hasNoIncidents: viewModel.incidentsData.incidents.isEmpty,
+                animateToSelectedIncidentBounds: animateToSelectedIncidentBounds
+            )
+        }
+        .onAppear {
+            viewModel.onViewAppear()
+            map.selectedAnnotations = []
+        }
+        .onDisappear { viewModel.onViewDisappear() }
+        .environmentObject(viewModel)
+    }
+}
+
+private struct CasesOverlayElements: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+    @EnvironmentObject var router: NavigationRouter
+
+    @EnvironmentObject var viewModel: CasesViewModel
+
+    @State var openIncidentSelect = false
+
+    @Binding var map: MKMapView
+
+    let incidentSelectViewBuilder: IncidentSelectViewBuilder
+    let hasNoIncidents: Bool
+    let animateToSelectedIncidentBounds: (_ bounds: LatLngBounds) -> Void
 
     func casesCountText(_ visibleCount: Int, _ totalCount: Int) -> String {
         {
@@ -47,51 +119,10 @@ struct CasesView: View {
     }
 
     var body: some View {
-        ZStack {
+        let isMapView = !viewModel.isTableView
 
-            MapView(
-                map: $map,
-                viewModel: viewModel,
-                onSelectWorksite: { worksiteId in
-                    let incidentId = viewModel.incidentsData.selectedId
-                    router.viewCase(incidentId: incidentId, worksiteId: worksiteId)
-                }
-            )
-                .onReceive(viewModel.$incidentLocationBounds) { bounds in
-                    animateToSelectedIncidentBounds(bounds.bounds)
-                }
-                .onReceive(viewModel.$incidentMapMarkers) { incidentAnnotations in
-                    let annotations = map.annotations
-                    if incidentAnnotations.annotationIdSet.isEmpty || annotations.count > 1500 {
-                        map.removeAnnotations(annotations)
-                    }
-                    map.addAnnotations(incidentAnnotations.newAnnotations)
-                    if map.annotations.isEmpty && !incidentAnnotations.annotationIdSet.isEmpty {
-                        viewModel.onMissingMapMarkers()
-                    }
-                }
-
-            if viewModel.showDataProgress {
-                VStack {
-                    ProgressView(value: viewModel.dataProgress, total: 1)
-                        .progressViewStyle(
-                            LinearProgressViewStyle(tint: appTheme.colors.primaryOrangeColor)
-                        )
-
-                    Spacer()
-                }
-            }
-
-            if viewModel.isMapBusy {
-                VStack {
-                    ProgressView()
-                        .frame(alignment: .center)
-                }
-            }
-
-            let hasNoIncidents = viewModel.incidentsData.incidents.isEmpty
-
-            VStack {
+        VStack {
+            if isMapView {
                 HStack {
                     VStack(spacing: 0) {
                         Button {
@@ -120,8 +151,8 @@ struct CasesView: View {
                             viewModel: viewModel,
                             map: map,
                             animateToSelectedIncidentBounds: animateToSelectedIncidentBounds,
-                            buttonSize: buttonSize,
-                            buttonSizeDoublePlus1: buttonSizeDoublePlus1
+                            buttonSize: appTheme.buttonSize,
+                            buttonSizeDoublePlus1: appTheme.buttonSizeDoublePlus1
                         )
 
                         Spacer()
@@ -144,6 +175,8 @@ struct CasesView: View {
 
                             Spacer()
 
+                            let buttonSize = appTheme.buttonSize
+
                             HStack(spacing: 0) {
                                 Button {
                                     router.openSearchCases()
@@ -160,16 +193,15 @@ struct CasesView: View {
                                 Button {
                                     router.openFilterCases()
                                 } label: {
-                                    // TODO: Use component
+                                    // TODO: Badge
                                     Image("ic_dials", bundle: .module)
                                         .frame(width: buttonSize, height: buttonSize)
                                         .background(Color.white)
                                         .foregroundColor(Color.black)
-
                                 }
 
                             }
-                            .frame(width: buttonSizeDoublePlus1, height: buttonSize)
+                            .frame(width: appTheme.buttonSizeDoublePlus1, height: buttonSize)
                             .background(Color.white)
                             .foregroundColor(Color.black)
                             .cornerRadius(appTheme.cornerRadius)
@@ -179,49 +211,37 @@ struct CasesView: View {
                         Spacer()
                     }
                 }
+            }
 
+            Spacer()
+
+            HStack {
                 Spacer()
 
-                HStack {
-                    Spacer()
-                    VStack {
-
-                        Button {
-                            router.createEditCase(
-                                incidentId: viewModel.incidentsData.selectedId,
-                                worksiteId: nil
-                            )
-                        } label: {
-                            Image(systemName: "plus")
-                                .padding()
-                                .background(Color.yellow)
-                                .foregroundColor(Color.black)
-                                .frame(width: buttonSize, height: buttonSize)
-                                .cornerRadius(appTheme.cornerRadius)
-                                .shadow(radius: appTheme.shadowRadius)
-                        }
-
-                        Button {
-
-                        } label: {
-                            Image("ic_table", bundle: .module)
-                                .background(Color.yellow)
-                                .foregroundColor(Color.black)
-                                .frame(width: buttonSize, height: buttonSize)
-                                .cornerRadius(appTheme.cornerRadius)
-                                .shadow(radius: appTheme.shadowRadius)
-                                .padding(.bottom)
-                        }
+                VStack {
+                    Button {
+                        router.createEditCase(
+                            incidentId: viewModel.incidentsData.selectedId,
+                            worksiteId: nil
+                        )
+                    } label: {
+                        Image(systemName: "plus")
+                            .padding()
                     }
+                    .styleRoundedRectanglePrimary()
+                    .padding(.bottom)
+
+                    Button {
+                        viewModel.isTableView.toggle()
+                    } label: {
+                        Image(isMapView ? "ic_map" : "ic_table", bundle: .module)
+                    }
+                    .styleRoundedRectanglePrimary()
+                    .padding(.bottom)
                 }
             }
-            .padding()
         }
-        .onAppear {
-            viewModel.onViewAppear()
-            map.selectedAnnotations = []
-        }
-        .onDisappear { viewModel.onViewDisappear() }
+        .padding()
     }
 }
 

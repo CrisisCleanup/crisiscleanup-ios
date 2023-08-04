@@ -6,11 +6,14 @@ enum AppTheme {
 }
 
 class ThemeValues: ObservableObject {
+    // TODO: Group in dimensions object
     @Published var textFieldInnerPadding: Double
     @Published var textFieldOutlineWidth: Double
     @Published var cornerRadius: Double
     @Published var shadowRadius: Double
     @Published var rowItemHeight: Double
+    @Published var buttonSize: Double
+    @Published var buttonSizeDoublePlus1: Double
 
     @Published var colors: ThemeColor
 
@@ -19,13 +22,16 @@ class ThemeValues: ObservableObject {
         textFieldOutlineWidth: Double = 0.5,
         cornerRadius: Double = 4.0,
         shadowRadius: Double = 1.0,
-        rowItemHeight: Double = 56
+        rowItemHeight: Double = 56,
+        buttonSize: Double = 48
     ) {
         self.textFieldInnerPadding = textFieldInnerPadding
         self.textFieldOutlineWidth = textFieldOutlineWidth
         self.cornerRadius = cornerRadius
         self.shadowRadius = shadowRadius
         self.rowItemHeight = rowItemHeight
+        self.buttonSize = buttonSize
+        buttonSizeDoublePlus1 = buttonSize * 2 + 1
 
         self.colors = ThemeColor()
     }
