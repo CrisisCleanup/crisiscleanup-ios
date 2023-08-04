@@ -16,6 +16,15 @@ struct CasesFilterView: View {
     @State var updatedStart: Date?
     @State var updatedEnd: Date?
 
+    @State var sectionCollapse = [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ]
+
     var body: some View {
         ScrollViewReader { proxy in
             FocusSectionSlider(
@@ -36,41 +45,58 @@ struct CasesFilterView: View {
 
                         let sectionTitle = viewModel.filterSectionTitles[index]
                         VStack(alignment: .leading) {
-                            FilterSectionTitle(title: sectionTitle)
+                            FilterSectionTitle(title: sectionTitle, isCollapsed: $sectionCollapse[index])
 
                             switch index {
                             case 0:
-                                FilterDistanceSection(
-                                    distances: viewModel.distanceOptions
-                                )
+                                if(!sectionCollapse[0]) {
+                                    FilterDistanceSection(
+                                        distances: viewModel.distanceOptions
+                                    )
+                                }
                             case 1:
-                                FilterGeneralSection(
-                                )
+                                if(!sectionCollapse[1]) {
+                                    FilterGeneralSection(
+                                    )
+                                    .environmentObject(viewModel)
+                                    .padding(.horizontal)
+                                }
                             case 2:
-                                FilterPersonalInfoSection(
-                                )
+                                if(!sectionCollapse[2]) {
+                                    FilterPersonalInfoSection(
+                                    )
+                                    .padding(.horizontal)
+                                }
                             case 3:
-                                FilterFlagsSection(
-                                    flags: viewModel.worksiteFlags
-                                )
+                                if(!sectionCollapse[3]) {
+                                    FilterFlagsSection(
+                                        flags: viewModel.worksiteFlags
+                                    )
+                                    .padding(.horizontal)
+                                }
                             case 4:
-                                FilterWorkSection(
-                                    workTypes: viewModel.workTypes
-                                )
+                                if(!sectionCollapse[4]) {
+                                    FilterWorkSection(
+                                        workTypes: viewModel.workTypes
+                                    )
+                                    .padding(.horizontal)
+                                }
                             case 5:
-                                CalendarFormField(
-                                    title: t.t("worksiteFilters.created"),
-                                    start: $createdStart,
-                                    end: $createdEnd
-                                )
-                                .padding([.horizontal, .bottom])
+                                if(!sectionCollapse[5]) {
+                                    CalendarFormField(
+                                        title: t.t("worksiteFilters.created"),
+                                        start: $createdStart,
+                                        end: $createdEnd
+                                    )
+                                    .padding([.horizontal, .bottom])
 
-                                CalendarFormField(
-                                    title: t.t("worksiteFilters.updated"),
-                                    start: $updatedStart,
-                                    end: $updatedEnd
-                                )
-                                .padding([.horizontal, .bottom])
+                                    CalendarFormField(
+                                        title: t.t("worksiteFilters.updated"),
+                                        start: $updatedStart,
+                                        end: $updatedEnd
+                                    )
+                                    .padding([.horizontal, .bottom])
+                                }
                             default:
                                 Text("Filter section not implemented")
                             }
@@ -84,6 +110,9 @@ struct CasesFilterView: View {
                 }
                 .coordinateSpace(name: "scrollForm")
                 .scrollDismissesKeyboard(.immediately)
+
+                FilterButtons()
+                    .environmentObject(viewModel)
             }
         }
         .hideNavBarUnderSpace()
@@ -94,12 +123,33 @@ struct CasesFilterView: View {
 
 private struct FilterSectionTitle: View {
     let title: String
+    @Binding var isCollapsed: Bool
+    var helpText = "placeholder for helptext"
 
     var body: some View {
-        Text(title)
-            .fontHeader3()
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding()
+
+//            .frame(maxWidth: .infinity, alignment: .leading)
+//            .padding()
+
+        HStack {
+            Button {
+                isCollapsed.toggle()
+            } label: {
+                Text(title)
+                    .fontHeader3()
+
+                if helpText.isNotBlank {
+                    HelpIcon(helpText)
+                        .padding(.horizontal)
+                }
+
+                Spacer()
+
+                Image(systemName: collapseIconName(isCollapsed))
+            }
+        }
+        .padding()
+        .tint(.black)
     }
 }
 
@@ -162,24 +212,90 @@ private struct FilterSlidersSection: View {
 
 struct FilterDistanceSection: View {
     let distances: [(Double, String)]
+    @State var selected: String = ""
+    @State var options: [String] = []
+
 
     var body: some View {
-        ForEach(distances, id: \.1) { (distance, text) in
-            Text(text)
-                .padding()
-        }
+        let options = distances.map{$0.1}
+        RadioButtons(selected: $selected, options: options)
+            .padding()
+
+
     }
 }
 
 struct FilterGeneralSection: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+    @EnvironmentObject var viewModel: CasesFilterViewModel
+
+    @State var selected: [String] = []
+    @State var tempBool = false
+
+
     var body: some View {
-        Text("General")
+        VStack(alignment: .leading) {
+            Group {
+                Text(t.t("worksiteFilters.location"))
+
+                CheckboxView(checked: $tempBool, text: t.t("worksiteFilters.in_primary_response_area"))
+
+                CheckboxView(checked: $tempBool, text: t.t("worksiteFilters.in_secondary_response_area"))
+
+                Text(t.t("worksiteFilters.team"))
+
+                CheckboxView(checked: $tempBool, text: t.t("worksiteFilters.assigned_to_my_team"))
+            }
+            Group {
+                Text(t.t("worksiteFilters.claim_reported_by"))
+
+                CheckboxView(checked: $tempBool, text: t.t("worksiteFilters.unclaimed"))
+
+                CheckboxView(checked: $tempBool, text: t.t("worksiteFilters.claimed_by_my_org"))
+
+                CheckboxView(checked: $tempBool, text: t.t("worksiteFilters.reported_by_my_org"))
+            }
+
+            Group {
+                Text(t.t("worksiteFilters.over_all_status"))
+
+                CheckboxView(checked: $tempBool, text: t.t("worksiteFilters.open"))
+
+                CheckboxView(checked: $tempBool, text: t.t("worksiteFilters.closed"))
+            }
+
+            Group {
+                Text(t.t("worksiteFilters.detailed_status"))
+
+                ForEach(viewModel.workTypeStatuses, id: \.self) { status in
+                    CheckboxView(checked: $tempBool, text: t.t(status.literal))
+                }
+            }
+        }
     }
 }
 
 struct FilterPersonalInfoSection: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+    @State var tempBool = false
+
     var body: some View {
-        Text("Personal information")
+        VStack(alignment: .leading) {
+            Text(t.t("worksiteFilters.my_organization"))
+
+            CheckboxView(checked: $tempBool, text: t.t("worksiteFilters.member_of_my_org"))
+
+            Text(t.t("worksiteFilters.my_organization"))
+
+            CheckboxView(checked: $tempBool, text: t.t("formLabels.older_than_60"))
+
+            CheckboxView(checked: $tempBool, text: t.t("formLabels.children_in_home"))
+
+            CheckboxView(checked: $tempBool, text: t.t("formLabels.first_responder"))
+
+            CheckboxView(checked: $tempBool, text: t.t("formLabels.veteran"))
+
+        }
     }
 }
 
@@ -187,11 +303,11 @@ struct FilterFlagsSection: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     let flags: [WorksiteFlagType]
+    @State var tempBool = false
 
     var body: some View {
         ForEach(flags, id: \.id) { flag in
-            Text(t.t(flag.literal))
-                .padding()
+            CheckboxView(checked: $tempBool, text: t.t(flag.literal))
         }
     }
 }
@@ -200,12 +316,12 @@ struct FilterWorkSection: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     let workTypes: [String]
+    @State var tempBool = false
 
     var body: some View {
         ForEach(workTypes, id: \.self) { workTypeKey in
             let workTypeText = t.t("workType.\(workTypeKey)")
-            Text(workTypeText)
-                .padding()
+            CheckboxView(checked: $tempBool, text: workTypeText)
         }
     }
 }
@@ -356,4 +472,38 @@ struct CalendarSelectView: View {
         }
         .presentationDetents([.medium, .large])
     }
+}
+
+struct FilterButtons: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @EnvironmentObject var viewModel: CasesFilterViewModel
+
+    var body: some View {
+        HStack {
+            let noFilters = viewModel.casesFilters.changeCount == 0
+            Button {
+
+            } label: {
+                Text(t.t("actions.clear_filters"))
+            }
+            .styleCancel()
+            .disabled(noFilters)
+
+            let filterCount = noFilters ? "" : "(\(viewModel.casesFilters.changeCount))"
+            let buttonText = t.t("actions.apply_filters") + filterCount
+            Button {
+
+            } label: {
+                Text(buttonText)
+            }
+            .stylePrimary()
+            .disabled(noFilters)
+        }
+        .padding(.horizontal)
+    }
+}
+
+private func collapseIconName(_ isCollapsed: Bool) -> String {
+    isCollapsed ? "chevron.up" : "chevron.down"
 }

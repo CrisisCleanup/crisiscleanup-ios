@@ -22,6 +22,7 @@ struct CheckboxViews: View {
                         .foregroundColor(isSelected ? Color.black : Color.gray)
                     Text(label)
                         .foregroundColor(Color.black)
+                        .multilineTextAlignment(.leading)
                 }
             }
             .padding(.vertical)
@@ -45,6 +46,7 @@ struct CheckboxView: View {
                     .foregroundColor(checked ? Color.black : Color.gray)
                 Text(text)
                     .foregroundColor(Color.black)
+                    .multilineTextAlignment(.leading)
             }
         }
         .padding(.vertical)
