@@ -64,7 +64,7 @@ class CrisisCleanupWorkTypeStatusRepository: WorkTypeStatusRepository {
             .map { statusFromLiteral($0.key) }
         workTypeStatusFilterOptionsSubject.value = workTypeStatuses
             .sorted(by: { a, b in a.name.localizedCompare(b.name) == .orderedAscending })
-            .map { statusFromLiteral($0.name) }
+            .map { statusFromLiteral($0.status) }
     }
 
     func translateStatus(_ status: String) -> String? {

@@ -66,7 +66,10 @@ public enum WorkTypeStatus: String, Identifiable, CaseIterable {
          closedDoneByOthers,
          closedNoHelpWanted,
          closedDuplicate,
-         closedRejected
+         closedRejected,
+         needUnfilled,
+         needFilled,
+         needOverdue
 
     public var id: String { rawValue }
 
@@ -85,6 +88,9 @@ public enum WorkTypeStatus: String, Identifiable, CaseIterable {
         case .closedNoHelpWanted: return "closed_no-help-wanted"
         case .closedDuplicate: return "closed_duplicate"
         case .closedRejected: return "closed_rejected"
+        case .needUnfilled: return "need_unfilled"
+        case .needFilled: return "need_filled"
+        case .needOverdue: return "need_overdue"
         }
     }
 }

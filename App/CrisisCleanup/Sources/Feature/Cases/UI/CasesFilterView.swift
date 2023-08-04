@@ -124,24 +124,14 @@ struct CasesFilterView: View {
 private struct FilterSectionTitle: View {
     let title: String
     @Binding var isCollapsed: Bool
-    var helpText = "placeholder for helptext"
 
     var body: some View {
-
-//            .frame(maxWidth: .infinity, alignment: .leading)
-//            .padding()
-
         HStack {
             Button {
                 isCollapsed.toggle()
             } label: {
                 Text(title)
                     .fontHeader3()
-
-                if helpText.isNotBlank {
-                    HelpIcon(helpText)
-                        .padding(.horizontal)
-                }
 
                 Spacer()
 
