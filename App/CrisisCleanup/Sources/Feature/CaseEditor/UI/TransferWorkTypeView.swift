@@ -139,10 +139,8 @@ struct RequestView: View {
             let (workType, isSelected) = entry
             HStack {
                 CheckboxView(checked: binding(key: workType), text: t.t(workType.workTypeLiteral))
-                    .disabled(workTypeSelections.count == 1)
                 Spacer()
             }
-
         }
 
         Group {
@@ -233,7 +231,7 @@ struct ReleaseView: View {
     }
 }
 
-struct TransferWorkTypeActions: View {
+private struct TransferWorkTypeActions: View {
     @EnvironmentObject var viewModel: TransferWorkTypeViewModel
     @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
@@ -248,7 +246,7 @@ struct TransferWorkTypeActions: View {
             .buttonStyle(CancelButtonStyle())
 
             Button {
-                viewModel.commitTransfer()
+                _ = viewModel.commitTransfer()
             } label: {
                 Text(t.t("actions.ok"))
             }

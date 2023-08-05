@@ -64,6 +64,14 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
             .assertNoFailure()
     }
 
+    func getWorksite(_ id: Int64) async throws -> Worksite? {
+        try await worksiteDao.getWorksite(id)?.asExternalModel(
+            orgIdPublisher.asyncFirst(),
+            languageTranslationsRepository
+        )
+        .worksite
+    }
+
     func streamLocalWorksite(_ worksiteId: Int64) -> any Publisher<LocalWorksite?, Never> {
         worksiteDao.streamLocalWorksite(worksiteId)
             .assertNoFailure()
@@ -257,5 +265,18 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
             logger.logError(error)
         }
         return false
+    }
+
+    func getTableData(
+        incidentId: Int64,
+        filters: CasesFilter,
+        sortBy: WorksiteSortBy,
+        latitude: Double,
+        longitude: Double,
+        searchRadius: Double,
+        count: Int
+    ) async -> [TableDataWorksite] {
+        // TODO: Do
+        []
     }
 }

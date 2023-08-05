@@ -5,8 +5,9 @@ struct CaseMoveOnMapView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
+    @EnvironmentObject var locationManager: LocationManager
+
     @ObservedObject var viewModel: CaseMoveOnMapViewModel
-    @ObservedObject var locationManager = LocationManager()
 
     @State var map = MKMapView()
     // TODO: Read initial coordinates from view model

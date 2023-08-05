@@ -11,8 +11,16 @@ class CasesComponent: Component<AppDependency>, CasesViewBuilder {
         incidentBoundsProvider: dependency.incidentBoundsProvider,
         incidentsRepository: dependency.incidentsRepository,
         worksitesRepository: dependency.worksitesRepository,
+        accountDataRepository: dependency.accountDataRepository,
+        worksiteChangeRepository: dependency.worksiteChangeRepository,
+        organizationsRepository: dependency.organizationsRepository,
+        appPreferences: dependency.appPreferences,
         dataPullReporter: dependency.incidentDataPullReporter,
         mapCaseIconProvider: dependency.mapCaseIconProvider,
+        locationManager: dependency.locationManager,
+        worksiteProvider: dependency.worksiteProvider,
+        transferWorkTypeProvider: dependency.transferWorkTypeProvider,
+        translator: dependency.translator,
         loggerFactory: dependency.loggerFactory
     )
 

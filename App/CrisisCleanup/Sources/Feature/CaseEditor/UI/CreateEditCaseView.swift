@@ -173,9 +173,9 @@ struct PropertyInformation: View {
     @Environment(\.translator) var t: KeyAssetTranslator
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var editableView: EditableView
+    @EnvironmentObject var locationManager: LocationManager
 
     @ObservedObject var viewModel: CreateEditCaseViewModel
-    @ObservedObject var locationManager = LocationManager()
     @State var coordinates = CLLocationCoordinate2D(
         latitude: 40.83834587046632,
         longitude: 14.254053016537693

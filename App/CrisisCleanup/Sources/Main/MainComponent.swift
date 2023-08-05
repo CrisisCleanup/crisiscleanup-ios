@@ -63,6 +63,7 @@ public class MainComponent: BootstrapComponent,
         MainView(
             viewModel: mainViewModel,
             router: navigationRouter,
+            locationManager: locationManager,
             authenticateViewBuilder: authenticateViewBuilder,
             casesViewBuilder: casesComponent,
             menuViewBuilder: menuComponent,

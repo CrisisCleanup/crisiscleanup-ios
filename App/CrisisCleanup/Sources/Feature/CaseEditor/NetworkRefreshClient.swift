@@ -6,7 +6,7 @@ public class IncidentRefresher {
     private let networkMonitor: NetworkMonitor
     private let logger: AppLogger
 
-    private let recentlyRefreshedIncident = ManagedAtomic<Int64>(EmptyIncident.id)
+    private let recentlyRefreshedIncident = ManagedAtomic(EmptyIncident.id)
 
     init(
         _ incidentsRepository: IncidentsRepository,
@@ -46,7 +46,7 @@ public class LanguageRefresher {
         self.networkMonitor = networkMonitor
         logger = loggerFactory.getLogger("language-refresh")
     }
-    private let lastLoadTime = ManagedAtomic<AtomicDouble>(AtomicDouble(Date(timeIntervalSince1970: 0).timeIntervalSince1970))
+    private let lastLoadTime = ManagedAtomic(AtomicDouble(Date(timeIntervalSince1970: 0).timeIntervalSince1970))
 
     func pullLanguages() async {
         let now = Date.now.timeIntervalSince1970

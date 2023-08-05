@@ -44,7 +44,7 @@ public struct MapViewCameraBounds {
         self.bounds = bounds
         self.durationMs = durationMs
         self.initialApply = initialApply
-        self.applyGuard = ManagedAtomic<Bool>(initialApply)
+        self.applyGuard = ManagedAtomic(initialApply)
     }
 
     /// - Returns: true if bounds has yet to be taken (and applied to map) or false otherwise

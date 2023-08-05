@@ -391,3 +391,39 @@ public struct WorksitePendingSync: Equatable {
     let incidentId: Int64
     let networkId: Int64
 }
+
+public enum WorksiteSortBy: String, Identifiable, CaseIterable, Codable {
+    case none,
+         caseNumber,
+         nearest,
+         name,
+         city,
+         countyParish
+
+    public var id: String { rawValue }
+
+    var literal: String {
+        switch self {
+        case .none: return ""
+        case .caseNumber: return "case-number"
+        case .nearest: return "nearest"
+        case .name: return "name"
+        case .city: return "city"
+        case .countyParish: return "county-parish"
+        }
+    }
+
+    var translateKey: String {
+        switch self {
+        case .none: return  "~~Sort by"
+        case .caseNumber: return  "~~Sort by Case Number"
+        case .nearest: return  "~~Sort by Nearest"
+        case .name: return  "~~Sort by Name"
+        case .city: return  "~~Sort by City"
+        case .countyParish: return  "~~Sort by County/Parish"
+        }
+    }
+}
+
+private let sortByLookup = WorksiteSortBy.allCases.associateBy{ $0.literal }
+func worksiteSortByFromLiteral(_ literal: String) -> WorksiteSortBy? { sortByLookup[literal] }

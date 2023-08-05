@@ -10,6 +10,8 @@ extension WorksiteQueryState {
 		coordinateBounds: CoordinateBounds,
 		isTableView: Bool,
 		isZoomInteractive: Bool,
+		tableViewSort: WorksiteSortBy,
+		filters: CasesFilter,
 		// This is to prevent overriding the default init if it exists already
 		forCopyInit: Void? = nil
 	) {
@@ -19,6 +21,8 @@ extension WorksiteQueryState {
 		self.coordinateBounds = coordinateBounds
 		self.isTableView = isTableView
 		self.isZoomInteractive = isZoomInteractive
+		self.tableViewSort = tableViewSort
+		self.filters = filters
 	}
 
 	// struct copy, lets you overwrite specific variables retaining the value of the rest
@@ -36,6 +40,8 @@ extension WorksiteQueryState {
 		var coordinateBounds: CoordinateBounds
 		var isTableView: Bool
 		var isZoomInteractive: Bool
+		var tableViewSort: WorksiteSortBy
+		var filters: CasesFilter
 
 		fileprivate init(original: WorksiteQueryState) {
 			self.incidentId = original.incidentId
@@ -44,6 +50,8 @@ extension WorksiteQueryState {
 			self.coordinateBounds = original.coordinateBounds
 			self.isTableView = original.isTableView
 			self.isZoomInteractive = original.isZoomInteractive
+			self.tableViewSort = original.tableViewSort
+			self.filters = original.filters
 		}
 
 		fileprivate func toWorksiteQueryState() -> WorksiteQueryState {
@@ -53,7 +61,9 @@ extension WorksiteQueryState {
 				zoom: zoom,
 				coordinateBounds: coordinateBounds,
 				isTableView: isTableView,
-				isZoomInteractive: isZoomInteractive
+				isZoomInteractive: isZoomInteractive,
+				tableViewSort: tableViewSort,
+				filters: filters
 			)
 		}
 	}

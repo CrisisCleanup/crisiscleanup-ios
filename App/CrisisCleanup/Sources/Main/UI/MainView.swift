@@ -6,6 +6,8 @@ struct MainView: View {
     @ObservedObject var viewModel: MainViewModel
     @ObservedObject var router: NavigationRouter
 
+    let locationManager: LocationManager
+
     let authenticateViewBuilder: AuthenticateViewBuilder
     let casesViewBuilder: CasesViewBuilder
     let menuViewBuilder: MenuViewBuilder
@@ -96,6 +98,7 @@ struct MainView: View {
         .environment(\.translator, viewModel.translator)
         .environment(\.font, .bodyLarge)
         .environmentObject(router)
+        .environmentObject(locationManager)
     }
 }
 

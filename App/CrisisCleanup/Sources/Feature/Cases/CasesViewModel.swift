@@ -8,11 +8,18 @@ class CasesViewModel: ObservableObject {
     private let incidentSelector: IncidentSelector
     private let incidentsRepository: IncidentsRepository
     private let worksitesRepository: WorksitesRepository
+    private let appPreferences: AppPreferencesDataStore
     private let dataPullReporter: IncidentDataPullReporter
     private let mapCaseIconProvider: MapCaseIconProvider
+    private let locationManager: LocationManager
+    private let worksiteProvider: WorksiteProvider
+    private let transferWorkTypeProvider: TransferWorkTypeProvider
+    private let translator: KeyTranslator
     private let logger: AppLogger
 
     @Published private(set) var incidentsData = LoadingIncidentsData
+    private let incidentWorksitesCount: AnyPublisher<IncidentIdWorksiteCount, Never>
+    var incidentId: Int64 { incidentsData.selectedId }
 
     @Published private(set) var showDataProgress = false
     @Published private(set) var dataProgress = 0.0
@@ -20,6 +27,22 @@ class CasesViewModel: ObservableObject {
     private let qsm: CasesQueryStateManager
 
     @Published var isTableView = false
+
+    private let tableDataDistanceSortSearchRadius = 100.0
+
+    let tableViewSort: Binding<WorksiteSortBy>
+
+    private let pendingTableSort = ManagedAtomic(AtomicSortBy())
+    let tableSortResultsMessage = CurrentValueSubject<String, Never>("")
+
+    private let tableViewDataLoader: CasesTableViewDataLoader
+    @Published var isLoadingTableViewData: Bool = false
+
+    let openWorksiteAddFlagCounter = CurrentValueSubject<Int, Never>(0)
+    private let openWorksiteAddFlag = ManagedAtomic(false)
+
+    @Published var worksitesChangingClaimAction: Set<Int64> = []
+    let changeClaimActionErrorMessage = CurrentValueSubject<String, Never>("")
 
     private let mapBoundsManager: CasesMapBoundsManager
 
@@ -35,6 +58,8 @@ class CasesViewModel: ObservableObject {
     @Published private(set) var incidentMapMarkers: IncidentAnnotations = emptyIncidentAnnotations
     private let wipeIncidentAnnotations = ManagedAtomic(false)
 
+    @Published var tableData = [WorksiteDistance]()
+
     @Published private(set) var casesCount: (Int, Int) = (-1, -1)
 
     private var hasDisappeared = false
@@ -46,17 +71,51 @@ class CasesViewModel: ObservableObject {
         incidentBoundsProvider: IncidentBoundsProvider,
         incidentsRepository: IncidentsRepository,
         worksitesRepository: WorksitesRepository,
+        accountDataRepository: AccountDataRepository,
+        worksiteChangeRepository: WorksiteChangeRepository,
+        organizationsRepository: OrganizationsRepository,
+        appPreferences: AppPreferencesDataStore,
         dataPullReporter: IncidentDataPullReporter,
         mapCaseIconProvider: MapCaseIconProvider,
+        locationManager: LocationManager,
+        worksiteProvider: WorksiteProvider,
+        transferWorkTypeProvider: TransferWorkTypeProvider,
+        translator: KeyTranslator,
         loggerFactory: AppLoggerFactory
     ) {
         self.incidentSelector = incidentSelector
         self.incidentsRepository = incidentsRepository
         self.worksitesRepository = worksitesRepository
+        self.appPreferences = appPreferences
         self.dataPullReporter = dataPullReporter
         self.mapCaseIconProvider = mapCaseIconProvider
-
+        self.locationManager = locationManager
+        self.worksiteProvider = worksiteProvider
+        self.transferWorkTypeProvider = transferWorkTypeProvider
+        self.translator = translator
         logger = loggerFactory.getLogger("cases")
+
+        incidentWorksitesCount = incidentSelector.incidentId
+            .eraseToAnyPublisher()
+            .map { id in
+                worksitesRepository.streamIncidentWorksitesCount(id)
+                    .eraseToAnyPublisher()
+                    .map { count in (id, count) }
+            }
+            .switchToLatest()
+            .map { (id, count) in IncidentIdWorksiteCount(id: id, count: count) }
+            .eraseToAnyPublisher()
+
+        tableViewDataLoader = CasesTableViewDataLoader(
+            worksiteProvider: worksiteProvider,
+            worksitesRepository: worksitesRepository,
+            worksiteChangeRepository: worksiteChangeRepository,
+            accountDataRepository: accountDataRepository,
+            organizationsRepository: organizationsRepository,
+            incidentsRepository: incidentsRepository,
+            translator: translator,
+            logger: logger
+        )
 
         mapBoundsManager = CasesMapBoundsManager(
             incidentSelector,
@@ -65,7 +124,13 @@ class CasesViewModel: ObservableObject {
 
         mapMarkerManager = CasesMapMarkerManager(worksitesRepository: worksitesRepository)
 
-        qsm = CasesQueryStateManager(incidentSelector)
+        let queryStateManager = CasesQueryStateManager(incidentSelector)
+        qsm = queryStateManager
+
+        tableViewSort =  Binding<WorksiteSortBy>(
+            get: { queryStateManager.tableViewSort.value },
+            set: { queryStateManager.tableViewSort.value = $0 }
+        )
     }
 
     func onViewAppear() {
@@ -74,6 +139,8 @@ class CasesViewModel: ObservableObject {
         subscribeIncidentBounds()
         subscribeWorksiteInBounds()
         subscribeDataPullStats()
+        subscribeSortBy()
+        subscribeTableData()
     }
 
     func onViewDisappear() {
@@ -92,6 +159,12 @@ class CasesViewModel: ObservableObject {
             .sink { b0, b1, b2, b3 in
                 self.isMapBusy = b0 || b1 || b2 || b3
             }
+            .store(in: &subscriptions)
+
+        tableViewDataLoader.isLoading
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.isLoadingTableViewData, on: self)
             .store(in: &subscriptions)
     }
 
@@ -118,14 +191,20 @@ class CasesViewModel: ObservableObject {
     }
 
     private func subscribeWorksiteInBounds() {
-        let worksitesInBounds = qsm.worksiteQueryState
-            .eraseToAnyPublisher()
+        let worksitesInBounds = Publishers.CombineLatest(
+            qsm.worksiteQueryState.eraseToAnyPublisher(),
+            incidentWorksitesCount
+        )
             .debounce(
                 for: .seconds(0.25),
                 scheduler: RunLoop.main
             )
-            .asyncThrowsMap { wqs in
+            .asyncThrowsMap { (wqs, _) in
                 let queryIncidentId = wqs.incidentId
+
+                if wqs.isTableView || queryIncidentId == EmptyIncident.id {
+                    return (queryIncidentId, [WorksiteAnnotationMapMark]())
+                }
 
                 if queryIncidentId != self.incidentMapMarkers.incidentId {
                     Task { @MainActor in
@@ -186,41 +265,31 @@ class CasesViewModel: ObservableObject {
             }
             return incidentAnnotations
         }
-            .receive(on: RunLoop.main)
-            .sink(receiveValue: { incidentAnnotations in
-                if incidentAnnotations.incidentId == self.incidentsData.selectedId {
-                    self.mapMarkersLock.withLock {
-                        self.incidentMapMarkers = incidentAnnotations
-                    }
+        .receive(on: RunLoop.main)
+        .sink(receiveValue: { incidentAnnotations in
+            if incidentAnnotations.incidentId == self.incidentsData.selectedId {
+                self.mapMarkersLock.withLock {
+                    self.incidentMapMarkers = incidentAnnotations
                 }
-            })
-            .store(in: &subscriptions)
-
-        let incidentWorksitesCount = incidentSelector.incidentId
-            .eraseToAnyPublisher()
-            .map { id in
-                self.worksitesRepository.streamIncidentWorksitesCount(id)
-                    .eraseToAnyPublisher()
-                    .map { count in (id, count) }
             }
-            .switchToLatest()
-            .map { (id, count) in IncidentIdWorksiteCount(id: id, count: count) }
+        })
+        .store(in: &subscriptions)
 
-        self.incidentsRepository.isLoading.eraseToAnyPublisher()
-            .combineLatest(
-                worksitesInBounds.eraseToAnyPublisher(),
-                incidentWorksitesCount.eraseToAnyPublisher()
-            )
-            .map { (isSyncing, inBoundsMarkers, worksitesCount) in
-                var totalCount = worksitesCount.count
-                if totalCount == 0 && isSyncing {
-                    totalCount = -1
-                }
-                return (inBoundsMarkers.1.count, totalCount)
+        Publishers.CombineLatest3(
+            incidentsRepository.isLoading.eraseToAnyPublisher(),
+            worksitesInBounds.eraseToAnyPublisher(),
+            incidentWorksitesCount
+        )
+        .map { (isSyncing, inBoundsMarkers, worksitesCount) in
+            var totalCount = worksitesCount.count
+            if totalCount == 0 && isSyncing {
+                totalCount = -1
             }
-            .receive(on: RunLoop.main)
-            .assign(to: \.casesCount, on: self)
-            .store(in: &subscriptions)
+            return (inBoundsMarkers.1.count, totalCount)
+        }
+        .receive(on: RunLoop.main)
+        .assign(to: \.casesCount, on: self)
+        .store(in: &subscriptions)
     }
 
     private func subscribeDataPullStats() {
@@ -231,6 +300,46 @@ class CasesViewModel: ObservableObject {
                 self.showDataProgress = stats.isOngoing
                 self.dataProgress = stats.progress
             }
+            .store(in: &subscriptions)
+    }
+
+    private func subscribeSortBy() {
+        appPreferences.preferences
+            .eraseToAnyPublisher()
+           .map { $0.tableViewSortBy }
+           .removeDuplicates()
+           .receive(on: RunLoop.main)
+           .sink(receiveValue: { sortBy in
+               self.qsm.tableViewSort.value = sortBy
+           })
+           .store(in: &subscriptions)
+    }
+
+    private func subscribeTableData() {
+        tableViewDataLoader.worksitesChangingClaimAction
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.worksitesChangingClaimAction, on: self)
+            .store(in: &subscriptions)
+
+        Publishers.CombineLatest(
+            qsm.worksiteQueryState.eraseToAnyPublisher(),
+            incidentWorksitesCount
+        )
+            .eraseToAnyPublisher()
+            .asyncMap { (wqs, _) in
+                if (wqs.isTableView) {
+                    self.tableSortResultsMessage.value = ""
+                    do {
+                        return try await self.fetchTableData(wqs)
+                    } catch {
+                        self.logger.logError(error)
+                    }
+                }
+                return []
+            }
+            .receive(on: RunLoop.main)
+            .assign(to: \.tableData, on: self)
             .store(in: &subscriptions)
     }
 
@@ -299,6 +408,64 @@ class CasesViewModel: ObservableObject {
         }
     }
 
+    private func fetchTableData(_ wqs: WorksiteQueryState) async throws -> [WorksiteDistance] {
+        let filters = wqs.filters
+        var sortBy = wqs.tableViewSort
+
+        let isDistanceSort = sortBy == .nearest
+        let locationCoordinates = locationManager.location?.coordinate
+        let hasLocation = locationCoordinates != nil
+        if (isDistanceSort && !hasLocation) {
+            sortBy = .caseNumber
+        }
+
+        let locationLatitude = locationCoordinates?.latitude ?? 0.0
+        let locationLongitude = locationCoordinates?.longitude ?? 0.0
+        let worksites = await worksitesRepository.getTableData(
+            incidentId: wqs.incidentId,
+            filters: filters,
+            sortBy: sortBy,
+            latitude: locationLatitude,
+            longitude: locationLongitude
+        )
+
+        let strideCount = 100
+        let locationLatitudeRad = locationLatitude.radians
+        let locationLongitudeRad = locationLongitude.radians
+        let tableData = try worksites.enumerated().map { (i, tableData) in
+            if (i % strideCount == 0) {
+                try Task.checkCancellation()
+            }
+
+            var distance = -1.0
+            if (hasLocation) {
+                let worksiteLatitudeRad = tableData.worksite.latitude.radians
+                let worksiteLongitudeRad = tableData.worksite.longitude.radians
+                let haversineDistance = haversineDistance(
+                    locationLatitudeRad, locationLongitudeRad,
+                    worksiteLatitudeRad, worksiteLongitudeRad
+                )
+                distance = haversineDistance.kmToMiles
+            }
+
+            return WorksiteDistance(
+                data: tableData,
+                distanceMiles: distance
+            )
+        }
+
+        if isDistanceSort && tableData.isEmpty {
+            tableSortResultsMessage.value =
+            translator.t("~~No Cases were found within {search_radius} mi.")
+                .replacingOccurrences(
+                    of: "{search_radius}",
+                    with: "\(Int(tableDataDistanceSortSearchRadius))"
+                )
+        }
+
+        return tableData
+    }
+
     private let denseMarkCountThreshold = 15
     private let denseMarkZoomThreshold = 14.0
     private let denseDegreeThreshold = 0.0001
@@ -364,6 +531,50 @@ class CasesViewModel: ObservableObject {
         }
         return markOffsets
     }
+
+    private func setSortBy(_ sortBy: WorksiteSortBy) {
+        appPreferences.setTableViewSortBy(sortBy)
+    }
+
+    func changeTableSort(_ sortBy: WorksiteSortBy) {
+        if sortBy == .nearest {
+            // TODO: Cache then request permission if not granted. Otherwise set sort by
+//            setSortBy(sortBy)
+//            pendingTableSort.set(sortBy)
+        } else {
+            setSortBy(sortBy)
+        }
+    }
+
+    func onOpenCaseFlags(_ worksite: Worksite) {
+        Task {
+            if await tableViewDataLoader.loadWorksiteForAddFlags(worksite) {
+                openWorksiteAddFlag.store(true, ordering: .sequentiallyConsistent)
+                openWorksiteAddFlagCounter.value += 1
+            }
+        }
+    }
+
+    func onWorksiteClaimAction(
+        _ worksite: Worksite,
+        _ claimAction: TableWorksiteClaimAction
+    ) {
+        changeClaimActionErrorMessage.value = ""
+        Task {
+            let result = await tableViewDataLoader.onWorkTypeClaimAction(
+                worksite,
+                claimAction,
+                transferWorkTypeProvider
+            )
+            if result.errorMessage.isNotBlank {
+                changeClaimActionErrorMessage.value = result.errorMessage
+            }
+        }
+    }
+
+    func takeOpenWorksiteAddFlag() -> Bool {
+        openWorksiteAddFlag.exchange(false, ordering: .sequentiallyConsistent)
+    }
 }
 
 extension CLLocationCoordinate2D {
@@ -406,3 +617,21 @@ struct IncidentAnnotations {
 }
 
 private let emptyIncidentAnnotations = IncidentAnnotations(EmptyIncident.id)
+
+struct WorksiteDistance {
+    let data: TableDataWorksite
+    let distanceMiles: Double
+
+    var worksite: Worksite { data.worksite }
+    var claimStatus: TableWorksiteClaimStatus { data.claimStatus }
+}
+
+private class AtomicSortBy: AtomicValue {
+    typealias AtomicRepresentation = AtomicReferenceStorage<AtomicSortBy>
+
+    let value: WorksiteSortBy
+
+    init(_ value: WorksiteSortBy = .none) {
+        self.value = value
+    }
+}

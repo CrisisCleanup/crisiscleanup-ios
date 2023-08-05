@@ -8,6 +8,8 @@ internal class CasesQueryStateManager {
 
     let mapBoundsSubject = CurrentValueSubject<CoordinateBounds, Never>(CoordinateBoundsDefault)
 
+    let tableViewSort = CurrentValueSubject<WorksiteSortBy, Never>(.none)
+
     private let worksiteQueryStateSubject = CurrentValueSubject<WorksiteQueryState, Never>(WorksiteQueryStateDefault)
     var worksiteQueryState: any Publisher<WorksiteQueryState, Never>
 
@@ -20,15 +22,13 @@ internal class CasesQueryStateManager {
         worksiteQueryState = worksiteQueryStateSubject
 
         incidentSelector.incident
-            .sink { completion in
-            } receiveValue: { incident in
+            .sink(receiveValue: { incident in
                 self.updateState { $0.incidentId = incident.id }
-            }
+            })
             .store(in: &disposables)
 
         isTableViewSubject
-            .sink(receiveCompletion: { completion in
-            }, receiveValue: { b in
+            .sink(receiveValue: { b in
                 self.updateState { $0.isTableView = b }
             })
             .store(in: &disposables)
@@ -38,8 +38,7 @@ internal class CasesQueryStateManager {
                 for: .seconds(mapChangeDebounceTimeout),
                 scheduler: RunLoop.main
             )
-            .sink(receiveCompletion: { completion in
-            }, receiveValue: { zoom in
+            .sink(receiveValue: { zoom in
                 self.updateState { $0.zoom = zoom }
             })
             .store(in: &disposables)
@@ -49,9 +48,14 @@ internal class CasesQueryStateManager {
                 for: .seconds(mapChangeDebounceTimeout),
                 scheduler: RunLoop.main
             )
-            .sink(receiveCompletion: { completion in
-            }, receiveValue: { bounds in
+            .sink(receiveValue: { bounds in
                 self.updateState { $0.coordinateBounds = bounds }
+            })
+            .store(in: &disposables)
+
+        tableViewSort
+            .sink(receiveValue: { sortBy in
+                self.updateState { $0.tableViewSort = sortBy }
             })
             .store(in: &disposables)
     }

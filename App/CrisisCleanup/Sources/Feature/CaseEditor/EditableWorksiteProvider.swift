@@ -63,7 +63,7 @@ class SingleEditableWorksiteProvider: EditableWorksiteProvider, WorksiteLocation
     var formFieldTranslationLookup = [String : String]()
     var workTypeTranslationLookup = [String : String]()
 
-    private var _isStale = ManagedAtomic<Bool>(false)
+    private var _isStale = ManagedAtomic(false)
     var isStale: Bool {
         get { _isStale.load(ordering: .relaxed) }
     }
@@ -75,7 +75,7 @@ class SingleEditableWorksiteProvider: EditableWorksiteProvider, WorksiteLocation
         _isStale.exchange(false, ordering: .acquiring)
     }
 
-    private let editedLocation = ManagedAtomic<OptionalCoordinates>(OptionalCoordinates())
+    private let editedLocation = ManagedAtomic(OptionalCoordinates())
 
     private func setCoordinates(_ coordinates: CLLocationCoordinate2D? = nil) {
         let oco = OptionalCoordinates(coordinates)
@@ -94,7 +94,7 @@ class SingleEditableWorksiteProvider: EditableWorksiteProvider, WorksiteLocation
         editedLocation.exchange(OptionalCoordinates(), ordering: .acquiring).coordinates
     }
 
-    private var _isAddressChanged = ManagedAtomic<Bool>(false)
+    private var _isAddressChanged = ManagedAtomic(false)
     var isAddressChanged: Bool {
         get { _isAddressChanged.load(ordering: .relaxed) }
     }

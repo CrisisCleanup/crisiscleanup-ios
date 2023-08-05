@@ -52,6 +52,7 @@ struct CasesSearchView: View {
                 )
                 .padding()
 
+                // TODO: LazyVStack
                 ScrollView {
                     if viewModel.searchQuery.isBlank {
                         RecentCasesView(
@@ -82,6 +83,7 @@ struct CasesSearchView: View {
                 }
             }
 
+            // TODO: Is container necessary? Animate.
             VStack {
                 if isLoading {
                     ProgressView()

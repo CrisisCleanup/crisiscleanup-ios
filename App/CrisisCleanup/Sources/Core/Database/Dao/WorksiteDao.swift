@@ -464,6 +464,10 @@ public class WorksiteDao {
         }.map { record in record.asExternalModel() }
     }
 
+    func getWorksite(_ id: Int64) throws -> PopulatedLocalWorksite? {
+        try reader.read { db in try fetchLocalWorksite(db, id) }
+    }
+
     func streamLocalWorksite(_ id: Int64) -> AnyPublisher<PopulatedLocalWorksite?, Error> {
         ValueObservation
             .tracking({ db in try self.fetchLocalWorksite(db, id) })

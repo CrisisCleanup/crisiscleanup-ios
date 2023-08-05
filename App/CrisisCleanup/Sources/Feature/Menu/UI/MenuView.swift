@@ -64,7 +64,7 @@ private struct TopBar: View {
                 ? t.t(TopLevelDestination.menu.titleTranslateKey)
                 : selectedIncident.shortName
                 Text(title)
-                    .font(.title2)
+                    .fontHeader1()
                     .padding(.leading, 8)
 
                 if !selectedIncident.isEmptyIncident {

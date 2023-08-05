@@ -32,7 +32,7 @@ class CasesFilterViewModel: ObservableObject {
 
     let distanceOptions: [(Double, String)]
 
-    private var distanceOptionCached = ManagedAtomic<AtomicDoubleOptional>(AtomicDoubleOptional())
+    private var distanceOptionCached = ManagedAtomic(AtomicDoubleOptional())
 
     private var subscriptions = Set<AnyCancellable>()
 

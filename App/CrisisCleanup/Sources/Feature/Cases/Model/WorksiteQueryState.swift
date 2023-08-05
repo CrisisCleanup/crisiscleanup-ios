@@ -16,7 +16,8 @@ struct WorksiteQueryState {
     let coordinateBounds: CoordinateBounds
     let isTableView: Bool
     let isZoomInteractive: Bool
-    // TODO Filters and additional
+    let tableViewSort: WorksiteSortBy
+    let filters: CasesFilter
 }
 
 let WorksiteQueryStateDefault = WorksiteQueryState(
@@ -25,5 +26,7 @@ let WorksiteQueryStateDefault = WorksiteQueryState(
     zoom: 0,
     coordinateBounds: CoordinateBoundsDefault,
     isTableView: false,
-    isZoomInteractive: false
+    isZoomInteractive: false,
+    tableViewSort: .none,
+    filters: CasesFilter()
 )

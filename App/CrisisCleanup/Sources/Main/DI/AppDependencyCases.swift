@@ -48,4 +48,10 @@ extension MainComponent {
             SingleTransferWorkTypeProvider()
         }
     }
+
+    public var worksiteProvider: WorksiteProvider {
+        shared {
+            SingleWorksiteProvider()
+        }
+    }
 }

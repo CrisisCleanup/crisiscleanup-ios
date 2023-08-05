@@ -10,6 +10,8 @@ public protocol WorksitesRepository {
 
     func streamLocalWorksite(_ worksiteId: Int64) -> any Publisher<LocalWorksite?, Never>
 
+    func getWorksite(_ id: Int64) async throws -> Worksite?
+
     func streamRecentWorksites(_ incidentId: Int64) -> any Publisher<[WorksiteSummary], Never>
 
     func getWorksitesMapVisual(
@@ -64,6 +66,16 @@ public protocol WorksitesRepository {
         shareMessage: String,
         noClaimReason: String?
     ) async -> Bool
+
+    func getTableData(
+        incidentId: Int64,
+        filters: CasesFilter,
+        sortBy: WorksiteSortBy,
+        latitude: Double,
+        longitude: Double,
+        searchRadius: Double,
+        count: Int
+    ) async -> [TableDataWorksite]
 }
 
 extension WorksitesRepository {
@@ -77,5 +89,23 @@ extension WorksitesRepository {
 
     func syncNetworkWorksite(_ worksite: NetworkWorksiteFull) async throws -> Bool {
         return try await syncNetworkWorksite(worksite, Date())
+    }
+
+    func getTableData(
+        incidentId: Int64,
+        filters: CasesFilter,
+        sortBy: WorksiteSortBy,
+        latitude: Double,
+        longitude: Double
+    ) async -> [TableDataWorksite] {
+        await getTableData(
+            incidentId: incidentId,
+            filters: filters,
+            sortBy: sortBy,
+            latitude: latitude,
+            longitude: longitude,
+            searchRadius: 100.0,
+            count: 360
+        )
     }
 }

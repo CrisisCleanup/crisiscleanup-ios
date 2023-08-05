@@ -32,7 +32,7 @@ internal class CaseEditorDataLoader {
     private let worksiteIdSubject = CurrentValueSubject<Int64?, Never>(nil)
     let worksiteStream: AnyPublisher<LocalWorksite?, Never>
 
-    private let isInitiallySynced = ManagedAtomic<Bool>(false)
+    private let isInitiallySynced = ManagedAtomic(false)
     private let isWorksitePulledSubject = CurrentValueSubject<Bool, Never>(false)
 
     private let incidentDataStream: AnyPublisher<IncidentBoundsPair?, Never>

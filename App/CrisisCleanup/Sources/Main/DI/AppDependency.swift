@@ -47,6 +47,8 @@ public protocol AppDependency: Dependency {
 
     var incidentSelector: IncidentSelector { get }
 
+    var locationManager: LocationManager { get }
+
     var incidentBoundsProvider: IncidentBoundsProvider { get }
 
     var mapCaseIconProvider: MapCaseIconProvider { get }
@@ -54,6 +56,7 @@ public protocol AppDependency: Dependency {
     var incidentRefresher: IncidentRefresher { get }
     var languageRefresher: LanguageRefresher { get }
     var transferWorkTypeProvider: TransferWorkTypeProvider { get }
+    var worksiteProvider: WorksiteProvider { get }
 }
 
 extension MainComponent {
@@ -137,6 +140,12 @@ extension MainComponent {
                 preferencesStore: appPreferences,
                 incidentsRepository: incidentsRepository
             )
+        }
+    }
+
+    public var locationManager: LocationManager {
+        shared {
+            LocationManager()
         }
     }
 }

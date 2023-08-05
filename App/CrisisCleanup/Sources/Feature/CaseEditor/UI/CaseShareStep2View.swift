@@ -76,6 +76,7 @@ struct CaseShareStep2View: View {
 
                 HStack {
                     let searchTitleKey = viewModel.isEmailContactMethod ? "shareWorksite.search_emails" : "shareWorksite.search_phones"
+                    // TODO: Keep this view at the top when focused and not scrollable
                     TextField(
                         t.t(searchTitleKey),
                         text: $viewModel.receiverContactSuggestion

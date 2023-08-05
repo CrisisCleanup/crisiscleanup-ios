@@ -27,7 +27,7 @@ public protocol SyncPusher {
 }
 
 class AppSyncer: SyncPuller, SyncPusher {
-    private let pullLanguageGuard = ManagedAtomic<Bool>(false)
+    private let pullLanguageGuard = ManagedAtomic(false)
 
     private let accountData: AnyPublisher<AccountData, Never>
     private let appPreferences: AnyPublisher<AppPreferences, Never>

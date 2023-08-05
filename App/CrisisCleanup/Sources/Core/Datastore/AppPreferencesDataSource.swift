@@ -12,6 +12,7 @@ public protocol AppPreferencesDataStore {
     func clearSyncData()
     func setSelectedIncident(_ id: Int64)
     func setLanguageKey(_ key: String)
+    func setTableViewSortBy(_ sortBy: WorksiteSortBy)
 }
 
 extension AppPreferencesDataStore {
@@ -80,6 +81,14 @@ class AppPreferencesUserDefaults: AppPreferencesDataStore {
         update(
             UserDefaults.standard.appPreferences.copy {
                 $0.languageKey = key
+            }
+        )
+    }
+
+    func setTableViewSortBy(_ sortBy: WorksiteSortBy) {
+        update(
+            UserDefaults.standard.appPreferences.copy {
+                $0.tableViewSortBy = sortBy
             }
         )
     }

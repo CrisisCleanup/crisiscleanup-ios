@@ -3,10 +3,10 @@
 import Foundation
 import MapKit
 
-class LocationManager: NSObject, ObservableObject {
+public class LocationManager: NSObject, ObservableObject {
 
     private let locationManager = CLLocationManager()
-    @Published  var location: CLLocation? = nil
+    @Published var location: CLLocation? = nil
 
     private let authorizedLocationAccessStatuses: Set<CLAuthorizationStatus> = [
         .authorizedAlways,
@@ -33,12 +33,12 @@ class LocationManager: NSObject, ObservableObject {
 }
 
 extension LocationManager: CLLocationManagerDelegate {
-    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+    public func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         // TODO: Handle change accordingly as necessary
         print("Location status change \(status)")
     }
 
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else {
             return
         }
