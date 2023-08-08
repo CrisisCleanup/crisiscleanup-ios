@@ -27,7 +27,7 @@ struct CasesView: View {
         ZStack {
 
             if viewModel.isTableView {
-                CasesTableView()
+                CasesTableView(viewModel: viewModel, incidentSelectViewBuilder: incidentSelectViewBuilder)
             } else {
                 MapView(
                     map: $map,
