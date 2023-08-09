@@ -234,6 +234,10 @@ private struct UpsetClient: View {
     @State var isMyOrgInvolved = ""
     @State var selectedOrg: OrganizationIdName? = nil
 
+    @FocusState private var isQueryFocused: Bool
+    @State private var animateTopSearchBar = false
+    var tempOrgs = ["org1", "org2", "org3", "org4", "org5"]
+
     var body: some View {
         let yesOption = t.t("formOptions.yes")
         let noOption = t.t("formOptions.no")
@@ -241,29 +245,65 @@ private struct UpsetClient: View {
         ScrollView {
             VStack(alignment: .leading) {
 
-                Text(t.t("flag.explain_why_client_upset"))
-                    .padding(.top)
-                LargeTextEditor(text: $upsetReason)
+                if !animateTopSearchBar {
+                    Text(t.t("flag.explain_why_client_upset"))
+                        .padding(.top)
+                    LargeTextEditor(text: $upsetReason)
 
-                Text(t.t("flag.does_issue_involve_you"))
-                let options = [
-                    yesOption,
-                    noOption
-                ]
-                RadioButtons(selected: $isMyOrgInvolved, options: options)
-                    .padding()
-
+                    Text(t.t("flag.does_issue_involve_you"))
+                    let options = [
+                        yesOption,
+                        noOption
+                    ]
+                    RadioButtons(selected: $isMyOrgInvolved, options: options)
+                        .padding()
+                }
                 Text(t.t("flag.please_share_other_orgs"))
-                    .padding(.top)
-                TextField(
-                    t.t("profileOrg.organization_name"),
-                    text: $viewModel.otherOrgQ
-                )
-                .textFieldBorder()
+
+                HStack {
+                    TextField(
+                        t.t("profileOrg.organization_name"),
+                        text: $viewModel.otherOrgQ
+                    )
+                    .focused($isQueryFocused)
+                    .onChange(of: isQueryFocused) { isFocused in
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            animateTopSearchBar = isFocused
+                        }
+                    }
+                    .textFieldBorder()
+
+                    if animateTopSearchBar {
+                        Button {
+                            viewModel.otherOrgQ = ""
+                            isQueryFocused = false
+                        } label: {
+                            Text(t.t("actions.close"))
+                        }
+                        // TODO: Common dimensions
+                        .padding(.leading, 8)
+                    }
+                }
+
+                if animateTopSearchBar {
+                    ForEach(tempOrgs, id:\.self) { org in
+                        VStack(alignment: .leading) {
+                            Text(org)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top)
+                        .onTapGesture {
+                            viewModel.otherOrgQ = org
+                            isQueryFocused = false
+                        }
+                    }
+                }
             }
             .padding(.horizontal)
         }
         .scrollDismissesKeyboard(.immediately)
+
+
 
 
         Spacer()
@@ -298,6 +338,10 @@ private struct ReportAbuse: View {
     @State var flagAction = ""
     @State var selectedOrg: OrganizationIdName? = nil
 
+    @FocusState private var isQueryFocused: Bool
+    @State private var animateTopSearchBar = false
+    var tempOrgs = ["org1", "org2", "org3", "org4", "org5"]
+
     var body: some View {
         let yesOption = t.t("formOptions.yes")
         let noOption = t.t("formOptions.no")
@@ -305,39 +349,72 @@ private struct ReportAbuse: View {
         ScrollView {
             VStack(alignment: .leading) {
                 Text(t.t("flag.organizations_complaining_about"))
-                TextField(
-                    t.t("profileOrg.organization_name"),
-                    text: $viewModel.otherOrgQ
-                )
-                .textFieldBorder()
-                .padding(.bottom)
-
-                Text(t.t("flag.must_contact_org_first"))
+                HStack {
+                    TextField(
+                        t.t("profileOrg.organization_name"),
+                        text: $viewModel.otherOrgQ
+                    )
+                    .focused($isQueryFocused)
+                    .onChange(of: isQueryFocused) { isFocused in
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            animateTopSearchBar = isFocused
+                        }
+                    }
+                    .textFieldBorder()
                     .padding(.bottom)
 
-                Text(t.t("flag.have_you_contacted_org"))
-                let options = [
-                    yesOption,
-                    noOption
-                ]
-                RadioButtons(selected: $isOrganizationContacted, options: options)
-                    .padding()
+                    if animateTopSearchBar {
+                        Button {
+                            viewModel.otherOrgQ = ""
+                            isQueryFocused = false
+                        } label: {
+                            Text(t.t("actions.close"))
+                        }
+                        // TODO: Common dimensions
+                        .padding(.leading, 8)
+                    }
+                }
 
-                Group {
-                    Text(t.t("flag.outcome_of_contact"))
+                if !animateTopSearchBar {
+                    Text(t.t("flag.must_contact_org_first"))
+                        .padding(.bottom)
+
+                    Text(t.t("flag.have_you_contacted_org"))
+                    let options = [
+                        yesOption,
+                        noOption
+                    ]
+                    RadioButtons(selected: $isOrganizationContacted, options: options)
+                        .padding()
+
+                    Group {
+                        Text(t.t("flag.outcome_of_contact"))
+                            .padding(.top)
+                        LargeTextEditor(text: $outcome)
+
+                        Text(t.t("flag.describe_problem"))
+                            .padding(.top)
+                        LargeTextEditor(text: $flagNotes)
+
+                        Text(t.t("flag.suggested_outcome"))
+                            .padding(.top)
+                        LargeTextEditor(text: $flagAction)
+
+                        Text(t.t("flag.warning_ccu_cannot_do_much"))
+                            .padding(.vertical)
+                    }
+                } else {
+                    ForEach(tempOrgs, id:\.self) { org in
+                        VStack(alignment: .leading) {
+                            Text(org)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top)
-                    LargeTextEditor(text: $outcome)
-
-                    Text(t.t("flag.describe_problem"))
-                        .padding(.top)
-                    LargeTextEditor(text: $flagNotes)
-
-                    Text(t.t("flag.suggested_outcome"))
-                        .padding(.top)
-                    LargeTextEditor(text: $flagAction)
-
-                    Text(t.t("flag.warning_ccu_cannot_do_much"))
-                        .padding(.vertical)
+                        .onTapGesture {
+                            viewModel.otherOrgQ = org
+                            isQueryFocused = false
+                        }
+                    }
                 }
             }
             .padding(.horizontal)
@@ -439,15 +516,39 @@ private struct WrongIncident: View {
     @State var isNotListed = false
     @State var selectedIncident: IncidentIdNameType? = nil
 
+    @FocusState private var isQueryFocused: Bool
+    @State private var animateTopSearchBar = false
+    var tempOrgs = ["org1", "org2", "org3", "org4", "org5"]
+
     var body: some View {
         VStack (alignment: .leading ) {
             Text(t.t("flag.choose_correct_incident"))
 
             TextField(t.t("casesVue.incident"), text: viewModel.incidentQ)
+                .focused($isQueryFocused)
+                .onChange(of: isQueryFocused) { isFocused in
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        animateTopSearchBar = isFocused
+                    }
+                }
                 .textFieldBorder()
 
-            CheckboxView(checked: $isNotListed, text: t.t("flag.incident_not_listed"))
-
+            if !animateTopSearchBar {
+                CheckboxView(checked: $isNotListed, text: t.t("flag.incident_not_listed"))
+            } else {
+                ForEach(tempOrgs, id:\.self) { incident in
+                    VStack(alignment: .leading) {
+                        Text(incident)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top)
+                    .onTapGesture {
+                        // TODO: assign value
+//                        viewModel.incidentQ = incident
+                        isQueryFocused = false
+                    }
+                }
+            }
         }
         .padding(.horizontal)
 

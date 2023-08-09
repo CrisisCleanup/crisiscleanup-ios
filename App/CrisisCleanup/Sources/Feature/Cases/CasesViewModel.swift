@@ -26,14 +26,15 @@ class CasesViewModel: ObservableObject {
 
     private let qsm: CasesQueryStateManager
 
-    @Published var isTableView = false
+    @Published private(set) var isTableView = false
 
     private let tableDataDistanceSortSearchRadius = 100.0
 
     let tableViewSort: Binding<WorksiteSortBy>
 
     private let pendingTableSort = ManagedAtomic(AtomicSortBy())
-    let tableSortResultsMessage = CurrentValueSubject<String, Never>("")
+    private let tableSortResultsMessageSubject = CurrentValueSubject<String, Never>("")
+    @Published private(set) var tableSortResultsMessage = ""
 
     private let tableViewDataLoader: CasesTableViewDataLoader
     @Published var isLoadingTableViewData: Bool = false
@@ -139,6 +140,7 @@ class CasesViewModel: ObservableObject {
         subscribeIncidentBounds()
         subscribeWorksiteInBounds()
         subscribeDataPullStats()
+        subscribeUiState()
         subscribeSortBy()
         subscribeTableData()
     }
@@ -303,6 +305,13 @@ class CasesViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
+    private func subscribeUiState() {
+        qsm.isTableViewSubject
+            .subscribe(on: RunLoop.main)
+            .assign(to: \.isTableView, on: self)
+            .store(in: &subscriptions)
+    }
+
     private func subscribeSortBy() {
         appPreferences.preferences
             .eraseToAnyPublisher()
@@ -316,6 +325,11 @@ class CasesViewModel: ObservableObject {
     }
 
     private func subscribeTableData() {
+        tableSortResultsMessageSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.tableSortResultsMessage, on: self)
+            .store(in: &subscriptions)
+
         tableViewDataLoader.worksitesChangingClaimAction
             .eraseToAnyPublisher()
             .receive(on: RunLoop.main)
@@ -329,7 +343,7 @@ class CasesViewModel: ObservableObject {
             .eraseToAnyPublisher()
             .asyncMap { (wqs, _) in
                 if (wqs.isTableView) {
-                    self.tableSortResultsMessage.value = ""
+                    self.tableSortResultsMessageSubject.value = ""
                     do {
                         return try await self.fetchTableData(wqs)
                     } catch {
@@ -408,6 +422,10 @@ class CasesViewModel: ObservableObject {
         }
     }
 
+    func toggleTableView() {
+        qsm.isTableViewSubject.value.toggle()
+    }
+
     private func fetchTableData(_ wqs: WorksiteQueryState) async throws -> [WorksiteDistance] {
         let filters = wqs.filters
         var sortBy = wqs.tableViewSort
@@ -419,17 +437,16 @@ class CasesViewModel: ObservableObject {
             sortBy = .caseNumber
         }
 
-        let locationLatitude = locationCoordinates?.latitude ?? 0.0
-        let locationLongitude = locationCoordinates?.longitude ?? 0.0
-        let worksites = await worksitesRepository.getTableData(
+        let worksites = try await worksitesRepository.getTableData(
             incidentId: wqs.incidentId,
             filters: filters,
             sortBy: sortBy,
-            latitude: locationLatitude,
-            longitude: locationLongitude
+            coordinates: locationCoordinates
         )
 
         let strideCount = 100
+        let locationLatitude = locationCoordinates?.latitude ?? 0.0
+        let locationLongitude = locationCoordinates?.longitude ?? 0.0
         let locationLatitudeRad = locationLatitude.radians
         let locationLongitudeRad = locationLongitude.radians
         let tableData = try worksites.enumerated().map { (i, tableData) in
@@ -437,17 +454,13 @@ class CasesViewModel: ObservableObject {
                 try Task.checkCancellation()
             }
 
-            var distance = -1.0
-            if (hasLocation) {
-                let worksiteLatitudeRad = tableData.worksite.latitude.radians
-                let worksiteLongitudeRad = tableData.worksite.longitude.radians
-                let haversineDistance = haversineDistance(
+            let distance = hasLocation ? {
+                let worksite = tableData.worksite
+                return haversineDistance(
                     locationLatitudeRad, locationLongitudeRad,
-                    worksiteLatitudeRad, worksiteLongitudeRad
-                )
-                distance = haversineDistance.kmToMiles
-            }
-
+                    worksite.latitude.radians, worksite.longitude.radians
+                ).kmToMiles
+            }() : -1.0
             return WorksiteDistance(
                 data: tableData,
                 distanceMiles: distance
@@ -455,7 +468,7 @@ class CasesViewModel: ObservableObject {
         }
 
         if isDistanceSort && tableData.isEmpty {
-            tableSortResultsMessage.value =
+            tableSortResultsMessageSubject.value =
             translator.t("worksiteFilters.no_cases_found_radius")
                 .replacingOccurrences(
                     of: "{search_radius}",

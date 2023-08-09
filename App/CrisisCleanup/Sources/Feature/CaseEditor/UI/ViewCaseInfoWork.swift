@@ -153,9 +153,10 @@ private struct WorkTypeSummaryView: View {
                     selectedStatus: summary.workType.status,
                     statusOptions: viewModel.statusOptions
                 ) { status in
-                    viewModel.updateWorkType(summary.workType.copy {
-                        $0.statusLiteral = status.literal
-                    })
+                    viewModel.updateWorkType(
+                        summary.workType.copy { $0.statusLiteral = status.literal },
+                        true
+                    )
                 }
 
                 Spacer()
@@ -163,9 +164,10 @@ private struct WorkTypeSummaryView: View {
                 if summary.workType.isClaimed {
                     if summary.isClaimedByMyOrg {
                         WorkTypeAction(viewModel.t("actions.unclaim"), false) {
-                            viewModel.updateWorkType(summary.workType.copy {
-                                $0.orgClaim = nil
-                            })
+                            viewModel.updateWorkType(
+                                summary.workType.copy { $0.orgClaim = nil },
+                                false
+                            )
                         }
                     } else if summary.isReleasable {
                         WorkTypeAction(viewModel.t("actions.release"), false) {
@@ -180,9 +182,10 @@ private struct WorkTypeSummaryView: View {
                     }
                 } else {
                     WorkTypeAction(viewModel.t("actions.claim"), true) {
-                        viewModel.updateWorkType(summary.workType.copy {
-                            $0.orgClaim = summary.myOrgId
-                        })
+                        viewModel.updateWorkType(
+                            summary.workType.copy { $0.orgClaim = summary.myOrgId },
+                            false
+                        )
                     }
                 }
             }

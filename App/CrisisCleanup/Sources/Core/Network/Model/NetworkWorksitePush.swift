@@ -7,7 +7,7 @@ public struct NetworkWorksitePush: Codable, Equatable {
     let caseNumber: String?
     let city: String
     let county: String
-    let email: String?
+    let email: String
     let favorite: NetworkType?
     let formData: [KeyDynamicValuePair]
     let incident: Int64
@@ -15,14 +15,14 @@ public struct NetworkWorksitePush: Codable, Equatable {
     let location: NetworkWorksiteFull.Location
     let name: String
     let phone1: String
-    let phone2: String?
+    let phone2: String
     let plusCode: String?
     let postalCode: String?
     let reportedBy: Int64?
     let state: String
     let svi: Float?
     let updatedAt: Date
-    let what3words: String?
+    let what3words: String
     let workTypes: [NetworkWorkType]?
 
     let skipDuplicateCheck: Bool?

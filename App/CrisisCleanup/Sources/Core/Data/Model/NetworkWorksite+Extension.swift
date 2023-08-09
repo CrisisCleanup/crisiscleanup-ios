@@ -10,6 +10,7 @@ extension NetworkWorksiteFull {
             address: address,
             autoContactFrequencyT: autoContactFrequencyT,
             caseNumber: caseNumber,
+            caseNumberOrder: WorksiteRecord.parseCaseNumberOrder(caseNumber),
             city: city,
             county: county,
             createdAt: nil,
@@ -45,6 +46,7 @@ extension NetworkWorksiteCoreData {
             address: address,
             autoContactFrequencyT: autoContactFrequencyT,
             caseNumber: caseNumber,
+            caseNumberOrder: WorksiteRecord.parseCaseNumberOrder(caseNumber),
             city: city,
             county: county,
             createdAt: nil,
@@ -80,6 +82,7 @@ extension NetworkWorksitePage {
             address: address,
             autoContactFrequencyT: autoContactFrequencyT,
             caseNumber: caseNumber,
+            caseNumberOrder: WorksiteRecord.parseCaseNumberOrder(caseNumber),
             city: city,
             county: county,
             createdAt: createdAt,
@@ -190,7 +193,6 @@ extension NetworkWorksiteFull {
         let formData = formData.map { $0.asWorksiteRecord() }
         let flags = flags.map { $0.asRecord() }
         let notes = notes.map { $0.asRecord() }
-        // TODO: When files are implemented
         let files = files.map { $0.asRecord() }
         return WorksiteRecords(
             core,

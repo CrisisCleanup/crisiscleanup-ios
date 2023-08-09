@@ -128,7 +128,7 @@ class WorksiteWorkTypeTests: XCTestCase {
 
         // Assert
 
-        var actual = try worksiteDao.getWorksite(1)!
+        var actual = try worksiteDao.getPopulatedWorksite(1)!
         XCTAssertEqual(
             existingWorksites[0].copy {
                 $0.address = "sync-address"
@@ -207,7 +207,7 @@ class WorksiteWorkTypeTests: XCTestCase {
             a.id - b.id <= 0
         }))
 
-        actual = try worksiteDao.getWorksite(2)!
+        actual = try worksiteDao.getPopulatedWorksite(2)!
         let expectedWorkTypesB = [
             testWorkTypeRecord(24, worksiteId: 2).copy {
                 $0.id = 6

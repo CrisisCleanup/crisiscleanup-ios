@@ -27,7 +27,7 @@ struct CasesView: View {
         ZStack {
 
             if viewModel.isTableView {
-                CasesTableView()
+                CasesTableView(viewModel: viewModel, incidentSelectViewBuilder: incidentSelectViewBuilder)
             } else {
                 MapView(
                     map: $map,
@@ -232,7 +232,7 @@ private struct CasesOverlayElements: View {
                     .padding(.bottom)
 
                     Button {
-                        viewModel.isTableView.toggle()
+                        viewModel.toggleTableView()
                     } label: {
                         Image(isMapView ? "ic_map" : "ic_table", bundle: .module)
                     }

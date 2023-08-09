@@ -4,7 +4,7 @@ import GRDB
 
 public class WorksiteDao {
     private let database: AppDatabase
-    private let reader: DatabaseReader
+    internal let reader: DatabaseReader
     private let syncLogger: SyncLogger
 
     init(
@@ -223,6 +223,7 @@ public class WorksiteDao {
                 worksiteId,
                 autoContactFrequencyT: core.autoContactFrequencyT,
                 caseNumber: core.caseNumber,
+                caseNumberOrder: core.caseNumberOrder,
                 email: core.email,
                 favoriteId: core.favoriteId,
                 phone1: core.phone1,
@@ -410,7 +411,7 @@ public class WorksiteDao {
         west: Double,
         east: Double
     ) throws -> Int {
-        return try reader.read({ db in
+        try reader.read{ db in
             try WorksiteRecord.getCount(
                 db,
                 incidentId,
@@ -419,7 +420,7 @@ public class WorksiteDao {
                 west: west,
                 east: east
             )
-        })
+        }
     }
 
     func getWorksiteId(_ networkId: Int64) throws -> Int64 {
@@ -477,7 +478,8 @@ public class WorksiteDao {
             .eraseToAnyPublisher()
     }
 
-    private func fetchLocalWorksite(_ db: Database, _ id: Int64) throws -> PopulatedLocalWorksite? {
+    // internal for testing. Should be private.
+    internal func fetchLocalWorksite(_ db: Database, _ id: Int64) throws -> PopulatedLocalWorksite? {
         try WorksiteRootRecord
             .filter(id: id)
             .including(required: WorksiteRootRecord.worksite)
@@ -485,6 +487,7 @@ public class WorksiteDao {
             .including(all: WorksiteRootRecord.worksiteFormData)
             .including(all: WorksiteRootRecord.worksiteNotes)
             .including(all: WorksiteRootRecord.workTypes)
+            .including(all: WorksiteRootRecord.worksiteWorkTypeRequests)
             .including(all: WorksiteRootRecord.networkFiles
                 .including(optional: NetworkFileRecord.networkFileLocalImage))
             .including(all: WorksiteRootRecord.worksiteLocalImages)
@@ -512,8 +515,11 @@ public class WorksiteDao {
         }
     }
 
-    func onSyncEnd(_ worksiteId: Int64, _ syncedAt: Date = Date.now) async throws -> Bool {
-        try await database.onSyncEnd(worksiteId, syncedAt)
+    func onSyncEnd(
+        _ worksiteId: Int64,
+        _ syncLogger: SyncLogger,
+        _ syncedAt: Date = Date.now) async throws -> Bool {
+        try await database.onSyncEnd(worksiteId, syncLogger, syncedAt)
     }
 
     func getLocallyModifiedWorksites(_ limit: Int) throws -> [Int64] {
@@ -539,35 +545,6 @@ public class WorksiteDao {
             ]
         }
     }
-
-    // MARK: - Test access
-
-    internal func getLocalWorksite(_ id: Int64) throws -> PopulatedLocalWorksite? {
-        try reader.read { db in try self.fetchLocalWorksite(db, id) }
-    }
-
-    internal func getWorksite(_ id: Int64) throws -> PopulatedWorksite? {
-        try reader.read { db in
-            try WorksiteRootRecord
-                .filter(id: id)
-                .including(required: WorksiteRootRecord.worksite)
-                .including(all: WorksiteRootRecord.workTypes)
-                .asRequest(of: PopulatedWorksite.self)
-                .fetchOne(db)
-        }
-    }
-
-    internal func getWorksites(_ incidentId: Int64) throws -> [PopulatedWorksite] {
-        try reader.read { db in
-            try WorksiteRootRecord
-                .all()
-                .byIncidentId(incidentId)
-                .including(required: WorksiteRootRecord.worksite.orderByUpdatedAtDescIdDesc())
-                .including(all: WorksiteRootRecord.workTypes)
-                .asRequest(of: PopulatedWorksite.self)
-                .fetchAll(db)
-        }
-    }
 }
 
 extension AppDatabase {
@@ -587,14 +564,22 @@ extension AppDatabase {
 
     fileprivate func onSyncEnd(
         _ worksiteId: Int64,
+        _ syncLogger: SyncLogger,
         _ syncedAt: Date
     ) async throws -> Bool {
         try await dbWriter.write { db in
-            let hasModification = try db.getUnsyncedFlagCount(worksiteId) > 0 ||
-            db.getUnsyncedNoteCount(worksiteId) > 0 ||
-            db.getUnsyncedWorkTypeCount(worksiteId) > 0 ||
-            db.getWorksiteChangeCount(worksiteId) > 0
+            let flagChanges = try db.getUnsyncedFlagCount(worksiteId)
+            let noteChanges = try db.getUnsyncedNoteCount(worksiteId)
+            let workTypeChanges = try db.getUnsyncedWorkTypeCount(worksiteId)
+            let changes = try db.getWorksiteChangeCount(worksiteId)
+            let hasModification = flagChanges > 0 ||
+            noteChanges > 0 ||
+            workTypeChanges > 0 ||
+            changes > 0
             if hasModification {
+                syncLogger.log(
+                    "Pending changes on sync end",
+                    details: "flag: \(flagChanges)\nnote: \(noteChanges)\nwork type: \(workTypeChanges)\nchanges: \(changes)")
                 return false
             }
             try db.setWorksiteRootUnmodified(worksiteId, syncedAt)

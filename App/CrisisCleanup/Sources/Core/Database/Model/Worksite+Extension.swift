@@ -17,6 +17,7 @@ extension Worksite {
             address: address,
             autoContactFrequencyT: autoContactFrequencyT,
             caseNumber: caseNumber,
+            caseNumberOrder: WorksiteRecord.parseCaseNumberOrder(caseNumber),
             city: city,
             county: county,
             createdAt: createdAt,
@@ -103,6 +104,43 @@ extension Worksite {
             formData: formDataRecords ?? [],
             notes: notesRecords,
             workTypes: workTypesRecords
+        )
+    }
+
+    static func from(
+        _ worksiteRoot: WorksiteRootRecord,
+        _ worksite: WorksiteRecord,
+        _ workTypes: [WorkTypeRecord]
+    ) -> Worksite {
+        let keyWorkType = workTypes
+            .first(where: {
+                $0.workType == worksite.keyWorkTypeType
+            })?.asExternalModel()
+        return Worksite(
+            id: worksite.id!,
+            address: worksite.address,
+            autoContactFrequencyT: worksite.autoContactFrequencyT ?? "",
+            caseNumber: worksite.caseNumber,
+            city: worksite.city,
+            county: worksite.county,
+            createdAt: worksite.createdAt,
+            email: worksite.email,
+            favoriteId: worksite.favoriteId,
+            incidentId: worksite.incidentId,
+            keyWorkType: keyWorkType,
+            latitude: worksite.latitude,
+            longitude: worksite.longitude,
+            name: worksite.name,
+            networkId: worksite.networkId,
+            phone1: worksite.phone1 ?? "",
+            phone2: worksite.phone2 ?? "",
+            postalCode: worksite.postalCode,
+            reportedBy: worksite.reportedBy,
+            state: worksite.state,
+            svi: worksite.svi,
+            updatedAt: worksite.updatedAt,
+            workTypes: workTypes.map { $0.asExternalModel() },
+            isAssignedToOrgMember: worksiteRoot.isLocalModified ? worksite.isLocalFavorite : worksite.favoriteId != nil
         )
     }
 }

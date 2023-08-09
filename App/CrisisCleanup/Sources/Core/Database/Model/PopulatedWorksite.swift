@@ -7,36 +7,7 @@ struct PopulatedWorksite: Equatable, Decodable, FetchableRecord {
     let workTypes: [WorkTypeRecord]
 
     func asExternalModel() -> Worksite {
-        let keyWorkType = workTypes
-            .first(where: {
-                $0.workType == worksite.keyWorkTypeType
-            })?.asExternalModel()
-        return Worksite(
-            id: worksite.id!,
-            address: worksite.address,
-            autoContactFrequencyT: worksite.autoContactFrequencyT ?? "",
-            caseNumber: worksite.caseNumber,
-            city: worksite.city,
-            county: worksite.county,
-            createdAt: worksite.createdAt,
-            email: worksite.email,
-            favoriteId: worksite.favoriteId,
-            incidentId: worksite.incidentId,
-            keyWorkType: keyWorkType,
-            latitude: worksite.latitude,
-            longitude: worksite.longitude,
-            name: worksite.name,
-            networkId: worksite.networkId,
-            phone1: worksite.phone1 ?? "",
-            phone2: worksite.phone2 ?? "",
-            postalCode: worksite.postalCode,
-            reportedBy: worksite.reportedBy,
-            state: worksite.state,
-            svi: worksite.svi,
-            updatedAt: worksite.updatedAt,
-            workTypes: workTypes.map { $0.asExternalModel() },
-            isAssignedToOrgMember: worksiteRoot.isLocalModified ? worksite.isLocalFavorite : worksite.favoriteId != nil
-        )
+        Worksite.from(worksiteRoot, worksite, workTypes)
     }
 }
 
@@ -58,6 +29,7 @@ struct PopulatedLocalWorksite: Equatable, Decodable, FetchableRecord {
     let worksiteFormData: [WorksiteFormDataRecord]
     let worksiteNotes: [WorksiteNoteRecord]
     let workTypes: [WorkTypeRecord]
+    let worksiteWorkTypeRequests: [WorkTypeRequestRecord]
     let networkFiles: [NetworkFileInfo]
     let worksiteLocalImages: [WorksiteLocalImageRecord]
 
@@ -122,8 +94,9 @@ struct PopulatedLocalWorksite: Equatable, Decodable, FetchableRecord {
                 svi: worksite.svi,
                 updatedAt: worksite.updatedAt,
                 workTypes: workTypes.map { $0.asExternalModel() },
-                // TODO: Do
-                workTypeRequests: [],
+                workTypeRequests: worksiteWorkTypeRequests
+                    .filter { $0.byOrg == orgId }
+                    .map { $0.asExternalModel() },
                 isAssignedToOrgMember: worksiteRoot.isLocalModified ? worksite.isLocalFavorite : worksite.favoriteId != nil
             ),
             localImages: worksiteLocalImages.map { $0.asExternalModel() },
