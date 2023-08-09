@@ -30,6 +30,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
 
     @Published private(set) var alert = false
     @Published private(set) var alertMessage = ""
+    @Published var alertCount = 0
 
     let editableViewState = EditableView()
 

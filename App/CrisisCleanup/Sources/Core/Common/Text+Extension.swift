@@ -20,6 +20,7 @@ struct CopyWithAnimation: ViewModifier {
                         pressed.toggle()
                         let message = t.t("info.copied_value").replacingOccurrences(of: "{copied_string}", with: copy)
                         viewModel.toggleAlert(message: message)
+                        viewModel.alertCount += 1
                         UIPasteboard.general.string = copy
                         let impactLight = UIImpactFeedbackGenerator(style: .light)
                         impactLight.impactOccurred()
@@ -27,7 +28,10 @@ struct CopyWithAnimation: ViewModifier {
                             pressed.toggle()
                         }
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                            viewModel.clearAlert()
+                            viewModel.alertCount -= 1
+                            if(viewModel.alertCount == 0) {
+                                viewModel.clearAlert()
+                            }
                         }
                     }
             )
