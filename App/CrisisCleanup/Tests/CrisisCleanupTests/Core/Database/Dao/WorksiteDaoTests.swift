@@ -40,14 +40,16 @@ class WorksiteDaoTests: XCTestCase {
         _ networkId: Int64,
         incidentId: Int64 = 1,
         address: String = "test-address",
-        createdAt: Date? = nil
+        createdAt: Date? = nil,
+        caseNumberOrder: Int64 = 0
     ) -> WorksiteRecord {
         testWorksiteRecord(
             networkId,
             incidentId,
             address,
             updatedAtA,
-            createdAt: createdAt
+            createdAt: createdAt,
+            caseNumberOrder: caseNumberOrder
         )
     }
 
@@ -125,9 +127,9 @@ class WorksiteDaoTests: XCTestCase {
             existingRecord(2),
             existingRecord(3, incidentId: 23, address: "test-address-23"),
             existingRecord(4, createdAt: createdAtA),
-            existingRecord(5),
+            existingRecord(5, caseNumberOrder: 52),
             existingRecord(6, createdAt: createdAtA),
-            existingRecord(7)
+            existingRecord(7, caseNumberOrder: 52)
         ]
         existingWorksites = try await WorksiteTestUtil.insertWorksites(dbQueue, previousSyncedAt, existingWorksites)
 
@@ -270,7 +272,8 @@ class WorksiteDaoTests: XCTestCase {
             },
             testWorksiteShortRecord(2, 1, createdAtB).copy {
                 $0.address = "expected-address"
-                $0.caseNumber = "expected-case"
+                $0.caseNumber = "expected-case 875"
+                $0.caseNumberOrder = 875
                 $0.city = "expected-city"
                 $0.county = "expected-county"
                 $0.favoriteId = existingWorksite.favoriteId! + 1
@@ -301,7 +304,8 @@ class WorksiteDaoTests: XCTestCase {
             testWorksiteFullRecord(2, 1, createdAtB).copy {
                 $0.id = 2
                 $0.address = "expected-address"
-                $0.caseNumber = "expected-case"
+                $0.caseNumber = "expected-case 875"
+                $0.caseNumberOrder = 875
                 $0.city = "expected-city"
                 $0.county = "expected-county"
                 $0.favoriteId = existingWorksite.favoriteId! + 1
@@ -330,6 +334,7 @@ func testWorksiteRecord(
     _ address: String,
     _ updatedAt: Date,
     createdAt: Date? = nil,
+    caseNumberOrder: Int64 = 0,
     id: Int64? = nil
 ) -> WorksiteRecord {
     WorksiteRecord(
@@ -339,6 +344,7 @@ func testWorksiteRecord(
         address: address,
         autoContactFrequencyT: "",
         caseNumber: "",
+        caseNumberOrder: caseNumberOrder,
         city: "",
         county: "",
         createdAt: createdAt,
@@ -376,7 +382,8 @@ func testWorksiteFullRecord(
         incidentId: incidentId,
         address: "123 address st",
         autoContactFrequencyT: "enum.never",
-        caseNumber: "case",
+        caseNumber: "case52",
+        caseNumberOrder: 52,
         city: "city 123",
         county: "county 123",
         createdAt: createdAt,
@@ -415,7 +422,8 @@ func testWorksiteShortRecord(
         incidentId: incidentId,
         address: "123 address st short",
         autoContactFrequencyT: nil,
-        caseNumber: "case short",
+        caseNumber: "case short96",
+        caseNumberOrder: 96,
         city: "city short 123",
         county: "county short 123",
         createdAt: createdAt,

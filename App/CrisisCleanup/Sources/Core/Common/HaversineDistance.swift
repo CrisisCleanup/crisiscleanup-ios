@@ -3,10 +3,14 @@ import Foundation
 // https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
 private let earthRadiusKm = 6_371.0
 
-extension Double {
-    var kmToMiles: Double { self * 0.621371 }
-}
-
+/**
+ * Distance in km
+ *
+ * Coordinates are in radians
+ *
+ * - SeeAlso Double.radians
+ * - SeeAlso Double.kmToMiles
+ */
 func haversineDistance(
     _ latA: Double,
     _ lngA: Double,

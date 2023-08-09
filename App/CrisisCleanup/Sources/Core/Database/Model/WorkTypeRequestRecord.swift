@@ -3,6 +3,8 @@ import GRDB
 
 // sourcery: copyBuilder
 struct WorkTypeRequestRecord : Identifiable, Equatable {
+    static let worksite = belongsTo(WorksiteRootRecord.self)
+
     var id: Int64?
     let networkId: Int64
     /**

@@ -95,6 +95,23 @@ public enum WorkTypeStatus: String, Identifiable, CaseIterable {
     }
 }
 
+let openWorkTypeStatuses: [WorkTypeStatus] = [
+    .openAssigned,
+    .openUnassigned,
+    .openPartiallyCompleted,
+    .openNeedsFollowUp,
+    .openUnresponsive
+]
+
+let closedWorkTypeStatuses: [WorkTypeStatus] = [
+    .closedCompleted,
+    .closedIncomplete,
+    .closedOutOfScope,
+    .closedDoneByOthers,
+    .closedNoHelpWanted,
+    .closedDuplicate,
+    .closedRejected
+]
 
 private let literalStatusLookup = WorkTypeStatus.allCases.associateBy{ $0.literal }
 func statusFromLiteral(_ literal: String) -> WorkTypeStatus { literalStatusLookup[literal] ?? WorkTypeStatus.unknown

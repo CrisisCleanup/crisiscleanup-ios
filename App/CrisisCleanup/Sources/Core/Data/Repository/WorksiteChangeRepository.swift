@@ -360,7 +360,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
             }
         }
 
-        let isFullySynced = try await worksiteDao.onSyncEnd(worksiteId)
+        let isFullySynced = try await worksiteDao.onSyncEnd(worksiteId, syncLogger)
         if isFullySynced {
             syncLogger.clear()
             syncLogger.log("Worksite fully synced.")

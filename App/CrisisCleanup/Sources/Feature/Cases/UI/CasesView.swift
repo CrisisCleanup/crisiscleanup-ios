@@ -232,7 +232,7 @@ private struct CasesOverlayElements: View {
                     .padding(.bottom)
 
                     Button {
-                        viewModel.isTableView.toggle()
+                        viewModel.toggleTableView()
                     } label: {
                         Image(isMapView ? "ic_map" : "ic_table", bundle: .module)
                     }

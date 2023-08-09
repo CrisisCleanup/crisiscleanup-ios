@@ -139,6 +139,7 @@ extension MainComponent {
                 workTypeTransferRequestDao: workTypeTransferRequestDao,
                 accountDataRepository: accountDataRepository,
                 languageTranslationsRepository: languageTranslationsRepository,
+                organizationsRepository: organizationsRepository,
                 appVersionProvider: appVersionProvider,
                 loggerFactory: loggerFactory
             )

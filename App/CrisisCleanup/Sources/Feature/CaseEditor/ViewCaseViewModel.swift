@@ -584,11 +584,17 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         saveWorksiteChange(startingWorksite, changedWorksite)
     }
 
-    func updateWorkType(_ workType: WorkType) {
+    func updateWorkType(_ workType: WorkType, _ isStatusChange: Bool) {
         let startingWorksite = referenceWorksite
         var updatedWorkTypes = startingWorksite.workTypes
                 .filter { $0.workType != workType.workType }
-        updatedWorkTypes.append(workType)
+
+        var updatedWorkType = workType
+        if isStatusChange && workType.orgClaim == nil {
+            updatedWorkType = workType.copy { $0.orgClaim = organizationId }
+        }
+        updatedWorkTypes.append(updatedWorkType)
+
         let changedWorksite = startingWorksite.copy { $0.workTypes = updatedWorkTypes }
         saveWorksiteChange(startingWorksite, changedWorksite)
     }
@@ -663,7 +669,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
 
         let startingWorksite = referenceWorksite
         var notes = [note]
-        notes.append(contentsOf: startingWorksite.notes)
+        notes += startingWorksite.notes
         let changedWorksite = startingWorksite.copy { $0.notes = notes }
         saveWorksiteChange(startingWorksite, changedWorksite)
     }
