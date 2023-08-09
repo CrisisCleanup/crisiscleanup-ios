@@ -5,11 +5,10 @@ struct CaseIncidentView: View {
     let isPendingSync: Bool
     let isSyncing: Bool
     let scheduleSync: () -> Void
-    var drop: Bool?
 
     var body: some View {
         HStack{
-            IncidentHeader(incident: incident, drop: drop)
+            IncidentHeader(incident: incident)
             Spacer()
             Group {
                 if isSyncing {

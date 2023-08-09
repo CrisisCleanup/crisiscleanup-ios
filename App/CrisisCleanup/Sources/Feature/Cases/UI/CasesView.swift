@@ -24,10 +24,14 @@ struct CasesView: View {
     }
 
     var body: some View {
-        ZStack {
+        let hasNoIncidents = viewModel.incidentsData.incidents.isEmpty
 
+        ZStack {
             if viewModel.isTableView {
-                CasesTableView(viewModel: viewModel, incidentSelectViewBuilder: incidentSelectViewBuilder)
+                CasesTableView(
+                    incidentSelectViewBuilder: incidentSelectViewBuilder,
+                    hasNoIncidents: hasNoIncidents
+                )
             } else {
                 MapView(
                     map: $map,
@@ -73,7 +77,7 @@ struct CasesView: View {
             CasesOverlayElements(
                 map: $map,
                 incidentSelectViewBuilder: incidentSelectViewBuilder,
-                hasNoIncidents: viewModel.incidentsData.incidents.isEmpty,
+                hasNoIncidents: hasNoIncidents,
                 animateToSelectedIncidentBounds: animateToSelectedIncidentBounds
             )
         }

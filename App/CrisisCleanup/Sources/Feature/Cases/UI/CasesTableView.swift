@@ -2,11 +2,13 @@ import SwiftUI
 
 struct CasesTableView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
-    @ObservedObject var viewModel: CasesViewModel
+
+    @EnvironmentObject var viewModel: CasesViewModel
+
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
+    let hasNoIncidents: Bool
 
     @State var openIncidentSelect = false
-    @State var selectSort: WorksiteSortBy = .none
 
     var body: some View {
         VStack {
@@ -14,19 +16,10 @@ struct CasesTableView: View {
                 Button {
                     openIncidentSelect.toggle()
                 } label: {
-                    HStack{
-                        CaseIncidentView(
-                            incident: viewModel.incidentsData.selected,
-                            isPendingSync: false,
-                            isSyncing: false,//viewModel.isSyncing,
-                            scheduleSync: {
-                                //viewModel.scheduleSync()
-                            },
-                            drop: true
-                        )
-
-                        Spacer()
-                    }
+                    IncidentHeader(
+                        incident: viewModel.incidentsData.selected,
+                        drop: true
+                    )
                     .tint(.black)
                 }
                 .sheet(
@@ -39,19 +32,20 @@ struct CasesTableView: View {
                         onDismiss: { openIncidentSelect = false }
                     )
                 }
-                //.disabled(hasNoIncidents)
+                .disabled(hasNoIncidents)
+
                 Spacer()
+
                 TableViewButtons()
             }
             .padding()
 
-
             HStack {
-                Text("t.t\(viewModel.tableData.count) cases")
+                Text("\(viewModel.tableData.count) \(t.t("casesVue.cases"))")
 
                 Spacer()
 
-                Picker("", selection: $selectSort ) {
+                Picker("", selection: viewModel.tableViewSort ) {
                     ForEach(WorksiteSortBy.allCases, id: \.self) { sortBy in
                         Text(t.t(sortBy.translateKey))
                             .onTapGesture {
@@ -61,7 +55,6 @@ struct CasesTableView: View {
                 }
                 .tint(.black)
                 .blackBorder()
-
             }
             .padding()
 
@@ -69,7 +62,6 @@ struct CasesTableView: View {
 
             ScrollView {
                 LazyVStack {
-
                     ForEach(0..<viewModel.tableData.count, id: \.self) { index in
                         TableCard(
                             worksiteDistance: viewModel.tableData[index]
@@ -79,11 +71,17 @@ struct CasesTableView: View {
                             FormListSectionSeparator()
                         }
                     }
-
                 }
             }
         }
         .background(.white)
+
+        if(viewModel.isLoadingTableViewData) {
+            VStack {
+                ProgressView()
+                    .frame(alignment: .center)
+            }
+        }
     }
 }
 
@@ -133,11 +131,10 @@ struct TableCard: View {
         VStack(alignment: .leading) {
             HStack {
                 Button {
-                    // TODO: specify case?
-                    router.openCaseFlags()
+                    // TODO: Set Case before opening
+                    // router.openCaseFlags()
                 } label: {
                     Image(systemName: "flag.fill")
-
                 }
                 .tint(.black)
 
@@ -154,7 +151,10 @@ struct TableCard: View {
 
                 Spacer()
 
-                Text("\(worksiteDistance.distanceMiles) ~~mi")
+                if (worksiteDistance.distanceMiles > 0) {
+                    let distanceText = String(format: "%.01f", worksiteDistance.distanceMiles)
+                    Text("\(distanceText) ~~mi")
+                }
             }
             .padding(.bottom, 4)
 
