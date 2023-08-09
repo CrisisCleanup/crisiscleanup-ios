@@ -669,7 +669,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
 
         let startingWorksite = referenceWorksite
         var notes = [note]
-        notes.append(contentsOf: startingWorksite.notes)
+        notes += startingWorksite.notes
         let changedWorksite = startingWorksite.copy { $0.notes = notes }
         saveWorksiteChange(startingWorksite, changedWorksite)
     }

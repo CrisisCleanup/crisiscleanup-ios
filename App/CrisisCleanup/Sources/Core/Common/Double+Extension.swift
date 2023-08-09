@@ -8,3 +8,7 @@ private let oneRadian = Double.pi / 180
 extension Double {
     var radians: Double { self * oneRadian }
 }
+
+extension Double {
+    var kmToMiles: Double { self * 0.621371 }
+}

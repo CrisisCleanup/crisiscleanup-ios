@@ -4,7 +4,7 @@ import GRDB
 
 public class WorksiteDao {
     private let database: AppDatabase
-    private let reader: DatabaseReader
+    internal let reader: DatabaseReader
     private let syncLogger: SyncLogger
 
     init(
@@ -223,6 +223,7 @@ public class WorksiteDao {
                 worksiteId,
                 autoContactFrequencyT: core.autoContactFrequencyT,
                 caseNumber: core.caseNumber,
+                caseNumberOrder: core.caseNumberOrder,
                 email: core.email,
                 favoriteId: core.favoriteId,
                 phone1: core.phone1,
@@ -410,7 +411,7 @@ public class WorksiteDao {
         west: Double,
         east: Double
     ) throws -> Int {
-        return try reader.read({ db in
+        try reader.read{ db in
             try WorksiteRecord.getCount(
                 db,
                 incidentId,
@@ -419,7 +420,7 @@ public class WorksiteDao {
                 west: west,
                 east: east
             )
-        })
+        }
     }
 
     func getWorksiteId(_ networkId: Int64) throws -> Int64 {
@@ -477,7 +478,8 @@ public class WorksiteDao {
             .eraseToAnyPublisher()
     }
 
-    private func fetchLocalWorksite(_ db: Database, _ id: Int64) throws -> PopulatedLocalWorksite? {
+    // internal for testing. Should be private.
+    internal func fetchLocalWorksite(_ db: Database, _ id: Int64) throws -> PopulatedLocalWorksite? {
         try WorksiteRootRecord
             .filter(id: id)
             .including(required: WorksiteRootRecord.worksite)
@@ -485,6 +487,7 @@ public class WorksiteDao {
             .including(all: WorksiteRootRecord.worksiteFormData)
             .including(all: WorksiteRootRecord.worksiteNotes)
             .including(all: WorksiteRootRecord.workTypes)
+            .including(all: WorksiteRootRecord.worksiteWorkTypeRequests)
             .including(all: WorksiteRootRecord.networkFiles
                 .including(optional: NetworkFileRecord.networkFileLocalImage))
             .including(all: WorksiteRootRecord.worksiteLocalImages)
@@ -540,35 +543,6 @@ public class WorksiteDao {
                 try WorkTypeRecord.getUnsyncedCount(db, worksiteId),
                 try WorksiteChangeRecord.getUnsyncedCount(db, worksiteId),
             ]
-        }
-    }
-
-    // MARK: - Test access
-
-    internal func getLocalWorksite(_ id: Int64) throws -> PopulatedLocalWorksite? {
-        try reader.read { db in try self.fetchLocalWorksite(db, id) }
-    }
-
-    internal func getPopulatedWorksite(_ id: Int64) throws -> PopulatedWorksite? {
-        try reader.read { db in
-            try WorksiteRootRecord
-                .filter(id: id)
-                .including(required: WorksiteRootRecord.worksite)
-                .including(all: WorksiteRootRecord.workTypes)
-                .asRequest(of: PopulatedWorksite.self)
-                .fetchOne(db)
-        }
-    }
-
-    internal func getWorksites(_ incidentId: Int64) throws -> [PopulatedWorksite] {
-        try reader.read { db in
-            try WorksiteRootRecord
-                .all()
-                .byIncidentId(incidentId)
-                .including(required: WorksiteRootRecord.worksite.orderByUpdatedAtDescIdDesc())
-                .including(all: WorksiteRootRecord.workTypes)
-                .asRequest(of: PopulatedWorksite.self)
-                .fetchAll(db)
         }
     }
 }

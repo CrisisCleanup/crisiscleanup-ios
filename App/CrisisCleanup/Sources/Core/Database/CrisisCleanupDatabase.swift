@@ -732,6 +732,32 @@ extension AppDatabase {
             }
         }
 
+        migrator.registerMigration(
+            "worksite-case-order-number",
+            foreignKeyChecks: .immediate
+        ) { db in
+            try db.alter(table: "worksite") { t in
+                t.add(column: "caseNumberOrder", .integer)
+                    .defaults(to: 0)
+            }
+            try db.create(
+                indexOn: "worksite",
+                columns: ["incidentId", "caseNumberOrder"]
+            )
+            try db.create(
+                indexOn: "worksite",
+                columns: ["incidentId", "name", "county", "city", "caseNumberOrder"]
+            )
+            try db.create(
+                indexOn: "worksite",
+                columns: ["incidentId", "city", "name", "caseNumberOrder"]
+            )
+            try db.create(
+                indexOn: "worksite",
+                columns: ["incidentId", "county", "name", "caseNumberOrder"]
+            )
+        }
+
         return migrator
     }
 }

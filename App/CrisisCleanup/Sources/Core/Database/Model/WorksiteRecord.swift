@@ -10,6 +10,7 @@ struct WorksiteRootRecord : Identifiable, Equatable {
     static let worksiteFormData = hasMany(WorksiteFormDataRecord.self)
     static let worksiteNotes = hasMany(WorksiteNoteRecord.self)
     static let workTypes = hasMany(WorkTypeRecord.self)
+    static let worksiteWorkTypeRequests = hasMany(WorkTypeRequestRecord.self)
     static let networkFiles = hasMany(
         NetworkFileRecord.self,
         through: hasMany(WorksiteToNetworkFileRecord.self),
@@ -287,6 +288,7 @@ struct WorksiteRecord : Identifiable, Equatable {
     let address: String
     let autoContactFrequencyT: String?
     let caseNumber: String
+    let caseNumberOrder: Int64
     let city: String
     let county: String
     // This can be null if full data is queried without short
@@ -314,6 +316,15 @@ struct WorksiteRecord : Identifiable, Equatable {
      * Is relevant when [WorksiteRootEntity.isLocalModified] otherwise ignore
      */
     let isLocalFavorite: Bool
+
+    private static let endNumbersCapture = #/(\d+)$/#
+    static func parseCaseNumberOrder(_ caseNumber: String) -> Int64 {
+        if let match = caseNumber.firstMatch(of: endNumbersCapture),
+           let parsed = Int64(match.1) {
+            return parsed
+        }
+        return 0
+    }
 }
 
 extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
@@ -326,6 +337,7 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
              address,
              autoContactFrequencyT,
              caseNumber,
+             caseNumberOrder,
              city,
              county,
              // This can be null if full data is queried without short
@@ -363,6 +375,7 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
                 address             =:address,
                 autoContactFrequencyT=COALESCE(:autoContactFrequencyT,autoContactFrequencyT),
                 caseNumber     	    =:caseNumber,
+                caseNumberORder     =:caseNumberOrder,
                 city                =:city,
                 county              =:county,
                 createdAt           =COALESCE(:createdAt, createdAt),
@@ -386,32 +399,33 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
                 WHERE id=:id AND networkId=:networkId
                 """,
             arguments: [
-                Columns.id.rawValue: id,
-                Columns.networkId.rawValue: networkId,
-                Columns.incidentId.rawValue: incidentId,
-                Columns.address.rawValue: address,
-                Columns.autoContactFrequencyT.rawValue: autoContactFrequencyT,
-                Columns.caseNumber.rawValue: caseNumber,
-                Columns.city.rawValue: city,
-                Columns.county.rawValue: county,
-                Columns.createdAt.rawValue: createdAt,
-                Columns.email.rawValue: email,
-                Columns.favoriteId.rawValue: favoriteId,
-                Columns.keyWorkTypeType.rawValue: keyWorkTypeType,
-                Columns.keyWorkTypeOrgClaim.rawValue: keyWorkTypeOrgClaim,
-                Columns.keyWorkTypeStatus.rawValue: keyWorkTypeStatus,
-                Columns.latitude.rawValue: latitude,
-                Columns.longitude.rawValue: longitude,
-                Columns.name.rawValue: name,
-                Columns.phone1.rawValue: phone1,
-                Columns.phone2.rawValue: phone2,
-                Columns.plusCode.rawValue: plusCode,
-                Columns.postalCode.rawValue: postalCode,
-                Columns.reportedBy.rawValue: reportedBy,
-                Columns.state.rawValue: state,
-                Columns.svi.rawValue: svi,
-                Columns.what3Words.rawValue: what3Words,
-                Columns.updatedAt.rawValue: updatedAt,
+                "id": id,
+                "networkId": networkId,
+                "incidentId": incidentId,
+                "address": address,
+                "autoContactFrequencyT": autoContactFrequencyT,
+                "caseNumber": caseNumber,
+                "caseNumberOrder": caseNumberOrder,
+                "city": city,
+                "county": county,
+                "createdAt": createdAt,
+                "email": email,
+                "favoriteId": favoriteId,
+                "keyWorkTypeType": keyWorkTypeType,
+                "keyWorkTypeOrgClaim": keyWorkTypeOrgClaim,
+                "keyWorkTypeStatus": keyWorkTypeStatus,
+                "latitude": latitude,
+                "longitude": longitude,
+                "name": name,
+                "phone1": phone1,
+                "phone2": phone2,
+                "plusCode": plusCode,
+                "postalCode": postalCode,
+                "reportedBy": reportedBy,
+                "state": state,
+                "svi": svi,
+                "what3Words": what3Words,
+                "updatedAt": updatedAt,
             ]
         )
     }
@@ -421,6 +435,7 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
         _ id: Int64,
         autoContactFrequencyT: String?,
         caseNumber: String,
+        caseNumberOrder: Int64,
         email: String?,
         favoriteId: Int64?,
         phone1: String?,
@@ -437,6 +452,7 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
                 SET
                 autoContactFrequencyT=COALESCE(autoContactFrequencyT, :autoContactFrequencyT),
                 caseNumber  =CASE WHEN LENGTH(caseNumber)==0 THEN :caseNumber ELSE caseNumber END,
+                caseNumberOrder=CASE WHEN LENGTH(caseNumber)==0 THEN :caseNumberOrder ELSE caseNumberOrder END,
                 email       =COALESCE(email, :email),
                 favoriteId  =COALESCE(favoriteId, :favoriteId),
                 phone1      =CASE WHEN LENGTH(COALESCE(phone1,''))<2 THEN :phone1 ELSE phone1 END,
@@ -448,17 +464,18 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
                 WHERE id=:id
                 """,
             arguments: [
-                Columns.id.rawValue: id,
-                Columns.autoContactFrequencyT.rawValue: autoContactFrequencyT,
-                Columns.caseNumber.rawValue: caseNumber,
-                Columns.email.rawValue: email,
-                Columns.favoriteId.rawValue: favoriteId,
-                Columns.phone1.rawValue: phone1,
-                Columns.phone2.rawValue: phone2,
-                Columns.plusCode.rawValue: plusCode,
-                Columns.reportedBy.rawValue: reportedBy,
-                Columns.svi.rawValue: svi,
-                Columns.what3Words.rawValue: what3Words,
+                "id": id,
+                "autoContactFrequencyT": autoContactFrequencyT,
+                "caseNumber": caseNumber,
+                "caseNumberOrder": caseNumberOrder,
+                "email": email,
+                "favoriteId": favoriteId,
+                "phone1": phone1,
+                "phone2": phone2,
+                "plusCode": plusCode,
+                "reportedBy": reportedBy,
+                "svi": svi,
+                "what3Words": what3Words,
             ])
     }
 
@@ -543,6 +560,37 @@ extension DerivableRequest<WorksiteRecord> {
             WorksiteColumns.caseNumber,
             WorksiteColumns.incidentId,
             WorksiteColumns.networkId
+        )
+    }
+
+    func orderByName() -> Self {
+        order(
+            WorksiteColumns.name,
+            WorksiteColumns.county,
+            WorksiteColumns.city,
+            WorksiteColumns.caseNumberOrder
+        )
+    }
+
+    func orderByCity() -> Self {
+        order(
+            WorksiteColumns.city,
+            WorksiteColumns.name,
+            WorksiteColumns.caseNumberOrder
+        )
+    }
+
+    func orderByCounty() -> Self {
+        order(
+            WorksiteColumns.county,
+            WorksiteColumns.name,
+            WorksiteColumns.caseNumberOrder
+        )
+    }
+
+    func orderByCaseNumber() -> Self {
+        order(
+            WorksiteColumns.caseNumberOrder
         )
     }
 }
@@ -664,15 +712,15 @@ extension WorkTypeRecord: Codable, FetchableRecord, MutablePersistableRecord {
                     WHERE worksiteId=:worksiteId AND workType=:workType
                     """,
                 arguments: [
-                    Columns.networkId.rawValue: networkId,
-                    Columns.worksiteId.rawValue: worksiteId,
-                    Columns.createdAt.rawValue: createdAt,
-                    Columns.orgClaim.rawValue: orgClaim,
-                    Columns.nextRecurAt.rawValue: nextRecurAt,
-                    Columns.phase.rawValue: phase,
-                    Columns.recur.rawValue: recur,
-                    Columns.status.rawValue: status,
-                    Columns.workType.rawValue: workType,
+                    "networkId": networkId,
+                    "worksiteId": worksiteId,
+                    "createdAt": createdAt,
+                    "orgClaim": orgClaim,
+                    "nextRecurAt": nextRecurAt,
+                    "phase": phase,
+                    "recur": recur,
+                    "status": status,
+                    "workType": workType,
                 ]
             )
         }
