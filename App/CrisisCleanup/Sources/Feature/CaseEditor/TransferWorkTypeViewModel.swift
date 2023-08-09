@@ -197,8 +197,8 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
     }
 
     private func transferWorkTypes() {
+        isTransferringSubject.value = true
         Task {
-            isTransferringSubject.value = true
             let isRequest = transferType == .request
             let workTypeIdLookup = transferWorkTypesState.keys
                 .map { ($0.id, $0.workTypeLiteral) }
@@ -209,7 +209,7 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
             let worksite = editableWorksiteProvider.editableWorksite.value
             do {
                 defer {
-                    Task { self.isTransferringSubject.value = false }
+                    self.isTransferringSubject.value = false
                 }
 
                 let isSaved = try await worksiteChangeRepository.saveWorkTypeTransfer(
@@ -224,7 +224,7 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
                 if isSaved {
                     syncPusher.appPushWorksite(worksite.id)
 
-                    Task { self.isTransferredSubject.value = true }
+                    self.isTransferredSubject.value = true
                 }
             } catch {
                 // TODO Show error

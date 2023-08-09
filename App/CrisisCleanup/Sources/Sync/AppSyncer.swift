@@ -243,6 +243,7 @@ class AppSyncer: SyncPuller, SyncPusher {
     // MARK: SyncPusher
 
     func appPushWorksite(_ worksiteId: Int64) {
+        // TODO: Run sync in background task (if not running to completion)
         Task {
             do {
                 if try await !validateAccountTokens() {

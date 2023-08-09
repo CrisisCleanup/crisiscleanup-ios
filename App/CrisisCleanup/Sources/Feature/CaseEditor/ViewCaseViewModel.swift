@@ -543,11 +543,16 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
 
                     syncPusher.appPushWorksite(worksiteIdIn)
                 } catch {
-                    self.logger.logError(error)
-                    // TODO: Show dialog save failed. Try again. If still fails seek help.
+                    onSaveFail(error)
                 }
             }
         }
+    }
+
+    private func onSaveFail(_ error: Error, _ isMediaSave: Bool = false) {
+        logger.logError(error)
+
+        // TODO: Show dialog save failed. Try again. If still fails seek help.
     }
 
     func removeFlag(_ flag: WorksiteFlag) {
