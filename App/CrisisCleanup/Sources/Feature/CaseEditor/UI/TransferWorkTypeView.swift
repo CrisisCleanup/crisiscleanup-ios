@@ -6,6 +6,8 @@ struct TransferWorkTypeView: View {
 
     @ObservedObject var viewModel: TransferWorkTypeViewModel
 
+    @State var reason = ""
+
     @State var isKeyboardOpen = false
 
     var body: some View {
@@ -18,18 +20,15 @@ struct TransferWorkTypeView: View {
                     VStack(alignment: .leading) {
 
                         if viewModel.transferType == .request {
-                            RequestView()
-                                .environmentObject(viewModel)
+                            RequestView(reason: $reason)
                         } else {
-                            ReleaseView()
-                                .environmentObject(viewModel)
+                            ReleaseView(reason: $reason)
                         }
 
                     }
                     .padding(.horizontal)
                 }
                 .scrollDismissesKeyboard(.immediately)
-
 
                 if isKeyboardOpen {
                     OpenKeyboardActionsView()
@@ -62,26 +61,18 @@ struct RequestView: View {
     @EnvironmentObject var viewModel: TransferWorkTypeViewModel
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    @State var tempString = ""
-    @State var tempWorkTypeState: [WorkType: Bool] = [:]
+    @Binding var reason: String
 
     @State var reqtDescAS: AttributedString = AttributedString()
     @State var respNoteAS: AttributedString = AttributedString()
 
     var fakeContacts: [PersonContact] = [
-        PersonContact(id: 1, firstName: "John", lastName: "Doe", email: "John@Doe.com", mobile: "123456789"),
-        PersonContact(id: 2, firstName: "John", lastName: "Doe", email: "John@Doe.com", mobile: "123456789"),
-        PersonContact(id: 3, firstName: "John", lastName: "Doe", email: "John@Doe.com", mobile: "123456789")
+//        PersonContact(id: 1, firstName: "John", lastName: "Doe", email: "John@Doe.com", mobile: "123456789"),
+//        PersonContact(id: 2, firstName: "John", lastName: "Doe", email: "John@Doe.com", mobile: "123456789"),
+//        PersonContact(id: 3, firstName: "John", lastName: "Doe", email: "John@Doe.com", mobile: "123456789")
     ]
 
-    private func binding(key: WorkType) -> Binding<Bool> {
-        return .init(
-            get: { self.tempWorkTypeState[key, default: false] },
-            set: { self.tempWorkTypeState[key] = $0 })
-    }
-
     var body: some View {
-
 //        HtmlAS(htmlContent: viewModel.requestDescription) // for some reason this doesn't work
 
         Text(reqtDescAS)
@@ -101,47 +92,33 @@ struct RequestView: View {
                 }
             }
 
-        Text(t.t("workTypeRequestModal.contacts"))
-            .bold()
-            .padding(.bottom, 4)
-            .onAppear {
-                // placeholder
-                tempWorkTypeState = viewModel.transferWorkTypesState
-            }
+        if viewModel.contactList.isNotEmpty {
+            Text(t.t("workTypeRequestModal.contacts"))
+                .fontHeader4()
+                .padding(.bottom, 4)
 
-        ForEach(fakeContacts, id: \.id) { contact in
-            VStack(alignment: .leading) {
-                Text(contact.fullName)
-                HStack {
-                    Link(contact.email, destination: URL(string: "mailto:\(contact.email)")!)
-                    Link(contact.mobile, destination: URL(string: "tel:\(contact.mobile)")!)
-                }
-            }.padding(.bottom)
-        }
+            //        ForEach(fakeContacts, id: \.id) { contact in
+            //            VStack(alignment: .leading) {
+            //                Text(contact.fullName)
+            //                HStack {
+            //                    Link(contact.email, destination: URL(string: "mailto:\(contact.email)")!)
+            //                    Link(contact.mobile, destination: URL(string: "tel:\(contact.mobile)")!)
+            //                }
+            //            }.padding(.bottom)
+            //        }
 
-        ForEach(viewModel.contactList, id: \.self) { contact in
-            VStack(alignment: .leading) {
-                Text(contact)
-                //                                    HStack {
-                //                                        Link(contact.email, destination: URL(string: "mailto:\(contact.email)")!)
-                //                                        Link(contact.mobile, destination: URL(string: "tel:\(contact.mobile)")!)
-                //                                    }
-            }.padding(.bottom)
-        }
-
-        if(viewModel.errorMessageWorkType.value.isNotBlank && !tempWorkTypeState.values.contains(true)) {
-            Text(t.t(viewModel.errorMessageWorkType.value))
-                .foregroundColor(appTheme.colors.primaryRedColor)
-        }
-
-        let workTypeSelections = Array(viewModel.transferWorkTypesState.enumerated())
-        ForEach(workTypeSelections, id: \.self.1.key.id) { (index, entry) in
-            let (workType, isSelected) = entry
-            HStack {
-                CheckboxView(checked: binding(key: workType), text: t.t(workType.workTypeLiteral))
-                Spacer()
+            ForEach(viewModel.contactList, id: \.self) { contact in
+                VStack(alignment: .leading) {
+                    Text(contact)
+                    //                                    HStack {
+                    //                                        Link(contact.email, destination: URL(string: "mailto:\(contact.email)")!)
+                    //                                        Link(contact.mobile, destination: URL(string: "tel:\(contact.mobile)")!)
+                    //                                    }
+                }.padding(.bottom)
             }
         }
+
+        TransferWorkTypeSection()
 
         Group {
             Text(respNoteAS)
@@ -170,15 +147,8 @@ struct RequestView: View {
             }
             .padding([.bottom, .leading])
 
-            if(viewModel.errorMessageReason.value.isNotBlank && tempString.isBlank) {
-                Text(t.t(viewModel.errorMessageReason.value))
-                    .foregroundColor(appTheme.colors.primaryRedColor)
-            }
-
-            LargeTextEditor(text: $tempString)
-                .padding(.vertical)
+            TransferWorkTypeReasonSection(reason: $reason)
         }
-
     }
 }
 
@@ -186,47 +156,57 @@ struct ReleaseView: View {
     @EnvironmentObject var viewModel: TransferWorkTypeViewModel
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    @State var tempWorkTypeState: [WorkType: Bool] = [:]
-    @State var tempString = ""
-
-    private func binding(key: WorkType) -> Binding<Bool> {
-            return .init(
-                get: { self.tempWorkTypeState[key, default: false] },
-                set: { self.tempWorkTypeState[key] = $0 })
-        }
+    @Binding var reason: String
 
     var body: some View {
         Text(t.t("caseView.please_justify_release"))
-            .onAppear {
-                tempWorkTypeState = viewModel.transferWorkTypesState
-            }
             .padding(.bottom)
 
-        if(viewModel.errorMessageWorkType.value.isNotBlank) {
-            Text(t.t(viewModel.errorMessageWorkType.value))
+        TransferWorkTypeReasonSection(reason: $reason)
+
+        TransferWorkTypeSection()
+    }
+}
+
+private struct TransferWorkTypeReasonSection: View {
+    @EnvironmentObject var viewModel: TransferWorkTypeViewModel
+
+    @Binding var reason: String
+
+    var body: some View {
+        if viewModel.errorMessageReason.value.isNotBlank {
+            Text(viewModel.errorMessageReason.value)
                 .foregroundColor(appTheme.colors.primaryRedColor)
         }
 
-        TextEditor(text: $tempString)
-            .frame(height: appTheme.rowItemHeight*5)
-            .textFieldBorder()
+        LargeTextEditor(text: $reason)
             .padding(.vertical)
-            .tint(.black)
+    }
+}
 
-        if(viewModel.errorMessageReason.value.isNotBlank) {
-            Text(t.t(viewModel.errorMessageReason.value))
+private struct TransferWorkTypeSection: View {
+    @EnvironmentObject var viewModel: TransferWorkTypeViewModel
+
+    var body: some View {
+        if viewModel.errorMessageWorkType.value.isNotBlank {
+            Text(viewModel.t(viewModel.errorMessageWorkType.value))
                 .foregroundColor(appTheme.colors.primaryRedColor)
         }
 
         let workTypeSelections = Array(viewModel.transferWorkTypesState.enumerated())
         ForEach(workTypeSelections, id: \.self.1.key.id) { (index, entry) in
-            let (workType, isSelected) = entry
+            let (workType, _) = entry
+            let id = workType.id
+            let isChecked = viewModel.workTypesState[id] ?? false
             HStack {
-                CheckboxView(checked: binding(key: workType), text: t.t(workType.workTypeLiteral))
-                    .disabled(workTypeSelections.count == 1)
+                CheckboxChangeView(
+                    checked: isChecked,
+                    text: viewModel.t(workType.workTypeLiteral)
+                ) { checked in
+                    viewModel.workTypesState[id] = checked
+                }
                 Spacer()
             }
-
         }
     }
 }

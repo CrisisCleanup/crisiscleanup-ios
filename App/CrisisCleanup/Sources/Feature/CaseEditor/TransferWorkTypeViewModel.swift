@@ -149,10 +149,13 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
 
     private func subscribeToRequestDescription() {
         if (transferType == .request) {
-            $requestWorkTypesState
-                .map { workTypeState in
-                    let orgLookup = workTypeState.workTypeIdOrgNameLookup
-                    let orgIds = self.workTypesState
+            Publishers.CombineLatest(
+                $requestWorkTypesState,
+                $workTypesState
+            )
+                .map { (requestState, workTypesState) in
+                    let orgLookup = requestState.workTypeIdOrgNameLookup
+                    let orgIds = workTypesState
                         .filter { $0.value }
                         .map { $0.key }
                         .compactMap { orgLookup[$0] }
