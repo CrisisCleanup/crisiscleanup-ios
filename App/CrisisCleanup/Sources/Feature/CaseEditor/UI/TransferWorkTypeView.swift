@@ -6,8 +6,6 @@ struct TransferWorkTypeView: View {
 
     @ObservedObject var viewModel: TransferWorkTypeViewModel
 
-    @State var reason = ""
-
     @State var isKeyboardOpen = false
 
     var body: some View {
@@ -18,13 +16,11 @@ struct TransferWorkTypeView: View {
             VStack {
                 ScrollView {
                     VStack(alignment: .leading) {
-
                         if viewModel.transferType == .request {
-                            RequestView(reason: $reason)
+                            RequestView()
                         } else {
-                            ReleaseView(reason: $reason)
+                            ReleaseView()
                         }
-
                     }
                     .padding(.horizontal)
                 }
@@ -39,6 +35,11 @@ struct TransferWorkTypeView: View {
                 }
             }
             .frame(maxWidth: UIScreen.main.bounds.size.width)
+            .onReceive(viewModel.$isTransferred) { b in
+                if (b) {
+                    dismiss()
+                }
+            }
             .onReceive(keyboardPublisher) { isVisible in
                 isKeyboardOpen = isVisible
             }
@@ -60,8 +61,6 @@ struct TransferWorkTypeView: View {
 struct RequestView: View {
     @EnvironmentObject var viewModel: TransferWorkTypeViewModel
     @Environment(\.translator) var t: KeyAssetTranslator
-
-    @Binding var reason: String
 
     @State var reqtDescAS: AttributedString = AttributedString()
     @State var respNoteAS: AttributedString = AttributedString()
@@ -147,7 +146,7 @@ struct RequestView: View {
             }
             .padding([.bottom, .leading])
 
-            TransferWorkTypeReasonSection(reason: $reason)
+            TransferWorkTypeReasonSection()
         }
     }
 }
@@ -156,13 +155,11 @@ struct ReleaseView: View {
     @EnvironmentObject var viewModel: TransferWorkTypeViewModel
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    @Binding var reason: String
-
     var body: some View {
         Text(t.t("caseView.please_justify_release"))
             .padding(.bottom)
 
-        TransferWorkTypeReasonSection(reason: $reason)
+        TransferWorkTypeReasonSection()
 
         TransferWorkTypeSection()
     }
@@ -171,15 +168,13 @@ struct ReleaseView: View {
 private struct TransferWorkTypeReasonSection: View {
     @EnvironmentObject var viewModel: TransferWorkTypeViewModel
 
-    @Binding var reason: String
-
     var body: some View {
-        if viewModel.errorMessageReason.value.isNotBlank {
-            Text(viewModel.errorMessageReason.value)
+        if viewModel.errorMessageReason.isNotBlank {
+            Text(viewModel.errorMessageReason)
                 .foregroundColor(appTheme.colors.primaryRedColor)
         }
 
-        LargeTextEditor(text: $reason)
+        LargeTextEditor(text: $viewModel.transferReason)
             .padding(.vertical)
     }
 }
@@ -188,22 +183,20 @@ private struct TransferWorkTypeSection: View {
     @EnvironmentObject var viewModel: TransferWorkTypeViewModel
 
     var body: some View {
-        if viewModel.errorMessageWorkType.value.isNotBlank {
-            Text(viewModel.t(viewModel.errorMessageWorkType.value))
+        if viewModel.errorMessageWorkType.isNotBlank {
+            Text(viewModel.errorMessageWorkType)
                 .foregroundColor(appTheme.colors.primaryRedColor)
         }
 
-        let workTypeSelections = Array(viewModel.transferWorkTypesState.enumerated())
-        ForEach(workTypeSelections, id: \.self.1.key.id) { (index, entry) in
-            let (workType, _) = entry
+        ForEach(viewModel.workTypeList, id: \.self.id) { workType in
             let id = workType.id
             let isChecked = viewModel.workTypesState[id] ?? false
             HStack {
-                CheckboxChangeView(
+                StatelessCheckboxView(
                     checked: isChecked,
                     text: viewModel.t(workType.workTypeLiteral)
-                ) { checked in
-                    viewModel.workTypesState[id] = checked
+                ) {
+                    viewModel.workTypesState[id] = !isChecked
                 }
                 Spacer()
             }
@@ -219,7 +212,7 @@ private struct TransferWorkTypeActions: View {
     var body: some View {
         HStack {
             Button {
-                dismiss.callAsFunction()
+                dismiss()
             } label: {
                 Text(t.t("actions.cancel"))
             }

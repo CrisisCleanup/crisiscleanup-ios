@@ -51,15 +51,14 @@ struct CheckboxView: View {
     }
 }
 
-struct CheckboxChangeView: View {
-    @State var checked: Bool
+struct StatelessCheckboxView: View {
+    let checked: Bool
     let text: String
-    var onCheckChange: (Bool) -> Void = {_ in}
+    let onToggle: () -> Void
 
     var body: some View {
         Button {
-            checked.toggle()
-            onCheckChange(checked)
+            onToggle()
         } label: {
             CheckboxTextView(isChecked: checked, text: text)
         }

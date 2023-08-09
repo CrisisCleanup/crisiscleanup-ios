@@ -33,18 +33,23 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
     @Published private(set) var isTransferring = false
 
     var transferWorkTypesState: [WorkType: Bool] { transferWorkTypeProvider.workTypes }
+    lazy var workTypeList: [WorkType] = {
+        transferWorkTypesState.keys.sorted { a, b in
+            a.workTypeLiteral.localizedCompare(b.workTypeLiteral) == .orderedAscending
+        }
+    }()
     @Published var workTypesState = [Int64: Bool]()
 
     private var subscriptions = Set<AnyCancellable>()
 
-    @Published private(set) var transferReason = ""
+    @Published var transferReason = ""
 
     var reasonHint: String? {
         transferType == .request ? t("workTypeRequestModal.reason_requested") : nil
     }
 
-    let errorMessageReason = CurrentValueSubject<String, Never>("")
-    let errorMessageWorkType = CurrentValueSubject<String, Never>("")
+    @Published private(set) var errorMessageReason = ""
+    @Published private(set) var errorMessageWorkType = ""
 
     @Published private var requestWorkTypesState = RequestWorkTypeState()
 
@@ -75,10 +80,9 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
     }
 
     func onViewAppear() {
-        transferWorkTypesState.forEach { workTypesState[$0.key.id] = $0.value }
-
         let isFirstAppear = isFirstVisible.exchange(false, ordering: .relaxed)
         if isFirstAppear {
+            transferWorkTypesState.forEach { workTypesState[$0.key.id] = $0.value }
             transferWorkTypeProvider.clearPendingTransfer()
         }
 
@@ -174,23 +178,25 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
     }
 
     func commitTransfer() -> Bool {
-        errorMessageReason.value = ""
+        errorMessageReason = ""
+        errorMessageWorkType = ""
+
         if transferReason.isBlank {
             let isRelease = transferType == .release
             let reasonTranslateKey =
             isRelease ? "workTypeRequestModal.explain_release_case_required"
             : "workTypeRequestModal.explain_request_case_required"
-            errorMessageReason.value = t(reasonTranslateKey)
+            errorMessageReason = t(reasonTranslateKey)
         }
 
-        errorMessageWorkType.value = ""
-        if workTypesState.filter({ $0.value }).isEmpty {
-            errorMessageWorkType.value =
+        let isWorkTypeChecked = workTypesState.contains(where: { (key, value) in value })
+        if !isWorkTypeChecked {
+            errorMessageWorkType =
             t("workTypeRequestModal.transfer_work_type_is_required")
         }
 
-        if errorMessageReason.value.isBlank &&
-            errorMessageWorkType.value.isBlank
+        if errorMessageReason.isBlank &&
+            errorMessageWorkType.isBlank
         {
             transferWorkTypes()
             return true
