@@ -22,7 +22,11 @@ class TagLogger: AppLogger {
         }
 
         if appEnv.isDebuggable {
-            print(self.tag, e)
+            if let ge = e as? GenericError {
+                print(self.tag, ge.message)
+            } else {
+                print(self.tag, e)
+            }
         } else {
             Crashlytics.crashlytics().record(error: e)
         }
