@@ -127,6 +127,8 @@ struct TableViewButtons: View {
 
 struct TableCard: View {
 
+    @Environment(\.translator) var t: KeyAssetTranslator
+
     var body: some View {
         VStack(alignment: .leading) {
             HStack {
@@ -168,8 +170,10 @@ struct TableCard: View {
 
                 Spacer()
 
-                Text("claim or request")
-                    .blackBorder()
+                WorkTypeAction(t.t("actions.claim"), true) {
+
+                }
+                .environmentObject(EditableView())
             }
             .padding(.bottom, 4)
         }

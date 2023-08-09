@@ -55,7 +55,7 @@ struct InfoWorkView : View {
     }
 }
 
-private struct WorkTypeAction: View {
+struct WorkTypeAction: View {
     @EnvironmentObject var editableView: EditableView
 
     private let title: String
