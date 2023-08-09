@@ -40,6 +40,7 @@ class WorksiteMapVisualTests: XCTestCase {
             address: "",
             autoContactFrequencyT: "",
             caseNumber: "",
+            caseNumberOrder: 0,
             city: "",
             county: "",
             createdAt: createdAtA,

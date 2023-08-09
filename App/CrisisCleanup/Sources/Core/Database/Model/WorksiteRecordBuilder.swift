@@ -12,6 +12,7 @@ extension WorksiteRecord {
 		address: String,
 		autoContactFrequencyT: String?,
 		caseNumber: String,
+		caseNumberOrder: Int64,
 		city: String,
 		county: String,
 		createdAt: Date?,
@@ -42,6 +43,7 @@ extension WorksiteRecord {
 		self.address = address
 		self.autoContactFrequencyT = autoContactFrequencyT
 		self.caseNumber = caseNumber
+		self.caseNumberOrder = caseNumberOrder
 		self.city = city
 		self.county = county
 		self.createdAt = createdAt
@@ -80,6 +82,7 @@ extension WorksiteRecord {
 		var address: String
 		var autoContactFrequencyT: String?
 		var caseNumber: String
+		var caseNumberOrder: Int64
 		var city: String
 		var county: String
 		var createdAt: Date?
@@ -109,6 +112,7 @@ extension WorksiteRecord {
 			self.address = original.address
 			self.autoContactFrequencyT = original.autoContactFrequencyT
 			self.caseNumber = original.caseNumber
+			self.caseNumberOrder = original.caseNumberOrder
 			self.city = original.city
 			self.county = original.county
 			self.createdAt = original.createdAt
@@ -140,6 +144,7 @@ extension WorksiteRecord {
 				address: address,
 				autoContactFrequencyT: autoContactFrequencyT,
 				caseNumber: caseNumber,
+				caseNumberOrder: caseNumberOrder,
 				city: city,
 				county: county,
 				createdAt: createdAt,

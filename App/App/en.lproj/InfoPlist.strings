@@ -1,0 +1,3 @@
+
+NSCameraUsageDescription = "Allow access to camera to take pictures";
+NSLocationWhenInUseUsageDescription = "We need your location for some features";

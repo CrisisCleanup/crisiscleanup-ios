@@ -1,4 +1,5 @@
 import Combine
+import CoreLocation
 import Foundation
 
 public protocol WorksitesRepository {
@@ -71,11 +72,10 @@ public protocol WorksitesRepository {
         incidentId: Int64,
         filters: CasesFilter,
         sortBy: WorksiteSortBy,
-        latitude: Double,
-        longitude: Double,
+        coordinates: CLLocationCoordinate2D?,
         searchRadius: Double,
         count: Int
-    ) async -> [TableDataWorksite]
+    ) async throws -> [TableDataWorksite]
 }
 
 extension WorksitesRepository {
@@ -95,15 +95,13 @@ extension WorksitesRepository {
         incidentId: Int64,
         filters: CasesFilter,
         sortBy: WorksiteSortBy,
-        latitude: Double,
-        longitude: Double
-    ) async -> [TableDataWorksite] {
-        await getTableData(
+        coordinates: CLLocationCoordinate2D?
+    ) async throws -> [TableDataWorksite] {
+        try await getTableData(
             incidentId: incidentId,
             filters: filters,
             sortBy: sortBy,
-            latitude: latitude,
-            longitude: longitude,
+            coordinates: coordinates,
             searchRadius: 100.0,
             count: 360
         )

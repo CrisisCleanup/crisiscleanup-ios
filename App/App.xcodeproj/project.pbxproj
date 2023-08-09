@@ -26,6 +26,7 @@
 		4E4647A629EEE23E0062147F /* AppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E4647A529EEE23E0062147F /* AppUITests.swift */; };
 		4E4647A829EEE23E0062147F /* AppUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E4647A729EEE23E0062147F /* AppUITestsLaunchTests.swift */; };
 		4E4975C22A4E266000EEC7A2 /* LerpGrayscaleToColorKernel.ci.metal in Sources */ = {isa = PBXBuildFile; fileRef = 4E4975C12A4E266000EEC7A2 /* LerpGrayscaleToColorKernel.ci.metal */; };
+		4E4B06452A84037F000CD2EB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 4E4B06432A84037F000CD2EB /* InfoPlist.strings */; };
 		4E59A32F2A117606006F2130 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 4E59A3312A117606006F2130 /* Localizable.strings */; };
 		4E646A002A1916BB009148E0 /* NeedleGenerated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E6469FF2A1916BB009148E0 /* NeedleGenerated.swift */; };
 		4E70C5392A69F89500A6C59B /* GooglePlaceAddressSearchRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E70C5382A69F89500A6C59B /* GooglePlaceAddressSearchRepository.swift */; };
@@ -108,6 +109,7 @@
 		4E4647A529EEE23E0062147F /* AppUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUITests.swift; sourceTree = "<group>"; };
 		4E4647A729EEE23E0062147F /* AppUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		4E4975C12A4E266000EEC7A2 /* LerpGrayscaleToColorKernel.ci.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = LerpGrayscaleToColorKernel.ci.metal; sourceTree = "<group>"; };
+		4E4B06442A84037F000CD2EB /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		4E59A3302A117606006F2130 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		4E59A3322A117668006F2130 /* CrisisCleanup */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = CrisisCleanup; path = /Users/oc/project/cricle/ios/App/AppUITests/CrisisCleanup; sourceTree = "<absolute>"; };
 		4E6469FF2A1916BB009148E0 /* NeedleGenerated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NeedleGenerated.swift; sourceTree = "<group>"; };
@@ -218,6 +220,7 @@
 				4E46478F29EEE23D0062147F /* App.entitlements */,
 				4E46479029EEE23D0062147F /* Preview Content */,
 				4E59A3312A117606006F2130 /* Localizable.strings */,
+				4E4B06432A84037F000CD2EB /* InfoPlist.strings */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -439,6 +442,7 @@
 				4E46478E29EEE23D0062147F /* Assets.xcassets in Resources */,
 				4E342A5B2A7A1B4C00B55713 /* NunitoSans_10pt-Regular.ttf in Resources */,
 				4ED625932A25160800C33EAB /* GoogleService-Info.plist in Resources */,
+				4E4B06452A84037F000CD2EB /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -639,6 +643,14 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		4E4B06432A84037F000CD2EB /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				4E4B06442A84037F000CD2EB /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
 		4E59A3312A117606006F2130 /* Localizable.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -770,7 +782,7 @@
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 27;
+				CURRENT_PROJECT_VERSION = 28;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = AYLY2UUH8J;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -780,8 +792,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = ccu;
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = ccu;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
-				INFOPLIST_KEY_NSCameraUsageDescription = "~~Allow access to camera to take pictures";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "~~We need your location for some features";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access reason";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location access reason";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -797,7 +809,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.1.17;
+				MARKETING_VERSION = 0.1.18;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.crisiscleanup-dev";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -821,7 +833,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 27;
+				CURRENT_PROJECT_VERSION = 28;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = AYLY2UUH8J;
@@ -832,8 +844,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = ccu;
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = CCU;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
-				INFOPLIST_KEY_NSCameraUsageDescription = "~~Allow access to camera to take pictures";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "~~We need your location for some features";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access reason";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location access reason";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -849,7 +861,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.1.17;
+				MARKETING_VERSION = 0.1.18;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1016,7 +1028,7 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 27;
+				CURRENT_PROJECT_VERSION = 28;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = AYLY2UUH8J;
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = AYLY2UUH8J;
@@ -1028,8 +1040,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = ccu;
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = CCU;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
-				INFOPLIST_KEY_NSCameraUsageDescription = "~~Allow access to camera to take pictures";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "~~We need your location for some features";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access reason";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location access reason";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -1045,7 +1057,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.1.17;
+				MARKETING_VERSION = 0.1.18;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.crisiscleanup-nonp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

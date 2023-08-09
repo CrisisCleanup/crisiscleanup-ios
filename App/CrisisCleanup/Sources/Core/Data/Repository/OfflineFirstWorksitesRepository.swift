@@ -1,4 +1,5 @@
 import Combine
+import CoreLocation
 import Foundation
 
 class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullReporter {
@@ -23,6 +24,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     var incidentDataPullStats: any Publisher<IncidentDataPullStats, Never>
 
     private let orgIdPublisher: AnyPublisher<Int64, Never>
+    private let organizationAffiliatesPublisher: AnyPublisher<Set<Int64>, Never>
 
     init(
         dataSource: CrisisCleanupNetworkDataSource,
@@ -34,6 +36,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         workTypeTransferRequestDao: WorkTypeTransferRequestDao,
         accountDataRepository: AccountDataRepository,
         languageTranslationsRepository: LanguageTranslationsRepository,
+        organizationsRepository: OrganizationsRepository,
         appVersionProvider: AppVersionProvider,
         loggerFactory: AppLoggerFactory
     ) {
@@ -56,6 +59,9 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         orgIdPublisher = accountDataRepository.accountData
             .eraseToAnyPublisher()
             .asyncMap { $0.org.id }
+            .eraseToAnyPublisher()
+        organizationAffiliatesPublisher = orgIdPublisher
+            .map { orgId in organizationsRepository.getOrganizationAffiliateIds(orgId) }
             .eraseToAnyPublisher()
     }
 
@@ -271,12 +277,37 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         incidentId: Int64,
         filters: CasesFilter,
         sortBy: WorksiteSortBy,
-        latitude: Double,
-        longitude: Double,
+        coordinates: CLLocationCoordinate2D?,
         searchRadius: Double,
         count: Int
-    ) async -> [TableDataWorksite] {
-        // TODO: Do
-        []
+    ) async throws -> [TableDataWorksite] {
+        let affiliateIds = try await organizationAffiliatesPublisher.asyncFirst()
+
+        let records = try await worksiteDao.loadTableWorksites(
+            incidentId: incidentId,
+            filters: filters,
+            organizationAffiliates: affiliateIds,
+            sortBy: sortBy,
+            coordinates: coordinates,
+            searchRadius: searchRadius,
+            count: count
+        )
+
+        try Task.checkCancellation()
+
+        let strideCount = 100
+        var tableData = [TableDataWorksite]()
+        for i in records.indices {
+            if i % strideCount == 0 {
+                try Task.checkCancellation()
+            }
+
+            let worksite = records[i].asExternalModel()
+            let claimStatus = worksite.getClaimStatus(affiliateIds)
+            let tableRecord = TableDataWorksite(worksite: worksite, claimStatus: claimStatus)
+            tableData.append(tableRecord)
+        }
+
+        return tableData
     }
 }

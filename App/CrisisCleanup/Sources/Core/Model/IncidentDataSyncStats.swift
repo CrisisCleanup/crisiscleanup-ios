@@ -3,7 +3,7 @@ import Foundation
 /**
  * Build version of the app where worksite (related) entity models were last changed
  */
-private let WorksitesStableModelBuildVersion = 14
+private let WorksitesStableModelBuildVersion = 28
 
 /**
  * Build version of the app where incident organization (related) entity models were last changed

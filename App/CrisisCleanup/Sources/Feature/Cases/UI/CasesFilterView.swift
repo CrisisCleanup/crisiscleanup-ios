@@ -390,7 +390,7 @@ struct CalendarSelectView: View {
                 .disabled(end == nil)
             }
             .padding()
-            MultiDatePicker("~~Select a date range", selection: $dates)
+            MultiDatePicker("worksiteFilters.select_date_range", selection: $dates)
                 .onAppear {
                     if let start = start, let end = end, dates.isEmpty {
                         let startComps = Calendar.current.dateComponents([.calendar, .era, .year, .month, .day], from: start)

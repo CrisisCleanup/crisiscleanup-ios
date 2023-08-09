@@ -203,7 +203,7 @@ class WorksiteSyncFillTests: XCTestCase {
             $0.id = coreB.id
             $0.networkId = coreB.networkId
             $0.autoContactFrequencyT = updateCore.autoContactFrequencyT
-            $0.caseNumber = "case-update"
+            $0.caseNumber = "case52-update"
             $0.email = updateCore.email
             $0.favoriteId = updateCore.favoriteId!
             $0.phone1 = updateCore.phone1
