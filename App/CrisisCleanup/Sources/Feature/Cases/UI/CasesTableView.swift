@@ -6,17 +6,7 @@ struct CasesTableView: View {
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
 
     @State var openIncidentSelect = false
-    @State var selectSort: String = "~~Sort by Name"
-
-    @State var sortOptions = [
-        "~~Sort by Nearest",
-        "~~Sort by Case Number",
-        "~~Sort by Name",
-        "~~Sort by City",
-        "~~Sort by County/Parish",
-    ]
-
-    var worksiteIds = [1,2,3,4,5]
+    @State var selectSort: WorksiteSortBy = .none
 
     var body: some View {
         VStack {
@@ -57,12 +47,16 @@ struct CasesTableView: View {
 
 
             HStack {
-                Text("t.t1234 cases")
+                Text("t.t\(viewModel.tableData.count) cases")
+
                 Spacer()
 
                 Picker("", selection: $selectSort ) {
-                    ForEach(sortOptions, id: \.self) { option in
-                        Text(option)
+                    ForEach(WorksiteSortBy.allCases, id: \.self) { sortBy in
+                        Text(t.t(sortBy.translateKey))
+                            .onTapGesture {
+                                viewModel.changeTableSort(sortBy)
+                            }
                     }
                 }
                 .tint(.black)
@@ -76,13 +70,15 @@ struct CasesTableView: View {
             ScrollView {
                 LazyVStack {
 
-                    ForEach(worksiteIds, id: \.self) { id in
-                        TableCard()
-                        if id != worksiteIds.last {
+                    ForEach(0..<viewModel.tableData.count, id: \.self) { index in
+                        TableCard(
+                            worksiteDistance: viewModel.tableData[index]
+                        )
+
+                        if index != viewModel.tableData.count - 1 {
                             FormListSectionSeparator()
                         }
                     }
-
 
                 }
             }
@@ -126,19 +122,39 @@ struct TableViewButtons: View {
 }
 
 struct TableCard: View {
-
+    @EnvironmentObject var router: NavigationRouter
     @Environment(\.translator) var t: KeyAssetTranslator
+
+    @EnvironmentObject var viewModel: CasesViewModel
+    var worksiteDistance: WorksiteDistance
+    var worksite: Worksite { worksiteDistance.data.worksite }
 
     var body: some View {
         VStack(alignment: .leading) {
             HStack {
-                Image(systemName: "flag.fill")
+                Button {
+                    // TODO: specify case?
+                    router.openCaseFlags()
+                } label: {
+                    Image(systemName: "flag.fill")
 
-                Text("U513")
+                }
+                .tint(.black)
+
+                Button {
+                    router.viewCase(
+                        incidentId: worksite.incidentId,
+                        worksiteId: worksite.id
+                    )
+                } label: {
+                    Text(worksite.caseNumber)
+                        .fontHeader3()
+                }
+                .tint(.black)
 
                 Spacer()
 
-                Text("1161.3 ~~mi")
+                Text("\(worksiteDistance.distanceMiles) ~~mi")
             }
             .padding(.bottom, 4)
 
@@ -146,7 +162,7 @@ struct TableCard: View {
                 Image(systemName: "person.fill")
                     .foregroundColor(Color.gray)
 
-                Text("AJ Walker")
+                Text(worksite.name)
             }
             .padding(.bottom, 4)
 
@@ -154,30 +170,78 @@ struct TableCard: View {
                 Image(systemName: "mappin.circle.fill")
                     .foregroundColor(Color.gray)
 
-                Text("12345 main st, main, fl, 12345")
+                Text(worksite.address)
 
             }
             .padding(.bottom, 4)
 
             HStack {
-                Image(systemName: "phone.fill")
-                    .frame(width: 75, height: 35)
-                    .blackBorder()
+                Button {
+                    let urlString =  "tel:\(worksite.phone1)"
+                    if let url = URL(string: urlString) {
+                        UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                    }
+                } label : {
+                    Image(systemName: "phone.fill")
+                        .frame(width: 75, height: 35)
+                        .fontHeader3()
+                        .blackBorder()
+                }
+                .tint(.black)
 
-                Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
-                    .frame(width: 75, height: 35)
-                    .blackBorder()
+                Button {
+                    let urlString =  "maps://?address=" + (worksite.address.addingPercentEncoding(withAllowedCharacters: .afURLQueryAllowed) ?? worksite.address)
+                    if let url = URL(string: urlString) {
+                        UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                    }
+                } label : {
+                    Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
+                        .frame(width: 75, height: 35)
+                        .fontHeader3()
+                        .blackBorder()
+                }
+                .tint(.black)
 
                 Spacer()
 
-                WorkTypeAction(t.t("actions.claim"), true) {
+                switch worksiteDistance.claimStatus {
+                case .hasUnclaimed:
+                    WorkTypeAction(t.t("actions.claim"), true) {
 
+                    }
+                    .environmentObject(EditableView())
+                case .claimedByMyOrg:
+                    WorkTypeAction(t.t("actions.unclaim"), true) {
+
+                    }
+                    .environmentObject(EditableView())
+                case .claimedByOthers:
+                    let isReleasable = viewModel.incidentsData.selected.turnOnRelease // && worksite.isReleaseEligible
+                    let actionText = isReleasable ? t.t("actions.release") : t.t("actions.request")
+                    WorkTypeAction(actionText, true) {
+
+                    }
+                    .environmentObject(EditableView())
+                case .requested:
+                    WorkTypeAction(t.t("caseView.requested"), true) {
+
+                    }
+                    .environmentObject(EditableView())
                 }
-                .environmentObject(EditableView())
+
+
+
             }
             .padding(.bottom, 4)
         }
         .padding()
+        .background()
+        .onTapGesture {
+            router.viewCase(
+                incidentId: worksite.incidentId,
+                worksiteId: worksite.id
+            )
+        }
     }
 
 }
