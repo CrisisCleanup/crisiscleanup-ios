@@ -88,10 +88,6 @@ class AppSyncer: SyncPuller, SyncPusher {
         // TODO: Do
     }
 
-    private func pullIncidents() async throws {
-        try await incidentsRepository.pullIncidents()
-    }
-
     private func getSyncPlan() async throws -> (Bool, Int64) {
         let preferences = try await appPreferences.asyncFirst()
         let recentIncidents = try incidentsRepository.getIncidents(Date.now.addingTimeInterval(-365.days))
