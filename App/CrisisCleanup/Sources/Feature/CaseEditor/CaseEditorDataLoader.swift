@@ -149,8 +149,13 @@ internal class CaseEditorDataLoader {
         Task {
             self.isRefreshingIncident.value = true
             do {
-                defer { self.isRefreshingIncident.value = false}
+                defer { self.isRefreshingIncident.value = false }
                 await incidentRefresher.pullIncident(incidentIdIn)
+
+                // TODO: Use a better syncing mechanisim after refreshing and local data query
+                do {
+                    try await Task.sleep(for: .seconds(0.5))
+                } catch {}
             }
             await languageRefresher.pullLanguages()
             await workTypeStatusRepository.loadStatuses()

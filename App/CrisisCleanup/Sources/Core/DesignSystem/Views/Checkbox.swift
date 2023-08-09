@@ -1,8 +1,6 @@
 import SwiftUI
 
 struct CheckboxViews: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
-
     @Binding var selectedOptions: [String]
     var options: [(String, String)]
 
@@ -15,24 +13,31 @@ struct CheckboxViews: View {
                     selectedOptions.append(key)
                 }
             } label: {
-                HStack{
-                    let isSelected = selectedOptions.contains(key)
-                    let checkImg = isSelected ? "checkmark.square.fill" : "square"
-                    Image(systemName: checkImg)
-                        .foregroundColor(isSelected ? Color.black : Color.gray)
-                    Text(label)
-                        .foregroundColor(Color.black)
-                        .multilineTextAlignment(.leading)
-                }
+                let isSelected = selectedOptions.contains(key)
+                CheckboxTextView(isChecked: isSelected, text: label)
             }
             .padding(.vertical)
         }
     }
 }
 
-struct CheckboxView: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
+private struct CheckboxTextView : View {
+    let isChecked: Bool
+    let text: String
 
+    var body: some View {
+        HStack{
+            let checkImg = isChecked ? "checkmark.square.fill" : "square"
+            Image(systemName: checkImg)
+                .foregroundColor(isChecked ? Color.black : Color.gray)
+            Text(text)
+                .foregroundColor(Color.black)
+                .multilineTextAlignment(.leading)
+        }
+    }
+}
+
+struct CheckboxView: View {
     @Binding var checked: Bool
     let text: String
 
@@ -40,14 +45,22 @@ struct CheckboxView: View {
         Button {
             checked.toggle()
         } label: {
-            HStack{
-                let checkImg = checked ? "checkmark.square.fill" : "square"
-                Image(systemName: checkImg)
-                    .foregroundColor(checked ? Color.black : Color.gray)
-                Text(text)
-                    .foregroundColor(Color.black)
-                    .multilineTextAlignment(.leading)
-            }
+            CheckboxTextView(isChecked: checked, text: text)
+        }
+        .padding(.vertical)
+    }
+}
+
+struct StatelessCheckboxView: View {
+    let checked: Bool
+    let text: String
+    let onToggle: () -> Void
+
+    var body: some View {
+        Button {
+            onToggle()
+        } label: {
+            CheckboxTextView(isChecked: checked, text: text)
         }
         .padding(.vertical)
     }

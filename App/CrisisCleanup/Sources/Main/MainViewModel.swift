@@ -52,14 +52,14 @@ class MainViewModel: ObservableObject {
                 if !data.isEmpty {
                     self.sync(true)
                     self.syncPuller.appPullIncident(data.selectedId)
-                    // TODO: Additional
                 }
             }
             .store(in: &subscriptions)
     }
 
     private func subscribeAccountData() {
-        accountDataRepository.accountData.eraseToAnyPublisher().combineLatest(
+        Publishers.CombineLatest(
+            accountDataRepository.accountData.eraseToAnyPublisher(),
             self.translator.translationCount.eraseToAnyPublisher()
         )
         .filter { (_, translationCount) in
@@ -71,17 +71,21 @@ class MainViewModel: ObservableObject {
                 state: .ready,
                 accountData: accountData
             )
-
-            if accountData.areTokensValid {
-                self.sync(false)
-
-                let data = self.incidentsData
-                if !data.isEmpty {
-                    self.syncPuller.appPullIncident(data.selectedId)
-                }
-            }
         }
         .store(in: &subscriptions)
+
+        accountDataRepository.accountData
+            .sink { accountData in
+                if accountData.areTokensValid {
+                    self.sync(false)
+
+                    let data = self.incidentsData
+                    if !data.isEmpty {
+                        self.syncPuller.appPullIncident(data.selectedId)
+                    }
+                }
+            }
+            .store(in: &subscriptions)
     }
 
     private func sync(_ cancelOngoing: Bool) {

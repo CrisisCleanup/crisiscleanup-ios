@@ -88,10 +88,6 @@ class AppSyncer: SyncPuller, SyncPusher {
         // TODO: Do
     }
 
-    private func pullIncidents() async throws {
-        try await incidentsRepository.pullIncidents()
-    }
-
     private func getSyncPlan() async throws -> (Bool, Int64) {
         let preferences = try await appPreferences.asyncFirst()
         let recentIncidents = try incidentsRepository.getIncidents(Date.now.addingTimeInterval(-365.days))
@@ -247,6 +243,7 @@ class AppSyncer: SyncPuller, SyncPusher {
     // MARK: SyncPusher
 
     func appPushWorksite(_ worksiteId: Int64) {
+        // TODO: Run sync in background task (if not running to completion)
         Task {
             do {
                 if try await !validateAccountTokens() {
