@@ -780,8 +780,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = ccu;
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = ccu;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
-				INFOPLIST_KEY_NSCameraUsageDescription = "~~Allow access to camera to take pictures";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "~~We need your location for some features";
+				INFOPLIST_KEY_NSCameraUsageDescription = "info.allow_camera_access";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "info.allow_location_sharing";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -832,8 +832,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = ccu;
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = CCU;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
-				INFOPLIST_KEY_NSCameraUsageDescription = "~~Allow access to camera to take pictures";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "~~We need your location for some features";
+				INFOPLIST_KEY_NSCameraUsageDescription = "info.allow_camera_access";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "info.allow_location_sharing";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -1028,8 +1028,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = ccu;
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = CCU;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
-				INFOPLIST_KEY_NSCameraUsageDescription = "~~Allow access to camera to take pictures";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "~~We need your location for some features";
+				INFOPLIST_KEY_NSCameraUsageDescription = "info.allow_camera_access";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "info.allow_location_sharing";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;

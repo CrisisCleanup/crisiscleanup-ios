@@ -456,7 +456,7 @@ class CasesViewModel: ObservableObject {
 
         if isDistanceSort && tableData.isEmpty {
             tableSortResultsMessage.value =
-            translator.t("~~No Cases were found within {search_radius} mi.")
+            translator.t("worksiteFilters.no_cases_found_radius")
                 .replacingOccurrences(
                     of: "{search_radius}",
                     with: "\(Int(tableDataDistanceSortSearchRadius))"

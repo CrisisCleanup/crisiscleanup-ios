@@ -415,12 +415,12 @@ public enum WorksiteSortBy: String, Identifiable, CaseIterable, Codable {
 
     var translateKey: String {
         switch self {
-        case .none: return  "~~Sort by"
-        case .caseNumber: return  "~~Sort by Case Number"
-        case .nearest: return  "~~Sort by Nearest"
-        case .name: return  "~~Sort by Name"
-        case .city: return  "~~Sort by City"
-        case .countyParish: return  "~~Sort by County/Parish"
+        case .none: return  "worksiteFilters.sort_by"
+        case .caseNumber: return  "worksiteFilters.sort_by_case_number"
+        case .nearest: return  "worksiteFilters.sort_by_nearest"
+        case .name: return  "worksiteFilters.sort_by_name"
+        case .city: return  "worksiteFilters.sort_by_city"
+        case .countyParish: return  "worksiteFilters.sort_by_county"
         }
     }
 }
