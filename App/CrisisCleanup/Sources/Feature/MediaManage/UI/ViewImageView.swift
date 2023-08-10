@@ -128,7 +128,7 @@ private struct ViewNetworkImage: View {
             } else if phase.error != nil {
                 VStack {
                     // TODO: Translation
-                    Text("~~Try refreshing and opening the image again.")
+                    Text("worksiteImages.try_refreshing_open_image")
                         .foregroundColor(.white)
                         .padding()
                     Image(systemName: "exclamationmark.circle")
