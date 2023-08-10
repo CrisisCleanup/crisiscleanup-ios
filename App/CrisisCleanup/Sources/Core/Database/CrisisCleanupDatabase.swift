@@ -742,19 +742,19 @@ extension AppDatabase {
             }
             try db.create(
                 indexOn: "worksite",
-                columns: ["incidentId", "caseNumberOrder"]
+                columns: ["incidentId", "caseNumberOrder", "caseNumber"]
             )
             try db.create(
                 indexOn: "worksite",
-                columns: ["incidentId", "name", "county", "city", "caseNumberOrder"]
+                columns: ["incidentId", "name", "county", "city", "caseNumberOrder", "caseNumber"]
             )
             try db.create(
                 indexOn: "worksite",
-                columns: ["incidentId", "city", "name", "caseNumberOrder"]
+                columns: ["incidentId", "city", "name", "caseNumberOrder", "caseNumber"]
             )
             try db.create(
                 indexOn: "worksite",
-                columns: ["incidentId", "county", "name", "caseNumberOrder"]
+                columns: ["incidentId", "county", "name", "caseNumberOrder", "caseNumber"]
             )
         }
 

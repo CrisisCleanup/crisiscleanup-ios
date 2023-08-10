@@ -104,6 +104,7 @@ private struct CasesOverlayElements: View {
     let hasNoIncidents: Bool
     let animateToSelectedIncidentBounds: (_ bounds: LatLngBounds) -> Void
 
+    // TODO: Move text into view model and show "Loading" when caching to files then show numbers after inserting to database.
     func casesCountText(_ visibleCount: Int, _ totalCount: Int) -> String {
         {
             if visibleCount == totalCount || visibleCount == 0 {

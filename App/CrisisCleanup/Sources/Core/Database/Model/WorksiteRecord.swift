@@ -317,7 +317,7 @@ struct WorksiteRecord : Identifiable, Equatable {
      */
     let isLocalFavorite: Bool
 
-    private static let endNumbersCapture = #/(\d+)$/#
+    private static let endNumbersCapture = #/(?:^|\D)(\d+)(?:\D|$)/#
     static func parseCaseNumberOrder(_ caseNumber: String) -> Int64 {
         if let match = caseNumber.firstMatch(of: endNumbersCapture),
            let parsed = Int64(match.1) {
@@ -568,7 +568,8 @@ extension DerivableRequest<WorksiteRecord> {
             WorksiteColumns.name,
             WorksiteColumns.county,
             WorksiteColumns.city,
-            WorksiteColumns.caseNumberOrder
+            WorksiteColumns.caseNumberOrder,
+            WorksiteColumns.caseNumber
         )
     }
 
@@ -576,7 +577,8 @@ extension DerivableRequest<WorksiteRecord> {
         order(
             WorksiteColumns.city,
             WorksiteColumns.name,
-            WorksiteColumns.caseNumberOrder
+            WorksiteColumns.caseNumberOrder,
+            WorksiteColumns.caseNumber
         )
     }
 
@@ -584,13 +586,15 @@ extension DerivableRequest<WorksiteRecord> {
         order(
             WorksiteColumns.county,
             WorksiteColumns.name,
-            WorksiteColumns.caseNumberOrder
+            WorksiteColumns.caseNumberOrder,
+            WorksiteColumns.caseNumber
         )
     }
 
     func orderByCaseNumber() -> Self {
         order(
-            WorksiteColumns.caseNumberOrder
+            WorksiteColumns.caseNumberOrder,
+            WorksiteColumns.caseNumber
         )
     }
 }
