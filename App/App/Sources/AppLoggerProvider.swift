@@ -31,6 +31,12 @@ class TagLogger: AppLogger {
             Crashlytics.crashlytics().record(error: e)
         }
     }
+
+    func logCapture(_ message: String) {
+        if !appEnv.isDebuggable {
+            Crashlytics.crashlytics().log(message)
+        }
+    }
 }
 
 class AppLoggerProvider: AppLoggerFactory {
