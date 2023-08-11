@@ -90,7 +90,6 @@ struct CaseFlagsView: View {
 }
 
 struct ContactSheet: View {
-    @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
     var org: IncidentOrganization
@@ -137,7 +136,6 @@ struct ContactSheet: View {
 }
 
 private struct HighPriority: View {
-    @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewModel: CaseFlagsViewModel
@@ -225,7 +223,6 @@ private func getBoolOptional(
 }
 
 private struct UpsetClient: View {
-    @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewModel: CaseFlagsViewModel
@@ -236,15 +233,13 @@ private struct UpsetClient: View {
 
     @FocusState private var isQueryFocused: Bool
     @State private var animateTopSearchBar = false
-    var tempOrgs = ["org1", "org2", "org3", "org4", "org5"]
 
     var body: some View {
         let yesOption = t.t("formOptions.yes")
         let noOption = t.t("formOptions.no")
 
-        ScrollView {
+        WrappingHeightScrollView {
             VStack(alignment: .leading) {
-
                 if !animateTopSearchBar {
                     Text(t.t("flag.explain_why_client_upset"))
                         .padding(.top)
@@ -258,57 +253,33 @@ private struct UpsetClient: View {
                     RadioButtons(selected: $isMyOrgInvolved, options: options)
                         .padding()
                 }
+
                 Text(t.t("flag.please_share_other_orgs"))
 
-                HStack {
-                    TextField(
-                        t.t("profileOrg.organization_name"),
-                        text: $viewModel.otherOrgQ
-                    )
-                    .focused($isQueryFocused)
-                    .onChange(of: isQueryFocused) { isFocused in
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            animateTopSearchBar = isFocused
-                        }
-                    }
-                    .textFieldBorder()
-
-                    if animateTopSearchBar {
-                        Button {
-                            viewModel.otherOrgQ = ""
-                            isQueryFocused = false
-                        } label: {
-                            Text(t.t("actions.close"))
-                        }
-                        // TODO: Common dimensions
-                        .padding(.leading, 8)
-                    }
-                }
-
-                if animateTopSearchBar {
-                    ForEach(tempOrgs, id:\.self) { org in
-                        VStack(alignment: .leading) {
-                            Text(org)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top)
-                        .onTapGesture {
-                            viewModel.otherOrgQ = org
-                            isQueryFocused = false
-                        }
-                    }
-                }
+                SuggestionsSearchField(
+                    q: $viewModel.otherOrgQ,
+                    animateSearchFieldFocus: $animateTopSearchBar,
+                    isQueryFocused: _isQueryFocused,
+                    hint: t.t("profileOrg.organization_name")
+                )
+                .padding(.bottom)
             }
             .padding(.horizontal)
         }
         .scrollDismissesKeyboard(.immediately)
 
-
-
+        if animateTopSearchBar {
+            CaseFlagsOrgResults(orgResults: viewModel.otherOrgResults) { organization in
+                viewModel.otherOrgQ = organization.name
+                selectedOrg = organization
+                isQueryFocused = false
+            }
+        }
 
         Spacer()
 
         AddFlagSaveActionBar(
+            hideActionBar: isQueryFocused,
             observeKeyboard: true
         ) {
             let isInvolved = getBoolOptional(
@@ -326,8 +297,23 @@ private struct UpsetClient: View {
     }
 }
 
+private struct CaseFlagsOrgResults: View {
+    let orgResults: [OrganizationIdName]
+    let onOrgSelect: (OrganizationIdName) -> Void
+
+    var body: some View {
+        ScrollLazyVGrid {
+            ForEach(orgResults, id: \.id) { idName in
+                Text(idName.name)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .onTapGesture { onOrgSelect(idName) }
+            }
+        }
+    }
+}
+
 private struct ReportAbuse: View {
-    @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewModel: CaseFlagsViewModel
@@ -340,40 +326,22 @@ private struct ReportAbuse: View {
 
     @FocusState private var isQueryFocused: Bool
     @State private var animateTopSearchBar = false
-    var tempOrgs = ["org1", "org2", "org3", "org4", "org5"]
 
     var body: some View {
         let yesOption = t.t("formOptions.yes")
         let noOption = t.t("formOptions.no")
 
-        ScrollView {
+        WrappingHeightScrollView {
             VStack(alignment: .leading) {
                 Text(t.t("flag.organizations_complaining_about"))
-                HStack {
-                    TextField(
-                        t.t("profileOrg.organization_name"),
-                        text: $viewModel.otherOrgQ
-                    )
-                    .focused($isQueryFocused)
-                    .onChange(of: isQueryFocused) { isFocused in
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            animateTopSearchBar = isFocused
-                        }
-                    }
-                    .textFieldBorder()
-                    .padding(.bottom)
 
-                    if animateTopSearchBar {
-                        Button {
-                            viewModel.otherOrgQ = ""
-                            isQueryFocused = false
-                        } label: {
-                            Text(t.t("actions.close"))
-                        }
-                        // TODO: Common dimensions
-                        .padding(.leading, 8)
-                    }
-                }
+                SuggestionsSearchField(
+                    q: $viewModel.otherOrgQ,
+                    animateSearchFieldFocus: $animateTopSearchBar,
+                    isQueryFocused: _isQueryFocused,
+                    hint: t.t("profileOrg.organization_name")
+                )
+                .padding(.bottom)
 
                 if !animateTopSearchBar {
                     Text(t.t("flag.must_contact_org_first"))
@@ -403,27 +371,24 @@ private struct ReportAbuse: View {
                         Text(t.t("flag.warning_ccu_cannot_do_much"))
                             .padding(.vertical)
                     }
-                } else {
-                    ForEach(tempOrgs, id:\.self) { org in
-                        VStack(alignment: .leading) {
-                            Text(org)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top)
-                        .onTapGesture {
-                            viewModel.otherOrgQ = org
-                            isQueryFocused = false
-                        }
-                    }
                 }
             }
             .padding(.horizontal)
         }
         .scrollDismissesKeyboard(.immediately)
 
+        if animateTopSearchBar {
+            CaseFlagsOrgResults(orgResults: viewModel.otherOrgResults) { organization in
+                viewModel.otherOrgQ = organization.name
+                selectedOrg = organization
+                isQueryFocused = false
+            }
+        }
+
         Spacer()
 
         AddFlagSaveActionBar(
+            hideActionBar: isQueryFocused,
             observeKeyboard: true
         ) {
             viewModel.onReportAbuse(
@@ -444,7 +409,6 @@ private struct ReportAbuse: View {
 
 // TODO: Why does observing the keyboard here fail to work?
 private struct WrongLocation: View {
-    @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewModel: CaseFlagsViewModel
@@ -506,7 +470,6 @@ private struct WrongLocation: View {
 }
 
 private struct WrongIncident: View {
-    @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewModel: CaseFlagsViewModel
@@ -518,34 +481,34 @@ private struct WrongIncident: View {
 
     @FocusState private var isQueryFocused: Bool
     @State private var animateTopSearchBar = false
-    var tempOrgs = ["org1", "org2", "org3", "org4", "org5"]
 
     var body: some View {
         VStack (alignment: .leading ) {
             Text(t.t("flag.choose_correct_incident"))
 
-            TextField(t.t("casesVue.incident"), text: viewModel.incidentQ)
-                .focused($isQueryFocused)
-                .onChange(of: isQueryFocused) { isFocused in
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        animateTopSearchBar = isFocused
-                    }
-                }
-                .textFieldBorder()
+            SuggestionsSearchField(
+                q: viewModel.incidentQBinding,
+                animateSearchFieldFocus: $animateTopSearchBar,
+                isQueryFocused: _isQueryFocused,
+                hint: t.t("casesVue.incident")
+            )
 
             if !animateTopSearchBar {
                 CheckboxView(checked: $isNotListed, text: t.t("flag.incident_not_listed"))
             } else {
-                ForEach(tempOrgs, id:\.self) { incident in
-                    VStack(alignment: .leading) {
-                        Text(incident)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top)
-                    .onTapGesture {
-                        // TODO: assign value
-//                        viewModel.incidentQ = incident
-                        isQueryFocused = false
+                let (incidentQuery, incidentResults) = viewModel.incidentResults
+                if incidentQuery == viewModel.incidentQ {
+                    ScrollLazyVGrid {
+                        ForEach(incidentResults, id: \.id) { idNameType in
+                            Text(idNameType.name)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.top)
+                                .onTapGesture {
+                                    selectedIncident = idNameType
+                                    viewModel.incidentQBinding.wrappedValue = idNameType.name
+                                    isQueryFocused = false
+                                }
+                        }
                     }
                 }
             }
@@ -554,11 +517,15 @@ private struct WrongIncident: View {
 
         Spacer()
 
-        let isSelected = isNotListed || selectedIncident?.name == viewModel.incidentQ.wrappedValue
-        AddFlagSaveActionBar(enabled: isEditable && isSelected) {
+        let isSelected = isNotListed || selectedIncident?.name == viewModel.incidentQ
+        AddFlagSaveActionBar(
+            hideActionBar: isQueryFocused,
+            enabled: isEditable && isSelected,
+            observeKeyboard: true
+        ) {
             viewModel.onWrongIncident(
                 isIncidentListed: !isNotListed,
-                incidentQuery: viewModel.incidentQ.wrappedValue,
+                incidentQuery: viewModel.incidentQ,
                 selectedIncident: selectedIncident
             )
         }
@@ -571,27 +538,28 @@ private struct AddFlagSaveActionBar: View {
 
     @EnvironmentObject var keyboardVisibilityProvider: KeyboardVisibilityProvider
 
+    var hideActionBar = false
     var isBusy = false
     var enabled = true
     var enableSave = true
     var observeKeyboard = false
 
-    var save: () -> Void
+    var onSave: () -> Void
 
     var body: some View {
-        if observeKeyboard && keyboardVisibilityProvider.isKeyboardVisible {
+        if hideActionBar || observeKeyboard && keyboardVisibilityProvider.isKeyboardVisible {
             OpenKeyboardActionsView()
         } else {
             HStack {
                 Button {
-                    dismiss.callAsFunction()
+                    dismiss()
                 } label: {
                     Text(t.t("actions.cancel"))
                 }
                 .styleCancel()
 
                 Button {
-                    save()
+                    onSave()
                 } label: {
                     BusyButtonContent(
                         isBusy: isBusy,

@@ -52,7 +52,7 @@ class CaseFlagsViewModel: ObservableObject {
     @Published private(set) var nearbyOrganizations: [IncidentOrganization]? = nil
 
     @Published var otherOrgQ = ""
-    @Published var otherOrgResults = [OrganizationIdName]()
+    @Published private(set) var otherOrgResults = [OrganizationIdName]()
 
     private let wrongLocationManager: WrongLocationFlagManager
     @Published private(set) var isProcessingLocation = false
@@ -60,7 +60,9 @@ class CaseFlagsViewModel: ObservableObject {
     @Published private(set) var validCoordinates: LocationAddress? = nil
 
     private let queryIncidentsManager: QueryIncidentsManager
-    let incidentQ: Binding<String>
+    // TODO: How to use single binding value compatible with complex SwiftUI views?
+    var incidentQBinding: Binding<String>
+    @Published private(set) var incidentQ = ""
     @Published private(set) var isLoadingIncidents = false
     @Published private(set) var incidentResults: (String, [IncidentIdNameType]) = ("", [])
 
@@ -107,7 +109,7 @@ class CaseFlagsViewModel: ObservableObject {
             set: { wlm.wrongLocationText.value = $0 }
         )
 
-        incidentQ = Binding<String>(
+        incidentQBinding = Binding<String>(
             get: { qim.incidentQ.value },
             set: { qim.incidentQ.value = $0 }
         )
@@ -124,19 +126,19 @@ class CaseFlagsViewModel: ObservableObject {
             }
         }
 
-        subscribeToSaveState()
-        subscribeToEditable()
-        subscribeToWrongLocationManager()
-        subscribeToQueryIncidentManager()
-        subscribeToNearbyOrganizations()
-        subscribeToOtherOrgResults()
+        subscribeSaveState()
+        subscribeEditable()
+        subscribeWrongLocationManager()
+        subscribeQueryIncidentManager()
+        subscribeNearbyOrganizations()
+        subscribeOtherOrgResults()
     }
 
     func onViewDisappear() {
         subscriptions = cancelSubscriptions(subscriptions)
     }
 
-    private func subscribeToSaveState() {
+    private func subscribeSaveState() {
         isSavingSubject
             .receive(on: RunLoop.main)
             .assign(to: \.isSaving, on: self)
@@ -151,7 +153,7 @@ class CaseFlagsViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
-    private func subscribeToEditable() {
+    private func subscribeEditable() {
         Publishers.CombineLatest3(
             $isSaving,
             $isSavingWorksite,
@@ -163,7 +165,7 @@ class CaseFlagsViewModel: ObservableObject {
         .store(in: &subscriptions)
     }
 
-    private func subscribeToWrongLocationManager() {
+    private func subscribeWrongLocationManager() {
         wrongLocationManager.isProcessingLocation
             .eraseToAnyPublisher()
             .debounce(
@@ -181,7 +183,7 @@ class CaseFlagsViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
-    private func subscribeToQueryIncidentManager() {
+    private func subscribeQueryIncidentManager() {
         queryIncidentsManager.isLoading.eraseToAnyPublisher()
             .receive(on: RunLoop.main)
             .assign(to: \.isLoadingIncidents, on: self)
@@ -191,9 +193,14 @@ class CaseFlagsViewModel: ObservableObject {
             .receive(on: RunLoop.main)
             .assign(to: \.incidentResults, on: self)
             .store(in: &subscriptions)
+
+        queryIncidentsManager.incidentQ
+            .receive(on: RunLoop.main)
+            .assign(to: \.incidentQ, on: self)
+            .store(in: &subscriptions)
     }
 
-    private func subscribeToNearbyOrganizations() {
+    private func subscribeNearbyOrganizations() {
             editableWorksiteProvider.editableWorksite.asyncMap {
                 let coordinates = $0.coordinates
                 return await self.organizationsRepository.getNearbyClaimingOrganizations(
@@ -206,7 +213,7 @@ class CaseFlagsViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
-    private func subscribeToOtherOrgResults() {
+    private func subscribeOtherOrgResults() {
             $otherOrgQ
             .throttle(
                 for: .seconds(0.15),

@@ -15,7 +15,7 @@ struct CaseShareStep2View: View {
         let shareByEmail = viewModel.isEmailContactMethod
         let shareByEmailOption = t.t("shareWorksite.email")
 
-        ScrollView {
+        WrappingHeightScrollView {
             VStack(alignment: .leading) {
                 Spacer(minLength: 8)
 
@@ -101,19 +101,7 @@ struct CaseShareStep2View: View {
                     }
                 }
 
-                if animateTopSearchBar {
-                    ForEach(viewModel.contactOptions, id:\.name) { contact in
-                        VStack(alignment: .leading) {
-                            Text(contact.name)
-                            Text(contact.contactValue)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top)
-                        .onTapGesture {
-                            viewModel.onAddContact(contact)
-                        }
-                    }
-                } else {
+                if !animateTopSearchBar {
                     Group {
                         Text(t.t("shareWorksite.add_message"))
                             .padding(.top)
@@ -131,7 +119,26 @@ struct CaseShareStep2View: View {
             .padding(.horizontal)
         }
         .environmentObject(viewModel)
-        .scrollDismissesKeyboard(.immediately)
+
+        if animateTopSearchBar {
+            ScrollLazyVGrid {
+                ForEach(viewModel.contactOptions, id:\.contactValue) { contact in
+                    VStack(alignment: .leading) {
+                        Text(contact.name)
+                        Text(contact.contactValue)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal)
+                    // TODO: Common dimensions
+                    .padding(.vertical, 8)
+                    .onTapGesture {
+                        viewModel.onAddContact(contact)
+                    }
+                }
+            }
+        }
+
+        Spacer()
     }
 }
 
