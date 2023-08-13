@@ -8,12 +8,16 @@ struct CaseShareStep2View: View {
 
     @State var shareMessage = ""
 
-    @FocusState private var isQueryFocused: Bool
+    @ObservedObject private var focusableViewState = TextInputFocusableView()
+    @FocusState private var focusState: TextInputFocused?
     @State private var animateTopSearchBar = false
 
     var body: some View {
         let shareByEmail = viewModel.isEmailContactMethod
         let shareByEmailOption = t.t("shareWorksite.email")
+
+        CaseShareNotSharableMessage(message: viewModel.notSharableMessage)
+            .padding([.top, .horizontal])
 
         WrappingHeightScrollView {
             VStack(alignment: .leading) {
@@ -46,7 +50,7 @@ struct CaseShareStep2View: View {
                 if !animateTopSearchBar {
                     let manualErrorMessage = viewModel.contactErrorMessage
                     if manualErrorMessage.isNotBlank {
-                        // TODO: Style
+                        // TODO: Common styles
                         Text(manualErrorMessage)
                             .padding(.vertical)
                             .foregroundColor(appTheme.colors.primaryRedColor)
@@ -59,6 +63,7 @@ struct CaseShareStep2View: View {
                             text: $viewModel.receiverContactManual
                         )
                         .textFieldBorder()
+                        .focused($focusState, equals: .anyTextInput)
                         .onSubmit {
                             viewModel.onAddContact(viewModel.receiverContactManual)
                         }
@@ -76,15 +81,14 @@ struct CaseShareStep2View: View {
 
                 HStack {
                     let searchTitleKey = viewModel.isEmailContactMethod ? "shareWorksite.search_emails" : "shareWorksite.search_phones"
-                    // TODO: Keep this view at the top when focused and not scrollable
                     TextField(
                         t.t(searchTitleKey),
                         text: $viewModel.receiverContactSuggestion
                     )
-                    .focused($isQueryFocused)
-                    .onChange(of: isQueryFocused) { isFocused in
+                    .focused($focusState, equals: .querySuggestionsInput)
+                    .onReceive(focusableViewState.$isQueryInputFocused) { b in
                         withAnimation(.easeInOut(duration: 0.3)) {
-                            animateTopSearchBar = isFocused
+                            animateTopSearchBar = b
                         }
                     }
                     .textFieldBorder()
@@ -92,12 +96,12 @@ struct CaseShareStep2View: View {
                     if animateTopSearchBar {
                         Button {
                             viewModel.receiverContactSuggestion = ""
-                            isQueryFocused = false
+                            focusableViewState.clear()
+                            hideKeyboard()
                         } label: {
                             Text(t.t("actions.close"))
                         }
-                        // TODO: Common dimensions
-                        .padding(.leading, 8)
+                        .padding(.leading, appTheme.gridItemSpacing)
                     }
                 }
 
@@ -110,15 +114,13 @@ struct CaseShareStep2View: View {
                         LargeTextEditor(text: $shareMessage)
                     }
                     .padding(.bottom)
-
-                    Spacer()
-
-                    CaseShareBottomActions(message: $shareMessage)
                 }
             }
             .padding(.horizontal)
         }
         .environmentObject(viewModel)
+        .environmentObject(focusableViewState)
+        .onChange(of: focusState) { focusableViewState.focusState = $0 }
 
         if animateTopSearchBar {
             ScrollLazyVGrid {
@@ -129,16 +131,25 @@ struct CaseShareStep2View: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
-                    // TODO: Common dimensions
-                    .padding(.vertical, 8)
+                    .padding(.vertical, appTheme.listItemVerticalPadding)
+                    .frame(minHeight: appTheme.rowItemHeight)
                     .onTapGesture {
                         viewModel.onAddContact(contact)
                     }
                 }
             }
-        }
+        } else if !focusableViewState.isQueryInputFocused {
+            Spacer()
 
-        Spacer()
+            if focusableViewState.isFocused {
+                OpenKeyboardActionsView()
+            } else {
+                CaseShareBottomActions(message: $shareMessage)
+                    .environmentObject(viewModel)
+                    .padding(.horizontal)
+                    .padding(.vertical, appTheme.listItemVerticalPadding)
+            }
+        }
     }
 }
 
@@ -178,9 +189,8 @@ private struct ShareReceiverContactList: View {
     var body: some View {
         FlowStack(
             alignment: .leading,
-            // TODO: Common dimensions
-            horizontalSpacing: 8,
-            verticalSpacing: 8
+            horizontalSpacing: appTheme.gridItemSpacing,
+            verticalSpacing: appTheme.gridItemSpacing
         ) {
             let contacts = viewModel.receiverContacts
             ForEach(Array(contacts.enumerated()), id: \.offset) { (index, contact) in
@@ -189,7 +199,7 @@ private struct ShareReceiverContactList: View {
                 }
             }
         }
-        .padding(.bottom, 4)
+        .padding(.bottom)
     }
 }
 
@@ -208,6 +218,7 @@ private struct ShareReceiverContactChip: View {
         }
         .padding()
         .background(appTheme.colors.attentionBackgroundColor)
+        // TODO: Is there a setting for fully rounded? If not common dimensions.
         .cornerRadius(40)
         .tint(.black)
     }

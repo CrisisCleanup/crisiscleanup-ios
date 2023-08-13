@@ -35,6 +35,12 @@ extension View {
                     .stroke(.black, lineWidth: appTheme.textFieldOutlineWidth)
             )
     }
+
+#if canImport(UIKit)
+    func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+#endif
 }
 
 class EditableView: ObservableObject {

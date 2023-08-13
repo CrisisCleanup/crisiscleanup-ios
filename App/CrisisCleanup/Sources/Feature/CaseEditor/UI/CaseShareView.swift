@@ -7,46 +7,71 @@ struct CaseShareView: View {
 
     @ObservedObject var viewModel: CaseShareViewModel
 
+    @ObservedObject var inputFocusViewState = TextInputFocusableView()
+
     var body: some View {
-        // TODO: Show message and disable actions if not online
-        VStack(alignment: .leading) {
-            HStack {
+        CaseShareNotSharableMessage(message: viewModel.notSharableMessage)
+            .padding()
+
+        ScrollView {
+            VStack(alignment: .leading) {
                 Text(t.t("casesVue.please_claim_if_share"))
-                Spacer()
+
+                LargeTextEditor(text: $viewModel.unclaimedShareReason)
             }
-
-            LargeTextEditor(text: $viewModel.unclaimedShareReason)
-                .padding(.bottom, 4)
-
-            Button {
-                // Guarded by disabled below
-                router.openCaseShareStep2()
-            } label: {
-                Text(t.t("actions.share_no_claim"))
-            }
-            .stylePrimary()
-            .disabled(viewModel.unclaimedShareReason.isBlank)
-            .padding(.bottom, 4)
-
-            Button {
-                router.openCaseShareStep2()
-            } label: {
-                Text(t.t("actions.claim_and_share"))
-            }
-            .stylePrimary()
-            .padding(.bottom, 4)
-
-            Button {
-                dismiss()
-            } label: {
-                Text(t.t("actions.cancel"))
-            }
-            .styleCancel()
-
-            Spacer()
         }
+        .scrollDismissesKeyboard(.immediately)
         .padding(.horizontal)
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
+        .environmentObject(inputFocusViewState)
+
+        let disabled = !viewModel.isSharable
+
+        if inputFocusViewState.isFocused {
+            OpenKeyboardActionsView()
+        } else {
+            VStack(spacing: appTheme.gridItemSpacing) {
+                Button {
+                    // Guarded by disabled below
+                    router.openCaseShareStep2()
+                } label: {
+                    Text(t.t("actions.share_no_claim"))
+                }
+                .stylePrimary()
+                .disabled(disabled || viewModel.unclaimedShareReason.isBlank)
+
+                Button {
+                    router.openCaseShareStep2()
+                } label: {
+                    Text(t.t("actions.claim_and_share"))
+                }
+                .stylePrimary()
+//                .disabled(disabled)
+
+                Button {
+                    dismiss()
+                } label: {
+                    Text(t.t("actions.cancel"))
+                }
+                .styleCancel()
+            }
+            .padding(.horizontal)
+
+            Spacer()
+        }
+    }
+}
+
+internal struct CaseShareNotSharableMessage: View {
+    let message: String
+
+    var body: some View {
+        if message.isNotBlank {
+            Text(message)
+            // TODO: Common styles
+                .foregroundColor(appTheme.colors.primaryRedColor)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 }
