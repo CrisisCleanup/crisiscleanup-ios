@@ -7,7 +7,7 @@ struct SuggestionsSearchField: View {
     @Binding var q: String
     @Binding var animateSearchFieldFocus: Bool
     @FocusState var focusState: TextInputFocused?
-    var focusedKey: TextInputFocused? = .querySuggestionsInput
+    var focusedKey: TextInputFocused? = .querySuggestions
 
     let hint: String
 

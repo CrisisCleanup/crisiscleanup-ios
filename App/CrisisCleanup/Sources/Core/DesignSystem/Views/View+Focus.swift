@@ -3,7 +3,9 @@ import SwiftUI
 
 enum TextInputFocused: Hashable {
     case anyTextInput,
-         querySuggestionsInput
+         querySuggestions,
+         authEmailAddress,
+         authPassword
 }
 
 class TextInputFocusableView: ObservableObject {
@@ -19,7 +21,7 @@ class TextInputFocusableView: ObservableObject {
             .sink(receiveValue: {
                 self.isFocused = $0 != nil
                 self.isNotFocused = $0 == nil
-                self.isQueryInputFocused = $0 == .querySuggestionsInput
+                self.isQueryInputFocused = $0 == .querySuggestions
             })
             .store(in: &disposables)
     }

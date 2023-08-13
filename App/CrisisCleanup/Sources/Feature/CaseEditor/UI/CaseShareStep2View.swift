@@ -85,7 +85,7 @@ struct CaseShareStep2View: View {
                         t.t(searchTitleKey),
                         text: $viewModel.receiverContactSuggestion
                     )
-                    .focused($focusState, equals: .querySuggestionsInput)
+                    .focused($focusState, equals: .querySuggestions)
                     .onReceive(focusableViewState.$isQueryInputFocused) { b in
                         withAnimation(.easeInOut(duration: 0.3)) {
                             animateTopSearchBar = b
