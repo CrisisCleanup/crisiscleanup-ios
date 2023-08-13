@@ -63,6 +63,10 @@ public class MainComponent: BootstrapComponent,
         MainView(
             viewModel: mainViewModel,
             router: navigationRouter,
+            appAlerts: AppAlertViewState(
+                networkMonitor: networkMonitor,
+                accountDataRepository: accountDataRepository
+            ),
             locationManager: locationManager,
             authenticateViewBuilder: authenticateViewBuilder,
             casesViewBuilder: casesComponent,

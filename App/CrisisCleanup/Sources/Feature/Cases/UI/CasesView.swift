@@ -93,6 +93,7 @@ struct CasesView: View {
 private struct CasesOverlayElements: View {
     @Environment(\.translator) var t: KeyAssetTranslator
     @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var appAlertState: AppAlertViewState
 
     @EnvironmentObject var viewModel: CasesViewModel
 
@@ -244,6 +245,14 @@ private struct CasesOverlayElements: View {
                     .styleRoundedRectanglePrimary()
                     .padding(.bottom)
                 }
+            }
+
+            if appAlertState.showAlert,
+               let appAlert = appAlertState.alertType {
+                AppAlertView(
+                    appAlert
+                    // TODO: Login action
+                )
             }
         }
         .padding()

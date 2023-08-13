@@ -14,7 +14,7 @@ class NetworkReachability: NetworkMonitor {
         isOnline = isOnlineSubject
         isNotOnline = isOnline
             .eraseToAnyPublisher()
-            .map { b in !b }
+            .map { !$0 }
 
         startNetworkMonitoring()
     }
@@ -26,7 +26,7 @@ class NetworkReachability: NetworkMonitor {
                     .reachable(.ethernetOrWiFi):
                 self.isOnlineSubject.value = true
             case .notReachable:
-                self.isOnlineSubject.value = true
+                self.isOnlineSubject.value = false
             case .unknown:
                 self.isOnlineSubject.value = false
             }

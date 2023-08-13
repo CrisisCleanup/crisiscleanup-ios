@@ -5,6 +5,7 @@ struct MainView: View {
 
     @ObservedObject var viewModel: MainViewModel
     @ObservedObject var router: NavigationRouter
+    @ObservedObject var appAlerts: AppAlertViewState
 
     let locationManager: LocationManager
 
@@ -98,6 +99,7 @@ struct MainView: View {
         .environment(\.translator, viewModel.translator)
         .environment(\.font, .bodyLarge)
         .environmentObject(router)
+        .environmentObject(appAlerts)
         .environmentObject(locationManager)
     }
 }
