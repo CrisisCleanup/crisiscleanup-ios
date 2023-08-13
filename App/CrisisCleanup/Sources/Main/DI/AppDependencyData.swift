@@ -190,7 +190,6 @@ extension MainComponent {
                 organizationsRepository: organizationsRepository,
                 localImageRepository: localImageRepository,
                 authEventBus: authEventBus,
-                networkMonitor: networkMonitor,
                 appEnv: appEnv,
                 syncLoggerFactory: syncLoggerFactory,
                 loggerFactory: loggerFactory
@@ -231,7 +230,6 @@ extension MainComponent {
         shared {
             CrisisCleanupCasesFilterRepository(
                 dataSource: CasesFiltersUserDefaults(),
-                networkMonitor: networkMonitor,
                 accountDataRepository: accountDataRepository,
                 networkDataSource: networkDataSource
             )

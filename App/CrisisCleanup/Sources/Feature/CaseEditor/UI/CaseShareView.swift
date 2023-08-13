@@ -7,28 +7,29 @@ struct CaseShareView: View {
 
     @ObservedObject var viewModel: CaseShareViewModel
 
-    @ObservedObject var inputFocusViewState = TextInputFocusableView()
+    @ObservedObject var focusableViewState = TextInputFocusableView()
 
     var body: some View {
         CaseShareNotSharableMessage(message: viewModel.notSharableMessage)
             .padding()
 
-        ScrollView {
+        WrappingHeightScrollView {
             VStack(alignment: .leading) {
                 Text(t.t("casesVue.please_claim_if_share"))
 
                 LargeTextEditor(text: $viewModel.unclaimedShareReason)
             }
+            .padding(.horizontal)
         }
-        .scrollDismissesKeyboard(.immediately)
-        .padding(.horizontal)
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
-        .environmentObject(inputFocusViewState)
+        .environmentObject(focusableViewState)
 
         let disabled = !viewModel.isSharable
 
-        if inputFocusViewState.isFocused {
+        if focusableViewState.isFocused {
+            Spacer()
+
             OpenKeyboardActionsView()
         } else {
             VStack(spacing: appTheme.gridItemSpacing) {
@@ -47,7 +48,6 @@ struct CaseShareView: View {
                     Text(t.t("actions.claim_and_share"))
                 }
                 .stylePrimary()
-//                .disabled(disabled)
 
                 Button {
                     dismiss()

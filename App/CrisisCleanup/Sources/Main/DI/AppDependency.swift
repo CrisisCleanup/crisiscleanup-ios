@@ -68,8 +68,7 @@ extension MainComponent {
 
     public var networkMonitor: NetworkMonitor {
         shared {
-            // TODO: Pass host URL by environment
-            NetworkReachability()
+            NetworkReachability(appSettingsProvider.reachabilityHost)
         }
     }
 

@@ -36,5 +36,7 @@
 	<string>$(IS_DEBUGGABLE)</string>
 	<key>isProduction</key>
 	<string>$(IS_PRODUCTION)</string>
+	<key>reachabilityHost</key>
+	<string>$(API_HOST)</string>
 </dict>
 </plist>

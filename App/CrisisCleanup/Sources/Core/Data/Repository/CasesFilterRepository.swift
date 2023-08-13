@@ -11,7 +11,6 @@ public protocol CasesFilterRepository {
 
 class CrisisCleanupCasesFilterRepository: CasesFilterRepository {
     private let dataSource: CasesFiltersDataSource
-    private let networkMonitor: NetworkMonitor
     private let accountDataRepository: AccountDataRepository
     private let networkDataSource: CrisisCleanupNetworkDataSource
 
@@ -29,12 +28,10 @@ class CrisisCleanupCasesFilterRepository: CasesFilterRepository {
 
     init(
         dataSource: CasesFiltersDataSource,
-        networkMonitor: NetworkMonitor,
         accountDataRepository: AccountDataRepository,
         networkDataSource: CrisisCleanupNetworkDataSource
     ) {
         self.dataSource = dataSource
-        self.networkMonitor = networkMonitor
         self.accountDataRepository = accountDataRepository
         self.networkDataSource = networkDataSource
 

@@ -256,10 +256,10 @@ private struct UpsetClient: View {
                     focusState: _focusState,
                     hint: t.t("profileOrg.organization_name")
                 )
+                .padding(.bottom)
             }
             .padding(.horizontal)
         }
-        .scrollDismissesKeyboard(.immediately)
         .onChange(of: focusState) { focusableViewState.focusState = $0 }
 
         if animateTopSearchBar {
@@ -372,7 +372,6 @@ private struct ReportAbuse: View {
             .padding(.horizontal)
             .onChange(of: focusState) { focusableViewState.focusState = $0 }
         }
-        .scrollDismissesKeyboard(.immediately)
 
         if animateTopSearchBar {
             CaseFlagsOrgResults(orgResults: viewModel.otherOrgResults) { organization in
