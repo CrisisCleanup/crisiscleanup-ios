@@ -5,6 +5,8 @@ struct LargeTextEditor: View {
 
     @Binding var text: String
 
+    var placeholder: String = ""
+
     var focusedKey: TextInputFocused = .anyTextInput
 
     @FocusState private var focusState: TextInputFocused?
@@ -17,5 +19,13 @@ struct LargeTextEditor: View {
             .lineLimit(5)
             .textFieldBorder()
             .tint(.black)
+            .overlay(alignment: .topLeading) {
+                if $text.wrappedValue.isBlank && placeholder.isNotBlank {
+                    Text(placeholder)
+                        .foregroundColor(.gray)
+                        .padding()
+                        .disabled(true)
+                }
+            }
     }
 }

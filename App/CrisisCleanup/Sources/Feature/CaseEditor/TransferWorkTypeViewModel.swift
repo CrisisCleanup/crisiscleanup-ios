@@ -44,8 +44,8 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
 
     @Published var transferReason = ""
 
-    var reasonHint: String? {
-        transferType == .request ? t("workTypeRequestModal.reason_requested") : nil
+    var reasonHint: String {
+        transferType == .request ? t("workTypeRequestModal.reason_requested") : ""
     }
 
     @Published private(set) var errorMessageReason = ""

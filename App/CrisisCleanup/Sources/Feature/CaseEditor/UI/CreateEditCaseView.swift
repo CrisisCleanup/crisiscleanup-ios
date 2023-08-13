@@ -10,6 +10,8 @@ struct CreateEditCaseView: View {
 
     @ObservedObject var viewModel: CreateEditCaseViewModel
 
+    @ObservedObject private var focusableViewState = TextInputFocusableView()
+
     @State var sectionCollapse = [
         false,
         false,
@@ -111,15 +113,12 @@ struct CreateEditCaseView: View {
                 .scrollDismissesKeyboard(.immediately)
             }
 
-            if isKeyboardOpen {
+            if focusableViewState.isFocused {
                 OpenKeyboardActionsView()
             } else {
                 CreateEditCaseSaveActions()
                     .disabled(disableMutation)
             }
-        }
-        .onReceive(keyboardPublisher) { isVisible in
-            isKeyboardOpen = isVisible
         }
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -131,6 +130,7 @@ struct CreateEditCaseView: View {
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)
         .environmentObject(viewModel.editableViewState)
+        .environmentObject(focusableViewState)
     }
 }
 
