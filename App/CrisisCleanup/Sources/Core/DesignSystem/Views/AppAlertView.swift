@@ -103,7 +103,6 @@ struct AppAlertView: View {
         actionKey = alertType.actionKey
     }
 
-    // TODO: Font styles
     var body: some View {
         let text = t.t(textKey)
 
@@ -111,6 +110,7 @@ struct AppAlertView: View {
             Text(text)
                 .padding(.horizontal)
                 .padding(.vertical, appTheme.listItemVerticalPadding)
+                .foregroundColor(.white)
 
             Spacer()
 
@@ -120,6 +120,7 @@ struct AppAlertView: View {
                 } label: {
                     Text(t.t(actionKey))
                         .padding(.vertical, appTheme.listItemVerticalPadding)
+                        .fontHeader4()
                 }
             }
 
@@ -131,6 +132,7 @@ struct AppAlertView: View {
             }
             .frame(minWidth: buttonSize, minHeight: buttonSize)
         }
-        .cardContainer()
+        .cardContainer(background: appTheme.colors.navigationContainerColor)
+        .tint(.white)
     }
 }

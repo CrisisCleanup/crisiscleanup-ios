@@ -6,8 +6,8 @@ extension View {
             .padding(.vertical, vertical)
     }
 
-    func cardContainer() -> some View {
-        self.background(.white)
+    func cardContainer(background: Color = .white) -> some View {
+        self.background(background)
             .cornerRadius(appTheme.cornerRadius)
             .shadow(radius: appTheme.shadowRadius)
     }

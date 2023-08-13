@@ -4,6 +4,7 @@ import SwiftUI
 
 struct MenuView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
+    @EnvironmentObject var appAlertState: AppAlertViewState
 
     @ObservedObject var viewModel: MenuViewModel
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
@@ -31,6 +32,15 @@ struct MenuView: View {
             }
 
             Spacer()
+
+            if appAlertState.showAlert,
+               let appAlert = appAlertState.alertType {
+                AppAlertView(
+                    appAlert,
+                    openAuthScreen
+                )
+                .padding()
+            }
         }
         .background(.white)
         .onAppear { viewModel.onViewAppear() }

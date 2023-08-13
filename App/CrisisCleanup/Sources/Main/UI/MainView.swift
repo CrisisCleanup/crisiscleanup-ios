@@ -106,21 +106,15 @@ struct MainView: View {
 
 private struct TabViewContainer<Content: View>: View {
     let backgroundColor: Color
-    let bottomPadding: CGFloat?
-    let addBottomRect: Bool
 
     private let content: Content
 
     init(
         backgroundColor: Color = appTheme.colors.navigationContainerColor,
-        bottomPadding: CGFloat? = 8,
-        addBottomRect: Bool = false,
         @ViewBuilder content: () -> Content
     ) {
         self.content = content()
         self.backgroundColor = backgroundColor
-        self.bottomPadding = bottomPadding
-        self.addBottomRect = addBottomRect
     }
 
     var body: some View {
@@ -129,15 +123,6 @@ private struct TabViewContainer<Content: View>: View {
 
             VStack {
                 content
-
-                if addBottomRect {
-                    Rectangle()
-                        .fill(backgroundColor)
-                    // TODO: Setting a positive height causes flickering in Cases tab.
-                    //       Figure out how to add space without flickering for all content.
-                        .frame(height: bottomPadding)
-                        .background(backgroundColor)
-                }
             }
         }
     }
@@ -164,7 +149,7 @@ private struct MainTabs: View {
 
     var body: some View {
         TabViewContainer {
-            casesViewBuilder.casesView
+            casesViewBuilder.casesView(openAuthScreen)
                 .navigationDestination(for: NavigationRoute.self) { route in
                     switch route {
                     case .filterCases:
@@ -212,11 +197,8 @@ private struct MainTabs: View {
         .navTabItem(.cases, viewModel.translator)
         .tag(TopLevelDestination.cases)
 
-        TabViewContainer(
-            bottomPadding: 0,
-            addBottomRect: true
-        ) {
-            menuViewBuilder.menuView(openAuthScreen: openAuthScreen)
+        TabViewContainer {
+            menuViewBuilder.menuView(openAuthScreen)
         }
         .navTabItem(.menu, viewModel.translator)
         .tag(TopLevelDestination.menu)

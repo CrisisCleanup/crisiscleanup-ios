@@ -9,6 +9,7 @@ struct CasesView: View {
 
     @ObservedObject var viewModel: CasesViewModel
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
+    let openAuthScreen: () -> Void
 
     @State var map = MKMapView()
 
@@ -75,6 +76,7 @@ struct CasesView: View {
             }
 
             CasesOverlayElements(
+                openAuthScreen: openAuthScreen,
                 map: $map,
                 incidentSelectViewBuilder: incidentSelectViewBuilder,
                 hasNoIncidents: hasNoIncidents,
@@ -97,13 +99,15 @@ private struct CasesOverlayElements: View {
 
     @EnvironmentObject var viewModel: CasesViewModel
 
-    @State var openIncidentSelect = false
+    let openAuthScreen: () -> Void
 
     @Binding var map: MKMapView
 
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
     let hasNoIncidents: Bool
     let animateToSelectedIncidentBounds: (_ bounds: LatLngBounds) -> Void
+
+    @State var openIncidentSelect = false
 
     // TODO: Move text into view model and show "Loading" when caching to files then show numbers after inserting to database.
     func casesCountText(_ visibleCount: Int, _ totalCount: Int) -> String {
@@ -250,8 +254,8 @@ private struct CasesOverlayElements: View {
             if appAlertState.showAlert,
                let appAlert = appAlertState.alertType {
                 AppAlertView(
-                    appAlert
-                    // TODO: Login action
+                    appAlert,
+                    openAuthScreen
                 )
             }
         }
