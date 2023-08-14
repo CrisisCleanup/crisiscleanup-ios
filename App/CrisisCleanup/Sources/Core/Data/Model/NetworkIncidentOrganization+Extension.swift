@@ -2,7 +2,9 @@ extension NetworkIncidentOrganization {
     func asRecord() -> IncidentOrganizationRecord {
         IncidentOrganizationRecord(
             id: id,
-            name: name
+            name: name,
+            primaryLocation: primaryLocation,
+            secondaryLocation: secondaryLocation
         )
     }
 

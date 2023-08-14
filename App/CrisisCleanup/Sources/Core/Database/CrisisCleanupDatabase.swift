@@ -758,6 +758,16 @@ extension AppDatabase {
             )
         }
 
+        migrator.registerMigration(
+            "incident-organization-locations",
+            foreignKeyChecks: .immediate
+        ) { db in
+            try db.alter(table: "incidentOrganization") { t in
+                t.add(column: "primaryLocation", .integer)
+                t.add(column: "secondaryLocation", .integer)
+            }
+        }
+
         return migrator
     }
 }

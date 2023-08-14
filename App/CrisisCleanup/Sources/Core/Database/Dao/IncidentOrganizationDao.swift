@@ -54,6 +54,22 @@ public class IncidentOrganizationDao {
         .map { $0.affiliateId }
     }
 
+    func streamLocationIds(_ orgId: Int64) -> AnyPublisher<PopulatedOrganizationLocationIds?, Never> {
+        ValueObservation
+            .tracking { db in
+                try IncidentOrganizationRecord
+                    .select(IncidentOrganizationRecord.locationColumns)
+                    .byId(orgId)
+                    .asRequest(of: PopulatedOrganizationLocationIds.self)
+                    .fetchOne(db)
+            }
+            .removeDuplicates()
+            .shared(in: reader)
+            .publisher()
+            .assertNoFailure()
+            .eraseToAnyPublisher()
+    }
+
     func saveOrganizations(
         _ organizations: [IncidentOrganizationRecord],
         _ primaryContacts: [PersonContactRecord]
@@ -112,6 +128,16 @@ public class IncidentOrganizationDao {
         }
         .map {
             OrganizationIdName(id: $0.id, name: $0.name)
+        }
+    }
+
+    func findOrganization(_ id: Int64) -> Int64? {
+        try! reader.read{ db in
+            try IncidentOrganizationRecord
+                .select(IncidentOrganizationRecord.idColumn)
+                .byId(id)
+                .asRequest(of: Int64.self)
+                .fetchOne(db)
         }
     }
 }

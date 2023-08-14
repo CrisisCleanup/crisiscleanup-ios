@@ -11,6 +11,8 @@ struct IncidentOrganizationRecord: Identifiable, Equatable {
 
     let id: Int64
     let name: String
+    let primaryLocation: Int64?
+    let secondaryLocation: Int64?
 }
 
 extension IncidentOrganizationRecord: Codable, FetchableRecord, PersistableRecord {
@@ -18,13 +20,25 @@ extension IncidentOrganizationRecord: Codable, FetchableRecord, PersistableRecor
 
     fileprivate enum Columns: String, ColumnExpression {
         case id,
-             name
+             name,
+             primaryLocation,
+             secondaryLocation
     }
+
+    static let idColumn: [SQLSelectable] = [Columns.id]
+    static let locationColumns: [SQLSelectable] = [
+        Columns.primaryLocation,
+        Columns.secondaryLocation,
+    ]
 }
 
 extension DerivableRequest<IncidentOrganizationRecord> {
     func inIds(_ ids: [Int64]) -> Self {
         filter(ids.contains(IncidentOrganizationRecord.Columns.id))
+    }
+
+    func byId(_ id: Int64) -> Self {
+        filter(IncidentOrganizationRecord.Columns.id == id)
     }
 }
 

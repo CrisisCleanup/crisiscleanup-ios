@@ -26,6 +26,18 @@ extension NetworkRequestProvider {
         )
     }
 
+    var accountProfile: NetworkRequest {
+        NetworkRequest(
+            apiUrl("users/me")
+        )
+    }
+
+    var organizations: NetworkRequest {
+        NetworkRequest(
+            apiUrl("organizations")
+        )
+    }
+
     var languages: NetworkRequest {
         NetworkRequest(apiUrl("languages"))
     }

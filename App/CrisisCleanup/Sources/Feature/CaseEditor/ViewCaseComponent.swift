@@ -37,6 +37,7 @@ class ViewCaseComponent: Component<AppDependency>, ViewCaseViewBuilder {
                 accountDataRepository: dependency.accountDataRepository,
                 incidentsRepository: dependency.incidentsRepository,
                 organizationsRepository: dependency.organizationsRepository,
+                accountDataRefresher: dependency.accountDataRefresher,
                 incidentRefresher: dependency.incidentRefresher,
                 incidentBoundsProvider: dependency.incidentBoundsProvider,
                 worksitesRepository: dependency.worksitesRepository,

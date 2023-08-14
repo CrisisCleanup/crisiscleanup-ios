@@ -155,11 +155,21 @@ extension MainComponent {
         }
     }
 
+    var locationBoundsConverter: LocationBoundsConverter {
+        shared {
+            CrisisCleanupLocationBoundsConverter(
+                loggerFactory: loggerFactory
+            )
+        }
+    }
+
     public var organizationsRepository: OrganizationsRepository {
         shared {
             OfflineFirstOrganizationsRepository(
                 incidentOrganizationDao: organizationsDao,
+                locationDao: locationDao,
                 networkDataSource: networkDataSource,
+                locationBoundsConverter: locationBoundsConverter,
                 loggerFactory: loggerFactory
             )
         }

@@ -9,6 +9,7 @@ class MenuComponent: Component<AppDependency>, MenuViewBuilder {
     lazy var menuViewModel: MenuViewModel = MenuViewModel(
         appEnv: dependency.appEnv,
         accountDataRepository: dependency.accountDataRepository,
+        accountDataRefresher: dependency.accountDataRefresher,
         syncLogRepository: dependency.syncLogRepository,
         incidentSelector: dependency.incidentSelector,
         appVersionProvider: dependency.appVersionProvider,

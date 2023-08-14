@@ -39,6 +39,7 @@ public protocol AppDependency: Dependency {
 
     var authEventBus: AuthEventBus { get }
     var accountDataRepository: AccountDataRepository { get }
+    var accountDataRefresher: AccountDataRefresher { get }
 
     var syncLoggerFactory: SyncLoggerFactory { get }
     var syncPuller: SyncPuller { get }
@@ -120,6 +121,17 @@ extension MainComponent {
                 authApi,
                 loggerFactory,
                 appEnv
+            )
+        }
+    }
+
+    public var accountDataRefresher: AccountDataRefresher {
+        shared {
+            AccountDataRefresher(
+                networkDataSource: networkDataSource,
+                accountDataRepository: accountDataRepository,
+                organizationsRepository: organizationsRepository,
+                loggerFactory: loggerFactory
             )
         }
     }

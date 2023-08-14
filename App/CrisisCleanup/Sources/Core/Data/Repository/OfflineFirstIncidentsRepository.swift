@@ -81,17 +81,7 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         let locationIds = incidents.flatMap { $0.locations.map { il in il.location } }
         let locations = try await dataSource.getIncidentLocations(locationIds)
         if locations.isNotEmpty {
-            let sourceLocations = locations.map {
-                let multiCoordinates = $0.geom?.condensedCoordinates
-                let coordinates = $0.poly?.condensedCoordinates ?? $0.point?.coordinates
-                return Location(
-                    id: $0.id,
-                    shapeLiteral: $0.shapeType,
-                    coordinates: multiCoordinates == nil ? coordinates : nil,
-                    multiCoordinates: multiCoordinates
-                )
-            }
-            try await locationDao.saveLocations(sourceLocations)
+            try await locationDao.saveLocations(locations.asRecordSource())
         }
     }
 
