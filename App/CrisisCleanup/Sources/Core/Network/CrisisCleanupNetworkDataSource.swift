@@ -90,6 +90,14 @@ public protocol CrisisCleanupNetworkDataSource {
         _ organization: Int64,
         limit: Int
     ) async throws -> [NetworkPersonContact]
+
+    func getCaseHistory(
+        _ worksiteId: Int64
+    ) async throws -> [NetworkCaseHistoryEvent]
+
+    func getUsers(
+        _ userIds: [Int64]
+    ) async throws -> [NetworkPersonContact]
 }
 
 extension CrisisCleanupNetworkDataSource {

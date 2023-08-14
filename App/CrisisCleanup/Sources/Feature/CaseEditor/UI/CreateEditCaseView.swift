@@ -120,11 +120,7 @@ struct CreateEditCaseView: View {
                     .disabled(disableMutation)
             }
         }
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text(viewModel.headerTitle)
-            }
-        }
+        .screenTitle(viewModel.headerTitle)
         .hideNavBarUnderSpace()
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }

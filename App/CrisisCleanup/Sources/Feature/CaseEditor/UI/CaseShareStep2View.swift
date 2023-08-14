@@ -130,8 +130,7 @@ struct CaseShareStep2View: View {
                         Text(contact.contactValue)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal)
-                    .padding(.vertical, appTheme.listItemVerticalPadding)
+                    .listItemModifier()
                     .frame(minHeight: appTheme.rowItemHeight)
                     .onTapGesture {
                         viewModel.onAddContact(contact)
@@ -146,8 +145,7 @@ struct CaseShareStep2View: View {
             } else {
                 CaseShareBottomActions(message: $shareMessage)
                     .environmentObject(viewModel)
-                    .padding(.horizontal)
-                    .padding(.vertical, appTheme.listItemVerticalPadding)
+                    .listItemModifier()
             }
         }
     }

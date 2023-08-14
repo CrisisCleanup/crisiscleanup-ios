@@ -768,6 +768,51 @@ extension AppDatabase {
             }
         }
 
+        migrator.registerMigration(
+            "case-history-events",
+            foreignKeyChecks: .immediate
+        ) { db in
+            try db.create(table: "caseHistoryEvent") { t in
+                t.primaryKey("id", .integer)
+                t.column("worksiteId", .integer)
+                    .references("worksiteRoot", onDelete: .cascade)
+                t.column("createdAt", .date)
+                    .notNull()
+                t.column("createdBy", .integer)
+                    .notNull()
+                t.column("eventKey", .text)
+                    .notNull()
+                t.column("pastTenseT", .text)
+                    .notNull()
+                t.column("actorLocationName", .text)
+                    .notNull()
+                t.column("recipientLocationName", .text)
+            }
+            try db.create(
+                indexOn: "caseHistoryEvent",
+                columns: ["worksiteId", "createdBy", "createdAt"]
+            )
+
+            try db.create(table: "caseHistoryEventAttr") { t in
+                t.primaryKey("id", .integer)
+                    .references("caseHistoryEvent", onDelete: .cascade)
+                t.column("incidentName", .text)
+                    .notNull()
+                t.column("patientCaseNumber", .text)
+                t.column("patientId", .integer)
+                    .notNull()
+                t.column("patientLabelT", .text)
+                t.column("patientLocationName", .text)
+                t.column("patientNameT", .text)
+                t.column("patientReasonT", .text)
+                t.column("patientStatusNameT", .text)
+                t.column("recipientCaseNumber", .text)
+                t.column("recipientId", .integer)
+                t.column("recipientName", .text)
+                t.column("recipientNameT", .text)
+            }
+        }
+
         return migrator
     }
 }

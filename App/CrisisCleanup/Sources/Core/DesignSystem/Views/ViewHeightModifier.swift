@@ -14,7 +14,6 @@ struct ViewHeightModifier: ViewModifier {
     }
 }
 
-
 extension View {
     func viewHeightObserver(contentHeight: Binding<CGFloat>) -> some View {
         ModifiedContent(content: self, modifier: ViewHeightModifier(contentHeight: contentHeight))

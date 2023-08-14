@@ -74,11 +74,7 @@ struct CaseFlagsView: View {
                 dismiss()
             }
         }
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text(t.t("nav.flag"))
-            }
-        }
+        .screenTitle(t.t("nav.flag"))
         .environmentObject(viewModel)
         .environmentObject(focusableViewState)
         .onAppear { viewModel.onViewAppear() }
@@ -299,8 +295,7 @@ private struct CaseFlagsOrgResults: View {
             ForEach(orgResults, id: \.id) { idName in
                 Text(idName.name)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal)
-                    .padding(.vertical, appTheme.listItemVerticalPadding)
+                    .listItemModifier()
                     .frame(minHeight: appTheme.rowItemHeight)
                     .onTapGesture { onOrgSelect(idName) }
             }
@@ -572,8 +567,7 @@ private struct AddFlagSaveActionBar: View {
                 .stylePrimary()
                 .disabled(!(enabled && enableSave))
             }
-            .padding(.horizontal)
-            .padding(.vertical, appTheme.listItemVerticalPadding)
+            .listItemModifier()
         }
     }
 }

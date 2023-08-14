@@ -367,7 +367,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
     }
 
     func getNearbyOrganizations(_ latitude: Double, _ longitude: Double) async throws -> [NetworkIncidentOrganization] {
-        let request = requestProvider.nearbyClaimedOrganizations
+        let request = requestProvider.organizations
             .addQueryItems(
                 "nearby_claimed", "\(longitude),\(latitude)"
             )
@@ -382,17 +382,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         throw response.error ?? networkError
     }
 
-    func searchUsers(
-        _ q: String,
-        _ organization: Int64,
-        limit: Int
-    ) async throws -> [NetworkPersonContact] {
-        let request = requestProvider.searchUsers
-            .addQueryItems(
-                "search", q,
-                "organization", "\(organization)",
-                "limit", "\(limit)"
-            )
+    private func processUsersRequest(_ request: NetworkRequest) async throws -> [NetworkPersonContact] {
         let response = await networkClient.callbackContinue(
             requestConvertible: request,
             type: NetworkUsersResult.self
@@ -402,6 +392,43 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
             return result.results ?? [NetworkPersonContact]()
         }
         throw response.error ?? networkError
+    }
+
+    func searchUsers(
+        _ q: String,
+        _ organization: Int64,
+        limit: Int
+    ) async throws -> [NetworkPersonContact] {
+        let request = requestProvider.users
+            .addQueryItems(
+                "search", q,
+                "organization", "\(organization)",
+                "limit", "\(limit)"
+            )
+        return try await processUsersRequest(request)
+    }
+
+    func getCaseHistory(_ worksiteId: Int64) async throws -> [NetworkCaseHistoryEvent] {
+        let request = requestProvider.caseHistory
+            .addPaths(String(worksiteId), "history")
+        let response = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkCaseHistoryResult.self,
+            wrapResponseKey: "events"
+        )
+        if let result = response.value {
+            try result.errors?.tryThrowException()
+            return result.events ?? [NetworkCaseHistoryEvent]()
+        }
+        throw response.error ?? networkError
+    }
+
+    func getUsers(_ userIds: [Int64]) async throws -> [NetworkPersonContact] {
+        let request = requestProvider.users
+            .addQueryItems(
+                "id__in", userIds.commaJoined
+            )
+        return try await processUsersRequest(request)
     }
 }
 

@@ -36,6 +36,8 @@ struct ThemeColor {
     let selectedOptionContainerColor: Color
     let navigationContainerColor: Color
     let neutralIconColor: Color
+    let neutralBackgroundColor: Color
+    let neutralFontColor: Color
     let unfocusedBorderColor: Color
 
     let addMediaBackgroundColor: Color
@@ -52,6 +54,8 @@ struct ThemeColor {
         separatorColor: Color = Color(hex: 0xFFF6F8F9),
         selectedOptionContainerColor: Color = Color(hex: 0xFFF6F8F9),
         neutralIconColor: Color = Color(hex: 0xFF848F99),
+        neutralBackgroundColor: Color = Color(hex: 0xFFF6F8F9),
+        neutralFontColor: Color = Color(hex: 0xFF818181),
         navigationContainerColor: Color = Color(hex: 0xFF2D2D2D),
         unfocusedBorderColor: Color = Color(hex: 0xFFDADADA),
 
@@ -78,6 +82,8 @@ struct ThemeColor {
         self.separatorColor = separatorColor
         self.selectedOptionContainerColor = selectedOptionContainerColor
         self.neutralIconColor = neutralIconColor
+        self.neutralBackgroundColor = neutralBackgroundColor
+        self.neutralFontColor = neutralFontColor
         self.navigationContainerColor = navigationContainerColor
         self.unfocusedBorderColor = unfocusedBorderColor
 

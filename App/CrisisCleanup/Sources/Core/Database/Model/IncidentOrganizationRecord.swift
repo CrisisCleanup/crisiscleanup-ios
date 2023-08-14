@@ -46,6 +46,7 @@ extension DerivableRequest<IncidentOrganizationRecord> {
 
 struct OrganizationToPrimaryContactRecord: Identifiable, Equatable {
     static let personContacts = belongsTo(PersonContactRecord.self)
+    static let organization = belongsTo(IncidentOrganizationRecord.self)
 
     /// organizationIod
     let id: Int64

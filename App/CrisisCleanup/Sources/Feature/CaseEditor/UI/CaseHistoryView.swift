@@ -1,82 +1,117 @@
 import SwiftUI
 
 struct CaseHistoryView: View {
-    @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @ObservedObject var viewModel: CaseHistoryViewModel
 
+    private let columns = [GridItem(.flexible())]
+
     var body: some View {
-        ScrollView {
+        ZStack {
             VStack(alignment: .leading) {
                 Text(t.t("caseHistory.do_not_share_contact_warning"))
-                    .padding([.horizontal, .top])
-                    .bold()
-                Text(t.t("caseHistory.do_not_share_contact_explanation"))
-                    .padding([.horizontal, .bottom])
+                    .fontHeader3()
+                    .listItemModifier()
 
-                Text("~~No History")
-                    .padding(.horizontal)
+                ScrollView {
+                    LazyVGrid(columns: columns) {
+                        Text(t.t("caseHistory.do_not_share_contact_explanation"))
+                            .listItemModifier()
 
-                HistoryCard()
-                HistoryCard()
-                HistoryCard()
-                Spacer()
+                        if viewModel.hasEvents {
+                            ForEach(viewModel.historyEvents, id: \.userId) { userEvents in
+                                VStack(alignment: .leading) {
+                                    CaseHistoryUser(userEvents: userEvents)
+                                    CaseHistoryEvents(events: userEvents.events)
+                                }
+                                .cardContainerPadded()
+                            }
+                        }
+                        else if !viewModel.isLoadingCaseHistory {
+                            Text(t.t("caseHistory.no_history"))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .listItemModifier()
+                        }
+                    }
+                }
+            }
+
+            if viewModel.isLoadingCaseHistory {
+                VStack {
+                    ProgressView()
+                        .frame(alignment: .center)
+                }
             }
         }
+        .screenTitle(viewModel.screenTitle)
+        .environmentObject(viewModel)
+        .onAppear { viewModel.onViewAppear() }
+        .onDisappear { viewModel.onViewDisappear() }
     }
 }
 
-
-struct HistoryCard: View {
+private struct CaseHistoryUser: View {
+    let userEvents: CaseHistoryUserEvents
 
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack {
             HStack {
-                VStack(alignment: .leading) {
-                    Text("First Last")
-                        .bold() // TODO: change to app font
-                        .foregroundColor(Color.gray)
-                    Text("Some Org Inc")
-                        .font(.caption) // TODO: change to app font
-                        .foregroundColor(Color.gray)
-                }
+                Text(userEvents.userName)
+                    .fontHeader4()
 
                 Spacer()
 
-                VStack(alignment: .trailing) {
-                    let phoneText = "123-456-7890"
-                    Text(phoneText)
-                        .font(.caption)
-                        .customLink(urlString: "tel:\(phoneText)")
+                let phoneText = userEvents.userPhone
+                Text(phoneText)
+                    .customLink(urlString: "tel:\(phoneText)")
+            }
 
-                    let email = "firstlast@email.com"
+            HStack {
+                Text(userEvents.orgName)
+
+                Spacer()
+
+                let email = userEvents.userEmail
+                if email.isNotBlank {
                     Text(email)
-                        .font(.caption)
                         .customLink(urlString: email)
                 }
             }
-            .padding()
-
-            HistoryAction()
-                .padding()
-            HistoryAction()
-                .padding()
         }
-        .cardContainerPadded()
+        // TODO: Common dimensions
+        .padding(.all, 16)
+        .background(.white)
     }
 }
 
-struct HistoryAction: View {
+private struct CaseHistoryEvents: View {
+    let events: [CaseHistoryEvent]
     var body: some View {
-        VStack(alignment: .leading ) {
-            Text("Viewed case C67 in Medium Flood")
-            HStack {
-                Text("1 Day ago • Some, Location")
-                    .font(.caption)
-                    .foregroundColor(Color.gray)
-                Spacer()
+        // TODO: Common dimensions
+        VStack(spacing: 16) {
+            ForEach(events, id: \.id) { event in
+                VStack(
+                    alignment: .leading,
+                    // TODO: Common dimensions
+                    spacing: 4
+                ) {
+                    Text(event.pastTenseDescription)
+                    HStack {
+                        Text(event.createdAt.relativeTime)
+                            .foregroundColor(appTheme.colors.neutralFontColor)
+                            .fontBodySmall()
+                        Text(event.actorLocationName)
+                            .foregroundColor(appTheme.colors.neutralFontColor)
+                            .fontBodySmall()
+                        Spacer()
+                    }
+                }
+                .frame(maxWidth: .infinity)
             }
         }
+        // TODO: Common dimensions
+        .padding(.all, 16)
+        .background(appTheme.colors.neutralBackgroundColor)
     }
 }

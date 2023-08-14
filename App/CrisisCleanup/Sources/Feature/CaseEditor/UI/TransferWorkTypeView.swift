@@ -31,8 +31,7 @@ struct TransferWorkTypeView: View {
                 } else {
                     TransferWorkTypeActions()
                         .disabled(disabled)
-                        .padding(.horizontal)
-                        .padding(.vertical, appTheme.listItemVerticalPadding)
+                        .listItemModifier()
    }
             }
             .frame(maxWidth: UIScreen.main.bounds.size.width)
@@ -41,11 +40,7 @@ struct TransferWorkTypeView: View {
                     dismiss()
                 }
             }
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text(viewModel.screenTitle)
-                }
-            }
+            .screenTitle(viewModel.screenTitle)
             .hideNavBarUnderSpace()
             .onAppear { viewModel.onViewAppear() }
             .onDisappear { viewModel.onViewDisappear() }

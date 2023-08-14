@@ -73,6 +73,10 @@ extension MainComponent {
         PersonContactDao(appDatabase)
     }
 
+    var caseHistoryDao: CaseHistoryDao {
+        CaseHistoryDao(appDatabase)
+    }
+
     var syncLogDao: SyncLogDao {
         SyncLogDao(appDatabase)
     }
@@ -242,6 +246,20 @@ extension MainComponent {
                 dataSource: CasesFiltersUserDefaults(),
                 accountDataRepository: accountDataRepository,
                 networkDataSource: networkDataSource
+            )
+        }
+    }
+
+    public var caseHistoryRepository: CaseHistoryRepository {
+        shared {
+            OfflineFirstCaseHistoryRepository(
+                caseHistoryDao: caseHistoryDao,
+                personContactDao: personContactDao,
+                worksiteDao: worksiteDao,
+                networkDataSource: networkDataSource,
+                incidentOrganizationDao: organizationsDao,
+                translator: languageTranslationsRepository,
+                loggerFactory: loggerFactory
             )
         }
     }

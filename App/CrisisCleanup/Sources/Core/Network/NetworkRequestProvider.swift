@@ -28,13 +28,15 @@ extension NetworkRequestProvider {
 
     var accountProfile: NetworkRequest {
         NetworkRequest(
-            apiUrl("users/me")
+            apiUrl("users/me"),
+            addTokenHeader: true
         )
     }
 
     var organizations: NetworkRequest {
         NetworkRequest(
-            apiUrl("organizations")
+            apiUrl("organizations"),
+            addTokenHeader: true
         )
     }
 
@@ -133,16 +135,16 @@ extension NetworkRequestProvider {
         )
     }
 
-    var nearbyClaimedOrganizations: NetworkRequest {
+    var users: NetworkRequest {
         NetworkRequest(
-            apiUrl("organizations"),
+            apiUrl("users"),
             addTokenHeader: true
         )
     }
 
-    var searchUsers: NetworkRequest {
+    var caseHistory: NetworkRequest {
         NetworkRequest(
-            apiUrl("users"),
+            apiUrl("worksites"),
             addTokenHeader: true
         )
     }

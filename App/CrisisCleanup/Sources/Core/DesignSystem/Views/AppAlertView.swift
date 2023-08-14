@@ -108,8 +108,7 @@ struct AppAlertView: View {
 
         HStack {
             Text(text)
-                .padding(.horizontal)
-                .padding(.vertical, appTheme.listItemVerticalPadding)
+                .listItemModifier()
                 .foregroundColor(.white)
 
             Spacer()

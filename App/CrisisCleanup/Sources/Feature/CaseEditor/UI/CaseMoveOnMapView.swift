@@ -61,12 +61,6 @@ struct CaseMoveOnMapView: View {
             .padding(.horizontal)
 
         }
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                VStack {
-                    Text(t.t("caseForm.select_on_map"))
-                }
-            }
-        }
+        .screenTitle(t.t("caseForm.select_on_map"))
     }
 }

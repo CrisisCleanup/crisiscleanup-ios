@@ -140,6 +140,25 @@ public class IncidentOrganizationDao {
                 .fetchOne(db)
         }
     }
+
+    func saveMissing(
+        _ organizations: [IncidentOrganizationRecord],
+        _ affiliateIds: [[Int64]]
+    ) throws {
+        var newOrganizations = [IncidentOrganizationRecord]()
+        var newAffiliates = [OrganizationAffiliateRecord]()
+        for i in organizations.indices {
+            let organization = organizations[i]
+            if findOrganization(organization.id) == nil {
+                newOrganizations.append(organization)
+                let affiliates = affiliateIds[i].map {
+                    OrganizationAffiliateRecord(id: organization.id, affiliateId: $0)
+                }
+                newAffiliates.append(contentsOf: affiliates)
+            }
+        }
+        try database.saveOrganizations(newOrganizations, newAffiliates)
+    }
 }
 
 extension AppDatabase {
@@ -187,6 +206,20 @@ extension AppDatabase {
     ) async throws {
         try await dbWriter.write { db in
             try stats.upsert(db)
+        }
+    }
+
+    fileprivate func saveOrganizations(
+        _ organizations: [IncidentOrganizationRecord],
+        _ affiliates: [OrganizationAffiliateRecord]
+    ) throws {
+        try dbWriter.write { db in
+            for record in organizations {
+                try record.upsert(db)
+            }
+            for record in affiliates {
+                try record.insert(db, onConflict: .ignore)
+            }
         }
     }
 }

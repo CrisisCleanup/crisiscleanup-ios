@@ -31,7 +31,7 @@ public protocol AppDependency: Dependency {
     var databaseManagementRepository: DatabaseManagementRepository { get }
     var usersRepository: UsersRepository { get }
     var casesFilterRepository: CasesFilterRepository { get }
-
+    var caseHistoryRepository: CaseHistoryRepository { get }
     var translator: KeyAssetTranslator { get }
 
     var authenticateViewBuilder: AuthenticateViewBuilder { get }
