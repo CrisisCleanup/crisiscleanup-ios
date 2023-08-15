@@ -457,7 +457,7 @@ private struct BottomNav: View {
             }
             Spacer()
             BottomNavButton("ic_case_flag", "nav.flag") {
-                router.openCaseFlags()
+                router.openCaseFlags(isFromCaseEdit: true)
             }
             Spacer()
             BottomNavButton("ic_case_history", "actions.history") {

@@ -119,25 +119,6 @@ private struct CasesOverlayElements: View {
 
     @State var openIncidentSelect = false
 
-    // TODO: Move text into view model and show "Loading" when caching to files then show numbers after inserting to database.
-    func casesCountText(_ visibleCount: Int, _ totalCount: Int) -> String {
-        {
-            if visibleCount == totalCount || visibleCount == 0 {
-                if visibleCount == 0 {
-                    return t.t("info.t_of_t_cases").replacingOccurrences(of: "{visible_count}", with: "\(totalCount)")
-                } else if totalCount == 1 {
-                    return t.t("info.1_of_1_case")
-                } else {
-                    return t.t("info.t_of_t_cases").replacingOccurrences(of: "{visible_count}", with: "\(totalCount)")
-                }
-            } else {
-                return t.t("info.v_of_t_cases")
-                    .replacingOccurrences(of: "{visible_count}", with: "\(visibleCount)")
-                    .replacingOccurrences(of: "{total_count}", with: "\(totalCount)")
-            }
-        }()
-    }
-
     var body: some View {
         let isMapView = !viewModel.isTableView
 
@@ -182,15 +163,26 @@ private struct CasesOverlayElements: View {
                         HStack {
                             Spacer()
 
-                            let (casesCount, totalCount) = viewModel.casesCount
-                            if totalCount >= 0 {
-                                Text(casesCountText(casesCount, totalCount))
-                                    .multilineTextAlignment(.center)
-                                    .padding()
-                                    .background(appTheme.colors.navigationContainerColor)
-                                    .foregroundColor(Color.white)
-                                    .cornerRadius(appTheme.cornerRadius)
-                                    .shadow(radius: appTheme.shadowRadius)
+                            let mapCount = viewModel.casesCountMapText
+                            if mapCount.isNotBlank || viewModel.isLoadingData {
+                                HStack(spacing: appTheme.gridItemSpacing) {
+                                    // TODO: Animate individual elements
+                                    if mapCount.isNotBlank {
+                                        Text(mapCount)
+                                            .foregroundColor(Color.white)
+                                    }
+                                    if viewModel.isLoadingData {
+                                        ProgressView()
+                                            .circularProgress()
+                                            .tint(.white)
+                                    }
+                                }
+                                .onTapGesture {
+                                    viewModel.syncWorksitesData()
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .cardContainer(background: appTheme.colors.navigationContainerColor)
                             }
 
                             Spacer()

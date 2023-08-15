@@ -66,22 +66,16 @@ private struct TopBar: View {
                 showIncidentSelect.toggle()
             } label: {
                 let selectedIncident = viewModel.incidentsData.selected
-
-                IncidentDisasterImage(
-                    selectedIncident,
-                    disabled: hasNoIncidents
-                )
-
                 let title = selectedIncident.isEmptyIncident
                 ? t.t(TopLevelDestination.menu.titleTranslateKey)
                 : selectedIncident.shortName
-                Text(title)
-                    .fontHeader1()
-                    .padding(.leading, appTheme.gridItemSpacing)
-
-                if !selectedIncident.isEmptyIncident {
-                    DropDownIcon()
-                }
+                IncidentHeader(
+                    incident: selectedIncident,
+                    drop: !selectedIncident.isEmptyIncident,
+                    text: title,
+                    disabled: hasNoIncidents,
+                    isLoading: viewModel.showHeaderLoading
+                )
             }
             .sheet(
                 isPresented: $showIncidentSelect,

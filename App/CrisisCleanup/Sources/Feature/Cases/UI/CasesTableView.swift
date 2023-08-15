@@ -3,18 +3,23 @@ import SwiftUI
 struct CasesTableView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
+    @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var viewModel: CasesViewModel
 
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
     let hasNoIncidents: Bool
 
     var body: some View {
+        let isLoadingData = viewModel.isLoadingData
+        let isEditable = viewModel.isTableEditable
+
         VStack {
             HStack {
                 TableViewIncidentSelector(
                     hasNoIncidents: hasNoIncidents,
                     selectedIncident: viewModel.incidentsData.selected,
-                    incidentSelectViewBuilder: incidentSelectViewBuilder
+                    incidentSelectViewBuilder: incidentSelectViewBuilder,
+                    isLoadingData: isLoadingData
                 )
 
                 Spacer()
@@ -23,14 +28,15 @@ struct CasesTableView: View {
             }
             .listItemModifier()
 
-            let casesData = viewModel.tableData
-
             HStack {
-                // TODO: Generate text in view model
                 // TODO: Animate
-                if casesData.isNotEmpty {
-                    Text("\(casesData.count) \(t.t("casesVue.cases"))")
+                if viewModel.casesCountTableText.isNotBlank {
+                    Text(viewModel.casesCountTableText)
                         .fontHeader4()
+                        .disabled(isLoadingData)
+                        .onTapGesture {
+                            viewModel.syncWorksitesData()
+                        }
                 }
 
                 Spacer()
@@ -40,11 +46,20 @@ struct CasesTableView: View {
                         Text(t.t(sortBy.translateKey))
                     }
                 }
+                .disabled(isLoadingData || !isEditable)
                 .tint(.black)
                 .blackBorder()
             }
             .listItemModifier()
 
+            // TODO: Show phone numbers in bottom sheet if there are more than 1 phone numbers
+            // TODO: Alert wrong location is checked if checked
+            // TODO: Show claim action error dialog if error has occurred
+            // TODO: Show (no results) table sort message if not blank
+
+            let casesData = viewModel.tableData
+            let isTurnOnRelease = viewModel.selectedIncident.turnOnRelease
+            let changingClaimIds = viewModel.worksitesChangingClaimAction
             ScrollView {
                 LazyVStack {
                     ForEach(0..<casesData.count, id: \.self) { index in
@@ -52,10 +67,20 @@ struct CasesTableView: View {
                             FormListSectionSeparator()
                         }
 
-                        TableCard(
-                            worksiteDistance: casesData[index]
+                        let worksite = casesData[index].worksite
+                        let isChangingClaim = changingClaimIds.contains(worksite.id)
+                        CaseTableItemCard(
+                            worksiteDistance: casesData[index],
+                            isEditable: isEditable,
+                            isTurnOnRelease: isTurnOnRelease,
+                            isChangingClaim: isChangingClaim
                         )
                     }
+                }
+            }
+            .onReceive(viewModel.openWorksiteAddFlagCounter) { _ in
+                if viewModel.takeOpenWorksiteAddFlag() {
+                    router.openCaseFlags(isFromCaseEdit: false)
                 }
             }
         }
@@ -74,6 +99,7 @@ private struct TableViewIncidentSelector: View {
     let hasNoIncidents: Bool
     let selectedIncident: Incident
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
+    let isLoadingData: Bool
 
     @State private var openIncidentSelect = false
 
@@ -83,7 +109,9 @@ private struct TableViewIncidentSelector: View {
         } label: {
             IncidentHeader(
                 incident: selectedIncident,
-                drop: true
+                drop: true,
+                disabled: hasNoIncidents,
+                isLoading: isLoadingData
             )
             .tint(.black)
         }
@@ -103,6 +131,7 @@ private struct TableViewIncidentSelector: View {
 
 struct TableViewButtons: View {
     @EnvironmentObject var router: NavigationRouter
+
     let buttonSize = appTheme.buttonSize
 
     var body: some View {
@@ -135,20 +164,24 @@ struct TableViewButtons: View {
     }
 }
 
-struct TableCard: View {
+private struct CaseTableItemCard: View {
     @EnvironmentObject var router: NavigationRouter
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewModel: CasesViewModel
-    var worksiteDistance: WorksiteDistance
+
+    let worksiteDistance: WorksiteDistance
     var worksite: Worksite { worksiteDistance.data.worksite }
+
+    let isEditable: Bool
+    let isTurnOnRelease: Bool
+    let isChangingClaim: Bool
 
     var body: some View {
         VStack(alignment: .leading) {
             HStack {
                 Button {
-                    // TODO: Set Case before opening
-                    // router.openCaseFlags()
+                    viewModel.onOpenCaseFlags(worksite)
                 } label: {
                     Image(systemName: "flag.fill")
                 }

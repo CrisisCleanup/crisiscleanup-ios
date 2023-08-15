@@ -58,7 +58,7 @@ class CasesSearchViewModel: ObservableObject {
     }
 
     private func subscribeToLoadingStates() {
-        let subscription = Publishers.CombineLatest3(
+        Publishers.CombineLatest3(
             isInitialLoading,
             isSearching,
             isSelectingResultSubject
@@ -66,11 +66,11 @@ class CasesSearchViewModel: ObservableObject {
             .map { (b0, b1, b2) in b0 || b1 || b2 }
             .eraseToAnyPublisher()
             .assign(to: \.isLoading, on: self)
-        subscriptions.insert(subscription)
+            .store(in: &subscriptions)
 
-        let selectingSubscription = isSelectingResultSubject
+        isSelectingResultSubject
             .assign(to: \.isSelectingResult, on: self)
-        subscriptions.insert(selectingSubscription)
+            .store(in: &subscriptions)
     }
 
     private func subscribeToRecents() {
@@ -112,8 +112,9 @@ class CasesSearchViewModel: ObservableObject {
             )
             .map { $0.trim() }
             .removeDuplicates()
+            .share()
 
-        let subscription = Publishers.CombineLatest(
+        Publishers.CombineLatest(
             incidentIdPublisher,
             searchQueryIntermediate
         )
@@ -146,7 +147,7 @@ class CasesSearchViewModel: ObservableObject {
         }
         .receive(on: RunLoop.main)
         .assign(to: \.searchResults, on: self)
-        subscriptions.insert(subscription)
+        .store(in: &subscriptions)
     }
 
     private func getIcon(_ workType: WorkType?) -> UIImage? {

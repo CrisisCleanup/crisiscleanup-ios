@@ -177,8 +177,7 @@ class AppSyncer: SyncPuller, SyncPusher {
             pullDeltaTask = Task {
                 do {
                     let incidentId = try await appPreferences.asyncFirst().selectedIncidentId
-                    if let _ = try incidentsRepository.getIncident(incidentId),
-                       let syncStats = try worksitesRepository.getWorksiteSyncStats(incidentId),
+                    if let syncStats = try worksitesRepository.getWorksiteSyncStats(incidentId),
                        syncStats.isDeltaPull {
                         syncLogger.log("App pull \(incidentId) delta")
                         do {

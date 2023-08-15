@@ -31,16 +31,19 @@ struct ExistingWorksitesList: View {
     let worksites: [CaseSummaryResult]
     let onSelect: (CaseSummaryResult) -> Void
     let isEditable: Bool
+    private let columns = [GridItem(.flexible())]
 
     var body: some View {
-        ForEach(worksites) { worksite in
-            CaseView(worksite: worksite)
-            .onTapGesture {
-                if isEditable {
-                    onSelect(worksite)
-                }
+        LazyVGrid(columns: columns) {
+            ForEach(worksites) { worksite in
+                CaseView(worksite: worksite)
+                    .onTapGesture {
+                        if isEditable {
+                            onSelect(worksite)
+                        }
+                    }
+                    .padding()
             }
-            .padding()
         }
     }
 }

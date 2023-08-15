@@ -21,6 +21,9 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     private let syncWorksitesFullIncidentIdSubject = CurrentValueSubject<Int64, Never>(EmptyWorksite.id)
     var syncWorksitesFullIncidentId: any Publisher<Int64, Never>
 
+    private let isDeterminingWorksitesCountSubject = CurrentValueSubject<Bool, Never>(false)
+    var isDeterminingWorksitesCount: any Publisher<Bool, Never>
+
     var incidentDataPullStats: any Publisher<IncidentDataPullStats, Never>
 
     private let orgIdPublisher: AnyPublisher<Int64, Never>
@@ -54,6 +57,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
 
         isLoading = isLoadingSubject
         syncWorksitesFullIncidentId = syncWorksitesFullIncidentIdSubject
+        isDeterminingWorksitesCount = isDeterminingWorksitesCountSubject
         incidentDataPullStats = worksitesSyncer.dataPullStats
 
         orgIdPublisher = accountDataRepository.accountData
@@ -63,6 +67,11 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         organizationAffiliatesPublisher = orgIdPublisher
             .map { orgId in organizationsRepository.getOrganizationAffiliateIds(orgId) }
             .eraseToAnyPublisher()
+    }
+
+    func streamIncidentWorksitesCount(incidentIdStream: any Publisher<Int64, Never>) -> any Publisher<Int, Never> {
+        // TODO: Do
+        Just(0)
     }
 
     func streamIncidentWorksitesCount(_ id: Int64) -> any Publisher<Int, Never> {

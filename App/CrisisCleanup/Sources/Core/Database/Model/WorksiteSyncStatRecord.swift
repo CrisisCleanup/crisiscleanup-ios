@@ -16,6 +16,7 @@ struct WorksiteSyncStatRecord : Identifiable, Equatable {
             incidentId: id,
             syncStart: syncStart,
             dataCount: targetCount,
+            pagedCount: pagedCount,
             syncAttempt: SyncAttempt(
                 successfulSeconds: successfulSync?.timeIntervalSince1970 ?? 0.0,
                 attemptedSeconds: attemptedSync?.timeIntervalSince1970 ?? 0.0,

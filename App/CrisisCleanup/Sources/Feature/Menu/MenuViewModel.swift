@@ -2,16 +2,20 @@ import SwiftUI
 import Combine
 
 class MenuViewModel: ObservableObject {
-    private let appEnv: AppEnv
+    private let incidentsRepository: IncidentsRepository
+    private let worksitesRepository: WorksitesRepository
     private let accountDataRepository: AccountDataRepository
     private let incidentSelector: IncidentSelector
     private let appVersionProvider: AppVersionProvider
     private let databaseVersionProvider: DatabaseVersionProvider
     private let authEventBus: AuthEventBus
+    private let appEnv: AppEnv
     private let logger: AppLogger
 
     let isDebuggable: Bool
     let isProduction: Bool
+
+    @Published private(set) var showHeaderLoading = false
 
     @Published private(set) var profilePicture: AccountProfilePicture? = nil
 
@@ -29,7 +33,8 @@ class MenuViewModel: ObservableObject {
     private var subscriptions = Set<AnyCancellable>()
 
     init(
-        appEnv: AppEnv,
+        incidentsRepository: IncidentsRepository,
+        worksitesRepository: WorksitesRepository,
         accountDataRepository: AccountDataRepository,
         accountDataRefresher: AccountDataRefresher,
         syncLogRepository: SyncLogRepository,
@@ -37,14 +42,17 @@ class MenuViewModel: ObservableObject {
         appVersionProvider: AppVersionProvider,
         databaseVersionProvider: DatabaseVersionProvider,
         authEventBus: AuthEventBus,
+        appEnv: AppEnv,
         loggerFactory: AppLoggerFactory
     ) {
-        self.appEnv = appEnv
+        self.incidentsRepository = incidentsRepository
+        self.worksitesRepository = worksitesRepository
         self.accountDataRepository = accountDataRepository
         self.incidentSelector = incidentSelector
         self.appVersionProvider = appVersionProvider
         self.databaseVersionProvider = databaseVersionProvider
         self.authEventBus = authEventBus
+        self.appEnv = appEnv
         logger = loggerFactory.getLogger("menu")
 
         isDebuggable = appEnv.isDebuggable
@@ -57,12 +65,24 @@ class MenuViewModel: ObservableObject {
     }
 
     func onViewAppear() {
+        subscribeLoading()
         subscribeIncidentsData()
-        subscribeToProfilePicture()
+        subscribeProfilePicture()
     }
 
     func onViewDisappear() {
         subscriptions = cancelSubscriptions(subscriptions)
+    }
+
+    private func subscribeLoading() {
+        Publishers.CombineLatest(
+            incidentsRepository.isLoading.eraseToAnyPublisher(),
+            worksitesRepository.isLoading.eraseToAnyPublisher()
+        )
+        .map { b0, b1 in b0 || b1 }
+        .receive(on: RunLoop.main)
+        .assign(to: \.showHeaderLoading, on: self)
+        .store(in: &subscriptions)
     }
 
     private func subscribeIncidentsData() {
@@ -73,7 +93,7 @@ class MenuViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
-    private func subscribeToProfilePicture() {
+    private func subscribeProfilePicture() {
         accountDataRepository.accountData
             .eraseToAnyPublisher()
             .receive(on: RunLoop.main)

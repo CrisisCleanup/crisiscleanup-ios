@@ -21,6 +21,7 @@ class CasesComponent: Component<AppDependency>, CasesViewBuilder {
         worksiteProvider: dependency.worksiteProvider,
         transferWorkTypeProvider: dependency.transferWorkTypeProvider,
         translator: dependency.translator,
+        syncPuller: dependency.syncPuller,
         loggerFactory: dependency.loggerFactory
     )
 

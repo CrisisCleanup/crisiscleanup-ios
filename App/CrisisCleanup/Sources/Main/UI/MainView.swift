@@ -177,8 +177,8 @@ private struct MainTabs: View {
                         caseShareViewBuilder.caseShareView
                     case .caseShareStep2:
                         caseShareViewBuilder.caseShareStep2View
-                    case .caseFlags:
-                        caseFlagsViewBuilder.caseFlagsView
+                    case .caseFlags(let isFromCaseEdit):
+                        caseFlagsViewBuilder.caseFlagsView(isFromCaseEdit: isFromCaseEdit)
                     case .caseHistory:
                         caseHistoryViewBuilder.caseHistoryView
                     case .caseWorkTypeTransfer:

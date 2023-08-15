@@ -74,7 +74,8 @@ struct CaseFlagsView: View {
                 dismiss()
             }
         }
-        .screenTitle(t.t("nav.flag"))
+        .screenTitle(viewModel.screenTitle)
+        .hideNavBarUnderSpace()
         .environmentObject(viewModel)
         .environmentObject(focusableViewState)
         .onAppear { viewModel.onViewAppear() }
