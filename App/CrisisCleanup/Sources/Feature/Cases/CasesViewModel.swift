@@ -451,6 +451,8 @@ class CasesViewModel: ObservableObject {
         locationManager.$locationPermission
             .sink { _ in
                 if self.locationManager.hasLocationAccess {
+                    self.isMyLocationEnabled = true
+
                     if self.isTableView {
                         let sortBy = self.pendingTableSort.exchange(AtomicSortBy(.none), ordering: .relaxed).value
                         if sortBy != .none {
@@ -465,6 +467,18 @@ class CasesViewModel: ObservableObject {
 
     func syncWorksitesData() {
         syncPuller.appPullIncidentWorksitesDelta()
+    }
+
+    func useMyLocation() -> Bool {
+        if locationManager.requestLocationAccess() {
+            return true
+        }
+
+        if locationManager.isDeniedLocationAccess {
+            showExplainLocationPermssion = true
+        }
+
+        return false
     }
 
     @MainActor

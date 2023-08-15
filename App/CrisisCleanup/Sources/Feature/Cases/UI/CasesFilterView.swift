@@ -113,6 +113,7 @@ struct CasesFilterView: View {
 
                 FilterButtons()
                     .environmentObject(viewModel)
+                    .listItemModifier()
             }
         }
         .hideNavBarUnderSpace()
@@ -490,7 +491,6 @@ struct FilterButtons: View {
             .stylePrimary()
             .disabled(noFilters)
         }
-        .padding(.horizontal)
     }
 }
 

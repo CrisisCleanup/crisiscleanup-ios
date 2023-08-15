@@ -55,6 +55,11 @@ struct CasesView: View {
                         viewModel.onMissingMapMarkers()
                     }
                 }
+                .onChange(of: viewModel.isMyLocationEnabled) { enabled in
+                    if enabled {
+                        map.userTrackingMode = .follow
+                    }
+                }
             }
 
             if viewModel.showDataProgress {
@@ -230,7 +235,18 @@ private struct CasesOverlayElements: View {
             HStack {
                 Spacer()
 
-                VStack {
+                // TODO: Common dimensions
+                VStack(spacing: 16) {
+                    Button {
+                        if viewModel.useMyLocation() {
+                            map.userTrackingMode = .follow
+                        }
+                    } label: {
+                        Image(systemName: "location")
+                            .padding()
+                    }
+                    .styleRoundedRectanglePrimary()
+
                     Button {
                         router.createEditCase(
                             incidentId: viewModel.incidentsData.selectedId,
@@ -241,15 +257,13 @@ private struct CasesOverlayElements: View {
                             .padding()
                     }
                     .styleRoundedRectanglePrimary()
-                    .padding(.bottom)
 
                     Button {
                         viewModel.toggleTableView()
                     } label: {
-                        Image(isMapView ? "ic_map" : "ic_table", bundle: .module)
+                        Image(isMapView ? "ic_table" : "ic_map", bundle: .module)
                     }
                     .styleRoundedRectanglePrimary()
-                    .padding(.bottom)
                 }
             }
 
