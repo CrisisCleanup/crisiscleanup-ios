@@ -169,7 +169,14 @@ struct TableCard: View {
 
                 if (worksiteDistance.distanceMiles > 0) {
                     let distanceText = String(format: "%.01f", worksiteDistance.distanceMiles)
-                    Text("\(distanceText) ~~mi")
+                    Text(distanceText)
+                        .fontBodySmall()
+                        .fontWeight(.bold)
+                    // TODO: Common dimensions
+                        .padding(.trailing, 2)
+
+                    Text(t.t("caseView.miles_abbrv"))
+                        .fontBodySmall()
                 }
             }
             .padding(.bottom, 4)

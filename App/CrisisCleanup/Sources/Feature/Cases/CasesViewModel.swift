@@ -374,9 +374,11 @@ class CasesViewModel: ObservableObject {
         locationManager.$locationPermission
             .sink { _ in
                 if self.locationManager.hasLocationAccess {
-                    let sortBy = self.pendingTableSort.exchange(AtomicSortBy(.none), ordering: .relaxed).value
-                    if sortBy != .none {
-                        self.setSortBy(sortBy)
+                    if self.isTableView {
+                        let sortBy = self.pendingTableSort.exchange(AtomicSortBy(.none), ordering: .relaxed).value
+                        if sortBy != .none {
+                            self.setSortBy(sortBy)
+                        }
                     }
                 }
             }
@@ -457,7 +459,7 @@ class CasesViewModel: ObservableObject {
         var sortBy = wqs.tableViewSort
 
         let isDistanceSort = sortBy == .nearest
-        let locationCoordinates = locationManager.location?.coordinate
+        let locationCoordinates = locationManager.getLocation()?.coordinate
         let hasLocation = locationCoordinates != nil
         if (isDistanceSort && !hasLocation) {
             sortBy = .caseNumber

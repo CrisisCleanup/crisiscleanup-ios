@@ -39,6 +39,11 @@ public class LocationManager: NSObject, ObservableObject {
         }
         return hasLocationAccess
     }
+
+    func getLocation() -> CLLocation? {
+        location = locationManager.location
+        return location
+    }
 }
 
 extension LocationManager: CLLocationManagerDelegate {
