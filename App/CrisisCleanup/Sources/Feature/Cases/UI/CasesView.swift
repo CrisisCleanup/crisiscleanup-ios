@@ -82,6 +82,16 @@ struct CasesView: View {
                 hasNoIncidents: hasNoIncidents,
                 animateToSelectedIncidentBounds: animateToSelectedIncidentBounds
             )
+
+            if viewModel.showExplainLocationPermssion {
+                OpenAppSettingsDialog(
+                    title: t.t("info.allow_access_to_location"),
+                    dismissDialog: { viewModel.showExplainLocationPermssion = false }
+                ) {
+                    Text(t.t("info.location_permission_explanation"))
+                        .padding(.horizontal)
+                }
+            }
         }
         .onAppear {
             viewModel.onViewAppear()

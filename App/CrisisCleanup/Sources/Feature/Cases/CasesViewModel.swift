@@ -30,8 +30,7 @@ class CasesViewModel: ObservableObject {
 
     private let tableDataDistanceSortSearchRadius = 100.0
 
-    let tableViewSort: Binding<WorksiteSortBy>
-
+    @Published var tableViewSort = WorksiteSortBy.none
     private let pendingTableSort = ManagedAtomic(AtomicSortBy())
     private let tableSortResultsMessageSubject = CurrentValueSubject<String, Never>("")
     @Published private(set) var tableSortResultsMessage = ""
@@ -66,6 +65,9 @@ class CasesViewModel: ObservableObject {
     private var hasDisappeared = false
 
     private var subscriptions = Set<AnyCancellable>()
+
+    @Published var showExplainLocationPermssion = false
+    @Published private(set) var isMyLocationEnabled = false
 
     init(
         incidentSelector: IncidentSelector,
@@ -127,11 +129,6 @@ class CasesViewModel: ObservableObject {
 
         let queryStateManager = CasesQueryStateManager(incidentSelector)
         qsm = queryStateManager
-
-        tableViewSort =  Binding<WorksiteSortBy>(
-            get: { queryStateManager.tableViewSort.value },
-            set: { queryStateManager.tableViewSort.value = $0 }
-        )
     }
 
     func onViewAppear() {
@@ -143,6 +140,7 @@ class CasesViewModel: ObservableObject {
         subscribeUiState()
         subscribeSortBy()
         subscribeTableData()
+        subscribeLocationStatus()
     }
 
     func onViewDisappear() {
@@ -313,6 +311,8 @@ class CasesViewModel: ObservableObject {
     }
 
     private func subscribeSortBy() {
+        // App preferences must be the single source of truth and other states computed.
+        // Preferences > query state > view model <> view
         appPreferences.preferences
             .eraseToAnyPublisher()
            .map { $0.tableViewSortBy }
@@ -322,6 +322,19 @@ class CasesViewModel: ObservableObject {
                self.qsm.tableViewSort.value = sortBy
            })
            .store(in: &subscriptions)
+
+        qsm.tableViewSort
+            .receive(on: RunLoop.main)
+            .assign(to: \.tableViewSort, on: self)
+            .store(in: &subscriptions)
+
+        $tableViewSort
+            .removeDuplicates()
+            .filter { $0 != self.tableViewSort && $0 != .none }
+            .sink { sortBy in
+                self.changeTableSort(sortBy)
+            }
+            .store(in: &subscriptions)
     }
 
     private func subscribeTableData() {
@@ -354,6 +367,19 @@ class CasesViewModel: ObservableObject {
             }
             .receive(on: RunLoop.main)
             .assign(to: \.tableData, on: self)
+            .store(in: &subscriptions)
+    }
+
+    private func subscribeLocationStatus() {
+        locationManager.$locationPermission
+            .sink { _ in
+                if self.locationManager.hasLocationAccess {
+                    let sortBy = self.pendingTableSort.exchange(AtomicSortBy(.none), ordering: .relaxed).value
+                    if sortBy != .none {
+                        self.setSortBy(sortBy)
+                    }
+                }
+            }
             .store(in: &subscriptions)
     }
 
@@ -549,11 +575,21 @@ class CasesViewModel: ObservableObject {
         appPreferences.setTableViewSortBy(sortBy)
     }
 
-    func changeTableSort(_ sortBy: WorksiteSortBy) {
+    private func changeTableSort(_ sortBy: WorksiteSortBy) {
         if sortBy == .nearest {
-            // TODO: Cache then request permission if not granted. Otherwise set sort by
-//            setSortBy(sortBy)
-//            pendingTableSort.set(sortBy)
+            if locationManager.requestLocationAccess() {
+                setSortBy(sortBy)
+            } else {
+                pendingTableSort.store(AtomicSortBy(sortBy), ordering: .relaxed)
+
+                if locationManager.isDeniedLocationAccess {
+                    showExplainLocationPermssion = true
+                }
+            }
+
+            if !locationManager.hasLocationAccess {
+                // TODO: How to revert view's selected sort by without too much complexity?
+            }
         } else {
             setSortBy(sortBy)
         }
