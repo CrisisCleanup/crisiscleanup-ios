@@ -38,10 +38,6 @@ struct CaseAddNoteView: View {
 
             Spacer()
         }
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text(t.t("caseView.add_note"))
-            }
-        }
+        .screenTitle(t.t("caseView.add_note"))
     }
 }

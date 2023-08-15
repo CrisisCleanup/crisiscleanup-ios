@@ -77,6 +77,34 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         networkError = GenericError("Network error")
     }
 
+    func getProfilePic() async throws -> String? {
+        let request = requestProvider.accountProfile
+        let response = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkAccountProfileResult.self
+        )
+        if let result = response.value {
+            try result.errors?.tryThrowException()
+            return result.files?.first(where: { $0.isProfilePicture })?.largeThumbnailUrl
+        }
+        throw response.error ?? networkError
+    }
+
+    func getOrganizations(_ organizations: [Int64]) async throws -> [NetworkIncidentOrganization] {
+        let request = requestProvider.organizations.addQueryItems(
+            "id__in", organizations.commaJoined
+        )
+        let response = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkOrganizationsResult.self
+        )
+        if let result = response.value {
+            try result.errors?.tryThrowException()
+            return result.results ?? [NetworkIncidentOrganization]()
+        }
+        throw response.error ?? networkError
+    }
+
     func getStatuses() async throws -> NetworkWorkTypeStatusResult? {
         let request = requestProvider.workTypeStatuses
         return await networkClient.callbackContinue(
@@ -110,7 +138,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
 
     func getIncidentLocations(_ locationIds: [Int64]) async throws -> [NetworkLocation] {
         let request = requestProvider.incidentLocations.addQueryItems(
-            "id__in", locationIds.map{String($0)}.commaJoined,
+            "id__in", locationIds.commaJoined,
             "limit", String(locationIds.count)
         )
         let response = await networkClient.callbackContinue(
@@ -182,7 +210,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
     func getWorksites(_ worksiteIds: [Int64]) async throws -> [NetworkWorksiteFull]? {
         let request = requestProvider.worksites
             .addQueryItems(
-                "id__in", worksiteIds.map { String($0) }.commaJoined
+                "id__in", worksiteIds.commaJoined
             )
         let response = await networkClient.callbackContinue(
             requestConvertible: request,
@@ -339,7 +367,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
     }
 
     func getNearbyOrganizations(_ latitude: Double, _ longitude: Double) async throws -> [NetworkIncidentOrganization] {
-        let request = requestProvider.nearbyClaimedOrganizations
+        let request = requestProvider.organizations
             .addQueryItems(
                 "nearby_claimed", "\(longitude),\(latitude)"
             )
@@ -354,17 +382,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         throw response.error ?? networkError
     }
 
-    func searchUsers(
-        _ q: String,
-        _ organization: Int64,
-        limit: Int
-    ) async throws -> [NetworkPersonContact] {
-        let request = requestProvider.searchUsers
-            .addQueryItems(
-                "search", q,
-                "organization", "\(organization)",
-                "limit", "\(limit)"
-            )
+    private func processUsersRequest(_ request: NetworkRequest) async throws -> [NetworkPersonContact] {
         let response = await networkClient.callbackContinue(
             requestConvertible: request,
             type: NetworkUsersResult.self
@@ -374,5 +392,48 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
             return result.results ?? [NetworkPersonContact]()
         }
         throw response.error ?? networkError
+    }
+
+    func searchUsers(
+        _ q: String,
+        _ organization: Int64,
+        limit: Int
+    ) async throws -> [NetworkPersonContact] {
+        let request = requestProvider.users
+            .addQueryItems(
+                "search", q,
+                "organization", "\(organization)",
+                "limit", "\(limit)"
+            )
+        return try await processUsersRequest(request)
+    }
+
+    func getCaseHistory(_ worksiteId: Int64) async throws -> [NetworkCaseHistoryEvent] {
+        let request = requestProvider.caseHistory
+            .addPaths(String(worksiteId), "history")
+        let response = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkCaseHistoryResult.self,
+            wrapResponseKey: "events"
+        )
+        if let result = response.value {
+            try result.errors?.tryThrowException()
+            return result.events ?? [NetworkCaseHistoryEvent]()
+        }
+        throw response.error ?? networkError
+    }
+
+    func getUsers(_ userIds: [Int64]) async throws -> [NetworkPersonContact] {
+        let request = requestProvider.users
+            .addQueryItems(
+                "id__in", userIds.commaJoined
+            )
+        return try await processUsersRequest(request)
+    }
+}
+
+extension Array where Element == Int64 {
+    fileprivate var commaJoined: String {
+        map { String($0) }.commaJoined
     }
 }

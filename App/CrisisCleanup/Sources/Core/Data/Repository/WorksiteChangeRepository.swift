@@ -114,7 +114,6 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         organizationsRepository: OrganizationsRepository,
         localImageRepository: LocalImageRepository,
         authEventBus: AuthEventBus,
-        networkMonitor: NetworkMonitor,
         appEnv: AppEnv,
         syncLoggerFactory: SyncLoggerFactory,
         loggerFactory: AppLoggerFactory

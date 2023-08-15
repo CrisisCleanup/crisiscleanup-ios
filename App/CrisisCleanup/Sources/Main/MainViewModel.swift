@@ -6,6 +6,7 @@ class MainViewModel: ObservableObject {
     private let incidentSelector: IncidentSelector
     let translator: KeyAssetTranslator
     private let syncPuller: SyncPuller
+    private let accountDataRefresher: AccountDataRefresher
     private let logger: AppLogger
 
     @Published private(set) var viewData: MainViewData = MainViewData()
@@ -21,6 +22,7 @@ class MainViewModel: ObservableObject {
         translationsRepository: LanguageTranslationsRepository,
         incidentSelector: IncidentSelector,
         syncPuller: SyncPuller,
+        accountDataRefresher: AccountDataRefresher,
         logger: AppLogger,
         appEnv: AppEnv
     ) {
@@ -28,6 +30,7 @@ class MainViewModel: ObservableObject {
         translator = translationsRepository
         self.incidentSelector = incidentSelector
         self.syncPuller = syncPuller
+        self.accountDataRefresher = accountDataRefresher
         self.logger = logger
 
         isNotProduction = appEnv.isNotProduction
@@ -82,6 +85,10 @@ class MainViewModel: ObservableObject {
                     let data = self.incidentsData
                     if !data.isEmpty {
                         self.syncPuller.appPullIncident(data.selectedId)
+                    }
+
+                    Task {
+                        await self.accountDataRefresher.updateMyOrganization(true)
                     }
                 }
             }

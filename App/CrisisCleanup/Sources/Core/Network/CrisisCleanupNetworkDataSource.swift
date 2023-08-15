@@ -9,6 +9,10 @@ public protocol CrisisCleanupAuthApi {
 }
 
 public protocol CrisisCleanupNetworkDataSource {
+    func getProfilePic() async throws -> String?
+
+    func getOrganizations(_ organizations: [Int64]) async throws -> [NetworkIncidentOrganization]
+
     func getStatuses() async throws -> NetworkWorkTypeStatusResult?
 
     func getIncidents(
@@ -85,6 +89,14 @@ public protocol CrisisCleanupNetworkDataSource {
         _ q: String,
         _ organization: Int64,
         limit: Int
+    ) async throws -> [NetworkPersonContact]
+
+    func getCaseHistory(
+        _ worksiteId: Int64
+    ) async throws -> [NetworkCaseHistoryEvent]
+
+    func getUsers(
+        _ userIds: [Int64]
     ) async throws -> [NetworkPersonContact]
 }
 

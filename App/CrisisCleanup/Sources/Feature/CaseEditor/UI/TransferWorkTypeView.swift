@@ -6,7 +6,7 @@ struct TransferWorkTypeView: View {
 
     @ObservedObject var viewModel: TransferWorkTypeViewModel
 
-    @State var isKeyboardOpen = false
+    @ObservedObject private var focusableViewState = TextInputFocusableView()
 
     var body: some View {
         if viewModel.isTransferable {
@@ -26,13 +26,13 @@ struct TransferWorkTypeView: View {
                 }
                 .scrollDismissesKeyboard(.immediately)
 
-                if isKeyboardOpen {
+                if focusableViewState.isFocused {
                     OpenKeyboardActionsView()
                 } else {
                     TransferWorkTypeActions()
                         .disabled(disabled)
-                        .environmentObject(viewModel)
-                }
+                        .listItemModifier()
+   }
             }
             .frame(maxWidth: UIScreen.main.bounds.size.width)
             .onReceive(viewModel.$isTransferred) { b in
@@ -40,18 +40,12 @@ struct TransferWorkTypeView: View {
                     dismiss()
                 }
             }
-            .onReceive(keyboardPublisher) { isVisible in
-                isKeyboardOpen = isVisible
-            }
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text(viewModel.screenTitle)
-                }
-            }
+            .screenTitle(viewModel.screenTitle)
             .hideNavBarUnderSpace()
             .onAppear { viewModel.onViewAppear() }
             .onDisappear { viewModel.onViewDisappear() }
             .environmentObject(viewModel)
+            .environmentObject(focusableViewState)
         } else {
             Text("Invalid state. Go back")
         }
@@ -59,21 +53,14 @@ struct TransferWorkTypeView: View {
 }
 
 struct RequestView: View {
-    @EnvironmentObject var viewModel: TransferWorkTypeViewModel
     @Environment(\.translator) var t: KeyAssetTranslator
+
+    @EnvironmentObject var viewModel: TransferWorkTypeViewModel
 
     @State var reqtDescAS: AttributedString = AttributedString()
     @State var respNoteAS: AttributedString = AttributedString()
 
-    var fakeContacts: [PersonContact] = [
-//        PersonContact(id: 1, firstName: "John", lastName: "Doe", email: "John@Doe.com", mobile: "123456789"),
-//        PersonContact(id: 2, firstName: "John", lastName: "Doe", email: "John@Doe.com", mobile: "123456789"),
-//        PersonContact(id: 3, firstName: "John", lastName: "Doe", email: "John@Doe.com", mobile: "123456789")
-    ]
-
     var body: some View {
-//        HtmlAS(htmlContent: viewModel.requestDescription) // for some reason this doesn't work
-
         Text(reqtDescAS)
             .onReceive(viewModel.$requestDescription) { desc in
                 DispatchQueue.main.async {
@@ -85,6 +72,7 @@ struct RequestView: View {
                         ],
                         documentAttributes: nil
                     ) {
+                        // TODO: Keep consistent with font styles
                         attributedString.replaceFont(font: .systemFont(ofSize: 16), size: 16)
                         reqtDescAS = AttributedString(attributedString)
                     }
@@ -94,17 +82,7 @@ struct RequestView: View {
         if viewModel.contactList.isNotEmpty {
             Text(t.t("workTypeRequestModal.contacts"))
                 .fontHeader4()
-                .padding(.bottom, 4)
-
-            //        ForEach(fakeContacts, id: \.id) { contact in
-            //            VStack(alignment: .leading) {
-            //                Text(contact.fullName)
-            //                HStack {
-            //                    Link(contact.email, destination: URL(string: "mailto:\(contact.email)")!)
-            //                    Link(contact.mobile, destination: URL(string: "tel:\(contact.mobile)")!)
-            //                }
-            //            }.padding(.bottom)
-            //        }
+                .padding(.bottom, appTheme.listItemVerticalPadding)
 
             ForEach(viewModel.contactList, id: \.self) { contact in
                 VStack(alignment: .leading) {
@@ -152,8 +130,9 @@ struct RequestView: View {
 }
 
 struct ReleaseView: View {
-    @EnvironmentObject var viewModel: TransferWorkTypeViewModel
     @Environment(\.translator) var t: KeyAssetTranslator
+
+    @EnvironmentObject var viewModel: TransferWorkTypeViewModel
 
     var body: some View {
         Text(t.t("caseView.please_justify_release"))
@@ -174,7 +153,10 @@ private struct TransferWorkTypeReasonSection: View {
                 .foregroundColor(appTheme.colors.primaryRedColor)
         }
 
-        LargeTextEditor(text: $viewModel.transferReason)
+        LargeTextEditor(
+            text: $viewModel.transferReason,
+            placeholder: viewModel.reasonHint
+        )
             .padding(.vertical)
     }
 }
@@ -205,9 +187,10 @@ private struct TransferWorkTypeSection: View {
 }
 
 private struct TransferWorkTypeActions: View {
-    @EnvironmentObject var viewModel: TransferWorkTypeViewModel
-    @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
+    @Environment(\.dismiss) var dismiss
+
+    @EnvironmentObject var viewModel: TransferWorkTypeViewModel
 
     var body: some View {
         HStack {
@@ -225,6 +208,5 @@ private struct TransferWorkTypeActions: View {
             }
             .buttonStyle(PrimaryButtonStyle())
         }
-        .padding(.horizontal)
     }
 }

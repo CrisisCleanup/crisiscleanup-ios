@@ -8,13 +8,13 @@ class NetworkReachability: NetworkMonitor {
 
     private let reachabilityManager: NetworkReachabilityManager
 
-    init(_ host: String = "https://crisiscleanup.org") {
+    init(_ host: String) {
         reachabilityManager = NetworkReachabilityManager(host: host)!
 
         isOnline = isOnlineSubject
         isNotOnline = isOnline
             .eraseToAnyPublisher()
-            .map { b in !b }
+            .map { !$0 }
 
         startNetworkMonitoring()
     }
@@ -25,16 +25,10 @@ class NetworkReachability: NetworkMonitor {
             case .reachable(.cellular),
                     .reachable(.ethernetOrWiFi):
                 self.isOnlineSubject.value = true
-#if targetEnvironment(simulator)
             case .notReachable:
-                self.isOnlineSubject.value = true
+                self.isOnlineSubject.value = false
             case .unknown:
                 self.isOnlineSubject.value = false
-#else
-            case .notReachable,
-                    .unknown:
-                self.isOnlineSubject.value = false
-#endif
             }
         }
     }

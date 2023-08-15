@@ -6,6 +6,7 @@ import SwiftUI
 class ViewCaseViewModel: ObservableObject, KeyTranslator {
     private let incidentsRepository: IncidentsRepository
     private let worksitesRepository: WorksitesRepository
+    private let accountDataRefresher: AccountDataRefresher
     private var editableWorksiteProvider: EditableWorksiteProvider
     private let transferWorkTypeProvider: TransferWorkTypeProvider
     private let translator: KeyAssetTranslator
@@ -77,6 +78,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         accountDataRepository: AccountDataRepository,
         incidentsRepository: IncidentsRepository,
         organizationsRepository: OrganizationsRepository,
+        accountDataRefresher: AccountDataRefresher,
         incidentRefresher: IncidentRefresher,
         incidentBoundsProvider: IncidentBoundsProvider,
         worksitesRepository: WorksitesRepository,
@@ -96,6 +98,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     ) {
         self.incidentsRepository = incidentsRepository
         self.worksitesRepository = worksitesRepository
+        self.accountDataRefresher = accountDataRefresher
         self.editableWorksiteProvider = editableWorksiteProvider
         self.transferWorkTypeProvider = transferWorkTypeProvider
         self.translator = translator
@@ -152,6 +155,10 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
 
         if isFirstAppear {
             editableWorksiteProvider.reset(incidentIdIn)
+
+            Task {
+                await accountDataRefresher.updateMyOrganization(false)
+            }
         }
         transferWorkTypeProvider.clearPendingTransfer()
 

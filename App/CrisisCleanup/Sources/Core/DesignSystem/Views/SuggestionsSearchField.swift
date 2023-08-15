@@ -2,32 +2,34 @@ import SwiftUI
 
 struct SuggestionsSearchField: View {
     @Environment(\.translator) var t: KeyAssetTranslator
+    @EnvironmentObject var focusableViewState: TextInputFocusableView
 
     @Binding var q: String
     @Binding var animateSearchFieldFocus: Bool
-    @FocusState var isQueryFocused
+    @FocusState var focusState: TextInputFocused?
+    var focusedKey: TextInputFocused? = .querySuggestions
 
     let hint: String
 
     var body: some View {
         HStack {
             TextField(hint, text: $q)
-                .focused($isQueryFocused)
-                .onChange(of: isQueryFocused) { isFocused in
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        animateSearchFieldFocus = isFocused
+                .focused($focusState, equals: focusedKey)
+                .onChange(of: focusState) { isFocused in
+                    withAnimation(.easeInOut(duration: appTheme.layoutAnimationDuration)) {
+                        animateSearchFieldFocus = isFocused == focusedKey
                     }
                 }
                 .textFieldBorder()
 
             if animateSearchFieldFocus {
                 Button {
-                    isQueryFocused = false
+                    focusState = nil
+                    animateSearchFieldFocus = false
                 } label: {
                     Text(t.t("actions.close"))
                 }
-                // TODO: Common dimensions
-                .padding(.leading, 8)
+                .padding(.leading, appTheme.gridItemSpacing)
             }
         }
     }

@@ -4,6 +4,7 @@ import SwiftUI
 
 struct MenuView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
+    @EnvironmentObject var appAlertState: AppAlertViewState
 
     @ObservedObject var viewModel: MenuViewModel
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
@@ -31,6 +32,15 @@ struct MenuView: View {
             }
 
             Spacer()
+
+            if appAlertState.showAlert,
+               let appAlert = appAlertState.alertType {
+                AppAlertView(
+                    appAlert,
+                    openAuthScreen
+                )
+                .padding()
+            }
         }
         .background(.white)
         .onAppear { viewModel.onViewAppear() }
@@ -47,6 +57,8 @@ private struct TopBar: View {
     let hasNoIncidents: Bool
 
     @State var showIncidentSelect = false
+
+    private let imageSize = 48.0
 
     var body: some View {
         HStack {
@@ -65,7 +77,7 @@ private struct TopBar: View {
                 : selectedIncident.shortName
                 Text(title)
                     .fontHeader1()
-                    .padding(.leading, 8)
+                    .padding(.leading, appTheme.gridItemSpacing)
 
                 if !selectedIncident.isEmptyIncident {
                     DropDownIcon()
@@ -90,21 +102,24 @@ private struct TopBar: View {
                 if let url = viewModel.profilePicture?.url {
                     if viewModel.profilePicture?.isSvg == true {
                         SVGView(contentsOf: url)
-                            .frame(width: 48, height: 48)
-                            .padding([.vertical], 8)
+                            .frame(width: imageSize, height: imageSize)
+                            .padding(.vertical, appTheme.gridItemSpacing)
                     } else {
                         CachedAsyncImage(url: url) { image in
                             image.resizable()
-                                .scaledToFit()
+                                .scaledToFill()
                         } placeholder: {
                             ProgressView()
                         }
-                        .frame(width: 48, height: 48)
+                        .frame(width: imageSize, height: imageSize)
                         .clipShape(Circle())
-                        .padding([.vertical], 8)
+                        .padding(.vertical, appTheme.gridItemSpacing)
                     }
                 } else {
-                    Text("Auth")
+                    Image(systemName: "person.circle")
+                    .resizable()
+                         .scaledToFill()
+                         .frame(width: imageSize, height: imageSize)
                 }
             }
         }

@@ -8,7 +8,7 @@ private let WorksitesStableModelBuildVersion = 28
 /**
  * Build version of the app where incident organization (related) entity models were last changed
  */
-let IncidentOrganizationsStableModelBuildVersion = 16
+let IncidentOrganizationsStableModelBuildVersion = 30
 
 /**
  * Keeps track of incident data (worksites, organizations, ...) syncing

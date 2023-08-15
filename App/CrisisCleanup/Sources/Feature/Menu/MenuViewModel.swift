@@ -31,6 +31,7 @@ class MenuViewModel: ObservableObject {
     init(
         appEnv: AppEnv,
         accountDataRepository: AccountDataRepository,
+        accountDataRefresher: AccountDataRefresher,
         syncLogRepository: SyncLogRepository,
         incidentSelector: IncidentSelector,
         appVersionProvider: AppVersionProvider,
@@ -51,6 +52,7 @@ class MenuViewModel: ObservableObject {
 
         Task {
             syncLogRepository.trimOldLogs()
+            await accountDataRefresher.updateProfilePicture()
         }
     }
 

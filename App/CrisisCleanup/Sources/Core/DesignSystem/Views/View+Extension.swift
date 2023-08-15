@@ -6,8 +6,8 @@ extension View {
             .padding(.vertical, vertical)
     }
 
-    func cardContainer() -> some View {
-        self.background(.white)
+    func cardContainer(background: Color = .white) -> some View {
+        self.background(background)
             .cornerRadius(appTheme.cornerRadius)
             .shadow(radius: appTheme.shadowRadius)
     }
@@ -35,6 +35,12 @@ extension View {
                     .stroke(.black, lineWidth: appTheme.textFieldOutlineWidth)
             )
     }
+
+#if canImport(UIKit)
+    func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+#endif
 }
 
 class EditableView: ObservableObject {

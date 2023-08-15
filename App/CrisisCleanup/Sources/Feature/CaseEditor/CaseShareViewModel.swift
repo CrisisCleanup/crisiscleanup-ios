@@ -32,7 +32,7 @@ class CaseShareViewModel: ObservableObject {
     @Published private(set) var isLoading = true
     @Published private(set) var showShareScreen = false
 
-    @Published private var isSharable = true
+    @Published private(set) var isSharable = true
     @Published private(set) var notSharableMessage = ""
 
     @Published private(set) var isShareEnabled = false
@@ -73,10 +73,10 @@ class CaseShareViewModel: ObservableObject {
     func onViewAppear() {
         let isFirstAppear = isFirstVisible.exchange(false, ordering: .relaxed)
         if isFirstAppear {
-            subscribeToLoadingState()
-            subscribeToOrganization()
-            subscribeToQueryState()
-            subscribeToShareState()
+            subscribeLoadingState()
+            subscribeOrganization()
+            subscribeQueryState()
+            subscribeShareState()
         }
     }
 
@@ -88,7 +88,7 @@ class CaseShareViewModel: ObservableObject {
         subscriptions = cancelSubscriptions(subscriptions)
     }
 
-    private func subscribeToLoadingState() {
+    private func subscribeLoadingState() {
          $hasClaimedWorkType
             .map { $0 == nil }
             .receive(on: RunLoop.main)
@@ -96,7 +96,7 @@ class CaseShareViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
-    private func subscribeToOrganization() {
+    private func subscribeOrganization() {
         organizationId
             .map { orgId in
                 let affiliatedOrgIds = self.organizationsRepository.getOrganizationAffiliateIds(orgId)
@@ -117,7 +117,7 @@ class CaseShareViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
-    private func subscribeToQueryState() {
+    private func subscribeQueryState() {
         $receiverContactManual
             .receive(on: RunLoop.main)
             .sink(receiveValue: { s in
@@ -142,6 +142,7 @@ class CaseShareViewModel: ObservableObject {
             }
 
             let isEmailContact = self.isEmailContactMethod
+            // TODO: Overlay/show loading indicator when query is in progress
             let contacts = await self.usersRepository.getMatchingUsers(query, orgId).map {
                 let contactValue = isEmailContact ? $0.email : $0.mobile
                 return ShareContactInfo(
@@ -157,7 +158,7 @@ class CaseShareViewModel: ObservableObject {
         .store(in: &subscriptions)
     }
 
-    private func subscribeToShareState() {
+    private func subscribeShareState() {
         let isOnlinePublisher = networkMonitor.isOnline.eraseToAnyPublisher()
         let accountDataPublisher = accountDataRepository.accountData.eraseToAnyPublisher()
 

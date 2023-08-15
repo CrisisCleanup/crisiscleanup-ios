@@ -31,7 +31,7 @@ public protocol AppDependency: Dependency {
     var databaseManagementRepository: DatabaseManagementRepository { get }
     var usersRepository: UsersRepository { get }
     var casesFilterRepository: CasesFilterRepository { get }
-
+    var caseHistoryRepository: CaseHistoryRepository { get }
     var translator: KeyAssetTranslator { get }
 
     var authenticateViewBuilder: AuthenticateViewBuilder { get }
@@ -39,6 +39,7 @@ public protocol AppDependency: Dependency {
 
     var authEventBus: AuthEventBus { get }
     var accountDataRepository: AccountDataRepository { get }
+    var accountDataRefresher: AccountDataRefresher { get }
 
     var syncLoggerFactory: SyncLoggerFactory { get }
     var syncPuller: SyncPuller { get }
@@ -68,8 +69,7 @@ extension MainComponent {
 
     public var networkMonitor: NetworkMonitor {
         shared {
-            // TODO: Pass host URL by environment
-            NetworkReachability()
+            NetworkReachability(appSettingsProvider.reachabilityHost)
         }
     }
 
@@ -121,6 +121,17 @@ extension MainComponent {
                 authApi,
                 loggerFactory,
                 appEnv
+            )
+        }
+    }
+
+    public var accountDataRefresher: AccountDataRefresher {
+        shared {
+            AccountDataRefresher(
+                networkDataSource: networkDataSource,
+                accountDataRepository: accountDataRepository,
+                organizationsRepository: organizationsRepository,
+                loggerFactory: loggerFactory
             )
         }
     }

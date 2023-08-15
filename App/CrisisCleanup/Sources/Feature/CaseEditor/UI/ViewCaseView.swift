@@ -94,7 +94,6 @@ struct ViewCaseView: View {
                         .fontBodySmall()
                 }
                 .modifier(CopyWithAnimation(pressed: $titlePressed, copy: viewModel.headerTitle))
-
             }
 
             ToolbarItem(placement: .navigationBarTrailing) {

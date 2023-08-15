@@ -17,8 +17,7 @@ class AuthenticateViewModel: ObservableObject {
     @Published private(set) var viewData: AuthenticateViewData = AuthenticateViewData()
 
     @Published var errorMessage: String = ""
-    @Published private(set) var passwordHasFocus: Bool = false
-    @Published private(set) var emailHasFocus: Bool = false
+    @Published private(set) var focusState: TextInputFocused?
 
     @Published private(set) var isAuthenticating: Bool = false
     @Published private(set) var isAuthenticateSuccessful: Bool = false
@@ -73,26 +72,25 @@ class AuthenticateViewModel: ObservableObject {
 
     private func resetVisualState() {
         errorMessage = ""
-        emailHasFocus = false
-        passwordHasFocus = false
+        focusState = nil
     }
 
     private func validateInput(_ emailAddress: String, _ password: String) -> Bool {
         if emailAddress.isBlank {
             errorMessage = translator.t("invitationSignup.email_error")
-            emailHasFocus = true
+            focusState = .authEmailAddress
             return false
         }
 
         if !inputValidator.validateEmailAddress(emailAddress) {
             errorMessage = translator.translate("invitationSignup.invalid_email_error", "Enter valid email error")
-            emailHasFocus = true
+            focusState = .authEmailAddress
             return false
         }
 
         if password.isBlank {
             errorMessage = translator.t("invitationSignup.password_length_error")
-            passwordHasFocus = true
+            focusState = .authPassword
             return false
         }
 

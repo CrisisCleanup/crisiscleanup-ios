@@ -8,7 +8,7 @@ struct CaseFlagsView: View {
 
     @State var selected: WorksiteFlagType? = nil
 
-    private let keyboardVisibilityProvider = KeyboardVisibilityProvider()
+    private let focusableViewState = TextInputFocusableView()
 
     var body: some View {
         VStack {
@@ -74,16 +74,9 @@ struct CaseFlagsView: View {
                 dismiss()
             }
         }
-        .onReceive(keyboardPublisher) { isVisible in
-            keyboardVisibilityProvider.isKeyboardVisible = isVisible
-        }
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text(t.t("nav.flag"))
-            }
-        }
+        .screenTitle(t.t("nav.flag"))
         .environmentObject(viewModel)
-        .environmentObject(keyboardVisibilityProvider)
+        .environmentObject(focusableViewState)
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
     }
@@ -96,19 +89,15 @@ struct ContactSheet: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text(org.name)
-                .font(.title)
-                .padding(.top)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
             Text(t.t("flag.primary_contacts"))
-                .font(.title2)
-                .padding(.bottom)
+                .fontHeader3()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical)
 
             ForEach(org.primaryContacts, id: \.id) { contact in
                 Text(contact.fullName)
                     .bold()
-                    .padding(.bottom, 4)
+                    .padding(.bottom, appTheme.listItemVerticalPadding)
 
                 if contact.email.isNotBlank,
                    let emailUri = URL(string: "mailto:\(contact.email)") {
@@ -116,7 +105,7 @@ struct ContactSheet: View {
                         Image(systemName: "envelope.fill")
                         Link(contact.email, destination: emailUri)
                     }
-                    .padding(.bottom, 4)
+                    .padding(.bottom, appTheme.listItemVerticalPadding)
                 }
 
                 if contact.mobile.isNotBlank,
@@ -125,7 +114,7 @@ struct ContactSheet: View {
                         Image(systemName: "phone.fill")
                         Link(contact.mobile, destination: phoneUri)
                     }
-                    .padding(.bottom, 8)
+                    .padding(.bottom)
                 }
             }
 
@@ -139,6 +128,8 @@ private struct HighPriority: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewModel: CaseFlagsViewModel
+    @EnvironmentObject var focusableViewState: TextInputFocusableView
+
     @State var showContactSheet: Bool = false
 
     @State var isHighPriority: Bool = false
@@ -161,11 +152,11 @@ private struct HighPriority: View {
                     if nearbyOrganizations.isNotEmpty {
                         Text(t.t("flag.nearby_organizations"))
                             .bold()
-                            .padding(.bottom, 4)
+                            .padding(.bottom, appTheme.listItemVerticalPadding)
 
                         Text(t.t("caseHistory.do_not_share_contact_warning"))
                             .bold()
-                            .padding(.bottom, 4)
+                            .padding(.bottom, appTheme.listItemVerticalPadding)
 
                         Text(t.t("caseHistory.do_not_share_contact_explanation"))
                             .padding(.bottom)
@@ -206,9 +197,7 @@ private struct HighPriority: View {
 
         Spacer()
 
-        AddFlagSaveActionBar(
-            observeKeyboard: true
-        ) {
+        AddFlagSaveActionBar() {
             viewModel.onHighPriority(isHighPriority, flagDescription)
         }
     }
@@ -226,12 +215,13 @@ private struct UpsetClient: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewModel: CaseFlagsViewModel
+    @EnvironmentObject var focusableViewState: TextInputFocusableView
 
     @State var upsetReason = ""
     @State var isMyOrgInvolved = ""
     @State var selectedOrg: OrganizationIdName? = nil
 
-    @FocusState private var isQueryFocused: Bool
+    @FocusState private var focusState: TextInputFocused?
     @State private var animateTopSearchBar = false
 
     var body: some View {
@@ -259,40 +249,39 @@ private struct UpsetClient: View {
                 SuggestionsSearchField(
                     q: $viewModel.otherOrgQ,
                     animateSearchFieldFocus: $animateTopSearchBar,
-                    isQueryFocused: _isQueryFocused,
+                    focusState: _focusState,
                     hint: t.t("profileOrg.organization_name")
                 )
                 .padding(.bottom)
             }
             .padding(.horizontal)
         }
-        .scrollDismissesKeyboard(.immediately)
+        .onChange(of: focusState) { focusableViewState.focusState = $0 }
 
         if animateTopSearchBar {
             CaseFlagsOrgResults(orgResults: viewModel.otherOrgResults) { organization in
                 viewModel.otherOrgQ = organization.name
                 selectedOrg = organization
-                isQueryFocused = false
+                focusState = nil
             }
         }
 
         Spacer()
 
-        AddFlagSaveActionBar(
-            hideActionBar: isQueryFocused,
-            observeKeyboard: true
-        ) {
-            let isInvolved = getBoolOptional(
-                isMyOrgInvolved,
-                yesOption: yesOption,
-                noOption: noOption
-            )
-            viewModel.onUpsetClient(
-                notes: upsetReason,
-                isMyOrgInvolved: isInvolved,
-                otherOrgQuery: viewModel.otherOrgQ,
-                otherOrganizationInvolved: selectedOrg
-            )
+        if !focusableViewState.isQueryInputFocused {
+            AddFlagSaveActionBar {
+                let isInvolved = getBoolOptional(
+                    isMyOrgInvolved,
+                    yesOption: yesOption,
+                    noOption: noOption
+                )
+                viewModel.onUpsetClient(
+                    notes: upsetReason,
+                    isMyOrgInvolved: isInvolved,
+                    otherOrgQuery: viewModel.otherOrgQ,
+                    otherOrganizationInvolved: selectedOrg
+                )
+            }
         }
     }
 }
@@ -306,7 +295,8 @@ private struct CaseFlagsOrgResults: View {
             ForEach(orgResults, id: \.id) { idName in
                 Text(idName.name)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
+                    .listItemModifier()
+                    .frame(minHeight: appTheme.rowItemHeight)
                     .onTapGesture { onOrgSelect(idName) }
             }
         }
@@ -317,6 +307,7 @@ private struct ReportAbuse: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewModel: CaseFlagsViewModel
+    @EnvironmentObject var focusableViewState: TextInputFocusableView
 
     @State var isOrganizationContacted = ""
     @State var outcome = ""
@@ -324,7 +315,7 @@ private struct ReportAbuse: View {
     @State var flagAction = ""
     @State var selectedOrg: OrganizationIdName? = nil
 
-    @FocusState private var isQueryFocused: Bool
+    @FocusState private var focusState: TextInputFocused?
     @State private var animateTopSearchBar = false
 
     var body: some View {
@@ -338,7 +329,7 @@ private struct ReportAbuse: View {
                 SuggestionsSearchField(
                     q: $viewModel.otherOrgQ,
                     animateSearchFieldFocus: $animateTopSearchBar,
-                    isQueryFocused: _isQueryFocused,
+                    focusState: _focusState,
                     hint: t.t("profileOrg.organization_name")
                 )
                 .padding(.bottom)
@@ -369,51 +360,52 @@ private struct ReportAbuse: View {
                         LargeTextEditor(text: $flagAction)
 
                         Text(t.t("flag.warning_ccu_cannot_do_much"))
-                            .padding(.vertical)
+                            .padding(.top)
                     }
                 }
             }
             .padding(.horizontal)
+            .onChange(of: focusState) { focusableViewState.focusState = $0 }
         }
-        .scrollDismissesKeyboard(.immediately)
 
         if animateTopSearchBar {
             CaseFlagsOrgResults(orgResults: viewModel.otherOrgResults) { organization in
                 viewModel.otherOrgQ = organization.name
                 selectedOrg = organization
-                isQueryFocused = false
+                focusState = nil
             }
         }
 
         Spacer()
 
-        AddFlagSaveActionBar(
-            hideActionBar: isQueryFocused,
-            observeKeyboard: true
-        ) {
-            viewModel.onReportAbuse(
-                isContacted: getBoolOptional(
-                    isOrganizationContacted,
-                    yesOption: yesOption,
-                    noOption: noOption
-                ),
-                contactOutcome: outcome,
-                notes: flagNotes,
-                action: flagAction,
-                otherOrgQuery: viewModel.otherOrgQ,
-                otherOrganizationInvolved: selectedOrg
-            )
+        if !focusableViewState.isQueryInputFocused {
+            AddFlagSaveActionBar() {
+                viewModel.onReportAbuse(
+                    isContacted: getBoolOptional(
+                        isOrganizationContacted,
+                        yesOption: yesOption,
+                        noOption: noOption
+                    ),
+                    contactOutcome: outcome,
+                    notes: flagNotes,
+                    action: flagAction,
+                    otherOrgQuery: viewModel.otherOrgQ,
+                    otherOrganizationInvolved: selectedOrg
+                )
+            }
         }
     }
 }
 
-// TODO: Why does observing the keyboard here fail to work?
 private struct WrongLocation: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewModel: CaseFlagsViewModel
+    @EnvironmentObject var focusableViewState: TextInputFocusableView
 
     @State var isEditable = false
+
+    @FocusState private var focusState: TextInputFocused?
 
     private let stepTranslateKeys = Array(
         [
@@ -425,37 +417,43 @@ private struct WrongLocation: View {
     )
 
     var body: some View {
-        VStack(alignment: .leading) {
-            HStack {
-                Text(t.t("flag.move_case_pin"))
-                    .padding(.vertical)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
+        ScrollView {
             VStack(alignment: .leading) {
+                HStack {
+                    Text(t.t("flag.move_case_pin"))
+                        .padding(.bottom)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
                 ForEach(stepTranslateKeys, id: \.offset) { (index, key) in
                     Text("\(index+1). \(t.t(key))")
-                    // TODO: Common dimensions
-                        .padding(.bottom, 4)
+                        .padding(.bottom, appTheme.textListVerticalPadding)
                 }
-            }
-            .padding(.bottom)
 
-            TextField(t.t("flag.google_map_url"), text: viewModel.wrongLocationText)
+                TextField(
+                    t.t("flag.google_map_url"),
+                    text: viewModel.wrongLocationText
+                )
+                .focused($focusState, equals: .anyTextInput)
                 .textFieldBorder()
                 .padding(.bottom)
 
-            Text(t.t("flag.click_if_location_unknown"))
-                .padding(.bottom, 4)
+                Text(t.t("flag.click_if_location_unknown"))
+                    .padding(.bottom, appTheme.listItemVerticalPadding)
 
-            Button {
-                viewModel.onAddFlag(.wrongLocation)
-            } label: {
-                Text(t.t("flag.location_unknown"))
+                Button {
+                    viewModel.onAddFlag(.wrongLocation)
+                } label: {
+                    Text(t.t("flag.location_unknown"))
+                }
+                .styleBlack()
+                .frame(minHeight: appTheme.buttonSize)
             }
-            .styleBlack()
+            .onChange(of: focusState) { focusableViewState.focusState = $0 }
+            .padding(.horizontal)
+
         }
-        .padding(.horizontal)
+        .scrollDismissesKeyboard(.immediately)
 
         Spacer()
 
@@ -473,13 +471,14 @@ private struct WrongIncident: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewModel: CaseFlagsViewModel
+    @EnvironmentObject var focusableViewState: TextInputFocusableView
 
     let isEditable: Bool
 
     @State var isNotListed = false
     @State var selectedIncident: IncidentIdNameType? = nil
 
-    @FocusState private var isQueryFocused: Bool
+    @FocusState private var focusState: TextInputFocused?
     @State private var animateTopSearchBar = false
 
     var body: some View {
@@ -489,7 +488,7 @@ private struct WrongIncident: View {
             SuggestionsSearchField(
                 q: viewModel.incidentQBinding,
                 animateSearchFieldFocus: $animateTopSearchBar,
-                isQueryFocused: _isQueryFocused,
+                focusState: _focusState,
                 hint: t.t("casesVue.incident")
             )
 
@@ -502,11 +501,11 @@ private struct WrongIncident: View {
                         ForEach(incidentResults, id: \.id) { idNameType in
                             Text(idNameType.name)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.top)
+                                .frame(minHeight: appTheme.rowItemHeight)
                                 .onTapGesture {
                                     selectedIncident = idNameType
                                     viewModel.incidentQBinding.wrappedValue = idNameType.name
-                                    isQueryFocused = false
+                                    focusState = nil
                                 }
                         }
                     }
@@ -514,20 +513,21 @@ private struct WrongIncident: View {
             }
         }
         .padding(.horizontal)
+        .onChange(of: focusState) { focusableViewState.focusState = $0 }
 
         Spacer()
 
-        let isSelected = isNotListed || selectedIncident?.name == viewModel.incidentQ
-        AddFlagSaveActionBar(
-            hideActionBar: isQueryFocused,
-            enabled: isEditable && isSelected,
-            observeKeyboard: true
-        ) {
-            viewModel.onWrongIncident(
-                isIncidentListed: !isNotListed,
-                incidentQuery: viewModel.incidentQ,
-                selectedIncident: selectedIncident
-            )
+        if !focusableViewState.isQueryInputFocused {
+            let isSelected = isNotListed || selectedIncident?.name == viewModel.incidentQ
+            AddFlagSaveActionBar(
+                enabled: isEditable && isSelected
+            ) {
+                viewModel.onWrongIncident(
+                    isIncidentListed: !isNotListed,
+                    incidentQuery: viewModel.incidentQ,
+                    selectedIncident: selectedIncident
+                )
+            }
         }
     }
 }
@@ -536,18 +536,16 @@ private struct AddFlagSaveActionBar: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    @EnvironmentObject var keyboardVisibilityProvider: KeyboardVisibilityProvider
+    @EnvironmentObject var focusableViewState: TextInputFocusableView
 
-    var hideActionBar = false
     var isBusy = false
     var enabled = true
     var enableSave = true
-    var observeKeyboard = false
 
     var onSave: () -> Void
 
     var body: some View {
-        if hideActionBar || observeKeyboard && keyboardVisibilityProvider.isKeyboardVisible {
+        if focusableViewState.isFocused {
             OpenKeyboardActionsView()
         } else {
             HStack {
@@ -569,7 +567,7 @@ private struct AddFlagSaveActionBar: View {
                 .stylePrimary()
                 .disabled(!(enabled && enableSave))
             }
-            .padding(.horizontal)
+            .listItemModifier()
         }
     }
 }

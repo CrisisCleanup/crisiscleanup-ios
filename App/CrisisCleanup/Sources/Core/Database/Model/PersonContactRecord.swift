@@ -1,6 +1,11 @@
 import GRDB
 
 struct PersonContactRecord: Identifiable, Equatable {
+    static let organization = hasOne(
+        IncidentOrganizationRecord.self,
+        through: hasOne(OrganizationToPrimaryContactRecord.self),
+        using: OrganizationToPrimaryContactRecord.organization
+    )
     let id: Int64
     let firstName: String
     let lastName: String
@@ -43,5 +48,11 @@ extension PersonContactRecord: Codable, FetchableRecord, PersistableRecord {
                 )
                 """
         )
+    }
+}
+
+extension DerivableRequest<PersonContactRecord> {
+    func byId(_ id: Int64) -> Self {
+        filter(PersonContactRecord.Columns.id == id)
     }
 }

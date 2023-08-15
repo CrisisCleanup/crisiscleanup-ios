@@ -27,7 +27,6 @@ extension MainComponent {
         shared {
             IncidentRefresher(
                 incidentsRepository,
-                networkMonitor,
                 loggerFactory
             )
         }
@@ -37,7 +36,6 @@ extension MainComponent {
         shared {
             LanguageRefresher(
                 languageTranslationsRepository,
-                networkMonitor,
                 loggerFactory
             )
         }

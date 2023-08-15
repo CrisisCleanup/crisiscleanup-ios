@@ -73,6 +73,10 @@ extension MainComponent {
         PersonContactDao(appDatabase)
     }
 
+    var caseHistoryDao: CaseHistoryDao {
+        CaseHistoryDao(appDatabase)
+    }
+
     var syncLogDao: SyncLogDao {
         SyncLogDao(appDatabase)
     }
@@ -155,11 +159,21 @@ extension MainComponent {
         }
     }
 
+    var locationBoundsConverter: LocationBoundsConverter {
+        shared {
+            CrisisCleanupLocationBoundsConverter(
+                loggerFactory: loggerFactory
+            )
+        }
+    }
+
     public var organizationsRepository: OrganizationsRepository {
         shared {
             OfflineFirstOrganizationsRepository(
                 incidentOrganizationDao: organizationsDao,
+                locationDao: locationDao,
                 networkDataSource: networkDataSource,
+                locationBoundsConverter: locationBoundsConverter,
                 loggerFactory: loggerFactory
             )
         }
@@ -190,7 +204,6 @@ extension MainComponent {
                 organizationsRepository: organizationsRepository,
                 localImageRepository: localImageRepository,
                 authEventBus: authEventBus,
-                networkMonitor: networkMonitor,
                 appEnv: appEnv,
                 syncLoggerFactory: syncLoggerFactory,
                 loggerFactory: loggerFactory
@@ -231,9 +244,22 @@ extension MainComponent {
         shared {
             CrisisCleanupCasesFilterRepository(
                 dataSource: CasesFiltersUserDefaults(),
-                networkMonitor: networkMonitor,
                 accountDataRepository: accountDataRepository,
                 networkDataSource: networkDataSource
+            )
+        }
+    }
+
+    public var caseHistoryRepository: CaseHistoryRepository {
+        shared {
+            OfflineFirstCaseHistoryRepository(
+                caseHistoryDao: caseHistoryDao,
+                personContactDao: personContactDao,
+                worksiteDao: worksiteDao,
+                networkDataSource: networkDataSource,
+                incidentOrganizationDao: organizationsDao,
+                translator: languageTranslationsRepository,
+                loggerFactory: loggerFactory
             )
         }
     }

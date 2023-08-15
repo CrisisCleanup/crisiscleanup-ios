@@ -41,13 +41,16 @@ struct AuthenticateView: View {
 
 struct LoginView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
+
     @ObservedObject var viewModel: AuthenticateViewModel
-    var dismissScreen: () -> ()
+    @ObservedObject var focusableViewState = TextInputFocusableView()
+
+    let dismissScreen: () -> Void
 
     @State var emailAddress: String = ""
     @State var password: String = ""
-    @FocusState var emailHasFocus: Bool
-    @FocusState var passwordHasFocus: Bool
+
+    @FocusState private var focusState: TextInputFocused?
 
     func authenticate() {
         viewModel.authenticate(emailAddress, password)
@@ -57,68 +60,89 @@ struct LoginView: View {
         let disabled = viewModel.isAuthenticating
 
         VStack {
-            let errorMessage = $viewModel.errorMessage.wrappedValue
-            if !errorMessage.isBlank {
-                Text(errorMessage)
-                    .padding([.vertical])
-            }
+            ScrollView {
+                VStack {
+                    Text(t.translate("actions.login", "Login action"))
+                        .fontHeader2()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical)
 
-            TextField(t.translate("loginForm.email_placeholder", "Email hint"), text: $emailAddress)
-                .textFieldBorder()
-                .keyboardType(.emailAddress)
-                .autocapitalization(.none)
-                .padding([.vertical])
-                .disableAutocorrection(true)
-                .focused($emailHasFocus)
-                .disabled(disabled)
-                .onChange(of: viewModel.emailHasFocus) { emailHasFocus = $0 }
-                .onSubmit { authenticate() }
-                .onAppear { emailHasFocus = true }
-            ToggleSecureTextField(t.translate("loginForm.password_placeholder", "Password hint"), text: $password)
-                .padding([.vertical])
-                .focused($passwordHasFocus)
-                .disabled(disabled)
-                .onChange(of: viewModel.passwordHasFocus) { passwordHasFocus = $0 }
-                .onSubmit { authenticate() }
+                    let errorMessage = viewModel.errorMessage
+                    if !errorMessage.isBlank {
+                        // TODO: Common styles
+                        Text(errorMessage)
+                            .foregroundColor(appTheme.colors.primaryRedColor)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding([.vertical])
+                    }
 
-            if viewModel.isDebuggable {
-                Button("Login Debug") {
-                    emailAddress = viewModel.appSettings.debugEmailAddress
-                    password = viewModel.appSettings.debugAccountPassword
-                    authenticate()
+                    Group {
+                        TextField(t.translate("loginForm.email_placeholder", "Email hint"), text: $emailAddress)
+                            .textFieldBorder()
+                            .keyboardType(.emailAddress)
+                            .autocapitalization(.none)
+                            .padding(.top, appTheme.listItemVerticalPadding)
+                            .disableAutocorrection(true)
+                            .focused($focusState, equals: TextInputFocused.authEmailAddress)
+                            .disabled(disabled)
+                            .onSubmit { authenticate() }
+                            .onAppear { focusState = TextInputFocused.authEmailAddress }
+                        ToggleSecureTextField(t.translate("loginForm.password_placeholder", "Password hint"), text: $password)
+                            .padding([.vertical])
+                            .focused($focusState, equals: TextInputFocused.authPassword)
+                            .disabled(disabled)
+                            .onSubmit { authenticate() }
+                    }
+                    .onChange(of: focusState) { focusableViewState.focusState = $0 }
+
+                    if viewModel.isDebuggable {
+                        Button("Login Debug") {
+                            emailAddress = viewModel.appSettings.debugEmailAddress
+                            password = viewModel.appSettings.debugAccountPassword
+                            authenticate()
+                        }
+                        .stylePrimary()
+                        .padding(.vertical, appTheme.listItemVerticalPadding)
+                        .disabled(disabled)
+                    }
+
+                    Button {
+                        authenticate()
+                    } label: {
+                        BusyButtonContent(
+                            isBusy: viewModel.isAuthenticating,
+                            text: t.translate("actions.login", "Login action")
+                        )
+                    }
+                    .stylePrimary()
+                    .padding(.vertical, appTheme.listItemVerticalPadding)
+                    .disabled(disabled)
+
+                    if viewModel.viewData.hasAuthenticated {
+                        Button {
+                            dismissScreen()
+                        } label:  {
+                            BusyButtonContent(
+                                isBusy: viewModel.isAuthenticating,
+                                text: t.translate("actions.cancel", "Cancel action")
+                            )
+                        }
+                        .stylePrimary()
+                        .padding(.vertical, appTheme.listItemVerticalPadding)
+                        .disabled(disabled)
+                    }
                 }
-                .stylePrimary()
-                .padding([.vertical])
-                .disabled(disabled)
+                .onChange(of: viewModel.focusState) { focusState = $0 }
+                .padding()
             }
+            .scrollDismissesKeyboard(.immediately)
 
-            Button {
-                authenticate()
-            } label: {
-                BusyButtonContent(
-                    isBusy: viewModel.isAuthenticating,
-                    text: t.translate("actions.login", "Login action")
-                )
-            }
-            .stylePrimary()
-            .padding([.vertical])
-            .disabled(disabled)
+            Spacer()
 
-            if viewModel.viewData.hasAuthenticated {
-                Button {
-                    dismissScreen()
-                } label:  {
-                    BusyButtonContent(
-                        isBusy: viewModel.isAuthenticating,
-                        text: t.translate("actions.cancel", "Cancel action")
-                    )
-                }
-                .stylePrimary()
-                .padding([.vertical])
-                .disabled(disabled)
+            if focusableViewState.isFocused {
+                OpenKeyboardActionsView()
             }
         }
-        .padding()
     }
 }
 

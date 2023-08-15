@@ -4,8 +4,10 @@ import Foundation
 import MapKit
 
 public class LocationManager: NSObject, ObservableObject {
-
     private let locationManager = CLLocationManager()
+
+    @Published private(set) var locationPermission: CLAuthorizationStatus? = nil
+
     @Published var location: CLLocation? = nil
 
     private let authorizedLocationAccessStatuses: Set<CLAuthorizationStatus> = [
@@ -13,8 +15,7 @@ public class LocationManager: NSObject, ObservableObject {
         .authorizedWhenInUse
     ]
     private let noLocationAccessStatuses: Set<CLAuthorizationStatus> = [
-        .authorizedAlways,
-        .authorizedWhenInUse
+        .denied,
     ]
     var hasLocationAccess: Bool { authorizedLocationAccessStatuses.contains(locationManager.authorizationStatus) }
 
@@ -25,17 +26,29 @@ public class LocationManager: NSObject, ObservableObject {
         self.locationManager.delegate = self
         self.locationManager.desiredAccuracy = kCLLocationAccuracyBest
         self.locationManager.distanceFilter = kCLDistanceFilterNone
+
+        locationPermission = locationManager.authorizationStatus
     }
 
-    func requestLocationAccess() {
-        self.locationManager.requestWhenInUseAuthorization()
+    func requestLocationAccess() -> Bool {
+        if hasLocationAccess || isDeniedLocationAccess {
+            locationPermission = locationManager.authorizationStatus
+        } else {
+            locationPermission = nil
+            self.locationManager.requestWhenInUseAuthorization()
+        }
+        return hasLocationAccess
+    }
+
+    func getLocation() -> CLLocation? {
+        location = locationManager.location
+        return location
     }
 }
 
 extension LocationManager: CLLocationManagerDelegate {
     public func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
-        // TODO: Handle change accordingly as necessary
-        print("Location status change \(status)")
+        locationPermission = status
     }
 
     public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
@@ -44,5 +57,4 @@ extension LocationManager: CLLocationManagerDelegate {
         }
         self.location = location
     }
-
 }

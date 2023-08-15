@@ -54,6 +54,22 @@ public class IncidentOrganizationDao {
         .map { $0.affiliateId }
     }
 
+    func streamLocationIds(_ orgId: Int64) -> AnyPublisher<PopulatedOrganizationLocationIds?, Never> {
+        ValueObservation
+            .tracking { db in
+                try IncidentOrganizationRecord
+                    .select(IncidentOrganizationRecord.locationColumns)
+                    .byId(orgId)
+                    .asRequest(of: PopulatedOrganizationLocationIds.self)
+                    .fetchOne(db)
+            }
+            .removeDuplicates()
+            .shared(in: reader)
+            .publisher()
+            .assertNoFailure()
+            .eraseToAnyPublisher()
+    }
+
     func saveOrganizations(
         _ organizations: [IncidentOrganizationRecord],
         _ primaryContacts: [PersonContactRecord]
@@ -114,6 +130,35 @@ public class IncidentOrganizationDao {
             OrganizationIdName(id: $0.id, name: $0.name)
         }
     }
+
+    func findOrganization(_ id: Int64) -> Int64? {
+        try! reader.read{ db in
+            try IncidentOrganizationRecord
+                .select(IncidentOrganizationRecord.idColumn)
+                .byId(id)
+                .asRequest(of: Int64.self)
+                .fetchOne(db)
+        }
+    }
+
+    func saveMissing(
+        _ organizations: [IncidentOrganizationRecord],
+        _ affiliateIds: [[Int64]]
+    ) throws {
+        var newOrganizations = [IncidentOrganizationRecord]()
+        var newAffiliates = [OrganizationAffiliateRecord]()
+        for i in organizations.indices {
+            let organization = organizations[i]
+            if findOrganization(organization.id) == nil {
+                newOrganizations.append(organization)
+                let affiliates = affiliateIds[i].map {
+                    OrganizationAffiliateRecord(id: organization.id, affiliateId: $0)
+                }
+                newAffiliates.append(contentsOf: affiliates)
+            }
+        }
+        try database.saveOrganizations(newOrganizations, newAffiliates)
+    }
 }
 
 extension AppDatabase {
@@ -161,6 +206,20 @@ extension AppDatabase {
     ) async throws {
         try await dbWriter.write { db in
             try stats.upsert(db)
+        }
+    }
+
+    fileprivate func saveOrganizations(
+        _ organizations: [IncidentOrganizationRecord],
+        _ affiliates: [OrganizationAffiliateRecord]
+    ) throws {
+        try dbWriter.write { db in
+            for record in organizations {
+                try record.upsert(db)
+            }
+            for record in affiliates {
+                try record.insert(db, onConflict: .ignore)
+            }
         }
     }
 }

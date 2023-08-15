@@ -9,6 +9,7 @@ public struct NetworkIncidentOrganization: Codable, Equatable {
     let name: String
     let affiliates: [Int64]
     let primaryLocation: Int64?
+    let secondaryLocation: Int64?
     let typeT: String?
     let primaryContacts: [NetworkPersonContact]?
 
@@ -17,6 +18,7 @@ public struct NetworkIncidentOrganization: Codable, Equatable {
              name,
              affiliates,
              primaryLocation = "primary_location",
+             secondaryLocation = "secondary_location",
              typeT = "type_t",
              primaryContacts = "primary_contacts"
     }

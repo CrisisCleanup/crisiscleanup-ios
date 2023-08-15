@@ -18,6 +18,7 @@ struct WorksiteQueryState {
     let isZoomInteractive: Bool
     let tableViewSort: WorksiteSortBy
     let filters: CasesFilter
+    let hasLocationPermission: Bool
 }
 
 let WorksiteQueryStateDefault = WorksiteQueryState(
@@ -28,5 +29,6 @@ let WorksiteQueryStateDefault = WorksiteQueryState(
     isTableView: false,
     isZoomInteractive: false,
     tableViewSort: .none,
-    filters: CasesFilter()
+    filters: CasesFilter(),
+    hasLocationPermission: false
 )

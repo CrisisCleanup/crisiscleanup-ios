@@ -29,6 +29,7 @@ public class MainComponent: BootstrapComponent,
             translationsRepository: languageTranslationsRepository,
             incidentSelector: incidentSelector,
             syncPuller: syncPuller,
+            accountDataRefresher: accountDataRefresher,
             logger: loggerFactory.getLogger("main"),
             appEnv: appEnv
         )
@@ -63,6 +64,10 @@ public class MainComponent: BootstrapComponent,
         MainView(
             viewModel: mainViewModel,
             router: navigationRouter,
+            appAlerts: AppAlertViewState(
+                networkMonitor: networkMonitor,
+                accountDataRepository: accountDataRepository
+            ),
             locationManager: locationManager,
             authenticateViewBuilder: authenticateViewBuilder,
             casesViewBuilder: casesComponent,

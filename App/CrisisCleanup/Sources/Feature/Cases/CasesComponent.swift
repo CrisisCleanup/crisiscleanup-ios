@@ -2,7 +2,7 @@ import NeedleFoundation
 import SwiftUI
 
 protocol CasesViewBuilder {
-    var casesView: AnyView { get }
+    func casesView(_ openAuthScreen: @escaping () -> Void) -> AnyView
 }
 
 class CasesComponent: Component<AppDependency>, CasesViewBuilder {
@@ -24,11 +24,12 @@ class CasesComponent: Component<AppDependency>, CasesViewBuilder {
         loggerFactory: dependency.loggerFactory
     )
 
-    var casesView: AnyView {
+    func casesView(_ openAuthScreen: @escaping () -> Void) -> AnyView {
         AnyView(
             CasesView(
                 viewModel: casesViewModel,
-                incidentSelectViewBuilder: dependency.incidentSelectViewBuilder
+                incidentSelectViewBuilder: dependency.incidentSelectViewBuilder,
+                openAuthScreen: openAuthScreen
             )
         )
     }

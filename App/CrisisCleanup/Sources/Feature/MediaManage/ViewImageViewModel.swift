@@ -8,7 +8,6 @@ class ViewImageViewModel: ObservableObject {
     private let translator: KeyTranslator
     private let accountDataRepository: AccountDataRepository
     private let syncPusher: SyncPusher
-    private let networkMonitor: NetworkMonitor
     private let logger: AppLogger
 
     private let imageId: Int64
@@ -39,7 +38,6 @@ class ViewImageViewModel: ObservableObject {
         translator: KeyTranslator,
         accountDataRepository: AccountDataRepository,
         syncPusher: SyncPusher,
-        networkMonitor: NetworkMonitor,
         loggerFactory: AppLoggerFactory,
         imageId: Int64,
         isNetworkImage: Bool,
@@ -50,7 +48,6 @@ class ViewImageViewModel: ObservableObject {
         self.translator = translator
         self.accountDataRepository = accountDataRepository
         self.syncPusher = syncPusher
-        self.networkMonitor = networkMonitor
         logger = loggerFactory.getLogger("view-image")
 
         self.imageId = imageId

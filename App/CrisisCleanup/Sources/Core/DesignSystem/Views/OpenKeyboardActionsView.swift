@@ -13,7 +13,3 @@ struct OpenKeyboardActionsView: View {
         }
     }
 }
-
-class KeyboardVisibilityProvider: ObservableObject {
-    @Published var isKeyboardVisible: Bool = false
-}

@@ -33,6 +33,9 @@ class CaseHistoryComponent: Component<AppDependency>, CaseHistoryViewBuilder {
     private func getViewModel() -> CaseHistoryViewModel {
         if viewModel == nil {
             viewModel = CaseHistoryViewModel(
+                editableWorksiteProvider: dependency.editableWorksiteProvider,
+                caseHistoryRepository: dependency.caseHistoryRepository,
+                translator: dependency.translator
             )
         }
         return viewModel!

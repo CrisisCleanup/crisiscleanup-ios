@@ -8,68 +8,53 @@ struct CasesTableView: View {
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
     let hasNoIncidents: Bool
 
-    @State var openIncidentSelect = false
-
     var body: some View {
         VStack {
             HStack {
-                Button {
-                    openIncidentSelect.toggle()
-                } label: {
-                    IncidentHeader(
-                        incident: viewModel.incidentsData.selected,
-                        drop: true
-                    )
-                    .tint(.black)
-                }
-                .sheet(
-                    isPresented: $openIncidentSelect,
-                    onDismiss: {
-                        incidentSelectViewBuilder.onIncidentSelectDismiss()
-                    }
-                ) {
-                    incidentSelectViewBuilder.incidentSelectView(
-                        onDismiss: { openIncidentSelect = false }
-                    )
-                }
-                .disabled(hasNoIncidents)
+                TableViewIncidentSelector(
+                    hasNoIncidents: hasNoIncidents,
+                    selectedIncident: viewModel.incidentsData.selected,
+                    incidentSelectViewBuilder: incidentSelectViewBuilder
+                )
 
                 Spacer()
 
                 TableViewButtons()
             }
-            .padding()
+            .listItemModifier()
+
+            let casesData = viewModel.tableData
 
             HStack {
-                Text("\(viewModel.tableData.count) \(t.t("casesVue.cases"))")
+                // TODO: Generate text in view model
+                // TODO: Animate
+                if casesData.isNotEmpty {
+                    Text("\(casesData.count) \(t.t("casesVue.cases"))")
+                        .fontHeader4()
+                }
 
                 Spacer()
 
-                Picker("", selection: viewModel.tableViewSort ) {
+                Picker("", selection: $viewModel.tableViewSort ) {
                     ForEach(WorksiteSortBy.allCases, id: \.self) { sortBy in
                         Text(t.t(sortBy.translateKey))
-                            .onTapGesture {
-                                viewModel.changeTableSort(sortBy)
-                            }
                     }
                 }
                 .tint(.black)
                 .blackBorder()
             }
-            .padding()
-
-            Spacer()
+            .listItemModifier()
 
             ScrollView {
                 LazyVStack {
-                    ForEach(0..<viewModel.tableData.count, id: \.self) { index in
-                        TableCard(
-                            worksiteDistance: viewModel.tableData[index]
-                        )
-
-                        if index != viewModel.tableData.count - 1 {
+                    ForEach(0..<casesData.count, id: \.self) { index in
+                        if index > 0 {
                             FormListSectionSeparator()
                         }
+
+                        TableCard(
+                            worksiteDistance: casesData[index]
+                        )
                     }
                 }
             }
@@ -82,6 +67,37 @@ struct CasesTableView: View {
                     .frame(alignment: .center)
             }
         }
+    }
+}
+
+private struct TableViewIncidentSelector: View {
+    let hasNoIncidents: Bool
+    let selectedIncident: Incident
+    let incidentSelectViewBuilder: IncidentSelectViewBuilder
+
+    @State private var openIncidentSelect = false
+
+    var body: some View {
+        Button {
+            openIncidentSelect.toggle()
+        } label: {
+            IncidentHeader(
+                incident: selectedIncident,
+                drop: true
+            )
+            .tint(.black)
+        }
+        .sheet(
+            isPresented: $openIncidentSelect,
+            onDismiss: {
+                incidentSelectViewBuilder.onIncidentSelectDismiss()
+            }
+        ) {
+            incidentSelectViewBuilder.incidentSelectView(
+                onDismiss: { openIncidentSelect = false }
+            )
+        }
+        .disabled(hasNoIncidents)
     }
 }
 
@@ -153,7 +169,14 @@ struct TableCard: View {
 
                 if (worksiteDistance.distanceMiles > 0) {
                     let distanceText = String(format: "%.01f", worksiteDistance.distanceMiles)
-                    Text("\(distanceText) ~~mi")
+                    Text(distanceText)
+                        .fontBodySmall()
+                        .fontWeight(.bold)
+                    // TODO: Common dimensions
+                        .padding(.trailing, 2)
+
+                    Text(t.t("caseView.miles_abbrv"))
+                        .fontBodySmall()
                 }
             }
             .padding(.bottom, 4)

@@ -3,18 +3,15 @@ import Foundation
 
 public class IncidentRefresher {
     private let incidentsRepository: IncidentsRepository
-    private let networkMonitor: NetworkMonitor
     private let logger: AppLogger
 
     private let recentlyRefreshedIncident = ManagedAtomic(EmptyIncident.id)
 
     init(
         _ incidentsRepository: IncidentsRepository,
-        _ networkMonitor: NetworkMonitor,
         _ loggerFactory: AppLoggerFactory
     ) {
         self.incidentsRepository = incidentsRepository
-        self.networkMonitor = networkMonitor
         logger = loggerFactory.getLogger("incident-refresh")
     }
 
@@ -34,16 +31,13 @@ public class IncidentRefresher {
 
 public class LanguageRefresher {
     private let languageRepository: LanguageTranslationsRepository
-    private let networkMonitor: NetworkMonitor
     private let logger: AppLogger
 
     init(
         _ languageRepository: LanguageTranslationsRepository,
-        _ networkMonitor: NetworkMonitor,
         _ loggerFactory: AppLoggerFactory
     ) {
         self.languageRepository = languageRepository
-        self.networkMonitor = networkMonitor
         logger = loggerFactory.getLogger("language-refresh")
     }
     private let lastLoadTime = ManagedAtomic(AtomicDouble(Date(timeIntervalSince1970: 0).timeIntervalSince1970))

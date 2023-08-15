@@ -10,6 +10,8 @@ internal class CasesQueryStateManager {
 
     let tableViewSort = CurrentValueSubject<WorksiteSortBy, Never>(.none)
 
+    let locationPermission = CurrentValueSubject<Bool, Never>(false)
+
     private let worksiteQueryStateSubject = CurrentValueSubject<WorksiteQueryState, Never>(WorksiteQueryStateDefault)
     var worksiteQueryState: any Publisher<WorksiteQueryState, Never>
 
@@ -56,6 +58,12 @@ internal class CasesQueryStateManager {
         tableViewSort
             .sink(receiveValue: { sortBy in
                 self.updateState { $0.tableViewSort = sortBy }
+            })
+            .store(in: &disposables)
+
+        locationPermission
+            .sink(receiveValue: { hasPermission in
+                self.updateState { $0.hasLocationPermission = hasPermission }
             })
             .store(in: &disposables)
     }

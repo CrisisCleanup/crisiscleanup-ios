@@ -47,7 +47,6 @@ class ViewImageComponent: Component<AppDependency>, ViewImageViewBuilder {
                 translator: dependency.translator,
                 accountDataRepository: dependency.accountDataRepository,
                 syncPusher: dependency.syncPusher,
-                networkMonitor: dependency.networkMonitor,
                 loggerFactory: dependency.loggerFactory,
                 imageId: imageId,
                 isNetworkImage: isNetworkImage,
