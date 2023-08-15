@@ -379,6 +379,7 @@ class CasesViewModel: ObservableObject {
                         if sortBy != .none {
                             self.setSortBy(sortBy)
                         }
+                        self.qsm.locationPermission.value = true
                     }
                 }
             }
