@@ -222,12 +222,13 @@ private struct CaseTableItemCard: View {
             }
             .padding(.bottom, 4)
 
+            let (fullAddress, addressMapItem) = worksite.addressQuery
+
             HStack {
                 Image(systemName: "mappin.circle.fill")
                     .foregroundColor(Color.gray)
 
-                Text(worksite.address)
-
+                Text(fullAddress)
             }
             .padding(.bottom, 4)
 
@@ -246,10 +247,8 @@ private struct CaseTableItemCard: View {
                 .tint(.black)
 
                 Button {
-                    let urlString =  "maps://?address=" + (worksite.address.addingPercentEncoding(withAllowedCharacters: .afURLQueryAllowed) ?? worksite.address)
-                    if let url = URL(string: urlString) {
-                        UIApplication.shared.open(url, options: [:], completionHandler: nil)
-                    }
+                    // TODO: Alert if wrong location flag was set
+                    addressMapItem.openInMaps()
                 } label : {
                     Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
                         .frame(width: 75, height: 35)
