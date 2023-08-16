@@ -26,7 +26,6 @@ struct RadioButton: View {
     var isListItem: Bool = false
 
     let onSelect: () -> Void
-    @State var tempValue = 1
 
     var body: some View {
         Button {
