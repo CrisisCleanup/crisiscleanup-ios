@@ -1,6 +1,6 @@
 import Foundation
 
-private let releaseDaysThreshold = 30.days
+internal let releaseDaysThreshold = 30.days
 
 // sourcery: copyBuilder, skipCopyInit
 public struct WorkType: Equatable, Hashable {
@@ -46,7 +46,7 @@ public struct WorkType: Equatable, Hashable {
         workType = typeFromLiteral(workTypeLiteral)
         isReleaseEligible = {
             if let at = createdAt {
-                return Date.now.addingTimeInterval(releaseDaysThreshold) > at
+                return at.addingTimeInterval(releaseDaysThreshold) < Date.now
             }
             return false
         }()

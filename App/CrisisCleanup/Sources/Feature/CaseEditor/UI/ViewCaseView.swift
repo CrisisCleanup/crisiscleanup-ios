@@ -533,7 +533,7 @@ private struct PropertyInformationView: View {
 
                 let (addressText, addressMapItem) = worksite.addressQuery
                 HStack {
-                    Image(systemName: "mappin.circle.fill")
+                    Image(systemName: "mappin")
                         .frame(width: iconSize, height: iconSize)
 
                     Button {

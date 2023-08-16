@@ -46,7 +46,8 @@ class CasesViewModel: ObservableObject {
     private let openWorksiteAddFlag = ManagedAtomic(false)
 
     @Published var worksitesChangingClaimAction: Set<Int64> = []
-    let changeClaimActionErrorMessage = CurrentValueSubject<String, Never>("")
+    private let changeClaimActionErrorMessageSubject = CurrentValueSubject<String, Never>("")
+    @Published var changeClaimActionErrorMessage = ""
 
     private let mapBoundsManager: CasesMapBoundsManager
 
@@ -426,12 +427,15 @@ class CasesViewModel: ObservableObject {
             .assign(to: \.worksitesChangingClaimAction, on: self)
             .store(in: &subscriptions)
 
-        Publishers.CombineLatest(
-            qsm.worksiteQueryState.eraseToAnyPublisher(),
-            incidentWorksitesCount
+        Publishers.CombineLatest3(
+            incidentWorksitesCount,
+            $worksitesChangingClaimAction,
+            qsm.worksiteQueryState.eraseToAnyPublisher()
         )
             .eraseToAnyPublisher()
-            .asyncMap { (wqs, _) in
+        // TODO: Create/find an equivalent to switchMap/mapLatest
+            .debounce(for: .seconds(0.1), scheduler: RunLoop.current)
+            .asyncMap { (_, _, wqs) in
                 if (wqs.isTableView) {
                     self.tableSortResultsMessageSubject.value = ""
                     do {
@@ -444,6 +448,11 @@ class CasesViewModel: ObservableObject {
             }
             .receive(on: RunLoop.main)
             .assign(to: \.tableData, on: self)
+            .store(in: &subscriptions)
+
+        changeClaimActionErrorMessageSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.changeClaimActionErrorMessage, on: self)
             .store(in: &subscriptions)
     }
 
@@ -708,7 +717,7 @@ class CasesViewModel: ObservableObject {
         _ worksite: Worksite,
         _ claimAction: TableWorksiteClaimAction
     ) {
-        changeClaimActionErrorMessage.value = ""
+        changeClaimActionErrorMessageSubject.value = ""
         Task {
             let result = await tableViewDataLoader.onWorkTypeClaimAction(
                 worksite,
@@ -716,7 +725,7 @@ class CasesViewModel: ObservableObject {
                 transferWorkTypeProvider
             )
             if result.errorMessage.isNotBlank {
-                changeClaimActionErrorMessage.value = result.errorMessage
+                changeClaimActionErrorMessageSubject.value = result.errorMessage
             }
         }
     }

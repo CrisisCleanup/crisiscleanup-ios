@@ -53,9 +53,13 @@ struct CasesTableView: View {
             .listItemModifier()
 
             // TODO: Show phone numbers in bottom sheet if there are more than 1 phone numbers
-            // TODO: Alert wrong location is checked if checked
             // TODO: Show claim action error dialog if error has occurred
-            // TODO: Show (no results) table sort message if not blank
+
+            if viewModel.tableSortResultsMessage.isNotBlank {
+                Text(viewModel.tableSortResultsMessage)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .listItemModifier()
+            }
 
             let casesData = viewModel.tableData
             let isTurnOnRelease = viewModel.selectedIncident.turnOnRelease
@@ -73,7 +77,10 @@ struct CasesTableView: View {
                             worksiteDistance: casesData[index],
                             isEditable: isEditable,
                             isTurnOnRelease: isTurnOnRelease,
-                            isChangingClaim: isChangingClaim
+                            isChangingClaim: isChangingClaim,
+                            onWorksiteClaimAction: { claimAction in
+                                viewModel.onWorksiteClaimAction(worksite, claimAction)
+                            }
                         )
                     }
                 }
@@ -176,6 +183,7 @@ private struct CaseTableItemCard: View {
     let isEditable: Bool
     let isTurnOnRelease: Bool
     let isChangingClaim: Bool
+    let onWorksiteClaimAction: (TableWorksiteClaimAction) -> Void
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -186,6 +194,7 @@ private struct CaseTableItemCard: View {
                     Image(systemName: "flag.fill")
                 }
                 .tint(.black)
+                .disabled(!isEditable)
 
                 Button {
                     router.viewCase(
@@ -225,21 +234,29 @@ private struct CaseTableItemCard: View {
             let (fullAddress, addressMapItem) = worksite.addressQuery
 
             HStack {
-                Image(systemName: "mappin.circle.fill")
+                Image(systemName: "mappin")
                     .foregroundColor(Color.gray)
 
                 Text(fullAddress)
+
+                Spacer()
+
+                if worksite.hasWrongLocationFlag {
+                    // TODO: Button when clicked pops message about wrong location flag is set
+                }
             }
             .padding(.bottom, 4)
 
             HStack {
                 Button {
+                    // TODO: Present multiple phone numbers if defined
                     let urlString =  "tel:\(worksite.phone1)"
                     if let url = URL(string: urlString) {
                         UIApplication.shared.open(url, options: [:], completionHandler: nil)
                     }
                 } label : {
                     Image(systemName: "phone.fill")
+                    // TODO: Common dimensions
                         .frame(width: 75, height: 35)
                         .fontHeader3()
                         .blackBorder()
@@ -247,10 +264,10 @@ private struct CaseTableItemCard: View {
                 .tint(.black)
 
                 Button {
-                    // TODO: Alert if wrong location flag was set
                     addressMapItem.openInMaps()
                 } label : {
                     Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
+                    // TODO: Common dimensions
                         .frame(width: 75, height: 35)
                         .fontHeader3()
                         .blackBorder()
@@ -259,33 +276,39 @@ private struct CaseTableItemCard: View {
 
                 Spacer()
 
+                let isClaimActionDisabled = !isEditable || isChangingClaim
+
                 switch worksiteDistance.claimStatus {
                 case .hasUnclaimed:
-                    WorkTypeAction(t.t("actions.claim"), true) {
-
+                    WorkTypeAction(
+                        t.t("actions.claim"),
+                        true,
+                        disabled: isClaimActionDisabled
+                    ) {
+                        onWorksiteClaimAction(.claim)
                     }
-                    .environmentObject(EditableView())
                 case .claimedByMyOrg:
-                    WorkTypeAction(t.t("actions.unclaim"), true) {
-
+                    WorkTypeAction(
+                        t.t("actions.unclaim"),
+                        false,
+                        disabled: isClaimActionDisabled
+                    ) {
+                        onWorksiteClaimAction(.unclaim)
                     }
-                    .environmentObject(EditableView())
                 case .claimedByOthers:
-                    let isReleasable = viewModel.incidentsData.selected.turnOnRelease // && worksite.isReleaseEligible
+                    let isReleasable = viewModel.incidentsData.selected.turnOnRelease && worksite.isReleaseEligible
                     let actionText = isReleasable ? t.t("actions.release") : t.t("actions.request")
-                    WorkTypeAction(actionText, true) {
-
+                    WorkTypeAction(
+                        actionText,
+                        false,
+                        disabled: isClaimActionDisabled
+                    ) {
+                        onWorksiteClaimAction(isReleasable ? .release : .request)
                     }
-                    .environmentObject(EditableView())
                 case .requested:
-                    WorkTypeAction(t.t("caseView.requested"), true) {
-
-                    }
-                    .environmentObject(EditableView())
+                    Text(t.t("caseView.requested"))
+                        .padding(.vertical, appTheme.listItemVerticalPadding)
                 }
-
-
-
             }
             .padding(.bottom, 4)
         }
