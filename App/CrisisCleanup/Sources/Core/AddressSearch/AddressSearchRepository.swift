@@ -5,7 +5,7 @@ public protocol AddressSearchRepository {
     func getAddress(_ coordinates: LatLng) async -> LocationAddress?
 
     func startSearchSession()
-    func searchAddresses(
+    @MainActor func searchAddresses(
         _ query: String,
         countryCodes: [String],
         center: LatLng?,

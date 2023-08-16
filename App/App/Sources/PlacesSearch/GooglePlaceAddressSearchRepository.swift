@@ -43,7 +43,7 @@ class GooglePlaceAddressSearchRepository: AddressSearchRepository {
         sessionToken =  GMSAutocompleteSessionToken.init()
     }
 
-    func searchAddresses(
+    @MainActor func searchAddresses(
         _ query: String,
         countryCodes: [String],
         center: LatLng?,

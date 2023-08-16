@@ -33,6 +33,7 @@ class CaseSearchLocationComponent: Component<AppDependency>, CaseSearchLocationV
     private func getViewModel() -> CaseSearchLocationViewModel {
         if viewModel == nil {
             viewModel = CaseSearchLocationViewModel(
+                addressSearchRepository: dependency.addressSearchRepository
             )
         }
         return viewModel!
