@@ -35,6 +35,7 @@ class CasesFilterComponent: Component<AppDependency>, CasesFilterViewBuilder {
                 incidentSelector: dependency.incidentSelector,
                 incidentsRepository: dependency.incidentsRepository,
                 languageRepository: dependency.languageTranslationsRepository,
+                locationManager: dependency.locationManager,
                 translator: dependency.translator,
                 loggerFactory: dependency.loggerFactory
             )

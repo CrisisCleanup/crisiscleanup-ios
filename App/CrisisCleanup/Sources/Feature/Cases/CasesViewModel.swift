@@ -14,6 +14,7 @@ class CasesViewModel: ObservableObject {
     private let locationManager: LocationManager
     private let worksiteProvider: WorksiteProvider
     private let transferWorkTypeProvider: TransferWorkTypeProvider
+    private let filterRepository: CasesFilterRepository
     private let translator: KeyTranslator
     private let syncPuller: SyncPuller
     private let logger: AppLogger
@@ -29,6 +30,8 @@ class CasesViewModel: ObservableObject {
     @Published private(set) var isLoadingData = false
 
     private let qsm: CasesQueryStateManager
+
+    @Published private(set) var filtersCount = 0
 
     @Published private(set) var isTableView = false
 
@@ -90,6 +93,7 @@ class CasesViewModel: ObservableObject {
         locationManager: LocationManager,
         worksiteProvider: WorksiteProvider,
         transferWorkTypeProvider: TransferWorkTypeProvider,
+        filterRepository: CasesFilterRepository,
         translator: KeyTranslator,
         syncPuller: SyncPuller,
         loggerFactory: AppLoggerFactory
@@ -103,6 +107,7 @@ class CasesViewModel: ObservableObject {
         self.locationManager = locationManager
         self.worksiteProvider = worksiteProvider
         self.transferWorkTypeProvider = transferWorkTypeProvider
+        self.filterRepository = filterRepository
         self.translator = translator
         self.syncPuller = syncPuller
         logger = loggerFactory.getLogger("cases")
@@ -150,6 +155,7 @@ class CasesViewModel: ObservableObject {
         subscribeSortBy()
         subscribeTableData()
         subscribeLocationStatus()
+        subscribeFilterCount()
     }
 
     func onViewDisappear() {
@@ -471,6 +477,14 @@ class CasesViewModel: ObservableObject {
                     }
                 }
             }
+            .store(in: &subscriptions)
+    }
+
+    private func subscribeFilterCount() {
+        filterRepository.filtersCount
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.filtersCount, on: self)
             .store(in: &subscriptions)
     }
 

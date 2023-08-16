@@ -8,6 +8,7 @@ class CasesFilterViewModel: ObservableObject {
     private let incidentSelector: IncidentSelector
     private let incidentsRepository: IncidentsRepository
     private let languageRepository: LanguageTranslationsRepository
+    private let locationManager: LocationManager
     let translator: KeyTranslator
     private let logger: AppLogger
 
@@ -31,8 +32,10 @@ class CasesFilterViewModel: ObservableObject {
     let indexedTitles: [(Int, String)]
 
     let distanceOptions: [(Double, String)]
-
     private var distanceOptionCached = ManagedAtomic(AtomicDoubleOptional())
+
+    @Published var showExplainLocationPermssion = false
+    @Published var hasInconsistentDistanceFilter = false
 
     private var subscriptions = Set<AnyCancellable>()
 
@@ -42,6 +45,7 @@ class CasesFilterViewModel: ObservableObject {
         incidentSelector: IncidentSelector,
         incidentsRepository: IncidentsRepository,
         languageRepository: LanguageTranslationsRepository,
+        locationManager: LocationManager,
         translator: KeyTranslator,
         loggerFactory: AppLoggerFactory
     ) {
@@ -50,6 +54,7 @@ class CasesFilterViewModel: ObservableObject {
         self.incidentSelector = incidentSelector
         self.incidentsRepository = incidentsRepository
         self.languageRepository = languageRepository
+        self.locationManager = locationManager
         self.translator = translator
         logger = loggerFactory.getLogger("filter-cases")
 
@@ -85,14 +90,15 @@ class CasesFilterViewModel: ObservableObject {
     }
 
     func onViewAppear() {
-        subscribeToFilterData()
+        subscribeFilterData()
+        subscribeLocationStatus()
     }
 
     func onViewDisappear() {
         subscriptions = cancelSubscriptions(subscriptions)
     }
 
-    private func subscribeToFilterData() {
+    private func subscribeFilterData() {
         casesFilterRepository.casesFilters
             .eraseToAnyPublisher()
             .receive(on: RunLoop.main)
@@ -131,6 +137,35 @@ class CasesFilterViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
+    private func subscribeLocationStatus() {
+        locationManager.$locationPermission
+            .sink { _ in
+                if self.locationManager.hasLocationAccess {
+                    if let cachedDistance = self.distanceOptionCached.exchange(AtomicDoubleOptional(), ordering: .relaxed).value {
+                        self.changeFilters {
+                            $0.distance = cachedDistance
+                        }
+                    }
+                }
+            }
+            .store(in: &subscriptions)
+
+        Publishers.CombineLatest(
+            locationManager.$locationPermission,
+            $casesFilters
+        )
+        .map { (_, filters) in
+            filters.hasDistanceFilter && !self.locationManager.hasLocationAccess
+        }
+        .receive(on: RunLoop.main)
+        .assign(to: \.hasInconsistentDistanceFilter, on: self)
+        .store(in: &subscriptions)
+    }
+
+    func requestLocationAccess() -> Bool {
+        locationManager.requestLocationAccess()
+    }
+
     private func changeDistanceFilter() {
         if let distance = distanceOptionCached.exchange(
             AtomicDoubleOptional(),
@@ -144,10 +179,18 @@ class CasesFilterViewModel: ObservableObject {
         changeFilters { $0.distance = distance }
     }
 
-    func tryChangeDistanceFilter(distance: Double) {
-        // TODO: Require permission if not granted. Cache and set later as necessary.
-        //        distanceOptionCached.set(distance)
-        changeDistanceFilter(distance)
+    func tryChangeDistanceFilter(_ distance: Double) -> Bool {
+        if requestLocationAccess() {
+            changeDistanceFilter(distance)
+            return true
+        }
+
+        distanceOptionCached.store(AtomicDoubleOptional(distance), ordering: .relaxed)
+
+        if locationManager.isDeniedLocationAccess {
+            showExplainLocationPermssion = true
+        }
+        return false
     }
 
     private func changeFilters(_ filters: CasesFilter) {

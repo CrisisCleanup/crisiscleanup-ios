@@ -210,20 +210,23 @@ private struct CasesOverlayElements: View {
                                 Button {
                                     router.openFilterCases()
                                 } label: {
-                                    // TODO: Badge
                                     Image("ic_dials", bundle: .module)
                                         .frame(width: buttonSize, height: buttonSize)
                                         .background(Color.white)
                                         .foregroundColor(Color.black)
                                 }
-
+                                .if(viewModel.filtersCount > 0) {
+                                    // TODO: Don't clip overlay
+                                    $0.overlay(alignment: .topTrailing) {
+                                        filterBadge(viewModel.filtersCount)
+                                    }
+                                }
                             }
                             .frame(width: appTheme.buttonSizeDoublePlus1, height: buttonSize)
                             .background(Color.white)
                             .foregroundColor(Color.black)
                             .cornerRadius(appTheme.cornerRadius)
                             .shadow(radius: appTheme.shadowRadius)
-
                         }
                         Spacer()
                     }

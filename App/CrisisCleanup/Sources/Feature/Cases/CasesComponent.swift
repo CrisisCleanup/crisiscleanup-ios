@@ -20,6 +20,7 @@ class CasesComponent: Component<AppDependency>, CasesViewBuilder {
         locationManager: dependency.locationManager,
         worksiteProvider: dependency.worksiteProvider,
         transferWorkTypeProvider: dependency.transferWorkTypeProvider,
+        filterRepository: dependency.casesFilterRepository,
         translator: dependency.translator,
         syncPuller: dependency.syncPuller,
         loggerFactory: dependency.loggerFactory

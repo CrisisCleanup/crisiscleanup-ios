@@ -112,6 +112,16 @@ struct CasesFilterView: View {
             .onDisappear { viewModel.onViewDisappear() }
             .environmentObject(viewModel)
         }
+
+        if viewModel.showExplainLocationPermssion {
+            OpenAppSettingsDialog(
+                title: t.t("info.allow_access_to_location"),
+                dismissDialog: { viewModel.showExplainLocationPermssion = false }
+            ) {
+                Text(t.t("worksiteFilters.location_required_to_filter_by_distance"))
+                    .padding(.horizontal)
+            }
+        }
     }
 }
 
@@ -224,22 +234,53 @@ private struct FilterSlidersSection: View {
 }
 
 struct FilterDistanceSection: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @EnvironmentObject var viewModel: CasesFilterViewModel
+
     let distances: [(Double, String)]
-    @State var selected: String = ""
+    @State var selected: Double = 0.0
     @State var options: [String] = []
 
-
     var body: some View {
-        let options = distances.map{$0.1}
-        RadioButtons(selected: $selected, options: options)
-            .padding()
+        if viewModel.hasInconsistentDistanceFilter {
+            VStack {
+                Text(t.t("~~Filtering by distance requires access to location"))
 
+                Button {
+                    _ = viewModel.requestLocationAccess()
+                } label: {
+                    Text(t.t("~~Grant access to location"))
+                }
+                .stylePrimary()
+            }
+            .listItemModifier()
+        }
 
+        Group {
+            ForEach(distances, id: \.1) { (distance, text) in
+                RadioButton(
+                    text: text,
+                    isSelected: distance == selected,
+                    isListItem: true
+                ) {
+                    if viewModel.tryChangeDistanceFilter(distance) {
+                        selected = distance
+                    }
+                }
+            }
+        }
+        .onChange(of: viewModel.casesFilters) { newValue in
+            if abs(selected - newValue.distance) > 0.001 {
+                selected = newValue.distance
+            }
+        }
     }
 }
 
 struct FilterGeneralSection: View {
     @Environment(\.translator) var t: KeyAssetTranslator
+
     @EnvironmentObject var viewModel: CasesFilterViewModel
 
     @State var selected: [String] = []
