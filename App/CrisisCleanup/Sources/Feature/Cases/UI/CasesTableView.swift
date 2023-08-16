@@ -118,7 +118,8 @@ private struct TableViewIncidentSelector: View {
                 incident: selectedIncident,
                 drop: true,
                 disabled: hasNoIncidents,
-                isLoading: isLoadingData
+                isLoading: isLoadingData,
+                isSpaceConstrained: true
             )
             .tint(.black)
         }
@@ -321,5 +322,4 @@ private struct CaseTableItemCard: View {
             )
         }
     }
-
 }

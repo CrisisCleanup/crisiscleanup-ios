@@ -74,7 +74,8 @@ private struct TopBar: View {
                     drop: !selectedIncident.isEmptyIncident,
                     text: title,
                     disabled: hasNoIncidents,
-                    isLoading: viewModel.showHeaderLoading
+                    isLoading: viewModel.showHeaderLoading,
+                    isSpaceConstrained: true
                 )
             }
             .sheet(

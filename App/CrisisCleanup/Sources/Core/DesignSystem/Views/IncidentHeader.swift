@@ -8,6 +8,7 @@ struct IncidentHeader: View {
     var text = ""
     var disabled: Bool = false
     var isLoading: Bool = false
+    var isSpaceConstrained: Bool = false
 
     var body: some View {
         HStack(spacing: appTheme.gridItemSpacing) {
@@ -17,7 +18,7 @@ struct IncidentHeader: View {
             )
 
             Text(text.isBlank ? incident.shortName : text)
-                .fontHeader1()
+                .fontHeader(size: isSpaceConstrained ? 2 : 1)
 
             if drop != nil {
                 DropDownIcon()
