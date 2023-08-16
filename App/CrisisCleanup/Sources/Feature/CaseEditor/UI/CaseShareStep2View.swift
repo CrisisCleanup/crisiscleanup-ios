@@ -145,7 +145,7 @@ struct CaseShareStep2View: View {
             } else {
                 CaseShareBottomActions(message: $shareMessage)
                     .environmentObject(viewModel)
-                    .listItemModifier()
+                    .listItemPadding()
             }
         }
     }

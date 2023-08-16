@@ -124,6 +124,8 @@ private struct CasesOverlayElements: View {
 
     @State var openIncidentSelect = false
 
+    @State var showCountProgress = false
+
     var body: some View {
         let isMapView = !viewModel.isTableView
 
@@ -168,10 +170,9 @@ private struct CasesOverlayElements: View {
                         HStack {
                             Spacer()
 
-                            let mapCount = viewModel.casesCountMapText
-                            if mapCount.isNotBlank || viewModel.isLoadingData {
+                            if showCountProgress {
                                 HStack(spacing: appTheme.gridItemSpacing) {
-                                    // TODO: Animate individual elements
+                                    let mapCount = viewModel.casesCountMapText
                                     if mapCount.isNotBlank {
                                         Text(mapCount)
                                             .foregroundColor(Color.white)
@@ -229,6 +230,11 @@ private struct CasesOverlayElements: View {
                             .shadow(radius: appTheme.shadowRadius)
                         }
                         Spacer()
+                    }
+                    .onChange(of: viewModel.hasCasesCountProgress) { b in
+                        withAnimation(.easeIn(duration: appTheme.visibleSlowAnimationDuration)) {
+                            showCountProgress = b
+                        }
                     }
                 }
             }

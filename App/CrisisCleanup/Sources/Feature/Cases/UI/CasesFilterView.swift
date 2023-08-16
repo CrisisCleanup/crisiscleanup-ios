@@ -43,38 +43,29 @@ struct CasesFilterView: View {
 
                             switch index {
                             case 0:
-                                if(!sectionCollapse[0]) {
+                                if !sectionCollapse[0] {
                                     FilterDistanceSection(
                                         distances: viewModel.distanceOptions
                                     )
                                 }
                             case 1:
-                                if(!sectionCollapse[1]) {
+                                if !sectionCollapse[1] {
                                     FilterGeneralSection()
-                                    .environmentObject(viewModel)
-                                    .padding(.horizontal)
                                 }
                             case 2:
-                                if(!sectionCollapse[2]) {
+                                if !sectionCollapse[2] {
                                     FilterPersonalInfoSection()
-                                    .padding(.horizontal)
                                 }
                             case 3:
-                                if(!sectionCollapse[3]) {
-                                    FilterFlagsSection(
-                                        flags: viewModel.worksiteFlags
-                                    )
-                                    .padding(.horizontal)
+                                if !sectionCollapse[3] {
+                                    FilterFlagsSection()
                                 }
                             case 4:
-                                if(!sectionCollapse[4]) {
-                                    FilterWorkSection(
-                                        workTypes: viewModel.workTypes
-                                    )
-                                    .padding(.horizontal)
+                                if !sectionCollapse[4] {
+                                    FilterWorkSection()
                                 }
                             case 5:
-                                if(!sectionCollapse[5]) {
+                                if !sectionCollapse[5] {
                                     CalendarFormField(
                                         title: t.t("worksiteFilters.created"),
                                         start: $createdStart,
@@ -105,7 +96,7 @@ struct CasesFilterView: View {
 
                 FilterButtons()
                     .environmentObject(viewModel)
-                    .listItemModifier()
+                    .listItemPadding()
             }
             .hideNavBarUnderSpace()
             .onAppear { viewModel.onViewAppear() }
@@ -147,6 +138,16 @@ private struct FilterSectionTitle: View {
     }
 }
 
+private struct FilterSubsectionTitle: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .fontHeader4()
+            .padding(.horizontal)
+    }
+}
+
 private struct FilterSliderLabelsView: View {
     let leadingLabel: String
     let trailingLabel: String
@@ -178,6 +179,7 @@ private struct FilterSlidersSection: View {
     var body: some View {
         VStack(alignment: .leading) {
             Text(t.t("svi.vulnerability"))
+                .fontHeader3()
 
             Slider(
                 value: $svi,
@@ -206,6 +208,7 @@ private struct FilterSlidersSection: View {
         VStack(alignment: .leading) {
             let updatedText = t.t("worksiteFilters.updated")
             Text("\(updatedText) (\(Int(daysAgo)))")
+                .fontHeader3()
 
             Slider(
                 value: $daysAgo,
@@ -233,7 +236,7 @@ private struct FilterSlidersSection: View {
     }
 }
 
-struct FilterDistanceSection: View {
+private struct FilterDistanceSection: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewModel: CasesFilterViewModel
@@ -254,7 +257,7 @@ struct FilterDistanceSection: View {
                 }
                 .stylePrimary()
             }
-            .listItemModifier()
+            .listItemPadding()
         }
 
         Group {
@@ -262,6 +265,7 @@ struct FilterDistanceSection: View {
                 RadioButton(
                     text: text,
                     isSelected: distance == selected,
+                    nestedLevel: 1,
                     isListItem: true
                 ) {
                     if viewModel.tryChangeDistanceFilter(distance) {
@@ -278,104 +282,249 @@ struct FilterDistanceSection: View {
     }
 }
 
-struct FilterGeneralSection: View {
+private struct FilterCheckboxView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewModel: CasesFilterViewModel
 
-    @State var selected: [String] = []
-    @State var tempBool = false
+    let textKey: String
+    var isNested: Bool = false
+    let onUpdateValue: (CasesFilter) -> Bool
+    let filterDelta: (CasesFilter, Bool) -> CasesFilter
 
+    @State private var isChecked: Bool = false
+
+    var body: some View {
+        CheckboxView(
+            checked: $isChecked,
+            text: t.t(textKey),
+            nestedLevel: isNested ? 1 : nil,
+            isListItem: true
+        )
+        .onChange(of: isChecked) { newValue in
+            viewModel.changeFilters(filterDelta(viewModel.casesFilters, newValue))
+        }
+        .onChange(of: viewModel.casesFilters) { newValue in
+            isChecked = onUpdateValue(newValue)
+        }
+    }
+}
+
+private struct FilterSubsection<Content>: View where Content: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    let titleKey: String
+    let content: Content
+
+    init(
+        _ titleKey: String,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.titleKey = titleKey
+        self.content = content()
+    }
+
+    var body: some View {
+        FilterSubsectionTitle(title: t.t(titleKey))
+
+        content
+    }
+}
+
+private struct FilterGeneralSection: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @EnvironmentObject var viewModel: CasesFilterViewModel
+
+    @State private var isStatusOpen = false
+    @State private var isStatusClosed = false
+
+    private func onStatusChange(_ isOpen: Bool, _ isClosed: Bool) -> CasesFilter {
+        viewModel.casesFilters.copy {
+            $0.isStatusOpen = isOpen
+            $0.isStatusClosed = isClosed
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading) {
-            Group {
-                Text(t.t("worksiteFilters.location"))
+            FilterSubsection("worksiteFilters.location") {
+                FilterCheckboxView(
+                    textKey: "worksiteFilters.in_primary_response_area",
+                    isNested: true,
+                    onUpdateValue: { $0.isWithinPrimaryResponseArea }
+                ) { filters, isChecked in
+                    filters.copy { $0.isWithinPrimaryResponseArea = isChecked }
+                }
 
-                CheckboxView(checked: $tempBool, text: t.t("worksiteFilters.in_primary_response_area"))
-
-                CheckboxView(checked: $tempBool, text: t.t("worksiteFilters.in_secondary_response_area"))
-
-                Text(t.t("worksiteFilters.team"))
-
-                CheckboxView(checked: $tempBool, text: t.t("worksiteFilters.assigned_to_my_team"))
-            }
-            Group {
-                Text(t.t("worksiteFilters.claim_reported_by"))
-
-                CheckboxView(checked: $tempBool, text: t.t("worksiteFilters.unclaimed"))
-
-                CheckboxView(checked: $tempBool, text: t.t("worksiteFilters.claimed_by_my_org"))
-
-                CheckboxView(checked: $tempBool, text: t.t("worksiteFilters.reported_by_my_org"))
+                FilterCheckboxView(
+                    textKey: "worksiteFilters.in_secondary_response_area",
+                    isNested: true,
+                    onUpdateValue: { $0.isWithinSecondaryResponseArea }
+                ) { filters, isChecked in
+                    filters.copy { $0.isWithinSecondaryResponseArea = isChecked }
+                }
             }
 
-            Group {
-                Text(t.t("worksiteFilters.over_all_status"))
-
-                CheckboxView(checked: $tempBool, text: t.t("worksiteFilters.open"))
-
-                CheckboxView(checked: $tempBool, text: t.t("worksiteFilters.closed"))
+            FilterSubsection("worksiteFilters.team") {
+                FilterCheckboxView(
+                    textKey: "worksiteFilters.assigned_to_my_team",
+                    isNested: true,
+                    onUpdateValue: { $0.isAssignedToMyTeam }
+                ) { filters, isChecked in
+                    filters.copy { $0.isAssignedToMyTeam = isChecked }
+                }
             }
 
-            Group {
-                Text(t.t("worksiteFilters.detailed_status"))
+            FilterSubsection("worksiteFilters.claim_reported_by") {
+                FilterCheckboxView(
+                    textKey: "worksiteFilters.unclaimed",
+                    isNested: true,
+                    onUpdateValue: { $0.isUnclaimed }
+                ) { filters, isChecked in
+                    filters.copy { $0.isUnclaimed = isChecked }
+                }
 
+                FilterCheckboxView(
+                    textKey: "worksiteFilters.claimed_by_my_org",
+                    isNested: true,
+                    onUpdateValue: { $0.isClaimedByMyOrg }
+                ) { filters, isChecked in
+                    filters.copy { $0.isClaimedByMyOrg = isChecked }
+                }
+
+                FilterCheckboxView(
+                    textKey: "worksiteFilters.reported_by_my_org",
+                    isNested: true,
+                    onUpdateValue: { $0.isReportedByMyOrg }
+                ) { filters, isChecked in
+                    filters.copy { $0.isReportedByMyOrg = isChecked }
+                }
+            }
+
+            FilterSubsection("worksiteFilters.over_all_status") {
+                Group {
+                    CheckboxView(
+                        checked: $isStatusOpen,
+                        text: t.t("worksiteFilters.open"),
+                        nestedLevel: 1,
+                        isListItem: true
+                    )
+                    .onChange(of: isStatusOpen) { newValue in
+                        if newValue != viewModel.casesFilters.isStatusOpen {
+                            viewModel.changeFilters(onStatusChange(newValue, false))
+                        }
+                    }
+                    CheckboxView(
+                        checked: $isStatusClosed,
+                        text: t.t("worksiteFilters.closed"),
+                        nestedLevel: 1,
+                        isListItem: true
+                    )
+                    .onChange(of: isStatusClosed) { newValue in
+                        if newValue != viewModel.casesFilters.isStatusClosed {
+                            viewModel.changeFilters(onStatusChange(false, newValue))
+                        }
+                    }
+                }
+                .onChange(of: viewModel.casesFilters) { newValue in
+                    isStatusOpen = newValue.isStatusOpen
+                    isStatusClosed = newValue.isStatusClosed
+                }
+            }
+
+            FilterSubsection("worksiteFilters.detailed_status") {
                 ForEach(viewModel.workTypeStatuses, id: \.self) { status in
-                    CheckboxView(checked: $tempBool, text: t.t(status.literal))
+                    CheckboxView(
+                        checked: $viewModel.filterStatuses[status.literal],
+                        text: t.t(status.literal),
+                        nestedLevel: 1,
+                        isListItem: true
+                    )
                 }
             }
         }
     }
 }
 
-struct FilterPersonalInfoSection: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
-    @State var tempBool = false
-
+private struct FilterPersonalInfoSection: View {
     var body: some View {
-        VStack(alignment: .leading) {
-            Text(t.t("worksiteFilters.my_organization"))
+        FilterSubsection("worksiteFilters.my_organization") {
+            FilterCheckboxView(
+                textKey: "worksiteFilters.member_of_my_org",
+                isNested: true,
+                onUpdateValue: { $0.isMemberOfMyOrg }
+            ) { filters, isChecked in
+                filters.copy { $0.isMemberOfMyOrg = isChecked }
+            }
+        }
 
-            CheckboxView(checked: $tempBool, text: t.t("worksiteFilters.member_of_my_org"))
+        FilterSubsection("worksiteFilters.personal_info") {
+            FilterCheckboxView(
+                textKey: "formLabels.older_than_60",
+                isNested: true,
+                onUpdateValue: { $0.isOlderThan60 }
+            ) { filters, isChecked in
+                filters.copy { $0.isOlderThan60 = isChecked }
+            }
 
-            Text(t.t("worksiteFilters.my_organization"))
+            FilterCheckboxView(
+                textKey: "formLabels.children_in_home",
+                isNested: true,
+                onUpdateValue: { $0.hasChildrenInHome }
+            ) { filters, isChecked in
+                filters.copy { $0.hasChildrenInHome = isChecked }
+            }
 
-            CheckboxView(checked: $tempBool, text: t.t("formLabels.older_than_60"))
+            FilterCheckboxView(
+                textKey: "formLabels.first_responder",
+                isNested: true,
+                onUpdateValue: { $0.isFirstResponder }
+            ) { filters, isChecked in
+                filters.copy { $0.isFirstResponder = isChecked }
+            }
 
-            CheckboxView(checked: $tempBool, text: t.t("formLabels.children_in_home"))
-
-            CheckboxView(checked: $tempBool, text: t.t("formLabels.first_responder"))
-
-            CheckboxView(checked: $tempBool, text: t.t("formLabels.veteran"))
-
+            FilterCheckboxView(
+                textKey: "formLabels.veteran",
+                isNested: true,
+                onUpdateValue: { $0.isVeteran }
+            ) { filters, isChecked in
+                filters.copy { $0.isVeteran = isChecked }
+            }
         }
     }
 }
 
-struct FilterFlagsSection: View {
+private struct FilterFlagsSection: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    let flags: [WorksiteFlagType]
-    @State var tempBool = false
+    @EnvironmentObject var viewModel: CasesFilterViewModel
 
     var body: some View {
-        ForEach(flags, id: \.id) { flag in
-            CheckboxView(checked: $tempBool, text: t.t(flag.literal))
+        ForEach(viewModel.worksiteFlags, id: \.self) { flag in
+            CheckboxView(
+                checked: $viewModel.filterFlags[flag.literal],
+                text: t.t(flag.literal),
+                nestedLevel: 1,
+                isListItem: true
+            )
         }
     }
 }
 
-struct FilterWorkSection: View {
+private struct FilterWorkSection: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    let workTypes: [String]
-    @State var isChecked = false
+    @EnvironmentObject var viewModel: CasesFilterViewModel
 
     var body: some View {
-        ForEach(workTypes, id: \.self) { workTypeKey in
-            let workTypeText = t.t("workType.\(workTypeKey)")
-            CheckboxView(checked: $isChecked, text: workTypeText)
+        ForEach(viewModel.workTypes, id: \.self) { workType in
+            CheckboxView(
+                checked: $viewModel.filterWorkTypes[workType],
+                text: t.t("workType.\(workType)"),
+                nestedLevel: 1,
+                isListItem: true
+            )
         }
     }
 }

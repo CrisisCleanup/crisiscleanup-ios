@@ -26,7 +26,7 @@ struct CasesTableView: View {
 
                 TableViewButtons()
             }
-            .listItemModifier()
+            .listItemPadding()
 
             HStack {
                 // TODO: Animate
@@ -50,7 +50,7 @@ struct CasesTableView: View {
                 .tint(.black)
                 .blackBorder()
             }
-            .listItemModifier()
+            .listItemPadding()
 
             // TODO: Show phone numbers in bottom sheet if there are more than 1 phone numbers
             // TODO: Show claim action error dialog if error has occurred
@@ -58,7 +58,7 @@ struct CasesTableView: View {
             if viewModel.tableSortResultsMessage.isNotBlank {
                 Text(viewModel.tableSortResultsMessage)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .listItemModifier()
+                    .listItemPadding()
             }
 
             let casesData = viewModel.tableData

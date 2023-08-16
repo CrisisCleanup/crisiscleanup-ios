@@ -36,16 +36,13 @@ struct RadioButton: View {
                 Image(systemName: radioImg)
                     .foregroundColor(isSelected ? Color.black : Color.gray)
                     .if(nestedLevel != nil) {
-                        // TODO: Common dimensions
-                        $0.padding(.leading, Double(nestedLevel!) * 16)
+                        $0.padding(.leading, Double(nestedLevel!) * appTheme.nestedItemPadding)
                     }
                 Text(text)
                     .foregroundColor(Color.black)
             }
             .if(isListItem) {
-                $0
-                    .padding(.horizontal)
-                    .frame(maxWidth: .infinity, minHeight: appTheme.rowItemHeight, alignment: .leading)
+                $0.listItemModifier()
             }
         }
     }

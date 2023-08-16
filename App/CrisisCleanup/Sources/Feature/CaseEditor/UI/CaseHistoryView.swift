@@ -12,12 +12,12 @@ struct CaseHistoryView: View {
             VStack(alignment: .leading) {
                 Text(t.t("caseHistory.do_not_share_contact_warning"))
                     .fontHeader3()
-                    .listItemModifier()
+                    .listItemPadding()
 
                 ScrollView {
                     LazyVGrid(columns: columns) {
                         Text(t.t("caseHistory.do_not_share_contact_explanation"))
-                            .listItemModifier()
+                            .listItemPadding()
 
                         if viewModel.hasEvents {
                             ForEach(viewModel.historyEvents, id: \.userId) { userEvents in
@@ -31,7 +31,7 @@ struct CaseHistoryView: View {
                         else if !viewModel.isLoadingCaseHistory {
                             Text(t.t("caseHistory.no_history"))
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .listItemModifier()
+                                .listItemPadding()
                         }
                     }
                 }

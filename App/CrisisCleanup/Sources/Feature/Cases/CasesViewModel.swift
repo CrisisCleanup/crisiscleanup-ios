@@ -71,6 +71,7 @@ class CasesViewModel: ObservableObject {
 
     @Published private(set) var casesCountTableText = ""
     @Published private(set) var casesCountMapText = ""
+    @Published private(set) var hasCasesCountProgress = false
 
     private var hasDisappeared = false
 
@@ -373,6 +374,15 @@ class CasesViewModel: ObservableObject {
         }
         .receive(on: RunLoop.main)
         .assign(to: \.casesCountMapText, on: self)
+        .store(in: &subscriptions)
+
+        Publishers.CombineLatest(
+            $casesCountMapText,
+            $isLoadingData
+        )
+        .map { countText, loading in countText.isNotBlank || loading }
+        .receive(on: RunLoop.main)
+        .assign(to: \.hasCasesCountProgress, on: self)
         .store(in: &subscriptions)
     }
 

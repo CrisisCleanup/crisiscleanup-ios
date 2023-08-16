@@ -17,9 +17,11 @@ class ThemeValues: ObservableObject {
     @Published var gridItemSpacing: Double
     @Published var listItemVerticalPadding: Double
     @Published var textListVerticalPadding: Double
+    @Published var nestedItemPadding: Double
 
     // TODO: Group in timings object
     @Published var layoutAnimationDuration: Double
+    @Published var visibleSlowAnimationDuration: Double
 
     @Published var colors: ThemeColor
 
@@ -33,7 +35,9 @@ class ThemeValues: ObservableObject {
         gridItemSpacing: Double = 8,
         listItemVerticalPadding: Double = 8,
         textListVerticalPadding: Double = 4,
-        layoutAnimationDuration: Double = 0.3
+        layoutAnimationDuration: Double = 0.3,
+        visibleSlowAnimationDuration: Double = 1.0,
+        nestedItemPadding: Double = 16
     ) {
         self.textFieldInnerPadding = textFieldInnerPadding
         self.textFieldOutlineWidth = textFieldOutlineWidth
@@ -45,8 +49,10 @@ class ThemeValues: ObservableObject {
         self.gridItemSpacing = gridItemSpacing
         self.listItemVerticalPadding = listItemVerticalPadding
         self.textListVerticalPadding = textListVerticalPadding
+        self.nestedItemPadding = nestedItemPadding
 
         self.layoutAnimationDuration = layoutAnimationDuration
+        self.visibleSlowAnimationDuration = visibleSlowAnimationDuration
 
         self.colors = ThemeColor()
     }

@@ -13,6 +13,9 @@ class CasesFilterViewModel: ObservableObject {
     private let logger: AppLogger
 
     @Published private(set) var casesFilters: CasesFilter = CasesFilter()
+    @Published var filterStatuses = ObservableBoolDictionary()
+    @Published var filterFlags = ObservableBoolDictionary()
+    @Published var filterWorkTypes = ObservableBoolDictionary()
 
     @Published private(set) var workTypeStatuses = [WorkTypeStatus]()
 
@@ -105,6 +108,25 @@ class CasesFilterViewModel: ObservableObject {
             .assign(to: \.casesFilters, on: self)
             .store(in: &subscriptions)
 
+        $casesFilters
+            .sink { filters in
+                let statuses = self.filterStatuses
+                for workTypeStatus in filters.workTypeStatuses {
+                    statuses[workTypeStatus.literal] = true
+                }
+
+                let flags = self.filterFlags
+                for flag in filters.worksiteFlags {
+                    flags[flag.literal] = true
+                }
+
+                let workTypes = self.filterWorkTypes
+                for workType in filters.workTypes {
+                    workTypes[workType] = true
+                }
+            }
+            .store(in: &subscriptions)
+
         workTypeStatusRepository.workTypeStatusFilterOptions
             .eraseToAnyPublisher()
             .receive(on: RunLoop.main)
@@ -193,7 +215,7 @@ class CasesFilterViewModel: ObservableObject {
         return false
     }
 
-    private func changeFilters(_ filters: CasesFilter) {
+    func changeFilters(_ filters: CasesFilter) {
         casesFilters = filters
     }
 
@@ -208,7 +230,31 @@ class CasesFilterViewModel: ObservableObject {
     }
 
     func applyFilters(_ filters: CasesFilter) {
-        casesFilterRepository.changeFilters(filters)
+        var statuses = Set<WorkTypeStatus>()
+        for (key, value) in filterStatuses.data {
+            if value {
+                statuses.insert(statusFromLiteral(key))
+            }
+        }
+        var flags = Set<WorksiteFlagType>()
+        for (key, value) in filterFlags.data {
+            if value,
+               let flag = flagFromLiteral(key) {
+                flags.insert(flag)
+            }
+        }
+        var workTypes = Set<String>()
+        for (key, value) in filterWorkTypes.data {
+            if value {
+                workTypes.insert(key)
+            }
+        }
+        let changed = filters.copy {
+            $0.workTypeStatuses = statuses
+            $0.worksiteFlags = Array(flags)
+            $0.workTypes = workTypes
+        }
+        casesFilterRepository.changeFilters(changed)
     }
 }
 
