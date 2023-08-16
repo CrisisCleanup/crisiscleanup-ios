@@ -7,9 +7,6 @@ struct CasesFilterView: View {
 
     @ObservedObject var viewModel: CasesFilterViewModel
 
-    @State var svi = 100.0
-    @State var daysAgo = Double(CasesFilterMaxDaysAgo)
-
     @State var createdStart: Date?
     @State var createdEnd: Date?
 
@@ -35,10 +32,7 @@ struct CasesFilterView: View {
 
             VStack {
                 ScrollView {
-                    FilterSlidersSection(
-                        svi: $svi,
-                        daysAgo: $daysAgo
-                    )
+                    FilterSlidersSection()
 
                     ForEach(viewModel.indexedTitles, id: \.0) { (index, sectionTitle) in
                         FormListSectionSeparator()
@@ -56,15 +50,13 @@ struct CasesFilterView: View {
                                 }
                             case 1:
                                 if(!sectionCollapse[1]) {
-                                    FilterGeneralSection(
-                                    )
+                                    FilterGeneralSection()
                                     .environmentObject(viewModel)
                                     .padding(.horizontal)
                                 }
                             case 2:
                                 if(!sectionCollapse[2]) {
-                                    FilterPersonalInfoSection(
-                                    )
+                                    FilterPersonalInfoSection()
                                     .padding(.horizontal)
                                 }
                             case 3:
@@ -115,10 +107,11 @@ struct CasesFilterView: View {
                     .environmentObject(viewModel)
                     .listItemModifier()
             }
+            .hideNavBarUnderSpace()
+            .onAppear { viewModel.onViewAppear() }
+            .onDisappear { viewModel.onViewDisappear() }
+            .environmentObject(viewModel)
         }
-        .hideNavBarUnderSpace()
-        .onAppear { viewModel.onViewAppear() }
-        .onDisappear { viewModel.onViewDisappear() }
     }
 }
 
@@ -144,11 +137,30 @@ private struct FilterSectionTitle: View {
     }
 }
 
+private struct FilterSliderLabelsView: View {
+    let leadingLabel: String
+    let trailingLabel: String
+
+    var body: some View {
+        HStack {
+            Text(leadingLabel)
+                .fontBodySmall()
+
+            Spacer()
+
+            Text(trailingLabel)
+                .fontBodySmall()
+        }
+    }
+}
+
 private struct FilterSlidersSection: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    @Binding var svi: Double
-    @Binding var daysAgo: Double
+    @EnvironmentObject var viewModel: CasesFilterViewModel
+
+    @State var svi = 100.0
+    @State var daysAgo = Double(CasesFilterMaxDaysAgo)
 
     private let minDaysAgo = Double(CasesFilterMinDaysAgo)
     private let maxDaysAgo = Double(CasesFilterMaxDaysAgo)
@@ -161,16 +173,21 @@ private struct FilterSlidersSection: View {
                 value: $svi,
                 in: 0...100
             )
-            .tint(.black)
-            HStack {
-                Text(t.t("svi.most_vulnerable"))
-                    .fontBodySmall()
-
-                Spacer()
-
-                Text(t.t("svi.everyone"))
-                    .fontBodySmall()
+            .onChange(of: svi) { newValue in
+                let actualSvi = newValue * 0.01
+                if abs(actualSvi - viewModel.casesFilters.svi) > 0.001 {
+                    viewModel.changeFilters { $0.svi = actualSvi }
+                }
             }
+            .tint(.black)
+
+            FilterSliderLabelsView(
+                leadingLabel: t.t("svi.most_vulnerable"),
+                trailingLabel: t.t("svi.everyone")
+            )
+        }
+        .onChange(of: viewModel.casesFilters) { newValue in
+            svi = newValue.svi * 100
         }
         .padding(.horizontal)
 
@@ -185,17 +202,22 @@ private struct FilterSlidersSection: View {
                 in: minDaysAgo...maxDaysAgo,
                 step: 1
             )
+            .onChange(of: daysAgo) { newValue in
+                if abs(newValue - Double(viewModel.casesFilters.daysAgoUpdated)) > 0.5 {
+                    viewModel.changeFilters { $0.daysAgoUpdated = Int(newValue) }
+                }
+            }
             .tint(.black)
 
-            HStack {
-                Text(t.t("worksiteFilters.days_ago").replacingOccurrences(of: "{days}", with: "\(CasesFilterMinDaysAgo)"))
-                    .fontBodySmall()
-
-                Spacer()
-
-                Text(t.t("worksiteFilters.days_ago").replacingOccurrences(of: "{days}", with: "\(CasesFilterMaxDaysAgo)"))
-                    .fontBodySmall()
-            }
+            FilterSliderLabelsView(
+                leadingLabel: t.t("worksiteFilters.days_ago")
+                    .replacingOccurrences(of: "{days}", with: "\(CasesFilterMinDaysAgo)"),
+                trailingLabel: t.t("worksiteFilters.days_ago")
+                    .replacingOccurrences(of: "{days}", with: "\(CasesFilterMaxDaysAgo)")
+            )
+        }
+        .onChange(of: viewModel.casesFilters) { newValue in
+            daysAgo = Double(newValue.daysAgoUpdated)
         }
         .padding(.horizontal)
     }
@@ -307,18 +329,17 @@ struct FilterWorkSection: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     let workTypes: [String]
-    @State var tempBool = false
+    @State var isChecked = false
 
     var body: some View {
         ForEach(workTypes, id: \.self) { workTypeKey in
             let workTypeText = t.t("workType.\(workTypeKey)")
-            CheckboxView(checked: $tempBool, text: workTypeText)
+            CheckboxView(checked: $isChecked, text: workTypeText)
         }
     }
 }
 
 struct CalendarFormField: View {
-
     var title: String
     @Binding var start: Date?
     @Binding var end: Date?
@@ -448,15 +469,21 @@ struct CalendarSelectView: View {
                         }
 
                         // Insert the other dates in between
-                        for date in stride(from:start!, to:end!, by: TimeInterval(86400)) {
-                            let comps = Calendar.current.dateComponents([.calendar, .era, .year, .month, .day], from: date)
+                        for date in stride(
+                            from: start!,
+                            to:end!,
+                            by: 1.days
+                        ) {
+                            let comps = Calendar.current.dateComponents(
+                                [.calendar, .era, .year, .month, .day],
+                                from: date
+                            )
                             dates.insert(comps)
                         }
 
                         datesFilled = true
                         datesCache = dates
                     }
-
                 }
 
             Spacer()
@@ -467,29 +494,32 @@ struct CalendarSelectView: View {
 
 struct FilterButtons: View {
     @Environment(\.translator) var t: KeyAssetTranslator
+    @Environment(\.dismiss) var dismiss
 
     @EnvironmentObject var viewModel: CasesFilterViewModel
 
     var body: some View {
+        let filters = viewModel.casesFilters
         HStack {
-            let noFilters = viewModel.casesFilters.changeCount == 0
+            let filterCount = filters.changeCount
+            let noFilters = filterCount == 0
             Button {
-
+                viewModel.clearFilters()
             } label: {
                 Text(t.t("actions.clear_filters"))
             }
             .styleCancel()
             .disabled(noFilters)
 
-            let filterCount = noFilters ? "" : "(\(viewModel.casesFilters.changeCount))"
-            let buttonText = t.t("actions.apply_filters") + filterCount
+            let applyFilters = t.t("actions.apply_filters")
+            let applyText = noFilters ? applyFilters : "\(applyFilters) (\(filterCount))"
             Button {
-
+                viewModel.applyFilters(filters)
+                dismiss()
             } label: {
-                Text(buttonText)
+                Text(applyText)
             }
             .stylePrimary()
-            .disabled(noFilters)
         }
     }
 }

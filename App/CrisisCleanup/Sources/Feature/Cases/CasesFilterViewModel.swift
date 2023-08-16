@@ -141,7 +141,7 @@ class CasesFilterViewModel: ObservableObject {
     }
 
     private func changeDistanceFilter(_ distance: Double) {
-        changeFilters(casesFilters.copy { $0.distance = distance })
+        changeFilters { $0.distance = distance }
     }
 
     func tryChangeDistanceFilter(distance: Double) {
@@ -150,8 +150,12 @@ class CasesFilterViewModel: ObservableObject {
         changeDistanceFilter(distance)
     }
 
-    func changeFilters(_ filters: CasesFilter) {
+    private func changeFilters(_ filters: CasesFilter) {
         casesFilters = filters
+    }
+
+    func changeFilters(build: (inout CasesFilter.Builder) -> Void) {
+        changeFilters(casesFilters.copy(build: build))
     }
 
     func clearFilters() {

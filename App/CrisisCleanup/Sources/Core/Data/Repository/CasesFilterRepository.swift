@@ -17,7 +17,6 @@ class CrisisCleanupCasesFilterRepository: CasesFilterRepository {
     private let _isLoading = CurrentValueSubject<Bool, Never>(true)
     let isLoading: any Publisher<Bool, Never>
 
-    private let _casesFilters = CurrentValueSubject<CasesFilter, Never>(CasesFilter())
     let casesFilters: any Publisher<CasesFilter, Never>
 
     let filtersCount: any Publisher<Int, Never>
@@ -36,17 +35,14 @@ class CrisisCleanupCasesFilterRepository: CasesFilterRepository {
         self.networkDataSource = networkDataSource
 
         isLoading = _isLoading
-        casesFilters = _casesFilters
+        casesFilters = dataSource.filters
         filtersCount = casesFilters
             .eraseToAnyPublisher()
             .map { $0.changeCount }
     }
 
     func changeFilters(_ filters: CasesFilter) {
-        // TODO: Is task necessary?
-        Task {
-            dataSource.updateFilters(filters)
-        }
+        dataSource.updateFilters(filters)
     }
 
     func updateWorkTypeFilters(_ workTypes: [String]) {
