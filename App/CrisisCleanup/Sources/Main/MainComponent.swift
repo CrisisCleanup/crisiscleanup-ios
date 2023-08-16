@@ -172,7 +172,7 @@ public class MainComponent: BootstrapComponent,
 
     lazy var caseFlagsComponent: CaseFlagsComponent = CaseFlagsComponent(parent: self, routerObserver: routerObserver)
 
-    public var caseFlagsView: AnyView { caseFlagsComponent.caseFlagsView }
+    public func caseFlagsView(isFromCaseEdit: Bool) -> AnyView { caseFlagsComponent.caseFlagsView(isFromCaseEdit: isFromCaseEdit) }
 
     // MARK: Case history
 

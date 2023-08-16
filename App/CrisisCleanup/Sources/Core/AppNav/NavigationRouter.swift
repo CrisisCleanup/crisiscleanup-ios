@@ -74,8 +74,8 @@ class NavigationRouter: ObservableObject {
     func openCaseShareStep2() {
         path.append(.caseShareStep2)
     }
-    func openCaseFlags() {
-        path.append(.caseFlags)
+    func openCaseFlags(isFromCaseEdit: Bool) {
+        path.append(.caseFlags(isFromCaseEdit))
     }
     func openCaseHistory() {
         path.append(.caseHistory)

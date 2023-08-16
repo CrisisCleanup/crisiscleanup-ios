@@ -7,6 +7,10 @@ public protocol WorksitesRepository {
 
     var syncWorksitesFullIncidentId: any Publisher<Int64, Never> { get }
 
+    var isDeterminingWorksitesCount: any Publisher<Bool, Never> { get }
+
+    func streamIncidentWorksitesCount(incidentIdStream: any Publisher<Int64, Never>) -> any Publisher<Int, Never>
+    // TODO: Delete after above is implemented
     func streamIncidentWorksitesCount(_ id: Int64) -> any Publisher<Int, Never>
 
     func streamLocalWorksite(_ worksiteId: Int64) -> any Publisher<LocalWorksite?, Never>

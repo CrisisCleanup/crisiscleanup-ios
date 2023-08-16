@@ -457,7 +457,7 @@ private struct BottomNav: View {
             }
             Spacer()
             BottomNavButton("ic_case_flag", "nav.flag") {
-                router.openCaseFlags()
+                router.openCaseFlags(isFromCaseEdit: true)
             }
             Spacer()
             BottomNavButton("ic_case_history", "actions.history") {
@@ -531,22 +531,23 @@ private struct PropertyInformationView: View {
                     .horizontalVerticalPadding(horizontalPadding, verticalPadding)
                 }
 
-                let fullAddress = [
-                    worksite.address,
-                    worksite.city,
-                    worksite.state,
-                    worksite.postalCode,
-                ].combineTrimText()
+                let (addressText, addressMapItem) = worksite.addressQuery
                 HStack {
-                    Image(systemName: "mappin.circle.fill")
+                    Image(systemName: "mappin")
                         .frame(width: iconSize, height: iconSize)
 
-                    let perFullAddress = "maps://?address=" + (fullAddress.addingPercentEncoding(withAllowedCharacters: .afURLQueryAllowed) ?? fullAddress)
-                        Text(fullAddress)
-                        .customLink(urlString: perFullAddress)
+                    Button {
+                        // TODO: Alert if wrong location flag was set
+                        addressMapItem.openInMaps()
+                    } label : {
+                        Text(addressText)
+                            .underline()
+                            .multilineTextAlignment(.leading)
+                    }
+
                     Spacer()
                 }
-                .modifier(CopyWithAnimation(pressed: $addressPressed, copy: fullAddress))
+                .modifier(CopyWithAnimation(pressed: $addressPressed, copy: addressText))
                 .horizontalVerticalPadding(horizontalPadding, verticalPadding)
 
                 ViewCaseMapView(

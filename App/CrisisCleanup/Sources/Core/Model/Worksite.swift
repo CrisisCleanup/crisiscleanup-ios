@@ -85,6 +85,8 @@ public struct Worksite: Equatable {
     var crossStreetNearbyLandmark: String {
         formData?[CROSS_STREET_FIELD_KEY]?.valueString ?? ""
     }
+
+    let isReleaseEligible: Bool
     // sourcery:end
 
     private func toggleFlag(_ flag: WorksiteFlagType) -> Worksite {
@@ -167,6 +169,13 @@ public struct Worksite: Equatable {
         self.workTypes = workTypes
         self.workTypeRequests = workTypeRequests
         self.isAssignedToOrgMember = isAssignedToOrgMember
+
+        isReleaseEligible = {
+            if let at = createdAt {
+                return at.addingTimeInterval(releaseDaysThreshold) < Date.now
+            }
+            return false
+        }()
     }
 
     func toggleHighPriorityFlag() -> Worksite {

@@ -4,7 +4,6 @@ import Foundation
 import SwiftUI
 
 class CaseFlagsViewModel: ObservableObject {
-    private let editableWorksiteProvider: EditableWorksiteProvider
     private let organizationsRepository: OrganizationsRepository
     private let incidentsRepository: IncidentsRepository
     private let databaseManagementRepository: DatabaseManagementRepository
@@ -16,11 +15,14 @@ class CaseFlagsViewModel: ObservableObject {
     let translator: KeyAssetTranslator
     private let logger: AppLogger
 
+    private let editableWorksite: AnyPublisher<Worksite, Never>
     private let worksiteIn: Worksite
     private let flagsIn: Set<WorksiteFlagType>
 
     @Published private(set) var incidentWorksiteChange = (0, 0)
     private let incidentWorksiteChangeSubject = CurrentValueSubject<(Int64, Int64), Never>((0, 0))
+
+    @Published private(set) var screenTitle = ""
 
     private let allFlags = [
         WorksiteFlagType.highPriority,
@@ -71,6 +73,8 @@ class CaseFlagsViewModel: ObservableObject {
     private var subscriptions =  Set<AnyCancellable>()
 
     init(
+        isFromCaseEdit: Bool,
+        worksiteProvider: WorksiteProvider,
         editableWorksiteProvider: EditableWorksiteProvider,
         organizationsRepository: OrganizationsRepository,
         incidentsRepository: IncidentsRepository,
@@ -83,7 +87,6 @@ class CaseFlagsViewModel: ObservableObject {
         translator: KeyAssetTranslator,
         loggerFactory: AppLoggerFactory
     ) {
-        self.editableWorksiteProvider = editableWorksiteProvider
         self.organizationsRepository = organizationsRepository
         self.incidentsRepository = incidentsRepository
         self.databaseManagementRepository = databaseManagementRepository
@@ -95,7 +98,11 @@ class CaseFlagsViewModel: ObservableObject {
         self.translator = translator
         logger = loggerFactory.getLogger("add-case-flag")
 
-        worksiteIn = editableWorksiteProvider.editableWorksite.value
+        let worksiteSubject = isFromCaseEdit
+        ? editableWorksiteProvider.editableWorksite
+        : worksiteProvider.editableWorksite
+        editableWorksite = worksiteSubject.eraseToAnyPublisher()
+        worksiteIn = worksiteSubject.value
         flagsIn = Set(worksiteIn.flags?.compactMap { $0.flagType } ?? [])
 
         let wlm = WrongLocationFlagManager(addressSearchRepository, logger)
@@ -116,6 +123,8 @@ class CaseFlagsViewModel: ObservableObject {
 
         let existingSingularFlags = Set(flagsIn.filter { singleExistingFlags.contains($0) })
         flagFlows = allFlags.filter { !existingSingularFlags.contains($0) }
+
+        screenTitle = "\(translator.t("nav.flag")) (\(worksiteIn.caseNumber))"
     }
 
     func onViewAppear() {
@@ -201,7 +210,7 @@ class CaseFlagsViewModel: ObservableObject {
     }
 
     private func subscribeNearbyOrganizations() {
-            editableWorksiteProvider.editableWorksite.asyncMap {
+            editableWorksite.asyncMap {
                 let coordinates = $0.coordinates
                 return await self.organizationsRepository.getNearbyClaimingOrganizations(
                     coordinates.latitude,

@@ -14,17 +14,24 @@ class CasesViewModel: ObservableObject {
     private let locationManager: LocationManager
     private let worksiteProvider: WorksiteProvider
     private let transferWorkTypeProvider: TransferWorkTypeProvider
+    private let filterRepository: CasesFilterRepository
     private let translator: KeyTranslator
+    private let syncPuller: SyncPuller
     private let logger: AppLogger
 
     @Published private(set) var incidentsData = LoadingIncidentsData
     private let incidentWorksitesCount: AnyPublisher<IncidentIdWorksiteCount, Never>
+    var selectedIncident: Incident { incidentsData.selected }
     var incidentId: Int64 { incidentsData.selectedId }
 
     @Published private(set) var showDataProgress = false
     @Published private(set) var dataProgress = 0.0
 
+    @Published private(set) var isLoadingData = false
+
     private let qsm: CasesQueryStateManager
+
+    @Published private(set) var filtersCount = 0
 
     @Published private(set) var isTableView = false
 
@@ -42,7 +49,8 @@ class CasesViewModel: ObservableObject {
     private let openWorksiteAddFlag = ManagedAtomic(false)
 
     @Published var worksitesChangingClaimAction: Set<Int64> = []
-    let changeClaimActionErrorMessage = CurrentValueSubject<String, Never>("")
+    private let changeClaimActionErrorMessageSubject = CurrentValueSubject<String, Never>("")
+    @Published var changeClaimActionErrorMessage = ""
 
     private let mapBoundsManager: CasesMapBoundsManager
 
@@ -59,8 +67,11 @@ class CasesViewModel: ObservableObject {
     private let wipeIncidentAnnotations = ManagedAtomic(false)
 
     @Published var tableData = [WorksiteDistance]()
+    @Published private(set) var isTableEditable = false
 
-    @Published private(set) var casesCount: (Int, Int) = (-1, -1)
+    @Published private(set) var casesCountTableText = ""
+    @Published private(set) var casesCountMapText = ""
+    @Published private(set) var hasCasesCountProgress = false
 
     private var hasDisappeared = false
 
@@ -83,7 +94,9 @@ class CasesViewModel: ObservableObject {
         locationManager: LocationManager,
         worksiteProvider: WorksiteProvider,
         transferWorkTypeProvider: TransferWorkTypeProvider,
+        filterRepository: CasesFilterRepository,
         translator: KeyTranslator,
+        syncPuller: SyncPuller,
         loggerFactory: AppLoggerFactory
     ) {
         self.incidentSelector = incidentSelector
@@ -95,7 +108,9 @@ class CasesViewModel: ObservableObject {
         self.locationManager = locationManager
         self.worksiteProvider = worksiteProvider
         self.transferWorkTypeProvider = transferWorkTypeProvider
+        self.filterRepository = filterRepository
         self.translator = translator
+        self.syncPuller = syncPuller
         logger = loggerFactory.getLogger("cases")
 
         incidentWorksitesCount = incidentSelector.incidentId
@@ -106,7 +121,7 @@ class CasesViewModel: ObservableObject {
                     .map { count in (id, count) }
             }
             .switchToLatest()
-            .map { (id, count) in IncidentIdWorksiteCount(id: id, count: count) }
+            .map { (id, count) in IncidentIdWorksiteCount(id: id, totalCount: count, filteredCount: count) }
             .eraseToAnyPublisher()
 
         tableViewDataLoader = CasesTableViewDataLoader(
@@ -141,6 +156,7 @@ class CasesViewModel: ObservableObject {
         subscribeSortBy()
         subscribeTableData()
         subscribeLocationStatus()
+        subscribeFilterCount()
     }
 
     func onViewDisappear() {
@@ -149,6 +165,16 @@ class CasesViewModel: ObservableObject {
     }
 
     private func subscribeLoading() {
+        Publishers.CombineLatest3(
+            incidentsRepository.isLoading.eraseToAnyPublisher(),
+            $showDataProgress,
+            worksitesRepository.isDeterminingWorksitesCount.eraseToAnyPublisher()
+        )
+        .map { b0, b1, b2 in b0 || b1 || b2 }
+        .receive(on: RunLoop.main)
+        .assign(to: \.isLoadingData, on: self)
+        .store(in: &subscriptions)
+
         Publishers.CombineLatest4(
             incidentsRepository.isLoading.eraseToAnyPublisher(),
             mapBoundsManager.isDeterminingBoundsPublisher.eraseToAnyPublisher(),
@@ -166,6 +192,15 @@ class CasesViewModel: ObservableObject {
             .receive(on: RunLoop.main)
             .assign(to: \.isLoadingTableViewData, on: self)
             .store(in: &subscriptions)
+
+        Publishers.CombineLatest(
+            $isLoadingTableViewData,
+            transferWorkTypeProvider.isPendingTransferPublisher
+        )
+        .map { isLoading, isPendingTransfer in !(isLoading || isPendingTransfer) }
+        .receive(on: RunLoop.main)
+        .assign(to: \.isTableEditable, on: self)
+        .store(in: &subscriptions)
     }
 
     private func subscribeIncidentsData() {
@@ -208,7 +243,6 @@ class CasesViewModel: ObservableObject {
 
                 if queryIncidentId != self.incidentMapMarkers.incidentId {
                     Task { @MainActor in
-                        self.casesCount = (-1, -1)
                         self.resetMapMarkers()
                     }
                     throw CancellationError()
@@ -230,6 +264,7 @@ class CasesViewModel: ObservableObject {
 
                 return (queryIncidentId, annotations)
             }
+            .share()
 
         worksitesInBounds.asyncThrowsMap { (queryIncidentId, annotations) in
             var idSet: Set<Int64>? = nil
@@ -275,20 +310,79 @@ class CasesViewModel: ObservableObject {
         })
         .store(in: &subscriptions)
 
-        Publishers.CombineLatest3(
-            incidentsRepository.isLoading.eraseToAnyPublisher(),
-            worksitesInBounds.eraseToAnyPublisher(),
+        let totalCasesCount = Publishers.CombineLatest3(
+            $isLoadingData,
+            incidentSelector.incidentId.eraseToAnyPublisher(),
             incidentWorksitesCount
         )
-        .map { (isSyncing, inBoundsMarkers, worksitesCount) in
-            var totalCount = worksitesCount.count
-            if totalCount == 0 && isSyncing {
-                totalCount = -1
+            .map { (isLoading, incidentId, worksitesCount) in
+                if incidentId != worksitesCount.id {
+                    return -1
+                }
+
+                let totalCount = worksitesCount.filteredCount
+                if totalCount == 0 && isLoading {
+                    return -1
+                }
+
+                return totalCount
             }
-            return (inBoundsMarkers.1.count, totalCount)
+            .eraseToAnyPublisher()
+            .share()
+
+        let t = self.translator
+        Publishers.CombineLatest(
+            totalCasesCount,
+            qsm.isTableViewSubject
+        )
+        .filter { (_, isTable) in isTable }
+        .map { (totalCount, _) in
+            if totalCount < 0 { return "" }
+            if totalCount == 1 { return "\(totalCount) \(t.t("casesVue.case"))" }
+            return "\(totalCount) \(t.t("casesVue.cases"))"
         }
         .receive(on: RunLoop.main)
-        .assign(to: \.casesCount, on: self)
+        .assign(to: \.casesCountTableText, on: self)
+        .store(in: &subscriptions)
+
+        Publishers.CombineLatest3(
+            totalCasesCount,
+            qsm.isTableViewSubject,
+            worksitesInBounds
+        )
+        .filter { (_, isTable, _) in !isTable }
+        .map { (totalCount, _, markers) in
+            if totalCount < 0 { return "" }
+
+            // TODO: Use actual visibleCount after filtering is fully integrated
+            let visibleCount = totalCount
+            // let visibleCount = markers.filter { !$0.isFilteredOut }.count
+
+            if visibleCount == totalCount || visibleCount == 0 {
+                if visibleCount == 0 {
+                    return t.t("info.t_of_t_cases").replacingOccurrences(of: "{visible_count}", with: "\(totalCount)")
+                } else if totalCount == 1 {
+                    return t.t("info.1_of_1_case")
+                } else {
+                    return t.t("info.t_of_t_cases").replacingOccurrences(of: "{visible_count}", with: "\(totalCount)")
+                }
+            } else {
+                return t.t("info.v_of_t_cases")
+                    .replacingOccurrences(of: "{visible_count}", with: "\(visibleCount)")
+                    .replacingOccurrences(of: "{total_count}", with: "\(totalCount)")
+            }
+        }
+        .receive(on: RunLoop.main)
+        .assign(to: \.casesCountMapText, on: self)
+        .store(in: &subscriptions)
+
+        Publishers.CombineLatest(
+            $casesCountMapText,
+            $isLoadingData
+        )
+        .map { countText, loading in countText.isNotBlank || loading }
+        .receive(on: RunLoop.main)
+        .assign(to: \.hasCasesCountProgress, on: self)
         .store(in: &subscriptions)
     }
 
@@ -349,12 +443,15 @@ class CasesViewModel: ObservableObject {
             .assign(to: \.worksitesChangingClaimAction, on: self)
             .store(in: &subscriptions)
 
-        Publishers.CombineLatest(
-            qsm.worksiteQueryState.eraseToAnyPublisher(),
-            incidentWorksitesCount
+        Publishers.CombineLatest3(
+            incidentWorksitesCount,
+            $worksitesChangingClaimAction,
+            qsm.worksiteQueryState.eraseToAnyPublisher()
         )
             .eraseToAnyPublisher()
-            .asyncMap { (wqs, _) in
+        // TODO: Create/find an equivalent to switchMap/mapLatest
+            .debounce(for: .seconds(0.1), scheduler: RunLoop.current)
+            .asyncMap { (_, _, wqs) in
                 if (wqs.isTableView) {
                     self.tableSortResultsMessageSubject.value = ""
                     do {
@@ -368,12 +465,19 @@ class CasesViewModel: ObservableObject {
             .receive(on: RunLoop.main)
             .assign(to: \.tableData, on: self)
             .store(in: &subscriptions)
+
+        changeClaimActionErrorMessageSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.changeClaimActionErrorMessage, on: self)
+            .store(in: &subscriptions)
     }
 
     private func subscribeLocationStatus() {
         locationManager.$locationPermission
             .sink { _ in
                 if self.locationManager.hasLocationAccess {
+                    self.isMyLocationEnabled = true
+
                     if self.isTableView {
                         let sortBy = self.pendingTableSort.exchange(AtomicSortBy(.none), ordering: .relaxed).value
                         if sortBy != .none {
@@ -384,6 +488,30 @@ class CasesViewModel: ObservableObject {
                 }
             }
             .store(in: &subscriptions)
+    }
+
+    private func subscribeFilterCount() {
+        filterRepository.filtersCount
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.filtersCount, on: self)
+            .store(in: &subscriptions)
+    }
+
+    func syncWorksitesData() {
+        syncPuller.appPullIncidentWorksitesDelta()
+    }
+
+    func useMyLocation() -> Bool {
+        if locationManager.requestLocationAccess() {
+            return true
+        }
+
+        if locationManager.isDeniedLocationAccess {
+            showExplainLocationPermssion = true
+        }
+
+        return false
     }
 
     @MainActor
@@ -602,7 +730,9 @@ class CasesViewModel: ObservableObject {
         Task {
             if await tableViewDataLoader.loadWorksiteForAddFlags(worksite) {
                 openWorksiteAddFlag.store(true, ordering: .sequentiallyConsistent)
-                openWorksiteAddFlagCounter.value += 1
+                Task { @MainActor in
+                    openWorksiteAddFlagCounter.value += 1
+                }
             }
         }
     }
@@ -611,7 +741,7 @@ class CasesViewModel: ObservableObject {
         _ worksite: Worksite,
         _ claimAction: TableWorksiteClaimAction
     ) {
-        changeClaimActionErrorMessage.value = ""
+        changeClaimActionErrorMessageSubject.value = ""
         Task {
             let result = await tableViewDataLoader.onWorkTypeClaimAction(
                 worksite,
@@ -619,7 +749,7 @@ class CasesViewModel: ObservableObject {
                 transferWorkTypeProvider
             )
             if result.errorMessage.isNotBlank {
-                changeClaimActionErrorMessage.value = result.errorMessage
+                changeClaimActionErrorMessageSubject.value = result.errorMessage
             }
         }
     }
@@ -649,7 +779,8 @@ extension CLLocationCoordinate2D {
 
 struct IncidentIdWorksiteCount {
     let id: Int64
-    let count: Int
+    let totalCount: Int
+    let filteredCount: Int
 }
 
 struct IncidentAnnotations {

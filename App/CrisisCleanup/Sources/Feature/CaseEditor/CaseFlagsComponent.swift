@@ -3,7 +3,7 @@ import NeedleFoundation
 import SwiftUI
 
 public protocol CaseFlagsViewBuilder {
-    var caseFlagsView: AnyView { get }
+    func caseFlagsView(isFromCaseEdit: Bool) -> AnyView
 }
 
 class CaseFlagsComponent: Component<AppDependency>, CaseFlagsViewBuilder {
@@ -17,9 +17,10 @@ class CaseFlagsComponent: Component<AppDependency>, CaseFlagsViewBuilder {
     ) {
         super.init(parent: parent)
 
+        let flagPath = NavigationRoute.caseFlags(false)
         routerObserver.pathIds
             .sink { pathIds in
-                if !pathIds.contains(NavigationRoute.caseFlags.id) {
+                if !pathIds.contains(flagPath.id) {
                     self.viewModel = nil
                 }
             }
@@ -30,9 +31,11 @@ class CaseFlagsComponent: Component<AppDependency>, CaseFlagsViewBuilder {
         _ = cancelSubscriptions(disposables)
     }
 
-    private func getViewModel() -> CaseFlagsViewModel {
+    private func getViewModel(_ isFromCaseEdit: Bool) -> CaseFlagsViewModel {
         if viewModel == nil {
             viewModel = CaseFlagsViewModel(
+                isFromCaseEdit: isFromCaseEdit,
+                worksiteProvider: dependency.worksiteProvider,
                 editableWorksiteProvider: dependency.editableWorksiteProvider,
                 organizationsRepository: dependency.organizationsRepository,
                 incidentsRepository: dependency.incidentsRepository,
@@ -49,10 +52,10 @@ class CaseFlagsComponent: Component<AppDependency>, CaseFlagsViewBuilder {
         return viewModel!
     }
 
-    var caseFlagsView: AnyView {
+    func caseFlagsView(isFromCaseEdit: Bool) -> AnyView {
         AnyView(
             CaseFlagsView(
-                viewModel: getViewModel()
+                viewModel: getViewModel(isFromCaseEdit)
             )
         )
     }

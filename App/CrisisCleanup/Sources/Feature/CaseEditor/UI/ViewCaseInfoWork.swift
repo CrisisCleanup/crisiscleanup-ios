@@ -60,20 +60,23 @@ struct WorkTypeAction: View {
 
     private let title: String
     private let isPrimary: Bool
+    private let disabled: Bool?
     private let action: () -> Void
 
     init(
         _ title: String,
         _ isPrimary: Bool,
-        _ action: @escaping () -> Void
+        disabled: Bool? = nil,
+        action: @escaping () -> Void
     ) {
         self.title = title
         self.isPrimary = isPrimary
+        self.disabled = disabled
         self.action = action
     }
 
     var body: some View {
-        let isDisabled = editableView.disabled
+        let isDisabled = disabled ?? editableView.disabled
         Button {
             action()
         } label: {

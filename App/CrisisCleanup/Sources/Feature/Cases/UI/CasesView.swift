@@ -55,6 +55,11 @@ struct CasesView: View {
                         viewModel.onMissingMapMarkers()
                     }
                 }
+                .onChange(of: viewModel.isMyLocationEnabled) { enabled in
+                    if enabled {
+                        map.userTrackingMode = .follow
+                    }
+                }
             }
 
             if viewModel.showDataProgress {
@@ -119,24 +124,7 @@ private struct CasesOverlayElements: View {
 
     @State var openIncidentSelect = false
 
-    // TODO: Move text into view model and show "Loading" when caching to files then show numbers after inserting to database.
-    func casesCountText(_ visibleCount: Int, _ totalCount: Int) -> String {
-        {
-            if visibleCount == totalCount || visibleCount == 0 {
-                if visibleCount == 0 {
-                    return t.t("info.t_of_t_cases").replacingOccurrences(of: "{visible_count}", with: "\(totalCount)")
-                } else if totalCount == 1 {
-                    return t.t("info.1_of_1_case")
-                } else {
-                    return t.t("info.t_of_t_cases").replacingOccurrences(of: "{visible_count}", with: "\(totalCount)")
-                }
-            } else {
-                return t.t("info.v_of_t_cases")
-                    .replacingOccurrences(of: "{visible_count}", with: "\(visibleCount)")
-                    .replacingOccurrences(of: "{total_count}", with: "\(totalCount)")
-            }
-        }()
-    }
+    @State var showCountProgress = false
 
     var body: some View {
         let isMapView = !viewModel.isTableView
@@ -182,15 +170,25 @@ private struct CasesOverlayElements: View {
                         HStack {
                             Spacer()
 
-                            let (casesCount, totalCount) = viewModel.casesCount
-                            if totalCount >= 0 {
-                                Text(casesCountText(casesCount, totalCount))
-                                    .multilineTextAlignment(.center)
-                                    .padding()
-                                    .background(appTheme.colors.navigationContainerColor)
-                                    .foregroundColor(Color.white)
-                                    .cornerRadius(appTheme.cornerRadius)
-                                    .shadow(radius: appTheme.shadowRadius)
+                            if showCountProgress {
+                                HStack(spacing: appTheme.gridItemSpacing) {
+                                    let mapCount = viewModel.casesCountMapText
+                                    if mapCount.isNotBlank {
+                                        Text(mapCount)
+                                            .foregroundColor(Color.white)
+                                    }
+                                    if viewModel.isLoadingData {
+                                        ProgressView()
+                                            .circularProgress()
+                                            .tint(.white)
+                                    }
+                                }
+                                .onTapGesture {
+                                    viewModel.syncWorksitesData()
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .cardContainer(background: appTheme.colors.navigationContainerColor)
                             }
 
                             Spacer()
@@ -213,22 +211,30 @@ private struct CasesOverlayElements: View {
                                 Button {
                                     router.openFilterCases()
                                 } label: {
-                                    // TODO: Badge
                                     Image("ic_dials", bundle: .module)
                                         .frame(width: buttonSize, height: buttonSize)
                                         .background(Color.white)
                                         .foregroundColor(Color.black)
                                 }
-
+                                .if(viewModel.filtersCount > 0) {
+                                    // TODO: Don't clip overlay
+                                    $0.overlay(alignment: .topTrailing) {
+                                        filterBadge(viewModel.filtersCount)
+                                    }
+                                }
                             }
                             .frame(width: appTheme.buttonSizeDoublePlus1, height: buttonSize)
                             .background(Color.white)
                             .foregroundColor(Color.black)
                             .cornerRadius(appTheme.cornerRadius)
                             .shadow(radius: appTheme.shadowRadius)
-
                         }
                         Spacer()
+                    }
+                    .onChange(of: viewModel.hasCasesCountProgress) { b in
+                        withAnimation(.easeIn(duration: appTheme.visibleSlowAnimationDuration)) {
+                            showCountProgress = b
+                        }
                     }
                 }
             }
@@ -238,7 +244,18 @@ private struct CasesOverlayElements: View {
             HStack {
                 Spacer()
 
-                VStack {
+                // TODO: Common dimensions
+                VStack(spacing: 16) {
+                    Button {
+                        if viewModel.useMyLocation() {
+                            map.userTrackingMode = .follow
+                        }
+                    } label: {
+                        Image(systemName: "location")
+                            .padding()
+                    }
+                    .styleRoundedRectanglePrimary()
+
                     Button {
                         router.createEditCase(
                             incidentId: viewModel.incidentsData.selectedId,
@@ -249,15 +266,13 @@ private struct CasesOverlayElements: View {
                             .padding()
                     }
                     .styleRoundedRectanglePrimary()
-                    .padding(.bottom)
 
                     Button {
                         viewModel.toggleTableView()
                     } label: {
-                        Image(isMapView ? "ic_map" : "ic_table", bundle: .module)
+                        Image(isMapView ? "ic_table" : "ic_map", bundle: .module)
                     }
                     .styleRoundedRectanglePrimary()
-                    .padding(.bottom)
                 }
             }
 

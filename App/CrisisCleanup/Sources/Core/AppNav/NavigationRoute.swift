@@ -9,7 +9,7 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
          caseMoveOnMap,
          caseShare,
          caseShareStep2,
-         caseFlags,
+         caseFlags(_ isFromCaseEdit: Bool),
          caseHistory,
          caseWorkTypeTransfer,
          caseAddNote,

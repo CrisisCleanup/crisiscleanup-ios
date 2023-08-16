@@ -74,7 +74,8 @@ struct CaseFlagsView: View {
                 dismiss()
             }
         }
-        .screenTitle(t.t("nav.flag"))
+        .screenTitle(viewModel.screenTitle)
+        .hideNavBarUnderSpace()
         .environmentObject(viewModel)
         .environmentObject(focusableViewState)
         .onAppear { viewModel.onViewAppear() }
@@ -494,26 +495,28 @@ private struct WrongIncident: View {
 
             if !animateTopSearchBar {
                 CheckboxView(checked: $isNotListed, text: t.t("flag.incident_not_listed"))
-            } else {
-                let (incidentQuery, incidentResults) = viewModel.incidentResults
-                if incidentQuery == viewModel.incidentQ {
-                    ScrollLazyVGrid {
-                        ForEach(incidentResults, id: \.id) { idNameType in
-                            Text(idNameType.name)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .frame(minHeight: appTheme.rowItemHeight)
-                                .onTapGesture {
-                                    selectedIncident = idNameType
-                                    viewModel.incidentQBinding.wrappedValue = idNameType.name
-                                    focusState = nil
-                                }
-                        }
-                    }
-                }
             }
         }
         .padding(.horizontal)
         .onChange(of: focusState) { focusableViewState.focusState = $0 }
+
+        if animateTopSearchBar {
+            let (incidentQuery, incidentResults) = viewModel.incidentResults
+            if incidentQuery == viewModel.incidentQ {
+                ScrollLazyVGrid {
+                    ForEach(incidentResults, id: \.id) { idNameType in
+                        Text(idNameType.name)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .onTapGesture {
+                                selectedIncident = idNameType
+                                viewModel.incidentQBinding.wrappedValue = idNameType.name
+                                focusState = nil
+                            }
+                            .listItemModifier()
+                    }
+                }
+            }
+        }
 
         Spacer()
 
@@ -567,7 +570,7 @@ private struct AddFlagSaveActionBar: View {
                 .stylePrimary()
                 .disabled(!(enabled && enableSave))
             }
-            .listItemModifier()
+            .listItemPadding()
         }
     }
 }

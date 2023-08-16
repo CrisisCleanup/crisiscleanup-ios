@@ -3,34 +3,40 @@ import SwiftUI
 struct CasesTableView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
+    @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var viewModel: CasesViewModel
 
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
     let hasNoIncidents: Bool
 
     var body: some View {
+        let isLoadingData = viewModel.isLoadingData
+        let isEditable = viewModel.isTableEditable
+
         VStack {
             HStack {
                 TableViewIncidentSelector(
                     hasNoIncidents: hasNoIncidents,
                     selectedIncident: viewModel.incidentsData.selected,
-                    incidentSelectViewBuilder: incidentSelectViewBuilder
+                    incidentSelectViewBuilder: incidentSelectViewBuilder,
+                    isLoadingData: isLoadingData
                 )
 
                 Spacer()
 
                 TableViewButtons()
             }
-            .listItemModifier()
-
-            let casesData = viewModel.tableData
+            .listItemPadding()
 
             HStack {
-                // TODO: Generate text in view model
                 // TODO: Animate
-                if casesData.isNotEmpty {
-                    Text("\(casesData.count) \(t.t("casesVue.cases"))")
+                if viewModel.casesCountTableText.isNotBlank {
+                    Text(viewModel.casesCountTableText)
                         .fontHeader4()
+                        .disabled(isLoadingData)
+                        .onTapGesture {
+                            viewModel.syncWorksitesData()
+                        }
                 }
 
                 Spacer()
@@ -40,11 +46,24 @@ struct CasesTableView: View {
                         Text(t.t(sortBy.translateKey))
                     }
                 }
+                .disabled(isLoadingData || !isEditable)
                 .tint(.black)
                 .blackBorder()
             }
-            .listItemModifier()
+            .listItemPadding()
 
+            // TODO: Show phone numbers in bottom sheet if there are more than 1 phone numbers
+            // TODO: Show claim action error dialog if error has occurred
+
+            if viewModel.tableSortResultsMessage.isNotBlank {
+                Text(viewModel.tableSortResultsMessage)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .listItemPadding()
+            }
+
+            let casesData = viewModel.tableData
+            let isTurnOnRelease = viewModel.selectedIncident.turnOnRelease
+            let changingClaimIds = viewModel.worksitesChangingClaimAction
             ScrollView {
                 LazyVStack {
                     ForEach(0..<casesData.count, id: \.self) { index in
@@ -52,10 +71,23 @@ struct CasesTableView: View {
                             FormListSectionSeparator()
                         }
 
-                        TableCard(
-                            worksiteDistance: casesData[index]
+                        let worksite = casesData[index].worksite
+                        let isChangingClaim = changingClaimIds.contains(worksite.id)
+                        CaseTableItemCard(
+                            worksiteDistance: casesData[index],
+                            isEditable: isEditable,
+                            isTurnOnRelease: isTurnOnRelease,
+                            isChangingClaim: isChangingClaim,
+                            onWorksiteClaimAction: { claimAction in
+                                viewModel.onWorksiteClaimAction(worksite, claimAction)
+                            }
                         )
                     }
+                }
+            }
+            .onReceive(viewModel.openWorksiteAddFlagCounter) { _ in
+                if viewModel.takeOpenWorksiteAddFlag() {
+                    router.openCaseFlags(isFromCaseEdit: false)
                 }
             }
         }
@@ -74,6 +106,7 @@ private struct TableViewIncidentSelector: View {
     let hasNoIncidents: Bool
     let selectedIncident: Incident
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
+    let isLoadingData: Bool
 
     @State private var openIncidentSelect = false
 
@@ -83,7 +116,10 @@ private struct TableViewIncidentSelector: View {
         } label: {
             IncidentHeader(
                 incident: selectedIncident,
-                drop: true
+                drop: true,
+                disabled: hasNoIncidents,
+                isLoading: isLoadingData,
+                isSpaceConstrained: true
             )
             .tint(.black)
         }
@@ -103,6 +139,7 @@ private struct TableViewIncidentSelector: View {
 
 struct TableViewButtons: View {
     @EnvironmentObject var router: NavigationRouter
+
     let buttonSize = appTheme.buttonSize
 
     var body: some View {
@@ -135,24 +172,30 @@ struct TableViewButtons: View {
     }
 }
 
-struct TableCard: View {
+private struct CaseTableItemCard: View {
     @EnvironmentObject var router: NavigationRouter
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewModel: CasesViewModel
-    var worksiteDistance: WorksiteDistance
+
+    let worksiteDistance: WorksiteDistance
     var worksite: Worksite { worksiteDistance.data.worksite }
+
+    let isEditable: Bool
+    let isTurnOnRelease: Bool
+    let isChangingClaim: Bool
+    let onWorksiteClaimAction: (TableWorksiteClaimAction) -> Void
 
     var body: some View {
         VStack(alignment: .leading) {
             HStack {
                 Button {
-                    // TODO: Set Case before opening
-                    // router.openCaseFlags()
+                    viewModel.onOpenCaseFlags(worksite)
                 } label: {
                     Image(systemName: "flag.fill")
                 }
                 .tint(.black)
+                .disabled(!isEditable)
 
                 Button {
                     router.viewCase(
@@ -189,23 +232,32 @@ struct TableCard: View {
             }
             .padding(.bottom, 4)
 
+            let (fullAddress, addressMapItem) = worksite.addressQuery
+
             HStack {
-                Image(systemName: "mappin.circle.fill")
+                Image(systemName: "mappin")
                     .foregroundColor(Color.gray)
 
-                Text(worksite.address)
+                Text(fullAddress)
 
+                Spacer()
+
+                if worksite.hasWrongLocationFlag {
+                    // TODO: Button when clicked pops message about wrong location flag is set
+                }
             }
             .padding(.bottom, 4)
 
             HStack {
                 Button {
+                    // TODO: Present multiple phone numbers if defined
                     let urlString =  "tel:\(worksite.phone1)"
                     if let url = URL(string: urlString) {
                         UIApplication.shared.open(url, options: [:], completionHandler: nil)
                     }
                 } label : {
                     Image(systemName: "phone.fill")
+                    // TODO: Common dimensions
                         .frame(width: 75, height: 35)
                         .fontHeader3()
                         .blackBorder()
@@ -213,12 +265,10 @@ struct TableCard: View {
                 .tint(.black)
 
                 Button {
-                    let urlString =  "maps://?address=" + (worksite.address.addingPercentEncoding(withAllowedCharacters: .afURLQueryAllowed) ?? worksite.address)
-                    if let url = URL(string: urlString) {
-                        UIApplication.shared.open(url, options: [:], completionHandler: nil)
-                    }
+                    addressMapItem.openInMaps()
                 } label : {
                     Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
+                    // TODO: Common dimensions
                         .frame(width: 75, height: 35)
                         .fontHeader3()
                         .blackBorder()
@@ -227,33 +277,39 @@ struct TableCard: View {
 
                 Spacer()
 
+                let isClaimActionDisabled = !isEditable || isChangingClaim
+
                 switch worksiteDistance.claimStatus {
                 case .hasUnclaimed:
-                    WorkTypeAction(t.t("actions.claim"), true) {
-
+                    WorkTypeAction(
+                        t.t("actions.claim"),
+                        true,
+                        disabled: isClaimActionDisabled
+                    ) {
+                        onWorksiteClaimAction(.claim)
                     }
-                    .environmentObject(EditableView())
                 case .claimedByMyOrg:
-                    WorkTypeAction(t.t("actions.unclaim"), true) {
-
+                    WorkTypeAction(
+                        t.t("actions.unclaim"),
+                        false,
+                        disabled: isClaimActionDisabled
+                    ) {
+                        onWorksiteClaimAction(.unclaim)
                     }
-                    .environmentObject(EditableView())
                 case .claimedByOthers:
-                    let isReleasable = viewModel.incidentsData.selected.turnOnRelease // && worksite.isReleaseEligible
+                    let isReleasable = viewModel.incidentsData.selected.turnOnRelease && worksite.isReleaseEligible
                     let actionText = isReleasable ? t.t("actions.release") : t.t("actions.request")
-                    WorkTypeAction(actionText, true) {
-
+                    WorkTypeAction(
+                        actionText,
+                        false,
+                        disabled: isClaimActionDisabled
+                    ) {
+                        onWorksiteClaimAction(isReleasable ? .release : .request)
                     }
-                    .environmentObject(EditableView())
                 case .requested:
-                    WorkTypeAction(t.t("caseView.requested"), true) {
-
-                    }
-                    .environmentObject(EditableView())
+                    Text(t.t("caseView.requested"))
+                        .padding(.vertical, appTheme.listItemVerticalPadding)
                 }
-
-
-
             }
             .padding(.bottom, 4)
         }
@@ -266,5 +322,4 @@ struct TableCard: View {
             )
         }
     }
-
 }

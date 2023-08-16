@@ -14,7 +14,7 @@ struct SyncInsightsView: View {
                 HStack {
                     if isPendingSync {
                         Text("Pending")
-                            .font(.title2)
+                            .fontHeader3()
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.bottom, 0)
                         Spacer()
@@ -35,7 +35,7 @@ struct SyncInsightsView: View {
                 }
 
                 Text("Logs")
-                    .font(.title2)
+                    .fontHeader3()
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.bottom, 0)
                 ForEach(logs, id: \.index) { log in
@@ -59,7 +59,7 @@ private struct SyncLogDetailView: View {
     var body: some View {
         if !log.isContinuingLogType {
             Text("\(log.syncLog.logType) \(log.relativeTime)")
-                .font(.title3)
+                .fontHeader4()
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.bottom, 0)
         }

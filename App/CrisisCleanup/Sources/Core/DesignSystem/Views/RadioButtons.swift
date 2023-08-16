@@ -21,37 +21,29 @@ struct RadioButtons: View {
 struct RadioButton: View {
     let text: String
     let isSelected: Bool
+
+    var nestedLevel: Int? = nil
+    var isListItem: Bool = false
+
     let onSelect: () -> Void
     @State var tempValue = 1
 
     var body: some View {
-        HStack {
-            Button {
-                onSelect()
-            } label: {
-                HStack{
-                    let radioImg = isSelected ? "circle.inset.filled" : "circle"
-                    Image(systemName: radioImg)
-                        .foregroundColor(isSelected ? Color.black : Color.gray)
-                    Text(text)
-                        .foregroundColor(Color.black)
-
-                }
-            }
-
-            if(text == "t.treccurringSchedule") {
-                Stepper(value: $tempValue,
-                        in: 1...99,
-                        step: 1) {
-                    HStack {
-                        Text(tempValue.description)
-                            .frame(width: 30, height: 30)
-                            .padding()
-                            .background(appTheme.colors.attentionBackgroundColor)
-                            .cornerRadius(appTheme.cornerRadius)
+        Button {
+            onSelect()
+        } label: {
+            HStack{
+                let radioImg = isSelected ? "circle.inset.filled" : "circle"
+                Image(systemName: radioImg)
+                    .foregroundColor(isSelected ? Color.black : Color.gray)
+                    .if(nestedLevel != nil) {
+                        $0.padding(.leading, Double(nestedLevel!) * appTheme.nestedItemPadding)
                     }
-                }
-                        .tint(.black)
+                Text(text)
+                    .foregroundColor(Color.black)
+            }
+            .if(isListItem) {
+                $0.listItemModifier()
             }
         }
     }

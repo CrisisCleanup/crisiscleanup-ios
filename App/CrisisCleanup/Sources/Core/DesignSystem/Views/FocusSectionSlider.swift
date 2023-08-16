@@ -11,8 +11,9 @@ struct FocusSectionSlider: View {
             HStack {
                 ForEach(Array(sectionTitles.enumerated()), id: \.offset) { (index, sectionTranslateKey) in
                     Text("\(index + 1). \(t.t(sectionTranslateKey))")
-                        .padding(.leading)
                         .id("scrollBar\(index)")
+                        .fontHeader4()
+                        .padding(.leading)
                         .onTapGesture {
                             // TODO: Expand the section if it is collapsed
                             withAnimation {

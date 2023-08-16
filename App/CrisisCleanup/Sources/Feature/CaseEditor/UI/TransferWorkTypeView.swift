@@ -31,7 +31,7 @@ struct TransferWorkTypeView: View {
                 } else {
                     TransferWorkTypeActions()
                         .disabled(disabled)
-                        .listItemModifier()
+                        .listItemPadding()
    }
             }
             .frame(maxWidth: UIScreen.main.bounds.size.width)
