@@ -7,12 +7,6 @@ struct CasesFilterView: View {
 
     @ObservedObject var viewModel: CasesFilterViewModel
 
-    @State var createdStart: Date?
-    @State var createdEnd: Date?
-
-    @State var updatedStart: Date?
-    @State var updatedEnd: Date?
-
     @State var sectionCollapse = [
         false,
         false,
@@ -68,15 +62,15 @@ struct CasesFilterView: View {
                                 if !sectionCollapse[5] {
                                     CalendarFormField(
                                         title: t.t("worksiteFilters.created"),
-                                        start: $createdStart,
-                                        end: $createdEnd
+                                        start: $viewModel.filterCreatedAtStart,
+                                        end: $viewModel.filterCreatedAtEnd
                                     )
                                     .padding([.horizontal, .bottom])
 
                                     CalendarFormField(
                                         title: t.t("worksiteFilters.updated"),
-                                        start: $updatedStart,
-                                        end: $updatedEnd
+                                        start: $viewModel.filterUpdatedAtStart,
+                                        end: $viewModel.filterUpdatedAtEnd
                                     )
                                     .padding([.horizontal, .bottom])
                                 }
@@ -542,10 +536,11 @@ struct CalendarFormField: View {
                 Spacer()
             }
             HStack {
-                if let start = start, let end = end {
-                    let text1 = start.formatted(.dateTime.day().month().year())
-                    let text2 = end.formatted(.dateTime.day().month().year())
-                    Text(text1 + " - " + text2)
+                if let start = start,
+                   let end = end {
+                    let startText = start.formatted(.dateTime.day().month().year())
+                    let endText = end.formatted(.dateTime.day().month().year())
+                    Text("\(startText) - \(endText)")
                     Spacer()
                     Image(systemName: "xmark")
                         .padding(.trailing)
@@ -578,13 +573,47 @@ struct CalendarFormField: View {
 struct CalendarSelectView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    @State var dates: Set<DateComponents> = []
-    @State var datesCache: Set<DateComponents> = []
-    @State var firstDateSelect: DateComponents = DateComponents()
     @Binding var start: Date?
     @Binding var end: Date?
+
+    @State var dates: Set<DateComponents> = []
+
+    @State var datesCache: Set<DateComponents> = []
+    @State var firstDateSelect: DateComponents = DateComponents()
     @State var datesFilled = false
+
     @Binding var showCalendar: Bool
+
+    func fillBetween(_ start: Date, _ end: Date) -> Set<DateComponents> {
+        var filled: Set<DateComponents> = []
+        if start <= end {
+            for date in stride(
+                from: start,
+                through: end,
+                by: 1.days
+            ) {
+                let comps = Calendar.current.dateComponents(
+                    [.calendar, .era, .year, .month, .day],
+                    from: date
+                )
+                filled.insert(comps)
+            }
+        }
+
+        return filled
+    }
+
+    func updateState(_ change: Set<DateComponents>, _ previous: Set<DateComponents>) {
+        for date in change {
+            if !previous.contains(date) {
+                start = Calendar.current.date(from: date)
+                end = nil
+                dates = [date]
+                datesCache = Set(dates)
+                break
+            }
+        }
+    }
 
     var body: some View {
         VStack(alignment:.leading) {
@@ -602,81 +631,33 @@ struct CalendarSelectView: View {
                 .disabled(end == nil)
             }
             .padding()
+
             MultiDatePicker("worksiteFilters.select_date_range", selection: $dates)
                 .onAppear {
-                    if let start = start, let end = end, dates.isEmpty {
-                        let startComps = Calendar.current.dateComponents([.calendar, .era, .year, .month, .day], from: start)
-                        dates.insert(startComps)
-
-                        let endComps = Calendar.current.dateComponents([.calendar, .era, .year, .month, .day], from: end)
-                        dates.insert(endComps)
+                    if let start = start,
+                       let end = end {
+                        dates = fillBetween(start, end)
+                        datesCache = Set(dates)
                     }
                 }
                 .onChange(of: dates) { change in
-                    if(datesFilled) {
-                        for date in dates {
-                            if !datesCache.contains(date) {
-                                datesFilled = false
-                                dates = [date]
-                                datesCache = []
-                                end = nil
-                                break
-                            }
-                        }
-                        // This determines if a date was selected in
-                        // between the existing range
-                        if(datesFilled) {
-                            print(datesFilled.description)
-                            for date in datesCache {
-                                if(!dates.contains(date)) {
-                                    datesFilled = false
-                                    dates = [date]
-                                    datesCache = []
-                                    end = nil
-                                    break
-                                }
-                            }
-                        }
-                    } else if (dates.count == 1) {
-                        firstDateSelect = dates.first!
-                        start = Calendar.current.date(from: firstDateSelect)!
-                    } else if (dates.count == 2) {
+                    if change.count == 2 {
+                        let sortedDates = Array(change)
+                            .map { Calendar.current.date(from: $0)! }
+                            .sorted(by: { a, b in a < b })
+                        start = sortedDates[0]
+                        end = sortedDates[1]
+                        dates = fillBetween(start!, end!)
+                        datesCache = Set(dates)
+                    } else if change.count > 2 {
+                        updateState(change, datesCache)
 
-                        // Determining if the second selected date
-                        // is after or before the first selected
-                        for comp in dates {
-                            if (comp != firstDateSelect) {
-                                let otherDate = Calendar.current.date(from: comp)!
-                                let firstDate = Calendar.current.date(from: firstDateSelect)!
-                                if otherDate > firstDate {
-                                    end = otherDate
-                                } else {
-                                    dates = [comp]
-                                    end = nil
-                                    return
-                                }
-                            }
+                        // Date was unselected (between previous range)
+                        if dates.count != 1 {
+                            updateState(datesCache, change)
                         }
-
-                        // Insert the other dates in between
-                        for date in stride(
-                            from: start!,
-                            to:end!,
-                            by: 1.days
-                        ) {
-                            let comps = Calendar.current.dateComponents(
-                                [.calendar, .era, .year, .month, .day],
-                                from: date
-                            )
-                            dates.insert(comps)
-                        }
-
-                        datesFilled = true
-                        datesCache = dates
                     }
                 }
-
-            Spacer()
         }
         .presentationDetents([.medium, .large])
     }

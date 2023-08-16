@@ -16,6 +16,10 @@ class CasesFilterViewModel: ObservableObject {
     @Published var filterStatuses = ObservableBoolDictionary()
     @Published var filterFlags = ObservableBoolDictionary()
     @Published var filterWorkTypes = ObservableBoolDictionary()
+    @Published var filterCreatedAtStart: Date? = nil
+    @Published var filterCreatedAtEnd: Date? = nil
+    @Published var filterUpdatedAtStart: Date? = nil
+    @Published var filterUpdatedAtEnd: Date? = nil
 
     @Published private(set) var workTypeStatuses = [WorkTypeStatus]()
 
@@ -124,6 +128,11 @@ class CasesFilterViewModel: ObservableObject {
                 for workType in filters.workTypes {
                     workTypes[workType] = true
                 }
+
+                self.filterCreatedAtStart = filters.createdAt?.start
+                self.filterCreatedAtEnd = filters.createdAt?.end
+                self.filterUpdatedAtStart = filters.updatedAt?.start
+                self.filterUpdatedAtEnd = filters.updatedAt?.end
             }
             .store(in: &subscriptions)
 
@@ -236,6 +245,7 @@ class CasesFilterViewModel: ObservableObject {
                 statuses.insert(statusFromLiteral(key))
             }
         }
+
         var flags = Set<WorksiteFlagType>()
         for (key, value) in filterFlags.data {
             if value,
@@ -243,16 +253,34 @@ class CasesFilterViewModel: ObservableObject {
                 flags.insert(flag)
             }
         }
+
         var workTypes = Set<String>()
         for (key, value) in filterWorkTypes.data {
             if value {
                 workTypes.insert(key)
             }
         }
+
+        let createdAt = filterCreatedAtStart == nil || filterCreatedAtEnd == nil
+        ? nil
+        : CasesFilter.DateRange(
+            start: filterCreatedAtStart!,
+            end: filterCreatedAtEnd!
+        )
+
+        let updatedAt = filterUpdatedAtStart == nil || filterUpdatedAtEnd == nil
+        ? nil
+        : CasesFilter.DateRange(
+            start: filterUpdatedAtStart!,
+            end: filterUpdatedAtEnd!
+        )
+
         let changed = filters.copy {
             $0.workTypeStatuses = statuses
             $0.worksiteFlags = Array(flags)
             $0.workTypes = workTypes
+            $0.createdAt = createdAt
+            $0.updatedAt = updatedAt
         }
         casesFilterRepository.changeFilters(changed)
     }
