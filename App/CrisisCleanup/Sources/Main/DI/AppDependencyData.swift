@@ -144,6 +144,8 @@ extension MainComponent {
                 accountDataRepository: accountDataRepository,
                 languageTranslationsRepository: languageTranslationsRepository,
                 organizationsRepository: organizationsRepository,
+                filtersRepository: casesFilterRepository,
+                locationManager: locationManager,
                 appVersionProvider: appVersionProvider,
                 loggerFactory: loggerFactory
             )
@@ -244,7 +246,7 @@ extension MainComponent {
         shared {
             CrisisCleanupCasesFilterRepository(
                 dataSource: CasesFiltersUserDefaults(),
-                accountDataRepository: accountDataRepository,
+                locationManager: locationManager,
                 networkDataSource: networkDataSource
             )
         }

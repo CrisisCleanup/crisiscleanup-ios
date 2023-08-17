@@ -9,7 +9,10 @@ extension CasesFilter {
         worksiteCreatedAt: Date?,
         worksiteIsFavorite: Bool,
         worksiteReportedBy: Int64?,
-        worksiteUpdatedAt: Date
+        worksiteUpdatedAt: Date,
+        worksiteLatitude: Double,
+        worksiteLongitude: Double,
+        locationAreaBounds: OrganizationLocationAreaBounds
     ) -> Bool {
         if hasWorkTypeFilters {
             var assignedToMyTeamCount = 0
@@ -100,6 +103,20 @@ extension CasesFilter {
         if let range = updatedAt,
            (worksiteUpdatedAt < range.start || worksiteUpdatedAt > range.end) {
             return false
+        }
+
+        if isWithinPrimaryResponseArea {
+            if let bounds = locationAreaBounds.primary,
+               !bounds.isInBounds(worksiteLatitude, worksiteLongitude) {
+                return false
+            }
+        }
+
+        if isWithinSecondaryResponseArea {
+            if let bounds = locationAreaBounds.secondary,
+               !bounds.isInBounds(worksiteLatitude, worksiteLongitude) {
+                return false
+            }
         }
 
         return true

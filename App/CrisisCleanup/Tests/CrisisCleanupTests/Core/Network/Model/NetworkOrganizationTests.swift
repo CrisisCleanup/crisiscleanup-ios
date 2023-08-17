@@ -17,6 +17,7 @@ final class NetworkOrganizationTests: XCTestCase {
             name:  "test",
             affiliates:  [5120],
             primaryLocation:  79749,
+            secondaryLocation: nil,
             typeT:  "orgType.government",
             primaryContacts:  [
                 NetworkPersonContact(

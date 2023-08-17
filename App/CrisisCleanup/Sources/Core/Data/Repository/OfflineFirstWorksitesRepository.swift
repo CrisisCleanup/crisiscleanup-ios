@@ -12,6 +12,8 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     private let workTypeTransferRequestDao: WorkTypeTransferRequestDao
     private let accountDataRepository: AccountDataRepository
     private let languageTranslationsRepository: LanguageTranslationsRepository
+    private let filtersRepository: CasesFilterRepository
+    private let locationManager: LocationManager
     private let appVersionProvider: AppVersionProvider
     private let logger: AppLogger
 
@@ -29,6 +31,8 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     private let orgIdPublisher: AnyPublisher<Int64, Never>
     private let organizationAffiliatesPublisher: AnyPublisher<Set<Int64>, Never>
 
+    private let organizationLocationAreaBounds: AnyPublisher<OrganizationLocationAreaBounds, Never>
+
     init(
         dataSource: CrisisCleanupNetworkDataSource,
         writeApi: CrisisCleanupWriteApi,
@@ -40,6 +44,8 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         accountDataRepository: AccountDataRepository,
         languageTranslationsRepository: LanguageTranslationsRepository,
         organizationsRepository: OrganizationsRepository,
+        filtersRepository: CasesFilterRepository,
+        locationManager: LocationManager,
         appVersionProvider: AppVersionProvider,
         loggerFactory: AppLoggerFactory
     ) {
@@ -52,6 +58,8 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         self.accountDataRepository = accountDataRepository
         self.languageTranslationsRepository = languageTranslationsRepository
         self.workTypeTransferRequestDao = workTypeTransferRequestDao
+        self.filtersRepository = filtersRepository
+        self.locationManager = locationManager
         self.appVersionProvider = appVersionProvider
         logger = loggerFactory.getLogger("worksites-repository")
 
@@ -67,15 +75,57 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         organizationAffiliatesPublisher = orgIdPublisher
             .map { orgId in organizationsRepository.getOrganizationAffiliateIds(orgId) }
             .eraseToAnyPublisher()
+
+        organizationLocationAreaBounds = orgIdPublisher
+            .filter { $0 > 0 }
+            .map { organizationsRepository.streamPrimarySecondaryAreas($0).eraseToAnyPublisher() }
+            .switchToLatest()
+            .assertNoFailure()
+            .eraseToAnyPublisher()
     }
 
-    func streamIncidentWorksitesCount(incidentIdStream: any Publisher<Int64, Never>) -> any Publisher<Int, Never> {
-        // TODO: Do
-        Just(0)
-    }
+    func streamIncidentWorksitesCount(_ incidentIdStream: any Publisher<Int64, Never>) -> any Publisher<IncidentIdWorksiteCount, Never> {
+        let incidentIdPublisher = incidentIdStream.eraseToAnyPublisher()
+        return Publishers.CombineLatest4(
+            incidentIdPublisher,
+            incidentIdPublisher
+                .map { id in self.worksiteDao.streamIncidentWorksitesCount(id).eraseToAnyPublisher() }
+                .switchToLatest()
+                .assertNoFailure()
+                .eraseToAnyPublisher(),
+            filtersRepository.casesFiltersLocation.eraseToAnyPublisher(),
+            organizationLocationAreaBounds
+        )
+        // TODO: Convert to switchMap/mapLatest equivalent
+            .debounce(for: .seconds(0.15), scheduler: RunLoop.current)
+            .asyncMap { id, totalCount, filtersLocation, areaBounds in
+                let filters = filtersLocation.0
+                if !filters.isDefault {
+                    self.isDeterminingWorksitesCountSubject.value = true
+                    do {
+                        defer { self.isDeterminingWorksitesCountSubject.value = false }
 
-    func streamIncidentWorksitesCount(_ id: Int64) -> any Publisher<Int, Never> {
-        worksiteDao.streamIncidentWorksitesCount(id)
+                        let organizationAffiliates = try await self.organizationAffiliatesPublisher.asyncFirst()
+                        return try await self.worksiteDao.getWorksitesCount(
+                            id,
+                            totalCount,
+                            filters,
+                            organizationAffiliates,
+                            self.locationManager.getLocation(),
+                            areaBounds
+                        )
+                    } catch {
+                        self.logger.logError(error)
+                    }
+                }
+
+                self.isDeterminingWorksitesCountSubject.value = false
+                return IncidentIdWorksiteCount(
+                    id: id,
+                    totalCount: totalCount,
+                    filteredCount: totalCount
+                )
+            }
             .assertNoFailure()
     }
 
@@ -291,6 +341,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         count: Int
     ) async throws -> [TableDataWorksite] {
         let affiliateIds = try await organizationAffiliatesPublisher.asyncFirst()
+        let areaBounds = try await organizationLocationAreaBounds.asyncFirst()
 
         let records = try await worksiteDao.loadTableWorksites(
             incidentId: incidentId,
@@ -299,7 +350,8 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
             sortBy: sortBy,
             coordinates: coordinates,
             searchRadius: searchRadius,
-            count: count
+            count: count,
+            locationAreaBounds: areaBounds
         )
 
         try Task.checkCancellation()

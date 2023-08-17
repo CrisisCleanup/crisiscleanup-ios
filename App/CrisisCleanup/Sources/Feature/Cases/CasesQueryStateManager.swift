@@ -19,6 +19,7 @@ internal class CasesQueryStateManager {
 
     init(
         _ incidentSelector: IncidentSelector,
+        _ filterRepository: CasesFilterRepository,
         _ mapChangeDebounceTimeout: Double = 0.1
     ) {
         worksiteQueryState = worksiteQueryStateSubject
@@ -58,6 +59,12 @@ internal class CasesQueryStateManager {
         tableViewSort
             .sink(receiveValue: { sortBy in
                 self.updateState { $0.tableViewSort = sortBy }
+            })
+            .store(in: &disposables)
+
+        filterRepository.casesFiltersLocation
+            .sink(receiveValue: { (filters, _) in
+                self.updateState { $0.filters = filters }
             })
             .store(in: &disposables)
 

@@ -813,6 +813,16 @@ extension AppDatabase {
             }
         }
 
+        migrator.registerMigration(
+            "worksite-createdAt-indexes",
+            foreignKeyChecks: .immediate
+        ) { db in
+            try db.create(
+                indexOn: "worksite",
+                columns: ["incidentId", "createdAt"]
+            )
+        }
+
         return migrator
     }
 }

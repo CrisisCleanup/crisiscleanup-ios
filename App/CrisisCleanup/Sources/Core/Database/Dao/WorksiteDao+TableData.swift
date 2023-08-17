@@ -9,7 +9,8 @@ extension WorksiteDao {
         sortBy: WorksiteSortBy,
         coordinates: CLLocationCoordinate2D?,
         searchRadius: Double,
-        count: Int
+        count: Int,
+        locationAreaBounds: OrganizationLocationAreaBounds
     ) async throws -> [PopulatedTableDataWorksite] {
         if sortBy == .nearest {
             if let coordinates = coordinates {
@@ -19,7 +20,8 @@ extension WorksiteDao {
                     searchRadius: searchRadius,
                     filters: filters,
                     organizationAffiliates: organizationAffiliates,
-                    coordinates: coordinates
+                    coordinates: coordinates,
+                    locationAreaBounds: locationAreaBounds
                 )
             }
             return []
@@ -30,7 +32,8 @@ extension WorksiteDao {
             count: count,
             filters: filters,
             organizationAffiliates: organizationAffiliates,
-            coordinates: coordinates
+            coordinates: coordinates,
+            locationAreaBounds: locationAreaBounds
         )
     }
 
@@ -55,7 +58,8 @@ extension WorksiteDao {
         searchRadius: Double,
         filters: CasesFilter,
         organizationAffiliates: Set<Int64>,
-        coordinates: CLLocationCoordinate2D
+        coordinates: CLLocationCoordinate2D,
+        locationAreaBounds: OrganizationLocationAreaBounds
     ) async throws -> [PopulatedTableDataWorksite] {
         let strideCount = 100
 
@@ -69,7 +73,8 @@ extension WorksiteDao {
             boundedWorksites = try getTableWorksites(incidentId).filter(
                 filters,
                 organizationAffiliates,
-                coordinates
+                coordinates,
+                locationAreaBounds
             )
         } else {
             let r = max(searchRadius, 24.0)
@@ -102,7 +107,8 @@ extension WorksiteDao {
                 remainingBounds: gridQuery.getSwNeGridCells(),
                 filters: filters,
                 organizationAffiliates: organizationAffiliates,
-                coordinates: coordinates
+                coordinates: coordinates,
+                locationAreaBounds: locationAreaBounds
             )
         }
 
@@ -132,7 +138,8 @@ extension WorksiteDao {
         count: Int,
         filters: CasesFilter,
         organizationAffiliates: Set<Int64>,
-        coordinates: CLLocationCoordinate2D?
+        coordinates: CLLocationCoordinate2D?,
+        locationAreaBounds: OrganizationLocationAreaBounds
     ) async throws -> [PopulatedTableDataWorksite] {
         let queryCount = max(count, 100)
         var queryOffset = 0
@@ -151,7 +158,8 @@ extension WorksiteDao {
             let filteredRecords = records.filter(
                 filters,
                 organizationAffiliates,
-                coordinates
+                coordinates,
+                locationAreaBounds
             )
 
             try Task.checkCancellation()
@@ -174,7 +182,8 @@ extension WorksiteDao {
         remainingBounds: [SwNeBounds],
         filters: CasesFilter,
         organizationAffiliates: Set<Int64>,
-        coordinates: CLLocationCoordinate2D
+        coordinates: CLLocationCoordinate2D,
+        locationAreaBounds: OrganizationLocationAreaBounds
     ) async throws -> [PopulatedTableDataWorksite] {
         var loadedWorksites = [PopulatedTableDataWorksite]()
 
@@ -196,7 +205,8 @@ extension WorksiteDao {
             let filteredRecords = records.filter(
                 filters,
                 organizationAffiliates,
-                coordinates
+                coordinates,
+                locationAreaBounds
             )
 
             try Task.checkCancellation()

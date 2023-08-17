@@ -24,7 +24,7 @@ struct CasesTableView: View {
 
                 Spacer()
 
-                TableViewButtons()
+                TableViewButtons(filtersCount: viewModel.filtersCount)
             }
             .listItemPadding()
 
@@ -140,6 +140,7 @@ private struct TableViewIncidentSelector: View {
 struct TableViewButtons: View {
     @EnvironmentObject var router: NavigationRouter
 
+    let filtersCount: Int
     let buttonSize = appTheme.buttonSize
 
     var body: some View {
@@ -166,7 +167,12 @@ struct TableViewButtons: View {
                     .background(Color.white)
                     .foregroundColor(Color.black)
             }
-
+            .if(filtersCount > 0) {
+                // TODO: Don't clip overlay
+                $0.overlay(alignment: .topTrailing) {
+                    filterBadge(filtersCount)
+                }
+            }
         }
         .frame(width: appTheme.buttonSizeDoublePlus1, height: buttonSize)
     }

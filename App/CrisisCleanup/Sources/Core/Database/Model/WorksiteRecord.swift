@@ -597,6 +597,44 @@ extension DerivableRequest<WorksiteRecord> {
             WorksiteColumns.caseNumber
         )
     }
+
+    func orderById() -> Self {
+        order(WorksiteColumns.id)
+    }
+
+    func bySviLte(_ svi: Double) -> Self {
+        filter(WorksiteColumns.svi <= svi)
+    }
+
+    func orderBySvi() -> Self {
+        order(WorksiteColumns.svi)
+    }
+
+    func byUpdatedGte(_ reference: Date) -> Self {
+        filter(WorksiteColumns.updatedAt >= reference)
+    }
+
+    func orderByUpdatedAt() -> Self {
+        order(WorksiteColumns.updatedAt)
+    }
+
+    func byUpdatedBetween(_ lower: Date, _ upper: Date) -> Self {
+        filter(
+            WorksiteColumns.updatedAt >= lower &&
+            WorksiteColumns.updatedAt <= upper
+        )
+    }
+
+    func byCreatedBetween(_ lower: Date, _ upper: Date) -> Self {
+        filter(
+            WorksiteColumns.createdAt >= lower &&
+            WorksiteColumns.createdAt <= upper
+        )
+    }
+
+    func orderByCreatedAt() -> Self {
+        order(WorksiteColumns.createdAt)
+    }
 }
 
 // MARK: - Work type

@@ -1,44 +1,55 @@
 import Combine
-import LRUCache
+import Foundation
 
 public protocol CasesFilterRepository {
-    var casesFilters: any Publisher<CasesFilter, Never> { get }
+    var casesFilters: CasesFilter { get }
+    var casesFiltersLocation: any Publisher<(CasesFilter, Bool), Never> { get }
     var filtersCount: any Publisher<Int, Never> { get }
 
     func changeFilters(_ filters: CasesFilter)
+
     func updateWorkTypeFilters(_ workTypes: [String])
 }
 
 class CrisisCleanupCasesFilterRepository: CasesFilterRepository {
     private let dataSource: CasesFiltersDataSource
-    private let accountDataRepository: AccountDataRepository
+    private let locationManager: LocationManager
     private let networkDataSource: CrisisCleanupNetworkDataSource
 
-    private let _isLoading = CurrentValueSubject<Bool, Never>(true)
-    let isLoading: any Publisher<Bool, Never>
-
-    let casesFilters: any Publisher<CasesFilter, Never>
+    private(set) var casesFilters = CasesFilter()
+    let casesFiltersLocation: any Publisher<(CasesFilter, Bool), Never>
 
     let filtersCount: any Publisher<Int, Never>
-
-    private let queryParamCache = LRUCache<OrgCasesFilter, Dictionary<String, Any>>()
 
     private var subscriptions = Set<AnyCancellable>()
 
     init(
         dataSource: CasesFiltersDataSource,
-        accountDataRepository: AccountDataRepository,
+        locationManager: LocationManager,
         networkDataSource: CrisisCleanupNetworkDataSource
     ) {
         self.dataSource = dataSource
-        self.accountDataRepository = accountDataRepository
+        self.locationManager = locationManager
         self.networkDataSource = networkDataSource
 
-        isLoading = _isLoading
-        casesFilters = dataSource.filters
-        filtersCount = casesFilters
+        casesFiltersLocation = Publishers.CombineLatest(
+            dataSource.filters.eraseToAnyPublisher(),
+            locationManager.$locationPermission
+        )
+        .map { filters, _  in
+            (filters, locationManager.hasLocationAccess)
+        }
+
+        filtersCount = casesFiltersLocation
             .eraseToAnyPublisher()
-            .map { $0.changeCount }
+            .map { $0.0.changeCount }
+
+        casesFiltersLocation
+            .eraseToAnyPublisher()
+            .map { $0.0 }
+            .receive(on: RunLoop.main)
+            .assign(to: \.casesFilters, on: self)
+            .store(in: &subscriptions)
     }
 
     func changeFilters(_ filters: CasesFilter) {
@@ -46,7 +57,7 @@ class CrisisCleanupCasesFilterRepository: CasesFilterRepository {
     }
 
     func updateWorkTypeFilters(_ workTypes: [String]) {
-        // TODO Update work types removing non-matching
+        // TODO: Update work types removing non-matching
     }
 }
 

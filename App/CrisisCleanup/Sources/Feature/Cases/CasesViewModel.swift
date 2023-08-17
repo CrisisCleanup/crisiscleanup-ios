@@ -113,15 +113,7 @@ class CasesViewModel: ObservableObject {
         self.syncPuller = syncPuller
         logger = loggerFactory.getLogger("cases")
 
-        incidentWorksitesCount = incidentSelector.incidentId
-            .eraseToAnyPublisher()
-            .map { id in
-                worksitesRepository.streamIncidentWorksitesCount(id)
-                    .eraseToAnyPublisher()
-                    .map { count in (id, count) }
-            }
-            .switchToLatest()
-            .map { (id, count) in IncidentIdWorksiteCount(id: id, totalCount: count, filteredCount: count) }
+        incidentWorksitesCount = worksitesRepository.streamIncidentWorksitesCount(incidentSelector.incidentId)
             .eraseToAnyPublisher()
 
         tableViewDataLoader = CasesTableViewDataLoader(
@@ -142,7 +134,10 @@ class CasesViewModel: ObservableObject {
 
         mapMarkerManager = CasesMapMarkerManager(worksitesRepository: worksitesRepository)
 
-        let queryStateManager = CasesQueryStateManager(incidentSelector)
+        let queryStateManager = CasesQueryStateManager(
+            incidentSelector,
+            filterRepository
+        )
         qsm = queryStateManager
     }
 
@@ -380,7 +375,9 @@ class CasesViewModel: ObservableObject {
             $casesCountMapText,
             $isLoadingData
         )
-        .map { countText, loading in countText.isNotBlank || loading }
+        .map { countText, loading in
+            countText.isNotBlank || loading
+        }
         .receive(on: RunLoop.main)
         .assign(to: \.hasCasesCountProgress, on: self)
         .store(in: &subscriptions)
@@ -777,7 +774,7 @@ extension CLLocationCoordinate2D {
     }
 }
 
-struct IncidentIdWorksiteCount {
+public struct IncidentIdWorksiteCount {
     let id: Int64
     let totalCount: Int
     let filteredCount: Int

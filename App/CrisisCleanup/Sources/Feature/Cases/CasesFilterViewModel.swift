@@ -12,6 +12,8 @@ class CasesFilterViewModel: ObservableObject {
     let translator: KeyTranslator
     private let logger: AppLogger
 
+    private let isInitialFilterValue = ManagedAtomic(true)
+
     @Published private(set) var casesFilters: CasesFilter = CasesFilter()
     @Published var filterStatuses = ObservableBoolDictionary()
     @Published var filterFlags = ObservableBoolDictionary()
@@ -106,35 +108,97 @@ class CasesFilterViewModel: ObservableObject {
     }
 
     private func subscribeFilterData() {
-        casesFilterRepository.casesFilters
+        casesFilterRepository.casesFiltersLocation
             .eraseToAnyPublisher()
             .receive(on: RunLoop.main)
-            .assign(to: \.casesFilters, on: self)
-            .store(in: &subscriptions)
+            .sink { (filters, _) in
+                if !filters.isDefault,
+                   self.isInitialFilterValue.exchange(false, ordering: .sequentiallyConsistent) {
+                    self.casesFilters = filters
 
-        $casesFilters
-            .sink { filters in
-                let statuses = self.filterStatuses
-                for workTypeStatus in filters.workTypeStatuses {
-                    statuses[workTypeStatus.literal] = true
+                    let statuses = self.filterStatuses
+                    for workTypeStatus in filters.workTypeStatuses {
+                        statuses[workTypeStatus.literal] = true
+                    }
+
+                    let flags = self.filterFlags
+                    for flag in filters.worksiteFlags {
+                        flags[flag.literal] = true
+                    }
+
+                    let workTypes = self.filterWorkTypes
+                    for workType in filters.workTypes {
+                        workTypes[workType] = true
+                    }
+
+                    self.filterCreatedAtStart = filters.createdAt?.start
+                    self.filterCreatedAtEnd = filters.createdAt?.end
+                    self.filterUpdatedAtStart = filters.updatedAt?.start
+                    self.filterUpdatedAtEnd = filters.updatedAt?.end
                 }
-
-                let flags = self.filterFlags
-                for flag in filters.worksiteFlags {
-                    flags[flag.literal] = true
-                }
-
-                let workTypes = self.filterWorkTypes
-                for workType in filters.workTypes {
-                    workTypes[workType] = true
-                }
-
-                self.filterCreatedAtStart = filters.createdAt?.start
-                self.filterCreatedAtEnd = filters.createdAt?.end
-                self.filterUpdatedAtStart = filters.updatedAt?.start
-                self.filterUpdatedAtEnd = filters.updatedAt?.end
             }
             .store(in: &subscriptions)
+
+        $filterStatuses
+            .sink { _ in
+                let statuses = self.filterStatuses.data.filter { $0.value }
+                    .map { statusFromLiteral($0.key) }
+                self.changeFilters {
+                    $0.workTypeStatuses = Set(statuses)
+                }
+            }
+            .store(in: &subscriptions)
+
+        $filterFlags
+            .sink { _ in
+                let flags = self.filterFlags.data.filter { $0.value }
+                    .compactMap { flagFromLiteral( $0.key ) }
+                self.changeFilters {
+                    $0.worksiteFlags = flags
+                }
+            }
+            .store(in: &subscriptions)
+
+        $filterWorkTypes
+            .sink { _ in
+                let workTypes = self.filterWorkTypes.data.filter { $0.value }
+                    .map { $0.key }
+                self.changeFilters {
+                    $0.workTypes = Set(workTypes)
+                }
+            }
+            .store(in: &subscriptions)
+
+        func getDateRange(_ start: Date?, _ end: Date?) -> CasesFilter.DateRange? {
+            start == nil || end == nil
+            ? nil
+            : CasesFilter.DateRange(
+                start: start!,
+                end: end!
+            )
+        }
+
+        Publishers.CombineLatest(
+            $filterCreatedAtStart,
+            $filterCreatedAtEnd
+        )
+        .sink(receiveValue: { start, end in
+            self.changeFilters {
+                $0.createdAt = getDateRange(start, end)
+            }
+        })
+        .store(in: &subscriptions)
+
+        Publishers.CombineLatest(
+            $filterUpdatedAtStart,
+            $filterUpdatedAtEnd
+        )
+        .sink(receiveValue: { start, end in
+            self.changeFilters {
+                $0.updatedAt = getDateRange(start, end)
+            }
+        })
+        .store(in: &subscriptions)
 
         workTypeStatusRepository.workTypeStatusFilterOptions
             .eraseToAnyPublisher()
@@ -144,6 +208,7 @@ class CasesFilterViewModel: ObservableObject {
 
         incidentSelector.incidentId
             .eraseToAnyPublisher()
+        // TODO: switchMap/mapLatest
             .map { id in self.incidentsRepository.streamIncident(id).eraseToAnyPublisher() }
             .switchToLatest()
             .eraseToAnyPublisher()
@@ -234,55 +299,15 @@ class CasesFilterViewModel: ObservableObject {
 
     func clearFilters() {
         let filters = CasesFilter()
+        filterStatuses = ObservableBoolDictionary()
+        filterFlags = ObservableBoolDictionary()
+        filterWorkTypes = ObservableBoolDictionary()
         changeFilters(filters)
         applyFilters(filters)
     }
 
     func applyFilters(_ filters: CasesFilter) {
-        var statuses = Set<WorkTypeStatus>()
-        for (key, value) in filterStatuses.data {
-            if value {
-                statuses.insert(statusFromLiteral(key))
-            }
-        }
-
-        var flags = Set<WorksiteFlagType>()
-        for (key, value) in filterFlags.data {
-            if value,
-               let flag = flagFromLiteral(key) {
-                flags.insert(flag)
-            }
-        }
-
-        var workTypes = Set<String>()
-        for (key, value) in filterWorkTypes.data {
-            if value {
-                workTypes.insert(key)
-            }
-        }
-
-        let createdAt = filterCreatedAtStart == nil || filterCreatedAtEnd == nil
-        ? nil
-        : CasesFilter.DateRange(
-            start: filterCreatedAtStart!,
-            end: filterCreatedAtEnd!
-        )
-
-        let updatedAt = filterUpdatedAtStart == nil || filterUpdatedAtEnd == nil
-        ? nil
-        : CasesFilter.DateRange(
-            start: filterUpdatedAtStart!,
-            end: filterUpdatedAtEnd!
-        )
-
-        let changed = filters.copy {
-            $0.workTypeStatuses = statuses
-            $0.worksiteFlags = Array(flags)
-            $0.workTypes = workTypes
-            $0.createdAt = createdAt
-            $0.updatedAt = updatedAt
-        }
-        casesFilterRepository.changeFilters(changed)
+        casesFilterRepository.changeFilters(filters)
     }
 }
 
