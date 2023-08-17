@@ -16,7 +16,7 @@ extern "C" {
                 swappedColor.r = linearCorrect(from.r, to.r, fraction);
                 swappedColor.g = linearCorrect(from.g, to.g, fraction);
                 swappedColor.b = linearCorrect(from.b, to.b, fraction);
-                swappedColor.a = alpha;
+                swappedColor.a = to.a;
                 return swappedColor;
             }
             return s;

@@ -6,6 +6,12 @@ extension Int {
     }
 }
 
+extension Int64 {
+    func clamp(lower: Int64, upper: Int64) -> Int64 {
+        self < lower ? lower : (self > upper ? upper : self)
+    }
+}
+
 extension Double {
     func clamp(lower: Double, upper: Double) -> Double {
         self < lower ? lower : (self > upper ? upper : self)

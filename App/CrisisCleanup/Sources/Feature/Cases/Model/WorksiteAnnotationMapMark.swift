@@ -30,9 +30,10 @@ extension WorksiteMapMark {
         point.mapIcon = iconProvider.getIcon(
             statusClaim,
             workType,
-            isFavorite,
-            isHighPriority,
-            hasMultipleWorkTypes
+            hasMultipleWorkTypes,
+            isFavorite: isFavorite,
+            isImportant: isHighPriority,
+            isFilteredOut: isFilteredOut
         )
 
         let statusId = statusClaim.status.literal

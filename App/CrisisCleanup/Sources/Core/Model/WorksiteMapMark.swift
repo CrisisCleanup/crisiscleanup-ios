@@ -9,6 +9,7 @@ public struct WorksiteMapMark: Equatable {
     let workTypeCount: Int
     let isFavorite: Bool
     let isHighPriority: Bool
+    let isDuplicate: Bool
     let isFilteredOut: Bool
 
     init(
@@ -21,6 +22,7 @@ public struct WorksiteMapMark: Equatable {
         workTypeCount: Int,
         isFavorite: Bool = false,
         isHighPriority: Bool = false,
+        isDuplicate: Bool = false,
         isFilteredOut: Bool = false
     ) {
         self.id = id
@@ -32,6 +34,7 @@ public struct WorksiteMapMark: Equatable {
         self.workTypeCount = workTypeCount
         self.isFavorite = isFavorite
         self.isHighPriority = isHighPriority
+        self.isDuplicate = isDuplicate
         self.isFilteredOut = isFilteredOut
     }
 }

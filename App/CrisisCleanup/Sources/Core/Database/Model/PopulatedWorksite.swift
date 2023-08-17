@@ -111,6 +111,7 @@ struct PopulatedLocalWorksite: Equatable, Decodable, FetchableRecord {
 }
 
 private let highPriorityFlagLiteral = WorksiteFlagType.highPriority.literal
+private let duplicateFlagLiteral = WorksiteFlagType.duplicate.literal
 
 struct PopulatedWorksiteMapVisual: Decodable, FetchableRecord {
     struct WorksiteMapVisualSubset : Decodable {
@@ -154,10 +155,13 @@ struct PopulatedWorksiteMapVisual: Decodable, FetchableRecord {
             workTypeCount: workTypeCount,
             // TODO: Account for unsynced local favorite as well
             isFavorite: worksite.favoriteId != nil,
-            isHighPriority: worksiteFlags.contains(where: { flag in
-                flag.isHighPriority == true ||
-                flag.reasonT == highPriorityFlagLiteral
-            }),
+            isHighPriority: worksiteFlags.contains {
+                $0.isHighPriority == true ||
+                $0.reasonT == highPriorityFlagLiteral
+            },
+            isDuplicate: worksiteFlags.contains {
+                $0.reasonT == duplicateFlagLiteral
+            },
             isFilteredOut: isFilteredOut
         )
     }

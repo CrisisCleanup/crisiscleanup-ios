@@ -14,6 +14,24 @@ extension Color {
     }
 
     func disabledAlpha() -> Color { opacity(_disabledAlpha) }
+
+    private func clamp255(_ i: Int64) -> Int64 {
+        i.clamp(lower: 0, upper: 255)
+    }
+
+    var hexRgb: Int64 {
+        let components = cgColor?.components
+        let r = clamp255(Int64((components?[0] ?? 0) * 256))
+        let g = clamp255(Int64((components?[1] ?? 0) * 256))
+        let b = clamp255(Int64((components?[2] ?? 0) * 256))
+        return (r << 16) | (g << 08) | b
+    }
+
+    func hex(_ alpha: Double) -> Int64 {
+        let rgb = hexRgb
+        let a = clamp255(Int64(alpha * 255))
+        return rgb | (a << 24)
+    }
 }
 
 struct ThemeColor {

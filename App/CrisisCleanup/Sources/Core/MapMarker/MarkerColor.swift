@@ -23,6 +23,7 @@ let statusDoneByOthersNhwDiColor = Color(hex: statusDoneByOthersNhwColorCode)
 let statusOutOfScopeRejectedColor = Color(hex: statusOutOfScopeRejectedColorCode)
 let statusUnresponsiveColor = Color(hex: statusUnresponsiveColorCode)
 
+// sourcery: copyBuilder
 struct MapMarkerColor {
     let fillLong: Int64
     let strokeLong: Int64
@@ -66,12 +67,37 @@ private let statusClaimMapMarkerColors: [WorkTypeStatusClaim: MapMarkerColor] = 
     WorkTypeStatusClaim(.closedDuplicate, false): MapMarkerColor(statusDuplicateUnclaimedColorCode),
 ]
 
-internal func getMapMarkerColors(_ statusClaim: WorkTypeStatusClaim) -> MapMarkerColor {
-    var colors = statusClaimMapMarkerColors[statusClaim]
-    if colors == nil {
-        if let status = statusClaimToStatus[statusClaim] {
-            colors = statusMapMarkerColors[status]
+internal let filteredOutMarkerAlpha = 0.25
+private let filteredOutDotAlpha = 0.25
+private let duplicateMarkerAlpha = 0.3
+
+internal func getMapMarkerColors(
+    _ statusClaim: WorkTypeStatusClaim,
+    isDuplicate: Bool,
+    isFilteredOut: Bool,
+    isDot: Bool = false
+) -> MapMarkerColor {
+    var colors = {
+        var markerColors = statusClaimMapMarkerColors[statusClaim]
+        if markerColors == nil,
+           let status = statusClaimToStatus[statusClaim] {
+            markerColors = statusMapMarkerColors[status]
         }
+        return markerColors ?? statusMapMarkerColors[.unknown]!
+    }()
+
+    if isDuplicate {
+        colors = MapMarkerColor(
+            colors.fill.hex(duplicateMarkerAlpha),
+            colors.stroke.hex(duplicateMarkerAlpha)
+        )
+    } else if isFilteredOut {
+        let alpha = isDot ? filteredOutDotAlpha : filteredOutMarkerAlpha
+        colors = MapMarkerColor(
+            Color.white.hex(alpha),
+            colors.fill.hex(alpha)
+        )
     }
-    return colors ?? statusMapMarkerColors[.unknown]!
+
+    return colors
 }

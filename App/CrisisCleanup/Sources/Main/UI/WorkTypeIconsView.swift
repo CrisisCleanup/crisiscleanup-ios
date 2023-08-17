@@ -57,7 +57,13 @@ class WorkTypeIconImageGenerator {
             for i in 0..<2 {
                 let status = statuses[statusIndex % statuses.count]
                 let statusClaim = WorkTypeStatusClaim.make(status.literal, orgId)
-                let image = iconProvider.getIcon(statusClaim, workType, isFavorite, isImportant, i>0)
+                let image = iconProvider.getIcon(
+                    statusClaim,
+                    workType,
+                    i>0,
+                    isFavorite: isFavorite,
+                    isImportant: isImportant
+                )
                 images.append(image ?? UIImage(named: "cases")!)
                 statusIndex += 1
             }

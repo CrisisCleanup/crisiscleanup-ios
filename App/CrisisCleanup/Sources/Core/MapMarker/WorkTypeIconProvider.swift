@@ -53,16 +53,20 @@ class WorkTypeIconProvider: MapCaseIconProvider {
     func getIcon(
         _ statusClaim: WorkTypeStatusClaim,
         _ workType: WorkTypeType,
-        _ isFavorite: Bool,
-        _ isImportant: Bool,
-        _ hasMultipleWorkTypes: Bool
+        _ hasMultipleWorkTypes: Bool,
+        isFavorite: Bool,
+        isImportant: Bool,
+        isFilteredOut: Bool,
+        isDuplicate: Bool
     ) -> UIImage? {
         let cacheKey = CacheKey(
             statusClaim,
             workType,
             hasMultipleWorkTypes,
             isFavorite: isFavorite,
-            isImportant: isImportant
+            isImportant: isImportant,
+            isFilteredOut: isFilteredOut,
+            isDuplicate: isDuplicate
         )
         let existing = cacheLock.withLock { cache.value(forKey: cacheKey) }
         guard existing == nil else { return existing }
@@ -73,9 +77,17 @@ class WorkTypeIconProvider: MapCaseIconProvider {
     func getIcon(
         _ statusClaim: WorkTypeStatusClaim,
         _ workType: WorkTypeType,
-        _ hasMultipleWorkTypes: Bool
+        _ hasMultipleWorkTypes: Bool,
+        isFilteredOut: Bool,
+        isDuplicate: Bool
     ) -> UIImage? {
-        return getIcon(statusClaim, workType, false, false, hasMultipleWorkTypes)
+        return getIcon(
+            statusClaim,
+            workType,
+            hasMultipleWorkTypes,
+            isFavorite: false,
+            isImportant: false
+        )
     }
 
     private func grayscaleToColor(_ imageIn: UIImage, fromColorInt: Int64, toColorInt: Int64) -> CGImage {
@@ -106,10 +118,18 @@ class WorkTypeIconProvider: MapCaseIconProvider {
             bwImage = baseImage
         }
 
-        let colors = getMapMarkerColors(cacheKey.statusClaim)
-        let filteredImage = grayscaleToColor(bwImage!, fromColorInt: colors.fillLong, toColorInt: colors.strokeLong)
+        let colors = getMapMarkerColors(
+            cacheKey.statusClaim,
+            isDuplicate: cacheKey.isDuplicate,
+            isFilteredOut: cacheKey.isFilteredOut
+        )
 
-        let shadowImage = UIImage(cgImage: filteredImage).withShadow(blur: 6)
+        let filteredImage = grayscaleToColor(bwImage!, fromColorInt: colors.fillLong, toColorInt: colors.strokeLong)
+        let filteredUiImage = UIImage(cgImage: filteredImage)
+
+        let shadowImage = cacheKey.isFilteredOut
+        ? filteredUiImage
+        : filteredUiImage.withShadow(blur: 6)
 
         var plussedImage = shadowImage
         if cacheKey.hasMultipleWorkTypes {
@@ -131,7 +151,11 @@ class WorkTypeIconProvider: MapCaseIconProvider {
             context.setShouldAntialias(true)
 
             plussedImage.draw(in: CGRect(origin: .zero, size: size))
-            plusImage.draw(in: offsetRect)
+            if cacheKey.isFilteredOut {
+                plusImage.draw(in: offsetRect, blendMode: .normal, alpha: filteredOutMarkerAlpha)
+            } else {
+                plusImage.draw(in: offsetRect)
+            }
             plussedImage = UIGraphicsGetImageFromCurrentImageContext()!
             UIGraphicsEndImageContext()
         }
@@ -147,18 +171,24 @@ private struct CacheKey: Hashable {
     let hasMultipleWorkTypes: Bool
     let isFavorite: Bool
     let isImportant: Bool
+    let isFilteredOut: Bool
+    let isDuplicate: Bool
 
     init(
         _ statusClaim: WorkTypeStatusClaim,
         _ workType: WorkTypeType,
         _ hasMultipleWorkTypes: Bool,
         isFavorite: Bool = false,
-        isImportant: Bool = false
+        isImportant: Bool = false,
+        isFilteredOut: Bool = false,
+        isDuplicate: Bool = false
     ) {
         self.statusClaim = statusClaim
         self.workType = workType
         self.hasMultipleWorkTypes = hasMultipleWorkTypes
         self.isFavorite = isFavorite
         self.isImportant = isImportant
+        self.isFilteredOut = isFilteredOut
+        self.isDuplicate = isDuplicate
     }
 }
