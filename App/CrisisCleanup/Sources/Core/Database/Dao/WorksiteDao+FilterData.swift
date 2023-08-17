@@ -50,7 +50,7 @@ extension WorksiteDao {
                     .orderByUpdatedAt()
                 }
             } else {
-                worksites = getFilterWorksites(incidentId, stride,offset) {
+                worksites = getFilterWorksites(incidentId, stride, offset) {
                     $0.orderById()
                 }
             }

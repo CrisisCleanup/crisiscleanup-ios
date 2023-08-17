@@ -613,7 +613,7 @@ extension DerivableRequest<WorksiteRecord> {
     }
 
     func bySviLte(_ svi: Double) -> Self {
-        filter(WorksiteColumns.svi <= svi)
+        filter(WorksiteColumns.svi == nil || WorksiteColumns.svi <= svi)
     }
 
     func orderBySvi() -> Self {
@@ -637,6 +637,7 @@ extension DerivableRequest<WorksiteRecord> {
 
     func byCreatedBetween(_ lower: Date, _ upper: Date) -> Self {
         filter(
+            WorksiteColumns.createdAt != nil &&
             WorksiteColumns.createdAt >= lower &&
             WorksiteColumns.createdAt <= upper
         )

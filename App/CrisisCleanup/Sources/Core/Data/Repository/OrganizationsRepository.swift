@@ -132,10 +132,11 @@ class OfflineFirstOrganizationsRepository: OrganizationsRepository {
                     locationIds.primaryLocation,
                     locationIds.secondaryLocation
                 ].compactMap { $0 }
+                // TODO: Stream bounds
                 let bounds = self.locationDao.getLocations(ids)
                     .map { location in self.locationBoundsConverter.convert(location) }
-                let primary = locationIds.primaryLocation == nil ? nil : bounds[0]
-                let secondary = locationIds.secondaryLocation == nil ? nil : bounds[bounds.count - 1]
+                let primary = locationIds.primaryLocation == nil || bounds.isEmpty ? nil : bounds[0]
+                let secondary = locationIds.secondaryLocation == nil || bounds.count < ids.count ? nil : bounds[bounds.count - 1]
                 return OrganizationLocationAreaBounds(primary, secondary)
             }
 
