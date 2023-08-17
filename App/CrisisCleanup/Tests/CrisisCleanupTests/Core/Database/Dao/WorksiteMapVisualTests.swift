@@ -92,6 +92,7 @@ class WorksiteMapVisualTests: XCTestCase {
             limit: 99,
             offset: 0
         )
+            .map { $0.asExternalModel() }
         let expected = [WorksiteMapMark(
             id: 1,
             incidentId: 1,

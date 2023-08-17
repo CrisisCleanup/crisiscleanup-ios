@@ -24,8 +24,9 @@ public protocol WorksitesRepository {
         longitudeWest: Double,
         longitudeEast: Double,
         limit: Int,
-        offset: Int
-    ) throws -> [WorksiteMapMark]
+        offset: Int,
+        coordinates: CLLocation?
+    ) async throws -> [WorksiteMapMark]
 
     func getWorksitesCount(_ incidentId: Int64) throws -> Int
 

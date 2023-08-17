@@ -2,9 +2,14 @@ import Foundation
 
 class CasesMapMarkerManager {
     private let worksitesRepository: WorksitesRepository
+    private let locationManager: LocationManager
 
-    init(worksitesRepository: WorksitesRepository) {
+    init(
+        worksitesRepository: WorksitesRepository,
+        locationManager: LocationManager
+    ) {
         self.worksitesRepository = worksitesRepository
+        self.locationManager = locationManager
     }
 
     private func getWorksitesCount(
@@ -81,15 +86,16 @@ class CasesMapMarkerManager {
 
         let sw = q.southWest
         let ne = q.northEast
-        let mapMarks = try worksitesRepository.getWorksitesMapVisual(
+        let mapMarks = try await worksitesRepository.getWorksitesMapVisual(
             incidentId: incidentId,
             latitudeSouth: sw.latitude,
             latitudeNorth: ne.latitude,
             longitudeWest: sw.longitude,
             longitudeEast: ne.longitude,
-            // TODO Review if this is sufficient and mostly complete
+            // TODO: Review if this is sufficient and mostly complete
             limit: min(q.queryCount, 2 * maxMarkersOnMap),
-            offset: 0
+            offset: 0,
+            coordinates: locationManager.getLocation()
         )
 
         try Task.checkCancellation()

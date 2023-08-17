@@ -437,7 +437,7 @@ public class WorksiteDao {
         east: Double,
         limit: Int,
         offset: Int
-    ) throws -> [WorksiteMapMark] {
+    ) throws -> [PopulatedWorksiteMapVisual] {
         try reader.read { db in
             let worksiteAlias = TableAlias(name: "w")
             let worksiteColumns = WorksiteRootRecord.worksite
@@ -445,7 +445,7 @@ public class WorksiteDao {
                 .aliased(worksiteAlias)
             let request = WorksiteRootRecord
                 .all()
-                .selectIdColumn()
+                .visualColumns()
                 .byIncidentId(incidentId)
                 .including(required: worksiteColumns
                     .byBounds(
@@ -458,11 +458,13 @@ public class WorksiteDao {
                         .orderByUpdatedAtDescIdDesc()
                 )
                 .including(all: WorksiteRootRecord.worksiteFlags)
+                .including(all: WorksiteRootRecord.worksiteFormData)
+                .including(all: WorksiteRootRecord.workTypes)
                 .annotated(with: WorksiteRootRecord.workTypes.count)
                 .limit(limit, offset: offset)
                 .asRequest(of: PopulatedWorksiteMapVisual.self)
             return try request.fetchAll(db)
-        }.map { record in record.asExternalModel() }
+        }
     }
 
     func getWorksite(_ id: Int64) throws -> PopulatedLocalWorksite? {

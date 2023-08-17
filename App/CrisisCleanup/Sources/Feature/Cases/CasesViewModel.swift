@@ -132,7 +132,10 @@ class CasesViewModel: ObservableObject {
             incidentBoundsProvider
         )
 
-        mapMarkerManager = CasesMapMarkerManager(worksitesRepository: worksitesRepository)
+        mapMarkerManager = CasesMapMarkerManager(
+            worksitesRepository: worksitesRepository,
+            locationManager: locationManager
+        )
 
         let queryStateManager = CasesQueryStateManager(
             incidentSelector,
@@ -346,12 +349,11 @@ class CasesViewModel: ObservableObject {
             worksitesInBounds
         )
         .filter { (_, isTable, _) in !isTable }
-        .map { (totalCount, _, markers) in
+        .map { (totalCount, _, idMarkers) in
             if totalCount < 0 { return "" }
 
-            // TODO: Use actual visibleCount after filtering is fully integrated
-            let visibleCount = totalCount
-            // let visibleCount = markers.filter { !$0.isFilteredOut }.count
+            let (_, markers) = idMarkers
+            let visibleCount = markers.filter { !$0.isFilteredOut }.count
 
             if visibleCount == totalCount || visibleCount == 0 {
                 if visibleCount == 0 {

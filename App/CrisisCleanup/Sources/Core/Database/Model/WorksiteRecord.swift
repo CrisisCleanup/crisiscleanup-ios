@@ -228,6 +228,10 @@ extension DerivableRequest<WorksiteRootRecord> {
         select(RootColumns.id)
     }
 
+    func visualColumns() -> Self {
+        select(RootColumns.id, RootColumns.isLocalModified)
+    }
+
     func filterLocalModified() -> Self {
         filter(RootColumns.isLocalModified == true)
     }
@@ -358,7 +362,8 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
              state,
              svi,
              what3Words,
-             updatedAt
+             updatedAt,
+             isLocalFavorite
     }
 
     mutating func didInsert(_ inserted: InsertionSuccess) {
@@ -517,7 +522,12 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
             Columns.keyWorkTypeStatus,
             Columns.keyWorkTypeType,
             Columns.keyWorkTypeOrgClaim,
-            Columns.favoriteId
+            Columns.favoriteId,
+            Columns.createdAt,
+            Columns.isLocalFavorite,
+            Columns.reportedBy,
+            Columns.svi,
+            Columns.updatedAt
         ]
     }
 }

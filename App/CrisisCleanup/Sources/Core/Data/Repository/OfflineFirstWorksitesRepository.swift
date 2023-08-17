@@ -161,9 +161,10 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         longitudeWest: Double,
         longitudeEast: Double,
         limit: Int,
-        offset: Int
-    ) throws -> [WorksiteMapMark] {
-        try worksiteDao.getWorksitesMapVisual(
+        offset: Int,
+        coordinates: CLLocation?
+    ) async throws -> [WorksiteMapMark] {
+        try await worksiteDao.getWorksitesMapVisual(
             incidentId,
             south: latitudeSouth,
             north: latitudeNorth,
@@ -171,6 +172,12 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
             east: longitudeEast,
             limit: limit,
             offset: offset
+        )
+        .filterMapVisuals(
+            filtersRepository.casesFilters,
+            organizationAffiliatesPublisher.asyncFirst(),
+            organizationLocationAreaBounds.asyncFirst(),
+            coordinates
         )
     }
 
