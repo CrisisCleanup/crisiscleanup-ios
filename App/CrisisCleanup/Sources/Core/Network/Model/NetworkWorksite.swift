@@ -540,4 +540,13 @@ struct FloatStringOptional: Codable, Equatable {
     init(value: Float?) {
         wrappedValue = value
     }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        if let value = wrappedValue {
+            try container.encode(value)
+        } else {
+            try container.encodeNil()
+        }
+    }
 }

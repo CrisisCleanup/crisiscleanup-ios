@@ -3,12 +3,12 @@ import Foundation
 /**
  * Build version of the app where worksite (related) entity models were last changed
  */
-private let WorksitesStableModelBuildVersion = 28
+private let WorksitesStableModelBuildVersion = 34
 
 /**
  * Build version of the app where incident organization (related) entity models were last changed
  */
-let IncidentOrganizationsStableModelBuildVersion = 30
+let IncidentOrganizationsStableModelBuildVersion = 34
 
 /**
  * Keeps track of incident data (worksites, organizations, ...) syncing

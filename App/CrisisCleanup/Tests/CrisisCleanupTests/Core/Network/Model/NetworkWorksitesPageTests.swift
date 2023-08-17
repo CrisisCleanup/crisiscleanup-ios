@@ -9,6 +9,9 @@ final class NetworkWorksitesPageTests: XCTestCase {
         XCTAssertNil(result.errors)
         XCTAssertEqual(146, result.count)
         XCTAssertEqual(10, result.results?.count)
+
+        // TODO: Compare entire result
+        XCTAssertEqual(result.results![0].svi, 0.9616)
     }
 
     func testGetWorksitesResultFail() throws {
