@@ -157,9 +157,7 @@ private struct CasesOverlayElements: View {
                         MapControls(
                             viewModel: viewModel,
                             map: map,
-                            animateToSelectedIncidentBounds: animateToSelectedIncidentBounds,
-                            buttonSize: appTheme.buttonSize,
-                            buttonSizeDoublePlus1: appTheme.buttonSizeDoublePlus1
+                            animateToSelectedIncidentBounds: animateToSelectedIncidentBounds
                         )
 
                         Spacer()
@@ -192,42 +190,33 @@ private struct CasesOverlayElements: View {
 
                             Spacer()
 
-                            let buttonSize = appTheme.buttonSize
-
                             HStack(spacing: 0) {
                                 Button {
                                     router.openSearchCases()
                                 } label: {
                                     Image("ic_search", bundle: .module)
-                                        .frame(width: buttonSize, height: buttonSize)
-                                        .background(Color.white)
-                                        .foregroundColor(Color.black)
+                                        .mapOverlayButton()
                                 }
 
                                 Divider()
-                                    .frame(height: buttonSize)
+                                    .frame(height: appTheme.buttonSize)
 
                                 Button {
                                     router.openFilterCases()
                                 } label: {
                                     Image("ic_dials", bundle: .module)
-                                        .frame(width: buttonSize, height: buttonSize)
-                                        .background(Color.white)
-                                        .foregroundColor(Color.black)
-                                }
-                                .if(viewModel.filtersCount > 0) {
-                                    // TODO: Don't clip overlay
-                                    $0.overlay(alignment: .topTrailing) {
-                                        filterBadge(viewModel.filtersCount)
-                                    }
+                                        .mapOverlayButton()
                                 }
                             }
-                            .frame(width: appTheme.buttonSizeDoublePlus1, height: buttonSize)
-                            .background(Color.white)
-                            .foregroundColor(Color.black)
                             .cornerRadius(appTheme.cornerRadius)
                             .shadow(radius: appTheme.shadowRadius)
-                        }
+                            // TODO: Overlay over button without getting clipped
+                            .if(viewModel.filtersCount > 0) {
+                                $0.overlay(alignment: .topTrailing) {
+                                    filterBadge(viewModel.filtersCount)
+                                }
+                            }
+                     }
                         Spacer()
                     }
                     .onChange(of: viewModel.hasCasesCountProgress) { b in
@@ -294,9 +283,6 @@ private struct MapControls: View {
     let map: MKMapView
     let animateToSelectedIncidentBounds: (LatLngBounds) -> Void
 
-    let buttonSize: Double
-    let buttonSizeDoublePlus1: Double
-
     func zoomDelta(scale: Double) {
         var region = map.region
         let latDelta = region.span.latitudeDelta * scale
@@ -311,25 +297,19 @@ private struct MapControls: View {
                 zoomDelta(scale: 0.5)
             } label: {
                 Image(systemName: "plus")
-                    .frame(width: buttonSize, height: buttonSize)
-                    .background(Color.white)
-                    .foregroundColor(Color.black)
+                    .mapOverlayButton()
             }
 
             Divider()
+                .frame(width: appTheme.buttonSize)
 
             Button {
                 zoomDelta(scale: 1.5)
             } label: {
                 Image(systemName: "minus")
-                    .frame(width: buttonSize, height: buttonSize)
-                    .background(Color.white)
-                    .foregroundColor(Color.black)
+                    .mapOverlayButton()
             }
-
         }
-        .background(Color.white)
-        .frame(width: buttonSize, height: buttonSizeDoublePlus1)
         .cornerRadius(appTheme.cornerRadius)
         .shadow(radius: appTheme.shadowRadius)
         .padding(.top)
@@ -347,9 +327,7 @@ private struct MapControls: View {
             )
         } label: {
             Image("ic_zoom_incident", bundle: .module)
-                .frame(width: buttonSize, height: buttonSize)
-                .background(Color.white)
-                .foregroundColor(Color.black)
+                .mapOverlayButton()
                 .cornerRadius(appTheme.cornerRadius)
                 .shadow(radius: appTheme.shadowRadius)
                 .padding(.top)
@@ -360,9 +338,7 @@ private struct MapControls: View {
             animateToSelectedIncidentBounds(bounds)
         } label: {
             Image("ic_zoom_interactive", bundle: .module)
-                .frame(width: buttonSize, height: buttonSize)
-                .background(Color.white)
-                .foregroundColor(Color.black)
+                .mapOverlayButton()
                 .cornerRadius(appTheme.cornerRadius)
                 .shadow(radius: appTheme.shadowRadius)
                 .padding(.top)
@@ -371,12 +347,25 @@ private struct MapControls: View {
 //        Button {
 //        } label: {
 //            Image("ic_layers", bundle: .module)
-//                .frame(width: buttonSize, height: buttonSize)
-//                .background(Color.white)
-//                .foregroundColor(Color.black)
+//                .mapOverlayButton()
 //                .cornerRadius(appTheme.cornerRadius)
 //                .shadow(radius: appTheme.shadowRadius)
 //                .padding(.top)
 //        }
+    }
+}
+
+private struct MapOverlayButtonModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        return content
+            .frame(width: appTheme.buttonSize, height: appTheme.buttonSize)
+            .background(Color.white)
+            .foregroundColor(Color.black)
+    }
+}
+
+extension View {
+    fileprivate func mapOverlayButton() -> some View {
+        ModifiedContent(content: self, modifier: MapOverlayButtonModifier())
     }
 }
