@@ -117,7 +117,7 @@ public class IncidentOrganizationDao {
                 FROM incidentOrganization o
                 JOIN incidentOrganization_ft fts
                     ON fts.rowid = o.rowid
-                    AND incidentOrganization_ft MATCH ?
+                WHERE incidentOrganization_ft MATCH ?
                 """
             let pattern = FTS3Pattern(matchingAllPrefixesIn: q)
             return try IncidentOrganizationRecord.fetchAll(

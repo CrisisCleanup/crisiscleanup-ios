@@ -164,6 +164,7 @@ extension MainComponent {
         shared {
             MemorySearchWorksitesRepository(
                 networkDataSource,
+                worksiteDao,
                 loggerFactory
             )
         }
@@ -230,13 +231,6 @@ extension MainComponent {
                 writeApi: writeApi,
                 syncLogger: syncLoggerFactory.getLogger("local-image"),
                 loggerFactory: loggerFactory
-            )
-        }
-    }
-
-    public var databaseManagementRepository: DatabaseManagementRepository {
-        shared {
-            CrisisCleanupDatabaseManagementRepository(
             )
         }
     }

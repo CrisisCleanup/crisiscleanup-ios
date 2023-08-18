@@ -18,7 +18,7 @@ public class RecentWorksiteDao {
     ) -> AnyPublisher<[WorksiteSummary], Error> {
         ValueObservation
             .tracking { db in try self.fetchRecents(db, incidentId, limit, offset) }
-            .map { $0.map { p in p.asSummary() } }
+            .map { $0.map { p in p.worksite.asSummary() } }
             .shared(in: reader)
             .publisher()
             .eraseToAnyPublisher()
@@ -56,22 +56,24 @@ extension AppDatabase {
 struct PopulatedRecentWorksite: Decodable, FetchableRecord {
     let recentWorksite: RecentWorksiteRecord
     let worksite: WorksiteRecord
+}
 
+extension WorksiteRecord {
     func asSummary() -> WorksiteSummary {
         WorksiteSummary(
-            id: worksite.id!,
-            networkId: worksite.networkId,
-            name: worksite.name,
-            address: worksite.address,
-            city: worksite.city,
-            state: worksite.state,
-            zipCode: worksite.postalCode,
-            county: worksite.county,
-            caseNumber: worksite.caseNumber,
+            id: id!,
+            networkId: networkId,
+            name: name,
+            address: address,
+            city: city,
+            state: state,
+            zipCode: postalCode,
+            county: county,
+            caseNumber: caseNumber,
             workType: WorkType(
                 id: 0,
-                statusLiteral: worksite.keyWorkTypeStatus,
-                workTypeLiteral: worksite.keyWorkTypeType
+                statusLiteral: keyWorkTypeStatus,
+                workTypeLiteral: keyWorkTypeType
             )
         )
     }

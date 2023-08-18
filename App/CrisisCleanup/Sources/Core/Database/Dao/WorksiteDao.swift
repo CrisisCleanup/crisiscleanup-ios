@@ -547,6 +547,37 @@ public class WorksiteDao {
             ]
         }
     }
+
+    func getMatchingWorksites(
+        _ incidentId: Int64,
+        _ q: String,
+        limit: Int = 20,
+        offset: Int = 0
+    ) -> [WorksiteSummary] {
+        let records = try! reader.read { db in
+            let sql = """
+                SELECT w.*
+                FROM worksite w
+                JOIN worksiteSearch_ft fts
+                    ON fts.rowid = w.rowid
+                WHERE incidentId=:incidentId AND worksiteSearch_ft MATCH :pattern
+                LIMIT :limit
+                OFFSET :offset
+                """
+            let pattern = FTS3Pattern(matchingAllPrefixesIn: q)
+            return try WorksiteRecord.fetchAll(
+                db,
+                sql: sql,
+                arguments: [
+                    "incidentId": incidentId,
+                    "pattern": pattern,
+                    "limit": limit,
+                    "offset": offset
+                ]
+            )
+        }
+        return records.map { $0.asSummary() }
+    }
 }
 
 extension AppDatabase {

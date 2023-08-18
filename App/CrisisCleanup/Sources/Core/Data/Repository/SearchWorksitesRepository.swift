@@ -11,17 +11,25 @@ public protocol SearchWorksitesRepository {
         _ incidentId: Int64,
         _ q: String
     ) async -> [WorksiteSummary]
+
+    func getMatchingLocalWorksites(
+        _ incidentId: Int64,
+        _ q: String
+    ) -> [WorksiteSummary]
 }
 
 class MemorySearchWorksitesRepository: SearchWorksitesRepository {
     private let networkDataSource: CrisisCleanupNetworkDataSource
+    private let worksiteDao: WorksiteDao
     private let logger: AppLogger
 
     init(
         _ networkDataSource: CrisisCleanupNetworkDataSource,
+        _ worksiteDao: WorksiteDao,
         _ loggerFactory: AppLoggerFactory
     ) {
         self.networkDataSource = networkDataSource
+        self.worksiteDao = worksiteDao
         logger = loggerFactory.getLogger("search-source")
     }
 
@@ -57,8 +65,6 @@ class MemorySearchWorksitesRepository: SearchWorksitesRepository {
         if let cached = cacheResults {
             return cached
         }
-
-        // TODO: Search local as well
 
         do {
             let results = try await networkDataSource.getSearchWorksites(incidentId, q)
@@ -138,6 +144,10 @@ class MemorySearchWorksitesRepository: SearchWorksitesRepository {
         }
 
         return []
+    }
+
+    func getMatchingLocalWorksites(_ incidentId: Int64, _ q: String) -> [WorksiteSummary] {
+        worksiteDao.getMatchingWorksites(incidentId, q)
     }
 }
 

@@ -1,4 +1,3 @@
-import Atomics
 import Combine
 import Foundation
 import SwiftUI
@@ -6,7 +5,6 @@ import SwiftUI
 class CaseFlagsViewModel: ObservableObject {
     private let organizationsRepository: OrganizationsRepository
     private let incidentsRepository: IncidentsRepository
-    private let databaseManagementRepository: DatabaseManagementRepository
     private let accountDataRepository: AccountDataRepository
     private let addressSearchRepository: AddressSearchRepository
     private let worksiteChangeRepository: WorksiteChangeRepository
@@ -68,8 +66,6 @@ class CaseFlagsViewModel: ObservableObject {
     @Published private(set) var isLoadingIncidents = false
     @Published private(set) var incidentResults: (String, [IncidentIdNameType]) = ("", [])
 
-    private let isFirstVisible = ManagedAtomic(true)
-
     private var subscriptions =  Set<AnyCancellable>()
 
     init(
@@ -78,7 +74,6 @@ class CaseFlagsViewModel: ObservableObject {
         editableWorksiteProvider: EditableWorksiteProvider,
         organizationsRepository: OrganizationsRepository,
         incidentsRepository: IncidentsRepository,
-        databaseManagementRepository: DatabaseManagementRepository,
         accountDataRepository: AccountDataRepository,
         addressSearchRepository: AddressSearchRepository,
         worksiteChangeRepository: WorksiteChangeRepository,
@@ -89,7 +84,6 @@ class CaseFlagsViewModel: ObservableObject {
     ) {
         self.organizationsRepository = organizationsRepository
         self.incidentsRepository = incidentsRepository
-        self.databaseManagementRepository = databaseManagementRepository
         self.accountDataRepository = accountDataRepository
         self.addressSearchRepository = addressSearchRepository
         self.worksiteChangeRepository = worksiteChangeRepository
@@ -128,13 +122,6 @@ class CaseFlagsViewModel: ObservableObject {
     }
 
     func onViewAppear() {
-        let isFirstAppear = isFirstVisible.exchange(false, ordering: .relaxed)
-        if isFirstAppear {
-            Task {
-                await databaseManagementRepository.rebuildFts()
-            }
-        }
-
         subscribeSaveState()
         subscribeEditable()
         subscribeWrongLocationManager()

@@ -823,6 +823,23 @@ extension AppDatabase {
             )
         }
 
+        migrator.registerMigration(
+            "worksite-search-fts",
+            foreignKeyChecks: .immediate
+        ) { db in
+            try db.create(virtualTable: "worksiteSearch_ft", using: FTS4()) { t in
+                t.synchronize(withTable: "worksite")
+                t.tokenizer = .porter
+                t.column("caseNumber")
+                t.column("city")
+                t.column("county")
+                t.column("email")
+                t.column("name")
+                t.column("phone1")
+                t.column("phone2")
+            }
+        }
+
         return migrator
     }
 }

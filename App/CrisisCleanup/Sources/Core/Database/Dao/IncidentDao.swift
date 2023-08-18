@@ -109,7 +109,8 @@ public class IncidentDao {
                 FROM incident i
                 JOIN incident_ft fts
                     ON fts.rowid = i.rowid
-                    AND incident_ft MATCH ?
+                WHERE incident_ft MATCH ?
+                ORDER BY startAt DESC
                 """
             let pattern = FTS3Pattern(matchingAllPrefixesIn: q)
             return try IncidentRecord.fetchAll(

@@ -12,6 +12,8 @@ class CasesSearchViewModel: ObservableObject {
 
     private let isInitialLoading = CurrentValueSubject<Bool, Never>(true)
     private let isSearching = CurrentValueSubject<Bool, Never>(false)
+    private let isSearchingLocal = CurrentValueSubject<Bool, Never>(false)
+    private let isCombiningResults = CurrentValueSubject<Bool, Never>(false)
     private let isSelectingResultSubject = CurrentValueSubject<Bool, Never>(false)
     private let isLoadingSubject = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isLoading = false
@@ -28,6 +30,8 @@ class CasesSearchViewModel: ObservableObject {
     private let emptyResults = [CaseSummaryResult]()
 
     private let latestSearchResultsPublisher = LatestAsyncThrowsPublisher<CasesSearchResults>()
+    private let latestLocalSearchResultsPublisher = LatestAsyncThrowsPublisher<CasesSearchResults>()
+    private let latestCombineResultsPublisher = LatestAsyncThrowsPublisher<CasesSearchResults>()
 
     private var subscriptions = Set<AnyCancellable>()
 
@@ -66,12 +70,21 @@ class CasesSearchViewModel: ObservableObject {
             .assign(to: \.isLoading, on: self)
             .store(in: &subscriptions)
 
+        let isSearchingState = Publishers.CombineLatest3(
+            isSearching,
+            isSearchingLocal,
+            isCombiningResults
+        )
+            .map { (b0, b1, b2) in b0 || b1 || b2 }
+            .eraseToAnyPublisher()
+
         Publishers.CombineLatest3(
             isInitialLoading,
-            isSearching,
+            isSearchingState,
             isSelectingResultSubject
         )
             .map { (b0, b1, b2) in b0 || b1 || b2 }
+            .receive(on: RunLoop.main)
             .eraseToAnyPublisher()
             .assign(to: \.isLoading, on: self)
             .store(in: &subscriptions)
@@ -122,7 +135,7 @@ class CasesSearchViewModel: ObservableObject {
             .removeDuplicates()
             .share()
 
-        Publishers.CombineLatest(
+        let networkSearchResults = Publishers.CombineLatest(
             incidentIdPublisher,
             searchQueryIntermediate
         )
@@ -132,13 +145,16 @@ class CasesSearchViewModel: ObservableObject {
                     return CasesSearchResults(q)
                 }
 
-                self.isLoadingSubject.value = true
+                self.isSearching.value = true
                 do {
                     defer {
-                        self.isLoadingSubject.value = false
+                        self.isSearching.value = false
                     }
 
                     let results = await self.searchWorksitesRepository.searchWorksites(incidentId, q)
+
+                    try Task.checkCancellation()
+
                     let options = results.map { summary in
                         CaseSummaryResult(
                             summary,
@@ -152,6 +168,93 @@ class CasesSearchViewModel: ObservableObject {
             try Task.checkCancellation()
 
             return CasesSearchResults(q, false)
+        }}
+        .switchToLatest()
+
+        let localSearchResults = Publishers.CombineLatest(
+            incidentIdPublisher,
+            searchQueryIntermediate
+        )
+        .map { (incidentId, q) in self.latestLocalSearchResultsPublisher.publisher {
+            if incidentId != EmptyIncident.id {
+                if q.count < 3 {
+                    return CasesSearchResults(q)
+                }
+
+                self.isSearchingLocal.value = true
+                do {
+                    defer {
+                        self.isSearchingLocal.value = false
+                    }
+
+                    let results = self.searchWorksitesRepository.getMatchingLocalWorksites(incidentId, q)
+
+                    try Task.checkCancellation()
+
+                    let options = results.map { summary in
+                        CaseSummaryResult(
+                            summary,
+                            self.getIcon(summary.workType),
+                            listItemKey: summary.networkId > 0 ? summary.networkId : -summary.id
+                        )
+                    }
+                    return CasesSearchResults(q, false, options)
+                }
+            }
+
+            try Task.checkCancellation()
+
+            return CasesSearchResults(q, false)
+        }}
+        .switchToLatest()
+
+        Publishers.CombineLatest3(
+            searchQueryIntermediate,
+            localSearchResults,
+            networkSearchResults
+        )
+        .filter { incidentQ, localResults, networkResults in
+            let q = incidentQ
+            return q == localResults.q || q == networkResults.q
+        }
+        .map { incidentQ, localResults, networkResults in self.latestCombineResultsPublisher.publisher {
+            let q = incidentQ
+            self.isCombiningResults.value = true
+            do {
+                defer { self.isCombiningResults.value = false }
+
+                let hasLocalResults = q == localResults.q
+                let hasNetworkResults = q == networkResults.q
+                let options = {
+                    if hasLocalResults && hasNetworkResults {
+                        let localResultIdIndex = localResults.options.enumerated()
+                            .map { element in (element.offset, element.element) }
+                            .associateBy { $0.1.id }
+
+                        var results = localResults.options
+                        var combined = [CaseSummaryResult]()
+                        networkResults.options.forEach { networkResult in
+                            if let matchingLocal = localResultIdIndex[networkResult.id] {
+                                results[matchingLocal.0] = matchingLocal.1
+                            } else {
+                                combined.append(networkResult)
+                            }
+                        }
+                        combined.append(contentsOf: results)
+
+                        return combined
+                    }
+                    if hasLocalResults {
+                        return localResults.options
+                    }
+                    if hasNetworkResults {
+                        return networkResults.options
+                    }
+                    return [CaseSummaryResult]()
+                }()
+
+                return CasesSearchResults(q, false, options)
+            }
         }}
         .switchToLatest()
         .receive(on: RunLoop.main)
