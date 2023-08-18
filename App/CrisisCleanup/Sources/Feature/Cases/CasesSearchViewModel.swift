@@ -13,6 +13,7 @@ class CasesSearchViewModel: ObservableObject {
     private let isInitialLoading = CurrentValueSubject<Bool, Never>(true)
     private let isSearching = CurrentValueSubject<Bool, Never>(false)
     private let isSelectingResultSubject = CurrentValueSubject<Bool, Never>(false)
+    private let isLoadingSubject = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isLoading = false
     @Published private(set) var isSelectingResult = false
 
@@ -25,6 +26,8 @@ class CasesSearchViewModel: ObservableObject {
     @Published private(set) var searchResults = CasesSearchResults()
 
     private let emptyResults = [CaseSummaryResult]()
+
+    private let latestSearchResultsPublisher = LatestAsyncThrowsPublisher<CasesSearchResults>()
 
     private var subscriptions = Set<AnyCancellable>()
 
@@ -48,16 +51,21 @@ class CasesSearchViewModel: ObservableObject {
     }
 
     func onViewAppear() {
-        subscribeToLoadingStates()
-        subscribeToRecents()
-        subscribeToSearch()
+        subscribeLoading()
+        subscribeRecents()
+        subscribeSearch()
     }
 
     func onViewDisappear() {
         subscriptions = cancelSubscriptions(subscriptions)
     }
 
-    private func subscribeToLoadingStates() {
+    private func subscribeLoading() {
+        isLoadingSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.isLoading, on: self)
+            .store(in: &subscriptions)
+
         Publishers.CombineLatest3(
             isInitialLoading,
             isSearching,
@@ -73,7 +81,7 @@ class CasesSearchViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
-    private func subscribeToRecents() {
+    private func subscribeRecents() {
         incidentIdPublisher
             .map { incidentId in
                 let publisher: AnyPublisher<[CaseSummaryResult], Never>
@@ -104,7 +112,7 @@ class CasesSearchViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
-    private func subscribeToSearch() {
+    private func subscribeSearch() {
         let searchQueryIntermediate = $searchQuery
             .debounce(
                 for: .seconds(0.2),
@@ -118,16 +126,16 @@ class CasesSearchViewModel: ObservableObject {
             incidentIdPublisher,
             searchQueryIntermediate
         )
-        .asyncThrowsMap { (incidentId, q) in
+        .map { (incidentId, q) in self.latestSearchResultsPublisher.publisher {
             if incidentId != EmptyIncident.id {
                 if q.count < 3 {
                     return CasesSearchResults(q)
                 }
 
-                Task { @MainActor in self.isLoading = true }
+                self.isLoadingSubject.value = true
                 do {
                     defer {
-                        Task { @MainActor in self.isLoading = false }
+                        self.isLoadingSubject.value = false
                     }
 
                     let results = await self.searchWorksitesRepository.searchWorksites(incidentId, q)
@@ -144,7 +152,8 @@ class CasesSearchViewModel: ObservableObject {
             try Task.checkCancellation()
 
             return CasesSearchResults(q, false)
-        }
+        }}
+        .switchToLatest()
         .receive(on: RunLoop.main)
         .assign(to: \.searchResults, on: self)
         .store(in: &subscriptions)

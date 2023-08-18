@@ -44,6 +44,8 @@ internal class CaseEditorDataLoader {
     private let uiStateSubject = CurrentValueSubject<CaseEditorUiState, Never>(CaseEditorUiState.loading)
     let uiState: any Publisher<CaseEditorUiState, Never>
 
+    private let latestDataPublisher = LatestAsyncThrowsPublisher<CaseEditorUiState>()
+
     private var disposables = Set<AnyCancellable>()
 
     init(
@@ -218,7 +220,7 @@ internal class CaseEditorDataLoader {
         }
         .filter { $0.incidentData != nil }
         .debounce(for: .seconds(0.15), scheduler: RunLoop.current)
-        .asyncThrowsMap { stateData in
+        .map { stateData in self.latestDataPublisher.publisher {
             let organization = stateData.organization
             let workTypeStatuses = stateData.statuses
             let incidentData = stateData.incidentData!
@@ -392,7 +394,8 @@ internal class CaseEditorDataLoader {
                     isPendingSync: isPendingSync
                 )
             )
-        }
+        }}
+        .switchToLatest()
         .sink(receiveValue: { state in
             self.uiStateSubject.value = state
         })

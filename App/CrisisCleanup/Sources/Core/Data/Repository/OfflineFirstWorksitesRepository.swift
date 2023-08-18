@@ -70,7 +70,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
 
         orgIdPublisher = accountDataRepository.accountData
             .eraseToAnyPublisher()
-            .asyncMap { $0.org.id }
+            .map { $0.org.id }
             .eraseToAnyPublisher()
         organizationAffiliatesPublisher = orgIdPublisher
             .map { orgId in organizationsRepository.getOrganizationAffiliateIds(orgId) }
@@ -84,6 +84,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
             .eraseToAnyPublisher()
     }
 
+    private let latestIncidentWorksitesCountPublisher = LatestAsyncPublisher<IncidentIdWorksiteCount>()
     func streamIncidentWorksitesCount(_ incidentIdStream: any Publisher<Int64, Never>) -> any Publisher<IncidentIdWorksiteCount, Never> {
         let incidentIdPublisher = incidentIdStream.eraseToAnyPublisher()
         return Publishers.CombineLatest4(
@@ -96,9 +97,9 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
             filtersRepository.casesFiltersLocation.eraseToAnyPublisher(),
             organizationLocationAreaBounds
         )
-        // TODO: Convert to switchMap/mapLatest equivalent
-            .debounce(for: .seconds(0.15), scheduler: RunLoop.current)
-            .asyncMap { id, totalCount, filtersLocation, areaBounds in
+        .debounce(for: .seconds(0.1), scheduler: RunLoop.current)
+        .map { id, totalCount, filtersLocation, areaBounds in
+            self.latestIncidentWorksitesCountPublisher.publisher {
                 let filters = filtersLocation.0
                 if !filters.isDefault {
                     self.isDeterminingWorksitesCountSubject.value = true
@@ -126,7 +127,9 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
                     filteredCount: totalCount
                 )
             }
-            .assertNoFailure()
+        }
+        .switchToLatest()
+        .assertNoFailure()
     }
 
     func getWorksite(_ id: Int64) async throws -> Worksite? {
