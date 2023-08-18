@@ -67,8 +67,11 @@ private let statusClaimMapMarkerColors: [WorkTypeStatusClaim: MapMarkerColor] = 
     WorkTypeStatusClaim(.closedDuplicate, false): MapMarkerColor(statusDuplicateUnclaimedColorCode),
 ]
 
-internal let filteredOutMarkerAlpha = 0.25
-private let filteredOutDotAlpha = 0.25
+internal let filteredOutMarkerAlpha = 0.2
+private let filteredOutMarkerStrokeAlpha = 0.5
+private let filteredOutMarkerFillAlpha = 0.2
+private let filteredOutDotStrokeAlpha = 0.35
+private let filteredOutDotFillAlpha = 0.2
 private let duplicateMarkerAlpha = 0.3
 
 internal func getMapMarkerColors(
@@ -92,10 +95,9 @@ internal func getMapMarkerColors(
             colors.stroke.hex(duplicateMarkerAlpha)
         )
     } else if isFilteredOut {
-        let alpha = isDot ? filteredOutDotAlpha : filteredOutMarkerAlpha
         colors = MapMarkerColor(
-            Color.white.hex(alpha),
-            colors.fill.hex(alpha)
+            Color.white.hex(isDot ? filteredOutDotFillAlpha : filteredOutMarkerFillAlpha),
+            colors.fill.hex(isDot ? filteredOutDotStrokeAlpha : filteredOutMarkerStrokeAlpha)
         )
     }
 
