@@ -27,13 +27,9 @@ extension View {
     }
 
     func blackBorder() -> some View {
-        // TODO: Change text and border color based on state (disabled, selected, ...). Create style instead?
         self
             .cornerRadius(appTheme.cornerRadius)
-            .overlay(
-                RoundedRectangle(cornerRadius: appTheme.cornerRadius)
-                    .stroke(.black, lineWidth: appTheme.textFieldOutlineWidth)
-            )
+            .roundedBorder(color: .black)
     }
 
 #if canImport(UIKit)

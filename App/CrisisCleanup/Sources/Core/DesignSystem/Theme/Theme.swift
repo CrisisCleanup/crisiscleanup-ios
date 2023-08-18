@@ -9,6 +9,7 @@ class ThemeValues: ObservableObject {
     // TODO: Group in dimensions object
     @Published var textFieldInnerPadding: Double
     @Published var textFieldOutlineWidth: Double
+    @Published var buttonOutlineWidth: Double
     @Published var cornerRadius: Double
     @Published var shadowRadius: Double
     @Published var rowItemHeight: Double
@@ -28,6 +29,7 @@ class ThemeValues: ObservableObject {
     init(
         textFieldInnerPadding: Double = 16.0,
         textFieldOutlineWidth: Double = 0.5,
+        buttonOutlineWidth: Double = 1.0,
         cornerRadius: Double = 4.0,
         shadowRadius: Double = 1.0,
         rowItemHeight: Double = 56,
@@ -41,6 +43,7 @@ class ThemeValues: ObservableObject {
     ) {
         self.textFieldInnerPadding = textFieldInnerPadding
         self.textFieldOutlineWidth = textFieldOutlineWidth
+        self.buttonOutlineWidth = buttonOutlineWidth
         self.cornerRadius = cornerRadius
         self.shadowRadius = shadowRadius
         self.rowItemHeight = rowItemHeight

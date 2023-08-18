@@ -6,10 +6,7 @@ extension View {
         self
             .padding(appTheme.textFieldInnerPadding)
             .cornerRadius(appTheme.cornerRadius)
-            .overlay(
-                RoundedRectangle(cornerRadius: appTheme.cornerRadius)
-                    .stroke(.gray, lineWidth: appTheme.textFieldOutlineWidth)
-            )
+            .roundedBorder()
     }
 }
 

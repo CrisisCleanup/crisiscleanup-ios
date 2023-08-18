@@ -3,9 +3,12 @@ import SwiftUI
 struct CasesSearchView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
     @Environment(\.dismiss) var dismiss
+
     @EnvironmentObject var router: NavigationRouter
 
     @ObservedObject var viewModel: CasesSearchViewModel
+
+    @State private var isLoadingVisible = false
 
     var body: some View {
         let isLoading = viewModel.isLoading
@@ -20,7 +23,7 @@ struct CasesSearchView: View {
                     Button {
                         dismiss()
                     } label: {
-                        let buttonSize = 48.0
+                        let buttonSize = appTheme.buttonSize
                         Image(systemName: "chevron.backward")
                             .frame(width: buttonSize, height: buttonSize)
                     }
@@ -46,13 +49,9 @@ struct CasesSearchView: View {
                         .padding()
                     }
                 }
-                .overlay(
-                    RoundedRectangle(cornerRadius: appTheme.cornerRadius)
-                        .stroke(appTheme.colors.unfocusedBorderColor, lineWidth: 1)
-                )
+                .roundedBorder()
                 .padding()
 
-                // TODO: LazyVStack
                 ScrollView {
                     if viewModel.searchQuery.isBlank {
                         RecentCasesView(
@@ -83,17 +82,19 @@ struct CasesSearchView: View {
                 }
             }
 
-            // TODO: Is container necessary? Animate.
-            VStack {
-                if isLoading {
-                    ProgressView()
-                }
+            if isLoadingVisible {
+                ProgressView()
             }
         }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .onReceive(viewModel.$selectedWorksite) { (incidentId, worksiteId) in
             router.viewCase(incidentId: incidentId, worksiteId: worksiteId)
+        }
+        .onChange(of: isLoading) { b in
+            withAnimation {
+                isLoadingVisible = b
+            }
         }
     }
 }

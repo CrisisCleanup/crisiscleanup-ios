@@ -102,9 +102,9 @@ struct WorkTypeAction: View {
                     .cornerRadius(appTheme.cornerRadius)
                     .tint(.black)
                     .fontHeader4()
-                    .overlay(
-                        RoundedRectangle(cornerRadius: appTheme.cornerRadius)
-                            .stroke(borderColor, lineWidth: 1)
+                    .roundedBorder(
+                        color: borderColor,
+                        lineWidth: appTheme.buttonOutlineWidth
                     )
             }
         }
