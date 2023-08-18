@@ -21,7 +21,7 @@ struct MenuView: View {
                 hasNoIncidents: hasNoIncidents
             )
             .tint(.black)
-            .padding([.horizontal, .top])
+            .padding()
 
             Text(viewModel.versionText)
                 .padding()
@@ -98,7 +98,6 @@ private struct TopBar: View {
                     if viewModel.profilePicture?.isSvg == true {
                         SVGView(contentsOf: url)
                             .frame(width: imageSize, height: imageSize)
-                            .padding(.vertical, appTheme.gridItemSpacing)
                     } else {
                         CachedAsyncImage(url: url) { image in
                             image.resizable()
@@ -108,7 +107,6 @@ private struct TopBar: View {
                         }
                         .frame(width: imageSize, height: imageSize)
                         .clipShape(Circle())
-                        .padding(.vertical, appTheme.gridItemSpacing)
                     }
                 } else {
                     Image(systemName: "person.circle")

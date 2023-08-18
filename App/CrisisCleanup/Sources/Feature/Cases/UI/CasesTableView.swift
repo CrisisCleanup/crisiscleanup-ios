@@ -26,7 +26,7 @@ struct CasesTableView: View {
 
                 TableViewButtons(filtersCount: viewModel.filtersCount)
             }
-            .listItemPadding()
+            .padding()
 
             HStack {
                 // TODO: Animate
