@@ -208,8 +208,10 @@ class CasesFilterViewModel: ObservableObject {
 
         incidentSelector.incidentId
             .eraseToAnyPublisher()
-        // TODO: switchMap/mapLatest
-            .map { id in self.incidentsRepository.streamIncident(id).eraseToAnyPublisher() }
+            .map { id in
+                self.incidentsRepository.streamIncident(id)
+                .eraseToAnyPublisher()
+            }
             .switchToLatest()
             .eraseToAnyPublisher()
             .map { incident in

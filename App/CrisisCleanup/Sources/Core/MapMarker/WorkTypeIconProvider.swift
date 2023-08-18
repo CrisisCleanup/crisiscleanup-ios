@@ -165,6 +165,7 @@ class WorkTypeIconProvider: MapCaseIconProvider {
     }
 }
 
+// Keep hashable properties synced with map marker reuse identifier
 private struct CacheKey: Hashable {
     let statusClaim: WorkTypeStatusClaim
     let workType: WorkTypeType

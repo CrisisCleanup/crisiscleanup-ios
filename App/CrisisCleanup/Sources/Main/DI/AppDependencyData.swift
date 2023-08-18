@@ -1,5 +1,13 @@
 extension MainComponent {
-    var appDatabase: AppDatabase { shared { .shared } }
+    var appDatabase: AppDatabase {
+        shared {
+            let database = AppDatabase.shared
+            if appEnv.isDebuggable {
+                database.logPath()
+            }
+            return database
+        }
+    }
 
     public var databaseVersionProvider: DatabaseVersionProvider { appDatabase }
 

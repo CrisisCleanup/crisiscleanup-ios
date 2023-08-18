@@ -50,6 +50,8 @@ class CrisisCleanupCasesFilterRepository: CasesFilterRepository {
             .receive(on: RunLoop.main)
             .assign(to: \.casesFilters, on: self)
             .store(in: &subscriptions)
+
+        // TODO: For now update or clear work type filters when incident changes
     }
 
     func changeFilters(_ filters: CasesFilter) {

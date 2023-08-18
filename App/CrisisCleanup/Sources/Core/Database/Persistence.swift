@@ -65,6 +65,12 @@ extension AppDatabase {
         }
     }
 
+    func logPath() {
+        if let dbPool = dbWriter as? DatabasePool {
+            print("Database path \(dbPool.path)")
+        }
+    }
+
     /// Creates an empty database for SwiftUI previews
     static func empty() -> AppDatabase {
         // Connect to an in-memory database

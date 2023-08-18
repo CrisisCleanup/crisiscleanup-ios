@@ -69,7 +69,8 @@ class CasesMapMarkerManager {
     func queryWorksitesInBounds(
         _ incidentId: Int64,
         _ boundsSw: LatLng,
-        _ boundsNe: LatLng
+        _ boundsNe: LatLng,
+        _ casesFilters: CasesFilter
     ) async throws -> ([WorksiteMapMark], Int) {
         // TODO: Adjust based on device resources and app performance
         let maxMarkersOnMap = 1024
@@ -95,7 +96,8 @@ class CasesMapMarkerManager {
             // TODO: Review if this is sufficient and mostly complete
             limit: min(q.queryCount, 2 * maxMarkersOnMap),
             offset: 0,
-            coordinates: locationManager.getLocation()
+            coordinates: locationManager.getLocation(),
+            casesFilters: casesFilters
         )
 
         try Task.checkCancellation()

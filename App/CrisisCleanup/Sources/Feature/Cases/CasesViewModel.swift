@@ -62,9 +62,9 @@ class CasesViewModel: ObservableObject {
 
     private let mapMarkerManager: CasesMapMarkerManager
 
-    private let mapMarkersLock = NSLock()
-    @Published private(set) var incidentMapMarkers: IncidentAnnotations = emptyIncidentAnnotations
-    private let wipeIncidentAnnotations = ManagedAtomic(false)
+    private let mapMarkersChangeSetSubject = CurrentValueSubject<AnnotationsChangeSet, Never>(emptyAnnotationsChangeSet)
+    @Published private(set) var mapMarkersChangeSet = emptyAnnotationsChangeSet
+    private let mapAnnotationsExchanger: MapAnnotationsExchanger
 
     @Published var tableData = [WorksiteDistance]()
     @Published private(set) var isTableEditable = false
@@ -75,10 +75,14 @@ class CasesViewModel: ObservableObject {
 
     private var hasDisappeared = false
 
-    private var subscriptions = Set<AnyCancellable>()
-
     @Published var showExplainLocationPermssion = false
     @Published private(set) var isMyLocationEnabled = false
+
+    private let latestBoundedMarkersPublisher = LatestAsyncThrowsPublisher<IncidentAnnotations>()
+    private let latestMapMarkersPublisher = LatestAsyncThrowsPublisher<AnnotationsChangeSet>()
+    private let latestTableDataPublisher = LatestAsyncPublisher<[WorksiteDistance]>()
+
+    private var subscriptions = Set<AnyCancellable>()
 
     init(
         incidentSelector: IncidentSelector,
@@ -142,6 +146,8 @@ class CasesViewModel: ObservableObject {
             filterRepository
         )
         qsm = queryStateManager
+
+        mapAnnotationsExchanger = MapAnnotationsExchanger(mapMarkersChangeSetSubject)
     }
 
     func onViewAppear() {
@@ -202,6 +208,11 @@ class CasesViewModel: ObservableObject {
     }
 
     private func subscribeIncidentsData() {
+        mapMarkersChangeSetSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.mapMarkersChangeSet, on: self)
+            .store(in: &subscriptions)
+
         incidentSelector.incidentsData
             .eraseToAnyPublisher()
             .receive(on: RunLoop.main)
@@ -225,88 +236,73 @@ class CasesViewModel: ObservableObject {
 
     private func subscribeWorksiteInBounds() {
         let worksitesInBounds = Publishers.CombineLatest(
-            qsm.worksiteQueryState.eraseToAnyPublisher(),
+            qsm.worksiteQueryState,
             incidentWorksitesCount
         )
-            .debounce(
-                for: .seconds(0.25),
-                scheduler: RunLoop.main
+            .throttle(
+                for: .seconds(0.15),
+                scheduler: RunLoop.main,
+                latest: true
             )
-            .asyncThrowsMap { (wqs, _) in
-                let queryIncidentId = wqs.incidentId
+            .map { (wqs, _) in
+                self.latestBoundedMarkersPublisher.publisher {
+                    let queryIncidentId = wqs.incidentId
+                    let queryFilters = wqs.filters
 
-                if wqs.isTableView || queryIncidentId == EmptyIncident.id {
-                    return (queryIncidentId, [WorksiteAnnotationMapMark]())
-                }
-
-                if queryIncidentId != self.incidentMapMarkers.incidentId {
-                    Task { @MainActor in
-                        self.resetMapMarkers()
+                    if wqs.isTableView || queryIncidentId == EmptyIncident.id {
+                        return IncidentAnnotations(queryIncidentId)
                     }
-                    throw CancellationError()
-                }
 
-                var annotations = [WorksiteAnnotationMapMark]()
-                if queryIncidentId != EmptyIncident.id {
-                    Task { @MainActor in self.isGeneratingWorksiteMarkers.value = true }
+                    _ = self.mapAnnotationsExchanger.onAnnotationStateChange(
+                        queryIncidentId,
+                        queryFilters
+                    )
+
+                    try Task.checkCancellation()
+
+                    var annotations = [WorksiteAnnotationMapMark]()
+                    self.isGeneratingWorksiteMarkers.value = true
                     do {
-                        defer {
-                            Task { @MainActor in self.isGeneratingWorksiteMarkers.value = false }
-                        }
+                        defer { self.isGeneratingWorksiteMarkers.value = false }
 
                         annotations = try await self.generateWorksiteMarkers(wqs)
                     } catch {
                         self.logger.logError(error)
                     }
-                }
 
-                return (queryIncidentId, annotations)
+                    return IncidentAnnotations(
+                        queryIncidentId,
+                        queryFilters,
+                        annotations
+                    )
+                }
             }
+            .switchToLatest()
             .share()
 
-        worksitesInBounds.asyncThrowsMap { (queryIncidentId, annotations) in
-            var idSet: Set<Int64>? = nil
+        worksitesInBounds
+            .map { incidentAnnotations in
+                self.latestMapMarkersPublisher.publisher {
+                    let changes = try self.mapAnnotationsExchanger.getChange(
+                        incidentAnnotations.incidentId,
+                        incidentAnnotations.filters,
+                        incidentAnnotations.annotations
+                    )
 
-            if self.wipeIncidentAnnotations.exchange(false, ordering: .sequentiallyConsistent) {
-                idSet = []
-            } else {
-                self.mapMarkersLock.withLock {
-                    let incidentAnnotations = self.incidentMapMarkers
-                    if queryIncidentId == self.incidentsData.selectedId {
-                        idSet = incidentAnnotations.annotationIdSet
-                    }
-                }
-            }
+                    try Task.checkCancellation()
 
-            var incidentAnnotations = IncidentAnnotations(EmptyIncident.id)
-            if var annotationIds = idSet {
-                var newAnnotations: [WorksiteAnnotationMapMark] = []
-                for mark in annotations {
-                    let worksiteId = mark.source.id
-                    if !annotationIds.contains(worksiteId) {
-                        annotationIds.insert(worksiteId)
-                        newAnnotations.append(mark)
-                    }
-                }
-                incidentAnnotations = IncidentAnnotations(
-                    queryIncidentId,
-                    annotationIdSet: annotationIds,
-                    newAnnotations: newAnnotations
-                )
-            } else {
-                throw CancellationError()
-            }
-            return incidentAnnotations
-        }
-        .receive(on: RunLoop.main)
-        .sink(receiveValue: { incidentAnnotations in
-            if incidentAnnotations.incidentId == self.incidentsData.selectedId {
-                self.mapMarkersLock.withLock {
-                    self.incidentMapMarkers = incidentAnnotations
+                    return changes
                 }
             }
-        })
-        .store(in: &subscriptions)
+            .switchToLatest()
+            .receive(on: RunLoop.main)
+            .sink(receiveValue: { changes in
+                if changes.annotations.incidentId == self.incidentId,
+                    changes.annotations.filters == self.filterRepository.casesFilters {
+                    self.mapMarkersChangeSetSubject.value = changes
+                }
+            })
+            .store(in: &subscriptions)
 
         let totalCasesCount = Publishers.CombineLatest3(
             $isLoadingData,
@@ -345,15 +341,25 @@ class CasesViewModel: ObservableObject {
 
         Publishers.CombineLatest3(
             totalCasesCount,
-            qsm.isTableViewSubject,
+            qsm.worksiteQueryState,
             worksitesInBounds
         )
-        .filter { (_, isTable, _) in !isTable }
-        .map { (totalCount, _, idMarkers) in
-            if totalCount < 0 { return "" }
+        .map { (totalCount, wqs, incidentAnnotations) in
+            if wqs.isTableView ||
+                totalCount < 0 ||
+                incidentAnnotations.incidentId != wqs.incidentId ||
+                incidentAnnotations.filters != wqs.filters {
+                return ""
+            }
 
-            let (_, markers) = idMarkers
-            let visibleCount = markers.filter { !$0.isFilteredOut }.count
+            let markers = incidentAnnotations.annotations
+
+            var visibleCount = markers.filter { !$0.isFilteredOut }.count
+            if visibleCount > totalCount {
+                // TODO: Fix if this continues occuring
+                self.logger.logDebug("Visible count \(visibleCount) / total \(totalCount)")
+                visibleCount = totalCount
+            }
 
             if visibleCount == totalCount || visibleCount == 0 {
                 if visibleCount == 0 {
@@ -445,22 +451,24 @@ class CasesViewModel: ObservableObject {
         Publishers.CombineLatest3(
             incidentWorksitesCount,
             $worksitesChangingClaimAction,
-            qsm.worksiteQueryState.eraseToAnyPublisher()
+            qsm.worksiteQueryState
         )
-            .eraseToAnyPublisher()
-        // TODO: Create/find an equivalent to switchMap/mapLatest
-            .debounce(for: .seconds(0.1), scheduler: RunLoop.current)
-            .asyncMap { (_, _, wqs) in
-                if (wqs.isTableView) {
-                    self.tableSortResultsMessageSubject.value = ""
+            .map { (_, _, wqs) in
+                if (!wqs.isTableView) {
+                    return Just([WorksiteDistance]()).eraseToAnyPublisher()
+                }
+
+                self.tableSortResultsMessageSubject.value = ""
+                return self.latestTableDataPublisher.publisher {
                     do {
                         return try await self.fetchTableData(wqs)
                     } catch {
                         self.logger.logError(error)
                     }
+                    return []
                 }
-                return []
             }
+            .switchToLatest()
             .receive(on: RunLoop.main)
             .assign(to: \.tableData, on: self)
             .store(in: &subscriptions)
@@ -513,17 +521,8 @@ class CasesViewModel: ObservableObject {
         return false
     }
 
-    @MainActor
-    private func resetMapMarkers() {
-        mapMarkersLock.withLock {
-            incidentMapMarkers = IncidentAnnotations(incidentsData.selectedId)
-        }
-    }
-
-    // TODO: Redesign the annotation generation stream to be certain so view does not need to report when markers are missing
-    func onMissingMapMarkers() {
-        logger.logDebug("!Missing annotations")
-        _ = wipeIncidentAnnotations.exchange(true, ordering: .acquiring)
+    func onAddMapAnnotations(_ changes: AnnotationsChangeSet) {
+        mapAnnotationsExchanger.onApplied(changes)
     }
 
     private let zeroOffset = (0.0, 0.0)
@@ -532,7 +531,8 @@ class CasesViewModel: ObservableObject {
         let id = wqs.incidentId
         let sw = wqs.coordinateBounds.southWest
         let ne = wqs.coordinateBounds.northEast
-        let marksQuery = try await mapMarkerManager.queryWorksitesInBounds(id, sw, ne)
+        let marksQuery = try await mapMarkerManager.queryWorksitesInBounds(id, sw, ne, wqs.filters)
+
         let marks = marksQuery.0
         let markOffsets = try denseMarkerOffsets(marks)
 
@@ -592,6 +592,8 @@ class CasesViewModel: ObservableObject {
         if (isDistanceSort && !hasLocation) {
             sortBy = .caseNumber
         }
+
+        try Task.checkCancellation()
 
         let worksites = try await worksitesRepository.getTableData(
             incidentId: wqs.incidentId,
@@ -781,24 +783,6 @@ public struct IncidentIdWorksiteCount {
     let totalCount: Int
     let filteredCount: Int
 }
-
-struct IncidentAnnotations {
-    let incidentId: Int64
-    var annotationIdSet: Set<Int64>
-    let newAnnotations: [WorksiteAnnotationMapMark]
-
-    init(
-        _ incidentId: Int64,
-        annotationIdSet: Set<Int64> = Set<Int64>(),
-        newAnnotations: [WorksiteAnnotationMapMark] = [WorksiteAnnotationMapMark]()
-    ) {
-        self.incidentId = incidentId
-        self.annotationIdSet = annotationIdSet
-        self.newAnnotations = newAnnotations
-    }
-}
-
-private let emptyIncidentAnnotations = IncidentAnnotations(EmptyIncident.id)
 
 struct WorksiteDistance {
     let data: TableDataWorksite

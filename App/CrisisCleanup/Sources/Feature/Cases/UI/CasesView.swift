@@ -45,15 +45,14 @@ struct CasesView: View {
                 .onReceive(viewModel.$incidentLocationBounds) { bounds in
                     animateToSelectedIncidentBounds(bounds.bounds)
                 }
-                .onReceive(viewModel.$incidentMapMarkers) { incidentAnnotations in
-                    let annotations = map.annotations
-                    if incidentAnnotations.annotationIdSet.isEmpty || annotations.count > 1500 {
+                .onReceive(viewModel.$mapMarkersChangeSet) { changes in
+                    if changes.isClean {
+                        let annotations = map.annotations
                         map.removeAnnotations(annotations)
                     }
-                    map.addAnnotations(incidentAnnotations.newAnnotations)
-                    if map.annotations.isEmpty && !incidentAnnotations.annotationIdSet.isEmpty {
-                        viewModel.onMissingMapMarkers()
-                    }
+                    map.addAnnotations(changes.newAnnotations)
+
+                    viewModel.onAddMapAnnotations(changes)
                 }
                 .onChange(of: viewModel.isMyLocationEnabled) { enabled in
                     if enabled {

@@ -13,7 +13,7 @@ internal class CasesQueryStateManager {
     let locationPermission = CurrentValueSubject<Bool, Never>(false)
 
     private let worksiteQueryStateSubject = CurrentValueSubject<WorksiteQueryState, Never>(WorksiteQueryStateDefault)
-    var worksiteQueryState: any Publisher<WorksiteQueryState, Never>
+    var worksiteQueryState: AnyPublisher<WorksiteQueryState, Never>
 
     private var disposables = Set<AnyCancellable>()
 
@@ -23,6 +23,7 @@ internal class CasesQueryStateManager {
         _ mapChangeDebounceTimeout: Double = 0.1
     ) {
         worksiteQueryState = worksiteQueryStateSubject
+            .eraseToAnyPublisher()
 
         incidentSelector.incident
             .sink(receiveValue: { incident in

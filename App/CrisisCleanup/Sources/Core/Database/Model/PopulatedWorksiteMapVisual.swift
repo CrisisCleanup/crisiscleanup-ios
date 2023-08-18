@@ -6,10 +6,12 @@ extension Array where Element == PopulatedWorksiteMapVisual {
         _ organizationAffiliates: Set<Int64>,
         _ locationAreaBounds: OrganizationLocationAreaBounds,
         _ location: CLLocation? = nil
-    ) -> [WorksiteMapMark] {
+    ) throws -> [WorksiteMapMark] {
         if filters.isDefault {
             return map { $0.asExternalModel() }
         }
+
+        try Task.checkCancellation()
 
         let filterByDistance = location != nil && filters.hasDistanceFilter
         let coordinates = location?.coordinate

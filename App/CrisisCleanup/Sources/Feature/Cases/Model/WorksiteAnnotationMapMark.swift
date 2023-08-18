@@ -6,7 +6,7 @@ class WorksiteAnnotationMapMark: MKPointAnnotation {
     var point: MKPointAnnotation!
     var mapIcon: UIImage? = nil
     var reuseIdentifier: String!
-    var isFilteredOut: Bool!
+    var isFilteredOut: Bool { source.isFilteredOut }
     // let mapIconOffset: Offset
 
     override init() {}
@@ -48,9 +48,7 @@ extension WorksiteMapMark {
         }
         let workTypeId = lookupKey.rawValue
 
-        point.reuseIdentifier = "\(statusId)-\(isClaimed)-\(workTypeId)-\(hasMultipleWorkTypes)"
-
-        point.isFilteredOut = isFilteredOut
+        point.reuseIdentifier = "\(statusId)-\(isClaimed)-\(workTypeId)-\(hasMultipleWorkTypes)-\(isFilteredOut)-\(isDuplicate)"
 
         // mapIconOffset = Offset(0.5f + xOffset, 0.5f + yOffset),
 
