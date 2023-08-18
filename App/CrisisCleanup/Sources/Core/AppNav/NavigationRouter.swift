@@ -32,7 +32,7 @@ class NavigationRouter: ObservableObject {
     func viewCase(
         incidentId: Int64,
         worksiteId: Int64,
-        popToRoot: Bool = true
+        popToRoot: Bool = false
     ) {
         if incidentId > 0 && worksiteId > 0 {
             if popToRoot {

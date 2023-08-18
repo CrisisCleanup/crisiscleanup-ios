@@ -4,7 +4,6 @@ public class LatestAsyncPublisher<T> {
     private var cancellable: Task<(), Never>?
 
     public func publisher(_ transform: @escaping () async -> T) -> AnyPublisher<T, Never> {
-
         cancellable?.cancel()
 
         let subject = PassthroughSubject<T, Never>()

@@ -119,6 +119,8 @@ class CasesViewModel: ObservableObject {
 
         incidentWorksitesCount = worksitesRepository.streamIncidentWorksitesCount(incidentSelector.incidentId)
             .eraseToAnyPublisher()
+            .share()
+            .eraseToAnyPublisher()
 
         tableViewDataLoader = CasesTableViewDataLoader(
             worksiteProvider: worksiteProvider,
@@ -309,6 +311,7 @@ class CasesViewModel: ObservableObject {
             incidentSelector.incidentId.eraseToAnyPublisher(),
             incidentWorksitesCount
         )
+            .throttle(for: .seconds(0.1), scheduler: RunLoop.current, latest: true)
             .map { (isLoading, incidentId, worksitesCount) in
                 if incidentId != worksitesCount.id {
                     return -1
