@@ -189,58 +189,72 @@ private struct ViewCaseInfo: View {
 }
 
 private struct ViewCasePhotos: View {
-    @EnvironmentObject var router: NavigationRouter
-    @EnvironmentObject var viewModel: ViewCaseViewModel
     @Environment(\.translator) var t: KeyAssetTranslator
 
+    @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewModel: ViewCaseViewModel
+
     var body: some View {
-        HStack {
-            VStack (alignment: .leading) {
-
-                Text(t.t("caseForm.before_photos"))
-                ScrollView(.horizontal, showsIndicators: false) {
-                    MediaDisplay(category: .before)
-                }
-
-                Text(t.t("caseForm.after_photos"))
-                ScrollView(.horizontal, showsIndicators: false) {
-                    MediaDisplay(category: .after)
-                }
-
-            }
-            .padding(.leading)
+        VStack (alignment: .leading) {
+            ViewCasePhotosSection(category: .before)
+            ViewCasePhotosSection(category: .after)
             Spacer()
-
         }
+    }
+}
 
+private struct ViewCasePhotosSection: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    let category: ImageCategory
+
+    var body: some View {
+        let sectionTranslateKey = category == .before
+        ? "caseForm.before_photos"
+        : "caseForm.after_photos"
+        Text(t.t(sectionTranslateKey))
+            .fontHeader4()
+            .padding([.horizontal, .top])
+        ScrollView(.horizontal, showsIndicators: false) {
+            MediaDisplay(category: category)
+        }
     }
 }
 
 private struct MediaDisplay: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var viewModel: ViewCaseViewModel
-    @Environment(\.translator) var t: KeyAssetTranslator
 
     var category: ImageCategory
     @State var photoDetents: Bool = false
 
     @State var results: [PhotosPickerItem] = []
-    @State var testImages: [Image] = []
+    @State var mediaImages: [Image] = []
     @State var presentCamera: Bool = false
     @State var selectedImage: UIImage = UIImage()
 
+    // TODO: Size relative to remaining screen height
+    let oneRowHeight = 172.0
+
     var body: some View {
-        // TODO: Size relative to remaining screen height
-        let rowHeight = 160.0
+        let beforeAfterImages = viewModel.beforeAfterPhotos[category] ?? []
+        let rowHeight = oneRowHeight
+        let rowActionHeight = rowHeight - 12
 
         HStack {
+            Rectangle()
+                .fill(.clear)
+                .frame(width: 0.1, height: rowHeight)
+
             let r = appTheme.cornerRadius
             ZStack {
                 let strokeColor = appTheme.colors.primaryBlueColor
                 let cornerSize = CGSize(width: r, height: r)
                 RoundedRectangle(cornerSize: cornerSize)
                     .fill(appTheme.colors.addMediaBackgroundColor)
-                    .frame(width: 120, height: rowHeight)
+                    .frame(width: 120, height: rowActionHeight)
                     .overlay {
                         RoundedRectangle(cornerSize: cornerSize)
                             .stroke(strokeColor, style: StrokeStyle(lineWidth: 2, dash: [5]))
@@ -264,10 +278,10 @@ private struct MediaDisplay: View {
                         // TODO: Save as a file.
                         if let data = try? await result.loadTransferable(type: Data.self) {
                             if let uiImage = UIImage(data: data) {
-                                testImages.append(Image(uiImage: uiImage))
-
+                                mediaImages.append(Image(uiImage: uiImage))
                             }
                         } else {
+                            // TODO Handle proper
                             print("failed")
                         }
                     }
@@ -276,15 +290,14 @@ private struct MediaDisplay: View {
                 }
             }
 
-            ForEach(0..<testImages.count, id: \.self) { imageIndex in
-                testImages[imageIndex]
+            ForEach(0..<mediaImages.count, id: \.self) { imageIndex in
+                mediaImages[imageIndex]
                     .resizable()
                     .scaledToFit()
                     .frame(height: rowHeight)
                     .cornerRadius(appTheme.cornerRadius)
             }
 
-            let beforeAfterImages = viewModel.beforeAfterPhotos[category] ?? []
             ForEach(beforeAfterImages, id: \.id) { caseImage in
                 CachedAsyncImage(url: URL(string: caseImage.thumbnailUri)) { phase in
                     if let image = phase.image {
@@ -307,6 +320,10 @@ private struct MediaDisplay: View {
                     }
                 }
             }
+
+            Rectangle()
+                .fill(.clear)
+                .frame(width: 0.1, height: rowHeight)
         }
         .sheet(isPresented: $photoDetents) {
             ZStack {
