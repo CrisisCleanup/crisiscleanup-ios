@@ -87,7 +87,16 @@ class ViewImageViewModel: ObservableObject {
                 }
                 return nil
             }
-            .map { ViewImageUiState(imageUrl: $0) }
+            .map {
+                let lastPath = $0.lastPathComponent
+                let cached = lastPath.isBlank ? nil : self.localImageRepository.getLocalImage(lastPath)
+                let image = cached == nil ? nil : Image(uiImage: cached!)
+                // TODO: Set error messages if image URL is invalid for network image or image is nil for local image
+                return ViewImageUiState(
+                    imageUrl: $0,
+                    image: image
+                )
+            }
             .receive(on: RunLoop.main)
             .assign(to: \.uiState, on: self)
             .store(in: &subscriptions)
@@ -180,15 +189,18 @@ class ViewImageViewModel: ObservableObject {
 struct ViewImageUiState {
     let isLoading: Bool
     let imageUrl: URL?
+    let image: Image?
     let errorMessage: String
 
     init(
         isLoading: Bool = false,
         imageUrl: URL? = nil,
+        image: Image? = nil,
         errorMessage: String = ""
     ) {
         self.isLoading = isLoading
         self.imageUrl = imageUrl
+        self.image = image
         self.errorMessage = errorMessage
     }
 }

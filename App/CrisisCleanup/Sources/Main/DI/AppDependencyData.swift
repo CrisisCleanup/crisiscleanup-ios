@@ -229,6 +229,7 @@ extension MainComponent {
                 networkFileDao: networkFileDao,
                 localImageDao: localImageDao,
                 writeApi: writeApi,
+                localFileCache: MemoryLocalFileCache(loggerFactory: loggerFactory),
                 syncLogger: syncLoggerFactory.getLogger("local-image"),
                 loggerFactory: loggerFactory
             )

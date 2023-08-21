@@ -17,6 +17,8 @@ public protocol AppDependency: Dependency {
 
     var appPreferences: AppPreferencesDataStore { get }
 
+    var translator: KeyAssetTranslator { get }
+
     var incidentsRepository: IncidentsRepository { get }
     var languageTranslationsRepository: LanguageTranslationsRepository { get }
     var workTypeStatusRepository: WorkTypeStatusRepository { get }
@@ -31,7 +33,6 @@ public protocol AppDependency: Dependency {
     var usersRepository: UsersRepository { get }
     var casesFilterRepository: CasesFilterRepository { get }
     var caseHistoryRepository: CaseHistoryRepository { get }
-    var translator: KeyAssetTranslator { get }
 
     var authenticateViewBuilder: AuthenticateViewBuilder { get }
     var incidentSelectViewBuilder: IncidentSelectViewBuilder { get }

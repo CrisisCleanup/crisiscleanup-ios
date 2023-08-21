@@ -1,5 +1,7 @@
 import Atomics
 import Combine
+import PhotosUI
+import SwiftUI
 
 public protocol LocalImageRepository {
     var syncingWorksiteId: any Publisher<Int64, Never> { get }
@@ -16,6 +18,24 @@ public protocol LocalImageRepository {
         _ rotationDegrees: Int
     )
 
+    func cachePicked(
+        _ incidentId: Int64,
+        _ worksiteId: Int64,
+        _ tag: String,
+        _ picked: [PhotosPickerItem]
+    ) async throws
+
+    func cacheImage(
+        _ incidentId: Int64,
+        _ worksiteId: Int64,
+        _ tag: String,
+        _ image: UIImage
+    ) async throws
+
+    func getLocalImage(
+        _ imageFileName: String
+    ) -> UIImage?
+
     func save(_ image: WorksiteLocalImage) throws
 
     func deleteLocalImage(_ id: Int64) throws
@@ -28,6 +48,7 @@ class CrisisCleanupLocalImageRepository: LocalImageRepository {
     private let networkFileDao: NetworkFileDao
     private let localImageDao: LocalImageDao
     private let writeApi: CrisisCleanupWriteApi
+    private let localFileCache: LocalFileCache
     private let syncLogger: SyncLogger
     private let appLogger: AppLogger
 
@@ -44,6 +65,7 @@ class CrisisCleanupLocalImageRepository: LocalImageRepository {
         networkFileDao: NetworkFileDao,
         localImageDao: LocalImageDao,
         writeApi: CrisisCleanupWriteApi,
+        localFileCache: LocalFileCache,
         syncLogger: SyncLogger,
         loggerFactory: AppLoggerFactory
     ) {
@@ -51,6 +73,7 @@ class CrisisCleanupLocalImageRepository: LocalImageRepository {
         self.networkFileDao = networkFileDao
         self.localImageDao = localImageDao
         self.writeApi = writeApi
+        self.localFileCache = localFileCache
         self.syncLogger = syncLogger
         appLogger = loggerFactory.getLogger("image-repository")
 
@@ -63,9 +86,7 @@ class CrisisCleanupLocalImageRepository: LocalImageRepository {
     }
 
     func streamLocalImageUri(_ id: Int64) -> AnyPublisher<String?, Never> {
-        // TODO: Do
-        Just(nil)
-            .eraseToAnyPublisher()
+        localImageDao.streamLocalImageUrl(id)
     }
 
     func getImageRotation(_ id: Int64, _ isNetworkImage: Bool) -> Int {
@@ -84,6 +105,49 @@ class CrisisCleanupLocalImageRepository: LocalImageRepository {
         } else {
             localImageDao.setLocalImageRotation(id, rotationDegrees)
         }
+    }
+
+    private func upsertCachedImages(
+        _ worksiteId: Int64,
+        _ tag: String,
+        _ cached: [String: String]
+    ) throws {
+        for (imageName, imagePath) in cached {
+            try localImageDao.upsertLocalImage(WorksiteLocalImageRecord(
+                id: nil,
+                worksiteId: worksiteId,
+                localDocumentId: imageName,
+                uri: imagePath,
+                tag: tag,
+                rotateDegrees: 0
+            ))
+        }
+    }
+
+    func cachePicked(
+        _ incidentId: Int64,
+        _ worksiteId: Int64,
+        _ tag: String,
+        _ picked: [PhotosPickerItem]
+    ) async throws {
+        let cached = try await localFileCache.cachePicked(incidentId, worksiteId, picked)
+        try upsertCachedImages(worksiteId, tag, cached)
+    }
+
+    func cacheImage(
+        _ incidentId: Int64,
+        _ worksiteId: Int64,
+        _ tag: String,
+        _ image: UIImage
+    ) async throws {
+        let cached = try await localFileCache.cacheImage(incidentId, worksiteId, image)
+        try upsertCachedImages(worksiteId, tag, cached)
+    }
+
+    func getLocalImage(
+        _ imageFileName: String
+    ) -> UIImage? {
+        localFileCache.getImage(imageFileName)
     }
 
     func save(_ image: WorksiteLocalImage) throws {

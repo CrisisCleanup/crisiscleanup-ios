@@ -26,6 +26,23 @@ public class LocalImageDao {
         }
     }
 
+    func streamLocalImageUrl(_ id: Int64) -> AnyPublisher<String?, Never> {
+        ValueObservation
+            .tracking({ db in
+                try WorksiteLocalImageRecord
+                    .all()
+                    .selectUriColumn()
+                    .filter(id: id)
+                    .asRequest(of: String.self)
+                    .fetchOne(db)
+            })
+            .removeDuplicates()
+            .shared(in: reader)
+            .publisher()
+            .assertNoFailure()
+            .eraseToAnyPublisher()
+    }
+
     func setNetworkImageRotation(_ id: Int64, _ rotationDegrees: Int) {
         try! database.setNetworkImageRotation(id, rotationDegrees)
     }

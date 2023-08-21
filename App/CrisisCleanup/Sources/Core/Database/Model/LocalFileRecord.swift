@@ -3,7 +3,7 @@ import GRDB
 struct WorksiteLocalImageRecord : Identifiable, Equatable {
     static let worksite = belongsTo(WorksiteRootRecord.self)
 
-    let id: Int64
+    let id: Int64?
     let worksiteId: Int64
     let localDocumentId: String
     let uri: String
@@ -59,5 +59,11 @@ extension WorksiteLocalImageRecord: Codable, FetchableRecord, PersistableRecord 
                 ]
             )
         }
+    }
+}
+
+extension DerivableRequest<WorksiteLocalImageRecord> {
+    func selectUriColumn() -> Self {
+        select(WorksiteLocalImageRecord.Columns.uri)
     }
 }

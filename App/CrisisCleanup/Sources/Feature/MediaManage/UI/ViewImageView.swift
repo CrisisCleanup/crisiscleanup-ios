@@ -3,6 +3,7 @@ import CachedAsyncImage
 
 struct ViewImageView: View {
     @Environment(\.dismiss) var dismiss
+
     @EnvironmentObject var router: NavigationRouter
 
     @ObservedObject var viewModel: ViewImageViewModel
@@ -20,8 +21,8 @@ struct ViewImageView: View {
                 }
             }
 
-            if let imageUrl = viewModel.uiState.imageUrl {
-                if viewModel.isNetworkImage {
+            if viewModel.isNetworkImage {
+                if let imageUrl = viewModel.uiState.imageUrl {
                     ViewNetworkImage(
                         imageUrl: imageUrl,
                         toggleNavBar: {
@@ -31,7 +32,21 @@ struct ViewImageView: View {
                         }
                     )
                 } else {
-                    // TODO: Do
+                    // TODO: Message for corrective actions (from view model)
+
+                }
+            } else {
+                if let image = viewModel.uiState.image {
+                    PanZoomImage(
+                        image: image,
+                        toggleNavBar: {
+                            withAnimation {
+                                showNavBar.toggle()
+                            }
+                        }
+                    )
+                } else {
+                    // TODO: Message that image may have been deleted by system. Will need to reselect to upload
                 }
             }
 
@@ -97,7 +112,7 @@ struct ImageNav: View {
             .background(
                 // TODO: Improve the smoothness of the gradient
                 LinearGradient(
-                    gradient: Gradient(colors: [.black.opacity(0.5), .black.opacity(0.0)]),
+                    gradient: Gradient(colors: [.black.opacity(0.7), .black.opacity(0.0)]),
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -112,6 +127,8 @@ struct ImageNav: View {
 }
 
 private struct ViewNetworkImage: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
     let imageUrl: URL
 
     let toggleNavBar: () -> Void
@@ -127,8 +144,7 @@ private struct ViewNetworkImage: View {
                 )
             } else if phase.error != nil {
                 VStack {
-                    // TODO: Translation
-                    Text("~~Try refreshing and opening the image again.")
+                    Text(t.t("worksiteImages.try_refreshing_open_image"))
                         .foregroundColor(.white)
                         .padding()
                     Image(systemName: "exclamationmark.circle")

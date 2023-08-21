@@ -1,6 +1,7 @@
 import Atomics
 import Combine
 import Foundation
+import PhotosUI
 import SwiftUI
 
 class ViewCaseViewModel: ObservableObject, KeyTranslator {
@@ -9,6 +10,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     private let accountDataRefresher: AccountDataRefresher
     private var editableWorksiteProvider: EditableWorksiteProvider
     private let transferWorkTypeProvider: TransferWorkTypeProvider
+    private let localImageRepository: LocalImageRepository
     private let translator: KeyAssetTranslator
     private let worksiteChangeRepository: WorksiteChangeRepository
     private let syncPusher: SyncPusher
@@ -67,6 +69,8 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     private let previousNoteCount = ManagedAtomic(0)
 
     var addImageCategory = ImageCategory.before
+    @Published var cachingLocalImageCount = ObservableIntDictionary()
+    private(set) var localImageCache = [String: UIImage]()
 
     private let nextRecurDateFormat: DateFormatter
 
@@ -87,6 +91,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         workTypeStatusRepository: WorkTypeStatusRepository,
         editableWorksiteProvider: EditableWorksiteProvider,
         transferWorkTypeProvider: TransferWorkTypeProvider,
+        localImageRepository: LocalImageRepository,
         translator: KeyAssetTranslator,
         worksiteChangeRepository: WorksiteChangeRepository,
         syncPusher: SyncPusher,
@@ -101,6 +106,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         self.accountDataRefresher = accountDataRefresher
         self.editableWorksiteProvider = editableWorksiteProvider
         self.transferWorkTypeProvider = transferWorkTypeProvider
+        self.localImageRepository = localImageRepository
         self.translator = translator
         self.worksiteChangeRepository = worksiteChangeRepository
         self.syncPusher = syncPusher
@@ -143,7 +149,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         nextRecurDateFormat.dateFormat = "EEE MMMM d yyyy 'at' h:mm a"
 
         updateHeaderTitle()
-        subscribeToSubTitle()
+        subscribeSubTitle()
     }
 
     deinit {
@@ -162,16 +168,17 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         }
         transferWorkTypeProvider.clearPendingTransfer()
 
-        subscribeToLoading()
-        subscribeToSyncing()
-        subscribeToSaving()
-        subscribeToPendingTransfer()
-        subscribeToEditableState()
+        subscribeLoading()
+        subscribeSyncing()
+        subscribeSaving()
+        subscribePendingTransfer()
+        subscribeEditableState()
 
-        subscribeToCaseData()
-        subscribeToWorksiteChange()
-        subscribeToWorkTypeProfile()
-        subscribeToFilesNotes()
+        subscribeCaseData()
+        subscribeWorksiteChange()
+        subscribeWorkTypeProfile()
+        subscribeFilesNotes()
+        subscribeLocalImages()
 
         if isFirstAppear {
             dataLoader.loadData(
@@ -190,13 +197,13 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         subscriptions = cancelSubscriptions(subscriptions)
     }
 
-    private func subscribeToLoading() {
+    private func subscribeLoading() {
         dataLoader.isLoading
             .assign(to: \.isLoading, on: self)
             .store(in: &subscriptions)
     }
 
-    private func subscribeToSyncing() {
+    private func subscribeSyncing() {
         // TODO: Combine with syncing images when available
         worksiteChangeRepository.syncingWorksiteIds
             .eraseToAnyPublisher()
@@ -208,7 +215,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
             .store(in: &subscriptions)
     }
 
-    private func subscribeToSaving() {
+    private func subscribeSaving() {
         Publishers.CombineLatest(
             isSavingWorksite.eraseToAnyPublisher(),
             isSavingMedia.eraseToAnyPublisher()
@@ -219,13 +226,13 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         .store(in: &subscriptions)
     }
 
-    private func subscribeToPendingTransfer() {
+    private func subscribePendingTransfer() {
         transferWorkTypeProvider.isPendingTransferPublisher
             .assign(to: \.isPendingTransfer, on: self)
             .store(in: &subscriptions)
     }
 
-    private func subscribeToEditableState() {
+    private func subscribeEditableState() {
         Publishers.CombineLatest3(
             $isPendingTransfer.eraseToAnyPublisher(),
             $isLoading.eraseToAnyPublisher(),
@@ -238,7 +245,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         .store(in: &subscriptions)
     }
 
-    private func subscribeToCaseData() {
+    private func subscribeCaseData() {
         uiState
             .throttle(
                 for: .seconds(0.1),
@@ -262,7 +269,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
             .store(in: &subscriptions)
     }
 
-    private func subscribeToWorksiteChange() {
+    private func subscribeWorksiteChange() {
         dataLoader.worksiteStream
             .sink(receiveValue: { localWorksiteOptional in
                 if let localWorksite = localWorksiteOptional {
@@ -285,7 +292,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
             .store(in: &subscriptions)
     }
 
-    private func subscribeToWorkTypeProfile() {
+    private func subscribeWorkTypeProfile() {
         Publishers.CombineLatest3(
             $caseData.assertNoFailure().eraseToAnyPublisher(),
             editableWorksite,
@@ -359,7 +366,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
 
             let releasable = otherOrgClaimedWorkTypes
                 .filter { summary in summary.isReleasable }
-                // TODO: Does this sort perform as expected
+            // TODO: Does this sort perform as expected
                 .sorted(by: { a, b in a.name.localizedStandardCompare(b.name) == .orderedAscending })
             let requestable = otherOrgClaimedWorkTypes
                 .filter { summary in !(summary.isReleasable || summary.isRequested) }
@@ -382,7 +389,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         .store(in: &subscriptions)
     }
 
-    private func subscribeToFilesNotes() {
+    private func subscribeFilesNotes() {
         let filesNotes = Publishers.CombineLatest(
             editableWorksite,
             $caseData.eraseToAnyPublisher()
@@ -443,6 +450,23 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         .store(in: &subscriptions)
     }
 
+    private func subscribeLocalImages() {
+        // TODO: Delete local image db entries where file no longer exists in cache
+        $beforeAfterPhotos
+            .sink(receiveValue: {
+                for (_, images) in $0 {
+                    images.filter { !$0.isNetworkImage }
+                        .forEach { localImage in
+                            let imageName = localImage.imageName
+                            if let cachedImage = self.localImageRepository.getLocalImage(imageName) {
+                                self.localImageCache[localImage.imageUri] = cachedImage
+                            }
+                        }
+                }
+            })
+            .store(in: &subscriptions)
+    }
+
     private func getWorkTypeSummaries(
         _ worksiteWorkTypes: [WorkType],
         _ stateData: CaseEditorCaseData,
@@ -474,9 +498,9 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
             let nextRecurSummary: String? = {
                 if let nextRecurAt = workType.nextRecurAt,
                    nextRecurAt > Date.now {
-                       let nextDate = nextRecurDateFormat.string(from: nextRecurAt)
-                       return "\(localTranslate("shareWorksite.next_recur")) \(nextDate)"
-                   }
+                    let nextDate = nextRecurDateFormat.string(from: nextRecurAt)
+                    return "\(localTranslate("shareWorksite.next_recur")) \(nextDate)"
+                }
                 return nil
             }()
             let summary = [
@@ -512,7 +536,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         : "\(localTranslate("actions.view")) \(caseNumber)"
     }
 
-    private func subscribeToSubTitle() {
+    private func subscribeSubTitle() {
         editableWorksite
             .map { worksite in
                 worksite.isNew ? "" : [worksite.county, worksite.state]
@@ -601,7 +625,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     func updateWorkType(_ workType: WorkType, _ isStatusChange: Bool) {
         let startingWorksite = referenceWorksite
         var updatedWorkTypes = startingWorksite.workTypes
-                .filter { $0.workType != workType.workType }
+            .filter { $0.workType != workType.workType }
 
         var updatedWorkType = workType
         if isStatusChange && workType.orgClaim == nil {
@@ -645,10 +669,10 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         if let orgId = organizationId {
             let startingWorksite = referenceWorksite
             let updatedWorkTypes =
-                startingWorksite.workTypes
-                    .map {
-                        $0.isClaimed ? $0: $0.copy { $0.orgClaim = orgId }
-                    }
+            startingWorksite.workTypes
+                .map {
+                    $0.isClaimed ? $0: $0.copy { $0.orgClaim = orgId }
+                }
             let changedWorksite = startingWorksite.copy { $0.workTypes = updatedWorkTypes }
             saveWorksiteChange(startingWorksite, changedWorksite)
         }
@@ -686,6 +710,59 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         notes += startingWorksite.notes
         let changedWorksite = startingWorksite.copy { $0.notes = notes }
         saveWorksiteChange(startingWorksite, changedWorksite)
+    }
+
+    func onPhotoTaken(_ result: UIImage) {
+        let categoryLiteral = addImageCategory.literal
+        let count = cachingLocalImageCount[categoryLiteral]
+        cachingLocalImageCount[categoryLiteral] = count + 1
+
+        Task {
+            do {
+                defer {
+                    Task { @MainActor in
+                        let cachingCount = cachingLocalImageCount[categoryLiteral]
+                        cachingLocalImageCount[categoryLiteral] = cachingCount - 1
+                    }
+                }
+
+                try await self.localImageRepository.cacheImage(
+                    incidentIdIn,
+                    worksiteIdIn,
+                    categoryLiteral,
+                    result
+                )
+            } catch {
+                logger.logError(error)
+            }
+        }
+    }
+
+    func onMediaSelected(_ results: [PhotosPickerItem]) {
+        let categoryLiteral = addImageCategory.literal
+        let count = cachingLocalImageCount[categoryLiteral]
+        let selectCount = results.count
+        cachingLocalImageCount[categoryLiteral] = count + selectCount
+
+        Task {
+            do {
+                defer {
+                    Task { @MainActor in
+                        let cachingCount = cachingLocalImageCount[categoryLiteral]
+                        cachingLocalImageCount[categoryLiteral] = cachingCount - selectCount
+                    }
+                }
+
+                try await self.localImageRepository.cachePicked(
+                    incidentIdIn,
+                    worksiteIdIn,
+                    categoryLiteral,
+                    results
+                )
+            } catch {
+                logger.logError(error)
+            }
+        }
     }
 
     func scheduleSync() {

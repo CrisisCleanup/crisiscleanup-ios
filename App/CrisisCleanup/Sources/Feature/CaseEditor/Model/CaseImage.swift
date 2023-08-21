@@ -27,6 +27,12 @@ struct CaseImage {
     // sourcery:begin skipCopy
     let category: ImageCategory
     let isAfter: Bool
+
+    var imageName: String {
+        let imageParts = imageUri.split(separator: "/")
+        let lastPart = imageParts.isEmpty ? "" : (imageParts.last ?? "")
+        return String(lastPart)
+    }
     // sourcery:end
 
     init(

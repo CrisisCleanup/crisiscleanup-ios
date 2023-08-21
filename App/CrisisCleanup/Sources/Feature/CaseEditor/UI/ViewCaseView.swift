@@ -7,8 +7,8 @@ import PhotosUI
 import CachedAsyncImage
 
 struct ViewCaseView: View {
-
     @Environment(\.translator) var t: KeyAssetTranslator
+
     @EnvironmentObject var router: NavigationRouter
 
     @ObservedObject var viewModel: ViewCaseViewModel
@@ -233,16 +233,24 @@ private struct MediaDisplay: View {
     @State var results: [PhotosPickerItem] = []
     @State var mediaImages: [Image] = []
     @State var presentCamera: Bool = false
-    @State var selectedImage: UIImage = UIImage()
+    @State var takePhotoImage: UIImage = UIImage()
 
     // TODO: Size relative to remaining screen height
     let oneRowHeight = 172.0
+
+    func openViewImage(_ caseImage: CaseImage) {
+        router.viewImage(
+            caseImage.id,
+            caseImage.isNetworkImage,
+            viewModel.headerTitle
+        )
+    }
 
     var body: some View {
         let beforeAfterImages = viewModel.beforeAfterPhotos[category] ?? []
         let rowHeight = oneRowHeight
         let rowActionHeight = rowHeight - 12
-
+        let iconFont = Font.system(size: rowHeight * 0.8)
         HStack {
             Rectangle()
                 .fill(.clear)
@@ -269,54 +277,59 @@ private struct MediaDisplay: View {
             }
             .padding(.all, r * 0.55)
             .onTapGesture {
+                viewModel.addImageCategory = category
                 photoDetents.toggle()
             }
             .onChange(of: results) { _ in
                 photoDetents = false
-                Task {
-                    for result in results {
-                        // TODO: Save as a file.
-                        if let data = try? await result.loadTransferable(type: Data.self) {
-                            if let uiImage = UIImage(data: data) {
-                                mediaImages.append(Image(uiImage: uiImage))
-                            }
-                        } else {
-                            // TODO Handle proper
-                            print("failed")
-                        }
-                    }
-
-                    results = []
-                }
+                viewModel.onMediaSelected(results)
+                results = []
             }
 
-            ForEach(0..<mediaImages.count, id: \.self) { imageIndex in
-                mediaImages[imageIndex]
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: rowHeight)
-                    .cornerRadius(appTheme.cornerRadius)
+            ForEach(0..<viewModel.cachingLocalImageCount[category.literal], id: \.self) { index in
+                Image(systemName: "photo")
+                    .foregroundColor(appTheme.colors.addMediaBackgroundColor)
+                    .font(iconFont)
             }
 
             ForEach(beforeAfterImages, id: \.id) { caseImage in
-                CachedAsyncImage(url: URL(string: caseImage.thumbnailUri)) { phase in
-                    if let image = phase.image {
-                        image
+                if caseImage.isNetworkImage {
+                    CachedAsyncImage(url: URL(string: caseImage.thumbnailUri)) { phase in
+                        if let image = phase.image {
+                            image
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: rowHeight)
+                                .cornerRadius(appTheme.cornerRadius)
+                                .onTapGesture { openViewImage(caseImage) }
+                        } else if phase.error != nil {
+                            Image(systemName: "exclamationmark.circle")
+                                .foregroundColor(appTheme.colors.primaryRedColor)
+                                .font(iconFont)
+                        } else {
+                            Image(systemName: "photo.circle")
+                                .foregroundColor(.gray)
+                                .font(iconFont)
+                        }
+                    }
+                } else {
+                    if let image = viewModel.localImageCache[caseImage.imageUri] {
+                        Image(uiImage: image)
                             .resizable()
                             .scaledToFit()
                             .frame(height: rowHeight)
                             .cornerRadius(appTheme.cornerRadius)
-                            .onTapGesture {
-                                router.viewImage(caseImage.id, caseImage.isNetworkImage, viewModel.headerTitle)
+                            .onTapGesture { openViewImage(caseImage) }
+                            .overlay(alignment: .topTrailing) {
+                                Image(systemName: "cloud.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 16, height: 16)
+                                    .padding(4)
+                                    .background(.white.opacity(0.8))
+                                    .clipShape(Circle())
+                                    .padding(8)
                             }
-                    } else if phase.error != nil {
-                        Image(systemName: "exclamationmark.circle")
-                            .foregroundColor(appTheme.colors.primaryRedColor)
-                            .font(.system(size: rowHeight * 0.8))
-                    } else {
-                        Image(systemName: "photo.circle")
-                            .foregroundColor(.gray)
-                            .font(.system(size: rowHeight * 0.6))
                     }
                 }
             }
@@ -336,7 +349,14 @@ private struct MediaDisplay: View {
                     }
                     .tint(.black)
                     .sheet(isPresented: $presentCamera) {
-                        ImagePickerCamera(selectedImage: $selectedImage)
+                        ImagePickerCamera(selectedImage: $takePhotoImage)
+                    }
+                    .onChange(of: takePhotoImage) { newValue in
+                        if newValue.size != .zero {
+                            viewModel.onPhotoTaken(newValue)
+                            takePhotoImage = UIImage()
+                            photoDetents = false
+                        }
                     }
 
                     PhotosPicker(selection: $results,
@@ -355,9 +375,10 @@ private struct MediaDisplay: View {
 }
 
 private struct ViewCaseNotes: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var viewModel: ViewCaseViewModel
-    @Environment(\.translator) var t: KeyAssetTranslator
 
     var body: some View {
         ZStack {

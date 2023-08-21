@@ -63,3 +63,35 @@ class ObservableStringDictionary: ObservableObject {
         fatalError("Index after is not supported by \(self)")
     }
 }
+
+class ObservableIntDictionary: ObservableObject, MutableCollection {
+    let didChange = PassthroughSubject<Void, Never>()
+
+    var data: Dictionary<String, Int> = [:] {
+        didSet {
+            didChange.send(())
+        }
+    }
+
+    public typealias Index = String
+
+    var startIndex: String = ""
+    var endIndex: String = ""
+
+    init(_ data: Dictionary<String, Int> = [:]) {
+        self.data = data
+    }
+
+    subscript(position: String) -> Int {
+        get {
+            data.keys.contains(position) ? data[position]! : 0
+        }
+        set {
+            data[position] = newValue
+        }
+    }
+
+    func index(after i: String) -> String {
+        fatalError("Index after is not supported by \(self)")
+    }
+}

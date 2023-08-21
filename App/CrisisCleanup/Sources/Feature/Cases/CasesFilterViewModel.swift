@@ -213,7 +213,6 @@ class CasesFilterViewModel: ObservableObject {
                 .eraseToAnyPublisher()
             }
             .switchToLatest()
-            .eraseToAnyPublisher()
             .map { incident in
                 if let formFields = incident?.formFields {
                     let formFieldRootNode = FormFieldNode.buildTree(

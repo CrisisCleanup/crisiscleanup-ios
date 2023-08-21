@@ -184,7 +184,7 @@ extension NetworkFileRecord {
 extension WorksiteLocalImageRecord {
     fileprivate func asExternalModel() -> WorksiteLocalImage {
         WorksiteLocalImage(
-            id: id,
+            id: id!,
             worksiteId: worksiteId,
             documentId: localDocumentId,
             uri: uri,
