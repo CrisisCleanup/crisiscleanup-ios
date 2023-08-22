@@ -314,21 +314,33 @@ private struct MediaDisplay: View {
                     }
                 } else {
                     if let image = viewModel.localImageCache[caseImage.imageUri] {
+                        let isSyncing = viewModel.syncingWorksiteImage == caseImage.id
+                        let alignment: Alignment = isSyncing ? .center : .topTrailing
                         Image(uiImage: image)
                             .resizable()
                             .scaledToFit()
                             .frame(height: rowHeight)
                             .cornerRadius(appTheme.cornerRadius)
                             .onTapGesture { openViewImage(caseImage) }
-                            .overlay(alignment: .topTrailing) {
-                                Image(systemName: "cloud.fill")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 16, height: 16)
-                                    .padding(4)
-                                    .background(.white.opacity(0.8))
-                                    .clipShape(Circle())
-                                    .padding(8)
+                            .overlay(alignment: alignment) {
+                                if isSyncing {
+                                    Image(systemName: "cloud.fill")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 48, height: 48)
+                                        .padding()
+                                        .background(.white.opacity(0.8))
+                                        .clipShape(Circle())
+                                } else {
+                                    Image(systemName: "cloud.fill")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 16, height: 16)
+                                        .padding(4)
+                                        .background(.white.opacity(0.5))
+                                        .clipShape(Circle())
+                                        .padding(8)
+                                }
                             }
                     }
                 }

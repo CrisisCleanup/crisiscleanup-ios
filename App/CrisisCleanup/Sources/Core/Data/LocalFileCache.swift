@@ -19,6 +19,14 @@ public protocol LocalFileCache {
     func getImage(
         _ imageFileName: String
     ) -> UIImage?
+
+    func deleteFile(
+        _ fileName: String
+    )
+
+    func deleteUnspecifiedFiles(
+        _ fileNames: Set<String>
+    )
 }
 
 class MemoryLocalFileCache: LocalFileCache {
@@ -44,36 +52,45 @@ class MemoryLocalFileCache: LocalFileCache {
         "\(incidentId)-\(worksiteId)-\(millis)-\(index).jpg"
     }
 
-    private func cacheFileUrl(_ fileName: String) throws -> URL {
+    private func getCacheDir() throws -> URL {
         if cacheDir == nil {
-            cacheDir = try FileManager.default.url(
-                for: .cachesDirectory,
+            let fileManager = FileManager.default
+            cacheDir = try fileManager.url(
+                for: .picturesDirectory,
                 in: .userDomainMask,
                 appropriateFor: nil,
                 create: true
             )
+            .appending(path: "upload-files-cache")
+
+            try fileManager.createDirectory(at: cacheDir!, withIntermediateDirectories: true)
         }
-        return cacheDir!.appendingPathComponent(fileName)
+        return cacheDir!
+    }
+
+    private func cacheFileUrl(_ fileName: String) throws -> URL {
+        try getCacheDir().appendingPathComponent(fileName)
     }
 
     private func cacheImage(
         _ fileUrl: URL,
         _ image: UIImage
     ) throws -> Bool {
-        if let jpegData = image.jpegData(compressionQuality: 0.9),
+        if let jpegData = image.jpegData(compressionQuality: 1.0),
            let _ = try? jpegData.write(to: fileUrl, options: [.atomic, .completeFileProtection]) {
             return true
         }
         return false
     }
 
+    private var nowMillis: Int64 { Int64(Date.now.timeIntervalSince1970 * 1000) }
+
     func cachePicked(
         _ incidentId: Int64,
         _ worksiteId: Int64,
         _ picked: [PhotosPickerItem]
     ) async throws -> [String: String] {
-        let timestamp = Date.now
-        let millis = Int64(timestamp.timeIntervalSince1970)
+        let millis = nowMillis
 
         var cachedImages = [String: String]()
         do {
@@ -99,8 +116,7 @@ class MemoryLocalFileCache: LocalFileCache {
         _ worksiteId: Int64,
         _ image: UIImage
     ) async throws -> [String: String] {
-        let timestamp = Date.now
-        let millis = Int64(timestamp.timeIntervalSince1970)
+        let millis = nowMillis
 
         var cachedImages = [String: String]()
         do {
@@ -126,10 +142,41 @@ class MemoryLocalFileCache: LocalFileCache {
             if let image = UIImage(contentsOfFile: imagePath.path()),
                image.size != .zero {
                 imageCache.setValue(image, forKey: imageFileName)
+                return image
             }
         } catch {
             logger.logError(error)
         }
         return nil
+    }
+
+    func deleteFile(_ fileName: String) {
+        do {
+            imageCache.removeValue(forKey: fileName)
+
+            let fileUrl = try cacheFileUrl(fileName)
+            try FileManager.default.removeItem(at: fileUrl)
+        } catch {
+            logger.logError(error)
+        }
+    }
+
+    func deleteUnspecifiedFiles(_ fileNames: Set<String>) {
+        // TODO: Review and update when non-image files are supported. Write tests.
+
+        do {
+            let files = try FileManager.default.contentsOfDirectory(at: getCacheDir(), includingPropertiesForKeys: nil)
+
+            for file in files {
+                let fileName = file.path().lastPath
+                if fileName.isNotBlank,
+                   !fileNames.contains(fileName) {
+                    // TODO: Write tests before deleting
+                    logger.logDebug("Delete file \(fileName) (no longer necessary)")
+                }
+            }
+        } catch {
+            logger.logError(error)
+        }
     }
 }

@@ -46,13 +46,13 @@ public protocol CrisisCleanupWriteApi {
         _ contentType: String
     ) async throws -> NetworkFileUpload
 
-    // TODO: When files are developed
-//    func uploadFile(
-//        _ url: String,
-//        _ fields: FileUploadFields,
-//        _ file: File,
-//        _ mimeType: String
-//    ) async throws
+    func uploadFile(
+        _ url: String,
+        _ fields: FileUploadFields,
+        _ file: Data,
+        _ fileName: String,
+        _ mimeType: String
+    ) async throws
 
     func addFileToWorksite(
         _ worksiteId: Int64,

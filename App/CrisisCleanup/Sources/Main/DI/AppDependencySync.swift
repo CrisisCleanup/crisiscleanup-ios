@@ -9,6 +9,7 @@ extension MainComponent {
                 worksitesRepository: worksitesRepository,
                 worksiteChangeRepository: worksiteChangeRepository,
                 appPreferencesDataStore: appPreferences,
+                localImageRepository: localImageRepository,
                 syncLoggerFactory: syncLoggerFactory,
                 authEventBus: authEventBus
             )

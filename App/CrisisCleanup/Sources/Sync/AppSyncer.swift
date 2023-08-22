@@ -1,6 +1,7 @@
 import Atomics
 import BackgroundTasks
 import Combine
+import UIKit
 
 public protocol SyncPuller {
     func appPull(_ cancelOngoing: Bool)
@@ -38,6 +39,7 @@ class AppSyncer: SyncPuller, SyncPusher {
     private let statusRepository: WorkTypeStatusRepository
     private let worksitesRepository: WorksitesRepository
     private let worksiteChangeRepository: WorksiteChangeRepository
+    private let localImageRepository: LocalImageRepository
     private let syncLogger: SyncLogger
     private let authEventBus: AuthEventBus
 
@@ -57,6 +59,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         worksitesRepository: WorksitesRepository,
         worksiteChangeRepository: WorksiteChangeRepository,
         appPreferencesDataStore: AppPreferencesDataStore,
+        localImageRepository: LocalImageRepository,
         syncLoggerFactory: SyncLoggerFactory,
         authEventBus: AuthEventBus
     ) {
@@ -66,18 +69,21 @@ class AppSyncer: SyncPuller, SyncPusher {
         self.statusRepository = statusRepository
         self.worksitesRepository = worksitesRepository
         self.worksiteChangeRepository = worksiteChangeRepository
+        self.localImageRepository = localImageRepository
         syncLogger = syncLoggerFactory.getLogger("app-syncer")
         self.authEventBus = authEventBus
 
         accountData = accountDataRepository.accountData.eraseToAnyPublisher()
         appPreferences = appPreferencesDataStore.preferences.eraseToAnyPublisher()
+    }
 
-        // TODO: This must be registered before application finishes launching. Move into app delegate.
+    // Call from application did finish launching
+//    public static func registerBackgroundTasks() {
 //        let scheduler = BGTaskScheduler.shared
 //        scheduler.register(forTaskWithIdentifier: BackgroundTaskType.pull.rawValue, using: nil) { task in
 //            self.pull(task as! BgPullTask)
 //        }
-    }
+//    }
 
     private func validateAccountTokens() async throws -> Bool {
         await accountDataRepository.updateAccountTokens()
@@ -281,8 +287,43 @@ class AppSyncer: SyncPuller, SyncPusher {
 //        }
     }
 
+    private let syncMediaGuard = ManagedAtomic(false)
     func scheduleSyncMedia() {
-        // TODO: Sync media
+        var syncingTask: Task<Void, Error>? = nil
+
+        var bgTaskId: UIBackgroundTaskIdentifier = .invalid
+        bgTaskId = UIApplication.shared.beginBackgroundTask(withName: "sync-media") {
+            syncingTask?.cancel()
+            UIApplication.shared.endBackgroundTask(bgTaskId)
+        }
+
+        let bgTaskIdConst = bgTaskId
+        syncingTask = Task {
+            do {
+                defer {
+                    Task { @MainActor in
+                        UIApplication.shared.endBackgroundTask(bgTaskIdConst)
+                    }
+                }
+
+                let syncTransaction = self.syncMediaGuard.compareExchange(
+                    expected: false,
+                    desired: true,
+                    ordering: .sequentiallyConsistent
+                )
+                if syncTransaction.original == true {
+                    return
+                }
+
+                let isSyncAll = try await worksiteChangeRepository.syncWorksiteMedia()
+                if !isSyncAll {
+                    // TODO: Schedule delayed background sync
+                }
+            } catch {
+                // TODO: Handle proper. Could be cancellation.
+                print("Sync media error \(error)")
+            }
+        }
     }
 }
 

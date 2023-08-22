@@ -28,11 +28,7 @@ struct CaseImage {
     let category: ImageCategory
     let isAfter: Bool
 
-    var imageName: String {
-        let imageParts = imageUri.split(separator: "/")
-        let lastPart = imageParts.isEmpty ? "" : (imageParts.last ?? "")
-        return String(lastPart)
-    }
+    var imageName: String { imageUri.lastPath }
     // sourcery:end
 
     init(

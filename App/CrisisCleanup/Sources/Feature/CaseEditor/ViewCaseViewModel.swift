@@ -44,7 +44,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     @Published private(set) var isPendingTransfer = false
     lazy var transferType: WorkTypeTransferType = { transferWorkTypeProvider.transferType }()
 
-    @Published private(set) var syncingWorksiteImage = 0
+    @Published private(set) var syncingWorksiteImage: Int64 = 0
 
     private let isOrganizationsRefreshed = ManagedAtomic(false)
     private let organizationLookup: AnyPublisher<[Int64: IncidentOrganization], Never>
@@ -204,11 +204,15 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     }
 
     private func subscribeSyncing() {
-        // TODO: Combine with syncing images when available
-        worksiteChangeRepository.syncingWorksiteIds
+        Publishers.CombineLatest(
+            worksiteChangeRepository.syncingWorksiteIds.eraseToAnyPublisher(),
+            localImageRepository.syncingWorksiteId.eraseToAnyPublisher()
+        )
             .eraseToAnyPublisher()
-            .map { syncingWorksiteIds in
-                syncingWorksiteIds.contains(self.worksiteIdIn)
+            .map { worksiteIds, imageWorksiteId in
+                let worksiteId = self.worksiteIdIn
+                return worksiteIds.contains(worksiteId) ||
+                imageWorksiteId == worksiteId
             }
             .receive(on: RunLoop.main)
             .assign(to: \.isSyncing, on: self)
@@ -451,7 +455,12 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     }
 
     private func subscribeLocalImages() {
-        // TODO: Delete local image db entries where file no longer exists in cache
+        localImageRepository.syncingWorksiteImage
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.syncingWorksiteImage, on: self)
+            .store(in: &subscriptions)
+
         $beforeAfterPhotos
             .sink(receiveValue: {
                 for (_, images) in $0 {
@@ -759,6 +768,8 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
                     categoryLiteral,
                     results
                 )
+
+                syncPusher.scheduleSyncMedia()
             } catch {
                 logger.logError(error)
             }

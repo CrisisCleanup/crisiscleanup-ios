@@ -37,7 +37,7 @@ public protocol WorksiteChangeRepository {
 
     func syncUnattemptedWorksite(_ worksiteId: Int64) async
 
-    func syncWorksiteMedia() async -> Bool
+    func syncWorksiteMedia() async throws -> Bool
 }
 
 extension WorksiteChangeRepository {
@@ -73,6 +73,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
     private let worksiteNoteDao: WorksiteNoteDao
     private let workTypeDao: WorkTypeDao
     private let localImageDao: LocalImageDao
+    private let localFileCache: LocalFileCache
     private let worksiteChangeSyncer: WorksiteChangeSyncer
     private let worksitePhotoChangeSyncer: WorksitePhotoChangeSyncer
     private let accountDataRepository: AccountDataRepository
@@ -106,6 +107,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         worksiteNoteDao: WorksiteNoteDao,
         workTypeDao: WorkTypeDao,
         localImageDao: LocalImageDao,
+        localFileCache: LocalFileCache,
         worksiteChangeSyncer: WorksiteChangeSyncer,
         worksitePhotoChangeSyncer: WorksitePhotoChangeSyncer,
         accountDataRepository: AccountDataRepository,
@@ -124,6 +126,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         self.worksiteNoteDao = worksiteNoteDao
         self.workTypeDao = workTypeDao
         self.localImageDao = localImageDao
+        self.localFileCache = localFileCache
         self.worksiteChangeSyncer = worksiteChangeSyncer
         self.worksitePhotoChangeSyncer = worksitePhotoChangeSyncer
         self.accountDataRepository = accountDataRepository
@@ -475,8 +478,24 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         }
     }
 
-    func syncWorksiteMedia() async -> Bool {
-        // TODO: Do
-        false
+    func syncWorksiteMedia() async throws -> Bool {
+        let worksitesWithImages = localImageDao.getUploadImageWorksiteIds()
+        var isSyncedAll = true
+        for worksiteImageUpload in worksitesWithImages {
+            try Task.checkCancellation()
+
+            let worksiteId = worksiteImageUpload.worksiteId
+            let syncCount = try await localImageRepository.syncWorksiteMedia(worksiteId)
+            if syncCount > 0 {
+                try await syncWorksite(worksiteId)
+            }
+            let unsyncedCount = worksiteImageUpload.count - syncCount
+            isSyncedAll = isSyncedAll && unsyncedCount == 0
+        }
+
+        let remainingFiles = Set(localImageDao.getPendingLocalImageFileNames())
+        localFileCache.deleteUnspecifiedFiles(remainingFiles)
+
+        return isSyncedAll
     }
 }

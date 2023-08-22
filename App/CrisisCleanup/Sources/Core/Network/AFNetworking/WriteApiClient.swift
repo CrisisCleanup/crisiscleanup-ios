@@ -280,18 +280,32 @@ class WriteApiClient: CrisisCleanupWriteApi {
         throw response.error ?? networkError
     }
 
-//    func uploadFile(
-//        url: String,
-//        fields: FileUploadFields,
-//        file: File,
-//        mimeType: String
-//    ) async {
-//        let mediaType = mimeType.toMediaTypeOrnil()
-//        let requestFile = file.asRequestBody(mediaType)
-//        let partFile = MultipartBody.Part.createFormData("file", file.name, requestFile)
-//        let parts = fields.asPartMap()
-//        fileUploadApi.uploadFile(url, parts, partFile)
-//    }
+    func uploadFile(
+        _ url: String,
+        _ fields: FileUploadFields,
+        _ fileData: Data,
+        _ fileName: String,
+        _ mimeType: String
+    ) async throws {
+        if let requestUrl = URL(string: url) {
+            let request = NetworkRequest(
+                requestUrl,
+                method: .post
+            )
+                .addHeaders(["Content-Type": "multipart/form-data"])
+            try await networkClient.uploadFile(requestConvertible: request) { formData in
+                for (key, value) in fields.asMap() {
+                    formData.append(value.data(using: .utf8)!, withName: key)
+                }
+                formData.append(
+                    fileData,
+                    withName: "file",
+                    fileName: fileName,
+                    mimeType: mimeType
+                )
+            }
+        }
+    }
 
     func addFileToWorksite(
         _ worksiteId: Int64,

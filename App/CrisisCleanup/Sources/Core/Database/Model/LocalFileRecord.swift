@@ -62,8 +62,36 @@ extension WorksiteLocalImageRecord: Codable, FetchableRecord, PersistableRecord 
     }
 }
 
+fileprivate typealias LocalImageColumn = WorksiteLocalImageRecord.Columns
+
 extension DerivableRequest<WorksiteLocalImageRecord> {
     func selectUriColumn() -> Self {
-        select(WorksiteLocalImageRecord.Columns.uri)
+        select(LocalImageColumn.uri)
+    }
+
+    func selectDescriptionColumns() -> Self {
+        select(
+            LocalImageColumn.id,
+            LocalImageColumn.uri,
+            LocalImageColumn.tag
+        )
+    }
+
+    func byWorksiteId(_ worksiteId: Int64) -> Self {
+        filter(LocalImageColumn.worksiteId == worksiteId)
+    }
+
+    func getUploadImageCounts(_ countColumnName: String = "count") -> Self {
+        select(
+            LocalImageColumn.worksiteId,
+            count(LocalImageColumn.id).forKey(countColumnName),
+            min(LocalImageColumn.id).forKey("minId")
+        )
+        .group(LocalImageColumn.worksiteId)
+        .order(SQL("minId").sqlExpression)
+    }
+
+    func selectFileName() -> Self {
+        select(LocalImageColumn.localDocumentId)
     }
 }

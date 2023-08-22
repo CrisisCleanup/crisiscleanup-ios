@@ -64,6 +64,35 @@ class AFNetworkingClient {
         }
         return result
     }
+
+    func uploadFile(
+        requestConvertible: URLRequestConvertible,
+        multipart: @escaping (MultipartFormData) -> Void
+    ) async throws {
+        let uploadRequest = AF.upload(
+            multipartFormData: multipart,
+            with: requestConvertible
+        )
+        return try await withCheckedThrowingContinuation { continuation in
+            uploadRequest.response { response in
+                switch response.result {
+                case .success(_):
+                    var failMessage = ""
+                    if let statusCode = response.response?.statusCode,
+                       statusCode < 200 || statusCode >= 300 {
+                        failMessage = "Upload failed. Status code: \(statusCode)."
+                    }
+                    if failMessage.isBlank {
+                        continuation.resume()
+                    } else {
+                        continuation.resume(throwing: GenericError(failMessage))
+                    }
+                default:
+                    continuation.resume(throwing: response.error ?? GenericError("Upload fail"))
+                }
+            }
+        }
+    }
 }
 
 private class LogEventMonitor : EventMonitor {

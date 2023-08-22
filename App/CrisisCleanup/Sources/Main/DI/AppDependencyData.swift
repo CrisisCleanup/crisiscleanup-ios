@@ -190,6 +190,12 @@ extension MainComponent {
         }
     }
 
+    var localFileCache: LocalFileCache {
+        shared {
+            MemoryLocalFileCache(loggerFactory: loggerFactory)
+        }
+    }
+
     public var worksiteChangeRepository: WorksiteChangeRepository {
         shared {
             CrisisCleanupWorksiteChangeRepository(
@@ -199,6 +205,7 @@ extension MainComponent {
                 worksiteNoteDao: worksiteNoteDao,
                 workTypeDao: workTypeDao,
                 localImageDao: localImageDao,
+                localFileCache: localFileCache,
                 worksiteChangeSyncer: NetworkWorksiteChangeSyncer(
                     changeSetOperator: WorksiteChangeSetOperator(),
                     networkDataSource: networkDataSource,
@@ -229,7 +236,7 @@ extension MainComponent {
                 networkFileDao: networkFileDao,
                 localImageDao: localImageDao,
                 writeApi: writeApi,
-                localFileCache: MemoryLocalFileCache(loggerFactory: loggerFactory),
+                localFileCache: localFileCache,
                 syncLogger: syncLoggerFactory.getLogger("local-image"),
                 loggerFactory: loggerFactory
             )

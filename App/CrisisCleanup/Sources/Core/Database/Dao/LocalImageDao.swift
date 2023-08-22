@@ -84,6 +84,52 @@ public class LocalImageDao {
                 .fetchAll(db)
         }
     }
+
+    func getWorksiteLocalImages(_ worksiteId: Int64) -> [PopulatedLocalImageDescription] {
+        try! reader.read{ db in
+            try WorksiteLocalImageRecord
+                .all()
+                .selectDescriptionColumns()
+                .byWorksiteId(worksiteId)
+                .asRequest(of: PopulatedLocalImageDescription.self)
+                .fetchAll(db)
+        }
+    }
+
+    func saveUploadedFile(
+        _ worksiteId: Int64,
+        _ localImage: PopulatedLocalImageDescription,
+        _ networkFile: NetworkFileRecord
+    ) throws {
+        try database.saveUploadedFile(worksiteId, localImage, networkFile)
+    }
+
+    // TODO: Write tests
+    func getUploadImageWorksiteIds() -> [PopulatedWorksiteImageCount] {
+        try! reader.read{ db in
+            let imageCountCte = CommonTableExpression(
+                named: "imageCount",
+                request: WorksiteLocalImageRecord
+                    .all()
+                    .getUploadImageCounts()
+            )
+            return try imageCountCte
+                .all()
+                .with(imageCountCte)
+                .asRequest(of: PopulatedWorksiteImageCount.self)
+                .fetchAll(db)
+        }
+    }
+
+    func getPendingLocalImageFileNames() -> [String] {
+        try! reader.read { db in
+            try WorksiteLocalImageRecord
+                .all()
+                .selectFileName()
+                .asRequest(of: String.self)
+                .fetchAll(db)
+        }
+    }
 }
 
 extension AppDatabase {
@@ -111,15 +157,36 @@ extension AppDatabase {
         try dbWriter.write { db in try record.insertOrUpdateTag(db) }
     }
 
+    private func deleteLocalImage(
+        _ db: Database,
+        _ id: Int64
+    ) throws {
+        _ = try WorksiteLocalImageRecord
+            .filter(id: id)
+            .deleteAll(db)
+    }
+
     fileprivate func deleteLocalImage(_ id: Int64) throws {
-        try dbWriter.write { db in
-            _ = try WorksiteLocalImageRecord
-                .filter(id: id)
-                .deleteAll(db)
-        }
+        try dbWriter.write { db in try deleteLocalImage(db, id) }
     }
 
     fileprivate func markNetworkImageForDelete(_ id: Int64) throws {
         try dbWriter.write { db in try NetworkFileLocalImageRecord.markForDelete(db, id) }
+    }
+
+    fileprivate func saveUploadedFile(
+        _ worksiteId: Int64,
+        _ localImage: PopulatedLocalImageDescription,
+        _ networkFile: NetworkFileRecord
+    ) throws {
+        try dbWriter.write{ db in
+            try networkFile.upsert(db)
+            try WorksiteToNetworkFileRecord(
+                id: worksiteId,
+                networkFileId: networkFile.id
+            )
+            .insert(db, onConflict: .ignore)
+            try deleteLocalImage(db, localImage.id)
+        }
     }
 }

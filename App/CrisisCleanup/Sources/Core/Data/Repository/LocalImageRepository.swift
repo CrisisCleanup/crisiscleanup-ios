@@ -40,7 +40,7 @@ public protocol LocalImageRepository {
 
     func deleteLocalImage(_ id: Int64) throws
 
-    func syncWorksiteMedia(_ worksiteId: Int64) async -> Int
+    func syncWorksiteMedia(_ worksiteId: Int64) async throws -> Int
 }
 
 class CrisisCleanupLocalImageRepository: LocalImageRepository {
@@ -49,7 +49,7 @@ class CrisisCleanupLocalImageRepository: LocalImageRepository {
     private let localImageDao: LocalImageDao
     private let writeApi: CrisisCleanupWriteApi
     private let localFileCache: LocalFileCache
-    private let syncLogger: SyncLogger
+    private var syncLogger: SyncLogger
     private let appLogger: AppLogger
 
     private let fileUploadGuard = ManagedAtomic(false)
@@ -158,8 +158,158 @@ class CrisisCleanupLocalImageRepository: LocalImageRepository {
         try localImageDao.deleteLocalImage(id)
     }
 
-    func syncWorksiteMedia(_ worksiteId: Int64) async -> Int {
-        // TODO: Do
-        0
+    func syncWorksiteMedia(_ worksiteId: Int64) async throws -> Int {
+        let imagesPendingUpload = localImageDao.getWorksiteLocalImages(worksiteId)
+        if imagesPendingUpload.isEmpty {
+            return 0
+        }
+
+        let networkWorksiteId = worksiteDao.getWorksiteNetworkId(worksiteId)
+        if networkWorksiteId <= 0 {
+            return 0
+        }
+
+        syncLogger.type = "worksite-\(worksiteId)-media"
+
+        syncLogger.log("Syncing \(imagesPendingUpload.count) images")
+
+        var saveCount = 0
+
+        let guardTransaction = fileUploadGuard.compareExchange(
+            expected: false,
+            desired: true,
+            ordering: .sequentiallyConsistent
+        )
+        if guardTransaction.original == false {
+            syncingWorksiteIdSubject.value = worksiteId
+            do {
+                defer {
+                    _ = fileUploadGuard.exchange(false, ordering: .sequentiallyConsistent)
+                    syncingWorksiteIdSubject.value = EmptyWorksite.id
+                    syncingWorksiteImageSubject.value = 0
+
+                    syncLogger.flush()
+                }
+
+                for localImage in imagesPendingUpload {
+                    try Task.checkCancellation()
+
+                    let isSynced = try await syncLocalImage(
+                        worksiteId,
+                        networkWorksiteId,
+                        localImage
+                    )
+
+                    if isSynced {
+                        saveCount += 1
+
+                        syncLogger.log("Synced \(saveCount)/\(imagesPendingUpload.count)")
+                    }
+                }
+            }
+        } else {
+            syncLogger.flush()
+        }
+
+        return saveCount
+    }
+
+    private func getFileNameType(_ uri: URL) -> (String, String) {
+        let displayName = uri.path.lastPath
+        let mimeType = "image/jpeg"
+        return (displayName, mimeType)
+    }
+
+    private func copyImageToData(_ uri: URL, _ fileName: String) -> Data? {
+        if let image = localFileCache.getImage(fileName),
+           let imageData = image.jpegData(compressionQuality: 1.0) {
+            return imageData
+        }
+
+        return nil
+    }
+
+    private func uploadWorksiteFile(
+        networkWorksiteId: Int64,
+        fileName: String,
+        file: Data,
+        mimeType: String,
+        imageTag: String
+    ) async throws -> NetworkFile {
+        let fileUpload = try await writeApi.startFileUpload(fileName, mimeType)
+        let up = fileUpload.uploadProperties
+        try await writeApi.uploadFile(
+            up.url,
+            up.fields,
+            file,
+            fileName,
+            mimeType
+        )
+        return try await writeApi.addFileToWorksite(networkWorksiteId, fileUpload.id, imageTag)
+    }
+
+    private func syncLocalImage(
+        _ worksiteId: Int64,
+        _ networkWorksiteId: Int64,
+        _ localImage: PopulatedLocalImageDescription
+    ) async throws -> Bool {
+        var deleteLogMessage = ""
+        var isSynced = false
+
+        if let uri = URL(string: localImage.uri) {
+            let (fileName, mimeType) = getFileNameType(uri)
+            if fileName.isBlank || mimeType.isBlank {
+                deleteLogMessage = "File not found from \(localImage.uri)"
+            } else {
+                syncingWorksiteImageSubject.value = localImage.id
+
+                do {
+                    if let imageData = copyImageToData(uri, fileName) {
+                        let networkFile = try await uploadWorksiteFile(
+                            networkWorksiteId: networkWorksiteId,
+                            fileName: fileName,
+                            file: imageData,
+                            mimeType: mimeType,
+                            imageTag: localImage.tag
+                        )
+                        try localImageDao.saveUploadedFile(
+                            worksiteId,
+                            localImage,
+                            networkFile.asRecord()
+                        )
+                        isSynced = true
+
+                        syncLogger.log("Synced \(localImage.id) (\(networkFile.id) file \(networkFile.file!))")
+
+                        localFileCache.deleteFile(fileName)
+                    } else {
+                        syncLogger.log("Unable to copy image.", details: localImage.uri)
+
+                        try localImageDao.deleteLocalImage(localImage.id)
+                        deleteLogMessage = "Missing image in cache"
+                    }
+                } catch {
+                    appLogger.logError(error)
+
+                    var errorMessage = error.localizedDescription
+                    if let e = error as? GenericError {
+                        errorMessage = e.message
+                    }
+                    syncLogger.log("Sync error", details: errorMessage)
+                }
+            }
+        } else {
+            deleteLogMessage = "Invalid URI \(localImage.uri)"
+        }
+
+        if deleteLogMessage.isNotBlank {
+            syncLogger.log(
+                "Deleting image \(localImage.id)",
+                details: deleteLogMessage
+            )
+            try localImageDao.deleteLocalImage(localImage.id)
+        }
+
+        return isSynced
     }
 }
