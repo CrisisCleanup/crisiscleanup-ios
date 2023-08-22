@@ -301,6 +301,8 @@ class AppSyncer: SyncPuller, SyncPusher {
         syncingTask = Task {
             do {
                 defer {
+                    self.syncMediaGuard.store(false, ordering: .sequentiallyConsistent)
+
                     Task { @MainActor in
                         UIApplication.shared.endBackgroundTask(bgTaskIdConst)
                     }

@@ -139,6 +139,7 @@ class ViewImageViewModel: ObservableObject {
             .removeDuplicates()
             .sink(receiveValue: { rotation in
                 if self.savedImageRotation < 999 {
+                    // TODO: This will fatal error if images is being deleted and rotation transaction occurs after local image record is deleted
                     self.localImageRepository.setImageRotation(
                         self.imageId,
                         self.isNetworkImage,

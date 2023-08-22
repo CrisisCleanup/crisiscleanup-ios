@@ -56,7 +56,7 @@ class MemoryLocalFileCache: LocalFileCache {
         if cacheDir == nil {
             let fileManager = FileManager.default
             cacheDir = try fileManager.url(
-                for: .picturesDirectory,
+                for: .applicationSupportDirectory,
                 in: .userDomainMask,
                 appropriateFor: nil,
                 create: true
@@ -69,7 +69,7 @@ class MemoryLocalFileCache: LocalFileCache {
     }
 
     private func cacheFileUrl(_ fileName: String) throws -> URL {
-        try getCacheDir().appendingPathComponent(fileName)
+        try getCacheDir().resolvingSymlinksInPath().appendingPathComponent(fileName)
     }
 
     private func cacheImage(
@@ -103,7 +103,7 @@ class MemoryLocalFileCache: LocalFileCache {
                    try cacheImage(fileUrl, image)
                 {
                     imageCache.setValue(image, forKey: fileName)
-                    cachedImages[fileName] = fileUrl.absoluteString
+                    cachedImages[fileName] = fileUrl.path()
                 }
             }
         }
@@ -125,7 +125,7 @@ class MemoryLocalFileCache: LocalFileCache {
 
             if try cacheImage(fileUrl, image) {
                 imageCache.setValue(image, forKey: fileName)
-                cachedImages[fileName] = fileUrl.absoluteString
+                cachedImages[fileName] = fileUrl.path()
             }
 
             return cachedImages
@@ -138,8 +138,8 @@ class MemoryLocalFileCache: LocalFileCache {
                 return cached
             }
 
-            let imagePath = try cacheFileUrl(imageFileName)
-            if let image = UIImage(contentsOfFile: imagePath.path()),
+            let imagePath = try cacheFileUrl(imageFileName).path(percentEncoded: false)
+            if let image = UIImage(contentsOfFile: imagePath),
                image.size != .zero {
                 imageCache.setValue(image, forKey: imageFileName)
                 return image
@@ -165,15 +165,16 @@ class MemoryLocalFileCache: LocalFileCache {
         // TODO: Review and update when non-image files are supported. Write tests.
 
         do {
-            let files = try FileManager.default.contentsOfDirectory(at: getCacheDir(), includingPropertiesForKeys: nil)
+            if fileNames.isEmpty {
+                let fileManager = FileManager.default
+                let files = try fileManager.contentsOfDirectory(at: getCacheDir(), includingPropertiesForKeys: nil)
 
-            for file in files {
-                let fileName = file.path().lastPath
-                if fileName.isNotBlank,
-                   !fileNames.contains(fileName) {
-                    // TODO: Write tests before deleting
-                    logger.logDebug("Delete file \(fileName) (no longer necessary)")
+                for file in files {
+                    imageCache.removeValue(forKey: file.lastPathComponent)
+                    try fileManager.removeItem(at: file)
                 }
+            } else {
+                logger.logDebug("Not deleting cached files when there are pending files.")
             }
         } catch {
             logger.logError(error)
