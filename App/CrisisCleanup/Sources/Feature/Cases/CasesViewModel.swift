@@ -60,6 +60,8 @@ class CasesViewModel: ObservableObject {
     private let isGeneratingWorksiteMarkers = CurrentValueSubject<Bool, Never>(false)
     private let isDelayingRegionBug = CurrentValueSubject<Bool, Never>(false)
 
+    @Published private(set) var coordinateOverlay = TileCoordinateOverlay(
+    )
     private let mapMarkerManager: CasesMapMarkerManager
 
     private let mapMarkersChangeSetSubject = CurrentValueSubject<AnnotationsChangeSet, Never>(emptyAnnotationsChangeSet)

@@ -34,7 +34,14 @@ class Coordinator: NSObject, MKMapViewDelegate {
     }
 
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-        return createPolygonRenderer(for: overlay as! MKPolygon)
+        switch overlay {
+        case let overlay as MKPolygon:
+            return createPolygonRenderer(for: overlay)
+        case let overlay as MKTileOverlay:
+            return createTileRenderer(for: overlay)
+        default:
+            return MKOverlayRenderer(overlay: overlay)
+        }
     }
 
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
@@ -63,6 +70,11 @@ class Coordinator: NSObject, MKMapViewDelegate {
         renderer.fillColor = UIColor.black
         renderer.blendMode = .color
         return renderer
+    }
+
+    func createTileRenderer(for overlay: MKTileOverlay) -> MKTileOverlayRenderer {
+        let tileRenderer = MKTileOverlayRenderer(tileOverlay: overlay)
+        return tileRenderer
     }
 }
 
@@ -104,6 +116,9 @@ struct MapView : UIViewRepresentable {
 
         map.addOverlay(firstHalfOverlay, level: .aboveRoads)
         map.addOverlay(secondHalfOverlay, level: .aboveRoads)
+
+        let coordinateOverlay = TileCoordinateOverlay()
+        map.addOverlay(coordinateOverlay, level: .aboveLabels)
 
         map.delegate = context.coordinator
 
