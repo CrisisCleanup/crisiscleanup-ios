@@ -741,6 +741,8 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
                     categoryLiteral,
                     result
                 )
+
+                syncPusher.scheduleSyncMedia()
             } catch {
                 logger.logError(error)
             }
