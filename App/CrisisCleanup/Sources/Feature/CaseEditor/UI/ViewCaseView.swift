@@ -28,6 +28,12 @@ struct ViewCaseView: View {
 
         ZStack {
             VStack {
+                let updatedAt = viewModel.updatedAtText
+                if updatedAt.isNotBlank {
+                    Text(updatedAt)
+                        .fontBodySmall()
+                        .listItemModifier()
+                }
 
                 HStack {
                     let tabTitles = viewModel.tabTitles
@@ -48,7 +54,6 @@ struct ViewCaseView: View {
                         }
                     }
                 }
-                .padding(.top)
 
                 // TODO: redraws the view when switching tabs? Change Zindex instead?
                 switch selectedTab {

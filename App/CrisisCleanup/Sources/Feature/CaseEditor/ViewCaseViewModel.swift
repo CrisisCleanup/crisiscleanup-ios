@@ -27,6 +27,8 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     @Published private(set) var headerTitle = ""
     @Published private(set) var subTitle = ""
 
+    @Published private(set) var updatedAtText = ""
+
     @Published private(set) var isLoading = true
 
     @Published private(set) var isSyncing = false
@@ -250,6 +252,18 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     }
 
     private func subscribeCaseData() {
+        editableWorksiteProvider.editableWorksite
+            .map { worksite in
+                if let updatedAt = worksite.updatedAt {
+                    return self.t("caseView.updated_ago")
+                        .replacingOccurrences(of: "{relative_time}", with: updatedAt.relativeTime)
+                }
+                return ""
+            }
+            .receive(on: RunLoop.main)
+            .assign(to: \.updatedAtText, on: self)
+            .store(in: &subscriptions)
+
         uiState
             .throttle(
                 for: .seconds(0.1),
