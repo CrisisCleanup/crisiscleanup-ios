@@ -3,7 +3,10 @@ import SwiftUI
 struct AuthenticateView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
+    @EnvironmentObject var router: NavigationRouter
+
     @ObservedObject var viewModel: AuthenticateViewModel
+
     let dismiss: () -> Void
 
     var body: some View {
@@ -61,6 +64,12 @@ struct LoginView: View {
 
         VStack {
             ScrollView {
+                Image("crisis_cleanup_logo", bundle: .module)
+                    .renderingMode(.original)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxWidth: 180)
+
                 VStack {
                     Text(t.translate("actions.login", "Login action"))
                         .fontHeader2()
@@ -94,6 +103,12 @@ struct LoginView: View {
                             .onSubmit { authenticate() }
                     }
                     .onChange(of: focusState) { focusableViewState.focusState = $0 }
+
+                    HStack {
+                        // TODO: Email link when Universal links are ready
+
+                        // TODO: Forgot password action
+                    }
 
                     if viewModel.isDebuggable {
                         Button("Login Debug") {
