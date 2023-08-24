@@ -33,6 +33,19 @@ struct MenuView: View {
 
             Spacer()
 
+            // TODO: Common dimensions
+            HStack(alignment: .center, spacing: 16) {
+                Link(
+                    t.t("publicNav.terms"),
+                    destination: URL(string: "https://crisiscleanup.org/terms")!
+                )
+                Link(
+                    t.t("nav.privacy"),
+                    destination: URL(string: "https://crisiscleanup.org/privacy")!
+                )
+            }
+            .padding()
+
             if appAlertState.showAlert,
                let appAlert = appAlertState.alertType {
                 AppAlertView(
