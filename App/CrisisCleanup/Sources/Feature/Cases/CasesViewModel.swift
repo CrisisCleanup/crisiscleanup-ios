@@ -60,9 +60,11 @@ class CasesViewModel: ObservableObject {
     private let isGeneratingWorksiteMarkers = CurrentValueSubject<Bool, Never>(false)
     private let isDelayingRegionBug = CurrentValueSubject<Bool, Never>(false)
 
-    @Published private(set) var coordinateOverlay = TileCoordinateOverlay(
-    )
+    private let mapCaseDotProvider = InMemoryDotProvider()
+    @Published private(set) var mapDotsOverlay: CasesMapDotsOverlay
+    @Published private(set) var debugOverlay: MKTileOverlay?
     private let mapMarkerManager: CasesMapMarkerManager
+    internal var mapView: MKMapView?
 
     private let mapMarkersChangeSetSubject = CurrentValueSubject<AnnotationsChangeSet, Never>(emptyAnnotationsChangeSet)
     @Published private(set) var mapMarkersChangeSet = emptyAnnotationsChangeSet
@@ -103,7 +105,8 @@ class CasesViewModel: ObservableObject {
         filterRepository: CasesFilterRepository,
         translator: KeyTranslator,
         syncPuller: SyncPuller,
-        loggerFactory: AppLoggerFactory
+        loggerFactory: AppLoggerFactory,
+        appEnv: AppEnv
     ) {
         self.incidentSelector = incidentSelector
         self.incidentsRepository = incidentsRepository
@@ -152,6 +155,15 @@ class CasesViewModel: ObservableObject {
         qsm = queryStateManager
 
         mapAnnotationsExchanger = MapAnnotationsExchanger(mapMarkersChangeSetSubject)
+
+        mapDotsOverlay = CasesMapDotsOverlay(
+            worksitesRepository: worksitesRepository,
+            mapCaseDotProvider: mapCaseDotProvider,
+            filterRepository: filterRepository
+        )
+        if appEnv.isDebuggable {
+            debugOverlay = TileCoordinateOverlay()
+        }
     }
 
     func onViewAppear() {
@@ -183,16 +195,21 @@ class CasesViewModel: ObservableObject {
         .assign(to: \.isLoadingData, on: self)
         .store(in: &subscriptions)
 
+        let isRenderingMapOverlay = Publishers.CombineLatest(
+            isGeneratingWorksiteMarkers,
+            mapDotsOverlay.isBusy.eraseToAnyPublisher()
+        )
+            .map { b0, b1 in b0 || b1 }
+            .eraseToAnyPublisher()
         Publishers.CombineLatest4(
             incidentsRepository.isLoading.eraseToAnyPublisher(),
             mapBoundsManager.isDeterminingBoundsPublisher.eraseToAnyPublisher(),
-            isGeneratingWorksiteMarkers,
+            isRenderingMapOverlay,
             isDelayingRegionBug
         )
             .receive(on: RunLoop.main)
-            .sink { b0, b1, b2, b3 in
-                self.isMapBusy = b0 || b1 || b2 || b3
-            }
+            .map { b0, b1, b2, b3 in b0 || b1 || b2 || b3 }
+            .assign(to: \.isMapBusy, on: self)
             .store(in: &subscriptions)
 
         tableViewDataLoader.isLoading
@@ -239,6 +256,18 @@ class CasesViewModel: ObservableObject {
     }
 
     private func subscribeWorksiteInBounds() {
+        Publishers.CombineLatest3(
+            incidentWorksitesCount,
+            dataPullReporter.incidentDataPullStats.eraseToAnyPublisher(),
+            filterRepository.casesFiltersLocation.eraseToAnyPublisher()
+        )
+        .debounce(for: .seconds(0.016), scheduler: RunLoop.current)
+        .throttle(for: .seconds(1.0), scheduler: RunLoop.current, latest: true)
+        .sink { count, stats, _ in
+            self.refreshTiles(count, stats)
+        }
+        .store(in: &subscriptions)
+
         let worksitesInBounds = Publishers.CombineLatest(
             qsm.worksiteQueryState,
             incidentWorksitesCount
@@ -253,8 +282,16 @@ class CasesViewModel: ObservableObject {
                     let queryIncidentId = wqs.incidentId
                     let queryFilters = wqs.filters
 
-                    if wqs.isTableView || queryIncidentId == EmptyIncident.id {
-                        return IncidentAnnotations(queryIncidentId)
+                    let isZoomedOut = self.mapDotsOverlay.rendersAt(wqs.zoom)
+                    if wqs.isTableView ||
+                        queryIncidentId == EmptyIncident.id ||
+                        isZoomedOut
+                    {
+                        return IncidentAnnotations(
+                            queryIncidentId,
+                            queryFilters,
+                            isClean: isZoomedOut
+                        )
                     }
 
                     _ = self.mapAnnotationsExchanger.onAnnotationStateChange(
@@ -274,6 +311,8 @@ class CasesViewModel: ObservableObject {
                         self.logger.logError(error)
                     }
 
+                    try Task.checkCancellation()
+
                     return IncidentAnnotations(
                         queryIncidentId,
                         queryFilters,
@@ -286,12 +325,16 @@ class CasesViewModel: ObservableObject {
 
         worksitesInBounds
             .map { incidentAnnotations in
-                self.latestMapMarkersPublisher.publisher {
-                    let changes = try self.mapAnnotationsExchanger.getChange(
-                        incidentAnnotations.incidentId,
-                        incidentAnnotations.filters,
-                        incidentAnnotations.annotations
-                    )
+                return self.latestMapMarkersPublisher.publisher {
+                    if incidentAnnotations.isClean {
+                        self.mapAnnotationsExchanger.onClean(
+                            incidentAnnotations.incidentId,
+                            incidentAnnotations.filters
+                        )
+                        throw CancellationError()
+                    }
+
+                    let changes = try self.mapAnnotationsExchanger.getChange(incidentAnnotations)
 
                     try Task.checkCancellation()
 
@@ -514,6 +557,10 @@ class CasesViewModel: ObservableObject {
         syncPuller.appPullIncidentWorksitesDelta()
     }
 
+    private func setTileRendererLocation() {
+        mapDotsOverlay.setLocation(locationManager.getLocation())
+    }
+
     func useMyLocation() -> Bool {
         if locationManager.requestLocationAccess() {
             return true
@@ -524,6 +571,79 @@ class CasesViewModel: ObservableObject {
         }
 
         return false
+    }
+
+    private let tileClearRefreshInterval = 5.seconds
+    private var tileRefreshedTime = Date(timeIntervalSince1970: 0)
+    private var tileClearWorksitesCount = 0
+
+    // TODO: Simplify below where possible
+    private func refreshTiles(
+        _ idCount: IncidentIdWorksiteCount,
+        _ pullStats: IncidentDataPullStats
+    ) {
+        var refreshTiles = true
+        var clearCache = false
+
+        let isIncidentChange = idCount.id != pullStats.incidentId
+        let casesCount = idCount.totalCount
+        if isIncidentChange || casesCount == 0 {
+            tileClearWorksitesCount = casesCount
+            _ = mapDotsOverlay.setIncident(incidentId, casesCount, true)
+        }
+
+        if !pullStats.isStarted || isIncidentChange {
+            return
+        }
+
+        let isEnded = pullStats.isEnded
+        refreshTiles = isEnded
+        clearCache = isEnded
+
+        if pullStats.dataCount > 3000 {
+            let now = Date.now
+            if !refreshTiles && pullStats.progress > pullStats.saveStartedAmount {
+                let sinceLastRefresh = tileRefreshedTime.distance(to: now)
+                let projectedDelta = now.distance(to: pullStats.projectedFinish)
+                refreshTiles = pullStats.pullStart.distance(to: now) > tileClearRefreshInterval &&
+                sinceLastRefresh > tileClearRefreshInterval &&
+                projectedDelta > tileClearRefreshInterval
+                if idCount.totalCount - tileClearWorksitesCount >= 6000 &&
+                    pullStats.dataCount - tileClearWorksitesCount > 3000
+                {
+                    clearCache = true
+                    refreshTiles = true
+                }
+            }
+            if (refreshTiles) {
+                tileRefreshedTime = now
+            }
+        }
+
+        if (refreshTiles) {
+            if mapDotsOverlay.setIncident(idCount.id, idCount.totalCount, clearCache) {
+                clearCache = true
+            }
+        }
+
+        if clearCache {
+            tileClearWorksitesCount = idCount.totalCount
+        }
+
+        if clearCache || refreshTiles,
+           let map = mapView,
+           let _ = map.renderer(for: mapDotsOverlay) {
+            map.removeOverlay(mapDotsOverlay)
+
+            mapDotsOverlay = CasesMapDotsOverlay(
+                worksitesRepository: worksitesRepository,
+                mapCaseDotProvider: mapCaseDotProvider,
+                filterRepository: filterRepository
+            )
+            _ = mapDotsOverlay.setIncident(idCount.id, idCount.totalCount, clearCache)
+            mapDotsOverlay.setLocation(locationManager.getLocation())
+            map.addOverlay(mapDotsOverlay, level: .aboveLabels)
+        }
     }
 
     func onAddMapAnnotations(_ changes: AnnotationsChangeSet) {

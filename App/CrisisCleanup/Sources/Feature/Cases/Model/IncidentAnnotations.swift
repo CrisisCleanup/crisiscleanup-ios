@@ -6,15 +6,18 @@ struct IncidentAnnotations {
     let incidentId: Int64
     let filters: CasesFilter
     let annotations: [WorksiteAnnotationMapMark]
+    let isClean: Bool
 
     init(
         _ incidentId: Int64,
         _ filters: CasesFilter = CasesFilter(),
-        _ annotations: [WorksiteAnnotationMapMark] = [WorksiteAnnotationMapMark]()
+        _ annotations: [WorksiteAnnotationMapMark] = [WorksiteAnnotationMapMark](),
+        isClean: Bool = false
     ) {
         self.incidentId = incidentId
         self.filters = filters
         self.annotations = annotations
+        self.isClean = isClean
     }
 }
 
@@ -43,7 +46,7 @@ let emptyIncidentAnnotations = IncidentAnnotations(EmptyIncident.id)
 let emptyAnnotationsChangeSet = AnnotationsChangeSet()
 
 class MapAnnotationsExchanger {
-    private let applyGuard = NSLock()
+    private let applyGuard = NSRecursiveLock()
 
     private let annotationsSubject: any Subject<AnnotationsChangeSet, Never>
 
@@ -55,19 +58,25 @@ class MapAnnotationsExchanger {
         self.annotationsSubject = annotationsSubject
     }
 
+    func onClean(_ incidentId: Int64, _ filters: CasesFilter) {
+        let annotations = IncidentAnnotations(incidentId, filters)
+        applyGuard.withLock {
+            applyChangeSet = AnnotationsChangeSet(
+                annotations: annotations,
+                isClean: true
+            )
+            appliedIds = []
+            annotationsSubject.send(applyChangeSet)
+        }
+    }
+
     func onAnnotationStateChange(_ incidentId: Int64, _ filters: CasesFilter) -> Bool {
         applyGuard.withLock {
-            let isChange = isChanged(incidentId, filters)
-            if isChange {
-                let annotations = IncidentAnnotations(incidentId, filters)
-                applyChangeSet = AnnotationsChangeSet(
-                    annotations: annotations,
-                    isClean: true
-                )
-                appliedIds = []
-                annotationsSubject.send(applyChangeSet)
+            if isChanged(incidentId, filters) {
+                onClean(incidentId, filters)
+                return true
             }
-            return isChange
+            return false
         }
     }
 
@@ -76,32 +85,31 @@ class MapAnnotationsExchanger {
         return state.incidentId != incidentId || state.filters != filters
     }
 
-    func getChange(
-        _ incidentId: Int64,
-        _ filters: CasesFilter,
-        _ annotations: [WorksiteAnnotationMapMark]
-    ) throws -> AnnotationsChangeSet {
+    func getChange(_ incidentAnnotations: IncidentAnnotations) throws -> AnnotationsChangeSet {
         var isChanged = false
         var appliedIds: Set<Int64> = []
         applyGuard.withLock {
+            if incidentAnnotations.isClean {
+                self.appliedIds = []
+            }
             appliedIds = self.appliedIds
-            isChanged = self.isChanged(incidentId, filters)
+            isChanged = self.isChanged(
+                incidentAnnotations.incidentId,
+                incidentAnnotations.filters
+            )
         }
 
         if isChanged {
             throw CancellationError()
         }
 
-        let newAnnotations = annotations.filter {
+        let newAnnotations = incidentAnnotations.annotations.filter {
             !appliedIds.contains($0.source.id)
         }
         let newIds = Set(newAnnotations.map { $0.source.id })
         return AnnotationsChangeSet(
-            annotations: IncidentAnnotations(
-                incidentId,
-                filters,
-                annotations
-            ),
+            annotations: incidentAnnotations,
+            isClean: incidentAnnotations.isClean,
             newAnnotations: newAnnotations,
             newAnnotationIds: newIds
         )

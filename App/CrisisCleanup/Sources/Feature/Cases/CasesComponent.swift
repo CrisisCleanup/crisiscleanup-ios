@@ -23,7 +23,8 @@ class CasesComponent: Component<AppDependency>, CasesViewBuilder {
         filterRepository: dependency.casesFilterRepository,
         translator: dependency.translator,
         syncPuller: dependency.syncPuller,
-        loggerFactory: dependency.loggerFactory
+        loggerFactory: dependency.loggerFactory,
+        appEnv: dependency.appEnv
     )
 
     func casesView(_ openAuthScreen: @escaping () -> Void) -> AnyView {

@@ -117,10 +117,14 @@ struct MapView : UIViewRepresentable {
         map.addOverlay(firstHalfOverlay, level: .aboveRoads)
         map.addOverlay(secondHalfOverlay, level: .aboveRoads)
 
-        let coordinateOverlay = TileCoordinateOverlay()
-        map.addOverlay(coordinateOverlay, level: .aboveLabels)
+        if let overlay = viewModel.debugOverlay{
+            map.addOverlay(overlay, level: .aboveLabels)
+        }
+        map.addOverlay(viewModel.mapDotsOverlay, level: .aboveLabels)
 
         map.delegate = context.coordinator
+
+        viewModel.mapView = map
 
         return map
     }

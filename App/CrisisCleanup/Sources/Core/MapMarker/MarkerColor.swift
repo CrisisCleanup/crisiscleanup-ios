@@ -70,8 +70,8 @@ private let statusClaimMapMarkerColors: [WorkTypeStatusClaim: MapMarkerColor] = 
 internal let filteredOutMarkerAlpha = 0.2
 private let filteredOutMarkerStrokeAlpha = 0.5
 private let filteredOutMarkerFillAlpha = 0.2
-private let filteredOutDotStrokeAlpha = 0.35
-private let filteredOutDotFillAlpha = 0.2
+private let filteredOutDotStrokeAlpha = 0.2
+private let filteredOutDotFillAlpha = 0.05
 private let duplicateMarkerAlpha = 0.3
 
 internal func getMapMarkerColors(

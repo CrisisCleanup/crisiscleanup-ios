@@ -9,7 +9,7 @@ private func yToLat(_ yNorm: Double) -> Double {
     (2 * atan(exp(TWO_PI * (0.5 - yNorm))) - HALF_PI).degrees
 }
 
-struct TileCoordinates {
+struct TileCoordinates: Hashable {
     let x: Int
     let y: Int
     let zoom: Int
@@ -97,5 +97,18 @@ struct TileCoordinates {
         }
 
         return (xNorm, yNorm)
+    }
+
+    static func == (lhs: TileCoordinates, rhs: TileCoordinates) -> Bool {
+        guard lhs.x == rhs.x else { return false }
+        guard lhs.y == rhs.y else { return false }
+        guard lhs.zoom == rhs.zoom else { return false }
+        return true
+    }
+
+    func hash(into hasher: inout Hasher) {
+        x.hash(into: &hasher)
+        y.hash(into: &hasher)
+        zoom.hash(into: &hasher)
     }
 }

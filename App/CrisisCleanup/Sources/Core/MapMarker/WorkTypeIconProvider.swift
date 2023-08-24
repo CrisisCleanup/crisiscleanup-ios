@@ -27,7 +27,7 @@ class WorkTypeIconProvider: MapCaseIconProvider {
 
     private lazy var plusImageLazy: UIImage = {
         let image = WorkTypeIconProvider.loadIcon("ic_work_type_plus")
-        let filteredImage = grayscaleToColor(image, fromColorInt: 0, toColorInt: -1)
+        let filteredImage = grayscaleToColor(image, fromColorInt: 0xFF000000, toColorInt: 0xFFFFFFFF)
         return UIImage(cgImage: filteredImage)
     }()
 
