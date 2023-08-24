@@ -177,6 +177,7 @@ class CasesViewModel: ObservableObject {
         subscribeTableData()
         subscribeLocationStatus()
         subscribeFilterCount()
+        subscribeMapTiles()
     }
 
     func onViewDisappear() {
@@ -197,7 +198,9 @@ class CasesViewModel: ObservableObject {
 
         let isRenderingMapOverlay = Publishers.CombineLatest(
             isGeneratingWorksiteMarkers,
-            mapDotsOverlay.isBusy.eraseToAnyPublisher()
+            mapDotsOverlay.isBusy
+                .eraseToAnyPublisher()
+                .removeDuplicates()
         )
             .map { b0, b1 in b0 || b1 }
             .eraseToAnyPublisher()
@@ -256,18 +259,6 @@ class CasesViewModel: ObservableObject {
     }
 
     private func subscribeWorksiteInBounds() {
-        Publishers.CombineLatest3(
-            incidentWorksitesCount,
-            dataPullReporter.incidentDataPullStats.eraseToAnyPublisher(),
-            filterRepository.casesFiltersLocation.eraseToAnyPublisher()
-        )
-        .debounce(for: .seconds(0.016), scheduler: RunLoop.current)
-        .throttle(for: .seconds(1.0), scheduler: RunLoop.current, latest: true)
-        .sink { count, stats, _ in
-            self.refreshTiles(count, stats)
-        }
-        .store(in: &subscriptions)
-
         let worksitesInBounds = Publishers.CombineLatest(
             qsm.worksiteQueryState,
             incidentWorksitesCount
@@ -553,6 +544,20 @@ class CasesViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
+    private func subscribeMapTiles() {
+        Publishers.CombineLatest3(
+            incidentWorksitesCount,
+            dataPullReporter.incidentDataPullStats.eraseToAnyPublisher(),
+            filterRepository.casesFiltersLocation.eraseToAnyPublisher()
+        )
+        .debounce(for: .seconds(0.016), scheduler: RunLoop.current)
+        .throttle(for: .seconds(1.0), scheduler: RunLoop.current, latest: true)
+        .sink { count, stats, filtersLocation in
+            self.refreshTiles(count, stats, filtersLocation)
+        }
+        .store(in: &subscriptions)
+    }
+
     func syncWorksitesData() {
         syncPuller.appPullIncidentWorksitesDelta()
     }
@@ -573,76 +578,24 @@ class CasesViewModel: ObservableObject {
         return false
     }
 
-    private let tileClearRefreshInterval = 5.seconds
-    private var tileRefreshedTime = Date(timeIntervalSince1970: 0)
-    private var tileClearWorksitesCount = 0
-
-    // TODO: Simplify below where possible
     private func refreshTiles(
         _ idCount: IncidentIdWorksiteCount,
-        _ pullStats: IncidentDataPullStats
+        _ pullStats: IncidentDataPullStats,
+        _ filtersLocation: (CasesFilter, Bool)
     ) {
-        var refreshTiles = true
-        var clearCache = false
-
-        let isIncidentChange = idCount.id != pullStats.incidentId
         let casesCount = idCount.totalCount
-        if isIncidentChange || casesCount == 0 {
-            tileClearWorksitesCount = casesCount
-            _ = mapDotsOverlay.setIncident(incidentId, casesCount, true)
-        }
+        var clearCache = casesCount == 0
+        clearCache = mapDotsOverlay.onStateChange(
+            incidentId,
+            casesCount,
+            filtersLocation,
+            clearCache
+        )
 
-        if !pullStats.isStarted || isIncidentChange {
-            return
-        }
-
-        let isEnded = pullStats.isEnded
-        refreshTiles = isEnded
-        clearCache = isEnded
-
-        if pullStats.dataCount > 3000 {
-            let now = Date.now
-            if !refreshTiles && pullStats.progress > pullStats.saveStartedAmount {
-                let sinceLastRefresh = tileRefreshedTime.distance(to: now)
-                let projectedDelta = now.distance(to: pullStats.projectedFinish)
-                refreshTiles = pullStats.pullStart.distance(to: now) > tileClearRefreshInterval &&
-                sinceLastRefresh > tileClearRefreshInterval &&
-                projectedDelta > tileClearRefreshInterval
-                if idCount.totalCount - tileClearWorksitesCount >= 6000 &&
-                    pullStats.dataCount - tileClearWorksitesCount > 3000
-                {
-                    clearCache = true
-                    refreshTiles = true
-                }
-            }
-            if (refreshTiles) {
-                tileRefreshedTime = now
-            }
-        }
-
-        if (refreshTiles) {
-            if mapDotsOverlay.setIncident(idCount.id, idCount.totalCount, clearCache) {
-                clearCache = true
-            }
-        }
-
-        if clearCache {
-            tileClearWorksitesCount = idCount.totalCount
-        }
-
-        if clearCache || refreshTiles,
+        if clearCache || pullStats.isEnded,
            let map = mapView,
-           let _ = map.renderer(for: mapDotsOverlay) {
-            map.removeOverlay(mapDotsOverlay)
-
-            mapDotsOverlay = CasesMapDotsOverlay(
-                worksitesRepository: worksitesRepository,
-                mapCaseDotProvider: mapCaseDotProvider,
-                filterRepository: filterRepository
-            )
-            _ = mapDotsOverlay.setIncident(idCount.id, idCount.totalCount, clearCache)
-            mapDotsOverlay.setLocation(locationManager.getLocation())
-            map.addOverlay(mapDotsOverlay, level: .aboveLabels)
+           let renderer = map.renderer(for: mapDotsOverlay) as? MKTileOverlayRenderer {
+            renderer.reloadData()
         }
     }
 

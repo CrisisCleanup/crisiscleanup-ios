@@ -19,6 +19,7 @@ class CasesMapDotsOverlay: MKTileOverlay {
     private var tileCache = TileDataCache(3000)
     private var incidentIdCache: Int64 = -1
     private var worksitesCount = 0
+    private var filtersLocationCache = (CasesFilter(), false)
 
     private var locationCoordinates: CLLocation? = nil
 
@@ -30,8 +31,6 @@ class CasesMapDotsOverlay: MKTileOverlay {
         }
         return _emptyTile!
     }
-
-    // TODO: Look into setting minimumZ and maximumZ
 
     init(
         worksitesRepository: WorksitesRepository,
@@ -46,27 +45,36 @@ class CasesMapDotsOverlay: MKTileOverlay {
             .map { $0 > 0 }
 
         super.init(urlTemplate: nil)
+        maximumZ = zoomThreshold
     }
 
     func rendersAt(_ zoom: Double) -> Bool {
         Int(zoom.rounded(.up)) < zoomThreshold + 1
     }
 
-    func setIncident(
+    func onStateChange(
         _ id: Int64,
         _ worksitesCount: Int,
+        _ filtersLocation: (CasesFilter, Bool),
         _ clearCache: Bool
     ) -> Bool {
-        let isIncidentChanged = id != incidentIdCache
+        var isChange = false
         cacheLock.withLock {
-            if isIncidentChanged || clearCache {
+            let isIncidentChanged = id != incidentIdCache
+            incidentIdCache = id
+
+            self.worksitesCount = worksitesCount
+
+            let isFiltersChange = filtersLocationCache.0 != filtersLocation.0 || filtersLocationCache.1 != filtersLocation.1
+            filtersLocationCache = filtersLocation
+
+            if isIncidentChanged || isFiltersChange || clearCache {
+                isChange = true
                 tileCache.clear()
             }
-            incidentIdCache = id
-            self.worksitesCount = worksitesCount
         }
 
-        return isIncidentChanged
+        return isChange
     }
 
     func setLocation(_ coordinates: CLLocation?) {
@@ -86,19 +94,29 @@ class CasesMapDotsOverlay: MKTileOverlay {
             y: path.y,
             zoom: path.z
         )
-        if let tileData = tileCache.get(coordinates),
-           tileData.tileCaseCount == 0 || tileData.tile != nil {
-            return tileData.tile ?? emptyTile
-        }
+        // TODO: Caching framework is poor. Fix when time avails.
+//        if let tileData = tileCache.get(coordinates),
+//           tileData.tileCaseCount == 0 || tileData.tile != nil {
+//            return tileData.tile ?? emptyTile
+//        }
 
         let tile = try await renderTile(coordinates)
-        return incidentId != incidentIdCache ? emptyTile : (tile ?? emptyTile)
+
+        if incidentId != incidentIdCache {
+            throw CancellationError()
+        }
+
+        return tile ?? emptyTile
     }
 
     private func renderTile(_ coordinates: TileCoordinates) async throws -> Data? {
-        renderingCounter.wrappingIncrement(ordering: .relaxed)
+        renderingCounter.wrappingIncrement(ordering: .sequentiallyConsistent)
+        renderingCount.value = renderingCounter.load(ordering: .sequentiallyConsistent)
         do {
-            defer { renderingCounter.wrappingDecrement(ordering: .relaxed) }
+            defer {
+                renderingCounter.wrappingDecrement(ordering: .sequentiallyConsistent)
+                renderingCount.value = renderingCounter.load(ordering: .sequentiallyConsistent)
+            }
 
             return try await renderTileInternal(coordinates)
         }
@@ -107,27 +125,23 @@ class CasesMapDotsOverlay: MKTileOverlay {
     private func renderTileInternal(_ coordinates: TileCoordinates) async throws -> Data? {
         let incidentId = incidentIdCache
 
-        let (boundedWorksitesCount, imageData) = try await renderTile(incidentId, worksitesCount, coordinates)
-
-        // Incident has changed this tile is invalid
-        if incidentId != incidentIdCache {
-            return nil
-        }
+        let (_, imageData) = try await renderTile(incidentId, worksitesCount, coordinates)
 
         let tile = imageData == nil ? emptyTile : imageData
 
-        cacheLock.withLock {
-            if incidentId == incidentIdCache {
-                let tileData = MapTileCases(
-                    tileCaseCount: boundedWorksitesCount,
-                    incidentCaseCount: worksitesCount,
-                    tile: tile
-                )
-                tileCache.add(coordinates, tileData)
-            }
-        }
+        // TODO: Caching framework is poor. Fix when time avails.
+//        cacheLock.withLock {
+//            if incidentId == incidentIdCache {
+//                let tileData = MapTileCases(
+//                    tileCaseCount: boundedWorksitesCount,
+//                    incidentCaseCount: worksitesCount,
+//                    tile: tile
+//                )
+//                tileCache.add(coordinates, tileData)
+//            }
+//        }
 
-        return incidentId == incidentIdCache ? tile : nil
+        return tile
     }
 
     private func renderTile(
@@ -135,7 +149,7 @@ class CasesMapDotsOverlay: MKTileOverlay {
         _ worksitesCount: Int,
         _ coordinates: TileCoordinates
     ) async throws -> (Int, Data?) {
-        let limit = 2000
+        let limit = 5000
         var offset = 0
         // TODO: Why does the offset require scaling by 2 (as opposed to 1)
         let centerDotOffset = -mapCaseDotProvider.iconOffset.0 * 2
@@ -143,9 +157,7 @@ class CasesMapDotsOverlay: MKTileOverlay {
         let sw = coordinates.querySouthwest
         let ne = coordinates.queryNortheast
 
-        var cgContext: CGContext?
-
-        var boundedWorksitesCount = 0
+        var allWorksites = [WorksiteMapMark]()
 
         for _ in stride(from: 0, to: worksitesCount, by: limit) {
             let worksites = try await worksitesRepository.getWorksitesMapVisual(
@@ -163,38 +175,10 @@ class CasesMapDotsOverlay: MKTileOverlay {
 
             // Incident has changed this tile is invalid
             if (incidentId != incidentIdCache) {
-                break
+                throw CancellationError()
             }
 
-            if worksites.isNotEmpty && cgContext == nil {
-                UIGraphicsBeginImageContextWithOptions(tileSize, false, 1)
-                cgContext = UIGraphicsGetCurrentContext()!
-                cgContext!.interpolationQuality = .high
-                cgContext!.setShouldAntialias(true)
-            }
-
-            worksites.forEach {
-                if let dotImage = mapCaseDotProvider.getIcon(
-                    $0.statusClaim,
-                    $0.workType,
-                    $0.workTypeCount > 1,
-                    isFilteredOut: $0.isFilteredOut,
-                    isDuplicate: $0.isDuplicate
-                ),
-                   let xyNorm = coordinates.fromLatLng($0.latitude, $0.longitude) {
-                    let (xNorm, yNorm) = xyNorm
-                    let left = xNorm * tileSize.width + centerDotOffset
-                    let top = yNorm * tileSize.height + centerDotOffset
-                    dotImage.draw(at: CGPoint(x: left, y: top))
-                }
-            }
-
-            boundedWorksitesCount += worksites.count
-
-            // Incident has changed this tile is invalid
-            if incidentId != incidentIdCache {
-                break
-            }
+            allWorksites.append(contentsOf: worksites)
 
             // There are no more worksites in this tile
             if worksites.count < limit {
@@ -204,8 +188,30 @@ class CasesMapDotsOverlay: MKTileOverlay {
             offset += limit
         }
 
-        let tileImage = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
+        let boundedWorksitesCount = allWorksites.count
+
+        var tileImage: UIImage?
+        if allWorksites.isNotEmpty {
+            let renderer = UIGraphicsImageRenderer(size: tileSize)
+            let data = renderer.pngData { context in
+                allWorksites.forEach {
+                    if let dotImage = mapCaseDotProvider.getIcon(
+                        $0.statusClaim,
+                        $0.workType,
+                        $0.workTypeCount > 1,
+                        isFilteredOut: $0.isFilteredOut,
+                        isDuplicate: $0.isDuplicate
+                    ),
+                       let xyNorm = coordinates.fromLatLng($0.latitude, $0.longitude) {
+                        let (xNorm, yNorm) = xyNorm
+                        let left = xNorm * tileSize.width + centerDotOffset
+                        let top = yNorm * tileSize.height + centerDotOffset
+                        dotImage.draw(at: CGPoint(x: left, y: top))
+                    }
+                }
+            }
+            tileImage = UIImage(data: data)
+        }
 
         return (boundedWorksitesCount, tileImage?.pngData())
     }
