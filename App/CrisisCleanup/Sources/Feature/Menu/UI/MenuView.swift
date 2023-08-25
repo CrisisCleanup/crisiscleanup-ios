@@ -5,6 +5,7 @@ import SwiftUI
 struct MenuView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
     @EnvironmentObject var appAlertState: AppAlertViewState
+    @EnvironmentObject var router: NavigationRouter
 
     @ObservedObject var viewModel: MenuViewModel
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
@@ -13,7 +14,7 @@ struct MenuView: View {
     var body: some View {
         let hasNoIncidents = viewModel.incidentsData.incidents.isEmpty
 
-        VStack {
+        VStack(alignment: .leading) {
             TopBar(
                 viewModel: viewModel,
                 incidentSelectViewBuilder: incidentSelectViewBuilder,
@@ -26,6 +27,15 @@ struct MenuView: View {
             Text(viewModel.versionText)
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button {
+                router.openUserFeedback()
+            } label: {
+                Text(t.t("info.give_app_feedback"))
+                    .padding(.horizontal)
+            }
+            .stylePrimary(true)
+            .padding(.horizontal)
 
             if !viewModel.isProduction {
                 MenuScreenNonProductionView(viewModel: viewModel)

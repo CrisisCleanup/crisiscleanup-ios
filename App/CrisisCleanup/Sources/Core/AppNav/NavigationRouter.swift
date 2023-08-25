@@ -92,6 +92,10 @@ class NavigationRouter: ObservableObject {
         path.append(.viewImage(imageId, isNetworkImage, screenTitle))
     }
 
+    func openUserFeedback() {
+        path.append(.userFeedback)
+    }
+
     func openSyncInsights() {
         path.append(.syncInsights)
     }

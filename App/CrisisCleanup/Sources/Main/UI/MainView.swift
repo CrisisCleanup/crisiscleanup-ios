@@ -24,6 +24,7 @@ struct MainView: View {
     let viewImageViewBuilder: ViewImageViewBuilder
     let caseSearchLocationViewBuilder: CaseSearchLocationViewBuilder
     let caseMoveOnMapViewBuilder: CaseMoveOnMapViewBuilder
+    let userFeedbackViewBuilder: UserFeedbackViewBuilder
     let syncInsightsViewBuilder: SyncInsightsViewBuilder
 
     @State var showAuthScreen = false
@@ -78,6 +79,7 @@ struct MainView: View {
                                             viewImageViewBuilder: viewImageViewBuilder,
                                             caseSearchLocationViewBuilder: caseSearchLocationViewBuilder,
                                             caseMoveOnMapViewBuilder: caseMoveOnMapViewBuilder,
+                                            userFeedbackViewBuilder: userFeedbackViewBuilder,
                                             syncInsightsViewBuilder: syncInsightsViewBuilder
                                         )
                                     }
@@ -145,6 +147,7 @@ private struct MainTabs: View {
     let viewImageViewBuilder: ViewImageViewBuilder
     let caseSearchLocationViewBuilder: CaseSearchLocationViewBuilder
     let caseMoveOnMapViewBuilder: CaseMoveOnMapViewBuilder
+    let userFeedbackViewBuilder: UserFeedbackViewBuilder
     let syncInsightsViewBuilder: SyncInsightsViewBuilder
 
     var body: some View {
@@ -185,6 +188,8 @@ private struct MainTabs: View {
                         transferWorkTypeViewBuilder.transferWorkTypeView
                     case .viewImage(let imageId, let isNetworkImage, let screenTitle):
                         viewImageViewBuilder.viewImageView(imageId, isNetworkImage, screenTitle)
+                    case .userFeedback:
+                        userFeedbackViewBuilder.userFeedbackView
                     case .syncInsights:
                         if viewModel.isNotProduction {
                             syncInsightsViewBuilder.syncInsightsView

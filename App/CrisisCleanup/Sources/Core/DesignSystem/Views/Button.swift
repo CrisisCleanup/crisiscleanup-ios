@@ -2,16 +2,21 @@ import SwiftUI
 
 struct PrimaryButtonStyle: ButtonStyle {
     let disabled: Bool
+    let maxWidth: CGFloat?
     var textSidePadding = 16.0
     var weight: Font.Weight = .semibold
 
-    init(_ disabled: Bool = false) {
+    init(
+        _ disabled: Bool = false,
+        _ maxWidth: CGFloat? = nil
+    ) {
         self.disabled = disabled
+        self.maxWidth = maxWidth
     }
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .frame(maxWidth: .infinity, minHeight: appTheme.buttonSize)
+            .frame(maxWidth: maxWidth, minHeight: appTheme.buttonSize)
             .background(disabled ? .gray.disabledAlpha() : appTheme.colors.themePrimaryContainer)
             .foregroundColor(disabled ? .black.disabledAlpha() : .black)
             .cornerRadius(appTheme.cornerRadius)
@@ -20,8 +25,11 @@ struct PrimaryButtonStyle: ButtonStyle {
 
 struct PrimaryButtonStyleModifier: ViewModifier {
     @Environment(\.isEnabled) var isEnabled
+
+    var isWrapWidth: Bool
+
     func body(content: Content) -> some View {
-        return content.buttonStyle(PrimaryButtonStyle(!isEnabled))
+        return content.buttonStyle(PrimaryButtonStyle(!isEnabled, isWrapWidth ? nil : .infinity))
     }
 }
 
@@ -116,8 +124,8 @@ struct BusyButtonContent: View {
 }
 
 extension Button {
-    func stylePrimary() -> some View {
-        ModifiedContent(content: self, modifier: PrimaryButtonStyleModifier())
+    func stylePrimary(_ isWrapWidth: Bool = false) -> some View {
+        ModifiedContent(content: self, modifier: PrimaryButtonStyleModifier(isWrapWidth: isWrapWidth))
     }
 
     func styleCancel() -> some View {

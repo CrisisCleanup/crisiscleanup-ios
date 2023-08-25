@@ -16,6 +16,7 @@ public class MainComponent: BootstrapComponent,
                             ViewImageViewBuilder,
                             CaseSearchLocationViewBuilder,
                             CaseMoveOnMapViewBuilder,
+                            UserFeedbackViewBuilder,
                             SyncInsightsViewBuilder
 {
     public let appEnv: AppEnv
@@ -84,6 +85,7 @@ public class MainComponent: BootstrapComponent,
             viewImageViewBuilder: self,
             caseSearchLocationViewBuilder: self,
             caseMoveOnMapViewBuilder: self,
+            userFeedbackViewBuilder: self,
             syncInsightsViewBuilder: self
         )
     }
@@ -201,6 +203,12 @@ public class MainComponent: BootstrapComponent,
     ) -> AnyView {
         viewImageComponent.viewImageView(imageId, isNetworkImage, screenTitle)
     }
+
+    // MARK: User feedback
+
+    lazy var userFeedbackComponent: UserFeedbackComponent = UserFeedbackComponent(parent: self, routerObserver: routerObserver)
+
+    public var userFeedbackView: AnyView { userFeedbackComponent.userFeedbackView }
 
     // MARK: Sync insights
 
