@@ -1,5 +1,4 @@
 import SwiftUI
-import WebKit
 
 struct UserFeedbackView: View {
     @Environment(\.dismiss) var dismiss
@@ -7,6 +6,25 @@ struct UserFeedbackView: View {
     @ObservedObject var viewModel: UserFeedbackViewModel
 
     var body: some View {
-        Text("user feedback web view full screen")
+        Group {
+            if viewModel.isLoading {
+                ProgressView()
+                    .frame(alignment: .center)
+            } else if let formUrl = viewModel.formHtmlPath {
+                LocalFileWebView(url: formUrl)
+                    .navigationTitle("~~Crisis Cleanup Feedback")
+                    .navigationBarTitleDisplayMode(.inline)
+            } else {
+                VStack {
+                    Text("~~Oops. It seems feedback was unintentionally modified.")
+                        .fontHeader3()
+                        .padding()
+
+                    Spacer()
+                }
+            }
+        }
+        .onAppear { viewModel.onViewAppear() }
+        .onDisappear { viewModel.onViewDisappear() }
     }
 }

@@ -30,6 +30,7 @@ class UserFeedbackComponent: Component<AppDependency>, UserFeedbackViewBuilder {
         if viewModel == nil {
             viewModel =
             UserFeedbackViewModel(
+                accountDataRepository: dependency.accountDataRepository
             )
         }
         return viewModel!

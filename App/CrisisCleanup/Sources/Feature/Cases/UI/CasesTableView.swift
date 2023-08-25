@@ -93,7 +93,8 @@ struct CasesTableView: View {
         }
         .background(.white)
 
-        if(viewModel.isLoadingTableViewData) {
+        if viewModel.isLoadingTableViewData {
+            // TODO: Is VStack necessary?
             VStack {
                 ProgressView()
                     .frame(alignment: .center)

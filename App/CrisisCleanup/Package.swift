@@ -42,7 +42,10 @@ let package = Package(
                 .product(name: "FlowStackLayout", package: "FlowStackLayout"),
                 .product(name: "CachedAsyncImage", package: "swiftui-cached-async-image"),
             ],
-            path: "Sources"
+            path: "Sources",
+            resources: [
+                .copy("Resources/user_feedback_form.html"),
+            ]
         ),
         .testTarget(
             name: "CrisisCleanupTests",
