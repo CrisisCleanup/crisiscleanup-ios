@@ -55,6 +55,7 @@ struct MenuView: View {
                 )
             }
             .padding()
+            .frame(maxWidth: .infinity, alignment: .center)
 
             if appAlertState.showAlert,
                let appAlert = appAlertState.alertType {

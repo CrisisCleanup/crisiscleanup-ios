@@ -64,11 +64,7 @@ struct LoginView: View {
 
         VStack {
             ScrollView {
-                Image("crisis_cleanup_logo", bundle: .module)
-                    .renderingMode(.original)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(maxWidth: 180)
+                CrisisCleanupLogoView()
 
                 VStack {
                     Text(t.translate("actions.login", "Login action"))
@@ -137,12 +133,8 @@ struct LoginView: View {
                         Button {
                             dismissScreen()
                         } label:  {
-                            BusyButtonContent(
-                                isBusy: viewModel.isAuthenticating,
-                                text: t.translate("actions.cancel", "Cancel action")
-                            )
+                            Text(t.t("actions.back"))
                         }
-                        .stylePrimary()
                         .padding(.vertical, appTheme.listItemVerticalPadding)
                         .disabled(disabled)
                     }
@@ -161,6 +153,27 @@ struct LoginView: View {
     }
 }
 
+private struct CrisisCleanupLogoView: View {
+    var body: some View {
+        HStack {
+            Image("crisis_cleanup_logo", bundle: .module)
+                .renderingMode(.original)
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: 180)
+                .overlay {
+                    Image("worker_wheelbarrow_world_background", bundle: .module)
+                        .padding(.leading, 360)
+                        .padding(.top, 176)
+                }
+                .padding(.top, 32)
+                .padding(.bottom, 128)
+                .padding(.leading, 24)
+            Spacer()
+        }
+    }
+}
+
 struct LogoutView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
     @ObservedObject var viewModel: AuthenticateViewModel
@@ -170,37 +183,38 @@ struct LogoutView: View {
     var body: some View {
         let disabled = viewModel.isAuthenticating
 
-        VStack {
-            let errorMessage = $viewModel.errorMessage.wrappedValue
-            if !errorMessage.isBlank {
-                Text(errorMessage)
-                    .padding([.vertical])
-            }
+        ScrollView {
+            CrisisCleanupLogoView()
+                .padding(.bottom)
 
-            Button {
-                logout()
-            } label: {
-                BusyButtonContent(
-                    isBusy: viewModel.isAuthenticating,
-                    text: t.translate("actions.logout", "Logout action")
-                )
-            }
-            .stylePrimary()
-            .padding([.vertical])
-            .disabled(disabled)
+            VStack{
+                let errorMessage = $viewModel.errorMessage.wrappedValue
+                if !errorMessage.isBlank {
+                    Text(errorMessage)
+                        .padding([.vertical])
+                }
 
-            Button {
-                dismissScreen()
-            } label:  {
-                BusyButtonContent(
-                    isBusy: viewModel.isAuthenticating,
-                    text: t.translate("actions.cancel", "Cancel action")
-                )
+                Button {
+                    logout()
+                } label: {
+                    BusyButtonContent(
+                        isBusy: viewModel.isAuthenticating,
+                        text: t.t("actions.logout")
+                    )
+                }
+                .stylePrimary()
+                .padding([.vertical])
+                .disabled(disabled)
+
+                Button {
+                    dismissScreen()
+                } label:  {
+                    Text(t.t("actions.back"))
+                }
+                .padding(.vertical, appTheme.listItemVerticalPadding)
+                .disabled(disabled)
             }
-            .stylePrimary()
-            .padding([.vertical])
-            .disabled(disabled)
+            .padding()
         }
-        .padding()
     }
 }

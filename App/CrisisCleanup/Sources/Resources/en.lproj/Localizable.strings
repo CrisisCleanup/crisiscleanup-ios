@@ -1,12 +1,7 @@
 
-"Menu nav" = "Menu";
-
 "Email hint" = "Email";
 "Password hint" = "Password";
-
 "Login action" = "Login";
-"Logout action" = "Logout";
-"Cancel action" = "Cancel";
 
 "Enter valid email error" = "Enter a valid email address";
 
