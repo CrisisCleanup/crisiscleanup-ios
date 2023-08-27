@@ -8,6 +8,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     private let incidentsRepository: IncidentsRepository
     private let worksitesRepository: WorksitesRepository
     private var editableWorksiteProvider: EditableWorksiteProvider
+    private let incidentBoundsProvider: IncidentBoundsProvider
     private let locationManager: LocationManager
     private let networkMonitor: NetworkMonitor
     private let translator: KeyAssetTranslator
@@ -69,6 +70,8 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     @Published var showExplainLocationPermission = false
     private var useMyLocationActionTime = Date.now
 
+    @Published var locationOutOfBoundsMessage = ""
+
     @Published private(set) var showInvalidWorksiteSave = false
     @Published private(set) var invalidWorksiteInfo = InvalidWorksiteInfo()
 
@@ -115,6 +118,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         self.worksitesRepository = worksitesRepository
         self.editableWorksiteProvider = editableWorksiteProvider
         self.worksiteChangeRepository = worksiteChangeRepository
+        self.incidentBoundsProvider = incidentBoundsProvider
         self.locationManager = locationManager
         self.networkMonitor = networkMonitor
         self.inputValidator = inputValidator
@@ -180,7 +184,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
 
         subscribeCaseData()
         subscribeWorksiteChange()
-        subscribeLocationStatus()
+        subscribeLocationState()
 
         if isFirstAppear {
             dataLoader.loadData(
@@ -332,7 +336,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
             .store(in: &subscriptions)
     }
 
-    private func subscribeLocationStatus() {
+    private func subscribeLocationState() {
         locationManager.$locationPermission
             .receive(on: RunLoop.main)
             .sink { _ in
@@ -342,6 +346,21 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
                     }
                 }
             }
+            .store(in: &subscriptions)
+
+        $mapCoordinates
+            .map {
+                let worksiteProvider = self.editableWorksiteProvider
+                let coordinates = LatLng($0.latitude, $0.longitude)
+                let isInBounds = worksiteProvider.incidentBounds.containsLocation(coordinates)
+                // TODO: Bounds determination is off.
+                print("In bounds \($0) \(isInBounds)")
+//                return isInBounds ? "" : self.t("caseForm.case_outside_incident_name")
+//                    .replacingOccurrences(of: "{incident_name}", with: worksiteProvider.incident.name)
+                return ""
+            }
+            .receive(on: RunLoop.main)
+            .assign(to: \.locationOutOfBoundsMessage, on: self)
             .store(in: &subscriptions)
     }
 

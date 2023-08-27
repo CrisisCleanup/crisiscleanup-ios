@@ -92,6 +92,7 @@ private struct CreateEditCaseContentView: View {
                                     propertyData: viewModel.propertyInputData,
                                     locationData: viewModel.locationInputData,
                                     mapCoordinates: $viewModel.mapCoordinates,
+                                    locationOutOfBoundsMessage: $viewModel.locationOutOfBoundsMessage,
                                     useMyLocation: { viewModel.useMyLocation() },
                                     flagTranslateKeys: viewModel.flagTranslateKeys
                                 )
@@ -200,6 +201,7 @@ struct PropertyInformation: View {
     @ObservedObject var propertyData: PropertyInputData
     @ObservedObject var locationData: LocationInputData
     @Binding var mapCoordinates: CLLocationCoordinate2D
+    @Binding var locationOutOfBoundsMessage: String
     let useMyLocation: () -> Void
     let flagTranslateKeys: [String]
 
@@ -281,6 +283,15 @@ struct PropertyInformation: View {
                 map: $map,
                 caseCoordinates: $mapCoordinates
             )
+            .if(locationOutOfBoundsMessage.isNotBlank) { view in
+                view.overlay(alignment: .bottomLeading) {
+                    Text(locationOutOfBoundsMessage)
+                        .fontBodySmall()
+                        .padding()
+                        .background(.white.disabledAlpha())
+                        .padding()
+                }
+            }
             .frame(width: UIScreen.main.bounds.width, height: appTheme.listItemMapHeight)
 
             HStack {
