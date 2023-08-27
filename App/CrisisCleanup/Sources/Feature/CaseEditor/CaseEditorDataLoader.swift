@@ -7,6 +7,7 @@ internal class CaseEditorDataLoader {
     private let worksitesRepository: WorksitesRepository
     private let worksiteChangeRepository: WorksiteChangeRepository
     private let editableWorksiteProvider: EditableWorksiteProvider
+    private let locationManager: LocationManager
     private let incidentRefresher: IncidentRefresher
     private let languageRefresher: LanguageRefresher
     private let workTypeStatusRepository: WorkTypeStatusRepository
@@ -38,7 +39,6 @@ internal class CaseEditorDataLoader {
     private let incidentDataStream: AnyPublisher<IncidentBoundsPair?, Never>
     private let organizationStream: AnyPublisher<OrgData, Never>
     private let workTypeStatusStream: AnyPublisher<[WorkTypeStatus], Never>
-    private let isOnlinePublisher: AnyPublisher<Bool, Never>
     private let keyTranslator: KeyTranslator
 
     private let uiStateSubject = CurrentValueSubject<CaseEditorUiState, Never>(CaseEditorUiState.loading)
@@ -55,13 +55,13 @@ internal class CaseEditorDataLoader {
         incidentsRepository: IncidentsRepository,
         incidentRefresher: IncidentRefresher,
         incidentBoundsProvider: IncidentBoundsProvider,
+        locationManager: LocationManager,
         worksitesRepository: WorksitesRepository,
         worksiteChangeRepository: WorksiteChangeRepository,
         keyTranslator: KeyTranslator,
         languageRefresher: LanguageRefresher,
         workTypeStatusRepository: WorkTypeStatusRepository,
         editableWorksiteProvider: EditableWorksiteProvider,
-        networkMonitor: NetworkMonitor,
         appEnv: AppEnv,
         loggerFactory: AppLoggerFactory,
         debugTag: String = ""
@@ -70,6 +70,7 @@ internal class CaseEditorDataLoader {
         self.worksitesRepository = worksitesRepository
         self.worksiteChangeRepository = worksiteChangeRepository
         self.editableWorksiteProvider = editableWorksiteProvider
+        self.locationManager = locationManager
         self.incidentRefresher = incidentRefresher
         self.languageRefresher = languageRefresher
         self.workTypeStatusRepository = workTypeStatusRepository
@@ -137,8 +138,6 @@ internal class CaseEditorDataLoader {
 
         uiState = uiStateSubject
             .receive(on: RunLoop.main)
-
-        isOnlinePublisher = networkMonitor.isOnline.eraseToAnyPublisher()
 
         self.keyTranslator = keyTranslator
     }
@@ -254,19 +253,23 @@ internal class CaseEditorDataLoader {
             let isPulled = stateData.isPulled
 
             let loadedWorksite = localWorksite?.worksite
-            let isOnline: Bool
-            do {
-                isOnline = try await self.isOnlinePublisher.asyncFirst()
-            } catch {
-                isOnline = false
-                self.logger.logError(error)
-            }
-            var worksiteState = loadedWorksite ?? EmptyWorksite.copy {
-                $0.incidentId = incidentIdIn
-                $0.autoContactFrequencyT = AutoContactFrequency.often.literal
-                // TODO: Toggle address input rather than set wrong location flag
-                $0.flags = isOnline ? EmptyWorksite.flags : [WorksiteFlag.wrongLocation()]
-            }
+            var worksiteState = loadedWorksite != nil ? loadedWorksite! : {
+                var worksiteCoordinates = bounds.centroid
+                if let coordinates = self.locationManager.getLocation() {
+                    let deviceLocation = LatLng(
+                        coordinates.coordinate.latitude,
+                        coordinates.coordinate.longitude
+                    )
+                    worksiteCoordinates = deviceLocation
+                }
+                return EmptyWorksite.copy {
+                    $0.incidentId = incidentIdIn
+                    $0.autoContactFrequencyT = AutoContactFrequency.notOften.literal
+                    $0.latitude = worksiteCoordinates.latitude
+                    $0.longitude = worksiteCoordinates.longitude
+                    $0.flags = EmptyWorksite.flags
+                }
+            }()
 
             try Task.checkCancellation()
 

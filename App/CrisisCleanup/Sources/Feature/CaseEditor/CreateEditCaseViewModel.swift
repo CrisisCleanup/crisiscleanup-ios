@@ -139,13 +139,13 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
             incidentsRepository: incidentsRepository,
             incidentRefresher: incidentRefresher,
             incidentBoundsProvider: incidentBoundsProvider,
+            locationManager: locationManager,
             worksitesRepository: worksitesRepository,
             worksiteChangeRepository: worksiteChangeRepository,
             keyTranslator: languageRepository,
             languageRefresher: languageRefresher,
             workTypeStatusRepository: workTypeStatusRepository,
             editableWorksiteProvider: editableWorksiteProvider,
-            networkMonitor: networkMonitor,
             appEnv: appEnv,
             loggerFactory: loggerFactory
         )
@@ -402,6 +402,11 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
                 contentFormData[key] = value
             }
         }
+
+        mapCoordinates = CLLocationCoordinate2D(
+            latitude: worksite.latitude,
+            longitude: worksite.longitude
+        )
     }
 
     func scheduleSync() {
