@@ -50,8 +50,10 @@ public class LocationManager: NSObject, ObservableObject {
     }
 
     func getLocation() -> CLLocation? {
-        locationSubject.value = locationManager.location
-        return location
+        let reportedLocation = locationManager.location
+        // TODO: Might be wise to check timestamp before broadcasting/returning
+        locationSubject.value = reportedLocation
+        return reportedLocation
     }
 }
 

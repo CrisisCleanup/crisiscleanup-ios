@@ -612,7 +612,8 @@ private struct PropertyInformationView: View {
                         longitude: worksite.longitude
                     )
                 )
-                .frame(maxWidth: .infinity, minHeight: 200, maxHeight: 200)
+                .frame(maxWidth: .infinity)
+                .frame(height: appTheme.listItemMapHeight)
             }
             .cardContainerPadded()
         }

@@ -19,8 +19,8 @@ class ViewCaseMapCoordinator: NSObject, MKMapViewDelegate {
         return createPolygonRenderer(for: overlay as! MKPolygon)
     }
 
+    let reuseIdentifier = "reuse-identifier"
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        let reuseIdentifier = "reuse-identifier"
         guard let annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseIdentifier) else {
             if let annotation = annotation as? CustomPinAnnotation {
                 let view = MKAnnotationView(annotation: annotation, reuseIdentifier: reuseIdentifier)
@@ -103,7 +103,7 @@ struct ViewCaseMapView : UIViewRepresentable {
 }
 
 class CustomPinAnnotation: NSObject, MKAnnotation {
-    var coordinate: CLLocationCoordinate2D
+    dynamic var coordinate: CLLocationCoordinate2D
     var image: UIImage?
 
     init(

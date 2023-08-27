@@ -12,6 +12,7 @@ struct CasesView: View {
     let openAuthScreen: () -> Void
 
     @State var map = MKMapView()
+    @State private var showMapBusyIndicator = false
 
     func animateToSelectedIncidentBounds(_ bounds: LatLngBounds) {
         let latDelta = bounds.northEast.latitude - bounds.southWest.latitude
@@ -34,7 +35,7 @@ struct CasesView: View {
                     hasNoIncidents: hasNoIncidents
                 )
             } else {
-                MapView(
+                CasesMapView(
                     map: $map,
                     viewModel: viewModel,
                     onSelectWorksite: { worksiteId in
@@ -72,10 +73,9 @@ struct CasesView: View {
                 }
             }
 
-            if viewModel.isMapBusy {
-                VStack {
+            if !viewModel.isTableView {
+                if showMapBusyIndicator {
                     ProgressView()
-                        .frame(alignment: .center)
                 }
             }
 
@@ -87,14 +87,15 @@ struct CasesView: View {
                 animateToSelectedIncidentBounds: animateToSelectedIncidentBounds
             )
 
-            if viewModel.showExplainLocationPermssion {
-                OpenAppSettingsDialog(
-                    title: t.t("info.allow_access_to_location"),
-                    dismissDialog: { viewModel.showExplainLocationPermssion = false }
-                ) {
-                    Text(t.t("info.location_permission_explanation"))
-                        .padding(.horizontal)
+            if viewModel.showExplainLocationPermission {
+                LocationAppSettingsDialog {
+                    viewModel.showExplainLocationPermission = false
                 }
+            }
+        }
+        .onChange(of: viewModel.isMapBusy) { isBusy in
+            withAnimation {
+                showMapBusyIndicator = isBusy
             }
         }
         .onAppear {
@@ -304,7 +305,7 @@ private struct MapControls: View {
                 .frame(width: appTheme.buttonSize)
 
             Button {
-                zoomDelta(scale: 1.5)
+                zoomDelta(scale: 2.0)
             } label: {
                 Image(systemName: "minus")
                     .mapOverlayButton()

@@ -79,7 +79,7 @@ class CasesViewModel: ObservableObject {
 
     private var hasDisappeared = false
 
-    @Published var showExplainLocationPermssion = false
+    @Published var showExplainLocationPermission = false
     @Published private(set) var isMyLocationEnabled = false
 
     private let latestBoundedMarkersPublisher = LatestAsyncThrowsPublisher<IncidentAnnotations>()
@@ -520,6 +520,7 @@ class CasesViewModel: ObservableObject {
 
     private func subscribeLocationStatus() {
         locationManager.$locationPermission
+            .receive(on: RunLoop.main)
             .sink { _ in
                 if self.locationManager.hasLocationAccess {
                     self.isMyLocationEnabled = true
@@ -572,7 +573,7 @@ class CasesViewModel: ObservableObject {
         }
 
         if locationManager.isDeniedLocationAccess {
-            showExplainLocationPermssion = true
+            showExplainLocationPermission = true
         }
 
         return false
@@ -793,7 +794,7 @@ class CasesViewModel: ObservableObject {
                 pendingTableSort.store(AtomicSortBy(sortBy), ordering: .relaxed)
 
                 if locationManager.isDeniedLocationAccess {
-                    showExplainLocationPermssion = true
+                    showExplainLocationPermission = true
                 }
             }
 

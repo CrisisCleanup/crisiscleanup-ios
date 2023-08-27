@@ -6,30 +6,24 @@ import MapKit
 import SwiftUI
 
 class CreateEditCaseMapCoordinator: NSObject, MKMapViewDelegate {
+    let caseCoordinates: CLLocationCoordinate2D
+    private let pinImage: UIImage = UIImage(named: "cc_map_pin", in: .module, with: .none)!
+        .withRenderingMode(.alwaysOriginal)
 
-    @Binding var caseCoordinates: CLLocationCoordinate2D
-    @Binding var imgView: UIImageView
-
-    init(
-        _ caseCoordinates: Binding<CLLocationCoordinate2D>,
-        _ imgView: Binding<UIImageView>
-    ) {
-        self._caseCoordinates = caseCoordinates
-        self._imgView = imgView
+    init(_ caseCoordinates: CLLocationCoordinate2D) {
+        self.caseCoordinates = caseCoordinates
     }
 
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-        return createPolygonRenderer(for: overlay as! MKPolygon)
+        createPolygonRenderer(for: overlay as! MKPolygon)
     }
 
+    private let reuseIdentifier = "reuse-identifier"
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        let reuseIdentifier = "reuse-identifier"
         guard let annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseIdentifier) else {
             if let annotation = annotation as? CustomPinAnnotation {
-                let view = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: reuseIdentifier)
+                let view = MKAnnotationView(annotation: annotation, reuseIdentifier: reuseIdentifier)
                 view.image = annotation.image
-                view.isDraggable = true
-                view.animatesWhenAdded = true
                 return view
             }
             return nil
@@ -38,13 +32,17 @@ class CreateEditCaseMapCoordinator: NSObject, MKMapViewDelegate {
     }
 
     func mapViewDidFinishLoadingMap(_ mapView: MKMapView) {
-        imgView.center = mapView.center
-        imgView.center.y = imgView.center.y - (imgView.image?.size.height ?? 0)/2
+        if mapView.annotations.isEmpty {
+            mapView.addAnnotation(CustomPinAnnotation(caseCoordinates, pinImage))
+        }
 
-        mapView.addSubview(imgView)
+//        imgView.center = mapView.center
+//        imgView.center.y = imgView.center.y - (imgView.image?.size.height ?? 0)/2
+//
+//        mapView.addSubview(imgView)
     }
 
-    func createPolygonRenderer(for polygon: MKPolygon) -> MKPolygonRenderer {
+    private func createPolygonRenderer(for polygon: MKPolygon) -> MKPolygonRenderer {
         let renderer = MKPolygonRenderer(polygon: polygon)
         renderer.alpha = 0.5
         renderer.lineWidth = 0
@@ -56,8 +54,7 @@ class CreateEditCaseMapCoordinator: NSObject, MKMapViewDelegate {
 
 struct CreateEditCaseMapView : UIViewRepresentable {
     @Binding var map: MKMapView
-    @State var caseCoordinates: CLLocationCoordinate2D
-    @State var imgView = UIImageView(image: UIImage(named: "cc_map_pin", in: .module, with: .none)!.withRenderingMode(.alwaysOriginal))
+    @Binding var caseCoordinates: CLLocationCoordinate2D
 
     let firstHalf = [
         CLLocationCoordinate2D(latitude: -90, longitude: -180),
@@ -82,15 +79,13 @@ struct CreateEditCaseMapView : UIViewRepresentable {
     }
 
     func makeUIView(context: Context) -> MKMapView {
-
         map.overrideUserInterfaceStyle = .light
         map.mapType = .standard
         map.pointOfInterestFilter = .excludingAll
         map.camera.centerCoordinateDistance = 20
-        map.showsUserLocation = true
+        map.isScrollEnabled = false
         map.isRotateEnabled = false
         map.isPitchEnabled = false
-        map.isZoomEnabled = true
 
         map.addOverlay(firstHalfOverlay, level: .aboveRoads)
         map.addOverlay(secondHalfOverlay, level: .aboveRoads)
@@ -101,9 +96,16 @@ struct CreateEditCaseMapView : UIViewRepresentable {
     }
 
     func makeCoordinator() -> CreateEditCaseMapCoordinator {
-        CreateEditCaseMapCoordinator($caseCoordinates, $imgView)
+        CreateEditCaseMapCoordinator(caseCoordinates)
     }
 
     func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<CreateEditCaseMapView>) {
+        if let annotation = uiView.annotations.firstOrNil,
+           let pinAnnotation = annotation as? CustomPinAnnotation {
+            pinAnnotation.coordinate = caseCoordinates
+            uiView.setCenter(caseCoordinates, animated: true)
+
+            uiView.animaiteToCenter(caseCoordinates)
+        }
     }
 }

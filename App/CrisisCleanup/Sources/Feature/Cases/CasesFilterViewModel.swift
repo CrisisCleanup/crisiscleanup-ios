@@ -43,7 +43,7 @@ class CasesFilterViewModel: ObservableObject {
     let distanceOptions: [(Double, String)]
     private var distanceOptionCached = ManagedAtomic(AtomicDoubleOptional())
 
-    @Published var showExplainLocationPermssion = false
+    @Published var showExplainLocationPermission = false
     @Published var hasInconsistentDistanceFilter = false
 
     private var subscriptions = Set<AnyCancellable>()
@@ -236,6 +236,7 @@ class CasesFilterViewModel: ObservableObject {
 
     private func subscribeLocationStatus() {
         locationManager.$locationPermission
+            .receive(on: RunLoop.main)
             .sink { _ in
                 if self.locationManager.hasLocationAccess {
                     if let cachedDistance = self.distanceOptionCached.exchange(AtomicDoubleOptional(), ordering: .relaxed).value {
@@ -263,6 +264,10 @@ class CasesFilterViewModel: ObservableObject {
         locationManager.requestLocationAccess()
     }
 
+    func isLocationDenied() -> Bool {
+        locationManager.isDeniedLocationAccess
+    }
+
     private func changeDistanceFilter() {
         if let distance = distanceOptionCached.exchange(
             AtomicDoubleOptional(),
@@ -285,7 +290,7 @@ class CasesFilterViewModel: ObservableObject {
         distanceOptionCached.store(AtomicDoubleOptional(distance), ordering: .relaxed)
 
         if locationManager.isDeniedLocationAccess {
-            showExplainLocationPermssion = true
+            showExplainLocationPermission = true
         }
         return false
     }

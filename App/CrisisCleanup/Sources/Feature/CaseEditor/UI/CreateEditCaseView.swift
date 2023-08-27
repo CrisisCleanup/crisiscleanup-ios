@@ -5,12 +5,44 @@ import MapKit
 import FlowStackLayout
 
 struct CreateEditCaseView: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
-    @EnvironmentObject var editableView: EditableView
-
     @ObservedObject var viewModel: CreateEditCaseViewModel
 
     @ObservedObject private var focusableViewState = TextInputFocusableView()
+
+    @State private var showBusyIndicator = true
+
+    var body: some View {
+        ZStack {
+            CreateEditCaseContentView()
+
+            if showBusyIndicator {
+                ProgressView()
+            }
+
+            if viewModel.showExplainLocationPermission {
+                LocationAppSettingsDialog {
+                    viewModel.showExplainLocationPermission = false
+                }
+            }
+        }
+        .screenTitle(viewModel.headerTitle)
+        .hideNavBarUnderSpace()
+        .onChange(of: viewModel.areEditorsReady) { isReady in
+            withAnimation {
+                showBusyIndicator = !isReady
+            }
+        }
+        .onAppear { viewModel.onViewAppear() }
+        .onDisappear { viewModel.onViewDisappear() }
+        .environmentObject(viewModel)
+        .environmentObject(viewModel.editableViewState)
+        .environmentObject(focusableViewState)
+    }
+}
+
+private struct CreateEditCaseContentView: View {
+    @EnvironmentObject var viewModel: CreateEditCaseViewModel
+    @EnvironmentObject private var focusableViewState: TextInputFocusableView
 
     @State var sectionCollapse = [
         false,
@@ -59,6 +91,8 @@ struct CreateEditCaseView: View {
                                 PropertyInformation(
                                     propertyData: viewModel.propertyInputData,
                                     locationData: viewModel.locationInputData,
+                                    mapCoordinates: $viewModel.mapCoordinates,
+                                    useMyLocation: { viewModel.useMyLocation() },
                                     flagTranslateKeys: viewModel.flagTranslateKeys
                                 )
                             }
@@ -117,13 +151,6 @@ struct CreateEditCaseView: View {
                     .disabled(disableMutation)
             }
         }
-        .screenTitle(viewModel.headerTitle)
-        .hideNavBarUnderSpace()
-        .onAppear { viewModel.onViewAppear() }
-        .onDisappear { viewModel.onViewDisappear() }
-        .environmentObject(viewModel)
-        .environmentObject(viewModel.editableViewState)
-        .environmentObject(focusableViewState)
     }
 }
 
@@ -172,15 +199,12 @@ struct PropertyInformation: View {
 
     @ObservedObject var propertyData: PropertyInputData
     @ObservedObject var locationData: LocationInputData
+    @Binding var mapCoordinates: CLLocationCoordinate2D
+    let useMyLocation: () -> Void
     let flagTranslateKeys: [String]
 
     @FocusState private var focusState: TextInputFocused?
 
-    // TODO: Remove
-    @State var coordinates = CLLocationCoordinate2D(
-        latitude: 40.83834587046632,
-        longitude: 14.254053016537693
-    )
     @State var map = MKMapView()
 
     @State var fullAddressPlaceholder: String = ""
@@ -255,9 +279,9 @@ struct PropertyInformation: View {
 
             CreateEditCaseMapView(
                 map: $map,
-                caseCoordinates: coordinates)
-            // TODO: Cap maximum height based on screen height (1/3?)
-                .frame(width: UIScreen.main.bounds.width, height: 240)
+                caseCoordinates: $mapCoordinates
+            )
+            .frame(width: UIScreen.main.bounds.width, height: appTheme.listItemMapHeight)
 
             HStack {
                 Button {
@@ -270,17 +294,8 @@ struct PropertyInformation: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .disabled(disabled)
 
-                // TODO: Move into view model
                 Button {
-                    if locationManager.hasLocationAccess {
-                        coordinates = map.userLocation.coordinate
-                        map.centerCoordinate = coordinates
-                    } else if locationManager.isDeniedLocationAccess {
-                        // TODO: Show dialog to grant access from settings
-                        print("Location access was previously denied")
-                    } else {
-                        _ = locationManager.requestLocationAccess()
-                    }
+                    useMyLocation()
                 } label: {
                     Image("ic_use_my_location", bundle: .module)
                         .frame(width: 24, height: 24)

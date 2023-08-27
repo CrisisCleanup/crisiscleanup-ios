@@ -1,5 +1,6 @@
 import Atomics
 import Combine
+import CoreLocation
 import Foundation
 import SwiftUI
 
@@ -7,9 +8,10 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     private let incidentsRepository: IncidentsRepository
     private let worksitesRepository: WorksitesRepository
     private var editableWorksiteProvider: EditableWorksiteProvider
+    private let locationManager: LocationManager
+    private let networkMonitor: NetworkMonitor
     private let translator: KeyAssetTranslator
     private let worksiteChangeRepository: WorksiteChangeRepository
-    private let networkMonitor: NetworkMonitor
     private let inputValidator: InputValidator
     private let syncPusher: SyncPusher
     private let logger: AppLogger
@@ -63,6 +65,10 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     @Published var binaryFormData = ObservableBoolDictionary()
     @Published var contentFormData = ObservableStringDictionary()
 
+    @Published var mapCoordinates = DefaultCoordinates2d
+    @Published var showExplainLocationPermission = false
+    private var useMyLocationActionTime = Date.now
+
     @Published private(set) var showInvalidWorksiteSave = false
     @Published private(set) var invalidWorksiteInfo = InvalidWorksiteInfo()
 
@@ -94,11 +100,12 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         languageRefresher: LanguageRefresher,
         workTypeStatusRepository: WorkTypeStatusRepository,
         editableWorksiteProvider: EditableWorksiteProvider,
-        translator: KeyAssetTranslator,
+        locationManager: LocationManager,
+        networkMonitor: NetworkMonitor,
         worksiteChangeRepository: WorksiteChangeRepository,
         syncPusher: SyncPusher,
-        networkMonitor: NetworkMonitor,
         inputValidator: InputValidator,
+        translator: KeyAssetTranslator,
         appEnv: AppEnv,
         loggerFactory: AppLoggerFactory,
         incidentId: Int64,
@@ -107,11 +114,12 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         self.incidentsRepository = incidentsRepository
         self.worksitesRepository = worksitesRepository
         self.editableWorksiteProvider = editableWorksiteProvider
-        self.translator = translator
         self.worksiteChangeRepository = worksiteChangeRepository
+        self.locationManager = locationManager
         self.networkMonitor = networkMonitor
         self.inputValidator = inputValidator
         self.syncPusher = syncPusher
+        self.translator = translator
         logger = loggerFactory.getLogger("create-edit-case")
 
         translationCount = translator.translationCount
@@ -172,6 +180,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
 
         subscribeCaseData()
         subscribeWorksiteChange()
+        subscribeLocationStatus()
 
         if isFirstAppear {
             dataLoader.loadData(
@@ -323,6 +332,19 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
             .store(in: &subscriptions)
     }
 
+    private func subscribeLocationStatus() {
+        locationManager.$locationPermission
+            .receive(on: RunLoop.main)
+            .sink { _ in
+                if self.locationManager.hasLocationAccess {
+                    if self.useMyLocationActionTime.distance(to: Date.now) < 20.seconds {
+                        self.updateCoordinatesToMyLocation()
+                    }
+                }
+            }
+            .store(in: &subscriptions)
+    }
+
     private func updateHeaderTitle(_ caseNumber: String = "") {
         headerTitle = {
             if caseNumber.isBlank {
@@ -386,6 +408,23 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         if !isSyncing,
            let worksiteId = worksiteIdIn {
             syncPusher.appPushWorksite(worksiteId)
+        }
+    }
+
+    private func updateCoordinatesToMyLocation() {
+        if let location = locationManager.getLocation() {
+            mapCoordinates = location.coordinate
+        }
+    }
+
+    func useMyLocation() {
+        useMyLocationActionTime = Date.now
+        if locationManager.requestLocationAccess() {
+            updateCoordinatesToMyLocation()
+        }
+
+        if locationManager.isDeniedLocationAccess {
+            showExplainLocationPermission = true
         }
     }
 

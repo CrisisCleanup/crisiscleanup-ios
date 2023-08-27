@@ -23,10 +23,10 @@ struct CaseMoveOnMapView: View {
                 .textFieldBorder()
                 .padding(.horizontal)
 
-            CreateEditCaseMapView(
-                map: $map,
-                caseCoordinates: caseCoordinates
-            )
+//            CreateEditCaseMapView(
+//                map: $map,
+//                caseCoordinates: $caseCoordinates
+//            )
 
             HStack {
                 Button {

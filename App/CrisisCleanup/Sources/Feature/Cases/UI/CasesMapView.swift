@@ -45,15 +45,12 @@ class Coordinator: NSObject, MKMapViewDelegate {
     }
 
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        if (annotation is WorksiteAnnotationMapMark)
-        {
-            let annotationMapMark = annotation as! WorksiteAnnotationMapMark
+        if let annotationMapMark = annotation as? WorksiteAnnotationMapMark {
             let reuseIdentifier = annotationMapMark.reuseIdentifier!
             guard let annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseIdentifier) else {
                 let view = MKAnnotationView(annotation: annotation, reuseIdentifier: reuseIdentifier)
                 view.displayPriority = .required
                 view.annotation = annotation
-                view.canShowCallout = true
 
                 view.image = annotationMapMark.mapIcon ?? UIImage(named: "ic_work_type_unknown", in: .module, with: .none)
                 return view
@@ -78,7 +75,7 @@ class Coordinator: NSObject, MKMapViewDelegate {
     }
 }
 
-struct MapView : UIViewRepresentable {
+internal struct CasesMapView : UIViewRepresentable {
     @Binding var map: MKMapView
     @ObservedObject var viewModel: CasesViewModel
     let onSelectWorksite: (Int64) -> Void
@@ -133,6 +130,6 @@ struct MapView : UIViewRepresentable {
         Coordinator(viewModel, onSelectWorksite)
     }
 
-    func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<MapView>) {
+    func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<CasesMapView>) {
     }
 }

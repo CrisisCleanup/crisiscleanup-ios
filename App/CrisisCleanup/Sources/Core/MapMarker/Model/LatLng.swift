@@ -21,9 +21,12 @@ extension CLLocation {
     var latLng: LatLng { LatLng(coordinate.latitude, coordinate.longitude) }
 }
 
-let DefaultCoordinates = LatLng(40.272621, -96.012327)
+private let defaultLat = 40.272621
+private let defaultLng = -96.012327
+let DefaultCoordinates = LatLng(defaultLat, defaultLng)
+let DefaultCoordinates2d = CLLocationCoordinate2D(latitude: defaultLat, longitude: defaultLng)
 
-// TODO Replace with actual location bounds from incident_id = 41762
+// TODO: Replace with actual location bounds from incident_id = 41762
 let DefaultBounds = LatLngBounds(
     southWest: LatLng(28.598360630332458, -122.5307175747425),
     northEast: LatLng(47.27322983958189, -68.49771985492872)

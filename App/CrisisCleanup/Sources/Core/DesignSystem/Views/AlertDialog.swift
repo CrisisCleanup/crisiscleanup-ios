@@ -57,12 +57,21 @@ struct AlertDialog<Content>: View where Content : View {
     }
 }
 
+func openSystemAppSettings() {
+    guard let url = URL(string: UIApplication.openSettingsURLString) else {
+       return
+    }
+    if UIApplication.shared.canOpenURL(url) {
+       UIApplication.shared.open(url, options: [:])
+    }
+}
+
 struct OpenAppSettingsDialog<Content>: View where Content : View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     let title: String
     let dismissDialog: () -> Void
-    var positiveAction: () -> Void = {}
+
     @ViewBuilder let content: () -> Content
 
     var body: some View {
@@ -73,15 +82,33 @@ struct OpenAppSettingsDialog<Content>: View where Content : View {
             dismissDialog: dismissDialog,
             negativeAction: dismissDialog,
             positiveAction: {
-                guard let url = URL(string: UIApplication.openSettingsURLString) else {
-                   return
-                }
-                if UIApplication.shared.canOpenURL(url) {
-                   UIApplication.shared.open(url, options: [:])
-                }
+                openSystemAppSettings()
                 dismissDialog()
             },
             content: content
         )
+    }
+}
+
+struct LocationAppSettingsDialog: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    var title: String = ""
+    var titleTranslateKey: String = "info.allow_access_to_location"
+    var textTranslateKey = ""
+
+    let dismissDialog: () -> Void
+
+    var body: some View {
+        OpenAppSettingsDialog(
+            title: title.isBlank ? t.t(titleTranslateKey) : title,
+            dismissDialog: dismissDialog
+        ) {
+            let text = t.t(textTranslateKey.ifBlank {
+                "info.location_permission_explanation"
+            })
+            Text(text)
+                .padding(.horizontal)
+        }
     }
 }

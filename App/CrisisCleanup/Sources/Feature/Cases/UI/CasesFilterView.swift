@@ -3,9 +3,33 @@ import SVGView
 
 struct CasesFilterView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
-    @Environment(\.dismiss) var dismiss
 
     @ObservedObject var viewModel: CasesFilterViewModel
+
+    var body: some View {
+        ZStack {
+            FiltersContentView()
+
+            if viewModel.showExplainLocationPermission {
+                LocationAppSettingsDialog(
+                    title: t.t("info.allow_access_to_location"),
+                    textTranslateKey: "worksiteFilters.location_required_to_filter_by_distance"
+                ) {
+                    viewModel.showExplainLocationPermission = false
+                }
+            }
+        }
+        .hideNavBarUnderSpace()
+        .onAppear { viewModel.onViewAppear() }
+        .onDisappear { viewModel.onViewDisappear() }
+        .environmentObject(viewModel)
+    }
+}
+
+private struct FiltersContentView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @EnvironmentObject var viewModel: CasesFilterViewModel
 
     @State var sectionCollapse = [
         false,
@@ -91,20 +115,6 @@ struct CasesFilterView: View {
                 FilterButtons()
                     .environmentObject(viewModel)
                     .listItemPadding()
-            }
-            .hideNavBarUnderSpace()
-            .onAppear { viewModel.onViewAppear() }
-            .onDisappear { viewModel.onViewDisappear() }
-            .environmentObject(viewModel)
-        }
-
-        if viewModel.showExplainLocationPermssion {
-            OpenAppSettingsDialog(
-                title: t.t("info.allow_access_to_location"),
-                dismissDialog: { viewModel.showExplainLocationPermssion = false }
-            ) {
-                Text(t.t("worksiteFilters.location_required_to_filter_by_distance"))
-                    .padding(.horizontal)
             }
         }
     }
@@ -242,10 +252,13 @@ private struct FilterDistanceSection: View {
     var body: some View {
         if viewModel.hasInconsistentDistanceFilter {
             VStack {
-                Text(t.t("~~Filtering by distance requires access to location"))
+                Text(t.t("worksiteFilters.location_required_to_filter_by_distance"))
 
                 Button {
-                    _ = viewModel.requestLocationAccess()
+                    let hasPermission = viewModel.requestLocationAccess()
+                    if !hasPermission && viewModel.isLocationDenied() {
+                        openSystemAppSettings()
+                    }
                 } label: {
                     Text(t.t("~~Grant access to location"))
                 }
