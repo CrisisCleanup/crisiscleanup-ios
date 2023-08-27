@@ -20,12 +20,6 @@ struct CreateEditCaseView: View {
         false
     ]
 
-    @State var sectionScrollCache = "section1"
-
-    @State var isKeyboardOpen = false
-
-    private let ignoreFormFieldKeys = Set(["cross_street", "email"])
-
     var body: some View {
         let disableMutation = viewModel.editableViewState.disabled
         let editSections = viewModel.editSections
@@ -62,7 +56,11 @@ struct CreateEditCaseView: View {
                             .id("section0")
 
                             if !sectionCollapse[0] {
-                                PropertyInformation(viewModel: viewModel)
+                                PropertyInformation(
+                                    propertyData: viewModel.propertyInputData,
+                                    locationData: viewModel.locationInputData,
+                                    flagTranslateKeys: viewModel.flagTranslateKeys
+                                )
                             }
                         }
                         .onScrollSectionFocus(
@@ -96,7 +94,6 @@ struct CreateEditCaseView: View {
                                                     node: child
                                                 )
                                                 .padding(.horizontal)
-
                                             }
                                         }
                                     }
@@ -167,25 +164,23 @@ private struct CreateEditCaseSectionHeaderView: View {
 
 struct PropertyInformation: View {
     @Environment(\.translator) var t: KeyAssetTranslator
+
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var editableView: EditableView
     @EnvironmentObject var locationManager: LocationManager
 
-    @ObservedObject var viewModel: CreateEditCaseViewModel
+    @ObservedObject var propertyData: PropertyInputData
+    @ObservedObject var locationData: LocationInputData
+    let flagTranslateKeys: [String]
+
+    // TODO: Remove
     @State var coordinates = CLLocationCoordinate2D(
         latitude: 40.83834587046632,
         longitude: 14.254053016537693
     )
     @State var map = MKMapView()
 
-    @State var residentName: String = ""
-    @State var phone1: String = ""
-    @State var phone2: String = ""
-    @State var email: String = ""
-    @State var autoContactFrequency: String = ""
-
     @State var fullAddressPlaceholder: String = ""
-    @State var crossStreetLandmark: String = ""
 
     @State var activeFlags: [String] = []
 
@@ -193,22 +188,22 @@ struct PropertyInformation: View {
         let disabled = editableView.disabled
         VStack(alignment: .leading) {
             VStack{
-                TextField(t.t("formLabels.name"), text: $residentName)
+                TextField(t.t("formLabels.name"), text: $propertyData.residentName)
                     .textFieldBorder()
                     .disabled(disabled)
                     .padding([.horizontal, .bottom])
 
-                TextField(t.t("formLabels.phone1"), text: $phone1)
+                TextField(t.t("formLabels.phone1"), text: $propertyData.phoneNumber)
                     .textFieldBorder()
                     .disabled(disabled)
                     .padding([.horizontal, .bottom])
 
-                TextField(t.t("formLabels.phone2"), text: $phone2)
+                TextField(t.t("formLabels.phone2"), text: $propertyData.phoneNumberSecondary)
                     .textFieldBorder()
                     .disabled(disabled)
                     .padding([.horizontal, .bottom])
 
-                TextField(t.t("formLabels.email"), text: $email)
+                TextField(t.t("formLabels.email"), text: $propertyData.email)
                     .keyboardType(.emailAddress)
                     .textFieldBorder()
                     .disabled(disabled)
@@ -217,10 +212,14 @@ struct PropertyInformation: View {
             VStack(alignment: .leading) {
                 Text(t.t("casesVue.auto_contact_frequency"))
 
-                RadioButtons(
-                    selected: $autoContactFrequency,
-                    options: autoContactFrequencyOptions.map { t.t($0.literal) }
-                )
+                ForEach(autoContactFrequencyOptions, id: \.self) {option in
+                    RadioButton(
+                        text: t.t(option.literal),
+                        isSelected: option == propertyData.autoContactFrequency
+                    ) {
+                        propertyData.autoContactFrequency = option
+                    }
+                }
                 .disabled(disabled)
                 .padding()
             }
@@ -261,6 +260,7 @@ struct PropertyInformation: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .disabled(disabled)
 
+                // TODO: Move into view model
                 Button {
                     if locationManager.hasLocationAccess {
                         coordinates = map.userLocation.coordinate
@@ -269,7 +269,7 @@ struct PropertyInformation: View {
                         // TODO: Show dialog to grant access from settings
                         print("Location access was previously denied")
                     } else {
-                        locationManager.requestLocationAccess()
+                        _ = locationManager.requestLocationAccess()
                     }
                 } label: {
                     Image("ic_use_my_location", bundle: .module)
@@ -281,13 +281,13 @@ struct PropertyInformation: View {
             }
             .padding()
 
-            TextField(t.t("formLabels.cross_street"), text: $crossStreetLandmark)
+            TextField(t.t("formLabels.cross_street"), text: $locationData.crossStreetNearbyLandmark)
                 .textFieldBorder()
                 .disabled(disabled)
                 .padding([.horizontal, .bottom])
 
             VStack(alignment: .leading) {
-                let flagOptions = viewModel.flagTranslateKeys
+                let flagOptions = flagTranslateKeys
                 CheckboxViews(
                     selectedOptions: $activeFlags,
                     options: flagOptions.map { ($0, t.t($0)) }
@@ -413,7 +413,7 @@ struct DisplayFormField: View {
                     horizontalSpacing: 8,
                     verticalSpacing: 8
                 ) {
-                    // TODO: Test
+                    // TODO: Test. Did not seem to work consistently
                     let selectOptions = Array(contentData[node.fieldKey].split(separator: ","))
                         .map { String($0) }
                         .filter { $0.isNotBlank }

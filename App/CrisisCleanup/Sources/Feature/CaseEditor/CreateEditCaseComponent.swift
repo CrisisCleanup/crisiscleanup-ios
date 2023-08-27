@@ -47,6 +47,7 @@ class CreateEditCaseComponent: Component<AppDependency>, CreateEditCaseViewBuild
                 worksiteChangeRepository: dependency.worksiteChangeRepository,
                 syncPusher: dependency.syncPusher,
                 networkMonitor: dependency.networkMonitor,
+                inputValidator: dependency.inputValidator,
                 appEnv: dependency.appEnv,
                 loggerFactory: dependency.loggerFactory,
                 incidentId: incidentId,

@@ -9,6 +9,8 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     private var editableWorksiteProvider: EditableWorksiteProvider
     private let translator: KeyAssetTranslator
     private let worksiteChangeRepository: WorksiteChangeRepository
+    private let networkMonitor: NetworkMonitor
+    private let inputValidator: InputValidator
     private let syncPusher: SyncPusher
     private let logger: AppLogger
 
@@ -22,9 +24,15 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
 
     @Published private(set) var headerTitle = ""
 
+    let visibleNoteCount = 3
+
+    @Published private(set) var isOnline = true
+
     @Published private(set) var isLoading = true
 
     @Published private(set) var isSyncing = false
+
+    @Published private(set) var areEditorsReady = false
 
     let editableViewState = EditableView()
 
@@ -32,6 +40,10 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
 
     private let uiState: AnyPublisher<CaseEditorUiState, Never>
     @Published private(set) var caseData: CaseEditorCaseData? = nil
+
+    // For preventing unwanted editor reloads
+    private var editorSetTime: Date?
+    private let editorSetWindow: Double
 
     @Published private(set) var editSections: [String] = []
     @Published private(set) var statusOptions: [WorkTypeStatus] = []
@@ -43,11 +55,30 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
 
     @Published private(set) var flagTranslateKeys: [String] = []
 
+    let propertyInputData = PropertyInputData()
+    let locationInputData = LocationInputData()
+    @Published private(set) var isHighPriority = false
+    @Published private(set) var isAssignedToOrgMember = false
+    @Published private(set) var worksiteNotes = [WorksiteNote]()
     @Published var binaryFormData = ObservableBoolDictionary()
     @Published var contentFormData = ObservableStringDictionary()
 
+    @Published private(set) var showInvalidWorksiteSave = false
+    @Published private(set) var invalidWorksiteInfo = InvalidWorksiteInfo()
+
+    @Published private(set) var navigateBack = false
+
     private let isSavingWorksite = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isSaving = false
+
+    @Published private(set) var editIncidentWorksite = (EmptyIncident.id, EmptyWorksite.id)
+
+    @Published private(set) var changeWorksiteIncidentId = EmptyIncident.id
+    @Published private(set) var changeExistingWorksite = (EmptyIncident.id, EmptyWorksite.id)
+    private var saveChangeIncident = EmptyIncident
+    private var changingIncidentWorksite = EmptyWorksite
+
+    @Published private(set) var showClaimAndSave = true
 
     private let isFirstVisible = ManagedAtomic(true)
 
@@ -67,6 +98,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         worksiteChangeRepository: WorksiteChangeRepository,
         syncPusher: SyncPusher,
         networkMonitor: NetworkMonitor,
+        inputValidator: InputValidator,
         appEnv: AppEnv,
         loggerFactory: AppLoggerFactory,
         incidentId: Int64,
@@ -77,6 +109,8 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         self.editableWorksiteProvider = editableWorksiteProvider
         self.translator = translator
         self.worksiteChangeRepository = worksiteChangeRepository
+        self.networkMonitor = networkMonitor
+        self.inputValidator = inputValidator
         self.syncPusher = syncPusher
         logger = loggerFactory.getLogger("create-edit-case")
 
@@ -111,6 +145,8 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
 
         editingWorksite = editableWorksiteProvider.editableWorksite.eraseToAnyPublisher()
 
+        editorSetWindow = isCreateWorksite ? 0.05.seconds : 0.6.seconds
+
         updateHeaderTitle()
     }
 
@@ -122,16 +158,20 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         let isFirstAppear = isFirstVisible.exchange(false, ordering: .sequentiallyConsistent)
 
         if isFirstAppear {
+            let incidentChangeData = editableWorksiteProvider.takeIncidentChanged()
+            changingIncidentWorksite = incidentChangeData?.worksite ?? EmptyWorksite
+
             editableWorksiteProvider.reset(incidentIdIn)
         }
 
-        subscribeToLoading()
-        subscribeToSyncing()
-        subscribeToSaving()
-        subscribeToEditableState()
+        subscribeOnline()
+        subscribeLoading()
+        subscribeSyncing()
+        subscribeSaving()
+        subscribeEditableState()
 
-        subscribeToCaseData()
-        subscribeToWorksiteChange()
+        subscribeCaseData()
+        subscribeWorksiteChange()
 
         if isFirstAppear {
             dataLoader.loadData(
@@ -146,13 +186,21 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         subscriptions = cancelSubscriptions(subscriptions)
     }
 
-    private func subscribeToLoading() {
+    private func subscribeOnline() {
+        networkMonitor.isOnline
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.isOnline, on: self)
+            .store(in: &subscriptions)
+    }
+
+    private func subscribeLoading() {
         dataLoader.isLoading
             .assign(to: \.isLoading, on: self)
             .store(in: &subscriptions)
     }
 
-    private func subscribeToSyncing() {
+    private func subscribeSyncing() {
         if let worksiteId = self.worksiteIdIn {
             worksiteChangeRepository.syncingWorksiteIds
                 .eraseToAnyPublisher()
@@ -163,34 +211,38 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         }
     }
 
-    private func subscribeToSaving() {
+    private func subscribeSaving() {
         isSavingWorksite.eraseToAnyPublisher()
             .receive(on: RunLoop.main)
             .assign(to: \.isSaving, on: self)
             .store(in: &subscriptions)
     }
 
-    private func subscribeToEditableState() {
-        Publishers.CombineLatest(
-            $isLoading.eraseToAnyPublisher(),
-            $isSaving.eraseToAnyPublisher()
+    private func subscribeEditableState() {
+        Publishers.CombineLatest3(
+            $isLoading,
+            $isSaving,
+            $areEditorsReady
         )
-        .map { (b0, b1) in b0 || b1 }
+        .map { (b0, b1, editorsReady) in b0 || b1 || !editorsReady}
         .sink { isTransient in
             self.editableViewState.isEditable = !isTransient
         }
         .store(in: &subscriptions)
+
+        if !isCreateWorksite {
+            editingWorksite.map {
+                $0.workTypes.first(where: { workType in workType.orgClaim == nil }) != nil
+            }
+            .receive(on: RunLoop.main)
+            .assign(to: \.showClaimAndSave, on: self)
+            .store(in: &subscriptions)
+        }
     }
 
-    private func subscribeToCaseData() {
-        // TODO: Guard against unwanted changes after the initial load
+    private func subscribeCaseData() {
         uiState
-            .throttle(
-                for: .seconds(0.1),
-                scheduler: RunLoop.current,
-                latest: true
-            )
-            .map { state in
+            .compactMap { state in
                 let result: CaseEditorCaseData? = {
                     switch state {
                     case .caseData(let caseData): return caseData
@@ -199,13 +251,32 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
                 }()
                 return result
             }
+            .filter { stateData in
+                var passesFilter = false
+                if stateData?.isNetworkLoadFinished == true {
+                    if self.editorSetTime == nil ||
+                        self.editorSetTime!.distance(to: Date.now) < self.editorSetWindow {
+                        passesFilter = true
+                    }
+                    if passesFilter {
+                        self.editorSetTime = Date.now
+                    }
+                }
+                return passesFilter
+            }
+            .debounce(
+                for: .seconds(editorSetWindow * 1.5),
+                scheduler: RunLoop.current
+            )
             .receive(on: RunLoop.main)
             .sink(receiveValue: { stateData in
-                self.caseData = stateData
-                self.statusOptions = stateData == nil ? [] : stateData!.statusOptions
-                if stateData != nil {
-                    self.setFormFieldNodes()
+                if self.changingIncidentWorksite != EmptyWorksite {
+                    self.editableWorksiteProvider.editableWorksite.value = self.changingIncidentWorksite
                 }
+
+                self.caseData = stateData
+                self.statusOptions = stateData!.statusOptions
+                self.setFormFieldNodes()
 
                 var flagOptionTranslationKeys = [
                     "caseForm.address_problems",
@@ -215,6 +286,10 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
                     flagOptionTranslationKeys.append("actions.member_of_my_org")
                 }
                 self.flagTranslateKeys = flagOptionTranslationKeys
+
+                self.loadInitialWorksite()
+
+                self.areEditorsReady = true
             })
             .store(in: &subscriptions)
 
@@ -225,7 +300,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
             .store(in: &subscriptions)
     }
 
-    private func subscribeToWorksiteChange() {
+    private func subscribeWorksiteChange() {
         dataLoader.worksiteStream
             .sink(receiveValue: { localWorksiteOptional in
                 if let localWorksite = localWorksiteOptional {
@@ -264,7 +339,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         _ incidentId: Int64,
         _ worksiteId: Int64
     ) {
-        if worksiteId > 0 {
+        if incidentId > 0 && worksiteId > 0 {
             self.worksitesRepository.setRecentWorksite(
                 incidentId: incidentId,
                 worksiteId: worksiteId,
@@ -286,11 +361,61 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         ]
     }
 
+    private var formFieldsInputData = FormFieldsInputData()
+    private func loadInitialWorksite() {
+        let worksite = editableWorksiteProvider.editableWorksite.value
+
+        propertyInputData.load(worksite)
+        locationInputData.load(worksite)
+        isHighPriority = worksite.hasHighPriorityFlag
+        isAssignedToOrgMember = worksite.isAssignedToOrgMember
+        worksiteNotes.append(contentsOf: worksite.notes)
+
+        if !isCreateWorksite {
+            formFieldsInputData = loadFormFieldsInputData(editableWorksiteProvider)
+            for binaryField in formFieldsInputData.binaryFields {
+                binaryFormData[binaryField] = true
+            }
+            for (key, value) in formFieldsInputData.contentFields {
+                contentFormData[key] = value
+            }
+        }
+    }
+
     func scheduleSync() {
         if !isSyncing,
            let worksiteId = worksiteIdIn {
             syncPusher.appPushWorksite(worksiteId)
         }
+    }
+
+    private func validateWorksite() -> Bool {
+        if !propertyInputData.validate(inputValidator, t) {
+            return false
+        }
+
+        if !locationInputData.validate(t) {
+            return false
+        }
+
+        // TODO: Validate remaining
+
+        return true
+    }
+
+    private func onIncidentChange() {
+        // TODO: Do
+    }
+
+    func saveChanges(
+        _ claimUnclaimed: Bool,
+        backOnSuccess: Bool = true
+    ) {
+        // TODO: Do
+    }
+
+    private func setInvalidSection() {
+        // TODO: Do
     }
 
     // MARK: KeyTranslator
@@ -303,5 +428,29 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
 
     func t(_ phraseKey: String) -> String {
         localTranslate(phraseKey)
+    }
+}
+
+enum WorksiteSection {
+    case none,
+         property,
+         location,
+         locationAddress,
+         details,
+         workType,
+         hazards,
+         volunteerReport
+}
+
+struct InvalidWorksiteInfo {
+    let invalidSection: WorksiteSection
+    let message: String
+
+    init(
+        _ invalidSection: WorksiteSection = .none,
+        _ message: String = ""
+    ) {
+        self.invalidSection = invalidSection
+        self.message = message
     }
 }

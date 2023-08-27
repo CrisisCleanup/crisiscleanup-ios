@@ -14,7 +14,6 @@ enum ImageCategory: String, Identifiable, CaseIterable {
 
 private let imageCategoryLookup = ImageCategory.allCases.associateBy { $0.literal }
 
-// sourcery: copyBuilder, skipCopyInit
 struct CaseImage {
     let id: Int64
     let isNetworkImage: Bool
@@ -24,12 +23,10 @@ struct CaseImage {
     let title: String
     let rotateDegrees: Int
 
-    // sourcery:begin skipCopy
     let category: ImageCategory
     let isAfter: Bool
 
     var imageName: String { imageUri.lastPath }
-    // sourcery:end
 
     init(
         id: Int64,

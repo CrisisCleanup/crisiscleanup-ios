@@ -1,5 +1,6 @@
 //  Created by Anthony Aguilar on 7/12/23.
 
+import Combine
 import Foundation
 import MapKit
 
@@ -8,6 +9,7 @@ public class LocationManager: NSObject, ObservableObject {
 
     @Published private(set) var locationPermission: CLAuthorizationStatus? = nil
 
+    private let locationSubject = CurrentValueSubject<CLLocation?, Never>(nil)
     @Published var location: CLLocation? = nil
 
     private let authorizedLocationAccessStatuses: Set<CLAuthorizationStatus> = [
@@ -21,6 +23,8 @@ public class LocationManager: NSObject, ObservableObject {
 
     var isDeniedLocationAccess: Bool { noLocationAccessStatuses.contains(locationManager.authorizationStatus) }
 
+    private var subscriptions = Set<AnyCancellable>()
+
     override init(){
         super.init()
         self.locationManager.delegate = self
@@ -28,6 +32,11 @@ public class LocationManager: NSObject, ObservableObject {
         self.locationManager.distanceFilter = kCLDistanceFilterNone
 
         locationPermission = locationManager.authorizationStatus
+
+        locationSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.location, on: self)
+            .store(in: &subscriptions)
     }
 
     func requestLocationAccess() -> Bool {
@@ -41,7 +50,7 @@ public class LocationManager: NSObject, ObservableObject {
     }
 
     func getLocation() -> CLLocation? {
-        location = locationManager.location
+        locationSubject.value = locationManager.location
         return location
     }
 }
@@ -55,6 +64,6 @@ extension LocationManager: CLLocationManagerDelegate {
         guard let location = locations.last else {
             return
         }
-        self.location = location
+        locationSubject.value = location
     }
 }

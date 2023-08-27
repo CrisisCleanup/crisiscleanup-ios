@@ -24,13 +24,12 @@ public protocol EditableWorksiteProvider {
     func addNote(_ note: String)
     func takeNote() -> WorksiteNote?
 
-    // TODO: Do
-//    var incidentIdChange: any Publisher<Int64, Never> { get }
-//    var peekIncidentChange: IncidentChangeData? { get }
+    var incidentIdChange: any Publisher<Int64, Never> { get }
+    var peekIncidentChange: IncidentChangeData? { get }
     func resetIncidentChange()
-//    func setIncidentAddressChanged(_ incident: Incident, _ worksite: Worksite)
-//    func updateIncidentChangeWorksite(_ worksite: Worksite)
-//    func takeIncidentChanged() -> IncidentChangeData?
+    func setIncidentAddressChanged(_ incident: Incident, _ worksite: Worksite)
+    func updateIncidentChangeWorksite(_ worksite: Worksite)
+    func takeIncidentChanged() -> IncidentChangeData?
 
     func translate(key: String) -> String?
 }
@@ -100,12 +99,12 @@ class SingleEditableWorksiteProvider: EditableWorksiteProvider, WorksiteLocation
     }
 
     func setAddressChanged(_ worksite: Worksite) {
-        _ = _isAddressChanged.exchange(true, ordering: .acquiring)
+        _ = _isAddressChanged.exchange(true, ordering: .sequentiallyConsistent)
         editableWorksite.value = worksite
     }
 
     func takeAddressChanged() -> Bool {
-        _isAddressChanged.exchange(false, ordering: .acquiring)
+        _isAddressChanged.exchange(false, ordering: .sequentiallyConsistent)
     }
 
     private let addNoteLock = NSLock()
@@ -129,8 +128,51 @@ class SingleEditableWorksiteProvider: EditableWorksiteProvider, WorksiteLocation
         }
     }
 
+    let incidentIdChangeSubject = CurrentValueSubject<Int64, Never>(EmptyIncident.id)
+    var incidentIdChange: any Publisher<Int64, Never> {
+        incidentIdChangeSubject
+    }
+
+    private let incidentChangeData = ManagedAtomic(AtomicIncidentChangeData())
+
+    var peekIncidentChange: IncidentChangeData? {
+        incidentChangeData.load(ordering: .sequentiallyConsistent).value
+    }
+
     func resetIncidentChange() {
-        // TODO: Do
+        incidentIdChangeSubject.value = EmptyIncident.id
+        incidentChangeData.store(AtomicIncidentChangeData(), ordering: .sequentiallyConsistent)
+    }
+
+    private func setIncidentChange(
+        _ incident: Incident,
+        _ worksite: Worksite
+    ) {
+        incidentChangeData.store(
+            AtomicIncidentChangeData(IncidentChangeData(
+                incident: incident,
+                worksite: worksite.copy { $0.incidentId = incident.id }
+            )),
+            ordering: .sequentiallyConsistent
+        )
+    }
+
+    func setIncidentAddressChanged(
+        _ incident: Incident,
+        _ worksite: Worksite
+    ) {
+        setIncidentChange(incident, worksite)
+        incidentIdChangeSubject.value = incident.id
+    }
+
+    func updateIncidentChangeWorksite(_ worksite: Worksite) {
+        if let changeData = incidentChangeData.load(ordering: .sequentiallyConsistent).value {
+            setIncidentChange(changeData.incident, worksite)
+        }
+    }
+
+    func takeIncidentChanged() -> IncidentChangeData? {
+        incidentChangeData.exchange(AtomicIncidentChangeData(), ordering: .sequentiallyConsistent).value
     }
 
     func translate(key: String) -> String? {
@@ -147,5 +189,27 @@ class OptionalCoordinates: AtomicOptionalWrappable {
 
     init(_ coordinates: CLLocationCoordinate2D? = nil) {
         self.coordinates = coordinates
+    }
+}
+
+public struct IncidentChangeData {
+    let incident: Incident
+    let worksite: Worksite
+}
+
+let EmptyIncidentChangeData = IncidentChangeData(
+    incident: EmptyIncident,
+    worksite: EmptyWorksite
+)
+
+class AtomicIncidentChangeData: AtomicOptionalWrappable {
+    typealias AtomicOptionalRepresentation = AtomicOptionalReferenceStorage<AtomicIncidentChangeData>
+
+    typealias AtomicRepresentation = AtomicReferenceStorage<AtomicIncidentChangeData>
+
+    let value: IncidentChangeData?
+
+    init(_ value: IncidentChangeData? = nil) {
+        self.value = value
     }
 }
