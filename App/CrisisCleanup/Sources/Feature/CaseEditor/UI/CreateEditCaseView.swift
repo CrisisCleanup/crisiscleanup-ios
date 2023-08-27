@@ -167,11 +167,14 @@ struct PropertyInformation: View {
 
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var editableView: EditableView
+    @EnvironmentObject var focusableViewState: TextInputFocusableView
     @EnvironmentObject var locationManager: LocationManager
 
     @ObservedObject var propertyData: PropertyInputData
     @ObservedObject var locationData: LocationInputData
     let flagTranslateKeys: [String]
+
+    @FocusState private var focusState: TextInputFocused?
 
     // TODO: Remove
     @State var coordinates = CLLocationCoordinate2D(
@@ -189,41 +192,48 @@ struct PropertyInformation: View {
         VStack(alignment: .leading) {
             VStack{
                 TextField(t.t("formLabels.name"), text: $propertyData.residentName)
+                    .focused($focusState, equals: .anyTextInput)
                     .textFieldBorder()
                     .disabled(disabled)
-                    .padding([.horizontal, .bottom])
+                    .padding(.bottom)
 
                 TextField(t.t("formLabels.phone1"), text: $propertyData.phoneNumber)
+                    .focused($focusState, equals: .anyTextInput)
                     .textFieldBorder()
                     .disabled(disabled)
-                    .padding([.horizontal, .bottom])
+                    .padding(.bottom)
 
                 TextField(t.t("formLabels.phone2"), text: $propertyData.phoneNumberSecondary)
+                    .focused($focusState, equals: .anyTextInput)
                     .textFieldBorder()
                     .disabled(disabled)
-                    .padding([.horizontal, .bottom])
+                    .padding(.bottom)
 
                 TextField(t.t("formLabels.email"), text: $propertyData.email)
                     .keyboardType(.emailAddress)
+                    .focused($focusState, equals: .anyTextInput)
                     .textFieldBorder()
                     .disabled(disabled)
-                    .padding([.horizontal, .bottom])
+                    .padding(.bottom)
             }
+            .padding(.horizontal)
+
             VStack(alignment: .leading) {
                 Text(t.t("casesVue.auto_contact_frequency"))
+                    .listItemPadding()
 
-                ForEach(autoContactFrequencyOptions, id: \.self) {option in
+                ForEach(autoContactFrequencyOptions, id: \.self) { option in
                     RadioButton(
                         text: t.t(option.literal),
-                        isSelected: option == propertyData.autoContactFrequency
+                        isSelected: option == propertyData.autoContactFrequency,
+                        nestedLevel: 1,
+                        isListItem: true
                     ) {
                         propertyData.autoContactFrequency = option
                     }
                 }
                 .disabled(disabled)
-                .padding()
             }
-            .padding(.leading)
 
             VStack(alignment: .leading) {
                 Text(t.t("formLabels.location"))
@@ -282,6 +292,7 @@ struct PropertyInformation: View {
             .padding()
 
             TextField(t.t("formLabels.cross_street"), text: $locationData.crossStreetNearbyLandmark)
+                .focused($focusState, equals: .anyTextInput)
                 .textFieldBorder()
                 .disabled(disabled)
                 .padding([.horizontal, .bottom])
@@ -314,23 +325,36 @@ struct PropertyInformation: View {
             .padding(.leading)
 
         }
+        .onChange(of: focusState) { focusableViewState.focusState = $0 }
+    }
+}
+
+private struct DisplayFormFieldLabel: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+    let node: FormFieldNode
+
+    var body: some View {
+        Text(t.t(node.formField.label))
+        if node.formField.help.isNotBlank {
+            HelpIcon(node.formField.help)
+        }
     }
 }
 
 struct DisplayFormField: View {
     @Environment(\.translator) var t: KeyAssetTranslator
+
     @EnvironmentObject var editableView: EditableView
+    @EnvironmentObject var focusableViewState: TextInputFocusableView
 
     @Binding var checkedData: ObservableBoolDictionary
     @Binding var contentData: ObservableStringDictionary
 
-    @State var tempDailyWeekly = ""
-    @State var tempSelected: [String] = []
-    @State var tempValue = 1
-    @State var tempDate = Date()
-    @State var tempSelectedRadio = ""
+    @State private var multiSelected: Set<String> = []
 
     let node: FormFieldNode
+
+    @FocusState private var focusState: TextInputFocused?
 
     var body: some View {
         let disabled = editableView.disabled
@@ -339,30 +363,24 @@ struct DisplayFormField: View {
             switch node.formField.htmlType {
             case "text":
                 HStack {
-                    Text(t.t(node.formField.label))
-                    if node.formField.help.isNotBlank
-                    {
-                        HelpIcon(node.formField.help)
-                    }
-                    Spacer()
-                }
-                TextField(t.t(node.formField.placeholder), text: $contentData[node.fieldKey])
-                    .textFieldBorder()
-                    .disabled(disabled)
-                    .padding(.bottom)
-            case "textarea":
-                HStack {
-                    Text(t.t(node.formField.label))
-                    if node.formField.help.isNotBlank {
-                       HelpIcon(node.formField.help)
-                    }
+                    DisplayFormFieldLabel(node: node)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                TextEditor(text: $contentData[node.fieldKey])
-                    .frame(minHeight: appTheme.rowItemHeight*2)
+                TextField(t.t(node.formField.placeholder), text: $contentData[node.fieldKey])
+                    .focused($focusState, equals: .anyTextInput)
                     .textFieldBorder()
                     .disabled(disabled)
                     .padding(.bottom)
+
+            case "textarea":
+                HStack {
+                    DisplayFormFieldLabel(node: node)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                LargeTextEditor(text: $contentData[node.fieldKey])
+                    .disabled(disabled)
+                    .padding(.bottom)
+
             case "checkbox":
                 HStack {
                     CheckboxView(
@@ -370,21 +388,16 @@ struct DisplayFormField: View {
                         text: node.formField.label
                     )
                     .disabled(disabled)
-                    if(node.formField.help.isNotBlank)
-                    {
+                    if node.formField.help.isNotBlank {
                         HelpIcon(node.formField.help)
                     }
                     Spacer()
                 }
                 .frame(minHeight: appTheme.rowItemHeight)
+
             case "select":
                 HStack {
-                    let label = t.t(node.formField.label)
-                    Text(label)
-                    if(node.formField.help.isNotBlank)
-                    {
-                        HelpIcon(node.formField.help)
-                    }
+                    DisplayFormFieldLabel(node: node)
                     Spacer()
                     let options = node.options
                     let sortedOptions = options
@@ -401,35 +414,38 @@ struct DisplayFormField: View {
                     .disabled(disabled)
                 }
                 .frame(minHeight: appTheme.rowItemHeight)
+
             case "multiselect":
                 HStack {
-                    Text(t.t(node.formField.label))
-                    if node.formField.help.isNotBlank {
-                        HelpIcon(node.formField.help)
-                    }
+                    DisplayFormFieldLabel(node: node)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 FlowStack(
                     alignment: .leading,
                     horizontalSpacing: 8,
                     verticalSpacing: 8
                 ) {
-                    // TODO: Test. Did not seem to work consistently
-                    let selectOptions = Array(contentData[node.fieldKey].split(separator: ","))
-                        .map { String($0) }
-                        .filter { $0.isNotBlank }
-                    var selected = Set(selectOptions)
+                    let selectionString = contentData[node.fieldKey]
+                    var selected = { () -> Set<String> in
+                        var set = multiSelected
+                        if set.isEmpty {
+                            let selectOptions = Array(selectionString.split(separator: ","))
+                                .map { String($0) }
+                                .filter { $0.isNotBlank }
+                            set = Set(selectOptions)
+                        }
+                        return set
+                    }()
                     ForEach(Array(node.options.keys), id: \.self) { option in
                         let isSelected = selected.contains(option)
                         Button {
-                            let newSelection = {
-                                if isSelected {
-                                    selected.remove(option)
-                                } else {
-                                    selected.insert(option)
-                                }
-                                return selected.joined(separator: ",")
-                            }()
-                            contentData[node.fieldKey] = newSelection
+                            if isSelected {
+                                selected.remove(option)
+                            } else {
+                                selected.insert(option)
+                            }
+                            contentData[node.fieldKey] = selected.joined(separator: ",")
+                            multiSelected = selected
                         } label : {
                             Text(t.t(option))
                             // TODO: Common styles
@@ -451,129 +467,7 @@ struct DisplayFormField: View {
                 .disabled(disabled)
                 .padding([.bottom])
             case "cronselect":
-                VStack(alignment: .leading) {
-                    let isChecked = checkedData[node.fieldKey]
-                    HStack {
-                        CheckboxView(
-                            checked: $checkedData[node.fieldKey],
-                            text: t.t(node.formField.label)
-                        )
-                        .disabled(isChecked)
-
-                        Spacer ()
-                    }
-                    if(isChecked) {
-                        HStack {
-                            Button {
-                                tempDailyWeekly = "daily"
-                            } label : {
-                                let isSelected = tempDailyWeekly == "daily"
-                                HStack {
-                                    Spacer()
-                                    Text("t.tDaily")
-                                    // TODO: Common styles
-                                    Spacer()
-                                }
-                                .padding()
-                                .background( isSelected ? Color.yellow : Color.white)
-                                .cornerRadius(40)
-                                .overlay(
-                                    Capsule(style: .continuous)
-                                        .strokeBorder(
-                                            Color.black,
-                                            lineWidth: isSelected ? 0 : 1
-                                        )
-                                )
-                            }
-                            .tint(.black)
-
-                            Button {
-                                tempDailyWeekly = "weekly"
-                            } label : {
-                                let isSelected = tempDailyWeekly == "weekly"
-                                HStack {
-                                    Spacer()
-                                    Text("t.weekly")
-                                    // TODO: Common styles
-                                    Spacer()
-                                }
-                                .padding()
-                                .background( isSelected ? Color.yellow : Color.white)
-                                .cornerRadius(40)
-                                .overlay(
-                                    Capsule(style: .continuous)
-                                        .strokeBorder(
-                                            Color.black,
-                                            lineWidth: isSelected ? 0 : 1
-                                        )
-                                )
-                            }
-                            .tint(.black)
-
-                        }
-                        // TODO: Test
-                        if tempDailyWeekly == "weekly" {
-
-                            Stepper(value: $tempValue,
-                                    in: 1...99,
-                                    step: 1) {
-                                HStack {
-                                    Text("t.tRecur Every")
-                                    Text(tempValue.description)
-                                        .frame(width: 30, height: 30)
-                                        .padding()
-                                        .background(appTheme.colors.attentionBackgroundColor)
-                                        .cornerRadius(appTheme.cornerRadius)
-                                    Text("week(s) on:")
-                                }
-                            }
-                            let options = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
-                            FlowStack(
-                                alignment: .leading,
-                                horizontalSpacing: 8,
-                                verticalSpacing: 8
-                            ) {
-                                ForEach(options, id: \.self) { option in
-                                    let isSelected = tempSelected.contains(option)
-                                    Button {
-                                        if isSelected {
-                                            tempSelected.remove(at: tempSelected.firstIndex(of: option)!)
-                                        } else {
-                                            tempSelected.append(option)
-                                        }
-                                    } label : {
-                                        Text(option)
-                                        // TODO: Common styles
-                                            .padding()
-                                            .frame(width: 75)
-                                            .background( isSelected ? Color.yellow : Color.white)
-                                            .cornerRadius(40)
-                                            .overlay(
-                                                Capsule(style: .continuous)
-                                                    .strokeBorder(
-                                                        Color.black,
-                                                        lineWidth: isSelected ? 0 : 1
-                                                    )
-                                            )
-                                    }
-                                    .tint(.black)
-
-
-                                }
-                            }
-
-                            SelectEndDate(date: $tempDate)
-                                .padding(.top)
-
-                        } else if tempDailyWeekly == "daily" {
-                            RadioButtons(selected: $tempSelectedRadio, options: ["t.treccurringSchedule", "t.teveryWeekday"])
-
-                            SelectEndDate(date: $tempDate)
-                                .padding(.top)
-                        }
-                    }
-
-                }
+                Text("Frequency types under development")
             case "h4":
                 Text("h4")
                 Text(t.t(node.formField.label))
@@ -585,10 +479,7 @@ struct DisplayFormField: View {
                             checkedData[node.fieldKey] = !isChecked
                         } label : {
                             HStack {
-                                Text(t.t(node.formField.label))
-                                if node.formField.help.isNotBlank {
-                                    HelpIcon(node.formField.help)
-                                }
+                                DisplayFormFieldLabel(node: node)
                                 Spacer()
                                 Image(systemName: collapseIconName(!isChecked))
                             }
@@ -621,9 +512,148 @@ struct DisplayFormField: View {
                 }
             }
         }
+        .onChange(of: focusState) { focusableViewState.focusState = $0 }
     }
 }
 
+private struct FrequencySelectView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @Binding var checkedData: ObservableBoolDictionary
+
+    let node: FormFieldNode
+
+    @State var tempDailyWeekly = ""
+    @State var tempSelected: [String] = []
+    @State var tempValue = 1
+    @State var tempDate = Date()
+    @State var tempSelectedRadio = ""
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            let isChecked = checkedData[node.fieldKey]
+            HStack {
+                CheckboxView(
+                    checked: $checkedData[node.fieldKey],
+                    text: t.t(node.formField.label)
+                )
+                .disabled(isChecked)
+
+                Spacer ()
+            }
+            if(isChecked) {
+                HStack {
+                    Button {
+                        tempDailyWeekly = "daily"
+                    } label : {
+                        let isSelected = tempDailyWeekly == "daily"
+                        HStack {
+                            Spacer()
+                            Text("t.tDaily")
+                            // TODO: Common styles
+                            Spacer()
+                        }
+                        .padding()
+                        .background( isSelected ? Color.yellow : Color.white)
+                        .cornerRadius(40)
+                        .overlay(
+                            Capsule(style: .continuous)
+                                .strokeBorder(
+                                    Color.black,
+                                    lineWidth: isSelected ? 0 : 1
+                                )
+                        )
+                    }
+                    .tint(.black)
+
+                    Button {
+                        tempDailyWeekly = "weekly"
+                    } label : {
+                        let isSelected = tempDailyWeekly == "weekly"
+                        HStack {
+                            Spacer()
+                            Text("t.weekly")
+                            // TODO: Common styles
+                            Spacer()
+                        }
+                        .padding()
+                        .background( isSelected ? Color.yellow : Color.white)
+                        .cornerRadius(40)
+                        .overlay(
+                            Capsule(style: .continuous)
+                                .strokeBorder(
+                                    Color.black,
+                                    lineWidth: isSelected ? 0 : 1
+                                )
+                        )
+                    }
+                    .tint(.black)
+
+                }
+                // TODO: Test
+                if tempDailyWeekly == "weekly" {
+
+                    Stepper(value: $tempValue,
+                            in: 1...99,
+                            step: 1) {
+                        HStack {
+                            Text("t.tRecur Every")
+                            Text(tempValue.description)
+                                .frame(width: 30, height: 30)
+                                .padding()
+                                .background(appTheme.colors.attentionBackgroundColor)
+                                .cornerRadius(appTheme.cornerRadius)
+                            Text("week(s) on:")
+                        }
+                    }
+                    let options = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
+                    FlowStack(
+                        alignment: .leading,
+                        horizontalSpacing: 8,
+                        verticalSpacing: 8
+                    ) {
+                        ForEach(options, id: \.self) { option in
+                            let isSelected = tempSelected.contains(option)
+                            Button {
+                                if isSelected {
+                                    tempSelected.remove(at: tempSelected.firstIndex(of: option)!)
+                                } else {
+                                    tempSelected.append(option)
+                                }
+                            } label : {
+                                Text(option)
+                                // TODO: Common styles
+                                    .padding()
+                                    .frame(width: 75)
+                                    .background( isSelected ? Color.yellow : Color.white)
+                                    .cornerRadius(40)
+                                    .overlay(
+                                        Capsule(style: .continuous)
+                                            .strokeBorder(
+                                                Color.black,
+                                                lineWidth: isSelected ? 0 : 1
+                                            )
+                                    )
+                            }
+                            .tint(.black)
+                        }
+                    }
+
+                    SelectEndDate(date: $tempDate)
+                        .padding(.top)
+
+                } else if tempDailyWeekly == "daily" {
+                    RadioButtons(selected: $tempSelectedRadio, options: ["t.treccurringSchedule", "t.teveryWeekday"])
+
+                    SelectEndDate(date: $tempDate)
+                        .padding(.top)
+                }
+            }
+        }
+    }
+}
+
+// TODO: Reuse calendar range from Filters
 private struct SelectEndDate: View {
 
     @Binding var date: Date
