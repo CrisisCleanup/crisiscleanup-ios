@@ -19,6 +19,8 @@ struct RadioButtons: View {
 }
 
 struct RadioButton: View {
+    @Environment(\.isEnabled) var isEnabled
+
     let text: String
     let isSelected: Bool
 
@@ -34,7 +36,7 @@ struct RadioButton: View {
             HStack{
                 let radioImg = isSelected ? "circle.inset.filled" : "circle"
                 Image(systemName: radioImg)
-                    .foregroundColor(isSelected ? Color.black : Color.gray)
+                    .foregroundColor(isSelected && isEnabled ? Color.black : Color.gray)
                     .if(nestedLevel != nil) {
                         $0.padding(.leading, Double(nestedLevel!) * appTheme.nestedItemPadding)
                     }
