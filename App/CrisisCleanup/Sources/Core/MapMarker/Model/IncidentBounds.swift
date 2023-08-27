@@ -31,7 +31,8 @@ public struct IncidentBounds: Equatable {
     let centroid: LatLng
 
     func containsLocation(_ location: LatLng) -> Bool {
-        bounds.bounds(location) && locations.first { $0.containsLocation(location) } != nil
+        bounds.bounds(location) &&
+        locations.first { $0.containsLocation(location) } != nil
     }
 }
 

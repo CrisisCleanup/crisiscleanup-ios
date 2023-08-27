@@ -1,40 +1,48 @@
 import Foundation
 
 class PolyUtil {
-    // TODO: Write tests or use existing
     static func containsLocation(
         _ location: LatLng,
         _ latLngs: [LatLng]
     ) -> Bool {
-        // ray-casting algorithm based on
-        // https://wrf.ecse.rpi.edu/Research/Short_Notes/pnpoly.html
+        inRing(location, latLngs)
+    }
 
-        let y = location.latitude
+    // Translation of https://github.com/omanges/turfpy/blob/master/turfpy/measurement.py
+    static func inRing(
+        _ location: LatLng,
+        _ latLngs: [LatLng],
+        ignoreBoundary: Bool = false
+    ) -> Bool {
+        var isInside = false
+
         let x = location.longitude
-
-        var inside = false
-        var segmentTestCount = 0
-        for i in latLngs.indices {
-            let j = (i + 1) % latLngs.count
-            let yi = latLngs[i].latitude
+        let y = location.latitude
+        var j = latLngs.count - 1
+        for i in 0..<latLngs.count {
             let xi = latLngs[i].longitude
-            let yj = latLngs[j].latitude
+            let yi = latLngs[i].latitude
             let xj = latLngs[j].longitude
+            let yj = latLngs[j].latitude
 
-            if xi == xj || yi == yj {
-                continue
-            }
-            segmentTestCount += 1
+            let onBoundary = (y * (xi - xj) + yi * (xj - x) + yj * (x - xi) == 0) &&
+                ((xi - x) * (xj - x) <= 0) &&
+                ((yi - y) * (yj - y) <= 0)
 
-            let intersect = ((yi > y) != (yj > y))
-            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)
-            if segmentTestCount > 0 && intersect != inside {
-                return false
+            if onBoundary {
+                return !ignoreBoundary
             }
-            inside = intersect
+
+            let intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)
+
+            if intersect {
+                isInside = !isInside
+            }
+
+            j = i
         }
 
-        return segmentTestCount > 2
+        return isInside
     }
 
     static func shoelaceArea(_ latLngs: [LatLng]) -> Double {

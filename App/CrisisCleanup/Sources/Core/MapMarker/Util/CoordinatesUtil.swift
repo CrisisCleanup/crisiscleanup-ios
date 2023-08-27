@@ -132,7 +132,7 @@ extension Array where Element == LocationLatLng {
             let locationPoly = locationPolyOpt!
             let centerBounds = centerBoundsOpt!
             incidentCentroid = centerBounds.center
-            if PolyUtil.containsLocation(incidentCentroid, locationPoly) {
+            if !PolyUtil.containsLocation(incidentCentroid, locationPoly) {
                 var closestPoint = locationPoly[0]
                 var closestDistance = PolyUtil.computeSqrDistanceBetween(incidentCentroid, closestPoint)
                 for polyPoint in locationPoly {

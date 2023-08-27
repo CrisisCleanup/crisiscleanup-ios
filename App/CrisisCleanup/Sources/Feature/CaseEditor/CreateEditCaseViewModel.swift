@@ -353,11 +353,8 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
                 let worksiteProvider = self.editableWorksiteProvider
                 let coordinates = LatLng($0.latitude, $0.longitude)
                 let isInBounds = worksiteProvider.incidentBounds.containsLocation(coordinates)
-                // TODO: Bounds determination is off.
-                print("In bounds \($0) \(isInBounds)")
-//                return isInBounds ? "" : self.t("caseForm.case_outside_incident_name")
-//                    .replacingOccurrences(of: "{incident_name}", with: worksiteProvider.incident.name)
-                return ""
+                return isInBounds ? "" : self.t("caseForm.case_outside_incident_name")
+                    .replacingOccurrences(of: "{incident_name}", with: worksiteProvider.incident.name)
             }
             .receive(on: RunLoop.main)
             .assign(to: \.locationOutOfBoundsMessage, on: self)
