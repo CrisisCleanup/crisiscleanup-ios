@@ -71,6 +71,14 @@ class LocationInputData: ObservableObject {
         state = worksite.state
     }
 
+    func clearAddress() {
+        streetAddress = ""
+        city = ""
+        zipCode = ""
+        county = ""
+        state = ""
+    }
+
     func resetValidity() {
         streetAddressError = ""
         zipCodeError = ""

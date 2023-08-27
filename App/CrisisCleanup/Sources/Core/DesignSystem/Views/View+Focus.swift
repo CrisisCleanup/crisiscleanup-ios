@@ -5,7 +5,15 @@ enum TextInputFocused: Hashable {
     case anyTextInput,
          querySuggestions,
          authEmailAddress,
-         authPassword
+         authPassword,
+         caseInfoName,
+         caseInfoPhone,
+         caseInfoEmail,
+         caseInfoStreetAddress,
+         caseInfoZipCode,
+         caseInfoCity,
+         caseInfoCounty,
+         caseInfoState
 }
 
 class TextInputFocusableView: ObservableObject {

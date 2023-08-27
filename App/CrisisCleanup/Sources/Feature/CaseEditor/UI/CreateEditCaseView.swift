@@ -190,6 +190,21 @@ private struct CreateEditCaseSectionHeaderView: View {
     }
 }
 
+private struct ErrorTextView: View {
+    let text: String
+    var paddingEdges: Edge.Set = []
+
+    var body: some View {
+        if text.isNotBlank {
+            Text(text)
+                .fontHeader3()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .foregroundColor(appTheme.colors.primaryRedColor)
+                .padding(paddingEdges)
+        }
+    }
+}
+
 struct PropertyInformation: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
@@ -216,15 +231,17 @@ struct PropertyInformation: View {
     var body: some View {
         let disabled = editableView.disabled
         VStack(alignment: .leading) {
-            VStack{
+            Group {
+                ErrorTextView(text: propertyData.residentNameError)
                 TextField(t.t("formLabels.name"), text: $propertyData.residentName)
-                    .focused($focusState, equals: .anyTextInput)
+                    .focused($focusState, equals: .caseInfoName)
                     .textFieldBorder()
                     .disabled(disabled)
                     .padding(.bottom)
 
+                ErrorTextView(text: propertyData.phoneNumberError)
                 TextField(t.t("formLabels.phone1"), text: $propertyData.phoneNumber)
-                    .focused($focusState, equals: .anyTextInput)
+                    .focused($focusState, equals: .caseInfoPhone)
                     .textFieldBorder()
                     .disabled(disabled)
                     .padding(.bottom)
@@ -235,9 +252,10 @@ struct PropertyInformation: View {
                     .disabled(disabled)
                     .padding(.bottom)
 
+                ErrorTextView(text: propertyData.emailError)
                 TextField(t.t("formLabels.email"), text: $propertyData.email)
                     .keyboardType(.emailAddress)
-                    .focused($focusState, equals: .anyTextInput)
+                    .focused($focusState, equals: .caseInfoEmail)
                     .textFieldBorder()
                     .disabled(disabled)
                     .padding(.bottom)
@@ -265,6 +283,7 @@ struct PropertyInformation: View {
                 Text(t.t("formLabels.location"))
                     .padding(.leading)
 
+                // TODO: Hide if not online or other reasons
                 TextField(
                     t.t("caseView.full_address"),
                     text: $fullAddressPlaceholder,
@@ -317,6 +336,8 @@ struct PropertyInformation: View {
             }
             .padding()
 
+            CaseAddressFormFields(locationData: locationData)
+
             TextField(t.t("formLabels.cross_street"), text: $locationData.crossStreetNearbyLandmark)
                 .focused($focusState, equals: .anyTextInput)
                 .textFieldBorder()
@@ -352,6 +373,99 @@ struct PropertyInformation: View {
 
         }
         .onChange(of: focusState) { focusableViewState.focusState = $0 }
+    }
+}
+
+private struct CaseAddressFormFields: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @EnvironmentObject var viewModel: CreateEditCaseViewModel
+    @EnvironmentObject var editableView: EditableView
+    @EnvironmentObject private var focusableViewState: TextInputFocusableView
+
+    @ObservedObject var locationData: LocationInputData
+
+    @FocusState private var focusState: TextInputFocused?
+
+    var body: some View {
+        let disabled = editableView.disabled
+
+        if locationData.isEditingAddress ||
+            locationData.hasWrongLocation ||
+            locationData.streetAddressError.isNotBlank ||
+            locationData.zipCodeError.isNotBlank ||
+            locationData.cityError.isNotBlank ||
+            locationData.countyError.isNotBlank ||
+            locationData.stateError.isNotBlank {
+
+            Group {
+                Group {
+                    ErrorTextView(text: locationData.streetAddressError)
+                    TextField(t.t("formLabels.address"), text: $locationData.streetAddress)
+                        .focused($focusState, equals: .caseInfoStreetAddress)
+                        .textFieldBorder()
+                        .padding(.bottom)
+
+                    ErrorTextView(text: locationData.cityError)
+                    TextField(t.t("formLabels.city"), text: $locationData.city)
+                        .focused($focusState, equals: .caseInfoCity)
+                        .textFieldBorder()
+                        .padding(.bottom)
+                }
+
+                Group {
+                    ErrorTextView(text: locationData.countyError)
+                    TextField(t.t("formLabels.county"), text: $locationData.county)
+                        .focused($focusState, equals: .caseInfoCounty)
+                        .textFieldBorder()
+                        .padding(.bottom)
+
+                    ErrorTextView(text: locationData.stateError)
+                    TextField(t.t("formLabels.state"), text: $locationData.state)
+                        .focused($focusState, equals: .caseInfoState)
+                        .textFieldBorder()
+                        .padding(.bottom)
+
+                    ErrorTextView(text: locationData.zipCodeError)
+                    TextField(t.t("formLabels.postal_code"), text: $locationData.zipCode)
+                        .focused($focusState, equals: .caseInfoZipCode)
+                        .textFieldBorder()
+                        .padding(.bottom)
+                }
+            }
+            .disabled(disabled)
+            .padding(.horizontal)
+
+        } else {
+            let addressSummary = locationData.addressSummary
+            if addressSummary.isNotEmpty {
+                ZStack(alignment: .bottomTrailing) {
+                    let addressText = addressSummary.joined(separator: "\n")
+                    Text(addressText)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+
+                    HStack(spacing: appTheme.gridItemSpacing) {
+                        Button {
+                            locationData.clearAddress()
+                        } label: {
+                            Image(systemName: "trash.fill")
+                                .frame(width: 24, height: 24)
+                        }
+                        Button {
+                            locationData.isEditingAddress = true
+                        } label: {
+                            Image(systemName: "pencil")
+                                .frame(width: 24, height: 24)
+                        }
+                    }
+                    .padding()
+                }
+                .roundedBorder()
+                .disabled(disabled)
+                .padding()
+            }
+        }
     }
 }
 
