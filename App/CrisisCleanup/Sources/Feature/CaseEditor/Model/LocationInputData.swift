@@ -24,11 +24,11 @@ class LocationInputData: ObservableObject {
 
     @Published var isEditingAddress = false
 
-    @Published var streetAddressError = ""
-    @Published var zipCodeError = ""
-    @Published var cityError = ""
-    @Published var countyError = ""
-    @Published var stateError = ""
+    @Published private(set) var streetAddressError = ""
+    @Published private(set) var zipCodeError = ""
+    @Published private(set) var cityError = ""
+    @Published private(set) var countyError = ""
+    @Published private(set) var stateError = ""
 
     private var isIncompleteAddress: Bool {
         streetAddress.isBlank ||
@@ -38,12 +38,20 @@ class LocationInputData: ObservableObject {
         state.isBlank
     }
 
+    // TODO: Turn into publisher if necessary
     private var isBlankAddress: Bool {
         streetAddress.isBlank &&
         zipCode.isBlank &&
         city.isBlank &&
         county.isBlank &&
         state.isBlank
+    }
+
+    private var wasGeocodeAddressSelected = false
+
+    // TODO: Turn into publisher if necessary
+    var isSearchSuggested: Bool {
+        !(wasGeocodeAddressSelected || isEditingAddress) || isBlankAddress
     }
 
     private func summarizeAddress(

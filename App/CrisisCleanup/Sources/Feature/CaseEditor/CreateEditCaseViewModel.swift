@@ -4,6 +4,10 @@ import CoreLocation
 import Foundation
 import SwiftUI
 
+let wrongLocationLabelKey = "caseForm.address_problems"
+let highPriorityLabelKey = "flag.flag_high_priority"
+let orgMemberLabelKey = "actions.member_of_my_org"
+
 class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     private let incidentsRepository: IncidentsRepository
     private let worksitesRepository: WorksitesRepository
@@ -60,8 +64,8 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
 
     let propertyInputData = PropertyInputData()
     let locationInputData = LocationInputData()
-    @Published private(set) var isHighPriority = false
-    @Published private(set) var isAssignedToOrgMember = false
+    @Published var isHighPriority = false
+    @Published var isAssignedToOrgMember = false
     @Published private(set) var worksiteNotes = [WorksiteNote]()
     @Published var binaryFormData = ObservableBoolDictionary()
     @Published var contentFormData = ObservableStringDictionary()
@@ -292,11 +296,11 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
                 self.setFormFieldNodes()
 
                 var flagOptionTranslationKeys = [
-                    "caseForm.address_problems",
-                    "flag.flag_high_priority"
+                    wrongLocationLabelKey,
+                    highPriorityLabelKey
                 ]
                 if self.isCreateWorksite {
-                    flagOptionTranslationKeys.append("actions.member_of_my_org")
+                    flagOptionTranslationKeys.append(orgMemberLabelKey)
                 }
                 self.flagTranslateKeys = flagOptionTranslationKeys
 
@@ -423,6 +427,10 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
             latitude: worksite.latitude,
             longitude: worksite.longitude
         )
+
+        isHighPriority = worksite.hasHighPriorityFlag
+        isAssignedToOrgMember = worksite.isAssignedToOrgMember
+        locationInputData.hasWrongLocation = worksite.hasWrongLocationFlag
     }
 
     func scheduleSync() {

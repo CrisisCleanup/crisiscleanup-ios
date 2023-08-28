@@ -90,11 +90,7 @@ private struct CreateEditCaseContentView: View {
                             if !sectionCollapse[0] {
                                 PropertyInformation(
                                     propertyData: viewModel.propertyInputData,
-                                    locationData: viewModel.locationInputData,
-                                    mapCoordinates: $viewModel.mapCoordinates,
-                                    locationOutOfBoundsMessage: $viewModel.locationOutOfBoundsMessage,
-                                    useMyLocation: { viewModel.useMyLocation() },
-                                    flagTranslateKeys: viewModel.flagTranslateKeys
+                                    locationData: viewModel.locationInputData
                                 )
                             }
                         }
@@ -209,24 +205,19 @@ struct PropertyInformation: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewModel: CreateEditCaseViewModel
     @EnvironmentObject var editableView: EditableView
     @EnvironmentObject var focusableViewState: TextInputFocusableView
     @EnvironmentObject var locationManager: LocationManager
 
     @ObservedObject var propertyData: PropertyInputData
     @ObservedObject var locationData: LocationInputData
-    @Binding var mapCoordinates: CLLocationCoordinate2D
-    @Binding var locationOutOfBoundsMessage: String
-    let useMyLocation: () -> Void
-    let flagTranslateKeys: [String]
 
     @FocusState private var focusState: TextInputFocused?
 
-    @State var map = MKMapView()
+    @State private var map = MKMapView()
 
-    @State var fullAddressPlaceholder: String = ""
-
-    @State var activeFlags: [String] = []
+    @State private var fullAddressPlaceholder: String = ""
 
     var body: some View {
         let disabled = editableView.disabled
@@ -279,11 +270,11 @@ struct PropertyInformation: View {
                 .disabled(disabled)
             }
 
-            VStack(alignment: .leading) {
-                Text(t.t("formLabels.location"))
-                    .padding(.leading)
+            Text(t.t("formLabels.location"))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.leading)
 
-                // TODO: Hide if not online or other reasons
+            if viewModel.isOnline && locationData.isSearchSuggested {
                 TextField(
                     t.t("caseView.full_address"),
                     text: $fullAddressPlaceholder,
@@ -298,13 +289,14 @@ struct PropertyInformation: View {
                 .padding(.horizontal)
             }
 
+            let outOfBoundsMessage = viewModel.locationOutOfBoundsMessage
             CreateEditCaseMapView(
                 map: $map,
-                caseCoordinates: $mapCoordinates
+                caseCoordinates: $viewModel.mapCoordinates
             )
-            .if(locationOutOfBoundsMessage.isNotBlank) { view in
+            .if(viewModel.areEditorsReady && outOfBoundsMessage.isNotBlank) { view in
                 view.overlay(alignment: .bottomLeading) {
-                    Text(locationOutOfBoundsMessage)
+                    Text(outOfBoundsMessage)
                         .fontBodySmall()
                         .padding()
                         .background(.white.disabledAlpha())
@@ -325,7 +317,7 @@ struct PropertyInformation: View {
                 .disabled(disabled)
 
                 Button {
-                    useMyLocation()
+                    viewModel.useMyLocation()
                 } label: {
                     Image("ic_use_my_location", bundle: .module)
                         .frame(width: 24, height: 24)
@@ -345,11 +337,37 @@ struct PropertyInformation: View {
                 .padding([.horizontal, .bottom])
 
             VStack(alignment: .leading) {
-                let flagOptions = flagTranslateKeys
-                CheckboxViews(
-                    selectedOptions: $activeFlags,
-                    options: flagOptions.map { ($0, t.t($0)) }
-                )
+                ForEach(viewModel.flagTranslateKeys, id: \.self) { key in
+                    let isSelected: Bool = {
+                        switch (key) {
+                        case highPriorityLabelKey:
+                            return viewModel.isHighPriority
+                        case wrongLocationLabelKey:
+                            return locationData.hasWrongLocation
+                        case orgMemberLabelKey:
+                            return viewModel.isAssignedToOrgMember
+                        default:
+                            return false
+                        }
+                    }()
+                    Button {
+                        let toggleSelected = !isSelected
+                        switch (key) {
+                        case highPriorityLabelKey:
+                            viewModel.isHighPriority = toggleSelected
+                        case wrongLocationLabelKey:
+                            locationData.hasWrongLocation = toggleSelected
+                        case orgMemberLabelKey:
+                            viewModel.isAssignedToOrgMember = toggleSelected
+                        default:
+                            print("Flag \(key) does not update any state")
+                        }
+                    } label: {
+                        let label = t.t(key)
+                        CheckboxTextView(isChecked: isSelected, text: label)
+                    }
+                    .listItemModifier()
+                }
             }
             .disabled(disabled)
             .padding(.leading)

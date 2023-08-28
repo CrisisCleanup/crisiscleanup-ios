@@ -262,6 +262,7 @@ internal class CaseEditorDataLoader {
                     )
                     worksiteCoordinates = deviceLocation
                 }
+
                 return EmptyWorksite.copy {
                     $0.incidentId = incidentIdIn
                     $0.autoContactFrequencyT = AutoContactFrequency.notOften.literal

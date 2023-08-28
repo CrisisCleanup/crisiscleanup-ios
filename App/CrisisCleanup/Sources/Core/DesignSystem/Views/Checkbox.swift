@@ -21,7 +21,7 @@ struct CheckboxViews: View {
     }
 }
 
-private struct CheckboxTextView : View {
+struct CheckboxTextView : View {
     @Environment(\.isEnabled) var isEnabled
 
     let isChecked: Bool
