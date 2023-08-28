@@ -72,11 +72,20 @@ struct CaseMoveOnMapView: View {
             }
         }
         .screenTitle(t.t("caseForm.select_on_map"))
-        .onChange(of: viewModel.isLocationSearching, perform: { isSearching in
+        .onChange(of: viewModel.isLocationSearching) { isSearching in
             withAnimation {
                 showSearchingIndicator = isSearching
             }
-        })
+        }
+        .onChange(of: viewModel.editIncidentWorksite) { identifier in
+            if identifier != ExistingWorksiteIdentifierNone {
+                router.viewCase(
+                    incidentId: identifier.incidentId,
+                    worksiteId: identifier.worksiteId,
+                    popToRoot: true
+                )
+            }
+        }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)

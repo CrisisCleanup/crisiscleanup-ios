@@ -1,6 +1,6 @@
 import Combine
 
-struct ExistingWorksiteIdentifier {
+struct ExistingWorksiteIdentifier: Equatable {
     let incidentId: Int64
     let worksiteId: Int64
 
@@ -21,8 +21,6 @@ public class ExistingWorksiteSelector {
     private let worksitesRepository: WorksitesRepository
     private let logger: AppLogger
 
-    let selected = CurrentValueSubject<ExistingWorksiteIdentifier, Never>(ExistingWorksiteIdentifierNone)
-
     init(
         worksiteProvider: EditableWorksiteProvider,
         incidentsRepository: IncidentsRepository,
@@ -35,13 +33,13 @@ public class ExistingWorksiteSelector {
         logger = loggerFactory.getLogger("existing-worksite-selector")
     }
 
-    func onNetworkWorksiteSelected(networkWorksiteId: Int64) async {
+    func onNetworkWorksiteSelected(networkWorksiteId: Int64) async -> ExistingWorksiteIdentifier {
         do {
             let incidentId = worksiteProvider.editableWorksite.value.incidentId
-            if let incident = try incidentsRepository.getIncident(incidentId, false) {
+            if let _ = try incidentsRepository.getIncident(incidentId, false) {
                 let worksiteId = try  worksitesRepository.getLocalId(networkWorksiteId)
                 if worksiteId > 0 {
-                    selected.value = ExistingWorksiteIdentifier(
+                    return ExistingWorksiteIdentifier(
                         incidentId: incidentId,
                         worksiteId: worksiteId
                     )
@@ -50,5 +48,6 @@ public class ExistingWorksiteSelector {
         } catch {
             logger.logError(error)
         }
+        return ExistingWorksiteIdentifierNone
     }
 }

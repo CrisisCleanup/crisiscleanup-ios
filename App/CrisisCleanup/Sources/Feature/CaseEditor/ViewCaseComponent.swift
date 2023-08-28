@@ -7,6 +7,9 @@ public protocol ViewCaseViewBuilder {
 }
 
 class ViewCaseComponent: Component<AppDependency>, ViewCaseViewBuilder {
+    private let routerObserver: RouterObserver
+    private let pathId: Int
+
     private var viewModel: ViewCaseViewModel? = nil
 
     private var disposables = Set<AnyCancellable>()
@@ -15,12 +18,14 @@ class ViewCaseComponent: Component<AppDependency>, ViewCaseViewBuilder {
         parent: Scope,
         routerObserver: RouterObserver
     ) {
+        self.routerObserver = routerObserver
+        pathId = NavigationRoute.viewCase(incidentId: 0, worksiteId: 0).id
+
         super.init(parent: parent)
 
-        let viewCasePathId = NavigationRoute.viewCase(incidentId: 0, worksiteId: 0).id
         routerObserver.pathIds
             .sink { pathIds in
-                if !pathIds.contains(viewCasePathId) {
+                if !pathIds.contains(self.pathId) {
                     self.viewModel = nil
                 }
             }
@@ -32,31 +37,37 @@ class ViewCaseComponent: Component<AppDependency>, ViewCaseViewBuilder {
     }
 
     private func getViewModel(incidentId: Int64, worksiteId: Int64) -> ViewCaseViewModel {
-        if viewModel == nil {
-            viewModel = ViewCaseViewModel(
-                accountDataRepository: dependency.accountDataRepository,
-                incidentsRepository: dependency.incidentsRepository,
-                organizationsRepository: dependency.organizationsRepository,
-                accountDataRefresher: dependency.accountDataRefresher,
-                incidentRefresher: dependency.incidentRefresher,
-                incidentBoundsProvider: dependency.incidentBoundsProvider,
-                locationManager: dependency.locationManager,
-                worksitesRepository: dependency.worksitesRepository,
-                languageRepository: dependency.languageTranslationsRepository,
-                languageRefresher: dependency.languageRefresher,
-                workTypeStatusRepository: dependency.workTypeStatusRepository,
-                editableWorksiteProvider: dependency.editableWorksiteProvider,
-                transferWorkTypeProvider: dependency.transferWorkTypeProvider,
-                localImageRepository: dependency.localImageRepository,
-                translator: dependency.translator,
-                worksiteChangeRepository: dependency.worksiteChangeRepository,
-                syncPusher: dependency.syncPusher,
-                appEnv: dependency.appEnv,
-                loggerFactory: dependency.loggerFactory,
-                incidentId: incidentId,
-                worksiteId: worksiteId
-            )
+        let isRelevant = routerObserver.isInPath(pathId)
+        if isRelevant,
+           let existingViewModel = viewModel,
+           existingViewModel.incidentIdIn == incidentId,
+           existingViewModel.worksiteIdIn == worksiteId {
+            return existingViewModel
         }
+
+        viewModel = ViewCaseViewModel(
+            accountDataRepository: dependency.accountDataRepository,
+            incidentsRepository: dependency.incidentsRepository,
+            organizationsRepository: dependency.organizationsRepository,
+            accountDataRefresher: dependency.accountDataRefresher,
+            incidentRefresher: dependency.incidentRefresher,
+            incidentBoundsProvider: dependency.incidentBoundsProvider,
+            locationManager: dependency.locationManager,
+            worksitesRepository: dependency.worksitesRepository,
+            languageRepository: dependency.languageTranslationsRepository,
+            languageRefresher: dependency.languageRefresher,
+            workTypeStatusRepository: dependency.workTypeStatusRepository,
+            editableWorksiteProvider: dependency.editableWorksiteProvider,
+            transferWorkTypeProvider: dependency.transferWorkTypeProvider,
+            localImageRepository: dependency.localImageRepository,
+            translator: dependency.translator,
+            worksiteChangeRepository: dependency.worksiteChangeRepository,
+            syncPusher: dependency.syncPusher,
+            appEnv: dependency.appEnv,
+            loggerFactory: dependency.loggerFactory,
+            incidentId: incidentId,
+            worksiteId: worksiteId
+        )
         return viewModel!
     }
 

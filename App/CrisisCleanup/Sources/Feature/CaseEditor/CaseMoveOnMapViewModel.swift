@@ -4,7 +4,7 @@ import Foundation
 import SwiftUI
 
 class CaseMoveOnMapViewModel: ObservableObject {
-    private let worksiteProvider: EditableWorksiteProvider
+    private var worksiteProvider: EditableWorksiteProvider
     private let locationManager: LocationManager
     private let incidentBoundsProvider: IncidentBoundsProvider
     private let searchWorksitesRepository: SearchWorksitesRepository
@@ -31,7 +31,12 @@ class CaseMoveOnMapViewModel: ObservableObject {
     @Published private(set) var isCheckingOutOfBounds = false
     @Published private(set) var locationOutOfBounds = false
 
+    private let editIncidentWorksiteSubject = CurrentValueSubject<ExistingWorksiteIdentifier, Never>(ExistingWorksiteIdentifierNone)
     @Published private(set) var editIncidentWorksite = ExistingWorksiteIdentifierNone
+
+    private let isSelectingWorksiteSubject = CurrentValueSubject<Bool, Never>(false)
+    @Published private(set) var isSelectingWorksite = false
+
     @Published private(set) var isLocationCommitted = false
 
     @Published private(set) var closeSearchBarTrigger = false
@@ -121,6 +126,16 @@ class CaseMoveOnMapViewModel: ObservableObject {
     }
 
     private func subscribeSearchState() {
+        isSelectingWorksiteSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.isSelectingWorksite, on: self)
+            .store(in: &subscriptions)
+
+        editIncidentWorksiteSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.editIncidentWorksite, on: self)
+            .store(in: &subscriptions)
+
         $locationQuery
             .sink { self.locationQuerySubject.value = $0 }
             .store(in: &subscriptions)
@@ -169,12 +184,26 @@ class CaseMoveOnMapViewModel: ObservableObject {
     }
 
     func onExistingWorksiteSelected(_ result: CaseSummaryResult) {
-        // TODO: Do
-        print("worksite selected \(result)")
+        if isSelectingWorksite {
+            return
+        }
+
+        isSelectingWorksiteSubject.value = true
+        Task {
+            do {
+                defer { isSelectingWorksiteSubject.value = false }
+
+                let existingWorksite = await existingWorksiteSelector.onNetworkWorksiteSelected(networkWorksiteId: result.networkWorksiteId)
+                if existingWorksite != ExistingWorksiteIdentifierNone {
+                    self.worksiteProvider.reset()
+                    editIncidentWorksiteSubject.value = existingWorksite
+                }
+            }
+        }
     }
 
     func onGeocodeAddressSelected(_ locationAddress: LocationAddress) -> Bool {
-        // TODO: Do
+        // TODO: Compare bounds. Take action accordingly
         print("address selected \(locationAddress)")
         return false
     }
