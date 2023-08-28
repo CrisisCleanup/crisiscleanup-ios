@@ -6,7 +6,7 @@ import SwiftUI
 
 class CreateEditCaseMapCoordinator: NSObject, MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-        staticMapRenderer(for: overlay as! MKPolygon)
+        overlayMapRenderer(overlay as! MKPolygon)
     }
 
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {

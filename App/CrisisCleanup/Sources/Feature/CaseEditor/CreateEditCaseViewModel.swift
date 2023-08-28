@@ -73,7 +73,6 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     @Published var mapCoordinates = DefaultCoordinates2d
     @Published var showExplainLocationPermission = false
     private var useMyLocationActionTime = Date.now
-
     @Published var locationOutOfBoundsMessage = ""
 
     @Published private(set) var showInvalidWorksiteSave = false
@@ -84,10 +83,10 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     private let isSavingWorksite = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isSaving = false
 
-    @Published private(set) var editIncidentWorksite = (EmptyIncident.id, EmptyWorksite.id)
+    @Published private(set) var editIncidentWorksite = ExistingWorksiteIdentifierNone
 
     @Published private(set) var changeWorksiteIncidentId = EmptyIncident.id
-    @Published private(set) var changeExistingWorksite = (EmptyIncident.id, EmptyWorksite.id)
+    @Published private(set) var changeExistingWorksite = ExistingWorksiteIdentifierNone
     private var saveChangeIncident = EmptyIncident
     private var changingIncidentWorksite = EmptyWorksite
 
@@ -354,11 +353,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
 
         $mapCoordinates
             .map {
-                let worksiteProvider = self.editableWorksiteProvider
-                let coordinates = LatLng($0.latitude, $0.longitude)
-                let isInBounds = worksiteProvider.incidentBounds.containsLocation(coordinates)
-                return isInBounds ? "" : self.t("caseForm.case_outside_incident_name")
-                    .replacingOccurrences(of: "{incident_name}", with: worksiteProvider.incident.name)
+                self.editableWorksiteProvider.getOutOfBoundsMessage($0, self.translator.t)
             }
             .receive(on: RunLoop.main)
             .assign(to: \.locationOutOfBoundsMessage, on: self)

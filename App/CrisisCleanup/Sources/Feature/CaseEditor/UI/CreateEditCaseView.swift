@@ -371,7 +371,6 @@ struct PropertyInformation: View {
                 }
             }
             .disabled(disabled)
-            .padding(.leading)
 
             VStack(alignment: .leading)
             {
@@ -389,7 +388,6 @@ struct PropertyInformation: View {
                 .disabled(disabled)
             }
             .padding(.leading)
-
         }
         .onChange(of: focusState) { focusableViewState.focusState = $0 }
     }
@@ -880,9 +878,12 @@ private struct SingleDateCalendar: View {
 private struct CreateEditCaseSaveActions: View {
     @Environment(\.translator) var t: KeyAssetTranslator
     @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var editableView: EditableView
+
+    @EnvironmentObject var viewModel: CreateEditCaseViewModel
+
 
     var body: some View {
+        // TODO: Better fit on thinner screen. Use app theme.
         HStack {
             Button {
                 dismiss()
@@ -891,13 +892,15 @@ private struct CreateEditCaseSaveActions: View {
             }
             .styleCancel()
 
-            Button {
-                // TODO: Do
-            } label : {
-                Text(t.t("actions.save_claim"))
+            if viewModel.showClaimAndSave {
+                Button {
+                    // TODO: Do
+                } label : {
+                    Text(t.t("actions.save_claim"))
+                }
+                .stylePrimary()
+                .frame(maxWidth: .infinity)
             }
-            .stylePrimary()
-            .frame(maxWidth: .infinity)
 
             Button {
                 // TODO: Do
@@ -906,6 +909,7 @@ private struct CreateEditCaseSaveActions: View {
             }
             .stylePrimary()
         }
+        .padding([.horizontal, .bottom], 8)
     }
 }
 

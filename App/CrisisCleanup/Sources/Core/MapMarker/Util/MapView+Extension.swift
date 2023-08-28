@@ -34,7 +34,7 @@ extension MKMapView {
         setRegion(region, animated: true)
     }
 
-    private func overlayPolygons() {
+    func overlayPolygons() {
         let firstHalf = [
             CLLocationCoordinate2D(latitude: -90, longitude: -180),
             CLLocationCoordinate2D(latitude: -90, longitude: 0),
@@ -81,9 +81,12 @@ extension MKMapView {
     }
 }
 
-func staticMapRenderer(for polygon: MKPolygon) -> MKPolygonRenderer {
+func overlayMapRenderer(
+    _ polygon: MKPolygon,
+    _ alpha: Double = 0.5
+) -> MKPolygonRenderer {
     let renderer = MKPolygonRenderer(polygon: polygon)
-    renderer.alpha = 0.5
+    renderer.alpha = alpha
     renderer.lineWidth = 0
     renderer.fillColor = UIColor.black
     renderer.blendMode = .color

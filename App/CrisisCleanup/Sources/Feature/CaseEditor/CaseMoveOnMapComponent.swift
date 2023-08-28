@@ -33,6 +33,16 @@ class CaseMoveOnMapComponent: Component<AppDependency>, CaseMoveOnMapViewBuilder
     private func getViewModel() -> CaseMoveOnMapViewModel {
         if viewModel == nil {
             viewModel = CaseMoveOnMapViewModel(
+                worksiteProvider: dependency.editableWorksiteProvider,
+                locationManager: dependency.locationManager,
+                incidentBoundsProvider: dependency.incidentBoundsProvider,
+                searchWorksitesRepository: dependency.searchWorksitesRepository,
+                addressSearchRepository: dependency.addressSearchRepository,
+                caseIconProvider: dependency.mapCaseIconProvider,
+                existingWorksiteSelector: dependency.existingWorksiteSelector,
+                networkMonitor: dependency.networkMonitor,
+                translator: dependency.languageTranslationsRepository,
+                loggerFactory: dependency.loggerFactory
             )
         }
         return viewModel!

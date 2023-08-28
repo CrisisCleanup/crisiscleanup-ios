@@ -4,9 +4,10 @@ private let fontBaseName = "NunitoSans10pt"
 private let appFontRegularName = "\(fontBaseName)-Regular"
 private let appFontBoldName = "\(fontBaseName)-Bold"
 private let smallFontSize = 14.0
+private let largeFontSize = 16.0
 extension Font {
     static var bodyLarge: Font {
-        Font.custom(appFontRegularName, size: 16.0)
+        Font.custom(appFontRegularName, size: largeFontSize)
     }
 
     static var bodySmall: Font {
@@ -37,6 +38,10 @@ extension Font {
 extension UIFont {
     static var bodySmall: UIFont {
         UIFont(name: appFontRegularName, size: smallFontSize)!
+    }
+
+    static var bodyLarge: UIFont {
+        UIFont(name: appFontRegularName, size: largeFontSize)!
     }
 }
 
