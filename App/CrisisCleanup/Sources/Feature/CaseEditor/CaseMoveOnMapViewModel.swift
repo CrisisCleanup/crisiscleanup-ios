@@ -1,5 +1,6 @@
 import Atomics
 import Combine
+import CoreLocation
 import Foundation
 import SwiftUI
 
@@ -19,17 +20,19 @@ class CaseMoveOnMapViewModel: ObservableObject {
 
     @Published private(set) var hasInternetConnection = true
 
+    @Published private(set) var isProcessingAction = false
+
     private let locationQuerySubject = CurrentValueSubject<String, Never>("")
     @Published var locationQuery = ""
     @Published var isShortQuery = false
     @Published var isLocationSearching = false
     @Published var searchResults = LocationSearchResults()
-    private let isSearchResultSelected = ManagedAtomic(false)
+    private var selectedAddress: LocationAddress?
 
     private let outOfBoundsManager: LocationOutOfBoundsManager
 
     @Published private(set) var isCheckingOutOfBounds = false
-    @Published private(set) var locationOutOfBounds = false
+    @Published private(set) var locationOutOfBounds: LocationOutOfBounds?
 
     private let editIncidentWorksiteSubject = CurrentValueSubject<ExistingWorksiteIdentifier, Never>(ExistingWorksiteIdentifierNone)
     @Published private(set) var editIncidentWorksite = ExistingWorksiteIdentifierNone
@@ -41,17 +44,10 @@ class CaseMoveOnMapViewModel: ObservableObject {
 
     @Published private(set) var closeSearchBarTrigger = false
 
-    // TODO: Is random offet necessary?
-    var defaultMapZoom: Double {
-        if worksiteProvider.editableWorksite.value.address.isBlank {
-            return 7
-        }
-        return 19
-    }
-
     @Published var mapCoordinates = DefaultCoordinates2d
     @Published var showExplainLocationPermission = false
     private var useMyLocationActionTime = Date.now
+
     @Published var locationOutOfBoundsMessage = ""
 
     private var subscriptions = Set<AnyCancellable>()
@@ -101,10 +97,17 @@ class CaseMoveOnMapViewModel: ObservableObject {
     }
 
     func onViewAppear() {
+        let latLng = worksiteProvider.editableWorksite.value.coordinates
+        mapCoordinates = CLLocationCoordinate2D(
+            latitude: latLng.latitude,
+            longitude: latLng.longitude
+        )
+
         subscribeLoading()
         subscribeInternetConnection()
         subscribeSearchState()
         subscribeLocationState()
+        subscribeOutOfBounds()
     }
 
     func onViewDisappear() {
@@ -116,6 +119,15 @@ class CaseMoveOnMapViewModel: ObservableObject {
             .receive(on: RunLoop.main)
             .assign(to: \.isLocationSearching, on: self)
             .store(in: &subscriptions)
+
+        Publishers.CombineLatest(
+            $isCheckingOutOfBounds,
+            $isSelectingWorksite
+        )
+        .map { b0, b1 in b0 || b1 }
+        .receive(on: RunLoop.main)
+        .assign(to: \.isProcessingAction, on: self)
+        .store(in: &subscriptions)
     }
 
     private func subscribeInternetConnection() {
@@ -177,9 +189,32 @@ class CaseMoveOnMapViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
+    private func subscribeOutOfBounds() {
+        outOfBoundsManager.isCheckingOutOfBounds
+            .receive(on: RunLoop.main)
+            .assign(to: \.isCheckingOutOfBounds, on: self)
+            .store(in: &subscriptions)
+
+        outOfBoundsManager.locationOutOfBounds
+            .receive(on: RunLoop.main)
+            .assign(to: \.locationOutOfBounds, on: self)
+            .store(in: &subscriptions)
+    }
+
     private func updateCoordinatesToMyLocation() {
         if let location = locationManager.getLocation() {
             mapCoordinates = location.coordinate
+        }
+    }
+
+    func useMyLocation() {
+        useMyLocationActionTime = Date.now
+        if locationManager.requestLocationAccess() {
+            updateCoordinatesToMyLocation()
+        }
+
+        if locationManager.isDeniedLocationAccess {
+            showExplainLocationPermission = true
         }
     }
 
@@ -202,25 +237,119 @@ class CaseMoveOnMapViewModel: ObservableObject {
         }
     }
 
+    private func setSearchedLocationAddress(_ locationAddress: LocationAddress) {
+        selectedAddress = locationAddress
+
+        locationQuery = ""
+        closeSearchBarTrigger = !closeSearchBarTrigger
+    }
+
     func onGeocodeAddressSelected(_ locationAddress: LocationAddress) -> Bool {
-        // TODO: Compare bounds. Take action accordingly
-        print("address selected \(locationAddress)")
-        return false
-    }
-
-    func useMyLocation() {
-        useMyLocationActionTime = Date.now
-        if locationManager.requestLocationAccess() {
-            updateCoordinatesToMyLocation()
+        if outOfBoundsManager.isPendingOutOfBounds {
+            return false
         }
 
-        if locationManager.isDeniedLocationAccess {
-            showExplainLocationPermission = true
+        let coordinates = locationAddress.toLatLng()
+        if !isCoordinatesInBounds(coordinates) {
+            outOfBoundsManager.onLocationOutOfBounds(coordinates, locationAddress)
+            return false
+        }
+
+        setSearchedLocationAddress(locationAddress)
+        return true
+    }
+
+    func onSaveMapMove() {
+        let latLng = LatLng(mapCoordinates.latitude, mapCoordinates.longitude)
+        if isCoordinatesInBounds(latLng) {
+            commitChanges()
+        } else {
+            outOfBoundsManager.onLocationOutOfBounds(latLng)
         }
     }
 
-    func onSave() {
-        // TODO: Do
+    private func isCoordinatesInBounds(_ coordinates: LatLng) -> Bool {
+        worksiteProvider.incidentBounds.containsLocation(coordinates)
+    }
+
+    func cancelOutOfBounds() {
+        outOfBoundsManager.clearOutOfBounds()
+    }
+
+    func changeIncidentOutOfBounds(_ locationOutOfBounds: LocationOutOfBounds) {
+        if let recentIncident = locationOutOfBounds.recentIncident {
+            let worksite: Worksite
+            if let address = locationOutOfBounds.address {
+                worksite = assumeChanges(address)
+            } else {
+                worksite = assumeChanges(locationOutOfBounds.coordinates)
+            }
+            worksiteProvider.setIncidentAddressChanged(recentIncident, worksite)
+        }
+
+        outOfBoundsManager.clearOutOfBounds()
+
+        isLocationCommitted = true
+    }
+
+    func acceptOutOfBounds(_ locationOutOfBounds: LocationOutOfBounds) {
+        if let address = locationOutOfBounds.address {
+            setSearchedLocationAddress(address)
+            commitChanges()
+        } else {
+            commitLocationCoordinates(locationOutOfBounds.coordinates)
+        }
+    }
+
+    func commitLocationCoordinates(_ coordinates: LatLng) {
+        mapCoordinates = CLLocationCoordinate2D(
+            latitude: coordinates.latitude,
+            longitude: coordinates.longitude
+        )
+        commitChanges()
+    }
+
+    private func assumeChanges(_ address: LocationAddress) -> Worksite {
+        let worksite = worksiteProvider.editableWorksite.value
+        return worksite.copy {
+            $0.latitude = address.latitude
+            $0.longitude = address.longitude
+            $0.address = address.address
+            $0.city = address.city
+            $0.county = address.county
+            $0.postalCode = address.zipCode
+            $0.state = address.state
+        }
+    }
+
+    private func assumeChanges(_ coordinates: CLLocationCoordinate2D) -> Worksite {
+        let worksite = worksiteProvider.editableWorksite.value
+        return worksite.copy {
+            $0.latitude = coordinates.latitude
+            $0.longitude = coordinates.longitude
+        }
+    }
+
+    private func assumeChanges(_ coordinates: LatLng) -> Worksite {
+        let worksite = worksiteProvider.editableWorksite.value
+        return worksite.copy {
+            $0.latitude = coordinates.latitude
+            $0.longitude = coordinates.longitude
+        }
+    }
+
+    func commitChanges() {
+        let worksite: Worksite
+        if let address = selectedAddress {
+            worksite = assumeChanges(address)
+        } else {
+            worksite = assumeChanges(mapCoordinates)
+        }
+        worksiteProvider.setAddressChanged(worksite)
+
+        outOfBoundsManager.clearOutOfBounds()
+
+        isLocationCommitted = true
     }
 }
 
@@ -252,8 +381,8 @@ internal class LocationOutOfBoundsManager {
     }
 
     func onLocationOutOfBounds(
-        coordinates: LatLng,
-        selectedAddress: LocationAddress? = nil
+        _ coordinates: LatLng,
+        _ selectedAddress: LocationAddress? = nil
     ) {
         Task {
             let outOfBoundsData = LocationOutOfBounds(
