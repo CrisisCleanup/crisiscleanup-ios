@@ -25,7 +25,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
 
     let incidentIdIn: Int64
     let worksiteIdIn: Int64?
-    private let isCreateWorksite: Bool
+    let isCreateWorksite: Bool
 
     private let localTranslate: (String) -> String
 

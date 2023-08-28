@@ -25,6 +25,9 @@ struct CreateEditCaseMapView : UIViewRepresentable {
     @Binding var map: MKMapView
     @Binding var caseCoordinates: CLLocationCoordinate2D
 
+    let isCreateWorksite: Bool
+    let mapCreateTime = Date.now
+
     func makeUIView(context: Context) -> MKMapView {
         map.configureStaticMap()
 
@@ -46,9 +49,13 @@ struct CreateEditCaseMapView : UIViewRepresentable {
         if let annotation = uiView.annotations.firstOrNil,
            let pinAnnotation = annotation as? CustomPinAnnotation {
             pinAnnotation.coordinate = caseCoordinates
-            uiView.setCenter(caseCoordinates, animated: true)
 
-            uiView.animaiteToCenter(caseCoordinates)
+            var zoom = 11
+            if isCreateWorksite && mapCreateTime.distance(to: Date.now) < 10.seconds {
+                zoom = 6
+            }
+
+            uiView.animaiteToCenter(caseCoordinates, zoom)
         }
     }
 }

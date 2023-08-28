@@ -1,4 +1,5 @@
 import Combine
+import Foundation
 
 private let zeroCoordinates = LatLng(0.0, 0.0)
 
@@ -11,6 +12,10 @@ class LocationInputData: ObservableObject {
     @Published var state = ""
     @Published var hasWrongLocation = false
     @Published var crossStreetNearbyLandmark = ""
+
+    @Published private(set) var isBlankAddress = false
+    @Published private(set) var wasGeocodeAddressSelected = false
+    @Published private(set) var isSearchSuggested = false
 
     var addressSummary: [String] {
         summarizeAddress(
@@ -38,20 +43,34 @@ class LocationInputData: ObservableObject {
         state.isBlank
     }
 
-    // TODO: Turn into publisher if necessary
-    private var isBlankAddress: Bool {
-        streetAddress.isBlank &&
-        zipCode.isBlank &&
-        city.isBlank &&
-        county.isBlank &&
-        state.isBlank
-    }
+    private var subscriptions = Set<AnyCancellable>()
 
-    private var wasGeocodeAddressSelected = false
+    init() {
+        let isBlankAddress1 = Publishers.CombineLatest3(
+            $streetAddress,
+            $zipCode,
+            $city
+        )
+            .map { s0, s1, s2 in s0.isBlank && s1.isBlank && s2.isBlank }
+        Publishers.CombineLatest3(
+            isBlankAddress1.eraseToAnyPublisher(),
+            $county,
+            $state
+        )
+        .map { isBlank, s3, s4 in isBlank && s3.isBlank && s4.isBlank }
+        .receive(on: RunLoop.main)
+        .assign(to: \.isBlankAddress, on: self)
+        .store(in: &subscriptions)
 
-    // TODO: Turn into publisher if necessary
-    var isSearchSuggested: Bool {
-        !(wasGeocodeAddressSelected || isEditingAddress) || isBlankAddress
+        Publishers.CombineLatest3(
+            $wasGeocodeAddressSelected,
+            $isEditingAddress,
+            $isBlankAddress
+        )
+        .map { selected, editing, blank in !(selected || editing) || blank }
+        .receive(on: RunLoop.main)
+        .assign(to: \.isSearchSuggested, on: self)
+        .store(in: &subscriptions)
     }
 
     private func summarizeAddress(

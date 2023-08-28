@@ -292,7 +292,8 @@ struct PropertyInformation: View {
             let outOfBoundsMessage = viewModel.locationOutOfBoundsMessage
             CreateEditCaseMapView(
                 map: $map,
-                caseCoordinates: $viewModel.mapCoordinates
+                caseCoordinates: $viewModel.mapCoordinates,
+                isCreateWorksite: viewModel.isCreateWorksite
             )
             .if(viewModel.areEditorsReady && outOfBoundsMessage.isNotBlank) { view in
                 view.overlay(alignment: .bottomLeading) {
