@@ -159,6 +159,7 @@ extension AppDatabase {
         try await dbWriter.write { db in
             try incidentData.forEach { (incidentId, formFields) in
                 if formFields.isNotEmpty {
+                    // TODO: Create a different column (isUpdating) rather than use isInvalidated column
                     try IncidentFormFieldRecord.updateAll(db, IncidentFormFieldRecord.setInvalidatedColumn())
                     try formFields.forEach { formFields in
                         try formFields.upsert(db)
@@ -186,9 +187,16 @@ private struct PopulatedFormFieldsIncident: Equatable, Decodable, FetchableRecor
     let incidentFormFields: [IncidentFormFieldRecord]
 
     func asExternalModel() -> Incident {
+        // TODO: Add column for is updating state rather than ignoring conditionally
+        let ignoreInvalid = incidentFormFields
+            .filter { $0.isInvalidated }
+            .count > incidentFormFields.count / 2
         let formFields = incidentFormFields
             .map { r in try! r.asExternalModel() }
-            .filter { f in !(f.isInvalidated || f.isDivEnd) }
+            .filter { f in
+                (ignoreInvalid || !f.isInvalidated) &&
+                !f.isDivEnd
+            }
         return incident.asExternalModel(
             locationIds: incidentLocations.locationIds,
             formFields: formFields
