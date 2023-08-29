@@ -7,7 +7,7 @@ struct CaseMoveOnMapView: View {
 
     @EnvironmentObject var router: NavigationRouter
 
-    @ObservedObject var viewModel: CaseMoveOnMapViewModel
+    @ObservedObject var viewModel: CaseChangeLocationAddressViewModel
 
     private let focusableViewState = TextInputFocusableView()
     @State private var animateTopSearchBar = false
@@ -115,7 +115,7 @@ struct CaseMoveOnMapView: View {
 private struct MoveOnMapView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    @EnvironmentObject var viewModel: CaseMoveOnMapViewModel
+    @EnvironmentObject var viewModel: CaseChangeLocationAddressViewModel
 
     @State private var map = MKMapView()
 
@@ -152,7 +152,7 @@ private struct MoveOnMapBottomActions: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    @EnvironmentObject var viewModel: CaseMoveOnMapViewModel
+    @EnvironmentObject var viewModel: CaseChangeLocationAddressViewModel
 
     var body: some View {
         HStack{
@@ -175,9 +175,9 @@ private struct MoveOnMapBottomActions: View {
 }
 
 private class MoveOnMapCoordinator: NSObject, MKMapViewDelegate {
-    let viewModel: CaseMoveOnMapViewModel
+    let viewModel: CaseChangeLocationAddressViewModel
 
-    init(viewModel: CaseMoveOnMapViewModel) {
+    init(viewModel: CaseChangeLocationAddressViewModel) {
         self.viewModel = viewModel
     }
 
@@ -207,7 +207,7 @@ private struct MoveOnMapMapView : UIViewRepresentable {
     @Binding var map: MKMapView
     @Binding var caseCoordinates: CLLocationCoordinate2D
 
-    @ObservedObject var viewModel: CaseMoveOnMapViewModel
+    @ObservedObject var viewModel: CaseChangeLocationAddressViewModel
 
     func makeUIView(context: Context) -> MKMapView {
         map.configureStaticMap()

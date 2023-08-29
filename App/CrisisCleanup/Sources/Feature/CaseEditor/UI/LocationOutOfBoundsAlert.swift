@@ -3,7 +3,7 @@ import SwiftUI
 internal struct LocationOutOfBoundsAlert: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    @EnvironmentObject var viewModel: CaseMoveOnMapViewModel
+    @EnvironmentObject var viewModel: CaseChangeLocationAddressViewModel
 
     let outOfBoundsData: LocationOutOfBounds
 

@@ -4,7 +4,7 @@ import CoreLocation
 import Foundation
 import SwiftUI
 
-class CaseMoveOnMapViewModel: ObservableObject {
+class CaseChangeLocationAddressViewModel: ObservableObject {
     private var worksiteProvider: EditableWorksiteProvider
     private let locationManager: LocationManager
     private let incidentBoundsProvider: IncidentBoundsProvider
