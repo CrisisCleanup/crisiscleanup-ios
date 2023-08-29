@@ -1,0 +1,2 @@
+*.xcconfig.enc diff=sopsdiffer
+*.plist.enc diff=sopsdiffer
