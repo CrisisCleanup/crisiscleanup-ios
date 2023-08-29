@@ -7,6 +7,9 @@ public protocol CreateEditCaseViewBuilder {
 }
 
 class CreateEditCaseComponent: Component<AppDependency>, CreateEditCaseViewBuilder {
+    private let routerObserver: RouterObserver
+    private let pathId: Int
+
     private var viewModel: CreateEditCaseViewModel? = nil
 
     private var disposables = Set<AnyCancellable>()
@@ -15,12 +18,14 @@ class CreateEditCaseComponent: Component<AppDependency>, CreateEditCaseViewBuild
         parent: Scope,
         routerObserver: RouterObserver
     ) {
+        self.routerObserver = routerObserver
+        pathId = NavigationRoute.createEditCase(incidentId: 0, worksiteId: 0).id
+
         super.init(parent: parent)
 
-        let createEditCasePathId = NavigationRoute.createEditCase(incidentId: 0, worksiteId: 0).id
         routerObserver.pathIds
             .sink { pathIds in
-                if !pathIds.contains(createEditCasePathId) {
+                if !pathIds.contains(self.pathId) {
                     self.viewModel = nil
                 }
             }
@@ -32,29 +37,35 @@ class CreateEditCaseComponent: Component<AppDependency>, CreateEditCaseViewBuild
     }
 
     private func getViewModel(incidentId: Int64, worksiteId: Int64?) -> CreateEditCaseViewModel {
-        if viewModel == nil {
-            viewModel = CreateEditCaseViewModel(
-                accountDataRepository: dependency.accountDataRepository,
-                incidentsRepository: dependency.incidentsRepository,
-                incidentRefresher: dependency.incidentRefresher,
-                incidentBoundsProvider: dependency.incidentBoundsProvider,
-                worksitesRepository: dependency.worksitesRepository,
-                languageRepository: dependency.languageTranslationsRepository,
-                languageRefresher: dependency.languageRefresher,
-                workTypeStatusRepository: dependency.workTypeStatusRepository,
-                editableWorksiteProvider: dependency.editableWorksiteProvider,
-                locationManager: dependency.locationManager,
-                networkMonitor: dependency.networkMonitor,
-                worksiteChangeRepository: dependency.worksiteChangeRepository,
-                syncPusher: dependency.syncPusher,
-                inputValidator: dependency.inputValidator,
-                translator: dependency.translator,
-                appEnv: dependency.appEnv,
-                loggerFactory: dependency.loggerFactory,
-                incidentId: incidentId,
-                worksiteId: worksiteId
-            )
+        let isRelevant = routerObserver.isInPath(pathId)
+        if isRelevant,
+           let existingViewModel = viewModel,
+           existingViewModel.incidentIdIn == incidentId,
+           existingViewModel.worksiteIdIn == worksiteId {
+            return existingViewModel
         }
+
+        viewModel = CreateEditCaseViewModel(
+            accountDataRepository: dependency.accountDataRepository,
+            incidentsRepository: dependency.incidentsRepository,
+            incidentRefresher: dependency.incidentRefresher,
+            incidentBoundsProvider: dependency.incidentBoundsProvider,
+            worksitesRepository: dependency.worksitesRepository,
+            languageRepository: dependency.languageTranslationsRepository,
+            languageRefresher: dependency.languageRefresher,
+            workTypeStatusRepository: dependency.workTypeStatusRepository,
+            editableWorksiteProvider: dependency.editableWorksiteProvider,
+            locationManager: dependency.locationManager,
+            networkMonitor: dependency.networkMonitor,
+            worksiteChangeRepository: dependency.worksiteChangeRepository,
+            syncPusher: dependency.syncPusher,
+            inputValidator: dependency.inputValidator,
+            translator: dependency.translator,
+            appEnv: dependency.appEnv,
+            loggerFactory: dependency.loggerFactory,
+            incidentId: incidentId,
+            worksiteId: worksiteId
+        )
         return viewModel!
     }
 

@@ -89,13 +89,18 @@ class LocationInputData: ObservableObject {
             .filter { $0.isNotBlank }
     }
 
-    func load(_ worksite: Worksite) {
+    func load(
+        _ worksite: Worksite,
+        _ wasAddressSelected: Bool = false
+    ) {
         coordinates = worksite.coordinates
         streetAddress = worksite.address
         zipCode = worksite.postalCode
         city = worksite.city
         county = worksite.county
         state = worksite.state
+
+        wasGeocodeAddressSelected = wasAddressSelected
     }
 
     func clearAddress() {

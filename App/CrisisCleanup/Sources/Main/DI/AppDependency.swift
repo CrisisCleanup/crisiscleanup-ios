@@ -58,6 +58,7 @@ public protocol AppDependency: Dependency {
     var languageRefresher: LanguageRefresher { get }
     var transferWorkTypeProvider: TransferWorkTypeProvider { get }
     var worksiteProvider: WorksiteProvider { get }
+    var existingWorksiteSelector: ExistingWorksiteSelector { get }
 }
 
 extension MainComponent {

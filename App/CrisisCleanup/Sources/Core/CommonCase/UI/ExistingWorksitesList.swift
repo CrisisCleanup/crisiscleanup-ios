@@ -1,6 +1,6 @@
 import SwiftUI
 
-private struct CaseView: View {
+struct CaseView: View {
     let worksite: CaseSummaryResult
 
     var body: some View {
@@ -35,7 +35,7 @@ struct ExistingWorksitesList: View {
 
     var body: some View {
         LazyVGrid(columns: columns) {
-            ForEach(worksites) { worksite in
+            ForEach(worksites, id: \.id) { worksite in
                 CaseView(worksite: worksite)
                     .onTapGesture {
                         if isEditable {

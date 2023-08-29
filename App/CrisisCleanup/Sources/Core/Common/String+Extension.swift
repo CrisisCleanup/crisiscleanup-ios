@@ -1,3 +1,4 @@
+import Atomics
 import Foundation
 
 extension String {
@@ -33,5 +34,15 @@ extension Array where Element == Optional<String> {
     public func combineTrimText(_ separator: String = ", ") -> String {
         filterNotBlankTrim()
             .joined(separator: separator)
+    }
+}
+
+class AtomicString: AtomicValue {
+    typealias AtomicRepresentation = AtomicReferenceStorage<AtomicString>
+
+    let value: String
+
+    init(_ value: String = "") {
+        self.value = value
     }
 }

@@ -61,46 +61,20 @@ class Coordinator: NSObject, MKMapViewDelegate {
     }
 
     func createPolygonRenderer(for polygon: MKPolygon) -> MKPolygonRenderer {
-        let renderer = MKPolygonRenderer(polygon: polygon)
-        renderer.alpha = 1.0
-        renderer.lineWidth = 0
-        renderer.fillColor = UIColor.black
-        renderer.blendMode = .color
-        return renderer
+        overlayMapRenderer(polygon, 1.0)
     }
 
     func createTileRenderer(for overlay: MKTileOverlay) -> MKTileOverlayRenderer {
-        let tileRenderer = MKTileOverlayRenderer(tileOverlay: overlay)
-        return tileRenderer
+        MKTileOverlayRenderer(tileOverlay: overlay)
     }
 }
 
 internal struct CasesMapView : UIViewRepresentable {
     @Binding var map: MKMapView
+
     @ObservedObject var viewModel: CasesViewModel
+
     let onSelectWorksite: (Int64) -> Void
-
-    let firstHalf = [
-        CLLocationCoordinate2D(latitude: -90, longitude: -180),
-        CLLocationCoordinate2D(latitude: -90, longitude: 0),
-        CLLocationCoordinate2D(latitude: 90, longitude: 0),
-        CLLocationCoordinate2D(latitude: 90, longitude: -180)
-    ]
-
-    let secondHalf = [
-        CLLocationCoordinate2D(latitude: 90, longitude: 0),
-        CLLocationCoordinate2D(latitude: 90, longitude: 180),
-        CLLocationCoordinate2D(latitude: -90, longitude: 180),
-        CLLocationCoordinate2D(latitude: -90, longitude: 0)
-    ]
-
-    var firstHalfOverlay: MKPolygon {
-        return MKPolygon(coordinates: firstHalf, count: firstHalf.count)
-    }
-
-    var secondHalfOverlay: MKPolygon {
-        return MKPolygon(coordinates: secondHalf, count: secondHalf.count)
-    }
 
     func makeUIView(context: Context) -> MKMapView {
         map.overrideUserInterfaceStyle = .light
@@ -111,8 +85,7 @@ internal struct CasesMapView : UIViewRepresentable {
         map.isRotateEnabled = false
         map.isPitchEnabled = false
 
-        map.addOverlay(firstHalfOverlay, level: .aboveRoads)
-        map.addOverlay(secondHalfOverlay, level: .aboveRoads)
+        map.overlayPolygons()
 
         if let overlay = viewModel.debugOverlay{
             map.addOverlay(overlay, level: .aboveLabels)

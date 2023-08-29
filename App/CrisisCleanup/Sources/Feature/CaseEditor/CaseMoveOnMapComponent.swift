@@ -7,7 +7,7 @@ public protocol CaseMoveOnMapViewBuilder {
 }
 
 class CaseMoveOnMapComponent: Component<AppDependency>, CaseMoveOnMapViewBuilder {
-    private var viewModel: CaseMoveOnMapViewModel? = nil
+    private var viewModel: CaseChangeLocationAddressViewModel? = nil
 
     private var disposables = Set<AnyCancellable>()
 
@@ -30,9 +30,19 @@ class CaseMoveOnMapComponent: Component<AppDependency>, CaseMoveOnMapViewBuilder
         _ = cancelSubscriptions(disposables)
     }
 
-    private func getViewModel() -> CaseMoveOnMapViewModel {
+    private func getViewModel() -> CaseChangeLocationAddressViewModel {
         if viewModel == nil {
-            viewModel = CaseMoveOnMapViewModel(
+            viewModel = CaseChangeLocationAddressViewModel(
+                worksiteProvider: dependency.editableWorksiteProvider,
+                locationManager: dependency.locationManager,
+                incidentBoundsProvider: dependency.incidentBoundsProvider,
+                searchWorksitesRepository: dependency.searchWorksitesRepository,
+                addressSearchRepository: dependency.addressSearchRepository,
+                caseIconProvider: dependency.mapCaseIconProvider,
+                existingWorksiteSelector: dependency.existingWorksiteSelector,
+                networkMonitor: dependency.networkMonitor,
+                translator: dependency.languageTranslationsRepository,
+                loggerFactory: dependency.loggerFactory
             )
         }
         return viewModel!
