@@ -139,6 +139,21 @@ private struct CreateEditCaseContentView: View {
                 }
                 .coordinateSpace(name: "scrollForm")
                 .scrollDismissesKeyboard(.immediately)
+                .onChange(of: focusableViewState.focusState) { focusState in
+                    let isNameFocus = focusState == .caseInfoName
+                    if isNameFocus {
+                        withAnimation {
+                            proxy.scrollTo("property-name-input", anchor: .top)
+                        }
+                    }
+                }
+                .onChange(of: viewModel.locationInputData.wasGeocodeAddressSelected) { isSelected in
+                    if isSelected {
+                        withAnimation {
+                            proxy.scrollTo("location-map", anchor: .top)
+                        }
+                    }
+                }
             }
 
             if focusableViewState.isFocused {
@@ -219,6 +234,8 @@ struct PropertyInformation: View {
 
     @State private var fullAddressPlaceholder: String = ""
 
+    @State private var showNameResults = false
+
     var body: some View {
         let disabled = editableView.disabled
         VStack(alignment: .leading) {
@@ -229,6 +246,24 @@ struct PropertyInformation: View {
                     .textFieldBorder()
                     .disabled(disabled)
                     .padding(.bottom)
+                    .id("property-name-input")
+
+                if showNameResults {
+                    Text(t.t("actions.stop_searching_cases"))
+                        .fontHeader3()
+                        .listItemModifier()
+                        .onTapGesture {
+                            viewModel.stopSearchingName()
+                        }
+
+                    ForEach(viewModel.nameSearchResults.worksites, id: \.id) { worksite in
+                        CaseView(worksite: worksite)
+                            .onTapGesture {
+                                viewModel.onExistingWorksiteSelected(worksite)
+                            }
+                            .padding()
+                    }
+                }
 
                 ErrorTextView(text: propertyData.phoneNumberError)
                 TextField(t.t("formLabels.phone1"), text: $propertyData.phoneNumber)
@@ -252,6 +287,20 @@ struct PropertyInformation: View {
                     .padding(.bottom)
             }
             .padding(.horizontal)
+            .onChange(of: viewModel.hasNameResults) { newValue in
+                withAnimation {
+                    showNameResults = newValue
+                }
+            }
+            .onChange(of: viewModel.editIncidentWorksite) { identifier in
+                if identifier != ExistingWorksiteIdentifierNone {
+                    router.viewCase(
+                        incidentId: identifier.incidentId,
+                        worksiteId: identifier.worksiteId,
+                        popToRoot: true
+                    )
+                }
+            }
 
             VStack(alignment: .leading) {
                 Text(t.t("casesVue.auto_contact_frequency"))
@@ -296,6 +345,7 @@ struct PropertyInformation: View {
                 isCreateWorksite: viewModel.isCreateWorksite,
                 hasInitialCoordinates: viewModel.hasInitialCoordinates
             )
+            .id("location-map")
             .if(viewModel.areEditorsReady && outOfBoundsMessage.isNotBlank) { view in
                 view.overlay(alignment: .bottomLeading) {
                     Text(outOfBoundsMessage)
