@@ -1,0 +1,3 @@
+*Config.xcconfig
+!AppConfig.xcconfig.sample
+GoogleService-Info*.plist
