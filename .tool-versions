@@ -1,0 +1,4 @@
+direnv    2.32.3
+ruby      3.2.2
+sops      3.7.3
+cocoapods 1.12.1
