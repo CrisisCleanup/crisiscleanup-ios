@@ -1,0 +1,83 @@
+# frozen_string_literal: true
+
+# vim: set ft=ruby :
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+require_relative './config'
+
+# disable telemetry
+opt_out_usage
+
+default_platform(:ios)
+
+platform :ios do
+  desc 'Setup codesigning keychain.'
+  lane :setup_keychain do
+    ensure_env_vars(env_vars: %w[KEYCHAIN_PASSWORD KEYCHAIN_NAME KEYCHAIN_PATH])
+    create_keychain(
+      unlock: true,
+      timeout: 0,
+      add_to_search_list: true,
+      require_create: false
+    )
+    unlock_keychain
+  end
+
+  desc 'Authenticate with app store connect api.'
+  lane :authenticate do
+    ensure_env_vars(env_vars: %w[FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD APP_STORE_CONNECT_API_KEY_KEY_ID
+                                 APP_STORE_CONNECT_API_KEY_ISSUER_ID APP_STORE_CONNECT_API_KEY_KEY])
+    app_store_connect_api_key(duration: 1200, in_house: false)
+  end
+
+  desc 'Install certifications + provisioning profiles.'
+  lane :certificates do |options|
+    setup_keychain
+    authenticate
+    ensure_env_vars(env_vars: %w[MATCH_PASSWORD MATCH_KEYCHAIN_NAME MATCH_KEYCHAIN_PASSWORD FASTLANE_PASSWORD])
+    match_type = (options[:profile] || 'development')
+    app_identifier = (options[:app_id] || APP_ID.values)
+    match(app_identifier: app_identifier, type: match_type, readonly: is_ci)
+  end
+
+  desc 'Build App'
+  lane :build do |options|
+    options[:target] ||= 'dev'
+    options[:profile] ||= 'development'
+    options[:config] ||= 'Debug'
+
+    identifier = APP_ID[options[:target].intern]
+    team_id = APPLE_AUTH[:team_id]
+    cocoapods
+    certificates(app_id: identifier, profile: options[:profile])
+    provisioning_key = "sigh_#{identifier}_#{options[:profile]}_profile-name"
+    codesign_identity_key = "sigh_#{identifier}_#{options[:profile]}_certificate-name"
+    ensure_env_vars(env_vars: [provisioning_key, codesign_identity_key])
+    provisioning_profile = ENV[provisioning_key]
+    codesign_identity = ENV[codesign_identity_key]
+    xcargs = [
+      'CODE_SIGN_STYLE=Manual',
+      "DEVELOPMENT_TEAM=#{team_id}",
+      "PROVISIONING_PROFILE='#{provisioning_profile}'"
+    ].join(' ')
+    build_app(
+      scheme: 'App',
+      workspace: WORKSPACE,
+      codesigning_identity: codesign_identity,
+      xcargs: xcargs,
+      configuration: options[:config]
+    )
+  end
+
+  desc 'Build Development App'
+  lane :dev do
+    build
+  end
+
+  desc 'Publish Beta Release'
+  lane :beta do
+    build(target: 'prod', profile: 'appstore', config: 'Release')
+  end
+end
