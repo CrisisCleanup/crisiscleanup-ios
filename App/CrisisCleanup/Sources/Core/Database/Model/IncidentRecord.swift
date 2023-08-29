@@ -198,7 +198,13 @@ extension IncidentFormFieldRecord: Codable, FetchableRecord, PersistableRecord {
              selectToggleWorkType
     }
 
-    static func setInvalidatedColumn() -> ColumnAssignment {
-        Columns.isInvalidated.set(to: true)
+    static func invalidateUnspecifiedFormFields(
+        _ db: Database,
+        _ incidentId: Int64,
+        _ validFieldKeys: Set<String>
+    ) throws {
+        try IncidentFormFieldRecord
+            .filter(Columns.incidentId == incidentId && !validFieldKeys.contains(Columns.fieldKey))
+            .updateAll(db, [Columns.isInvalidated.set(to: true)])
     }
 }
