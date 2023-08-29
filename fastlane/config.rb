@@ -6,6 +6,9 @@
 ROOT_DIR = File.expand_path(File.join(File.dirname(__FILE__), '../')).freeze
 FASTLANE_ROOT = File.join(ROOT_DIR, 'fastlane').freeze
 CONFIG_PATH = File.join(FASTLANE_ROOT, 'config').freeze
+APP_CONFIG_ROOT = File.join(ROOT_DIR, 'App', 'App', 'Config').freeze
+APP_CONFIG_XCCONFIG = File.join(APP_CONFIG_ROOT, 'AppConfig.xcconfig').freeze
+APP_CONFIG_GOOGLE = File.join(APP_CONFIG_ROOT, 'GoogleService-Info.plist').freeze
 WORKSPACE = File.join(ROOT_DIR, 'crisiscleanup.xcworkspace').freeze
 
 ## App Identifiers

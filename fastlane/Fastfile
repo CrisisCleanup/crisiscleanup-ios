@@ -42,11 +42,22 @@ platform :ios do
     match(app_identifier: app_identifier, type: match_type, readonly: is_ci)
   end
 
+  desc 'Decrypt Config'
+  lane :decrypt do |options|
+    options[:config] ||= 'Debug'
+    xcconfig_enc_path = File.join(APP_CONFIG_ROOT, "#{options[:config]}Config.xcconfig.enc")
+    google_enc_path = File.join(APP_CONFIG_ROOT, "GoogleService-Info-#{options[:config].downcase}.plist.enc")
+    sh(command: "sops -d #{xcconfig_enc_path} > #{APP_CONFIG_XCCONFIG}")
+    sh(command: "sops -d #{google_enc_path} > #{APP_CONFIG_GOOGLE}")
+  end
+
   desc 'Build App'
   lane :build do |options|
     options[:target] ||= 'dev'
     options[:profile] ||= 'development'
     options[:config] ||= 'Debug'
+
+    decrypt(config: options[:config])
 
     identifier = APP_ID[options[:target].intern]
     team_id = APPLE_AUTH[:team_id]
