@@ -2,7 +2,6 @@
 
 import SwiftUI
 
-
 struct WorkTypeRow: View {
     @Binding var showPicker: Bool
 
@@ -30,7 +29,7 @@ struct WorkTypeRow: View {
 
                             Spacer()
 
-                            if(workType.statusClaim.isClaimed)
+                            if workType.statusClaim.isClaimed
                             {
                                 Text("Request")
                                     .lineLimit(1)

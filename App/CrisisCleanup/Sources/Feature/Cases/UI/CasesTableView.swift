@@ -168,7 +168,7 @@ struct TableViewButtons: View {
                     .background(Color.white)
                     .foregroundColor(Color.black)
             }
-            .if(filtersCount > 0) {
+            .if (filtersCount > 0) {
                 // TODO: Don't clip overlay
                 $0.overlay(alignment: .topTrailing) {
                     filterBadge(filtersCount)

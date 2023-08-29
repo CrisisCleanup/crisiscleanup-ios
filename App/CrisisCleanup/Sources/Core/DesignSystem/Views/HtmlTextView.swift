@@ -24,6 +24,7 @@ struct HtmlTextView: View {
                     }
                 }
             }
+            .multilineTextAlignment(.leading)
             .disabled(true)
     }
 }

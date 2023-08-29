@@ -62,8 +62,7 @@ private struct CreateEditCaseContentView: View {
                     sectionTitles: editSections,
                     proxy: proxy
                 )
-                // TODO: Common dimensions
-                .padding(.vertical, 8)
+                .padding(.vertical, appTheme.gridItemSpacing)
 
                 ScrollView {
                     VStack {
@@ -117,11 +116,15 @@ private struct CreateEditCaseContentView: View {
                                     if !sectionCollapse[sectionIndex] {
                                         let children = node.children
                                             .filter { !ignoreFormFieldKeys.contains($0.fieldKey) }
-                                        ForEach(children, id: \.id) { child in
+                                        ForEach(children, id: \.viewId) { child in
                                             if child.parentKey == node.fieldKey {
                                                 DisplayFormField(
                                                     checkedData: $viewModel.binaryFormData,
                                                     contentData: $viewModel.contentFormData,
+                                                    workTypeStatuses: $viewModel.statusOptions,
+                                                    statusData: $viewModel.workTypeStatusFormData,
+                                                    statusTranslator: viewModel,
+                                                    isNewCase: viewModel.isCreateWorksite,
                                                     node: child
                                                 )
                                                 .padding(.horizontal)
@@ -354,7 +357,7 @@ struct PropertyInformation: View {
                 hasInitialCoordinates: viewModel.hasInitialCoordinates
             )
             .id("location-map")
-            .if(viewModel.areEditorsReady && outOfBoundsMessage.isNotBlank) { view in
+            .if (viewModel.areEditorsReady && outOfBoundsMessage.isNotBlank) { view in
                 view.overlay(alignment: .bottomLeading) {
                     Text(outOfBoundsMessage)
                         .fontBodySmall()
@@ -626,8 +629,14 @@ struct DisplayFormField: View {
 
     @Binding var checkedData: ObservableBoolDictionary
     @Binding var contentData: ObservableStringDictionary
+    @Binding var workTypeStatuses: [WorkTypeStatus]
+    @Binding var statusData: ObservableStringDictionary
 
     @State private var multiSelected: Set<String> = []
+
+    let statusTranslator: KeyTranslator
+
+    let isNewCase: Bool
 
     let node: FormFieldNode
 
@@ -725,9 +734,8 @@ struct DisplayFormField: View {
                             multiSelected = selected
                         } label : {
                             Text(t.t(option))
-                            // TODO: Common styles
                                 .padding()
-                                .background( isSelected ? Color.yellow : Color.white)
+                                .background( isSelected ? appTheme.colors.themePrimaryContainer : Color.white)
                                 .cornerRadius(40)
                                 .overlay(
                                     Capsule(style: .continuous)
@@ -745,37 +753,51 @@ struct DisplayFormField: View {
                 .padding([.bottom])
             case "cronselect":
                 Text("Frequency types under development")
-            case "h4":
-                Text("h4")
-                Text(t.t(node.formField.label))
-            case "h5":
+            case "h4", "h5":
                 let isChecked = checkedData[node.fieldKey]
                 HStack {
-                    if node.formField.isReadOnly {
-                        Button {
-                            checkedData[node.fieldKey] = !isChecked
-                        } label : {
-                            HStack {
-                                DisplayFormFieldLabel(node: node)
-                                Spacer()
-                                Image(systemName: collapseIconName(!isChecked))
-                            }
-                        }
+                    if node.children.isEmpty || node.formField.isReadOnly {
+                        Text(t.t(node.formField.label))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, appTheme.listItemVerticalPadding)
                     } else {
                         CheckboxView(
                             checked: $checkedData[node.fieldKey],
                             text: t.t(node.formField.label)
                         )
                         .disabled(disabled)
+
+                        let isActiveWorkType = isChecked && node.isWorkTypeGroup
+                        if !isNewCase && isActiveWorkType {
+                            Spacer()
+
+                            let workTypeLiteral = node.formField.selectToggleWorkType
+                            let selectedStatusLiteral = statusData[workTypeLiteral]
+                            let selectedStatus = statusFromLiteral(selectedStatusLiteral, .openUnassigned)
+                            WorkTypeStatusPicker(
+                                translator: statusTranslator,
+                                selectedStatus: selectedStatus,
+                                statusOptions: workTypeStatuses,
+                                spanWidth: false
+                            ) { status in
+                                statusData[workTypeLiteral] = status.literal
+                            }
+                        } else if node.formField.help.isNotBlank {
+                            HelpIcon(node.formField.help)
+                        }
                     }
-                    Spacer()
                 }
+
                 if isChecked {
-                    ForEach(node.children, id: \.id) { childNode in
+                    ForEach(node.children, id: \.viewId) { childNode in
                         HStack {
                             DisplayFormField(
                                 checkedData: $checkedData,
                                 contentData: $contentData,
+                                workTypeStatuses: $workTypeStatuses,
+                                statusData: $statusData,
+                                statusTranslator: statusTranslator,
+                                isNewCase: isNewCase,
                                 node: childNode
                             )
                             .padding(.leading)
@@ -828,13 +850,5 @@ private struct CreateEditCaseSaveActions: View {
             .stylePrimary()
         }
         .padding([.horizontal, .bottom], 8)
-    }
-}
-
-struct ViewOffsetKey: PreferenceKey {
-    typealias Value = CGFloat
-    static var defaultValue = CGFloat.zero
-    static func reduce(value: inout Value, nextValue: () -> Value) {
-        value += nextValue()
     }
 }

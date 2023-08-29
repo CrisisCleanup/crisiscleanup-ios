@@ -114,7 +114,11 @@ let closedWorkTypeStatuses: [WorkTypeStatus] = [
 ]
 
 private let literalStatusLookup = WorkTypeStatus.allCases.associateBy{ $0.literal }
-func statusFromLiteral(_ literal: String) -> WorkTypeStatus { literalStatusLookup[literal] ?? WorkTypeStatus.unknown
+func statusFromLiteral(
+    _ literal: String,
+    _ fallback: WorkTypeStatus = .unknown
+) -> WorkTypeStatus {
+    literalStatusLookup[literal] ?? fallback
 }
 
 public struct WorkTypeStatusClaim: Hashable {

@@ -37,13 +37,13 @@ struct RadioButton: View {
                 let radioImg = isSelected ? "circle.inset.filled" : "circle"
                 Image(systemName: radioImg)
                     .foregroundColor(isSelected && isEnabled ? Color.black : Color.gray)
-                    .if(nestedLevel != nil) {
+                    .if (nestedLevel != nil) {
                         $0.padding(.leading, Double(nestedLevel!) * appTheme.nestedItemPadding)
                     }
                 Text(text)
                     .foregroundColor(Color.black)
             }
-            .if(isListItem) {
+            .if (isListItem) {
                 $0.listItemModifier()
             }
         }

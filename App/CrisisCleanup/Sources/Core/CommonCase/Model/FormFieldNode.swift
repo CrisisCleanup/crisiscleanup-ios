@@ -21,8 +21,6 @@ fileprivate struct FormFieldKeys: Hashable {
 
 // sourcery: copyBuilder, skipCopyInit
 public struct FormFieldNode {
-    var id = UUID()
-
     static func make(
         formField: IncidentFormField,
         children: [FormFieldNode],
@@ -45,6 +43,12 @@ public struct FormFieldNode {
     let parentKey: String
     let isRootNode: Bool
 
+    // sourcery:begin: skipCopy
+    var viewId = UUID()
+
+    let isWorkTypeGroup: Bool
+    // sourcery:end
+
     init(
         formField: IncidentFormField,
         children: [FormFieldNode],
@@ -59,6 +63,8 @@ public struct FormFieldNode {
         self.fieldKey = fieldKey
         self.parentKey = parentKey
         self.isRootNode = isRootNode
+
+        isWorkTypeGroup = formField.parentKey == WorkFormGroupKey
     }
 
     static func buildTree(

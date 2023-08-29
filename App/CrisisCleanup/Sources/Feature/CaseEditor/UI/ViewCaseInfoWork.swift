@@ -154,7 +154,8 @@ private struct WorkTypeSummaryView: View {
                 WorkTypeStatusPicker(
                     translator: viewModel,
                     selectedStatus: summary.workType.status,
-                    statusOptions: viewModel.statusOptions
+                    statusOptions: viewModel.statusOptions,
+                    spanWidth: true
                 ) { status in
                     viewModel.updateWorkType(
                         summary.workType.copy { $0.statusLiteral = status.literal },

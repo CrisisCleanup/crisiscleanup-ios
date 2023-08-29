@@ -55,7 +55,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     private let editorSetWindow: Double
 
     @Published private(set) var editSections: [String] = []
-    @Published private(set) var statusOptions: [WorkTypeStatus] = []
+    @Published var statusOptions: [WorkTypeStatus] = []
     @Published private(set) var detailsFormFieldNode: FormFieldNode = EmptyFormFieldNode
     @Published private(set) var workFormFieldNode: FormFieldNode = EmptyFormFieldNode
     @Published private(set) var hazardsFormFieldNode: FormFieldNode = EmptyFormFieldNode
@@ -71,6 +71,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     @Published private(set) var worksiteNotes = [WorksiteNote]()
     @Published var binaryFormData = ObservableBoolDictionary()
     @Published var contentFormData = ObservableStringDictionary()
+    @Published var workTypeStatusFormData = ObservableStringDictionary()
 
     var hasInitialCoordinates: Bool { locationInputData.coordinates == caseData?.worksite.coordinates }
     @Published var showExplainLocationPermission = false
@@ -481,6 +482,9 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
             }
             for (key, value) in formFieldsInputData.contentFields {
                 contentFormData[key] = value
+            }
+            for (key, value) in formFieldsInputData.workTypeStatuses {
+                workTypeStatusFormData[key] = value.literal
             }
         }
 

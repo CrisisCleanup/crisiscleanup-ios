@@ -4,19 +4,22 @@ struct FormFieldsInputData {
     let contentFields: [String: String]
     let groupFormFieldData: [String: [FieldDynamicValue]]
     let groupFields: [String: [FieldDynamicValue]]
+    let workTypeStatuses: [String: WorkTypeStatus]
 
     init(
         managedGroups: Set<String> = [],
         binaryFields: Set<String> = [],
         contentFields: [String : String] = [:],
         groupFormFieldData: [String : [FieldDynamicValue]] = [:],
-        groupFields: [String : [FieldDynamicValue]] = [:]
+        groupFields: [String : [FieldDynamicValue]] = [:],
+        workTypeStatuses: [String: WorkTypeStatus] = [:]
     ) {
         self.managedGroups = managedGroups
         self.binaryFields = binaryFields
         self.contentFields = contentFields
         self.groupFormFieldData = groupFormFieldData
         self.groupFields = groupFields
+        self.workTypeStatuses = workTypeStatuses
     }
 }
 
@@ -37,6 +40,7 @@ internal func loadFormFieldsInputData(_ worksiteProvider: EditableWorksiteProvid
     var managedGroups: Set<String> = []
     var groupFormFieldData: [String: [FieldDynamicValue]] = [:]
     var groupFields = [String: [FieldDynamicValue]]()
+    var workTypeStatuses = [String: WorkTypeStatus]()
     var binaryFields: Set<String> = []
     var contentFields = [String: String]()
     for groupKey in formFieldGroupKeys {
@@ -77,10 +81,11 @@ internal func loadFormFieldsInputData(_ worksiteProvider: EditableWorksiteProvid
 
                 if isWorkInputData && fieldData.isWorkTypeGroup {
                     let fieldWorkType = node.formField.selectToggleWorkType
-                    let status = workTypeMap[fieldWorkType]?.status
+                    let status = workTypeMap[fieldWorkType]?.status ?? .openUnassigned
                     fieldData = fieldData.copy {
-                        $0.workTypeStatus = status ?? .openUnassigned
+                        $0.workTypeStatus = status
                     }
+                    workTypeStatuses[fieldWorkType] = status
                 }
 
                 if dynamicValue.isBool {
@@ -105,6 +110,7 @@ internal func loadFormFieldsInputData(_ worksiteProvider: EditableWorksiteProvid
         binaryFields: binaryFields,
         contentFields: contentFields,
         groupFormFieldData: groupFormFieldData,
-        groupFields: groupFields
+        groupFields: groupFields,
+        workTypeStatuses: workTypeStatuses
     )
 }

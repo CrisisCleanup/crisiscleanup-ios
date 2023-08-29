@@ -1,17 +1,17 @@
-// sourcery: copyBuilder
+// sourcery: copyBuilder, skipCopyInit
 struct FieldDynamicValue {
     let field: IncidentFormField
     let selectOptions: [String: String]
     let childKeys: Set<String>
     let nestLevel: Int
     let dynamicValue: DynamicValue
-    let breakGlass: FieldEditProperties
     let workTypeStatus: WorkTypeStatus
 
-    // sourcery:begin skipCopy
+    // sourcery:begin: skipCopy
     var key: String { field.fieldKey }
     var childrenCount: Int { childKeys.count }
 
+    let breakGlass: FieldEditProperties
     let isWorkTypeGroup: Bool
     // sourcery:end
 
