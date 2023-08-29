@@ -547,7 +547,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "export PATH=\"$PATH:/opt/homebrew/bin\"\n\nneedle generate App/Sources/NeedleGenerated.swift App/Sources/ CrisisCleanup/Sources\n";
+			shellScript = "export PATH=\"$PATH:/opt/homebrew/bin\"\n\nneedle generate App/Sources/NeedleGenerated.swift App/Sources/ CrisisCleanup/Sources --additional-imports 'import CrisisCleanup'\n";
 			showEnvVarsInLog = 0;
 		};
 		7FB17C63D06099B25C3E8AD2 /* [CP] Copy Pods Resources */ = {
