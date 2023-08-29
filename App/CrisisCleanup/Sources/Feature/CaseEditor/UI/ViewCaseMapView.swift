@@ -6,7 +6,7 @@ import SwiftUI
 
 class ViewCaseMapCoordinator: NSObject, MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-        staticMapRenderer(for: overlay as! MKPolygon)
+        overlayMapRenderer(overlay as! MKPolygon)
     }
 
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
@@ -20,7 +20,7 @@ struct ViewCaseMapView : UIViewRepresentable {
     var caseCoordinates: CLLocationCoordinate2D
 
     func makeUIView(context: Context) -> MKMapView {
-        map.configureStaticMap()
+        map.configure()
 
         map.delegate = context.coordinator
 

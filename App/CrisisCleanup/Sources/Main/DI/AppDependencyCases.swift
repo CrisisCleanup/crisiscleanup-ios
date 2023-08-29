@@ -9,7 +9,7 @@ extension MainComponent {
                 locationsRepository: locationsRepository
             )
         }
-}
+    }
 
     public var mapCaseIconProvider: MapCaseIconProvider {
         shared {
@@ -50,6 +50,17 @@ extension MainComponent {
     public var worksiteProvider: WorksiteProvider {
         shared {
             SingleWorksiteProvider()
+        }
+    }
+
+    public var existingWorksiteSelector: ExistingWorksiteSelector {
+        shared {
+            ExistingWorksiteSelector(
+                worksiteProvider: editableWorksiteProvider,
+                incidentsRepository: incidentsRepository,
+                worksitesRepository: worksitesRepository,
+                loggerFactory: loggerFactory
+            )
         }
     }
 }

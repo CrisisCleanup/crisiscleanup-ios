@@ -24,7 +24,7 @@ public protocol EditableWorksiteProvider {
     func addNote(_ note: String)
     func takeNote() -> WorksiteNote?
 
-    var incidentIdChange: any Publisher<Int64, Never> { get }
+    var incidentIdChange: Int64 { get }
     var peekIncidentChange: IncidentChangeData? { get }
     func resetIncidentChange()
     func setIncidentAddressChanged(_ incident: Incident, _ worksite: Worksite)
@@ -129,8 +129,8 @@ class SingleEditableWorksiteProvider: EditableWorksiteProvider, WorksiteLocation
     }
 
     let incidentIdChangeSubject = CurrentValueSubject<Int64, Never>(EmptyIncident.id)
-    var incidentIdChange: any Publisher<Int64, Never> {
-        incidentIdChangeSubject
+    var incidentIdChange: Int64 {
+        incidentIdChangeSubject.value
     }
 
     private let incidentChangeData = ManagedAtomic(AtomicIncidentChangeData())

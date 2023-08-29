@@ -70,10 +70,9 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     @Published var binaryFormData = ObservableBoolDictionary()
     @Published var contentFormData = ObservableStringDictionary()
 
-    @Published var mapCoordinates = DefaultCoordinates2d
+    var hasInitialCoordinates: Bool { locationInputData.coordinates == caseData?.worksite.coordinates }
     @Published var showExplainLocationPermission = false
     private var useMyLocationActionTime = Date.now
-
     @Published var locationOutOfBoundsMessage = ""
 
     @Published private(set) var showInvalidWorksiteSave = false
@@ -84,10 +83,8 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     private let isSavingWorksite = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isSaving = false
 
-    @Published private(set) var editIncidentWorksite = (EmptyIncident.id, EmptyWorksite.id)
-
     @Published private(set) var changeWorksiteIncidentId = EmptyIncident.id
-    @Published private(set) var changeExistingWorksite = (EmptyIncident.id, EmptyWorksite.id)
+    @Published private(set) var changeExistingWorksite = ExistingWorksiteIdentifierNone
     private var saveChangeIncident = EmptyIncident
     private var changingIncidentWorksite = EmptyWorksite
 
@@ -196,6 +193,18 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
                 worksiteIdIn: worksiteIdIn,
                 translate: localTranslate
             )
+        } else if editableWorksiteProvider.isAddressChanged {
+            let worksite = editableWorksiteProvider.editableWorksite.value
+            locationInputData.load(worksite, true)
+
+        } else if editableWorksiteProvider.incidentIdChange != EmptyIncident.id {
+            if let changeData = editableWorksiteProvider.peekIncidentChange {
+                let incidentChangeId = changeData.incident.id
+                if incidentChangeId != EmptyIncident.id,
+                   incidentChangeId != incidentIdIn {
+                    // TODO: Initiate change
+                }
+            }
         }
     }
 
@@ -352,13 +361,13 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
             }
             .store(in: &subscriptions)
 
-        $mapCoordinates
+        locationInputData.$coordinates
+            .map { CLLocationCoordinate2D(
+                latitude: $0.latitude,
+                longitude: $0.longitude)
+            }
             .map {
-                let worksiteProvider = self.editableWorksiteProvider
-                let coordinates = LatLng($0.latitude, $0.longitude)
-                let isInBounds = worksiteProvider.incidentBounds.containsLocation(coordinates)
-                return isInBounds ? "" : self.t("caseForm.case_outside_incident_name")
-                    .replacingOccurrences(of: "{incident_name}", with: worksiteProvider.incident.name)
+                self.editableWorksiteProvider.getOutOfBoundsMessage($0, self.translator.t)
             }
             .receive(on: RunLoop.main)
             .assign(to: \.locationOutOfBoundsMessage, on: self)
@@ -423,11 +432,6 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
             }
         }
 
-        mapCoordinates = CLLocationCoordinate2D(
-            latitude: worksite.latitude,
-            longitude: worksite.longitude
-        )
-
         isHighPriority = worksite.hasHighPriorityFlag
         isAssignedToOrgMember = worksite.isAssignedToOrgMember
         locationInputData.hasWrongLocation = worksite.hasWrongLocationFlag
@@ -442,7 +446,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
 
     private func updateCoordinatesToMyLocation() {
         if let location = locationManager.getLocation() {
-            mapCoordinates = location.coordinate
+            locationInputData.coordinates = location.coordinate.latLng
         }
     }
 
