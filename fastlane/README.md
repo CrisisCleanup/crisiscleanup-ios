@@ -39,6 +39,14 @@ Authenticate with app store connect api.
 
 Install certifications + provisioning profiles.
 
+### ios decrypt
+
+```sh
+[bundle exec] fastlane ios decrypt
+```
+
+Decrypt Config
+
 ### ios build
 
 ```sh
