@@ -418,8 +418,7 @@ private struct ViewCaseNotes: View {
                                     .font(.caption)
                                     .padding(.bottom, 4)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                // TODO: Render static HTML if exists
-                                Text(note.note)
+                                StaticHtmlTextView(htmlContent: note.note)
                             }
                             .padding()
                             .cardContainer(background: note.isSurvivor ? appTheme.colors.survivorNoteColorNoTransparency : Color.white)

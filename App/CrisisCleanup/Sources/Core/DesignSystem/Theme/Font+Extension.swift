@@ -45,6 +45,12 @@ extension UIFont {
     }
 }
 
+extension NSMutableAttributedString {
+    func replaceFontBodyLarge() {
+        replaceFont(font: .bodyLarge, size: largeFontSize)
+    }
+}
+
 fileprivate struct FontLineHeight: ViewModifier {
     let font: Font
     let lineHeight: CGFloat

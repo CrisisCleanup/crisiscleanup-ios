@@ -241,6 +241,7 @@ struct PropertyInformation: View {
         VStack(alignment: .leading) {
             Group {
                 ErrorTextView(text: propertyData.residentNameError)
+                    .id("property-name-error")
                 TextField(t.t("formLabels.name"), text: $propertyData.residentName)
                     .focused($focusState, equals: .caseInfoName)
                     .textFieldBorder()
@@ -266,6 +267,7 @@ struct PropertyInformation: View {
                 }
 
                 ErrorTextView(text: propertyData.phoneNumberError)
+                    .id("property-phone-error")
                 TextField(t.t("formLabels.phone1"), text: $propertyData.phoneNumber)
                     .focused($focusState, equals: .caseInfoPhone)
                     .textFieldBorder()
@@ -279,6 +281,7 @@ struct PropertyInformation: View {
                     .padding(.bottom)
 
                 ErrorTextView(text: propertyData.emailError)
+                    .id("property-email-error")
                 TextField(t.t("formLabels.email"), text: $propertyData.email)
                     .keyboardType(.emailAddress)
                     .focused($focusState, equals: .caseInfoEmail)
@@ -303,8 +306,11 @@ struct PropertyInformation: View {
             }
 
             VStack(alignment: .leading) {
-                Text(t.t("casesVue.auto_contact_frequency"))
-                    .listItemPadding()
+                HStack {
+                    Text(t.t("casesVue.auto_contact_frequency"))
+                    HelpIcon(t.t("casesVue.auto_contact_frequency_help"))
+                }
+                .listItemModifier()
 
                 ForEach(autoContactFrequencyOptions, id: \.self) { option in
                     RadioButton(
@@ -319,9 +325,11 @@ struct PropertyInformation: View {
                 .disabled(disabled)
             }
 
-            Text(t.t("formLabels.location"))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.leading)
+            HStack {
+                Text(t.t("formLabels.location"))
+                HelpIcon(t.t("caseForm.location_instructions"))
+            }
+            .listItemModifier()
 
             if viewModel.isOnline && locationData.isSearchSuggested {
                 TextField(
@@ -454,12 +462,14 @@ private struct CaseAddressFormFields: View {
             Group {
                 Group {
                     ErrorTextView(text: locationData.streetAddressError)
+                        .id("location-address-error")
                     TextField(t.t("formLabels.address"), text: $locationData.streetAddress)
                         .focused($focusState, equals: .caseInfoStreetAddress)
                         .textFieldBorder()
                         .padding(.bottom)
 
                     ErrorTextView(text: locationData.cityError)
+                        .id("location-city-error")
                     TextField(t.t("formLabels.city"), text: $locationData.city)
                         .focused($focusState, equals: .caseInfoCity)
                         .textFieldBorder()
@@ -468,18 +478,21 @@ private struct CaseAddressFormFields: View {
 
                 Group {
                     ErrorTextView(text: locationData.countyError)
+                        .id("location-county-error")
                     TextField(t.t("formLabels.county"), text: $locationData.county)
                         .focused($focusState, equals: .caseInfoCounty)
                         .textFieldBorder()
                         .padding(.bottom)
 
                     ErrorTextView(text: locationData.stateError)
+                        .id("location-state-error")
                     TextField(t.t("formLabels.state"), text: $locationData.state)
                         .focused($focusState, equals: .caseInfoState)
                         .textFieldBorder()
                         .padding(.bottom)
 
                     ErrorTextView(text: locationData.zipCodeError)
+                        .id("location-zip-code-error")
                     TextField(t.t("formLabels.postal_code"), text: $locationData.zipCode)
                         .focused($focusState, equals: .caseInfoZipCode)
                         .textFieldBorder()
