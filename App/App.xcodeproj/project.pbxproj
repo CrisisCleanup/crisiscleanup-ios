@@ -527,7 +527,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "googleServiceInfo=\"GoogleService-Info\"\nconfigFileName=\"${googleServiceInfo}-${CONFIGURATION}.plist\"\n\nconfigDir=\"./App/Config\"\nconfigFile=\"${configDir}/${configFileName}\"\nreplaceFile=\"${configDir}/${googleServiceInfo}.plist\"\nif [ -f \"${configFile}\" ]; then\n    cp \"${configFile}\" \"${replaceFile}\"\n    echo \"Copied ${configFileName}\"\nelse\n    echo \"GoogleService-Info not found for ${CONFIGURATION}\"\n    exit 1\nfi\n";
+			shellScript = "googleServiceInfo=\"GoogleService-Info\"\nconfigFileName=\"${googleServiceInfo}-${CONFIGURATION}.plist\"\n\nconfigDir=\"./App/Config\"\nconfigFile=\"${configDir}/${configFileName}.enc\"\nreplaceFile=\"${configDir}/${googleServiceInfo}.plist\"\nif [ -f \"${configFile}\" ]; then\n    sops -d \"${configFile}\" > \"${replaceFile}\"\n    echo \"Copied ${configFileName}\"\nelse\n    echo \"GoogleService-Info not found for ${CONFIGURATION}\"\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 		4EBFB44D2A1910D800DA7C84 /* Generate Needle Dependency Graph */ = {
