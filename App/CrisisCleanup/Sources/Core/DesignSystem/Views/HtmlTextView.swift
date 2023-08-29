@@ -28,7 +28,8 @@ struct HtmlTextView: View {
     }
 }
 
-struct StaticHtmlTextView: UIViewRepresentable {
+// TODO: Test URLs aren't linked before using
+private struct StaticLinkHtmlTextView: UIViewRepresentable {
     let htmlContent: String
 
     func makeUIView(context: UIViewRepresentableContext<Self>) -> UITextView {

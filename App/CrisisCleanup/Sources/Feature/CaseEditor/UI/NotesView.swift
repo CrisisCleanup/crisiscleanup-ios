@@ -29,7 +29,8 @@ struct StaticNotesList: View {
             VStack(alignment: .leading, spacing: appTheme.gridItemSpacing) {
                 Text(note.createdAt.relativeTime)
                     .fontBodySmall()
-                StaticHtmlTextView(htmlContent: note.note)
+                // TODO: Render HTML (no links)
+                Text(note.note)
             }
             .listItemModifier()
             .background(note.isSurvivor ? appTheme.colors.survivorNoteColorNoTransparency : .white)
