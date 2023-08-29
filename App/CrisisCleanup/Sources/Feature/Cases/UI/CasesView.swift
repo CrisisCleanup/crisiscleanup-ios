@@ -211,8 +211,7 @@ private struct CasesOverlayElements: View {
                             }
                             .cornerRadius(appTheme.cornerRadius)
                             .shadow(radius: appTheme.shadowRadius)
-                            // TODO: Overlay over button without getting clipped
-                            .if(viewModel.filtersCount > 0) {
+                            .if (viewModel.filtersCount > 0) {
                                 $0.overlay(alignment: .topTrailing) {
                                     filterBadge(viewModel.filtersCount)
                                 }

@@ -47,12 +47,20 @@ extension View {
             )
             // TODO: Run animation once the list has settled scrolling or animating
             .onPreferenceChange(ViewOffsetKey.self) {
-                if($0 < frame.height && $0 > 0) {
+                if ($0 < frame.height && $0 > 0) {
                     withAnimation {
                         proxy.scrollTo(scrollToId, anchor: .leading)
                     }
                 }
             }
         })
+    }
+}
+
+struct ViewOffsetKey: PreferenceKey {
+    typealias Value = CGFloat
+    static var defaultValue = CGFloat.zero
+    static func reduce(value: inout Value, nextValue: () -> Value) {
+        value += nextValue()
     }
 }

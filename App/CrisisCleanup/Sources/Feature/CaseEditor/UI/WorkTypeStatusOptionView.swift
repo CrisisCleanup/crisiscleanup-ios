@@ -23,6 +23,7 @@ private struct WorkTypeStatusOption : View {
     var status: WorkTypeStatus
     var showOpenIcon = false
     var isSelected = false
+    var spanWidth = false
 
     private let dotSize = 16.0
 
@@ -44,7 +45,9 @@ private struct WorkTypeStatusOption : View {
         .if (editableView.disabled) { view in
             view.foregroundColor(.gray)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .if (spanWidth) {
+            $0.frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 }
 
@@ -54,6 +57,7 @@ struct WorkTypeStatusPicker: View {
     var translator: KeyTranslator
     var selectedStatus: WorkTypeStatus
     var statusOptions: [WorkTypeStatus]
+    var spanWidth: Bool
     var onSelectStatus: (WorkTypeStatus) -> Void
 
     @State private var showOptions: Bool = false
@@ -62,32 +66,32 @@ struct WorkTypeStatusPicker: View {
         WorkTypeStatusOption(
             translator: translator,
             status: selectedStatus,
-            showOpenIcon: true
+            showOpenIcon: true,
+            spanWidth: spanWidth
         )
         .onTapGesture {
             showOptions.toggle()
         }
         .disabled(editableView.disabled)
         .sheet(isPresented: $showOptions) {
-            List {
+            ScrollLazyVGrid {
                 ForEach(statusOptions) { status in
                     WorkTypeStatusOption(
                         translator: translator,
                         status: status,
                         isSelected: selectedStatus == status
                     )
+                    .listItemModifier()
+                    .background(.white)
                     .onTapGesture {
                         onSelectStatus(status)
                         showOptions = false
                     }
                 }
-                .padding(.horizontal)
             }
 
-            Button {
+            Button(translator.t("actions.cancel")) {
                 showOptions = false
-            } label: {
-                Text(translator.t("actions.cancel"))
             }
             .padding()
         }

@@ -127,7 +127,7 @@ private struct MoveOnMapView: View {
                 caseCoordinates: $viewModel.mapCoordinates,
                 viewModel: viewModel
             )
-            .if(outOfBoundsMessage.isNotBlank) { view in
+            .if (outOfBoundsMessage.isNotBlank) { view in
                 view.overlay(alignment: .bottomLeading) {
                     Text(outOfBoundsMessage)
                         .fontBodySmall()

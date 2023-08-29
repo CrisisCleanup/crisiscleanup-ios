@@ -29,7 +29,7 @@ struct CopyWithAnimation: ViewModifier {
                         }
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                             viewModel.alertCount -= 1
-                            if(viewModel.alertCount == 0) {
+                            if viewModel.alertCount == 0 {
                                 viewModel.clearAlert()
                             }
                         }

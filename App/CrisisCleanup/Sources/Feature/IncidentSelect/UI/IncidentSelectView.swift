@@ -38,6 +38,7 @@ struct IncidentSelectView: View {
             Button(t.t("actions.close")) {
                 onDismiss()
             }
+            .padding()
         }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }

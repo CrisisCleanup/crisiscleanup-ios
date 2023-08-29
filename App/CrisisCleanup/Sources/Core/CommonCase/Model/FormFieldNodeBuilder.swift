@@ -2,25 +2,6 @@
 // DO NOT EDIT
 
 extension FormFieldNode {
-	// A default style constructor for the .copy fn to use
-	init(
-		formField: IncidentFormField,
-		children: [FormFieldNode],
-		options: [String: String],
-		fieldKey: String,
-		parentKey: String,
-		isRootNode: Bool,
-		// This is to prevent overriding the default init if it exists already
-		forCopyInit: Void? = nil
-	) {
-		self.formField = formField
-		self.children = children
-		self.options = options
-		self.fieldKey = fieldKey
-		self.parentKey = parentKey
-		self.isRootNode = isRootNode
-	}
-
 	// struct copy, lets you overwrite specific variables retaining the value of the rest
 	// using a closure to set the new values for the copy of the struct
 	func copy(build: (inout Builder) -> Void) -> FormFieldNode {

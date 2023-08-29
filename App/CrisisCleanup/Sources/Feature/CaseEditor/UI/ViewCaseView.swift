@@ -418,7 +418,7 @@ private struct ViewCaseNotes: View {
                                     .font(.caption)
                                     .padding(.bottom, 4)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                // TODO: Render static HTML if exists
+                                // TODO: Render HTML (no links)
                                 Text(note.note)
                             }
                             .padding()

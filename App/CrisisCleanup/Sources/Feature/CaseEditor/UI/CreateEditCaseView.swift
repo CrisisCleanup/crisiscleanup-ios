@@ -62,8 +62,7 @@ private struct CreateEditCaseContentView: View {
                     sectionTitles: editSections,
                     proxy: proxy
                 )
-                // TODO: Common dimensions
-                .padding(.vertical, 8)
+                .padding(.vertical, appTheme.gridItemSpacing)
 
                 ScrollView {
                     VStack {
@@ -117,11 +116,15 @@ private struct CreateEditCaseContentView: View {
                                     if !sectionCollapse[sectionIndex] {
                                         let children = node.children
                                             .filter { !ignoreFormFieldKeys.contains($0.fieldKey) }
-                                        ForEach(children, id: \.id) { child in
+                                        ForEach(children, id: \.viewId) { child in
                                             if child.parentKey == node.fieldKey {
                                                 DisplayFormField(
                                                     checkedData: $viewModel.binaryFormData,
                                                     contentData: $viewModel.contentFormData,
+                                                    workTypeStatuses: $viewModel.statusOptions,
+                                                    statusData: $viewModel.workTypeStatusFormData,
+                                                    statusTranslator: viewModel,
+                                                    isNewCase: viewModel.isCreateWorksite,
                                                     node: child
                                                 )
                                                 .padding(.horizontal)
@@ -241,6 +244,7 @@ struct PropertyInformation: View {
         VStack(alignment: .leading) {
             Group {
                 ErrorTextView(text: propertyData.residentNameError)
+                    .id("property-name-error")
                 TextField(t.t("formLabels.name"), text: $propertyData.residentName)
                     .focused($focusState, equals: .caseInfoName)
                     .textFieldBorder()
@@ -266,6 +270,7 @@ struct PropertyInformation: View {
                 }
 
                 ErrorTextView(text: propertyData.phoneNumberError)
+                    .id("property-phone-error")
                 TextField(t.t("formLabels.phone1"), text: $propertyData.phoneNumber)
                     .focused($focusState, equals: .caseInfoPhone)
                     .textFieldBorder()
@@ -279,6 +284,7 @@ struct PropertyInformation: View {
                     .padding(.bottom)
 
                 ErrorTextView(text: propertyData.emailError)
+                    .id("property-email-error")
                 TextField(t.t("formLabels.email"), text: $propertyData.email)
                     .keyboardType(.emailAddress)
                     .focused($focusState, equals: .caseInfoEmail)
@@ -303,8 +309,11 @@ struct PropertyInformation: View {
             }
 
             VStack(alignment: .leading) {
-                Text(t.t("casesVue.auto_contact_frequency"))
-                    .listItemPadding()
+                HStack {
+                    Text(t.t("casesVue.auto_contact_frequency"))
+                    HelpIcon(t.t("casesVue.auto_contact_frequency_help"))
+                }
+                .listItemModifier()
 
                 ForEach(autoContactFrequencyOptions, id: \.self) { option in
                     RadioButton(
@@ -319,9 +328,11 @@ struct PropertyInformation: View {
                 .disabled(disabled)
             }
 
-            Text(t.t("formLabels.location"))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.leading)
+            HStack {
+                Text(t.t("formLabels.location"))
+                HelpIcon(t.t("caseForm.location_instructions"))
+            }
+            .listItemModifier()
 
             if viewModel.isOnline && locationData.isSearchSuggested {
                 TextField(
@@ -346,7 +357,7 @@ struct PropertyInformation: View {
                 hasInitialCoordinates: viewModel.hasInitialCoordinates
             )
             .id("location-map")
-            .if(viewModel.areEditorsReady && outOfBoundsMessage.isNotBlank) { view in
+            .if (viewModel.areEditorsReady && outOfBoundsMessage.isNotBlank) { view in
                 view.overlay(alignment: .bottomLeading) {
                     Text(outOfBoundsMessage)
                         .fontBodySmall()
@@ -454,12 +465,14 @@ private struct CaseAddressFormFields: View {
             Group {
                 Group {
                     ErrorTextView(text: locationData.streetAddressError)
+                        .id("location-address-error")
                     TextField(t.t("formLabels.address"), text: $locationData.streetAddress)
                         .focused($focusState, equals: .caseInfoStreetAddress)
                         .textFieldBorder()
                         .padding(.bottom)
 
                     ErrorTextView(text: locationData.cityError)
+                        .id("location-city-error")
                     TextField(t.t("formLabels.city"), text: $locationData.city)
                         .focused($focusState, equals: .caseInfoCity)
                         .textFieldBorder()
@@ -468,18 +481,21 @@ private struct CaseAddressFormFields: View {
 
                 Group {
                     ErrorTextView(text: locationData.countyError)
+                        .id("location-county-error")
                     TextField(t.t("formLabels.county"), text: $locationData.county)
                         .focused($focusState, equals: .caseInfoCounty)
                         .textFieldBorder()
                         .padding(.bottom)
 
                     ErrorTextView(text: locationData.stateError)
+                        .id("location-state-error")
                     TextField(t.t("formLabels.state"), text: $locationData.state)
                         .focused($focusState, equals: .caseInfoState)
                         .textFieldBorder()
                         .padding(.bottom)
 
                     ErrorTextView(text: locationData.zipCodeError)
+                        .id("location-zip-code-error")
                     TextField(t.t("formLabels.postal_code"), text: $locationData.zipCode)
                         .focused($focusState, equals: .caseInfoZipCode)
                         .textFieldBorder()
@@ -613,8 +629,14 @@ struct DisplayFormField: View {
 
     @Binding var checkedData: ObservableBoolDictionary
     @Binding var contentData: ObservableStringDictionary
+    @Binding var workTypeStatuses: [WorkTypeStatus]
+    @Binding var statusData: ObservableStringDictionary
 
     @State private var multiSelected: Set<String> = []
+
+    let statusTranslator: KeyTranslator
+
+    let isNewCase: Bool
 
     let node: FormFieldNode
 
@@ -712,9 +734,8 @@ struct DisplayFormField: View {
                             multiSelected = selected
                         } label : {
                             Text(t.t(option))
-                            // TODO: Common styles
                                 .padding()
-                                .background( isSelected ? Color.yellow : Color.white)
+                                .background( isSelected ? appTheme.colors.themePrimaryContainer : Color.white)
                                 .cornerRadius(40)
                                 .overlay(
                                     Capsule(style: .continuous)
@@ -732,37 +753,51 @@ struct DisplayFormField: View {
                 .padding([.bottom])
             case "cronselect":
                 Text("Frequency types under development")
-            case "h4":
-                Text("h4")
-                Text(t.t(node.formField.label))
-            case "h5":
+            case "h4", "h5":
                 let isChecked = checkedData[node.fieldKey]
                 HStack {
-                    if node.formField.isReadOnly {
-                        Button {
-                            checkedData[node.fieldKey] = !isChecked
-                        } label : {
-                            HStack {
-                                DisplayFormFieldLabel(node: node)
-                                Spacer()
-                                Image(systemName: collapseIconName(!isChecked))
-                            }
-                        }
+                    if node.children.isEmpty || node.formField.isReadOnly {
+                        Text(t.t(node.formField.label))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, appTheme.listItemVerticalPadding)
                     } else {
                         CheckboxView(
                             checked: $checkedData[node.fieldKey],
                             text: t.t(node.formField.label)
                         )
                         .disabled(disabled)
+
+                        let isActiveWorkType = isChecked && node.isWorkTypeGroup
+                        if !isNewCase && isActiveWorkType {
+                            Spacer()
+
+                            let workTypeLiteral = node.formField.selectToggleWorkType
+                            let selectedStatusLiteral = statusData[workTypeLiteral]
+                            let selectedStatus = statusFromLiteral(selectedStatusLiteral, .openUnassigned)
+                            WorkTypeStatusPicker(
+                                translator: statusTranslator,
+                                selectedStatus: selectedStatus,
+                                statusOptions: workTypeStatuses,
+                                spanWidth: false
+                            ) { status in
+                                statusData[workTypeLiteral] = status.literal
+                            }
+                        } else if node.formField.help.isNotBlank {
+                            HelpIcon(node.formField.help)
+                        }
                     }
-                    Spacer()
                 }
+
                 if isChecked {
-                    ForEach(node.children, id: \.id) { childNode in
+                    ForEach(node.children, id: \.viewId) { childNode in
                         HStack {
                             DisplayFormField(
                                 checkedData: $checkedData,
                                 contentData: $contentData,
+                                workTypeStatuses: $workTypeStatuses,
+                                statusData: $statusData,
+                                statusTranslator: statusTranslator,
+                                isNewCase: isNewCase,
                                 node: childNode
                             )
                             .padding(.leading)
@@ -777,208 +812,6 @@ struct DisplayFormField: View {
             }
         }
         .onChange(of: focusState) { focusableViewState.focusState = $0 }
-    }
-}
-
-private struct FrequencySelectView: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
-
-    @Binding var checkedData: ObservableBoolDictionary
-
-    let node: FormFieldNode
-
-    @State var tempDailyWeekly = ""
-    @State var tempSelected: [String] = []
-    @State var tempValue = 1
-    @State var tempDate = Date()
-    @State var tempSelectedRadio = ""
-
-    var body: some View {
-        VStack(alignment: .leading) {
-            let isChecked = checkedData[node.fieldKey]
-            HStack {
-                CheckboxView(
-                    checked: $checkedData[node.fieldKey],
-                    text: t.t(node.formField.label)
-                )
-                .disabled(isChecked)
-
-                Spacer ()
-            }
-            if(isChecked) {
-                HStack {
-                    Button {
-                        tempDailyWeekly = "daily"
-                    } label : {
-                        let isSelected = tempDailyWeekly == "daily"
-                        HStack {
-                            Spacer()
-                            Text("t.tDaily")
-                            // TODO: Common styles
-                            Spacer()
-                        }
-                        .padding()
-                        .background( isSelected ? Color.yellow : Color.white)
-                        .cornerRadius(40)
-                        .overlay(
-                            Capsule(style: .continuous)
-                                .strokeBorder(
-                                    Color.black,
-                                    lineWidth: isSelected ? 0 : 1
-                                )
-                        )
-                    }
-                    .tint(.black)
-
-                    Button {
-                        tempDailyWeekly = "weekly"
-                    } label : {
-                        let isSelected = tempDailyWeekly == "weekly"
-                        HStack {
-                            Spacer()
-                            Text("t.weekly")
-                            // TODO: Common styles
-                            Spacer()
-                        }
-                        .padding()
-                        .background( isSelected ? Color.yellow : Color.white)
-                        .cornerRadius(40)
-                        .overlay(
-                            Capsule(style: .continuous)
-                                .strokeBorder(
-                                    Color.black,
-                                    lineWidth: isSelected ? 0 : 1
-                                )
-                        )
-                    }
-                    .tint(.black)
-
-                }
-                // TODO: Test
-                if tempDailyWeekly == "weekly" {
-
-                    Stepper(value: $tempValue,
-                            in: 1...99,
-                            step: 1) {
-                        HStack {
-                            Text("t.tRecur Every")
-                            Text(tempValue.description)
-                                .frame(width: 30, height: 30)
-                                .padding()
-                                .background(appTheme.colors.attentionBackgroundColor)
-                                .cornerRadius(appTheme.cornerRadius)
-                            Text("week(s) on:")
-                        }
-                    }
-                    let options = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
-                    FlowStack(
-                        alignment: .leading,
-                        horizontalSpacing: 8,
-                        verticalSpacing: 8
-                    ) {
-                        ForEach(options, id: \.self) { option in
-                            let isSelected = tempSelected.contains(option)
-                            Button {
-                                if isSelected {
-                                    tempSelected.remove(at: tempSelected.firstIndex(of: option)!)
-                                } else {
-                                    tempSelected.append(option)
-                                }
-                            } label : {
-                                Text(option)
-                                // TODO: Common styles
-                                    .padding()
-                                    .frame(width: 75)
-                                    .background( isSelected ? Color.yellow : Color.white)
-                                    .cornerRadius(40)
-                                    .overlay(
-                                        Capsule(style: .continuous)
-                                            .strokeBorder(
-                                                Color.black,
-                                                lineWidth: isSelected ? 0 : 1
-                                            )
-                                    )
-                            }
-                            .tint(.black)
-                        }
-                    }
-
-                    SelectEndDate(date: $tempDate)
-                        .padding(.top)
-
-                } else if tempDailyWeekly == "daily" {
-                    RadioButtons(selected: $tempSelectedRadio, options: ["t.treccurringSchedule", "t.teveryWeekday"])
-
-                    SelectEndDate(date: $tempDate)
-                        .padding(.top)
-                }
-            }
-        }
-    }
-}
-
-// TODO: Reuse calendar range from Filters
-private struct SelectEndDate: View {
-
-    @Binding var date: Date
-    @State var showCalendar = false
-    @State var dateSelected = false
-
-//    @State var start: Date?
-//    @State var end: Date?
-
-    var body: some View {
-        HStack {
-            Image(systemName: "calendar")
-            Text("t.tSelect end date")
-            if(dateSelected)
-            {
-                Text(date.formatted(.dateTime.day().month().year()))
-                Image(systemName: "xmark")
-                    .onTapGesture {
-                        dateSelected = false
-                    }
-            }
-
-        }
-        .onTapGesture {
-            showCalendar = true
-            dateSelected = true
-        }
-        .sheet(isPresented: $showCalendar) {
-//            CalendarSelectView(start: $start, end: $end, showCalendar: $showCalendar)
-            SingleDateCalendar(date: $date, showCalendar: $showCalendar)
-        }
-    }
-}
-
-private struct SingleDateCalendar: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
-    @Binding var date: Date
-    @Binding var showCalendar: Bool
-
-    var body: some View {
-        VStack(alignment: .leading) {
-            HStack {
-                let text2 = date.formatted(.dateTime.day().month().year())
-                Text("t.tEnd date: " + text2)
-                    .fontHeader3()
-                Spacer()
-                Button {
-                    showCalendar = false
-                } label: {
-                    Text(t.t("actions.save"))
-                }
-            }
-            .padding()
-            DatePicker(
-                "Start Date",
-                selection: $date,
-                displayedComponents: [.date]
-            )
-            .datePickerStyle(.graphical)
-        }
-        .presentationDetents([.medium, .large])
     }
 }
 
@@ -1017,13 +850,5 @@ private struct CreateEditCaseSaveActions: View {
             .stylePrimary()
         }
         .padding([.horizontal, .bottom], 8)
-    }
-}
-
-struct ViewOffsetKey: PreferenceKey {
-    typealias Value = CGFloat
-    static var defaultValue = CGFloat.zero
-    static func reduce(value: inout Value, nextValue: () -> Value) {
-        value += nextValue()
     }
 }

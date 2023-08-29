@@ -144,7 +144,7 @@ class IncidentDaoTests: XCTestCase {
 
         let incidentId = incidentA.id
         try await incidentDao.updateFormFields([
-            (1, [
+            (incidentId, [
                 testIncidentFormFieldRecord(incidentId, "field-a"),
                 testIncidentFormFieldRecord(incidentId, "field-b"),
                 testIncidentFormFieldRecord(
@@ -205,7 +205,7 @@ class IncidentDaoTests: XCTestCase {
             .waitForExpectations(timeout: 0.1)
 
         try await incidentDao.updateFormFields([
-            (1, [
+            (incidentId, [
                 testIncidentFormFieldRecord(incidentId, "field-b", isInvalidated: true),
                 testIncidentFormFieldRecord(incidentId, "field-c"),
                 testIncidentFormFieldRecord(
