@@ -402,13 +402,8 @@ private struct ViewCaseNotes: View {
             ScrollView {
                 VStack {
                     if viewModel.caseData?.worksite.notes.hasSurvivorNote == true {
-                        HStack {
-                            Spacer()
-                            Image(systemName: "circle.fill")
-                                .foregroundColor(appTheme.colors.survivorNoteColorNoTransparency)
-                            Text(t.t("formLabels.survivor_notes"))
-                        }
-                        .padding()
+                        SurvivorNoteLegend()
+                            .padding()
                     } else {
                         Rectangle()
                             .fill(.clear)
@@ -423,13 +418,13 @@ private struct ViewCaseNotes: View {
                                     .font(.caption)
                                     .padding(.bottom, 4)
                                     .frame(maxWidth: .infinity, alignment: .leading)
+                                // TODO: Render static HTML if exists
                                 Text(note.note)
                             }
                             .padding()
-                            .background(note.isSurvivor ? appTheme.colors.survivorNoteColorNoTransparency : Color.white)
-                            .cornerRadius(appTheme.cornerRadius)
-                            .shadow(radius: appTheme.shadowRadius)
+                            .cardContainer(background: note.isSurvivor ? appTheme.colors.survivorNoteColorNoTransparency : Color.white)
                             .padding(.horizontal)
+                            .padding(.bottom, 8)
                         }
 
                         // Spacing

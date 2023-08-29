@@ -229,6 +229,12 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
                 }
             }
         }
+
+        if !isFirstAppear,
+           let addedNote = editableWorksiteProvider.takeNote() {
+            worksiteNotes.insert(addedNote, at: 0)
+            // TODO: Animate to added note?
+        }
     }
 
     func onViewDisappear() {
