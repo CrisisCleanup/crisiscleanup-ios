@@ -519,11 +519,13 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
+				"$(SRCROOT)/App/Config/GoogleService-Info-${CONFIGURATION}.plist.enc",
 			);
 			name = "Overwrite GoogleService-Info";
 			outputFileListPaths = (
 			);
 			outputPaths = (
+				"$(SRCROOT)/App/Config/GoogleService-Info.plist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
