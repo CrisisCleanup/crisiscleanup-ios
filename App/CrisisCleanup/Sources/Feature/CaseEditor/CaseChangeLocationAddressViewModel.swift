@@ -44,11 +44,15 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
 
     @Published private(set) var closeSearchBarTrigger = false
 
+    private let mapCoordinatesSubject = CurrentValueSubject<CLLocationCoordinate2D, Never>(DefaultCoordinates2d)
     @Published var mapCoordinates = DefaultCoordinates2d
+    private(set) var isPinCenterScreen: Bool = false
     @Published var showExplainLocationPermission = false
     private var useMyLocationActionTime = Date.now
 
     @Published var locationOutOfBoundsMessage = ""
+
+    private let isFirstVisible = ManagedAtomic(true)
 
     private var subscriptions = Set<AnyCancellable>()
 
@@ -97,17 +101,21 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
     }
 
     func onViewAppear() {
-        let latLng = worksiteProvider.editableWorksite.value.coordinates
-        mapCoordinates = CLLocationCoordinate2D(
-            latitude: latLng.latitude,
-            longitude: latLng.longitude
-        )
-
         subscribeLoading()
         subscribeInternetConnection()
         subscribeSearchState()
         subscribeLocationState()
         subscribeOutOfBounds()
+
+        if isFirstVisible.exchange(false, ordering: .relaxed) {
+            let latLng = worksiteProvider.editableWorksite.value.coordinates
+            let coordinates = CLLocationCoordinate2D(
+                latitude: latLng.latitude,
+                longitude: latLng.longitude
+            )
+            mapCoordinatesSubject.value = coordinates
+            mapCoordinates = coordinates
+        }
     }
 
     func onViewDisappear() {
@@ -180,6 +188,11 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
             }
             .store(in: &subscriptions)
 
+        mapCoordinatesSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.mapCoordinates, on: self)
+            .store(in: &subscriptions)
+
         $mapCoordinates
             .map {
                 self.worksiteProvider.getOutOfBoundsMessage($0, self.translator.t)
@@ -203,7 +216,8 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
 
     private func updateCoordinatesToMyLocation() {
         if let location = locationManager.getLocation() {
-            mapCoordinates = location.coordinate
+            isPinCenterScreen = false
+            mapCoordinatesSubject.value = location.coordinate
         }
     }
 
@@ -216,6 +230,11 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
         if locationManager.isDeniedLocationAccess {
             showExplainLocationPermission = true
         }
+    }
+
+    func onMapChange(_ center: CLLocationCoordinate2D) {
+        isPinCenterScreen = true
+        mapCoordinatesSubject.value = center
     }
 
     func onExistingWorksiteSelected(_ result: CaseSummaryResult) {
@@ -302,7 +321,7 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
     }
 
     func commitLocationCoordinates(_ coordinates: LatLng) {
-        mapCoordinates = CLLocationCoordinate2D(
+        mapCoordinatesSubject.value = CLLocationCoordinate2D(
             latitude: coordinates.latitude,
             longitude: coordinates.longitude
         )

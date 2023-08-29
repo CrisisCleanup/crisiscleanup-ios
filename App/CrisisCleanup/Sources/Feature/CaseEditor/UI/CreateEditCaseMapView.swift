@@ -12,29 +12,23 @@ class CreateEditCaseMapCoordinator: NSObject, MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         mapView.staticMapAnnotationView(annotation)
     }
-
-    func mapViewDidFinishLoadingMap(_ mapView: MKMapView) {
-//        imgView.center = mapView.center
-//        imgView.center.y = imgView.center.y - (imgView.image?.size.height ?? 0)/2
-//
-//        mapView.addSubview(imgView)
-    }
 }
 
 struct CreateEditCaseMapView : UIViewRepresentable {
     @Binding var map: MKMapView
-    @Binding var caseCoordinates: CLLocationCoordinate2D
+    @Binding var latLng: LatLng
 
     let isCreateWorksite: Bool
-    let mapCreateTime = Date.now
+    let hasInitialCoordinates: Bool
 
     func makeUIView(context: Context) -> MKMapView {
-        map.configureStaticMap()
+        map.configure()
 
         map.delegate = context.coordinator
 
         let image = UIImage(named: "cc_map_pin", in: .module, with: .none)!
-        let casePin = CustomPinAnnotation(caseCoordinates, image)
+        let coordinates = CLLocationCoordinate2D(latitude: latLng.latitude, longitude: latLng.longitude)
+        let casePin = CustomPinAnnotation(coordinates, image)
         map.addAnnotation(casePin)
         map.showAnnotations([casePin], animated: false)
 
@@ -48,14 +42,15 @@ struct CreateEditCaseMapView : UIViewRepresentable {
     func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<CreateEditCaseMapView>) {
         if let annotation = uiView.annotations.firstOrNil,
            let pinAnnotation = annotation as? CustomPinAnnotation {
-            pinAnnotation.coordinate = caseCoordinates
+            let coordinates = CLLocationCoordinate2D(latitude: latLng.latitude, longitude: latLng.longitude)
+            pinAnnotation.coordinate = coordinates
 
-            var zoom = 11
-            if isCreateWorksite && mapCreateTime.distance(to: Date.now) < 10.seconds {
+            var zoom = 12
+            if isCreateWorksite && hasInitialCoordinates {
                 zoom = 6
             }
 
-            uiView.animaiteToCenter(caseCoordinates, zoom)
+            uiView.animaiteToCenter(coordinates, zoom)
         }
     }
 }

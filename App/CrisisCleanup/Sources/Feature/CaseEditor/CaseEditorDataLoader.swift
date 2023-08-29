@@ -255,12 +255,14 @@ internal class CaseEditorDataLoader {
             let loadedWorksite = localWorksite?.worksite
             var worksiteState = loadedWorksite != nil ? loadedWorksite! : {
                 var worksiteCoordinates = bounds.centroid
-                if let coordinates = self.locationManager.getLocation() {
+                if let coordinates = self.locationManager.getLocation()?.coordinate {
                     let deviceLocation = LatLng(
-                        coordinates.coordinate.latitude,
-                        coordinates.coordinate.longitude
+                        coordinates.latitude,
+                        coordinates.longitude
                     )
-                    worksiteCoordinates = deviceLocation
+                    if bounds.containsLocation(deviceLocation) {
+                        worksiteCoordinates = deviceLocation
+                    }
                 }
 
                 return EmptyWorksite.copy {

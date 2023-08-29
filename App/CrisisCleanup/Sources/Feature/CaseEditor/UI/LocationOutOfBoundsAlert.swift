@@ -16,8 +16,10 @@ internal struct LocationOutOfBoundsAlert: View {
             let titleKey = isInRecentIncidentBounds ? "caseForm.incorrect_location" : "caseForm.case_outside_incident"
             let title = t.t(titleKey)
             let text = isInRecentIncidentBounds
-            ? t.t("caseForm.suggested_incident").replacingOccurrences(of: "{incident}", with: incident.name)
-            : t.t("caseForm.warning_case_outside_incident").replacingOccurrences(of: "{incident}", with: incident.name)
+            ? t.t("caseForm.suggested_incident")
+                .replacingOccurrences(of: "{incident}", with: incident.name)
+            : t.t("caseForm.warning_case_outside_incident")
+                .replacingOccurrences(of: "{incident}", with: incident.name)
 
             Text(title)
                 .fontHeader3()

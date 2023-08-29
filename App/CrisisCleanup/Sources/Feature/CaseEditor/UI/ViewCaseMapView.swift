@@ -20,7 +20,7 @@ struct ViewCaseMapView : UIViewRepresentable {
     var caseCoordinates: CLLocationCoordinate2D
 
     func makeUIView(context: Context) -> MKMapView {
-        map.configureStaticMap()
+        map.configure()
 
         map.delegate = context.coordinator
 

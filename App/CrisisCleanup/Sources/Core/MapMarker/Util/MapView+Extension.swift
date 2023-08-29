@@ -56,14 +56,19 @@ extension MKMapView {
         addOverlay(positivePolygon, level: .aboveRoads)
     }
 
-    func configureStaticMap() {
+    func configure(
+        isScrollEnabled: Bool = false,
+        isExistingMap: Bool = false
+    ) {
         overrideUserInterfaceStyle = .light
         mapType = .standard
         pointOfInterestFilter = .excludingAll
-        camera.centerCoordinateDistance = 20
+        if !isExistingMap {
+            camera.centerCoordinateDistance = 20
+        }
         isRotateEnabled = false
         isPitchEnabled = false
-        isScrollEnabled = false
+        self.isScrollEnabled = isScrollEnabled
 
         overlayPolygons()
     }

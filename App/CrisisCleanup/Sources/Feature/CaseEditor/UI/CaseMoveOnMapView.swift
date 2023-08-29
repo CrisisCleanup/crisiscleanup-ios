@@ -81,7 +81,7 @@ struct CaseMoveOnMapView: View {
                     .interactiveDismissDisabled()
                     .presentationDetents([.medium])
             } else {
-                // Should never show if state is consistent
+                // Should never happen if state is consistent
                 Text("A bug in the code")
             }
         }
@@ -189,17 +189,8 @@ private class MoveOnMapCoordinator: NSObject, MKMapViewDelegate {
         mapView.staticMapAnnotationView(annotation)
     }
 
-    func mapViewDidFinishLoadingMap(_ mapView: MKMapView) {
-//        imgView.center = mapView.center
-//        imgView.center.y = imgView.center.y - (imgView.image?.size.height ?? 0)/2
-//
-//        mapView.addSubview(imgView)
-    }
-
     func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-        // TODO: Report back to view model to adjust the coordinates
-        //        (mapView.region.span.longitudeDelta * 128))
-//        viewModel.onMapCameraChange(zoom, mapView.region, animated)
+        viewModel.onMapChange(mapView.centerCoordinate)
     }
 }
 
@@ -209,15 +200,22 @@ private struct MoveOnMapMapView : UIViewRepresentable {
 
     @ObservedObject var viewModel: CaseChangeLocationAddressViewModel
 
+    // TODO: Crossing incident bounds causes makeUIView to be called when the map already exists? Solve and remove guards in method below.
+    //       Likely due to the conditional overlay.
     func makeUIView(context: Context) -> MKMapView {
-        map.configureStaticMap()
+        map.configure(
+            isScrollEnabled: true,
+            isExistingMap: map.annotations.isNotEmpty
+        )
 
         map.delegate = context.coordinator
 
-        let image = UIImage(named: "cc_map_pin", in: .module, with: .none)!
-        let casePin = CustomPinAnnotation(caseCoordinates, image)
-        map.addAnnotation(casePin)
-        map.showAnnotations([casePin], animated: false)
+        if map.annotations.isEmpty {
+            let image = UIImage(named: "cc_map_pin", in: .module, with: .none)!
+            let casePin = CustomPinAnnotation(caseCoordinates, image)
+            map.addAnnotation(casePin)
+            map.showAnnotations([casePin], animated: false)
+        }
 
         return map
     }
@@ -229,9 +227,15 @@ private struct MoveOnMapMapView : UIViewRepresentable {
     func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<MoveOnMapMapView>) {
         if let annotation = uiView.annotations.firstOrNil,
            let pinAnnotation = annotation as? CustomPinAnnotation {
-            pinAnnotation.coordinate = caseCoordinates
+            if viewModel.isPinCenterScreen {
+                UIView.animate(withDuration: 0.3) {
+                    pinAnnotation.coordinate = caseCoordinates
+                }
+            } else {
+                pinAnnotation.coordinate = caseCoordinates
 
-            uiView.animaiteToCenter(caseCoordinates)
+                uiView.animaiteToCenter(caseCoordinates)
+            }
         }
     }
 }
