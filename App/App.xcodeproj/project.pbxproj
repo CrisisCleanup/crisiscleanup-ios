@@ -472,7 +472,7 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/App/Config/${CONFIGURATION}Config.xcconfig",
+				"$(SRCROOT)/App/Config/${CONFIGURATION}Config.xcconfig.enc",
 			);
 			name = "Overwrite App Config";
 			outputFileListPaths = (
@@ -482,7 +482,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ -f \"${SCRIPT_INPUT_FILE_0}\" ]; then\n    cp \"${SCRIPT_INPUT_FILE_0}\" \"${SCRIPT_OUTPUT_FILE_0}\"\n    configFileName=$(basename \"${SCRIPT_INPUT_FILE_0}\")\n    echo \"Copied ${configFileName}\"\nelse\n    echo \"Configuration file not found for ${CONFIGURATION}\"\n    exit 1\nfi\n";
+			shellScript = "if [ -f \"${SCRIPT_INPUT_FILE_0}\" ]; then\n    sops -d \"${SCRIPT_INPUT_FILE_0}\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n    configFileName=$(basename \"${SCRIPT_INPUT_FILE_0}\")\n    echo \"Decrypted ${configFileName}\"\nelse\n    echo \"Configuration file not found for ${CONFIGURATION}\"\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 		4E0CCF062A1988F300EC6906 /* Process and Upload dSYMs */ = {
