@@ -7,7 +7,7 @@ public protocol CaseSearchLocationViewBuilder {
 }
 
 class CaseSearchLocationComponent: Component<AppDependency>, CaseSearchLocationViewBuilder {
-    private var viewModel: CaseSearchLocationViewModel? = nil
+    private var viewModel: CaseChangeLocationAddressViewModel? = nil
 
     private var disposables = Set<AnyCancellable>()
 
@@ -30,10 +30,19 @@ class CaseSearchLocationComponent: Component<AppDependency>, CaseSearchLocationV
         _ = cancelSubscriptions(disposables)
     }
 
-    private func getViewModel() -> CaseSearchLocationViewModel {
+    private func getViewModel() -> CaseChangeLocationAddressViewModel {
         if viewModel == nil {
-            viewModel = CaseSearchLocationViewModel(
-                addressSearchRepository: dependency.addressSearchRepository
+            viewModel = CaseChangeLocationAddressViewModel(
+                worksiteProvider: dependency.editableWorksiteProvider,
+                locationManager: dependency.locationManager,
+                incidentBoundsProvider: dependency.incidentBoundsProvider,
+                searchWorksitesRepository: dependency.searchWorksitesRepository,
+                addressSearchRepository: dependency.addressSearchRepository,
+                caseIconProvider: dependency.mapCaseIconProvider,
+                existingWorksiteSelector: dependency.existingWorksiteSelector,
+                networkMonitor: dependency.networkMonitor,
+                translator: dependency.languageTranslationsRepository,
+                loggerFactory: dependency.loggerFactory
             )
         }
         return viewModel!

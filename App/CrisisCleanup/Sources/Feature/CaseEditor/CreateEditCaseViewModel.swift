@@ -412,7 +412,6 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         ]
     }
 
-    private var formFieldsInputData = FormFieldsInputData()
     private func loadInitialWorksite() {
         let worksite = editableWorksiteProvider.editableWorksite.value
 
@@ -423,7 +422,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         worksiteNotes.append(contentsOf: worksite.notes)
 
         if !isCreateWorksite {
-            formFieldsInputData = loadFormFieldsInputData(editableWorksiteProvider)
+            let formFieldsInputData = loadFormFieldsInputData(editableWorksiteProvider)
             for binaryField in formFieldsInputData.binaryFields {
                 binaryFormData[binaryField] = true
             }
