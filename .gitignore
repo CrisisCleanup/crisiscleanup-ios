@@ -50,7 +50,6 @@ Pods/
 .build/
 
 NeedleGenerated.swift
-GoogleService-Info-*.plist
 
 # Created by https://www.toptal.com/developers/gitignore/api/fastlane,dotenv,direnv,ruby
 # Edit at https://www.toptal.com/developers/gitignore?templates=fastlane,dotenv,direnv,ruby
@@ -143,3 +142,6 @@ build-iPhoneSimulator/
 # .rubocop-https?--*
 
 # End of https://www.toptal.com/developers/gitignore/api/fastlane,dotenv,direnv,ruby
+
+.Trash*
+crisiscleanup.xcworkspace/xcuserdata/*
