@@ -10,6 +10,7 @@ class CasesViewModel: ObservableObject {
     private let worksitesRepository: WorksitesRepository
     private let appPreferences: AppPreferencesDataStore
     private let dataPullReporter: IncidentDataPullReporter
+    private let worksiteLocationEditor: WorksiteLocationEditor
     private let mapCaseIconProvider: MapCaseIconProvider
     private let locationManager: LocationManager
     private let worksiteProvider: WorksiteProvider
@@ -30,6 +31,8 @@ class CasesViewModel: ObservableObject {
     @Published private(set) var isLoadingData = false
 
     private let qsm: CasesQueryStateManager
+
+    @Published var editedWorksiteLocation: CLLocationCoordinate2D?
 
     @Published private(set) var filtersCount = 0
 
@@ -98,6 +101,7 @@ class CasesViewModel: ObservableObject {
         organizationsRepository: OrganizationsRepository,
         appPreferences: AppPreferencesDataStore,
         dataPullReporter: IncidentDataPullReporter,
+        worksiteLocationEditor: WorksiteLocationEditor,
         mapCaseIconProvider: MapCaseIconProvider,
         locationManager: LocationManager,
         worksiteProvider: WorksiteProvider,
@@ -113,6 +117,7 @@ class CasesViewModel: ObservableObject {
         self.worksitesRepository = worksitesRepository
         self.appPreferences = appPreferences
         self.dataPullReporter = dataPullReporter
+        self.worksiteLocationEditor = worksiteLocationEditor
         self.mapCaseIconProvider = mapCaseIconProvider
         self.locationManager = locationManager
         self.worksiteProvider = worksiteProvider
@@ -178,6 +183,10 @@ class CasesViewModel: ObservableObject {
         subscribeLocationStatus()
         subscribeFilterCount()
         subscribeMapTiles()
+
+        if let location = worksiteLocationEditor.takeEditedLocation() {
+            editedWorksiteLocation = location
+        }
     }
 
     func onViewDisappear() {

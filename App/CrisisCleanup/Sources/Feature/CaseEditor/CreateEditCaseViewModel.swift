@@ -70,11 +70,12 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     @Published var isHighPriority = false
     @Published var isAssignedToOrgMember = false
     @Published private(set) var worksiteNotes = [WorksiteNote]()
-    @Published private(set) var noteCount = 0
     private var formFieldsInputData = FormFieldsInputData()
     @Published var binaryFormData = ObservableBoolDictionary()
     @Published var contentFormData = ObservableStringDictionary()
     @Published var workTypeStatusFormData = ObservableStringDictionary()
+
+    @Published private(set) var focusNoteCount = 0
 
     var hasInitialCoordinates: Bool { locationInputData.coordinates == caseData?.worksite.coordinates }
     @Published var showExplainLocationPermission = false
@@ -243,6 +244,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         if !isFirstAppear,
            let addedNote = worksiteProvider.takeNote() {
             worksiteNotes.insert(addedNote, at: 0)
+            focusNoteCount = worksiteNotes.count
         }
     }
 
@@ -363,12 +365,6 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
             .eraseToAnyPublisher()
             .receive(on: RunLoop.main)
             .assign(to: \.editSections, on: self)
-            .store(in: &subscriptions)
-
-        $worksiteNotes
-            .map { $0.count }
-            .receive(on: RunLoop.main)
-            .assign(to: \.noteCount, on: self)
             .store(in: &subscriptions)
     }
 
@@ -862,6 +858,8 @@ enum CaseEditorElement {
         case .work: return "section2"
         }
     }
+
+    // TODO: Add focus state and configure focus on error
 }
 
 struct InvalidWorksiteInfo: Equatable {

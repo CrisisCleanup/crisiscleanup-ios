@@ -71,6 +71,7 @@ class Coordinator: NSObject, MKMapViewDelegate {
 
 internal struct CasesMapView : UIViewRepresentable {
     @Binding var map: MKMapView
+    @Binding var focusWorksiteCenter: CLLocationCoordinate2D?
 
     @ObservedObject var viewModel: CasesViewModel
 
@@ -104,5 +105,11 @@ internal struct CasesMapView : UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<CasesMapView>) {
+        if let worksiteCoordinates = focusWorksiteCenter {
+            uiView.animaiteToCenter(worksiteCoordinates)
+            Task { @MainActor in
+                viewModel.editedWorksiteLocation = nil
+            }
+        }
     }
 }

@@ -167,7 +167,7 @@ private struct CreateEditCaseContentView: View {
                     }
                 }
             }
-            .onChange(of: viewModel.noteCount) { newValue in
+            .onChange(of: viewModel.focusNoteCount) { newValue in
                 proxy.scrollTo("section-notes", anchor: .top)
             }
             .onChange(of: viewModel.invalidWorksiteInfo) { info in

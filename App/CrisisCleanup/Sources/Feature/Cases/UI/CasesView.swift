@@ -37,6 +37,7 @@ struct CasesView: View {
             } else {
                 CasesMapView(
                     map: $map,
+                    focusWorksiteCenter: $viewModel.editedWorksiteLocation,
                     viewModel: viewModel,
                     onSelectWorksite: { worksiteId in
                         let incidentId = viewModel.incidentsData.selectedId
