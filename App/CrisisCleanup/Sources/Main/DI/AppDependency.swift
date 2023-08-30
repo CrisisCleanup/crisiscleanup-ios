@@ -54,6 +54,7 @@ public protocol AppDependency: Dependency {
 
     var mapCaseIconProvider: MapCaseIconProvider { get }
     var editableWorksiteProvider: EditableWorksiteProvider { get }
+    var worksiteLocationEditor: WorksiteLocationEditor { get }
     var incidentRefresher: IncidentRefresher { get }
     var languageRefresher: LanguageRefresher { get }
     var transferWorkTypeProvider: TransferWorkTypeProvider { get }

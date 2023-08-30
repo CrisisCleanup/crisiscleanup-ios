@@ -23,6 +23,10 @@ extension MainComponent {
         }
     }
 
+    public var worksiteLocationEditor: WorksiteLocationEditor {
+        editableWorksiteProvider as! WorksiteLocationEditor
+    }
+
     public var incidentRefresher: IncidentRefresher {
         shared {
             IncidentRefresher(

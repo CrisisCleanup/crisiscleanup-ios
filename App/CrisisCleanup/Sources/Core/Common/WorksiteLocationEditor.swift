@@ -1,5 +1,5 @@
 import CoreLocation
 
-protocol WorksiteLocationEditor {
+public protocol WorksiteLocationEditor {
     func takeEditedLocation() -> CLLocationCoordinate2D?
 }
