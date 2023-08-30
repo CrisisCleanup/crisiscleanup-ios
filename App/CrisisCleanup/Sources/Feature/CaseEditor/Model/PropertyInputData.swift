@@ -49,21 +49,49 @@ class PropertyInputData: ObservableObject {
         return true
     }
 
-    func getUserErrorMessage(
+    func updateCase(
+        _ worksite: Worksite,
         _ inputValidator: InputValidator,
         _ t: (String) -> String
-    ) -> String {
-        var messages = [String]()
-        if residentName.isBlank {
-            messages.append(t("caseForm.name_required"))
-        }
-        if phoneNumber.isBlank {
-            messages.append(t("caseForm.phone_required"))
-        }
-        if email.isNotBlank && !inputValidator.hasEmailAddress(email) {
-            messages.append(t("info.enter_valid_email"))
+    ) -> Worksite? {
+        if !validate(inputValidator, t) {
+            return nil
         }
 
-        return messages.joined(separator: "\n")
+        return worksite.copy {
+            $0.name = residentName.trim()
+            $0.phone1 = phoneNumber.trim()
+            $0.phone2 = phoneNumberSecondary.trim()
+            $0.email = email.trim()
+            $0.autoContactFrequencyT = autoContactFrequency.literal
+        }
+    }
+
+    func getInvalidSection(
+        _ inputValidator: InputValidator,
+        _ t: (String) -> String
+    ) -> InvalidWorksiteInfo {
+        var focusElements = [CaseEditorElement]()
+        var translationKeys = [String]()
+
+        if residentName.isBlank {
+            focusElements.append(.name)
+            translationKeys.append("caseForm.name_required")
+        }
+        if phoneNumber.isBlank {
+            focusElements.append(.phone)
+            translationKeys.append("caseForm.phone_required")
+        }
+
+        if email.isNotBlank && !inputValidator.hasEmailAddress(email) {
+            focusElements.append(.email)
+            translationKeys.append("info.enter_valid_email")
+        }
+
+        let focusElement = focusElements.firstOrNil ?? .none
+        let message = translationKeys
+            .map(t)
+            .joined(separator: "\n")
+        return InvalidWorksiteInfo(focusElement, message)
     }
 }

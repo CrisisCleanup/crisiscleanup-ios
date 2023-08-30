@@ -19,28 +19,28 @@ class LocationInputData: ObservableObject {
 
     var addressSummary: [String] {
         summarizeAddress(
-            streetAddress,
-            zipCode,
-            county,
-            city,
-            state
+            streetAddress: streetAddress,
+            city: city,
+            county: county,
+            state: state,
+            zipCode: zipCode
         )
     }
 
     @Published var isEditingAddress = false
 
     @Published private(set) var streetAddressError = ""
-    @Published private(set) var zipCodeError = ""
     @Published private(set) var cityError = ""
     @Published private(set) var countyError = ""
     @Published private(set) var stateError = ""
+    @Published private(set) var zipCodeError = ""
 
     private var isIncompleteAddress: Bool {
         streetAddress.isBlank ||
-        zipCode.isBlank ||
         city.isBlank ||
         county.isBlank ||
-        state.isBlank
+        state.isBlank ||
+        zipCode.isBlank
     }
 
     private var subscriptions = Set<AnyCancellable>()
@@ -48,14 +48,14 @@ class LocationInputData: ObservableObject {
     init() {
         let isBlankAddress1 = Publishers.CombineLatest3(
             $streetAddress,
-            $zipCode,
-            $city
+            $city,
+            $county
         )
             .map { s0, s1, s2 in s0.isBlank && s1.isBlank && s2.isBlank }
         Publishers.CombineLatest3(
             isBlankAddress1.eraseToAnyPublisher(),
-            $county,
-            $state
+            $state,
+            $zipCode
         )
         .map { isBlank, s3, s4 in isBlank && s3.isBlank && s4.isBlank }
         .receive(on: RunLoop.main)
@@ -74,11 +74,11 @@ class LocationInputData: ObservableObject {
     }
 
     private func summarizeAddress(
-        _ streetAddress: String,
-        _ zipCode: String,
-        _ county: String,
-        _ city: String,
-        _ state: String
+        streetAddress: String,
+        city: String,
+        county: String,
+        state: String,
+        zipCode: String
     ) -> [String] {
         [
             streetAddress,
@@ -93,12 +93,14 @@ class LocationInputData: ObservableObject {
         _ worksite: Worksite,
         _ wasAddressSelected: Bool = false
     ) {
+        resetValidity()
+
         coordinates = worksite.coordinates
         streetAddress = worksite.address
-        zipCode = worksite.postalCode
         city = worksite.city
         county = worksite.county
         state = worksite.state
+        zipCode = worksite.postalCode
 
         wasGeocodeAddressSelected = wasAddressSelected
     }
@@ -106,17 +108,17 @@ class LocationInputData: ObservableObject {
     func clearAddress() {
         streetAddress = ""
         city = ""
-        zipCode = ""
         county = ""
         state = ""
+        zipCode = ""
     }
 
     func resetValidity() {
         streetAddressError = ""
-        zipCodeError = ""
         cityError = ""
         countyError = ""
         stateError = ""
+        zipCodeError = ""
     }
 
     func validate(
@@ -128,57 +130,94 @@ class LocationInputData: ObservableObject {
             streetAddressError = t("caseForm.address_required")
             return false
         }
-        if zipCode.isBlank {
-            zipCodeError = t("caseForm.postal_code_required")
-            return false
-        }
-        if county.isNotBlank {
-            countyError = t("caseForm.county_required")
-            return false
-        }
 
-        if city.isNotBlank {
+        if city.isBlank {
             cityError = t("caseForm.city_required")
             return false
         }
 
-        if state.isNotBlank {
+        if county.isBlank {
+            countyError = t("caseForm.county_required")
+            return false
+        }
+
+        if state.isBlank {
             stateError = t("caseForm.state_required")
+            return false
+        }
+
+        if zipCode.isBlank {
+            zipCodeError = t("caseForm.postal_code_required")
             return false
         }
 
         return true
     }
 
-    func getUserErrorMessage(
+    func updateCase(
+        _ worksite: Worksite,
         _ t: (String) -> String
-) -> (Bool, String) {
+    ) -> Worksite? {
+        if !validate(t) {
+            return nil
+        }
+
+        return worksite.copy {
+            $0.latitude = coordinates.latitude
+            $0.longitude = coordinates.longitude
+            $0.address = streetAddress.trim()
+            $0.city = city.trim()
+            $0.county = county.trim()
+            $0.state = state.trim()
+            $0.postalCode = zipCode.trim()
+        }
+        .copyModifiedFlag(hasWrongLocation) {
+            $0.isWrongLocationFlag
+        } _: {
+            WorksiteFlag.wrongLocation()
+        }
+    }
+
+    func getInvalidSection(
+        _ t: (String) -> String
+    ) -> InvalidWorksiteInfo {
+        var focusElements = [CaseEditorElement]()
         var translationKeys = [String]()
-        var isAddressError = true
 
         if coordinates == zeroCoordinates {
-            isAddressError = false
+            focusElements.append(.location)
             translationKeys.append("caseForm.no_lat_lon_error")
         }
         if streetAddress.isBlank {
+            focusElements.append(.address)
             translationKeys.append("caseForm.address_required")
         }
-        if zipCode.isBlank {
-            translationKeys.append("caseForm.postal_code_required")
-        }
-        if county.isBlank {
-            translationKeys.append("caseForm.county_required")
-        }
         if city.isBlank {
+            focusElements.append(.city)
             translationKeys.append("caseForm.city_required")
         }
+        if county.isBlank {
+            focusElements.append(.county)
+            translationKeys.append("caseForm.county_required")
+        }
         if state.isBlank {
+            focusElements.append(.state)
             translationKeys.append("caseForm.state_required")
+        }
+        if zipCode.isBlank {
+            focusElements.append(.zipCode)
+            translationKeys.append("caseForm.postal_code_required")
         }
 
         let message = translationKeys
-            .map { t($0) }
+            .map(t)
             .joined(separator: "\n")
-        return (isAddressError, message)
+        var focusElement = focusElements.firstOrNil ?? .none
+        if message.isNotBlank,
+           focusElement != .location,
+           isSearchSuggested {
+            focusElement = .location
+        }
+        return InvalidWorksiteInfo(focusElement, message)
     }
 }

@@ -109,10 +109,7 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
 
         if isFirstVisible.exchange(false, ordering: .relaxed) {
             let latLng = worksiteProvider.editableWorksite.value.coordinates
-            let coordinates = CLLocationCoordinate2D(
-                latitude: latLng.latitude,
-                longitude: latLng.longitude
-            )
+            let coordinates = latLng.coordinates
             mapCoordinatesSubject.value = coordinates
             mapCoordinates = coordinates
         }
@@ -321,10 +318,7 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
     }
 
     func commitLocationCoordinates(_ coordinates: LatLng) {
-        mapCoordinatesSubject.value = CLLocationCoordinate2D(
-            latitude: coordinates.latitude,
-            longitude: coordinates.longitude
-        )
+        mapCoordinatesSubject.value = coordinates.coordinates
         commitChanges()
     }
 
@@ -415,9 +409,11 @@ internal class LocationOutOfBoundsManager {
                 defer { isCheckingOutOfBounds.value = false }
 
                 let recentIncident = try boundsProvider.isInRecentIncidentBounds(coordinates)
-                locationOutOfBounds.value = recentIncident == nil
-                ? outOfBoundsData
-                : outOfBoundsData.copy { $0.recentIncident = recentIncident }
+                // TODO: Delete line. Uncomment under. Complete flow. Test.
+                locationOutOfBounds.value = outOfBoundsData
+//                locationOutOfBounds.value = recentIncident == nil
+//                ? outOfBoundsData
+//                : outOfBoundsData.copy { $0.recentIncident = recentIncident }
             } catch {
                 logger.logError(error)
             }

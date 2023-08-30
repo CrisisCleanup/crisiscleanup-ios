@@ -5,6 +5,8 @@ import MapKit
 import FlowStackLayout
 
 struct CreateEditCaseView: View {
+    @Environment(\.dismiss) var dismiss
+
     @ObservedObject var viewModel: CreateEditCaseViewModel
 
     @ObservedObject private var focusableViewState = TextInputFocusableView()
@@ -32,6 +34,11 @@ struct CreateEditCaseView: View {
                 showBusyIndicator = !isReady
             }
         }
+        .onChange(of: viewModel.navigateBack) { b in
+            if b {
+                dismiss()
+            }
+        }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)
@@ -41,6 +48,8 @@ struct CreateEditCaseView: View {
 }
 
 private struct CreateEditCaseContentView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
     @EnvironmentObject var viewModel: CreateEditCaseViewModel
     @EnvironmentObject private var focusableViewState: TextInputFocusableView
 
@@ -52,111 +61,140 @@ private struct CreateEditCaseContentView: View {
         false
     ]
 
+    @State private var isInvalidSave = false
+
     var body: some View {
         let disableMutation = viewModel.editableViewState.disabled
         let editSections = viewModel.editSections
 
-        VStack {
-            ScrollViewReader { proxy in
-                FocusSectionSlider(
-                    sectionTitles: editSections,
-                    proxy: proxy
-                )
-                .padding(.vertical, appTheme.gridItemSpacing)
+        ScrollViewReader { proxy in
+            FocusSectionSlider(
+                sectionTitles: editSections,
+                proxy: proxy
+            )
+            .padding(.vertical, appTheme.gridItemSpacing)
 
-                ScrollView {
-                    VStack {
-                        if let caseState = viewModel.caseData {
-                            HStack{
-                                CaseIncidentView(
-                                    incident: caseState.incident,
-                                    isPendingSync: caseState.isPendingSync,
-                                    isSyncing: viewModel.isSyncing,
-                                    scheduleSync: { viewModel.scheduleSync() }
-                                )
-                                .padding()
-                            }
+            ScrollView {
+                VStack {
+                    if let caseState = viewModel.caseData {
+                        HStack{
+                            CaseIncidentView(
+                                incident: caseState.incident,
+                                isPendingSync: caseState.isPendingSync,
+                                isSyncing: viewModel.isSyncing,
+                                scheduleSync: { viewModel.scheduleSync() }
+                            )
+                            .padding()
                         }
+                    }
 
+                    Group {
+                        CreateEditCaseSectionHeaderView (
+                            isCollapsed: $sectionCollapse[0],
+                            titleNumber: 1,
+                            titleTranslateKey: editSections.get(0, "")
+                        )
+                        .id("section0")
+
+                        if !sectionCollapse[0] {
+                            PropertyInformation(
+                                propertyData: viewModel.propertyInputData,
+                                locationData: viewModel.locationInputData
+                            )
+                        }
+                    }
+                    .onScrollSectionFocus(
+                        proxy,
+                        scrollToId: "scrollBar0"
+                    )
+
+                    let nodes = Array(viewModel.groupFormFieldNodes.enumerated())
+                    ForEach(nodes, id: \.offset) { offset, node in
+                        FormListSectionSeparator()
+
+                        let sectionIndex = offset + 1
                         Group {
                             CreateEditCaseSectionHeaderView (
-                                isCollapsed: $sectionCollapse[0],
-                                titleNumber: 1,
-                                titleTranslateKey: editSections.get(0, "")
+                                isCollapsed: $sectionCollapse[sectionIndex],
+                                titleNumber: sectionIndex + 1,
+                                titleTranslateKey: editSections.get(sectionIndex, ""),
+                                helpText: node.formField.help
                             )
-                            .id("section0")
+                            .id("section\(sectionIndex)")
 
-                            if !sectionCollapse[0] {
-                                PropertyInformation(
-                                    propertyData: viewModel.propertyInputData,
-                                    locationData: viewModel.locationInputData
-                                )
-                            }
-                        }
-                        .onScrollSectionFocus(
-                            proxy,
-                            scrollToId: "scrollBar0"
-                        )
-
-                        let nodes = Array(viewModel.groupFormFieldNodes.enumerated())
-                        ForEach(nodes, id: \.offset) { offset, node in
-                            FormListSectionSeparator()
-
-                            let sectionIndex = offset + 1
-                            Group {
-                                CreateEditCaseSectionHeaderView (
-                                    isCollapsed: $sectionCollapse[sectionIndex],
-                                    titleNumber: sectionIndex + 1,
-                                    titleTranslateKey: editSections.get(sectionIndex, ""),
-                                    helpText: node.formField.help
-                                )
-                                .id("section\(sectionIndex)")
-
-                                VStack {
-                                    if !sectionCollapse[sectionIndex] {
-                                        let children = node.children
-                                            .filter { !ignoreFormFieldKeys.contains($0.fieldKey) }
-                                        ForEach(children, id: \.viewId) { child in
-                                            if child.parentKey == node.fieldKey {
-                                                DisplayFormField(
-                                                    checkedData: $viewModel.binaryFormData,
-                                                    contentData: $viewModel.contentFormData,
-                                                    workTypeStatuses: $viewModel.statusOptions,
-                                                    statusData: $viewModel.workTypeStatusFormData,
-                                                    statusTranslator: viewModel,
-                                                    isNewCase: viewModel.isCreateWorksite,
-                                                    node: child
-                                                )
-                                                .padding(.horizontal)
-                                            }
+                            VStack {
+                                if !sectionCollapse[sectionIndex] {
+                                    let children = node.children
+                                        .filter { !ignoreFormFieldKeys.contains($0.fieldKey) }
+                                    ForEach(children, id: \.viewId) { child in
+                                        if child.parentKey == node.fieldKey {
+                                            DisplayFormField(
+                                                checkedData: $viewModel.binaryFormData,
+                                                contentData: $viewModel.contentFormData,
+                                                workTypeStatuses: $viewModel.statusOptions,
+                                                statusData: $viewModel.workTypeStatusFormData,
+                                                statusTranslator: viewModel,
+                                                isNewCase: viewModel.isCreateWorksite,
+                                                node: child
+                                            )
+                                            .padding(.horizontal)
                                         }
                                     }
                                 }
                             }
-                            .onScrollSectionFocus(
-                                proxy,
-                                scrollToId: "scrollBar\(sectionIndex)"
-                            )
+                        }
+                        .onScrollSectionFocus(
+                            proxy,
+                            scrollToId: "scrollBar\(sectionIndex)"
+                        )
+                    }
+                }
+            }
+            .coordinateSpace(name: "scrollForm")
+            .scrollDismissesKeyboard(.immediately)
+            .onChange(of: focusableViewState.focusState) { focusState in
+                let isNameFocus = focusState == .caseInfoName
+                if isNameFocus {
+                    withAnimation {
+                        proxy.scrollTo("property-name-input", anchor: .top)
+                    }
+                }
+            }
+            .onChange(of: viewModel.locationInputData.wasGeocodeAddressSelected) { isSelected in
+                if isSelected {
+                    withAnimation {
+                        proxy.scrollTo("location-map", anchor: .top)
+                    }
+                }
+            }
+            .onChange(of: viewModel.noteCount) { newValue in
+                proxy.scrollTo("section-notes", anchor: .top)
+            }
+            .onChange(of: viewModel.invalidWorksiteInfo) { info in
+                if info.invalidElement != .none && info.message.isNotBlank {
+                    isInvalidSave = true
+                }
+            }
+            .sheet(isPresented: $isInvalidSave) {
+                let info = viewModel.invalidWorksiteInfo
+                let message = info.message.ifBlank {
+                    t.t("caseForm.missing_required_fields")
+                }
+                VStack {
+                    Text(message)
+                        .padding()
+
+                    Spacer()
+
+                    if info.invalidElement != .none {
+                        Button(t.t("actions.fix")) {
+                            proxy.scrollTo(info.invalidElement.scrollId, anchor: .top)
+                            isInvalidSave = false
                         }
                     }
                 }
-                .coordinateSpace(name: "scrollForm")
-                .scrollDismissesKeyboard(.immediately)
-                .onChange(of: focusableViewState.focusState) { focusState in
-                    let isNameFocus = focusState == .caseInfoName
-                    if isNameFocus {
-                        withAnimation {
-                            proxy.scrollTo("property-name-input", anchor: .top)
-                        }
-                    }
-                }
-                .onChange(of: viewModel.locationInputData.wasGeocodeAddressSelected) { isSelected in
-                    if isSelected {
-                        withAnimation {
-                            proxy.scrollTo("location-map", anchor: .top)
-                        }
-                    }
-                }
+                // TODO: Adjust to content height (remove Spacer)
+                .presentationDetents([.fraction(0.35)])
             }
 
             if focusableViewState.isFocused {
@@ -330,6 +368,7 @@ struct PropertyInformation: View {
 
             HStack {
                 Text(t.t("formLabels.location"))
+                    .id("location-section")
                 HelpIcon(t.t("caseForm.location_instructions"))
             }
             .listItemModifier()
@@ -457,10 +496,10 @@ private struct CaseAddressFormFields: View {
         if locationData.isEditingAddress ||
             locationData.hasWrongLocation ||
             locationData.streetAddressError.isNotBlank ||
-            locationData.zipCodeError.isNotBlank ||
             locationData.cityError.isNotBlank ||
             locationData.countyError.isNotBlank ||
-            locationData.stateError.isNotBlank {
+            locationData.stateError.isNotBlank ||
+            locationData.zipCodeError.isNotBlank {
 
             Group {
                 Group {
@@ -556,6 +595,7 @@ private struct CreateEditCaseNotesView: View {
 
             HStack {
                 Text(t.t("formLabels.notes"))
+                    .id("section-notes")
 
                 if notes.count > viewModel.visibleNoteCount {
                     Spacer()
@@ -751,8 +791,10 @@ struct DisplayFormField: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .disabled(disabled)
                 .padding([.bottom])
+
             case "cronselect":
                 Text("Frequency types under development")
+
             case "h4", "h5":
                 let isChecked = checkedData[node.fieldKey]
                 HStack {
@@ -787,6 +829,7 @@ struct DisplayFormField: View {
                         }
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 if isChecked {
                     ForEach(node.children, id: \.viewId) { childNode in
@@ -834,7 +877,7 @@ private struct CreateEditCaseSaveActions: View {
 
             if viewModel.showClaimAndSave {
                 Button {
-                    // TODO: Do
+                    viewModel.saveChanges(true)
                 } label : {
                     Text(t.t("actions.save_claim"))
                 }
@@ -843,7 +886,7 @@ private struct CreateEditCaseSaveActions: View {
             }
 
             Button {
-                // TODO: Do
+                viewModel.saveChanges(false)
             } label : {
                 Text(t.t("actions.save"))
             }

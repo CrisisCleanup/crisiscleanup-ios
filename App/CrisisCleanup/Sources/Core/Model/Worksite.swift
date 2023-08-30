@@ -239,6 +239,8 @@ public struct WorksiteFormValue: Equatable {
     }
 }
 
+let worksiteFormValueTrue = WorksiteFormValue(isBoolean: true, valueBoolean: true)
+
 enum WorksiteFlagType: String, Identifiable, CaseIterable {
     case highPriority,
          upsetClient,

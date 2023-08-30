@@ -3,7 +3,7 @@ struct FormFieldsInputData {
     let binaryFields: Set<String>
     let contentFields: [String: String]
     let groupFormFieldData: [String: [FieldDynamicValue]]
-    let groupFields: [String: [FieldDynamicValue]]
+    let groupFields: [FieldDynamicValue]
     let workTypeStatuses: [String: WorkTypeStatus]
 
     init(
@@ -11,7 +11,7 @@ struct FormFieldsInputData {
         binaryFields: Set<String> = [],
         contentFields: [String : String] = [:],
         groupFormFieldData: [String : [FieldDynamicValue]] = [:],
-        groupFields: [String : [FieldDynamicValue]] = [:],
+        groupFields: [FieldDynamicValue] = [],
         workTypeStatuses: [String: WorkTypeStatus] = [:]
     ) {
         self.managedGroups = managedGroups
@@ -39,7 +39,7 @@ internal func loadFormFieldsInputData(_ worksiteProvider: EditableWorksiteProvid
 
     var managedGroups: Set<String> = []
     var groupFormFieldData: [String: [FieldDynamicValue]] = [:]
-    var groupFields = [String: [FieldDynamicValue]]()
+    var groupFields = [FieldDynamicValue]()
     var workTypeStatuses = [String: WorkTypeStatus]()
     var binaryFields: Set<String> = []
     var contentFields = [String: String]()
@@ -98,11 +98,14 @@ internal func loadFormFieldsInputData(_ worksiteProvider: EditableWorksiteProvid
                     }
                 }
 
+                if fieldData.childrenCount > 0 {
+                    groupFields.append(fieldData)
+                }
+
                 return fieldData
             }
 
         groupFormFieldData[groupKey] = formFieldData
-        groupFields[groupKey] = formFieldData.filter { $0.childrenCount > 0 }
     }
 
     return FormFieldsInputData(

@@ -9,7 +9,8 @@ struct OpenKeyboardActionsView: View {
             } label: {
                 Image(systemName: "keyboard.chevron.compact.down.fill")
             }
-            .padding()
+            .padding(.horizontal)
+            .padding(.bottom, 4)
         }
     }
 }
