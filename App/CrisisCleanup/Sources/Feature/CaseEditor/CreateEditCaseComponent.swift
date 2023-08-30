@@ -41,7 +41,7 @@ class CreateEditCaseComponent: Component<AppDependency>, CreateEditCaseViewBuild
         if isRelevant,
            let existingViewModel = viewModel,
            existingViewModel.incidentIdIn == incidentId,
-           existingViewModel.worksiteIdIn == worksiteId {
+           existingViewModel.worksiteIdLatest == worksiteId {
             return existingViewModel
         }
 
@@ -54,12 +54,13 @@ class CreateEditCaseComponent: Component<AppDependency>, CreateEditCaseViewBuild
             languageRepository: dependency.languageTranslationsRepository,
             languageRefresher: dependency.languageRefresher,
             workTypeStatusRepository: dependency.workTypeStatusRepository,
-            editableWorksiteProvider: dependency.editableWorksiteProvider,
+            worksiteProvider: dependency.editableWorksiteProvider,
             locationManager: dependency.locationManager,
             networkMonitor: dependency.networkMonitor,
             searchWorksitesRepository: dependency.searchWorksitesRepository,
             mapCaseIconProvider: dependency.mapCaseIconProvider,
             existingWorksiteSelector: dependency.existingWorksiteSelector,
+            incidentSelector: dependency.incidentSelector,
             worksiteChangeRepository: dependency.worksiteChangeRepository,
             syncPusher: dependency.syncPusher,
             inputValidator: dependency.inputValidator,

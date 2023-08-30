@@ -15,6 +15,10 @@ public struct LatLng: Equatable, CustomStringConvertible {
     public var location: CLLocation {
         CLLocation(latitude: latitude, longitude: longitude)
     }
+
+    public var coordinates: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
 }
 
 extension CLLocation {

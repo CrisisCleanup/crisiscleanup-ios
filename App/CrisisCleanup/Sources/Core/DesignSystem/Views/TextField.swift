@@ -26,10 +26,12 @@ struct ToggleSecureTextField: View {
                 if isSecure {
                     SecureField(title, text: $text)
                         .textFieldStyle(.plain)
+                        .autocapitalization(.none)
                         .disableAutocorrection(true)
                 } else {
                     TextField(title, text: $text)
                         .textFieldStyle(.plain)
+                        .autocapitalization(.none)
                         .disableAutocorrection(true)
                 }
             }

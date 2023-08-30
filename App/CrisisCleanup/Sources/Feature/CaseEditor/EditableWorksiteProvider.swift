@@ -14,7 +14,7 @@ public protocol EditableWorksiteProvider {
     func setStale()
     func takeStale() -> Bool
 
-    func setEditedLocation(coordinates: CLLocationCoordinate2D)
+    func setEditedLocation(_ coordinates: CLLocationCoordinate2D)
     func clearEditedLocation()
 
     var isAddressChanged: Bool { get }
@@ -81,7 +81,7 @@ class SingleEditableWorksiteProvider: EditableWorksiteProvider, WorksiteLocation
         editedLocation.store(oco, ordering: .sequentiallyConsistent)
     }
 
-    func setEditedLocation(coordinates: CLLocationCoordinate2D) {
+    func setEditedLocation(_ coordinates: CLLocationCoordinate2D) {
         setCoordinates(coordinates)
     }
 
