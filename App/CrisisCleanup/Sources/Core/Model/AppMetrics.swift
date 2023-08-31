@@ -8,7 +8,7 @@ public struct MinSupportedAppVersion: Codable {
 }
 
 let supportedAppVersion = MinSupportedAppVersion(
-    minBuild: Int64.max,
+    minBuild: 0,
     title: nil,
     message: "",
     link: nil

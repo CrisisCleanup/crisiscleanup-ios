@@ -1,6 +1,7 @@
 enum MainViewState {
     case loading
     case ready
+    case unsupportedBuild
 }
 
 struct MainViewData {

@@ -42,7 +42,7 @@ class CrisisCleanupAppSupportRepository: AppSupportRepository {
             if let info = await networkDataSource.getAppSupportInfo(appEnv.isNotProduction) {
                 appMetricsDataSource.setMinSupportedVersion(MinSupportedAppVersion(
                     minBuild: info.minBuildVersion,
-                    title: info.link,
+                    title: info.title,
                     message: info.message,
                     link: info.link
                 ))

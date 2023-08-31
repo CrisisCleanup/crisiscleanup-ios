@@ -14,7 +14,6 @@ class MainViewModel: ObservableObject {
     @Published private(set) var viewData: MainViewData = MainViewData()
 
     @Published private(set) var minSupportedVersion = supportedAppVersion
-    @Published private(set) var isBuildUnsupported = false
 
     let isNotProduction: Bool
 
@@ -47,13 +46,17 @@ class MainViewModel: ObservableObject {
         syncPuller.pullUnauthenticatedData()
     }
 
-    func onViewAppear() {
+    func onActivePhase() {
         appSupportRepository.onAppOpen()
         appSupportRepository.pullMinSupportedAppVersion()
+    }
 
+    func onViewAppear() {
         subscribeIncidentsData()
         subscribeAccountData()
         subscribeAppSupport()
+
+        // TODO: Queue push sync (if logged in)
     }
 
     func onViewDisappear() {
@@ -74,17 +77,19 @@ class MainViewModel: ObservableObject {
     }
 
     private func subscribeAccountData() {
-        Publishers.CombineLatest(
+        Publishers.CombineLatest3(
             accountDataRepository.accountData.eraseToAnyPublisher(),
-            translator.translationCount.eraseToAnyPublisher()
+            translator.translationCount.eraseToAnyPublisher(),
+            $minSupportedVersion
         )
-        .filter { (_, translationCount) in
+        .filter { (_, translationCount, _) in
             translationCount > 0
         }
         .receive(on: RunLoop.main)
-        .sink { (accountData, _) in
-            self.viewData = MainViewData(
-                state: .ready,
+        .sink { (accountData, _, minSupport) in
+            let isUnsupported = self.appVersionProvider.buildNumber < minSupport.minBuild
+            self.viewData =  MainViewData(
+                state: isUnsupported ? .unsupportedBuild : .ready,
                 accountData: accountData
             )
         }
@@ -114,11 +119,6 @@ class MainViewModel: ObservableObject {
             .map { $0.minSupportedVersion }
             .receive(on: RunLoop.main)
             .assign(to: \.minSupportedVersion, on: self)
-            .store(in: &subscriptions)
-
-        $minSupportedVersion
-            .map { self.appVersionProvider.buildNumber < $0.minBuild }
-            .assign(to: \.isBuildUnsupported, on: self)
             .store(in: &subscriptions)
     }
 

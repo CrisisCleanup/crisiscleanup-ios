@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct MainView: View {
+    @Environment(\.scenePhase) var scenePhase
     @Environment(\.translator) var translator
 
     @ObservedObject var viewModel: MainViewModel
@@ -35,8 +36,14 @@ struct MainView: View {
         Group {
             switch viewModel.viewData.state {
             case .loading:
-                // TODO: Show actual splash screen (or loading animation)
-                Text("Splash/loading")
+                Image("crisis_cleanup_logo", bundle: .module)
+                    .renderingMode(.original)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: 240)
+
+            case .unsupportedBuild:
+                UnsupportedBuildView(supportedInfo: viewModel.minSupportedVersion)
             case .ready:
                 let hideAuthScreen = {
                     showAuthScreen = false
@@ -94,6 +101,11 @@ struct MainView: View {
                         .toolbarColorScheme(.light, for: .navigationBar)
                     }
                 }
+            }
+        }
+        .onChange(of: scenePhase) { newPhase in
+            if newPhase == .active {
+                viewModel.onActivePhase()
             }
         }
         .onAppear { viewModel.onViewAppear() }
