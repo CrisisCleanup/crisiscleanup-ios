@@ -573,7 +573,7 @@ private struct PropertyInformationView: View {
                         Image(systemName: "envelope.fill")
                             .frame(width: iconSize, height: iconSize)
                         Text(worksite.email!)
-                            .customLink(urlString: worksite.email!)
+                            .customLink(urlString: "mailto:\(worksite.email!)")
                         Spacer()
                     }
                     .modifier(CopyWithAnimation(pressed: $emailPressed, copy: worksite.email!))

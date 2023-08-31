@@ -93,7 +93,7 @@ struct RequestView: View {
                             if contact.email.isNotBlank {
                                 Text(contact.email)
                                     .if (contact.isValidEmail) {
-                                        $0.customLink(urlString: contact.email)
+                                        $0.customLink(urlString: "mailto:\(contact.email)")
                                     }
                             }
                             if contact.mobile.isNotBlank {
