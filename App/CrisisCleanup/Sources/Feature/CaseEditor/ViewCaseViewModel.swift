@@ -175,6 +175,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         subscribeSaving()
         subscribePendingTransfer()
         subscribeEditableState()
+        subscribeViewState()
 
         subscribeCaseData()
         subscribeWorksiteChange()
@@ -249,6 +250,20 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
             self.editableViewState.isEditable = !isTransient
         }
         .store(in: &subscriptions)
+    }
+
+    private func subscribeViewState() {
+        $alertMessage
+            .filter { $0.isNotBlank }
+            .debounce(
+                for: .seconds(2),
+                scheduler: RunLoop.current
+            )
+            .receive(on: RunLoop.main)
+            .sink { _ in
+                self.clearAlert()
+            }
+            .store(in: &subscriptions)
     }
 
     private func subscribeCaseData() {
@@ -585,7 +600,8 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
 
     private func saveWorksiteChange(
         _ startingWorksite: Worksite,
-        _ changedWorksite: Worksite
+        _ changedWorksite: Worksite,
+        _ onSaveAction: @escaping () -> Void = {}
     ) {
         if startingWorksite.isNew ||
             startingWorksite == changedWorksite {
@@ -608,6 +624,8 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
                     )
 
                     syncPusher.appPushWorksite(worksiteIdIn)
+
+                    onSaveAction()
                 } catch {
                     onSaveFail(error)
                 }
@@ -646,13 +664,29 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         let startingWorksite = referenceWorksite
         let changedWorksite =
         startingWorksite.copy { $0.isAssignedToOrgMember = !startingWorksite.isLocalFavorite }
-        saveWorksiteChange(startingWorksite, changedWorksite)
+        saveWorksiteChange(startingWorksite, changedWorksite) {
+            let messageTranslateKey = changedWorksite.isLocalFavorite
+            ? "caseView.member_my_org"
+            : "~~Not member of my organization"
+            let message = self.t(messageTranslateKey)
+            Task { @MainActor in
+                self.toggleAlert(message: message)
+            }
+        }
     }
 
     func toggleHighPriority() {
         let startingWorksite = referenceWorksite
         let changedWorksite = startingWorksite.toggleHighPriorityFlag()
-        saveWorksiteChange(startingWorksite, changedWorksite)
+        saveWorksiteChange(startingWorksite, changedWorksite) {
+            let messageTranslateKey = changedWorksite.hasHighPriorityFlag
+            ? "caseView.high_priority"
+            : "caseView.not_high_priority"
+            let message = self.t(messageTranslateKey)
+            Task { @MainActor in
+                self.toggleAlert(message: message)
+            }
+        }
     }
 
     func updateWorkType(_ workType: WorkType, _ isStatusChange: Bool) {

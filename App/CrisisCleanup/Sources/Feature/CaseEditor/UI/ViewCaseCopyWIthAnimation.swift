@@ -1,9 +1,9 @@
-import Foundation
 import SwiftUI
 
 struct CopyWithAnimation: ViewModifier {
     @Environment(\.translator) var t: KeyAssetTranslator
     @EnvironmentObject var viewModel: ViewCaseViewModel
+
     @Binding var pressed: Bool
     var copy: String
 
@@ -18,7 +18,8 @@ struct CopyWithAnimation: ViewModifier {
                 LongPressGesture()
                     .onEnded { _ in
                         pressed.toggle()
-                        let message = t.t("info.copied_value").replacingOccurrences(of: "{copied_string}", with: copy)
+                        let message = t.t("info.copied_value")
+                            .replacingOccurrences(of: "{copied_string}", with: copy)
                         viewModel.toggleAlert(message: message)
                         viewModel.alertCount += 1
                         UIPasteboard.general.string = copy
