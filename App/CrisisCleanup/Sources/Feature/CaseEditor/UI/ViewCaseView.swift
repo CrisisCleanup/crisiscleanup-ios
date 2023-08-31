@@ -418,8 +418,7 @@ private struct ViewCaseNotes: View {
                                     .font(.caption)
                                     .padding(.bottom, 4)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                // TODO: Render HTML (no links)
-                                Text(note.note)
+                                NoteContentView(text: note.note)
                             }
                             .padding()
                             .cardContainer(background: note.isSurvivor ? appTheme.colors.survivorNoteColorNoTransparency : Color.white)
