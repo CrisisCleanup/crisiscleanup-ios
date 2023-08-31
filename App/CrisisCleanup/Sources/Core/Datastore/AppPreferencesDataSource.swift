@@ -27,22 +27,22 @@ fileprivate let jsonEncoder = JsonEncoderFactory().encoder()
 class AppPreferencesUserDefaults: AppPreferencesDataStore {
     let preferences: any Publisher<AppPreferences, Never>
 
-    private func update(_ preferences: AppPreferences) {
-        UserDefaults.standard.appPreferences = preferences
-    }
-
     init() {
         preferences = UserDefaults.standard.publisher(for: \.appPreferencesData)
             .map { preferencesData in
                 let appPreferences: AppPreferences
-                if preferencesData != nil,
-                   let data = try? jsonDecoder.decode(AppPreferences.self, from: preferencesData!) {
+                if let preferencesData = preferencesData,
+                   let data = try? jsonDecoder.decode(AppPreferences.self, from: preferencesData) {
                     appPreferences = data
                 } else {
                     appPreferences = AppPreferences()
                 }
                 return appPreferences
             }
+    }
+
+    private func update(_ preferences: AppPreferences) {
+        UserDefaults.standard.appPreferences = preferences
     }
 
     func setSyncAttempt(

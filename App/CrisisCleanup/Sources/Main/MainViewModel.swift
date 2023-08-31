@@ -3,6 +3,8 @@ import Combine
 
 class MainViewModel: ObservableObject {
     private let accountDataRepository: AccountDataRepository
+    private let appSupportRepository: AppSupportRepository
+    private let appVersionProvider: AppVersionProvider
     private let incidentSelector: IncidentSelector
     let translator: KeyAssetTranslator
     private let syncPuller: SyncPuller
@@ -10,6 +12,8 @@ class MainViewModel: ObservableObject {
     private let logger: AppLogger
 
     @Published private(set) var viewData: MainViewData = MainViewData()
+
+    @Published private(set) var minSupportedVersion = supportedAppVersion
 
     let isNotProduction: Bool
 
@@ -19,6 +23,8 @@ class MainViewModel: ObservableObject {
 
     init(
         accountDataRepository: AccountDataRepository,
+        appSupportRepository: AppSupportRepository,
+        appVersionProvider: AppVersionProvider,
         translationsRepository: LanguageTranslationsRepository,
         incidentSelector: IncidentSelector,
         syncPuller: SyncPuller,
@@ -27,6 +33,8 @@ class MainViewModel: ObservableObject {
         appEnv: AppEnv
     ) {
         self.accountDataRepository = accountDataRepository
+        self.appSupportRepository = appSupportRepository
+        self.appVersionProvider = appVersionProvider
         translator = translationsRepository
         self.incidentSelector = incidentSelector
         self.syncPuller = syncPuller
@@ -38,9 +46,17 @@ class MainViewModel: ObservableObject {
         syncPuller.pullUnauthenticatedData()
     }
 
+    func onActivePhase() {
+        appSupportRepository.onAppOpen()
+        appSupportRepository.pullMinSupportedAppVersion()
+    }
+
     func onViewAppear() {
         subscribeIncidentsData()
         subscribeAccountData()
+        subscribeAppSupport()
+
+        // TODO: Queue push sync (if logged in)
     }
 
     func onViewDisappear() {
@@ -61,17 +77,19 @@ class MainViewModel: ObservableObject {
     }
 
     private func subscribeAccountData() {
-        Publishers.CombineLatest(
+        Publishers.CombineLatest3(
             accountDataRepository.accountData.eraseToAnyPublisher(),
-            self.translator.translationCount.eraseToAnyPublisher()
+            translator.translationCount.eraseToAnyPublisher(),
+            $minSupportedVersion
         )
-        .filter { (_, translationCount) in
+        .filter { (_, translationCount, _) in
             translationCount > 0
         }
         .receive(on: RunLoop.main)
-        .sink { (accountData, _) in
-            self.viewData = MainViewData(
-                state: .ready,
+        .sink { (accountData, _, minSupport) in
+            let isUnsupported = self.appVersionProvider.buildNumber < minSupport.minBuild
+            self.viewData =  MainViewData(
+                state: isUnsupported ? .unsupportedBuild : .ready,
                 accountData: accountData
             )
         }
@@ -92,6 +110,15 @@ class MainViewModel: ObservableObject {
                     }
                 }
             }
+            .store(in: &subscriptions)
+    }
+
+    private func subscribeAppSupport() {
+        appSupportRepository.appMetrics
+            .eraseToAnyPublisher()
+            .map { $0.minSupportedVersion }
+            .receive(on: RunLoop.main)
+            .assign(to: \.minSupportedVersion, on: self)
             .store(in: &subscriptions)
     }
 

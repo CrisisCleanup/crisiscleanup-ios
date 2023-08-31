@@ -27,6 +27,8 @@ public class MainComponent: BootstrapComponent,
     var mainViewModel: MainViewModel {
         MainViewModel(
             accountDataRepository: accountDataRepository,
+            appSupportRepository: appSupportRepository,
+            appVersionProvider: appVersionProvider,
             translationsRepository: languageTranslationsRepository,
             incidentSelector: incidentSelector,
             syncPuller: syncPuller,

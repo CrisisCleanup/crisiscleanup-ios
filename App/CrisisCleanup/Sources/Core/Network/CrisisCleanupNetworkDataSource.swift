@@ -98,6 +98,10 @@ public protocol CrisisCleanupNetworkDataSource {
     func getUsers(
         _ userIds: [Int64]
     ) async throws -> [NetworkPersonContact]
+
+    func getAppSupportInfo(
+        _ isTest: Bool
+    ) async -> NetworkAppSupportInfo?
 }
 
 extension CrisisCleanupNetworkDataSource {
@@ -113,5 +117,9 @@ extension CrisisCleanupNetworkDataSource {
         _ organization: Int64
     ) async throws -> [NetworkPersonContact] {
         try await searchUsers(q, organization, limit: 10)
+    }
+
+    func getAppSupportInfo() async -> NetworkAppSupportInfo? {
+        await getAppSupportInfo(false)
     }
 }

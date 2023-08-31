@@ -1,5 +1,6 @@
 public protocol AppSettingsProvider {
     var apiBaseUrl: String { get }
+    var appSupportApiBaseUrl: String { get }
     var baseUrl: String { get }
     var reachabilityHost: String { get }
 

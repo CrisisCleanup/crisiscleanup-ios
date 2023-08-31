@@ -12,8 +12,6 @@ public protocol AppDependency: Dependency {
 
     var networkRequestProvider: NetworkRequestProvider { get }
     var authApi: CrisisCleanupAuthApi { get }
-    var networkDataSource: CrisisCleanupNetworkDataSource { get }
-    var writeApi: CrisisCleanupWriteApi { get }
 
     var appPreferences: AppPreferencesDataStore { get }
 
@@ -33,6 +31,7 @@ public protocol AppDependency: Dependency {
     var usersRepository: UsersRepository { get }
     var casesFilterRepository: CasesFilterRepository { get }
     var caseHistoryRepository: CaseHistoryRepository { get }
+    var appSupportRepository: AppSupportRepository { get }
 
     var authenticateViewBuilder: AuthenticateViewBuilder { get }
     var incidentSelectViewBuilder: IncidentSelectViewBuilder { get }
@@ -87,7 +86,7 @@ extension MainComponent {
             )
         }
     }
-    public var networkDataSource: CrisisCleanupNetworkDataSource {
+    var networkDataSource: CrisisCleanupNetworkDataSource {
         shared {
             DataApiClient(
                 networkRequestProvider: networkRequestProvider,
@@ -98,7 +97,7 @@ extension MainComponent {
             )
         }
     }
-    public var writeApi: CrisisCleanupWriteApi {
+    var writeApi: CrisisCleanupWriteApi {
         shared {
             WriteApiClient(
                 networkRequestProvider: networkRequestProvider,
@@ -135,6 +134,12 @@ extension MainComponent {
                 organizationsRepository: organizationsRepository,
                 loggerFactory: loggerFactory
             )
+        }
+    }
+
+    var appMetricsDataSource: AppMetricsDataSource {
+        shared {
+            LocalAppMetricsDataSource()
         }
     }
 

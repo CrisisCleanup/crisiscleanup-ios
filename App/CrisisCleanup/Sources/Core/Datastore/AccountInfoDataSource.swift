@@ -75,15 +75,15 @@ extension UserDefaults {
 
     var accountInfo: AccountInfo {
         get {
-            if let infoData = accountInfoData,
-               let info = try? jsonDecoder.decode(AccountInfo.self, from: infoData) {
+            if let data = accountInfoData,
+               let info = try? jsonDecoder.decode(AccountInfo.self, from: data) {
                 return info
             }
             return AccountInfo()
         }
         set {
-            if let infoData = try? jsonEncoder.encode(newValue) {
-                accountInfoData = infoData
+            if let data = try? jsonEncoder.encode(newValue) {
+                accountInfoData = data
             }
         }
     }

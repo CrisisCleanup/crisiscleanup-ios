@@ -2,6 +2,7 @@ import CrisisCleanup
 
 struct AppSettings : AppSettingsProvider {
     let apiBaseUrl: String
+    let appSupportApiBaseUrl: String
     let baseUrl: String
     let reachabilityHost: String
     let googleMapsApiKey: String
@@ -10,6 +11,7 @@ struct AppSettings : AppSettingsProvider {
 
     init(_ config: ConfigProperties) {
         self.apiBaseUrl = config.apiBaseUrl
+        self.appSupportApiBaseUrl = config.appSupportApiBaseUrl
         self.baseUrl = config.baseUrl
         self.reachabilityHost = config.reachabilityHost
         self.googleMapsApiKey = config.googleMapsApiKey
@@ -19,6 +21,7 @@ struct AppSettings : AppSettingsProvider {
 
     init() {
         apiBaseUrl = ""
+        appSupportApiBaseUrl = ""
         baseUrl = ""
         reachabilityHost = ""
         googleMapsApiKey = ""
