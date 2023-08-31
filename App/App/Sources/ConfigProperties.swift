@@ -4,6 +4,7 @@ struct ConfigProperties: Codable {
     let isDebuggable: String
     let isProduction: String
     let apiBaseUrl: String
+    let appSupportApiBaseUrl: String
     let baseUrl: String
     let reachabilityHost: String
     let googleMapsApiKey: String
@@ -21,6 +22,7 @@ func loadConfigProperties() -> ConfigProperties {
         isDebuggable: "NO",
         isProduction: "YES",
         apiBaseUrl: "",
+        appSupportApiBaseUrl: "",
         baseUrl: "",
         reachabilityHost: "",
         googleMapsApiKey: "",

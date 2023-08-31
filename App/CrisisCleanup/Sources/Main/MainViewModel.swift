@@ -3,6 +3,8 @@ import Combine
 
 class MainViewModel: ObservableObject {
     private let accountDataRepository: AccountDataRepository
+    private let appSupportRepository: AppSupportRepository
+    private let appVersionProvider: AppVersionProvider
     private let incidentSelector: IncidentSelector
     let translator: KeyAssetTranslator
     private let syncPuller: SyncPuller
@@ -10,6 +12,9 @@ class MainViewModel: ObservableObject {
     private let logger: AppLogger
 
     @Published private(set) var viewData: MainViewData = MainViewData()
+
+    @Published private(set) var minSupportedVersion = supportedAppVersion
+    @Published private(set) var isBuildUnsupported = false
 
     let isNotProduction: Bool
 
@@ -19,6 +24,8 @@ class MainViewModel: ObservableObject {
 
     init(
         accountDataRepository: AccountDataRepository,
+        appSupportRepository: AppSupportRepository,
+        appVersionProvider: AppVersionProvider,
         translationsRepository: LanguageTranslationsRepository,
         incidentSelector: IncidentSelector,
         syncPuller: SyncPuller,
@@ -27,6 +34,8 @@ class MainViewModel: ObservableObject {
         appEnv: AppEnv
     ) {
         self.accountDataRepository = accountDataRepository
+        self.appSupportRepository = appSupportRepository
+        self.appVersionProvider = appVersionProvider
         translator = translationsRepository
         self.incidentSelector = incidentSelector
         self.syncPuller = syncPuller
@@ -39,8 +48,12 @@ class MainViewModel: ObservableObject {
     }
 
     func onViewAppear() {
+        appSupportRepository.onAppOpen()
+        appSupportRepository.pullMinSupportedAppVersion()
+
         subscribeIncidentsData()
         subscribeAccountData()
+        subscribeAppSupport()
     }
 
     func onViewDisappear() {
@@ -63,7 +76,7 @@ class MainViewModel: ObservableObject {
     private func subscribeAccountData() {
         Publishers.CombineLatest(
             accountDataRepository.accountData.eraseToAnyPublisher(),
-            self.translator.translationCount.eraseToAnyPublisher()
+            translator.translationCount.eraseToAnyPublisher()
         )
         .filter { (_, translationCount) in
             translationCount > 0
@@ -92,6 +105,20 @@ class MainViewModel: ObservableObject {
                     }
                 }
             }
+            .store(in: &subscriptions)
+    }
+
+    private func subscribeAppSupport() {
+        appSupportRepository.appMetrics
+            .eraseToAnyPublisher()
+            .map { $0.minSupportedVersion }
+            .receive(on: RunLoop.main)
+            .assign(to: \.minSupportedVersion, on: self)
+            .store(in: &subscriptions)
+
+        $minSupportedVersion
+            .map { self.appVersionProvider.buildNumber < $0.minBuild }
+            .assign(to: \.isBuildUnsupported, on: self)
             .store(in: &subscriptions)
     }
 

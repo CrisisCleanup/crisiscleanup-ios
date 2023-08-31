@@ -430,6 +430,19 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
             )
         return try await processUsersRequest(request)
     }
+
+    func getAppSupportInfo(_ isTest: Bool) async -> NetworkAppSupportInfo? {
+        let request = isTest
+        ? requestProvider.testMinAppVersionSupport
+        : requestProvider.minAppVersionSupport
+        if let req = request {
+            return await networkClient.callbackContinue(
+                requestConvertible: req,
+                type: NetworkAppSupportInfo.self
+            ).value
+        }
+        return nil
+    }
 }
 
 extension Array where Element == Int64 {

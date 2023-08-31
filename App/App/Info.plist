@@ -24,6 +24,8 @@
 	<true/>
 	<key>apiBaseUrl</key>
 	<string>$(API_BASE_URL)</string>
+	<key>appSupportApiBaseUrl</key>
+	<string>$(APP_SUPPORT_API_BASE_URL)</string>
 	<key>baseUrl</key>
 	<string>$(BASE_URL)</string>
 	<key>debugAccountPassword</key>

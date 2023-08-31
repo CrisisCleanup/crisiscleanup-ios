@@ -2,6 +2,8 @@ import Foundation
 
 public protocol NetworkRequestProvider {
     func apiUrl(_ path: String) -> URL
+
+    func appSupportApiUrl(_ path: String) -> URL?
 }
 
 extension NetworkRequestProvider {
@@ -278,16 +280,36 @@ extension NetworkRequestProvider {
             addTokenHeader: true
         )
     }
+
+    var minAppVersionSupport: NetworkRequest? {
+        if let url = appSupportApiUrl("min-supported-version/ios") {
+            return NetworkRequest(url)
+        }
+        return nil
+    }
+
+    var testMinAppVersionSupport: NetworkRequest? {
+        if let url = appSupportApiUrl("min-supported-version/test/ios") {
+            return NetworkRequest(url)
+        }
+        return nil
+    }
 }
 
 class CrisisCleanupNetworkRequestProvider: NetworkRequestProvider {
     let baseUrl: URL
+    let appSupportBaseUrl: URL?
 
     init(_ appSettings: AppSettingsProvider) {
         baseUrl = try! appSettings.apiBaseUrl.asURL()
+        appSupportBaseUrl = try? appSettings.appSupportApiBaseUrl.asURL()
     }
 
     func apiUrl(_ path: String) -> URL {
-        return baseUrl.appendingPathComponent(path)
+        baseUrl.appendingPathComponent(path)
+    }
+
+    func appSupportApiUrl(_ path: String) -> URL? {
+        appSupportBaseUrl?.appendingPathComponent(path)
     }
 }

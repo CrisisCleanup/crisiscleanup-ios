@@ -276,6 +276,18 @@ extension MainComponent {
         }
     }
 
+    public var appSupportRepository: AppSupportRepository {
+        shared {
+            CrisisCleanupAppSupportRepository(
+                appVersionProvider: appVersionProvider,
+                networkDataSource: networkDataSource,
+                appMetricsDataSource: appMetricsDataSource,
+                appEnv: appEnv,
+                loggerFactory: loggerFactory
+            )
+        }
+    }
+
     var pagingSyncLogRepository: PagingSyncLogRepository {
         shared {
             PagingSyncLogRepository(
