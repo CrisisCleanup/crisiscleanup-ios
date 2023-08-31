@@ -8,6 +8,7 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
     private let worksiteChangeRepository: WorksiteChangeRepository
     private let editableWorksiteProvider: EditableWorksiteProvider
     private let transferWorkTypeProvider: TransferWorkTypeProvider
+    private let inputValidator: InputValidator
     private let translator: KeyAssetTranslator
     private let syncPusher: SyncPusher
     private let logger: AppLogger
@@ -55,7 +56,7 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
 
     @Published private(set) var requestDescription = ""
 
-    @Published private(set) var contactList = [String]()
+    @Published private(set) var contactList = [OrgContactInfoDisplay]()
 
     private let isFirstVisible = ManagedAtomic(true)
 
@@ -64,6 +65,7 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
         worksiteChangeRepository: WorksiteChangeRepository,
         editableWorksiteProvider: EditableWorksiteProvider,
         transferWorkTypeProvider: TransferWorkTypeProvider,
+        inputValidator: InputValidator,
         translator: KeyAssetTranslator,
         syncPusher: SyncPusher,
         loggerFactory: AppLoggerFactory
@@ -72,6 +74,7 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
         self.worksiteChangeRepository = worksiteChangeRepository
         self.editableWorksiteProvider = editableWorksiteProvider
         self.transferWorkTypeProvider = transferWorkTypeProvider
+        self.inputValidator = inputValidator
         self.translator = translator
         self.syncPusher = syncPusher
         logger = loggerFactory.getLogger("transfer-work-type")
@@ -125,7 +128,17 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
                     .compactMap { (workType, _) in
                         if let orgClaim = workType.orgClaim,
                            let org = orgLookup[orgClaim] {
-                            return (org.id, org.contactList)
+                            let orgContacts = org.primaryContacts.map {
+                                OrgContactInfoDisplay(
+                                    contactName: $0.fullName,
+                                    orgName: org.name,
+                                    isValidEmail: self.inputValidator.validateEmailAddress($0.email),
+                                    email: $0.email,
+                                    isValidMobile: self.inputValidator.validatePhoneNumber($0.mobile, allowSpaces: true),
+                                    mobile: $0.mobile
+                                )
+                            }
+                            return (org.id, orgContacts)
                         }
                         return nil
                     }
@@ -257,13 +270,24 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
 
 struct RequestWorkTypeState {
     let workTypeIdOrgNameLookup: [Int64: String]
-    let orgIdContactListLookup: [Int64: [String]]
+    let orgIdContactListLookup: [Int64: [OrgContactInfoDisplay]]
 
     init(
         _ workTypeIdOrgNameLookup: [Int64 : String] = [:],
-        _ orgIdContactListLookup: [Int64 : [String]] = [:]
+        _ orgIdContactListLookup: [Int64 : [OrgContactInfoDisplay]] = [:]
     ) {
         self.workTypeIdOrgNameLookup = workTypeIdOrgNameLookup
         self.orgIdContactListLookup = orgIdContactListLookup
     }
+}
+
+struct OrgContactInfoDisplay: Hashable {
+    let contactName: String
+    let orgName: String
+    let isValidEmail: Bool
+    let email: String
+    let isValidMobile: Bool
+    let mobile: String
+
+    var hasContactInfo: Bool { email.isNotBlank && mobile.isNotBlank }
 }

@@ -33,14 +33,19 @@ extension SyncLogRecord: Codable, FetchableRecord, MutablePersistableRecord {
     mutating func didInsert(_ inserted: InsertionSuccess) {
         id = inserted.rowID
     }
+
+    static func deleteOlderThan(
+        _ db: Database,
+        _ date: Date
+    ) throws {
+        try SyncLogRecord
+            .filter(SyncLogRecord.Columns.logTime < date)
+            .deleteAll(db)
+    }
 }
 
 extension DerivableRequest<SyncLogRecord> {
     func orderByLogTimeDesc() -> Self {
         order(SyncLogRecord.Columns.logTime.desc)
-    }
-
-    func olderThan(_ date: Date) -> Self {
-        filter(SyncLogRecord.Columns.logTime < date)
     }
 }

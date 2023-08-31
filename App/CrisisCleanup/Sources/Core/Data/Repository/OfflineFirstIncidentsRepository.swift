@@ -187,7 +187,7 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
                 if let syncStats = try incidentOrganizationDao.getSyncStats(incidentId),
                    syncStats.targetCount > 0,
                    let syncedAt = syncStats.successfulSync,
-                   syncedAt.addingTimeInterval(14.days) > Date.now,
+                   syncedAt.addingTimeInterval(7.days) > Date.now,
                    syncStats.appBuildVersionCode >= IncidentOrganizationsStableModelBuildVersion {
                     return
                 }

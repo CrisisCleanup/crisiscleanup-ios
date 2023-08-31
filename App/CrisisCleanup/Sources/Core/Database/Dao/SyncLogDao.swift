@@ -55,10 +55,7 @@ extension AppDatabase {
 
     fileprivate func trimOldSyncLogs(_ minLogTime: Date) async throws {
         try await dbWriter.write { db in
-            _ = try SyncLogRecord
-                .all()
-                .olderThan(minLogTime)
-                .deleteAll(db)
+            _ = try SyncLogRecord.deleteOlderThan(db, minLogTime)
         }
     }
 }
