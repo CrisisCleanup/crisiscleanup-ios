@@ -29,11 +29,24 @@ struct StaticNotesList: View {
             VStack(alignment: .leading, spacing: appTheme.gridItemSpacing) {
                 Text(note.createdAt.relativeTime)
                     .fontBodySmall()
-                // TODO: Render HTML (no links)
-                Text(note.note)
+                NoteContentView(text: note.note)
             }
             .listItemModifier()
             .background(note.isSurvivor ? appTheme.colors.survivorNoteColorNoTransparency : .white)
+        }
+    }
+}
+
+struct NoteContentView: View {
+    let text: String
+
+    var body: some View {
+        if text.contains("<"),
+           text.contains(">") {
+            // TODO: Render HTML without links. Notes should never link out.
+            HtmlTextView(htmlContent: text)
+        } else {
+            Text(text)
         }
     }
 }

@@ -418,8 +418,7 @@ private struct ViewCaseNotes: View {
                                     .font(.caption)
                                     .padding(.bottom, 4)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                // TODO: Render HTML (no links)
-                                Text(note.note)
+                                NoteContentView(text: note.note)
                             }
                             .padding()
                             .cardContainer(background: note.isSurvivor ? appTheme.colors.survivorNoteColorNoTransparency : Color.white)
@@ -574,7 +573,7 @@ private struct PropertyInformationView: View {
                         Image(systemName: "envelope.fill")
                             .frame(width: iconSize, height: iconSize)
                         Text(worksite.email!)
-                            .customLink(urlString: worksite.email!)
+                            .customLink(urlString: "mailto:\(worksite.email!)")
                         Spacer()
                     }
                     .modifier(CopyWithAnimation(pressed: $emailPressed, copy: worksite.email!))

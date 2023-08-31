@@ -177,7 +177,7 @@ class CasesSearchViewModel: ObservableObject {
         )
         .map { (incidentId, q) in self.latestLocalSearchResultsPublisher.publisher {
             if incidentId != EmptyIncident.id {
-                if q.count < 3 {
+                if q.count < 2 {
                     return CasesSearchResults(q)
                 }
 

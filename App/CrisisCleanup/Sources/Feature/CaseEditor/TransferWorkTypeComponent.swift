@@ -38,6 +38,7 @@ class TransferWorkTypeComponent: Component<AppDependency>, TransferWorkTypeViewB
                 worksiteChangeRepository: dependency.worksiteChangeRepository,
                 editableWorksiteProvider: dependency.editableWorksiteProvider,
                 transferWorkTypeProvider: dependency.transferWorkTypeProvider,
+                inputValidator: dependency.inputValidator,
                 translator: dependency.translator,
                 syncPusher: dependency.syncPusher,
                 loggerFactory: dependency.loggerFactory

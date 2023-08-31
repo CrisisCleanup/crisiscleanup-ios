@@ -86,12 +86,26 @@ struct RequestView: View {
 
             ForEach(viewModel.contactList, id: \.self) { contact in
                 VStack(alignment: .leading) {
-                    Text(contact)
-                    //                                    HStack {
-                    //                                        Link(contact.email, destination: URL(string: "mailto:\(contact.email)")!)
-                    //                                        Link(contact.mobile, destination: URL(string: "tel:\(contact.mobile)")!)
-                    //                                    }
-                }.padding(.bottom)
+                    Text("\(contact.contactName) (\(contact.orgName))")
+
+                    if contact.hasContactInfo {
+                        HStack(spacing: appTheme.gridItemSpacing) {
+                            if contact.email.isNotBlank {
+                                Text(contact.email)
+                                    .if (contact.isValidEmail) {
+                                        $0.customLink(urlString: "mailto:\(contact.email)")
+                                    }
+                            }
+                            if contact.mobile.isNotBlank {
+                                Text(contact.mobile)
+                                    .if (contact.isValidMobile) {
+                                        $0.customLink(urlString: "tel:\(contact.mobile)")
+                                    }
+                            }
+                        }
+                    }
+                }
+                .padding(.bottom)
             }
         }
 
@@ -199,14 +213,14 @@ private struct TransferWorkTypeActions: View {
             } label: {
                 Text(t.t("actions.cancel"))
             }
-            .buttonStyle(CancelButtonStyle())
+            .styleCancel()
 
             Button {
                 _ = viewModel.commitTransfer()
             } label: {
                 Text(t.t("actions.ok"))
             }
-            .buttonStyle(PrimaryButtonStyle())
+            .stylePrimary()
         }
     }
 }

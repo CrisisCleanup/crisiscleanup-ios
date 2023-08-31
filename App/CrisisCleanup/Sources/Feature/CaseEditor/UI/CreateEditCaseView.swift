@@ -284,6 +284,7 @@ struct PropertyInformation: View {
                 ErrorTextView(text: propertyData.residentNameError)
                     .id("property-name-error")
                 TextField(t.t("formLabels.name"), text: $propertyData.residentName)
+                    .textInputAutocapitalization(.words)
                     .focused($focusState, equals: .caseInfoName)
                     .textFieldBorder()
                     .disabled(disabled)

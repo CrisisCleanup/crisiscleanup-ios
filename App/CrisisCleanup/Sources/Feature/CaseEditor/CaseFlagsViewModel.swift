@@ -393,7 +393,7 @@ class CaseFlagsViewModel: ObservableObject {
             $0.attr = WorksiteFlag.FlagAttributes(
                 involvesMyOrg: nil,
                 haveContactedOtherOrg: isContacted,
-                organizations:organizations
+                organizations: organizations
             )
         }
         commitFlag(reportAbuseFlag)

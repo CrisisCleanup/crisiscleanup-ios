@@ -75,12 +75,11 @@ private struct CaseHistoryUser: View {
                 let email = userEvents.userEmail
                 if email.isNotBlank {
                     Text(email)
-                        .customLink(urlString: email)
+                        .customLink(urlString: "mailto:\(email)")
                 }
             }
         }
-        // TODO: Common dimensions
-        .padding(.all, 16)
+        .padding()
         .background(.white)
     }
 }

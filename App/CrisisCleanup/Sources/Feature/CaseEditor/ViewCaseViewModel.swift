@@ -349,10 +349,18 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
             )
 
             let claimedWorkType = summaries.filter { summary in summary.workType.orgClaim != nil }
-            let unclaimed = summaries.filter { summary in summary.workType.orgClaim == nil }
-            let otherOrgClaimedWorkTypes =
-            claimedWorkType.filter { !$0.isClaimedByMyOrg }
-            let orgClaimedWorkTypes = claimedWorkType.filter { $0.isClaimedByMyOrg }
+            let unclaimed = summaries
+                .filter { summary in summary.workType.orgClaim == nil }
+                .sorted { a, b in
+                    a.workType.workTypeLiteral.localizedCompare(b.workType.workTypeLiteral) == .orderedAscending
+                }
+            let otherOrgClaimedWorkTypes = claimedWorkType
+                .filter { !$0.isClaimedByMyOrg }
+            let orgClaimedWorkTypes = claimedWorkType
+                .filter { $0.isClaimedByMyOrg }
+                .sorted { a, b in
+                    a.workType.workTypeLiteral.localizedCompare(b.workType.workTypeLiteral) == .orderedAscending
+                }
 
             var otherOrgClaimMap = [Int64: [WorkTypeSummary]]()
             otherOrgClaimedWorkTypes.forEach { summary in
@@ -369,7 +377,10 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
                 return OrgClaimWorkType(
                     orgId: orgId,
                     orgName: name ?? "",
-                    workTypes: summaries,
+                    workTypes: summaries
+                        .sorted { a, b in
+                            a.workType.workTypeLiteral.localizedCompare(b.workType.workTypeLiteral) == .orderedAscending
+                        },
                     isMyOrg: false
                 )
             }
@@ -547,7 +558,6 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     private func refreshOrganizationLookup() {
         if !isOrganizationsRefreshed.exchange(true, ordering: .sequentiallyConsistent) {
             Task {
-                await incidentsRepository.pullIncidentOrganizations(incidentIdIn, true)
                 await incidentsRepository.pullIncidentOrganizations(incidentIdIn, true)
             }
         }

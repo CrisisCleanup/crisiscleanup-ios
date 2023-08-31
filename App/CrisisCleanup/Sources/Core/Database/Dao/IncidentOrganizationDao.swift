@@ -182,19 +182,15 @@ extension AppDatabase {
         _ organizationAffiliates: [OrganizationAffiliateRecord]
     ) async throws {
         let organizationIds = Set(organizations.map { $0.id })
-        // TODO: Test coverage. Only specified organization data is deleted and updated.
         try await dbWriter.write { db in
             try OrganizationToPrimaryContactRecord
-                .all()
-                .inIds(organizationIds)
-                .deleteAll(db)
+                .deleteInIds(db, organizationIds)
             for record in organizationContactCrossRefs {
                 try record.insert(db, onConflict: .ignore)
             }
+
             try OrganizationAffiliateRecord
-                .all()
-                .inIds(organizationIds)
-                .deleteAll(db)
+                .deleteInIds(db, organizationIds)
             for record in organizationAffiliates {
                 try record.insert(db, onConflict: .ignore)
             }
@@ -231,10 +227,8 @@ struct PopulatedIncidentOrganization: Equatable, Decodable, FetchableRecord {
     let organizationAffiliates: [OrganizationAffiliateRecord]
 
     func asExternalModel() -> IncidentOrganization {
-        var affiliateIds: Set<Int64> = [incidentOrganization.id]
-        organizationAffiliates.forEach { record in
-            affiliateIds.insert(record.affiliateId)
-        }
+        var affiliateIds = Set(organizationAffiliates.map { $0.affiliateId })
+        affiliateIds.insert(incidentOrganization.id)
         return IncidentOrganization(
             id: incidentOrganization.id,
             name: incidentOrganization.name,

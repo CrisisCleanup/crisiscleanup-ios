@@ -60,12 +60,14 @@ extension OrganizationToPrimaryContactRecord: Codable, FetchableRecord, Persista
         case id,
              contactId
     }
-}
 
-
-extension DerivableRequest<OrganizationToPrimaryContactRecord> {
-    func inIds(_ ids: Set<Int64>) -> Self {
-        select(ids.contains(OrganizationToPrimaryContactRecord.Columns.id))
+    static func deleteInIds(
+        _ db: Database,
+        _ ids: Set<Int64>
+    ) throws {
+        try OrganizationToPrimaryContactRecord
+            .filter(ids.contains(Columns.id))
+            .deleteAll(db)
     }
 }
 
@@ -85,15 +87,20 @@ extension OrganizationAffiliateRecord: Codable, FetchableRecord, PersistableReco
         case id,
              affiliateId
     }
+
+    static func deleteInIds(
+        _ db: Database,
+        _ ids: Set<Int64>
+    ) throws {
+        try OrganizationAffiliateRecord
+            .filter(ids.contains(Columns.id))
+            .deleteAll(db)
+    }
 }
 
 extension DerivableRequest<OrganizationAffiliateRecord> {
     func byId(_ organizationId: Int64) -> Self {
         filter(OrganizationAffiliateRecord.Columns.id == organizationId)
-    }
-
-    func inIds(_ ids: Set<Int64>) -> Self {
-        select(ids.contains(OrganizationAffiliateRecord.Columns.id))
     }
 }
 
