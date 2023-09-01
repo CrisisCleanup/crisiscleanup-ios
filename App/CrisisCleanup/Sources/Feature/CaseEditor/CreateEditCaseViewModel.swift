@@ -265,6 +265,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     }
 
     func onViewDisappear() {
+        clearInvalidWorksiteInfo()
         subscriptions = cancelSubscriptions(subscriptions)
     }
 
@@ -593,6 +594,10 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         if locationManager.isDeniedLocationAccess {
             showExplainLocationPermission = true
         }
+    }
+
+    private func clearInvalidWorksiteInfo() {
+        invalidWorksiteInfoSubject.value = InvalidWorksiteInfo()
     }
 
     private func locationAddressInvalidInfo(

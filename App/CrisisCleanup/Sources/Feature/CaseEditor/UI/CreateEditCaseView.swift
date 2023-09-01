@@ -178,9 +178,7 @@ private struct CreateEditCaseContentView: View {
                 proxy.scrollTo("section-notes", anchor: .top)
             }
             .onChange(of: viewModel.invalidWorksiteInfo) { info in
-                if info.invalidElement != .none && info.message.isNotBlank {
-                    isInvalidSave = true
-                }
+                isInvalidSave = info.invalidElement != .none || info.message.isNotBlank
             }
             .sheet(isPresented: $isInvalidSave) {
                 let info = viewModel.invalidWorksiteInfo
@@ -494,6 +492,9 @@ struct PropertyInformation: View {
         .onChange(of: focusState) {
             focusableViewState.focusState = $0
             showNameResults = false
+        }
+        .onDisappear {
+            focusState = nil
         }
     }
 }
