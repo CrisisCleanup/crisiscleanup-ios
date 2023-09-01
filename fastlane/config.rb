@@ -18,6 +18,16 @@ APP_ID = {
   earlyaccess: 'com.crisiscleanup.earlyaccess'
 }.freeze
 
+## App Config
+APP_CONFIG = {
+  apiBaseUrl: ENV['CCU_API_BASE_URL'],
+  baseUrl: ENV['CCU_BASE_URL'],
+  apiHost: ENV['CCU_API_HOST'],
+  debugEmailAddress: ENV['CCU_DEBUG_EMAIL_ADDRESS'],
+  debugAccountPassword: ENV['CCU_DEBUG_ACCOUNT_PASSWORD'],
+  googleMapsApiKey: ENV['CCU_MAPS_API_KEY']
+}.freeze
+
 ## Developer Center Auth
 APPLE_AUTH = {
   username: ENV['FASTLANE_USER'],
