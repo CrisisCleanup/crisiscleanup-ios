@@ -841,7 +841,9 @@ struct DisplayFormField: View {
                                 selectedStatus: selectedStatus,
                                 statusOptions: workTypeStatuses,
                                 spanWidth: false
-                            ) { status in
+                            ) {
+                                focusState = nil
+                            } onSelectStatus: { status in
                                 statusData[workTypeLiteral] = status.literal
                             }
                         } else if node.formField.help.isNotBlank {
