@@ -64,6 +64,21 @@ platform :ios do
   end
 
   desc 'Inject plist config'
+  lane :inject_config do |options|
+    plist_path = options[:path]
+    UI.message("Injecting config at: #{plist_path}")
+    update_plist(
+      plist_path: plist_path,
+      block: proc do |plist|
+        APP_CONFIG.each_key do |key|
+          value = APP_CONFIG.fetch(key, plist[key])
+          plist[key] = value
+          UI.message("Setting #{key} (current: #{plist[key]}) -> #{value}")
+        end
+      end
+    )
+  end
+
     identifier = APP_ID[options[:target].intern]
     team_id = APPLE_AUTH[:team_id]
     cocoapods
