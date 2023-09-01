@@ -145,3 +145,5 @@ build-iPhoneSimulator/
 
 .Trash*
 crisiscleanup.xcworkspace/xcuserdata/*
+.build_logs
+.build
