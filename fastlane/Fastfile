@@ -122,11 +122,18 @@ platform :ios do
     build_args
   end
 
+  desc 'Build App'
+  lane :build do |options|
+    options[:target] ||= 'dev'
+    options[:profile] ||= 'development'
+    options[:config] ||= 'Debug'
+    build_args = gather_build_args(**options)
+
     build_app(
       scheme: 'App',
       workspace: WORKSPACE,
-      codesigning_identity: codesign_identity,
-      xcargs: xcargs,
+      codesigning_identity: build_args[:codesign_identity],
+      xcargs: build_args[:xcargs],
       configuration: options[:config]
     )
   end
