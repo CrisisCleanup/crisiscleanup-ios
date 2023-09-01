@@ -83,10 +83,14 @@ extension WorksiteChangeRecord: Codable, FetchableRecord, MutablePersistableReco
 
     static func getUnsyncedCount(
         _ db: Database,
-        _ worksiteId: Int64
+        _ worksiteId: Int64,
+        _ maxSaveAttempt: Int
     ) throws -> Int {
         try WorksiteChangeRecord
-            .filter(Columns.worksiteId == worksiteId)
+            .filter(
+                Columns.worksiteId == worksiteId &&
+                Columns.saveAttempt <= max(1, maxSaveAttempt)
+            )
             .fetchCount(db)
     }
 
@@ -156,8 +160,14 @@ extension WorksiteChangeRecord: Codable, FetchableRecord, MutablePersistableReco
 private typealias ChangeColumns = WorksiteChangeRecord.Columns
 
 extension DerivableRequest<WorksiteChangeRecord> {
-    func filterByWorksiteId(_ worksiteId: Int64) -> Self {
-        filter(ChangeColumns.worksiteId == worksiteId)
+    func filterByWorksiteId(
+        _ worksiteId: Int64,
+        _ maxSaveAttempt: Int
+    ) -> Self {
+        filter(
+            ChangeColumns.worksiteId == worksiteId &&
+            ChangeColumns.saveAttempt <= max(1, maxSaveAttempt)
+        )
     }
 
     func worksiteIdAttemptCreated() -> Self {

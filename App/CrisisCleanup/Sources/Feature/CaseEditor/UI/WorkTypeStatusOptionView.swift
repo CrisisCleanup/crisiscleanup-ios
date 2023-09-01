@@ -58,6 +58,7 @@ struct WorkTypeStatusPicker: View {
     var selectedStatus: WorkTypeStatus
     var statusOptions: [WorkTypeStatus]
     var spanWidth: Bool
+    var onOptionsOpen: () -> Void = {}
     var onSelectStatus: (WorkTypeStatus) -> Void
 
     @State private var showOptions: Bool = false
@@ -71,6 +72,7 @@ struct WorkTypeStatusPicker: View {
         )
         .onTapGesture {
             showOptions.toggle()
+            onOptionsOpen()
         }
         .disabled(editableView.disabled)
         .sheet(isPresented: $showOptions) {

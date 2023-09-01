@@ -317,7 +317,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     }
 
     func getUnsyncedCounts(_ worksiteId: Int64) throws -> [Int] {
-        try worksiteDao.getUnsyncedChangeCount(worksiteId)
+        try worksiteDao.getUnsyncedChangeCount(worksiteId, MaxSyncTries)
     }
 
     func shareWorksite(

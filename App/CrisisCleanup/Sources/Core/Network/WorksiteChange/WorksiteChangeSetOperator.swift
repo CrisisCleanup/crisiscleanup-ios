@@ -45,12 +45,22 @@ class WorksiteChangeSetOperator {
             sendSms: true
         )
 
+        let workTypeChanges = snapshot.workTypes
+            .filter { $0.workType.orgClaim != nil }
+            .map {
+                $0.workType.claimNew(
+                    $0.localId,
+                    $0.workType.createdAt ?? worksitePush.updatedAt
+                )
+            }
+
         return WorksiteChangeSet(
             updatedAtFallback: worksitePush.updatedAt,
             worksite: worksitePush,
             isOrgMember: coreB.isAssignedToOrgMember ? true : nil,
             extraNotes: snapshot.getNewNetworkNotes([:]),
-            flagChanges: (snapshot.flags.map { ($0.localId, $0.asNetworkFlag()) }, [])
+            flagChanges: (snapshot.flags.map { ($0.localId, $0.asNetworkFlag()) }, []),
+            workTypeChanges: workTypeChanges
         )
     }
 
@@ -68,9 +78,7 @@ class WorksiteChangeSetOperator {
 
         let updatedAt = coreB.updatedAt ?? Date.now
 
-        // TODO: Add new and delete from base properly.
-        //       Probably best to apply changes to coreA and coreB and have getCoreChanges resolve.
-        let (newWorkTypes, workTypeChanges, deleteWorkTypeIds) = base.getWorkTypeChanges(
+        let (_, workTypeChanges, _) = base.getWorkTypeChanges(
             start.workTypes,
             change.workTypes,
             updatedAt,

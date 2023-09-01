@@ -105,6 +105,9 @@ class LocationInputData: ObservableObject {
         zipCode = worksite.postalCode
 
         wasGeocodeAddressSelected = wasAddressSelected
+        if wasAddressSelected {
+            isEditingAddress = isIncompleteAddress
+        }
     }
 
     func setSearchedLocationAddress(_ address: LocationAddress) {
@@ -115,6 +118,7 @@ class LocationInputData: ObservableObject {
         zipCode = address.zipCode
 
         isLocationAddressFound = true
+        isEditingAddress = isIncompleteAddress
     }
 
     func clearAddress() {

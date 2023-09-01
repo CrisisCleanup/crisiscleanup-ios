@@ -519,9 +519,10 @@ public class WorksiteDao {
 
     func onSyncEnd(
         _ worksiteId: Int64,
+        _ maxSyncTries: Int,
         _ syncLogger: SyncLogger,
         _ syncedAt: Date = Date.now) async throws -> Bool {
-        try await database.onSyncEnd(worksiteId, syncLogger, syncedAt)
+        try await database.onSyncEnd(worksiteId, maxSyncTries, syncLogger, syncedAt)
     }
 
     func getLocallyModifiedWorksites(_ limit: Int) throws -> [Int64] {
@@ -537,13 +538,16 @@ public class WorksiteDao {
         }
     }
 
-    func getUnsyncedChangeCount(_ worksiteId: Int64) throws -> [Int] {
+    func getUnsyncedChangeCount(
+        _ worksiteId: Int64,
+        _ maxSyncTries: Int
+    ) throws -> [Int] {
         try reader.read { db in
             return [
                 try WorksiteFlagRecord.getUnsyncedCount(db, worksiteId),
                 try WorksiteNoteRecord.getUnsyncedCount(db, worksiteId),
                 try WorkTypeRecord.getUnsyncedCount(db, worksiteId),
-                try WorksiteChangeRecord.getUnsyncedCount(db, worksiteId),
+                try WorksiteChangeRecord.getUnsyncedCount(db, worksiteId, maxSyncTries),
             ]
         }
     }
@@ -597,6 +601,7 @@ extension AppDatabase {
 
     fileprivate func onSyncEnd(
         _ worksiteId: Int64,
+        _ maxSyncTries: Int,
         _ syncLogger: SyncLogger,
         _ syncedAt: Date
     ) async throws -> Bool {
@@ -604,7 +609,7 @@ extension AppDatabase {
             let flagChanges = try db.getUnsyncedFlagCount(worksiteId)
             let noteChanges = try db.getUnsyncedNoteCount(worksiteId)
             let workTypeChanges = try db.getUnsyncedWorkTypeCount(worksiteId)
-            let changes = try db.getWorksiteChangeCount(worksiteId)
+            let changes = try db.getWorksiteChangeCount(worksiteId, maxSyncTries)
             let hasModification = flagChanges > 0 ||
             noteChanges > 0 ||
             workTypeChanges > 0 ||
