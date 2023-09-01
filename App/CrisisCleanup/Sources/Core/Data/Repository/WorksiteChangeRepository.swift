@@ -64,7 +64,7 @@ extension WorksiteChangeRepository {
     }
 }
 
-private let MaxSyncTries = 3
+internal let MaxSyncTries = 3
 
 class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
     private let worksiteDao: WorksiteDao
@@ -362,12 +362,14 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
             }
         }
 
-        let isFullySynced = try await worksiteDao.onSyncEnd(worksiteId, syncLogger)
+        let isFullySynced = try await worksiteDao.onSyncEnd(worksiteId, MaxSyncTries, syncLogger)
         if isFullySynced {
             syncLogger.clear()
             syncLogger.log("Worksite fully synced.")
         } else {
-            syncLogger.log("Unsynced data exists.")
+            let caseNumber = syncNetworkWorksite?.caseNumber ?? "?"
+            syncLogger.log("Unsynced data exists for \(caseNumber).")
+
         }
 
         if let syncWorksite = syncNetworkWorksite,

@@ -294,10 +294,13 @@ class WorksiteChangeDao {
 }
 
 extension Database {
-    func getWorksiteChangeCount(_ worksiteId: Int64) throws -> Int {
+    func getWorksiteChangeCount(
+        _ worksiteId: Int64,
+        _ maxSyncTries: Int
+    ) throws -> Int {
         try WorksiteChangeRecord
             .all()
-            .filterByWorksiteId(worksiteId)
+            .filterByWorksiteId(worksiteId, maxSyncTries)
             .fetchCount(self)
     }
 

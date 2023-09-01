@@ -164,7 +164,7 @@ extension NetworkRequestProvider {
     var updateWorksite: NetworkRequest {
         NetworkRequest(
             apiUrl("worksites"),
-            method: .post,
+            method: .put,
             addTokenHeader: true
         )
     }
