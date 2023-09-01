@@ -9,6 +9,7 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
     private let locationManager: LocationManager
     private let incidentBoundsProvider: IncidentBoundsProvider
     private let searchWorksitesRepository: SearchWorksitesRepository
+    private let addressSearchRepository: AddressSearchRepository
     private let caseIconProvider: MapCaseIconProvider
     private let existingWorksiteSelector: ExistingWorksiteSelector
     private let networkMonitor: NetworkMonitor
@@ -39,6 +40,9 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
 
     private let isSelectingWorksiteSubject = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isSelectingWorksite = false
+
+    private let isSelectingAddressSubject = CurrentValueSubject<Bool, Never>(false)
+    @Published private(set) var isSelectingAddress = false
 
     @Published private(set) var isLocationCommitted = false
 
@@ -72,6 +76,7 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
         self.locationManager = locationManager
         self.incidentBoundsProvider = incidentBoundsProvider
         self.searchWorksitesRepository = searchWorksitesRepository
+        self.addressSearchRepository = addressSearchRepository
         self.caseIconProvider = caseIconProvider
         self.existingWorksiteSelector = existingWorksiteSelector
         self.networkMonitor = networkMonitor
@@ -82,6 +87,7 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
         let worksite = worksiteProvider.editableWorksite.value
         incidentId = worksite.incidentId
 
+        addressSearchRepository.startSearchSession()
         locationSearchManager = LocationSearchManager(
             incidentId: incidentId,
             locationQuery: locationQuerySubject.eraseToAnyPublisher(),
@@ -125,11 +131,12 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
             .assign(to: \.isLocationSearching, on: self)
             .store(in: &subscriptions)
 
-        Publishers.CombineLatest(
+        Publishers.CombineLatest3(
             $isCheckingOutOfBounds,
-            $isSelectingWorksite
+            $isSelectingWorksite,
+            $isSelectingAddress
         )
-        .map { b0, b1 in b0 || b1 }
+        .map { b0, b1, b2 in b0 || b1 || b2 }
         .receive(on: RunLoop.main)
         .assign(to: \.isProcessingAction, on: self)
         .store(in: &subscriptions)
@@ -260,19 +267,29 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
         closeSearchBarTrigger = !closeSearchBarTrigger
     }
 
-    func onGeocodeAddressSelected(_ locationAddress: LocationAddress) -> Bool {
+    func onSearchAddressSelected(_ searchAddress: KeySearchAddress) {
         if outOfBoundsManager.isPendingOutOfBounds {
-            return false
+            return
         }
 
-        let coordinates = locationAddress.toLatLng()
-        if !isCoordinatesInBounds(coordinates) {
-            outOfBoundsManager.onLocationOutOfBounds(coordinates, locationAddress)
-            return false
-        }
+        isSelectingAddressSubject.value = true
+        Task {
+            do {
+                defer { isSelectingAddressSubject.value = false }
 
-        setSearchedLocationAddress(locationAddress)
-        return true
+                if let address = try await addressSearchRepository.getPlaceAddress(searchAddress.key) {
+                    Task { @MainActor in
+                        let coordinates = address.toLatLng()
+                        if isCoordinatesInBounds(coordinates) {
+                            setSearchedLocationAddress(address)
+                            commitChanges()
+                        } else {
+                            outOfBoundsManager.onLocationOutOfBounds(coordinates, address)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     func onSaveMapMove() {

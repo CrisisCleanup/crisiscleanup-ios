@@ -26,11 +26,3 @@ extension CLPlacemark {
         )
     }
 }
-
-extension Array where Element == CLPlacemark {
-    func filterLatLng() -> [CLPlacemark] {
-        compactMap {
-            $0.location != nil ? $0 : nil
-        }
-    }
-}

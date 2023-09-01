@@ -21,7 +21,7 @@ internal struct WorksiteAddressSearchResultsView: View {
     @Binding var results: LocationSearchResults
 
     let onCaseSelect: (CaseSummaryResult) -> Void
-    let onAddressSelect: (LocationAddress) -> Void
+    let onAddressSelect: (KeySearchAddress) -> Void
 
     var body: some View {
         if isShortQuery {
@@ -57,9 +57,9 @@ internal struct WorksiteAddressSearchResultsView: View {
                         ListItemTitle(textTranslateKey: "caseView.full_address")
 
                         ForEach(results.addresses, id: \.key) { result in
-                            AddressResultView(address: result.address)
+                            AddressResultView(address: result)
                                 .onTapGesture {
-                                    onAddressSelect(result.address)
+                                    onAddressSelect(result)
                                 }
                                 .padding()
                         }
@@ -71,19 +71,14 @@ internal struct WorksiteAddressSearchResultsView: View {
 }
 
 private struct AddressResultView: View {
-    let address: LocationAddress
+    let address: KeySearchAddress
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text(address.address)
+            Text(address.addressLine1)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            let secondLine = [
-                address.city,
-                address.state,
-                address.country
-            ].combineTrimText()
-            Text(secondLine)
+            Text(address.addressLine2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

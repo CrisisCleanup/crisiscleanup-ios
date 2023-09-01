@@ -56,6 +56,8 @@ class CreateEditCaseComponent: Component<AppDependency>, CreateEditCaseViewBuild
             workTypeStatusRepository: dependency.workTypeStatusRepository,
             worksiteProvider: dependency.editableWorksiteProvider,
             locationManager: dependency.locationManager,
+            addressSearchRepository: dependency.addressSearchRepository,
+            caseIconProvider: dependency.mapCaseIconProvider,
             networkMonitor: dependency.networkMonitor,
             searchWorksitesRepository: dependency.searchWorksitesRepository,
             mapCaseIconProvider: dependency.mapCaseIconProvider,

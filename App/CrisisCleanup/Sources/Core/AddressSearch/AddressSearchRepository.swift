@@ -1,10 +1,10 @@
 public protocol AddressSearchRepository {
     func clearCache()
 
-
     func getAddress(_ coordinates: LatLng) async -> LocationAddress?
 
     func startSearchSession()
+
     @MainActor func searchAddresses(
         _ query: String,
         countryCodes: [String],
@@ -12,7 +12,9 @@ public protocol AddressSearchRepository {
         southwest: LatLng?,
         northeast: LatLng?,
         maxResults: Int
-    ) async -> [KeyLocationAddress]
+    ) async -> [KeySearchAddress]
+
+    func getPlaceAddress(_ placeId: String) async throws -> LocationAddress?
 }
 
 extension AddressSearchRepository {
@@ -23,7 +25,7 @@ extension AddressSearchRepository {
         southwest: LatLng? = nil,
         northeast: LatLng? = nil,
         maxResults: Int = 10
-    ) async -> [KeyLocationAddress] {
+    ) async -> [KeySearchAddress] {
         await searchAddresses(
             query,
             countryCodes: countryCodes,

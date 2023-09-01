@@ -92,15 +92,6 @@ final class SaveWorksiteUpdateWorkTypeTests: XCTestCase {
 
     // TODO: Frequency work types
 
-    private var startingWorktypesA: Worksite {
-        testWorksite(
-            workTypes: [
-                testWorkType(workType: .smokeDamage),
-                testWorkType(workType: .deferredMaintenance),
-            ]
-        )
-    }
-
     private let workTypeLookup = ["tarps_needed": "tarp", "mold_scraping": "mold_remediation", "mold_remediation_info": "mold_remediation", "floors_affected": "muck_out", "mold_hvac": "mold_remediation", "house_roof_damage": "tarp", "needs_visual": "rebuild", "roof_type": "tarp", "roof_pitch": "tarp", "outbuilding_roof_damage": "tarp", "flood_height_select": "muck_out", "tile_removal": "muck_out", "appliance_removal": "muck_out", "debris_description": "debris", "mold_drying": "mold_remediation", "mold_replace_studs": "mold_remediation", "carpet_removal": "muck_out", "nonvegitative_debris_removal": "debris", "vegitative_debris_removal": "debris", "mold_amount": "mold_remediation", "ceiling_water_damage": "muck_out", "rebuild_details": "rebuild", "heavy_machinary_required": "debris", "rebuild_info": "rebuild", "notes": "mold_remediation", "drywall_removal": "muck_out", "help_install_tarp": "tarp", "muck_out_info": "muck_out", "tarping_info": "tarp", "unsalvageable_structure": "debris", "debris_info": "debris", "mold_spraying": "mold_remediation", "heavy_item_removal": "muck_out", "tree_info": "trees", "num_wide_trees": "trees", "num_trees_down": "trees", "interior_debris_removal": "debris", "hardwood_floor_removal": "muck_out"]
 
     private let formFieldLookup = [
@@ -494,7 +485,7 @@ private func testWorksite(
     networkId: Int64 = 3
 ) -> Worksite {
     Worksite(
-        id: 1,
+        id: id,
         address: "address",
         autoContactFrequencyT: AutoContactFrequency.none.literal,
         caseNumber: "case-number",

@@ -14,6 +14,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     private var worksiteProvider: EditableWorksiteProvider
     private let incidentBoundsProvider: IncidentBoundsProvider
     private let locationManager: LocationManager
+    private let locationSearchManager: LocationSearchManager
     private let networkMonitor: NetworkMonitor
     private let residentNameSearchManager: ResidentNameSearchManager
     private let existingWorksiteSelector: ExistingWorksiteSelector
@@ -121,6 +122,8 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         workTypeStatusRepository: WorkTypeStatusRepository,
         worksiteProvider: EditableWorksiteProvider,
         locationManager: LocationManager,
+        addressSearchRepository: AddressSearchRepository,
+        caseIconProvider: MapCaseIconProvider,
         networkMonitor: NetworkMonitor,
         searchWorksitesRepository: SearchWorksitesRepository,
         mapCaseIconProvider: MapCaseIconProvider,
@@ -187,6 +190,20 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
 
         editingWorksite = worksiteProvider.editableWorksite.eraseToAnyPublisher()
 
+        addressSearchRepository.startSearchSession()
+        // TODO: Subscribe to location search loading state?
+        locationSearchManager = LocationSearchManager(
+            incidentId: incidentId,
+            locationQuery: PassthroughSubject<String, Never>()
+                .eraseToAnyPublisher(),
+            worksiteProvider: worksiteProvider,
+            searchWorksitesRepository: searchWorksitesRepository,
+            locationManager: locationManager,
+            addressSearchRepository: addressSearchRepository,
+            iconProvider: caseIconProvider,
+            logger: logger
+        )
+
         editorSetWindow = isCreateWorksite ? 0.05.seconds : 0.6.seconds
 
         updateHeaderTitle()
@@ -249,6 +266,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     }
 
     func onViewDisappear() {
+        clearInvalidWorksiteInfo()
         subscriptions = cancelSubscriptions(subscriptions)
     }
 
@@ -555,7 +573,16 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
 
     private func updateCoordinatesToMyLocation() {
         if let location = locationManager.getLocation() {
-            locationInputData.coordinates = location.coordinate.latLng
+            let latLng = location.coordinate.latLng
+            locationInputData.coordinates = latLng
+
+            Task {
+                if let address = await locationSearchManager.queryAddress(latLng) {
+                    Task { @MainActor in
+                        locationInputData.setSearchedLocationAddress(address)
+                    }
+                }
+            }
         }
     }
 
@@ -568,6 +595,10 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         if locationManager.isDeniedLocationAccess {
             showExplainLocationPermission = true
         }
+    }
+
+    private func clearInvalidWorksiteInfo() {
+        invalidWorksiteInfoSubject.value = InvalidWorksiteInfo()
     }
 
     private func locationAddressInvalidInfo(
@@ -859,12 +890,27 @@ enum CaseEditorElement {
         }
     }
 
-    // TODO: Add focus state and configure focus on error
+    var focusElement: TextInputFocused {
+        switch self {
+        case .none: return .anyTextInput
+        case .name: return .caseInfoName
+        case .phone: return .caseInfoPhone
+        case .email: return .caseInfoEmail
+        case .location: return .anyTextInput
+        case .address: return .caseInfoStreetAddress
+        case .city: return .caseInfoCity
+        case .county: return .caseInfoCounty
+        case .state: return .caseInfoState
+        case .zipCode: return .caseInfoZipCode
+        case .work: return .anyTextInput
+        }
+    }
 }
 
 struct InvalidWorksiteInfo: Equatable {
     let invalidElement: CaseEditorElement
     let message: String
+    let timestamp: Date
 
     init(
         _ invalidElement: CaseEditorElement = .none,
@@ -872,5 +918,6 @@ struct InvalidWorksiteInfo: Equatable {
     ) {
         self.invalidElement = invalidElement
         self.message = message
+        timestamp = Date.now
     }
 }

@@ -31,9 +31,7 @@ struct CaseSearchLocationView: View {
                             viewModel.onExistingWorksiteSelected($0)
                         },
                         onAddressSelect: {
-                            if viewModel.onGeocodeAddressSelected($0) {
-                                viewModel.commitChanges()
-                            }
+                            viewModel.onSearchAddressSelected($0)
                         }
                     )
 

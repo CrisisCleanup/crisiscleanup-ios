@@ -167,13 +167,18 @@ private struct CreateEditCaseContentView: View {
                     }
                 }
             }
+            .onChange(of: viewModel.locationInputData.isLocationAddressFound) { isFound in
+                if isFound {
+                    withAnimation {
+                        proxy.scrollTo("location-map", anchor: .top)
+                    }
+                }
+            }
             .onChange(of: viewModel.focusNoteCount) { newValue in
                 proxy.scrollTo("section-notes", anchor: .top)
             }
             .onChange(of: viewModel.invalidWorksiteInfo) { info in
-                if info.invalidElement != .none && info.message.isNotBlank {
-                    isInvalidSave = true
-                }
+                isInvalidSave = info.invalidElement != .none || info.message.isNotBlank
             }
             .sheet(isPresented: $isInvalidSave) {
                 let info = viewModel.invalidWorksiteInfo
@@ -188,7 +193,11 @@ private struct CreateEditCaseContentView: View {
 
                     if info.invalidElement != .none {
                         Button(t.t("actions.fix")) {
-                            proxy.scrollTo(info.invalidElement.scrollId, anchor: .top)
+                            let scrollId = info.invalidElement.scrollId
+                            if scrollId.isNotBlank {
+                                proxy.scrollTo(scrollId, anchor: .top)
+                            }
+
                             isInvalidSave = false
                         }
                     }
@@ -346,6 +355,10 @@ struct PropertyInformation: View {
                     )
                 }
             }
+            .onChange(of: viewModel.invalidWorksiteInfo) { info in
+                let focusElement = info.invalidElement.focusElement
+                focusState = focusElement == .anyTextInput ? nil : focusElement
+            }
 
             VStack(alignment: .leading) {
                 HStack {
@@ -476,7 +489,13 @@ struct PropertyInformation: View {
 
             CreateEditCaseNotesView()
         }
-        .onChange(of: focusState) { focusableViewState.focusState = $0 }
+        .onChange(of: focusState) {
+            focusableViewState.focusState = $0
+            showNameResults = false
+        }
+        .onDisappear {
+            focusState = nil
+        }
     }
 }
 
@@ -496,6 +515,11 @@ private struct CaseAddressFormFields: View {
 
         if locationData.isEditingAddress ||
             locationData.hasWrongLocation ||
+            locationData.streetAddress.isBlank ||
+            locationData.city.isBlank ||
+            locationData.county.isBlank ||
+            locationData.state.isBlank ||
+            locationData.zipCode.isBlank ||
             locationData.streetAddressError.isNotBlank ||
             locationData.cityError.isNotBlank ||
             locationData.countyError.isNotBlank ||
