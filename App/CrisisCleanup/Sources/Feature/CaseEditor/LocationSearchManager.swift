@@ -96,7 +96,7 @@ internal class LocationSearchManager {
             .eraseToAnyPublisher()
 
         let oneMinute = 1.0 / 60.0
-        let addressSearchLatestPublisher = LatestAsyncPublisher<(String, [KeyLocationAddress])>()
+        let addressSearchLatestPublisher = LatestAsyncPublisher<(String, [KeySearchAddress])>()
         let addressSearch = searchQuery
             .map { q in
                 addressSearchLatestPublisher.publisher {
@@ -174,14 +174,14 @@ internal class LocationSearchManager {
 
 struct LocationSearchResults {
     let query: String
-    let addresses: [KeyLocationAddress]
+    let addresses: [KeySearchAddress]
     let worksites: [CaseSummaryResult]
 
     let isEmpty: Bool
 
     init(
         _ query: String = "",
-        _ addresses: [KeyLocationAddress] = [],
+        _ addresses: [KeySearchAddress] = [],
         _ worksites: [CaseSummaryResult] = []
     ) {
         self.query = query

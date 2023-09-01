@@ -515,6 +515,11 @@ private struct CaseAddressFormFields: View {
 
         if locationData.isEditingAddress ||
             locationData.hasWrongLocation ||
+            locationData.streetAddress.isBlank ||
+            locationData.city.isBlank ||
+            locationData.county.isBlank ||
+            locationData.state.isBlank ||
+            locationData.zipCode.isBlank ||
             locationData.streetAddressError.isNotBlank ||
             locationData.cityError.isNotBlank ||
             locationData.countyError.isNotBlank ||

@@ -12,12 +12,9 @@ class GooglePlaceAddressSearchRepository: AddressSearchRepository {
     // TODO: Use configurable maxSize
     private let placeAutocompleteResultCache =
     LRUCache<String, (Date, [GMSAutocompletePrediction])>(countLimit: 30)
-    private let addressResultCache =
-    LRUCache<String, (Date, [KeyLocationAddress])>(countLimit: 30)
 
     func clearCache() {
         placeAutocompleteResultCache.removeAllValues()
-        addressResultCache.removeAllValues()
     }
 
     func getAddress(_ coordinates: LatLng) async -> LocationAddress? {
@@ -39,7 +36,6 @@ class GooglePlaceAddressSearchRepository: AddressSearchRepository {
     private var sessionToken: GMSAutocompleteSessionToken? = nil
     func startSearchSession() {
         // Initialize client (on main thread)
-        print(placeClient.description)
         sessionToken =  GMSAutocompleteSessionToken.init()
     }
 
@@ -50,26 +46,12 @@ class GooglePlaceAddressSearchRepository: AddressSearchRepository {
         southwest: LatLng?,
         northeast: LatLng?,
         maxResults: Int
-    ) async -> [KeyLocationAddress] {
+    ) async -> [KeySearchAddress] {
         let now = Date.now
-
-        if let cached = addressResultCache.value(forKey: query),
-           cached.0.addingTimeInterval(staleResultDuration) > now {
-            return cached.1
-        }
 
         if let cached = placeAutocompleteResultCache.value(forKey: query) {
             if cached.0.addingTimeInterval(staleResultDuration) > now {
-                do {
-                    let addresses = try await mapPredictionsToAddress(cached.1)
-                    let sorted = addresses.sort(center)
-                    addressResultCache.setValue((now, sorted), forKey: query)
-                    return sorted
-                } catch {
-                    if !(error is CancellationError) {
-                        // TODO: Report
-                    }
-                }
+                return mapPredictionsToAddress(cached.1)
             }
         }
 
@@ -78,8 +60,9 @@ class GooglePlaceAddressSearchRepository: AddressSearchRepository {
         let hasBounds = southwest != nil && northeast != nil
         let bounds = hasBounds
         ? GMSPlaceRectangularLocationOption(
-            southwest!.location.coordinate,
-            northeast!.location.coordinate)
+            northeast!.location.coordinate,
+            southwest!.location.coordinate
+        )
         : nil
         let filter = GMSAutocompleteFilter()
         filter.locationBias = bounds
@@ -108,10 +91,7 @@ class GooglePlaceAddressSearchRepository: AddressSearchRepository {
             try Task.checkCancellation()
 
             if let predictions = placePredictions {
-                let sorted = try await mapPredictionsToAddress(predictions)
-                    .sort(center)
-                addressResultCache.setValue((now, sorted), forKey: query)
-                return sorted
+                return mapPredictionsToAddress(predictions)
             }
         } catch {
             if !(error is CancellationError) {
@@ -122,30 +102,93 @@ class GooglePlaceAddressSearchRepository: AddressSearchRepository {
         return []
     }
 
-    private func mapPredictionsToAddress(_ predictions: [GMSAutocompletePrediction]) async throws -> [KeyLocationAddress] {
-        var keyLocationAddresses = [KeyLocationAddress]()
+    private func mapPredictionsToAddress(_ predictions: [GMSAutocompletePrediction]) -> [KeySearchAddress] {
+        predictions.map {
+            return KeySearchAddress(
+                key: $0.placeID,
+                addressLine1: $0.attributedPrimaryText.string,
+                addressLine2: $0.attributedSecondaryText?.string ?? "",
+                fullAddress: $0.attributedFullText.string
+            )
+        }
+    }
 
-        for prediction in predictions {
-            let placeText = prediction.attributedFullText.string
-            let addresses = await withCheckedContinuation { continuation in
-                geocoder.geocodeAddressString(placeText) { placemarks, error in
-                    if let geocodeError = error {
-                        // TODO: Report
-                        print(geocodeError)
-                    }
-                    continuation.resume(returning: placemarks)
+    private func getGeocoderCoordinates(_ placeText: String) async throws -> CLLocationCoordinate2D? {
+        let addresses = await withCheckedContinuation { continuation in
+            geocoder.geocodeAddressString(placeText) { placemarks, error in
+                if let geocodeError = error {
+                    // TODO: Report
+                    print(geocodeError)
                 }
-            }
-
-            try Task.checkCancellation()
-
-            if let firstAddress = addresses?.filterLatLng().first {
-                let coordinates = firstAddress.location?.coordinate ?? CLLocationCoordinate2D(latitude: 0.0, longitude: 0.0)
-                let keyLocationAddress = firstAddress.asKeyLocationAddress(prediction.placeID, coordinates)
-                keyLocationAddresses.append(keyLocationAddress)
+                continuation.resume(returning: placemarks)
             }
         }
 
-        return keyLocationAddresses
+        try Task.checkCancellation()
+
+        return addresses?.compactMap { $0.location }.first?.coordinate
+    }
+
+    func getPlaceAddress(_ placeId: String) async throws -> LocationAddress? {
+        let fields: GMSPlaceField = GMSPlaceField(
+            rawValue: UInt64(
+                UInt(GMSPlaceField.name.rawValue) |
+                UInt(GMSPlaceField.coordinate.rawValue) |
+                UInt(GMSPlaceField.addressComponents.rawValue) |
+                UInt(GMSPlaceField.placeID.rawValue)
+            )
+        )
+
+        if let place = await withCheckedContinuation({ continuation in
+            placeClient.fetchPlace(
+                fromPlaceID: placeId,
+                placeFields: fields,
+                sessionToken: sessionToken
+            ) { place, error in
+                if let error = error {
+                    // TODO: Report
+                    print(error)
+                }
+                continuation.resume(returning: place)
+
+            }
+        }) {
+            let coordinates = place.coordinate
+            let addressTypeKeys = Set([
+                "street_number",
+                "route",
+                "locality",
+                "administrative_area_level_2",
+                "administrative_area_level_1",
+                "country",
+                "postal_code",
+            ])
+            var addressComponentLookup = [String: String]()
+            place.addressComponents?.forEach {
+                for t in $0.types {
+                    if addressTypeKeys.contains(t) {
+                        addressComponentLookup[t] = $0.name
+                    }
+                }
+            }
+
+            startSearchSession()
+
+            return LocationAddress(
+                latitude: coordinates.latitude,
+                longitude: coordinates.longitude,
+                address: [
+                    addressComponentLookup["street_number"] ?? "",
+                    addressComponentLookup["route"] ?? "",
+                ].combineTrimText(),
+                city: addressComponentLookup["locality"] ?? "",
+                county: addressComponentLookup["administrative_area_level_2"] ?? "",
+                state: addressComponentLookup["administrative_area_level_1"] ?? "",
+                country: addressComponentLookup["country"] ?? "",
+                zipCode: addressComponentLookup["postal_code"] ?? ""
+            )
+        }
+
+        return nil
     }
 }

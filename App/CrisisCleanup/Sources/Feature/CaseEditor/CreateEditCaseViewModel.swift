@@ -190,6 +190,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
 
         editingWorksite = worksiteProvider.editableWorksite.eraseToAnyPublisher()
 
+        addressSearchRepository.startSearchSession()
         // TODO: Subscribe to location search loading state?
         locationSearchManager = LocationSearchManager(
             incidentId: incidentId,

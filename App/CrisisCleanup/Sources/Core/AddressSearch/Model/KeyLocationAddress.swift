@@ -22,3 +22,22 @@ extension Array where Element == KeyLocationAddress {
         return sorted
     }
 }
+
+public struct KeySearchAddress {
+    let key: String
+    let addressLine1: String
+    let addressLine2: String
+    let fullAddress: String
+
+    public init(
+        key: String,
+        addressLine1: String,
+        addressLine2: String,
+        fullAddress: String
+    ) {
+        self.key = key
+        self.addressLine1 = addressLine1
+        self.addressLine2 = addressLine2
+        self.fullAddress = fullAddress
+    }
+}
