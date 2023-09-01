@@ -1,0 +1,185 @@
+# frozen_string_literal: true
+
+# vim: set ft=ruby :
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+fastlane_require 'find'
+require_relative './config'
+
+# disable telemetry
+opt_out_usage
+
+default_platform(:ios)
+
+platform :ios do
+  desc 'Setup codesigning keychain.'
+  lane :setup_keychain do
+    ensure_env_vars(env_vars: %w[KEYCHAIN_PASSWORD KEYCHAIN_NAME KEYCHAIN_PATH])
+    create_keychain(
+      unlock: true,
+      timeout: 0,
+      add_to_search_list: true,
+      require_create: false
+    )
+    unlock_keychain
+  end
+
+  desc 'Authenticate with app store connect api.'
+  lane :authenticate do
+    ensure_env_vars(env_vars: %w[FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD APP_STORE_CONNECT_API_KEY_KEY_ID
+                                 APP_STORE_CONNECT_API_KEY_ISSUER_ID APP_STORE_CONNECT_API_KEY_KEY])
+    app_store_connect_api_key(duration: 1200, in_house: false)
+  end
+
+  desc 'Install certifications + provisioning profiles.'
+  lane :certificates do |options|
+    setup_keychain
+    authenticate
+    ensure_env_vars(env_vars: %w[MATCH_PASSWORD MATCH_KEYCHAIN_NAME MATCH_KEYCHAIN_PASSWORD FASTLANE_PASSWORD])
+    match_type = (options[:profile] || 'development')
+    app_identifier = (options[:app_id] || APP_ID.values)
+    match(app_identifier: app_identifier, type: match_type, readonly: is_ci)
+  end
+
+  desc 'Decrypt Configs'
+  lane :decrypt do
+    Find.find(APP_CONFIG_ROOT) do |path|
+      next unless FileTest.file?(path) && File.extname(path) == '.enc'
+
+      decrypted_path = File.absolute_path(path).chomp('.enc')
+      sh(command: "sops -d #{path.shellescape} > #{decrypted_path.shellescape}")
+    end
+  end
+
+  desc 'Encrypt Configs (Update)'
+  lane :encrypt do
+    Find.find(APP_CONFIG_ROOT) do |path|
+      encrypt_path = "#{File.absolute_path(path)}.enc"
+      next unless FileTest.file?(path) && File.file?(encrypt_path)
+
+      sh(command: "sops -e #{path.shellescape} > #{encrypt_path.shellescape}")
+    end
+  end
+
+  desc 'Inject plist config'
+  lane :inject_config do |options|
+    plist_path = options[:path]
+    UI.message("Injecting config at: #{plist_path}")
+    update_plist(
+      plist_path: plist_path,
+      block: proc do |plist|
+        APP_CONFIG.each_key do |key|
+          value = APP_CONFIG.fetch(key, plist[key])
+          plist[key] = value
+          UI.message("Setting #{key} (current: #{plist[key]}) -> #{value}")
+        end
+      end
+    )
+  end
+
+  desc 'Upload Privacy'
+  lane :privacy do
+    upload_app_privacy_details_to_app_store(
+      username: APPLE_AUTH[:username],
+      team_id: APPLE_AUTH[:team_id],
+      app_identifier: APP_ID[:prod],
+      json_path: 'fastlane/app_data_usages.json'
+    )
+  end
+
+  desc 'Check metadata'
+  lane :check do
+    authenticate
+    precheck(
+      app_identifier: APP_ID[:prod],
+      team_id: APPLE_AUTH[:team_id],
+      include_in_app_purchases: false
+    )
+  end
+
+  desc 'Gather Build Args'
+  private_lane :gather_build_args do |options|
+    identifier = APP_ID[options[:target].intern]
+    team_id = APPLE_AUTH[:team_id]
+    cocoapods
+    certificates(app_id: identifier, profile: options[:profile])
+    provisioning_key = "sigh_#{identifier}_#{options[:profile]}_profile-name"
+    codesign_identity_key = "sigh_#{identifier}_#{options[:profile]}_certificate-name"
+    ensure_env_vars(env_vars: [provisioning_key, codesign_identity_key])
+    provisioning_profile = ENV[provisioning_key]
+    codesign_identity = ENV[codesign_identity_key]
+    xcargs = [
+      'CODE_SIGN_STYLE=Manual',
+      "DEVELOPMENT_TEAM=#{team_id}",
+      "PROVISIONING_PROFILE='#{provisioning_profile}'"
+    ].join(' ')
+    build_args = {
+      codesign_identity: codesign_identity,
+      xcargs: xcargs
+    }
+    build_args
+  end
+
+  desc 'Build App'
+  lane :build do |options|
+    options[:target] ||= 'dev'
+    options[:profile] ||= 'development'
+    options[:config] ||= 'Debug'
+    build_args = gather_build_args(**options)
+
+    build_app(
+      scheme: 'App',
+      workspace: WORKSPACE,
+      codesigning_identity: build_args[:codesign_identity],
+      xcargs: build_args[:xcargs],
+      configuration: options[:config]
+    )
+  end
+
+  desc 'Run Tests'
+  lane :test do |options|
+    gather_build_args(target: 'prod', profile: 'development', config: 'Release')
+
+    derived_data = File.join(ROOT_DIR, '.build', 'test')
+    unless options[:skip_build]
+      UI.message 'Building for test...'
+      run_tests(
+        workspace: WORKSPACE,
+        scheme: 'UITests',
+        derived_data_path: derived_data,
+        build_for_testing: true
+      )
+    end
+
+    UI.message 'Running tests...'
+    run_tests(
+      workspace: WORKSPACE,
+      scheme: 'UITests',
+      prelaunch_simulator: true,
+      ensure_devices_found: true,
+      destination: 'platform=iOS Simulator,name=iPhone 14',
+      test_without_building: true,
+      derived_data_path: derived_data,
+      open_report: true,
+      force_quit_simulator: true
+    )
+  end
+
+  desc 'Build Development App'
+  lane :dev do
+    build
+  end
+
+  desc 'Build Release App'
+  lane :release do
+    build(target: 'prod', profile: 'appstore', config: 'Release')
+  end
+
+  desc 'Publish Beta Release'
+  lane :beta do
+    release
+    upload_to_testflight(skip_waiting_for_build_processing: false)
+  end
+end

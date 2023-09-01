@@ -1,0 +1,12 @@
+# vim: set ft=ruby:
+# frozen_string_literal: true
+
+# app file gets eval'd by fastline, so just './config' would fail here.
+require_relative File.join(__dir__, 'config')
+
+app_identifier(['com.crisiscleanup.dev'])
+apple_id(APPLE_AUTH[:username])
+team_id(APPLE_AUTH[:team_id])
+
+# For more information about the Appfile, see:
+#     https://docs.fastlane.tools/advanced/#appfile

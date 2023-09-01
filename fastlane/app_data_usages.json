@@ -1,0 +1,170 @@
+[
+  {
+    "category": "COARSE_LOCATION",
+    "purposes": [
+      "ANALYTICS",
+      "APP_FUNCTIONALITY",
+      "PRODUCT_PERSONALIZATION"
+    ],
+    "data_protections": [
+      "DATA_LINKED_TO_YOU"
+    ]
+  },
+  {
+    "category": "CRASH_DATA",
+    "purposes": [
+      "ANALYTICS",
+      "APP_FUNCTIONALITY"
+    ],
+    "data_protections": [
+      "DATA_LINKED_TO_YOU"
+    ]
+  },
+  {
+    "category": "CUSTOMER_SUPPORT",
+    "purposes": [
+      "APP_FUNCTIONALITY"
+    ],
+    "data_protections": [
+      "DATA_LINKED_TO_YOU"
+    ]
+  },
+  {
+    "category": "EMAIL_ADDRESS",
+    "purposes": [
+      "ANALYTICS",
+      "APP_FUNCTIONALITY",
+      "PRODUCT_PERSONALIZATION"
+    ],
+    "data_protections": [
+      "DATA_LINKED_TO_YOU"
+    ]
+  },
+  {
+    "category": "NAME",
+    "purposes": [
+      "ANALYTICS",
+      "APP_FUNCTIONALITY"
+    ],
+    "data_protections": [
+      "DATA_LINKED_TO_YOU"
+    ]
+  },
+  {
+    "category": "OTHER_DATA",
+    "purposes": [
+      "ANALYTICS",
+      "APP_FUNCTIONALITY",
+      "PRODUCT_PERSONALIZATION"
+    ],
+    "data_protections": [
+      "DATA_LINKED_TO_YOU"
+    ]
+  },
+  {
+    "category": "OTHER_DIAGNOSTIC_DATA",
+    "purposes": [
+      "ANALYTICS",
+      "APP_FUNCTIONALITY"
+    ],
+    "data_protections": [
+      "DATA_LINKED_TO_YOU"
+    ]
+  },
+  {
+    "category": "OTHER_USAGE_DATA",
+    "purposes": [
+      "ANALYTICS",
+      "APP_FUNCTIONALITY",
+      "PRODUCT_PERSONALIZATION"
+    ],
+    "data_protections": [
+      "DATA_LINKED_TO_YOU"
+    ]
+  },
+  {
+    "category": "OTHER_USER_CONTENT",
+    "purposes": [
+      "ANALYTICS",
+      "APP_FUNCTIONALITY",
+      "PRODUCT_PERSONALIZATION"
+    ],
+    "data_protections": [
+      "DATA_LINKED_TO_YOU"
+    ]
+  },
+  {
+    "category": "PERFORMANCE_DATA",
+    "purposes": [
+      "ANALYTICS",
+      "APP_FUNCTIONALITY"
+    ],
+    "data_protections": [
+      "DATA_LINKED_TO_YOU"
+    ]
+  },
+  {
+    "category": "PHONE_NUMBER",
+    "purposes": [
+      "ANALYTICS",
+      "APP_FUNCTIONALITY",
+      "PRODUCT_PERSONALIZATION"
+    ],
+    "data_protections": [
+      "DATA_LINKED_TO_YOU"
+    ]
+  },
+  {
+    "category": "PHOTOS_OR_VIDEOS",
+    "purposes": [
+      "APP_FUNCTIONALITY"
+    ],
+    "data_protections": [
+      "DATA_LINKED_TO_YOU"
+    ]
+  },
+  {
+    "category": "PHYSICAL_ADDRESS",
+    "purposes": [
+      "APP_FUNCTIONALITY",
+      "OTHER_PURPOSES",
+      "PRODUCT_PERSONALIZATION"
+    ],
+    "data_protections": [
+      "DATA_LINKED_TO_YOU"
+    ]
+  },
+  {
+    "category": "PRECISE_LOCATION",
+    "purposes": [
+      "ANALYTICS",
+      "APP_FUNCTIONALITY",
+      "PRODUCT_PERSONALIZATION"
+    ],
+    "data_protections": [
+      "DATA_LINKED_TO_YOU"
+    ]
+  },
+  {
+    "category": "PRODUCT_INTERACTION",
+    "purposes": [
+      "ANALYTICS",
+      "APP_FUNCTIONALITY",
+      "PRODUCT_PERSONALIZATION"
+    ],
+    "data_protections": [
+      "DATA_LINKED_TO_YOU"
+    ]
+  },
+  {
+    "category": "USER_ID",
+    "purposes": [
+      "ANALYTICS",
+      "APP_FUNCTIONALITY",
+      "PRODUCT_PERSONALIZATION"
+    ],
+    "data_protections": [
+      "DATA_LINKED_TO_YOU"
+    ]
+  }
+]
