@@ -172,9 +172,14 @@ platform :ios do
     build
   end
 
+  desc 'Build Release App'
+  lane :release do
+    build(target: 'prod', profile: 'appstore', config: 'Release')
+  end
+
   desc 'Publish Beta Release'
   lane :beta do
-    build(target: 'prod', profile: 'appstore', config: 'Release')
+    release
     upload_to_testflight(skip_waiting_for_build_processing: false)
   end
 end
