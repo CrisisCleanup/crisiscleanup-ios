@@ -5,6 +5,7 @@
 # Uncomment the line if you want fastlane to automatically update itself
 # update_fastlane
 
+fastlane_require 'find'
 require_relative './config'
 
 # disable telemetry
@@ -42,23 +43,27 @@ platform :ios do
     match(app_identifier: app_identifier, type: match_type, readonly: is_ci)
   end
 
-  desc 'Decrypt Config'
-  lane :decrypt do |options|
-    options[:config] ||= 'Debug'
-    xcconfig_enc_path = File.join(APP_CONFIG_ROOT, "#{options[:config]}Config.xcconfig.enc")
-    google_enc_path = File.join(APP_CONFIG_ROOT, "GoogleService-Info-#{options[:config].downcase}.plist.enc")
-    sh(command: "sops -d #{xcconfig_enc_path} > #{APP_CONFIG_XCCONFIG}")
-    sh(command: "sops -d #{google_enc_path} > #{APP_CONFIG_GOOGLE}")
+  desc 'Decrypt Configs'
+  lane :decrypt do
+    Find.find(APP_CONFIG_ROOT) do |path|
+      next unless FileTest.file?(path) && File.extname(path) == '.enc'
+
+      decrypted_path = File.absolute_path(path).chomp('.enc')
+      sh(command: "sops -d #{path.shellescape} > #{decrypted_path.shellescape}")
+    end
   end
 
-  desc 'Build App'
-  lane :build do |options|
-    options[:target] ||= 'dev'
-    options[:profile] ||= 'development'
-    options[:config] ||= 'Debug'
+  desc 'Encrypt Configs (Update)'
+  lane :encrypt do
+    Find.find(APP_CONFIG_ROOT) do |path|
+      encrypt_path = "#{File.absolute_path(path)}.enc"
+      next unless FileTest.file?(path) && File.file?(encrypt_path)
 
-    decrypt(config: options[:config])
+      sh(command: "sops -e #{path.shellescape} > #{encrypt_path.shellescape}")
+    end
+  end
 
+  desc 'Inject plist config'
     identifier = APP_ID[options[:target].intern]
     team_id = APPLE_AUTH[:team_id]
     cocoapods
