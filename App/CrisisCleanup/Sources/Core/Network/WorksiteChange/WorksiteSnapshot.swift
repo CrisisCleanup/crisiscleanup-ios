@@ -208,6 +208,20 @@ struct WorkTypeSnapshot: Codable, Equatable {
                 isStatusChange: status.trim() != reference.status.trim()
             )
         }
+
+        func claimNew(
+            _ localId: Int64,
+            _ changedAt: Date
+        ) -> WorkTypeChange {
+            WorkTypeChange(
+                localId: localId,
+                networkId: -1,
+                workType: self,
+                changedAt: changedAt,
+                isClaimChange: true,
+                isStatusChange: false
+            )
+        }
     }
 }
 

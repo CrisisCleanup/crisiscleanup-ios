@@ -508,10 +508,10 @@ class WorksiteChangeProcessor {
     }
 
     private func ensureSyncConditions() async throws {
-        // TODO: Find a reliable signal for offline state
-//        if try await networkMonitor.isNotOnline.eraseToAnyPublisher().asyncFirst() {
-//            throw NoInternetConnectionError
-//        }
+        if try await networkMonitor.isNotOnline.eraseToAnyPublisher().asyncFirst() {
+            syncLogger.log("Internet not reachable")
+            throw NoInternetConnectionError
+        }
         if !accountData.areTokensValid {
             throw ExpiredTokenError
         }
