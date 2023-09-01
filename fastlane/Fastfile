@@ -138,6 +138,35 @@ platform :ios do
     )
   end
 
+  desc 'Run Tests'
+  lane :test do |options|
+    gather_build_args(target: 'prod', profile: 'development', config: 'Release')
+
+    derived_data = File.join(ROOT_DIR, '.build', 'test')
+    unless options[:skip_build]
+      UI.message 'Building for test...'
+      run_tests(
+        workspace: WORKSPACE,
+        scheme: 'UITests',
+        derived_data_path: derived_data,
+        build_for_testing: true
+      )
+    end
+
+    UI.message 'Running tests...'
+    run_tests(
+      workspace: WORKSPACE,
+      scheme: 'UITests',
+      prelaunch_simulator: true,
+      ensure_devices_found: true,
+      destination: 'platform=iOS Simulator,name=iPhone 14',
+      test_without_building: true,
+      derived_data_path: derived_data,
+      open_report: true,
+      force_quit_simulator: true
+    )
+  end
+
   desc 'Build Development App'
   lane :dev do
     build
