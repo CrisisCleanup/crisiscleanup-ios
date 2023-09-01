@@ -70,4 +70,13 @@ public struct DynamicValue: Codable, Equatable {
     func isStringEqual(_ other: DynamicValue) -> Bool {
         !isBool && !other.isBool && valueString.trim() == other.valueString.trim()
     }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        if isBool {
+            try container.encode(valueBool)
+        } else {
+            try container.encode(valueString)
+        }
+    }
 }
