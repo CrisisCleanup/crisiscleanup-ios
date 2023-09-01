@@ -7,13 +7,19 @@ struct CaseAddNoteView: View {
     @ObservedObject var viewModel: CaseAddNoteViewModel
     @State var note: String = ""
 
+    @FocusState private var focusState: TextInputFocused?
+
     var body: some View {
         VStack {
             TextEditor(text: $note)
-                .frame(height: appTheme.rowItemHeight*5)
+                .focused($focusState, equals: .anyTextInput)
+                .frame(height: appTheme.rowItemHeight*3)
                 .textFieldBorder()
                 .padding()
                 .tint(.black)
+                .onAppear {
+                    focusState = .anyTextInput
+                }
 
             HStack {
                 Spacer()
