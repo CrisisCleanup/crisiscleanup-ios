@@ -45,7 +45,39 @@ Install certifications + provisioning profiles.
 [bundle exec] fastlane ios decrypt
 ```
 
-Decrypt Config
+Decrypt Configs
+
+### ios encrypt
+
+```sh
+[bundle exec] fastlane ios encrypt
+```
+
+Encrypt Configs (Update)
+
+### ios inject_config
+
+```sh
+[bundle exec] fastlane ios inject_config
+```
+
+Inject plist config
+
+### ios privacy
+
+```sh
+[bundle exec] fastlane ios privacy
+```
+
+Upload Privacy
+
+### ios check
+
+```sh
+[bundle exec] fastlane ios check
+```
+
+Check metadata
 
 ### ios build
 
@@ -55,6 +87,14 @@ Decrypt Config
 
 Build App
 
+### ios test
+
+```sh
+[bundle exec] fastlane ios test
+```
+
+Run Tests
+
 ### ios dev
 
 ```sh
@@ -62,6 +102,14 @@ Build App
 ```
 
 Build Development App
+
+### ios release
+
+```sh
+[bundle exec] fastlane ios release
+```
+
+Build Release App
 
 ### ios beta
 
