@@ -14,6 +14,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     private var worksiteProvider: EditableWorksiteProvider
     private let incidentBoundsProvider: IncidentBoundsProvider
     private let locationManager: LocationManager
+    private let locationSearchManager: LocationSearchManager
     private let networkMonitor: NetworkMonitor
     private let residentNameSearchManager: ResidentNameSearchManager
     private let existingWorksiteSelector: ExistingWorksiteSelector
@@ -121,6 +122,8 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         workTypeStatusRepository: WorkTypeStatusRepository,
         worksiteProvider: EditableWorksiteProvider,
         locationManager: LocationManager,
+        addressSearchRepository: AddressSearchRepository,
+        caseIconProvider: MapCaseIconProvider,
         networkMonitor: NetworkMonitor,
         searchWorksitesRepository: SearchWorksitesRepository,
         mapCaseIconProvider: MapCaseIconProvider,
@@ -186,6 +189,19 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         uiState = dataLoader.uiState.eraseToAnyPublisher()
 
         editingWorksite = worksiteProvider.editableWorksite.eraseToAnyPublisher()
+
+        // TODO: Subscribe to location search loading state?
+        locationSearchManager = LocationSearchManager(
+            incidentId: incidentId,
+            locationQuery: PassthroughSubject<String, Never>()
+                .eraseToAnyPublisher(),
+            worksiteProvider: worksiteProvider,
+            searchWorksitesRepository: searchWorksitesRepository,
+            locationManager: locationManager,
+            addressSearchRepository: addressSearchRepository,
+            iconProvider: caseIconProvider,
+            logger: logger
+        )
 
         editorSetWindow = isCreateWorksite ? 0.05.seconds : 0.6.seconds
 
@@ -555,7 +571,16 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
 
     private func updateCoordinatesToMyLocation() {
         if let location = locationManager.getLocation() {
-            locationInputData.coordinates = location.coordinate.latLng
+            let latLng = location.coordinate.latLng
+            locationInputData.coordinates = latLng
+
+            Task {
+                if let address = await locationSearchManager.queryAddress(latLng) {
+                    Task { @MainActor in
+                        locationInputData.setSearchedLocationAddress(address)
+                    }
+                }
+            }
         }
     }
 

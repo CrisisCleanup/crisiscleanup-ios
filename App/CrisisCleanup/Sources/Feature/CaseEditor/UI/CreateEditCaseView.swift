@@ -167,6 +167,13 @@ private struct CreateEditCaseContentView: View {
                     }
                 }
             }
+            .onChange(of: viewModel.locationInputData.isLocationAddressFound) { isFound in
+                if isFound {
+                    withAnimation {
+                        proxy.scrollTo("location-map", anchor: .top)
+                    }
+                }
+            }
             .onChange(of: viewModel.focusNoteCount) { newValue in
                 proxy.scrollTo("section-notes", anchor: .top)
             }

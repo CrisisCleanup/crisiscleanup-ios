@@ -16,6 +16,7 @@ class LocationInputData: ObservableObject {
     @Published private(set) var isBlankAddress = false
     @Published private(set) var wasGeocodeAddressSelected = false
     @Published private(set) var isSearchSuggested = false
+    @Published private(set) var isLocationAddressFound = false
 
     var addressSummary: [String] {
         summarizeAddress(
@@ -62,12 +63,13 @@ class LocationInputData: ObservableObject {
         .assign(to: \.isBlankAddress, on: self)
         .store(in: &subscriptions)
 
-        Publishers.CombineLatest3(
+        Publishers.CombineLatest4(
             $wasGeocodeAddressSelected,
             $isEditingAddress,
-            $isBlankAddress
+            $isBlankAddress,
+            $isLocationAddressFound
         )
-        .map { selected, editing, blank in !(selected || editing) || blank }
+        .map { selected, editing, blank, found in !(selected || editing || found) || blank }
         .receive(on: RunLoop.main)
         .assign(to: \.isSearchSuggested, on: self)
         .store(in: &subscriptions)
@@ -103,6 +105,16 @@ class LocationInputData: ObservableObject {
         zipCode = worksite.postalCode
 
         wasGeocodeAddressSelected = wasAddressSelected
+    }
+
+    func setSearchedLocationAddress(_ address: LocationAddress) {
+        streetAddress = address.address
+        city = address.city
+        county = address.county
+        state = address.state
+        zipCode = address.zipCode
+
+        isLocationAddressFound = true
     }
 
     func clearAddress() {
