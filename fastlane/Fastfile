@@ -89,6 +89,16 @@ platform :ios do
     )
   end
 
+  desc 'Check metadata'
+  lane :check do
+    authenticate
+    precheck(
+      app_identifier: APP_ID[:prod],
+      team_id: APPLE_AUTH[:team_id],
+      include_in_app_purchases: false
+    )
+  end
+
     identifier = APP_ID[options[:target].intern]
     team_id = APPLE_AUTH[:team_id]
     cocoapods
