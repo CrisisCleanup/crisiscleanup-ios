@@ -79,6 +79,16 @@ platform :ios do
     )
   end
 
+  desc 'Upload Privacy'
+  lane :privacy do
+    upload_app_privacy_details_to_app_store(
+      username: APPLE_AUTH[:username],
+      team_id: APPLE_AUTH[:team_id],
+      app_identifier: APP_ID[:prod],
+      json_path: 'fastlane/app_data_usages.json'
+    )
+  end
+
     identifier = APP_ID[options[:target].intern]
     team_id = APPLE_AUTH[:team_id]
     cocoapods
