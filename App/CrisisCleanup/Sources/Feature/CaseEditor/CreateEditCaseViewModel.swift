@@ -859,12 +859,27 @@ enum CaseEditorElement {
         }
     }
 
-    // TODO: Add focus state and configure focus on error
+    var focusElement: TextInputFocused {
+        switch self {
+        case .none: return .anyTextInput
+        case .name: return .caseInfoName
+        case .phone: return .caseInfoPhone
+        case .email: return .caseInfoEmail
+        case .location: return .anyTextInput
+        case .address: return .caseInfoStreetAddress
+        case .city: return .caseInfoCity
+        case .county: return .caseInfoCounty
+        case .state: return .caseInfoState
+        case .zipCode: return .caseInfoZipCode
+        case .work: return .anyTextInput
+        }
+    }
 }
 
 struct InvalidWorksiteInfo: Equatable {
     let invalidElement: CaseEditorElement
     let message: String
+    let timestamp: Date
 
     init(
         _ invalidElement: CaseEditorElement = .none,
@@ -872,5 +887,6 @@ struct InvalidWorksiteInfo: Equatable {
     ) {
         self.invalidElement = invalidElement
         self.message = message
+        timestamp = Date.now
     }
 }

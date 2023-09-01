@@ -188,7 +188,11 @@ private struct CreateEditCaseContentView: View {
 
                     if info.invalidElement != .none {
                         Button(t.t("actions.fix")) {
-                            proxy.scrollTo(info.invalidElement.scrollId, anchor: .top)
+                            let scrollId = info.invalidElement.scrollId
+                            if scrollId.isNotBlank {
+                                proxy.scrollTo(scrollId, anchor: .top)
+                            }
+
                             isInvalidSave = false
                         }
                     }
@@ -346,6 +350,10 @@ struct PropertyInformation: View {
                     )
                 }
             }
+            .onChange(of: viewModel.invalidWorksiteInfo) { info in
+                let focusElement = info.invalidElement.focusElement
+                focusState = focusElement == .anyTextInput ? nil : focusElement
+            }
 
             VStack(alignment: .leading) {
                 HStack {
@@ -476,7 +484,10 @@ struct PropertyInformation: View {
 
             CreateEditCaseNotesView()
         }
-        .onChange(of: focusState) { focusableViewState.focusState = $0 }
+        .onChange(of: focusState) {
+            focusableViewState.focusState = $0
+            showNameResults = false
+        }
     }
 }
 
