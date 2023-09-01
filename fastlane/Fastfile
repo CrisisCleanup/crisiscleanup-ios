@@ -99,6 +99,8 @@ platform :ios do
     )
   end
 
+  desc 'Gather Build Args'
+  private_lane :gather_build_args do |options|
     identifier = APP_ID[options[:target].intern]
     team_id = APPLE_AUTH[:team_id]
     cocoapods
@@ -113,6 +115,13 @@ platform :ios do
       "DEVELOPMENT_TEAM=#{team_id}",
       "PROVISIONING_PROFILE='#{provisioning_profile}'"
     ].join(' ')
+    build_args = {
+      codesign_identity: codesign_identity,
+      xcargs: xcargs
+    }
+    build_args
+  end
+
     build_app(
       scheme: 'App',
       workspace: WORKSPACE,
