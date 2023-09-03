@@ -845,7 +845,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ccu;
-				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = CCU;
+				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = "Crisis Cleanup";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access reason";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location access reason";
@@ -1041,7 +1041,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ccu;
-				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = CCU;
+				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = "Crisis Cleanup";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access reason";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location access reason";
