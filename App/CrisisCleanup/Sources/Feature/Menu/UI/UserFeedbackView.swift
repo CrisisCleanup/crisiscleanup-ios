@@ -12,11 +12,11 @@ struct UserFeedbackView: View {
                     .frame(alignment: .center)
             } else if let formUrl = viewModel.formHtmlPath {
                 LocalFileWebView(url: formUrl)
-                    .navigationTitle("~~Crisis Cleanup Feedback")
+                    .navigationTitle("nav.feedback")
                     .navigationBarTitleDisplayMode(.inline)
             } else {
                 VStack {
-                    Text("~~Oops. It seems feedback was unintentionally modified.")
+                    Text("info.feedback_modified_error")
                         .fontHeader3()
                         .padding()
 
