@@ -23,7 +23,7 @@ class MenuViewModel: ObservableObject {
 
     var versionText: String {
         let version = appVersionProvider.version
-        return isProduction ? version.1 : "\(version.1) (\(version.0))"
+        return "\(version.1) (\(version.0)) \(appEnv.apiEnvironment) iOS"
     }
 
     var databaseVersionText: String {
