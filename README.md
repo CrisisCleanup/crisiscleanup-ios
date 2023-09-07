@@ -16,6 +16,10 @@ Reset package caches whenever modules are not found.
    - The app installed on the simulator/devices should have an black background for the app icon.
 1. After the first project build when App/Sources/NeedleGenerated.swift is generated.
    - Add `import CrisisCleanup` at the top of the file.
+1. Cocoapods setup may be necessary. If so install with Ruby/`gem` (through ruby version manager) not `brew`.
+   - `gem -v` is 3.2.x or 3.3.x (or higher)
+   - `pod --version` is ~1.11.x (or higher)
+   - Versions aren't exact. Compare to other developers for certainty.
 
 ## Building and archiving
 - Be sure to build from a completely clean state or run the build command twice on the scheme/configuration as Xcode uses cached files unexpectedly...
