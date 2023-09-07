@@ -34,7 +34,8 @@ internal class CasesMapBoundsManager {
 
         isDeterminingBoundsPublisher = Publishers.CombineLatest(
             incidentIdPublisher,
-            incidentBoundsPublisher)
+            incidentBoundsPublisher
+        )
         .map { id, ids in
             ids.contains(id)
         }
