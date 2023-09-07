@@ -44,7 +44,7 @@ struct ForgotPasswordView: View {
                         // TODO: reset password
                         resetPressed.toggle()
                     } label: {
-                        Text("actions.reset_password")
+                        Text(t.t("actions.reset_password"))
                     }
                     .stylePrimary()
                     .padding(.bottom)

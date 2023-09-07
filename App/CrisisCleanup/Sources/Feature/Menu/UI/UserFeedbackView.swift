@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct UserFeedbackView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
     @Environment(\.dismiss) var dismiss
 
     @ObservedObject var viewModel: UserFeedbackViewModel
@@ -12,11 +13,11 @@ struct UserFeedbackView: View {
                     .frame(alignment: .center)
             } else if let formUrl = viewModel.formHtmlPath {
                 LocalFileWebView(url: formUrl)
-                    .navigationTitle("nav.feedback")
+                    .navigationTitle(t.t("nav.feedback"))
                     .navigationBarTitleDisplayMode(.inline)
             } else {
                 VStack {
-                    Text("info.feedback_modified_error")
+                    Text(t.t("info.feedback_modified_error"))
                         .fontHeader3()
                         .padding()
 
