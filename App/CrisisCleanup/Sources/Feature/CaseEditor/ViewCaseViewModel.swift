@@ -667,7 +667,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         saveWorksiteChange(startingWorksite, changedWorksite) {
             let messageTranslateKey = changedWorksite.isLocalFavorite
             ? "caseView.member_my_org"
-            : "~~Not member of my organization"
+            : "actions.not_member_of_my_org"
             let message = self.t(messageTranslateKey)
             Task { @MainActor in
                 self.toggleAlert(message: message)

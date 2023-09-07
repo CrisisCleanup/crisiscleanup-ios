@@ -260,7 +260,7 @@ private struct FilterDistanceSection: View {
                         openSystemAppSettings()
                     }
                 } label: {
-                    Text(t.t("~~Grant access to location"))
+                    Text(t.t("actions.grant_access_location"))
                 }
                 .stylePrimary()
             }
