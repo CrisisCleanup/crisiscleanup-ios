@@ -98,8 +98,6 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     private var saveChangeIncident = EmptyIncident
     private var changingIncidentWorksite = EmptyWorksite
 
-    @Published private(set) var showClaimAndSave = true
-
     @Published private(set) var nameSearchResults = ResidentNameSearchResults()
     @Published private(set) var hasNameResults = false
     private let isSelectingWorksiteSubject = CurrentValueSubject<Bool, Never>(false)
@@ -315,15 +313,6 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
             self.editableViewState.isEditable = !isTransient
         }
         .store(in: &subscriptions)
-
-        if !isCreateWorksite {
-            editingWorksite.map {
-                $0.workTypes.first(where: { workType in workType.orgClaim == nil }) != nil
-            }
-            .receive(on: RunLoop.main)
-            .assign(to: \.showClaimAndSave, on: self)
-            .store(in: &subscriptions)
-        }
     }
 
     private func subscribeCaseData() {

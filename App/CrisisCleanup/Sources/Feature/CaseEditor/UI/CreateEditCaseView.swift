@@ -897,15 +897,13 @@ private struct CreateEditCaseSaveActions: View {
             }
             .styleCancel()
 
-            if viewModel.showClaimAndSave {
-                Button {
-                    viewModel.saveChanges(true)
-                } label : {
-                    Text(t.t("actions.save_claim"))
-                }
-                .stylePrimary()
-                .frame(maxWidth: .infinity)
+            Button {
+                viewModel.saveChanges(true)
+            } label : {
+                Text(t.t("actions.save_claim"))
             }
+            .stylePrimary()
+            .frame(maxWidth: .infinity)
 
             Button {
                 viewModel.saveChanges(false)
