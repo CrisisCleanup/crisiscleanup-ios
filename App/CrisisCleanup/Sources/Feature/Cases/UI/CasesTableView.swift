@@ -64,30 +64,42 @@ struct CasesTableView: View {
             let casesData = viewModel.tableData
             let isTurnOnRelease = viewModel.selectedIncident.turnOnRelease
             let changingClaimIds = viewModel.worksitesChangingClaimAction
-            ScrollView {
-                LazyVStack {
-                    ForEach(0..<casesData.count, id: \.self) { index in
-                        if index > 0 {
-                            FormListSectionSeparator()
-                        }
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack {
+                        Rectangle()
+                            .fill(.clear)
+                            .background(.clear)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 0.01)
+                            .id("case-table-first")
 
-                        let worksite = casesData[index].worksite
-                        let isChangingClaim = changingClaimIds.contains(worksite.id)
-                        CaseTableItemCard(
-                            worksiteDistance: casesData[index],
-                            isEditable: isEditable,
-                            isTurnOnRelease: isTurnOnRelease,
-                            isChangingClaim: isChangingClaim,
-                            onWorksiteClaimAction: { claimAction in
-                                viewModel.onWorksiteClaimAction(worksite, claimAction)
+                        ForEach(0..<casesData.count, id: \.self) { index in
+                            if index > 0 {
+                                FormListSectionSeparator()
                             }
-                        )
+
+                            let worksite = casesData[index].worksite
+                            let isChangingClaim = changingClaimIds.contains(worksite.id)
+                            CaseTableItemCard(
+                                worksiteDistance: casesData[index],
+                                isEditable: isEditable,
+                                isTurnOnRelease: isTurnOnRelease,
+                                isChangingClaim: isChangingClaim,
+                                onWorksiteClaimAction: { claimAction in
+                                    viewModel.onWorksiteClaimAction(worksite, claimAction)
+                                }
+                            )
+                        }
                     }
                 }
-            }
-            .onReceive(viewModel.openWorksiteAddFlagCounter) { _ in
-                if viewModel.takeOpenWorksiteAddFlag() {
-                    router.openCaseFlags(isFromCaseEdit: false)
+                .onReceive(viewModel.openWorksiteAddFlagCounter) { _ in
+                    if viewModel.takeOpenWorksiteAddFlag() {
+                        router.openCaseFlags(isFromCaseEdit: false)
+                    }
+                }
+                .onChange(of: viewModel.tableViewSort) { newValue in
+                    proxy.scrollTo("case-table-first", anchor: .top)
                 }
             }
         }
