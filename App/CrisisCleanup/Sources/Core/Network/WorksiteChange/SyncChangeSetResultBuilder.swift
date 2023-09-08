@@ -16,7 +16,7 @@ extension SyncChangeSetResult {
 		deleteFlagExceptions: [Int64: Error],
 		noteExceptions: [Int64: Error],
 		workTypeStatusExceptions: [Int64: Error],
-		workTypeClaimException: Error?,
+		workTypeClaimExceptions: [String: Error],
 		workTypeUnclaimException: Error?,
 		workTypeRequestException: Error?,
 		workTypeReleaseException: Error?,
@@ -35,7 +35,7 @@ extension SyncChangeSetResult {
 		self.deleteFlagExceptions = deleteFlagExceptions
 		self.noteExceptions = noteExceptions
 		self.workTypeStatusExceptions = workTypeStatusExceptions
-		self.workTypeClaimException = workTypeClaimException
+		self.workTypeClaimExceptions = workTypeClaimExceptions
 		self.workTypeUnclaimException = workTypeUnclaimException
 		self.workTypeRequestException = workTypeRequestException
 		self.workTypeReleaseException = workTypeReleaseException
@@ -62,7 +62,7 @@ extension SyncChangeSetResult {
 		var deleteFlagExceptions: [Int64: Error]
 		var noteExceptions: [Int64: Error]
 		var workTypeStatusExceptions: [Int64: Error]
-		var workTypeClaimException: Error?
+		var workTypeClaimExceptions: [String: Error]
 		var workTypeUnclaimException: Error?
 		var workTypeRequestException: Error?
 		var workTypeReleaseException: Error?
@@ -80,7 +80,7 @@ extension SyncChangeSetResult {
 			self.deleteFlagExceptions = original.deleteFlagExceptions
 			self.noteExceptions = original.noteExceptions
 			self.workTypeStatusExceptions = original.workTypeStatusExceptions
-			self.workTypeClaimException = original.workTypeClaimException
+			self.workTypeClaimExceptions = original.workTypeClaimExceptions
 			self.workTypeUnclaimException = original.workTypeUnclaimException
 			self.workTypeRequestException = original.workTypeRequestException
 			self.workTypeReleaseException = original.workTypeReleaseException
@@ -100,7 +100,7 @@ extension SyncChangeSetResult {
 				deleteFlagExceptions: deleteFlagExceptions,
 				noteExceptions: noteExceptions,
 				workTypeStatusExceptions: workTypeStatusExceptions,
-				workTypeClaimException: workTypeClaimException,
+				workTypeClaimExceptions: workTypeClaimExceptions,
 				workTypeUnclaimException: workTypeUnclaimException,
 				workTypeRequestException: workTypeRequestException,
 				workTypeReleaseException: workTypeReleaseException

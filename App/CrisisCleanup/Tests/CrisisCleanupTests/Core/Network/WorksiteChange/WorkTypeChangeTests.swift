@@ -5,7 +5,7 @@ import XCTest
 
 class WorkTypeChangeTests: XCTestCase {
     private let emptyChangesResult = (
-        [(Int64, WorkTypeSnapshot.WorkType)](),
+        [String: WorkTypeChange](),
         [WorkTypeChange](),
         [Int64]()
     )
@@ -123,13 +123,17 @@ class WorkTypeChangeTests: XCTestCase {
         XCTAssertEqual(
             (
                 [
-                    (
-                        Int64(59),
-                        WorkTypeSnapshot.WorkType(
+                    "work-type-a": WorkTypeChange(
+                        localId: 59,
+                        networkId: -1,
+                        workType: WorkTypeSnapshot.WorkType(
                             id: -1,
                             status: "status-b",
                             workType: "work-type-a"
-                        )
+                        ),
+                        changedAt: ChangeTestUtil.updatedAtA,
+                        isClaimChange: true,
+                        isStatusChange: true
                     )
                 ],
                 emptyChangesResult.1,
@@ -243,9 +247,10 @@ class WorkTypeChangeTests: XCTestCase {
         let actual = worksite.getWorkTypeChanges([], change, ChangeTestUtil.updatedAtA)
 
         let expectedChanges = [
-            (
-                Int64(59),
-                WorkTypeSnapshot.WorkType(
+            "work-type-a": WorkTypeChange(
+                localId: 59,
+                networkId: -1,
+                workType: WorkTypeSnapshot.WorkType(
                     id: -1,
                     status: "status-b",
                     workType: "work-type-a",
@@ -254,7 +259,10 @@ class WorkTypeChangeTests: XCTestCase {
                     nextRecurAt: nil,
                     phase: nil,
                     recur: nil
-                )
+                ),
+                changedAt: ChangeTestUtil.updatedAtA,
+                isClaimChange: true,
+                isStatusChange: true
             )
         ]
         XCTAssertEqual(
