@@ -81,6 +81,7 @@ class CasesViewModel: ObservableObject {
     @Published private(set) var hasCasesCountProgress = false
 
     private var hasDisappeared = false
+    private var incidentOnDisappear = EmptyIncident.id
 
     @Published var showExplainLocationPermission = false
     @Published private(set) var isMyLocationEnabled = false
@@ -192,6 +193,7 @@ class CasesViewModel: ObservableObject {
     func onViewDisappear() {
         subscriptions = cancelSubscriptions(subscriptions)
         hasDisappeared = true
+        incidentOnDisappear = incidentId
     }
 
     private func subscribeLoading() {
@@ -257,7 +259,20 @@ class CasesViewModel: ObservableObject {
         mapBoundsManager.mapCameraBoundsPublisher
             .eraseToAnyPublisher()
             .receive(on: RunLoop.main)
-            .assign(to: \.incidentLocationBounds, on: self)
+            .sink(receiveValue: { bounds in
+                var updateBounds = !self.hasDisappeared
+                if self.hasDisappeared {
+                    self.hasDisappeared = false
+                    if self.incidentId != self.incidentOnDisappear {
+                        self.incidentOnDisappear = self.incidentId
+                        updateBounds = true
+                    }
+                }
+
+                if updateBounds {
+                    self.incidentLocationBounds = bounds
+                }
+            })
             .store(in: &subscriptions)
     }
 
