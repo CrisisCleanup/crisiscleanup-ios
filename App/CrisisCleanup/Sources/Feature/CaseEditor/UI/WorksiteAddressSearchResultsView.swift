@@ -56,6 +56,13 @@ internal struct WorksiteAddressSearchResultsView: View {
                     if results.addresses.isNotEmpty {
                         ListItemTitle(textTranslateKey: "caseView.full_address")
 
+                        // Required by https://developers.google.com/maps/documentation/places/ios-sdk/autocomplete#displaying_attributions_in_your_app
+                        Text("Powered by Google")
+                            .fontBodySmall()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal)
+                            .padding(.bottom, appTheme.listItemVerticalPadding)
+
                         ForEach(results.addresses, id: \.key) { result in
                             AddressResultView(address: result)
                                 .onTapGesture {
