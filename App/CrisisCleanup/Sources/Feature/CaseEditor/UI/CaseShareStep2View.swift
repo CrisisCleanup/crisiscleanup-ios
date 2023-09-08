@@ -62,6 +62,9 @@ struct CaseShareStep2View: View {
                             t.t(manualKey),
                             text: $viewModel.receiverContactManual
                         )
+                        .if (shareByEmail) {
+                            $0.keyboardType(.emailAddress)
+                        }
                         .textFieldBorder()
                         .focused($focusState, equals: .anyTextInput)
                         .onSubmit {

@@ -249,7 +249,12 @@ class WorksiteChangeProcessor {
 
             result = try await syncNotes(changeCreatedAt, changeSet.extraNotes, result)
 
-            result = try await syncWorkTypes(changeCreatedAt, changeSet.workTypeChanges, result)
+            result = try await syncWorkTypes(
+                changeCreatedAt,
+                changeSet.newWorkTypes,
+                changeSet.workTypeChanges,
+                result
+            )
 
             result = result.copy { $0.isFullySynced = true }
 
@@ -364,12 +369,64 @@ class WorksiteChangeProcessor {
 
     private func syncWorkTypes(
         _ changeAt: Date,
+        _ newWorkTypes: [String: WorkTypeChange],
         _ workTypeChanges: [WorkTypeChange],
         _ baseResult: SyncChangeSetResult
     ) async throws -> SyncChangeSetResult {
         var workTypeStatusExceptions = [Int64: Error]()
+        var workTypeClaimExceptions = [String: Error]()
         var claimWorkTypes: Set<String> = []
         var unclaimWorkTypes: Set<String> = []
+
+        var hasClaimChange = false
+
+        if newWorkTypes.isNotEmpty {
+            let networkWorkTypes = try await getNetworkWorksite().newestWorkTypes
+            var claimNewWorkTypes = Set<String>()
+            for workType in networkWorkTypes {
+                if let workTypeChange = newWorkTypes[workType.workType] {
+                    let status = workTypeChange.workType.status
+                    if status != workType.status {
+                        do {
+                            let syncedWorkType =
+                                try await writeApiClient.updateWorkTypeStatus(
+                                    changeAt,
+                                    workType.id!,
+                                    status
+                                )
+                            let networkId = syncedWorkType.id!
+                            workTypeIdMap[workTypeChange.localId] = networkId
+                            syncLogger.log("Synced work type status \(workTypeChange.localId) (\(networkId)).")
+                        } catch {
+                            try await ensureSyncConditions()
+                            workTypeStatusExceptions[workTypeChange.localId] = error
+                        }
+                    }
+
+                    if workTypeChange.workType.orgClaim != nil {
+                        claimNewWorkTypes.insert(workTypeChange.workType.workType)
+                    }
+                }
+            }
+
+            if !claimNewWorkTypes.isEmpty {
+                let workTypes = Array(claimWorkTypes)
+                do {
+                    try await writeApiClient.claimWorkTypes(
+                        changeAt,
+                        networkWorksiteId,
+                        workTypes
+                    )
+                    hasClaimChange = true
+                    syncLogger.log("Synced work type claim \(workTypes.joined(separator: ", ")).")
+                } catch {
+                    try await ensureSyncConditions()
+                    let errorKey = workTypes.joined(separator: ", ")
+                    workTypeClaimExceptions[errorKey] = error
+                }
+            }
+        }
+
         for workTypeChange in workTypeChanges {
             let localId = workTypeChange.localId
             let workType = workTypeChange.workType
@@ -393,12 +450,10 @@ class WorksiteChangeProcessor {
             }
         }
 
-        var hasClaimChange = false
         let workTypeOrgLookup = try await getNetworkWorksite().newestWorkTypes
             .compactMap { $0.orgClaim == nil ? nil : ($0.workType, $0.orgClaim!) }
             .associate { $0 }
 
-        var workTypeClaimException: Error? = nil
         let networkClaimWorkTypes = claimWorkTypes.filter { workTypeOrgLookup[$0] == nil }
         // Do not call to API with empty arrays as it may indicate all.
         if !networkClaimWorkTypes.isEmpty {
@@ -412,7 +467,8 @@ class WorksiteChangeProcessor {
                 syncLogger.log("Synced work type claim \(networkClaimWorkTypes.joined(separator: ", ")).")
             } catch {
                 try await ensureSyncConditions()
-                workTypeClaimException = error
+                let errorKey = networkClaimWorkTypes.joined(separator: ", ")
+                workTypeClaimExceptions[errorKey] = error
             }
         }
 
@@ -441,7 +497,7 @@ class WorksiteChangeProcessor {
         return baseResult.copy {
             $0.hasClaimChange = hasClaimChange
             $0.workTypeStatusExceptions = workTypeStatusExceptions
-            $0.workTypeClaimException = workTypeClaimException
+            $0.workTypeClaimExceptions = workTypeClaimExceptions
             $0.workTypeUnclaimException = workTypeUnclaimException
         }
     }
@@ -573,7 +629,7 @@ internal struct SyncChangeSetResult {
     let deleteFlagExceptions: [Int64: Error]
     let noteExceptions: [Int64: Error]
     let workTypeStatusExceptions: [Int64: Error]
-    let workTypeClaimException: Error?
+    let workTypeClaimExceptions: [String: Error]
     let workTypeUnclaimException: Error?
     let workTypeRequestException: Error?
     let workTypeReleaseException: Error?
@@ -591,7 +647,7 @@ internal struct SyncChangeSetResult {
         deleteFlagExceptions: [Int64: Error] = [:],
         noteExceptions: [Int64: Error] = [:],
         workTypeStatusExceptions: [Int64: Error] = [:],
-        workTypeClaimException: Error? = nil,
+        workTypeClaimExceptions: [String: Error] = [:],
         workTypeUnclaimException: Error? = nil,
         workTypeRequestException: Error? = nil,
         workTypeReleaseException: Error? = nil
@@ -608,7 +664,7 @@ internal struct SyncChangeSetResult {
         self.deleteFlagExceptions = deleteFlagExceptions
         self.noteExceptions = noteExceptions
         self.workTypeStatusExceptions = workTypeStatusExceptions
-        self.workTypeClaimException = workTypeClaimException
+        self.workTypeClaimExceptions = workTypeClaimExceptions
         self.workTypeUnclaimException = workTypeUnclaimException
         self.workTypeRequestException = workTypeRequestException
         self.workTypeReleaseException = workTypeReleaseException
@@ -623,7 +679,7 @@ internal struct SyncChangeSetResult {
             deleteFlagExceptions.values.first,
             noteExceptions.values.first,
             workTypeStatusExceptions.values.first,
-            workTypeClaimException,
+            workTypeClaimExceptions.values.first,
             workTypeUnclaimException,
             workTypeRequestException,
             workTypeReleaseException,
@@ -641,7 +697,7 @@ internal struct SyncChangeSetResult {
 
     var hasError: Bool { dataException != nil }
 
-    private func summarizeExceptions(_ key: String, _ exceptions: [Int64: Error]) -> String {
+    private func summarizeExceptions<T>(_ key: String, _ exceptions: [T: Error]) -> String {
         if exceptions.isNotEmpty {
             let summary = exceptions
                 .map { "  \($0.key): \($0.value.localizedDescription)" }
@@ -659,7 +715,7 @@ internal struct SyncChangeSetResult {
             summarizeExceptions("Delete flags", deleteFlagExceptions),
             summarizeExceptions("Notes", noteExceptions),
             summarizeExceptions("Work type status", workTypeStatusExceptions),
-            workTypeClaimException?.prefixMessage("Claim work types"),
+            summarizeExceptions("Claim work types", workTypeClaimExceptions),
             workTypeUnclaimException?.prefixMessage("Unclaim work types"),
             workTypeRequestException?.prefixMessage("Request work types"),
             workTypeReleaseException?.prefixMessage("Release work types"),

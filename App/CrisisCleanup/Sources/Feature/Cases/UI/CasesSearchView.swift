@@ -80,6 +80,7 @@ struct CasesSearchView: View {
                         }
                     }
                 }
+                .scrollDismissesKeyboard(.immediately)
             }
 
             if isLoadingVisible {

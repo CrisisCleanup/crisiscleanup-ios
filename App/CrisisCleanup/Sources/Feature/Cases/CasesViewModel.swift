@@ -257,13 +257,7 @@ class CasesViewModel: ObservableObject {
         mapBoundsManager.mapCameraBoundsPublisher
             .eraseToAnyPublisher()
             .receive(on: RunLoop.main)
-            .sink(receiveValue: { bounds in
-                if self.hasDisappeared {
-                    self.hasDisappeared = false
-                } else {
-                    self.incidentLocationBounds = bounds
-                }
-            })
+            .assign(to: \.incidentLocationBounds, on: self)
             .store(in: &subscriptions)
     }
 

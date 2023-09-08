@@ -78,7 +78,7 @@ class WorksiteChangeSetOperator {
 
         let updatedAt = coreB.updatedAt ?? Date.now
 
-        let (_, workTypeChanges, _) = base.getWorkTypeChanges(
+        let (newWorkTypes, workTypeChanges, _) = base.getWorkTypeChanges(
             start.workTypes,
             change.workTypes,
             updatedAt,
@@ -115,6 +115,7 @@ class WorksiteChangeSetOperator {
             isOrgMember: isAssignedToOrgMember,
             extraNotes: newNotes,
             flagChanges: flagChanges,
+            newWorkTypes: newWorkTypes,
             workTypeChanges: workTypeChanges
         )
     }
@@ -310,7 +311,7 @@ extension NetworkWorksiteFull {
         _ change: [WorkTypeSnapshot],
         _ changedAt: Date,
         _ workTypeIdLookup: [Int64: Int64] = [:]
-    ) -> ([(Int64, WorkTypeSnapshot.WorkType)], [WorkTypeChange], [Int64]) {
+    ) -> ([String: WorkTypeChange], [WorkTypeChange], [Int64]) {
         let existingWorkTypes = newestWorkTypes.associate {
             let workTypeCopy = WorkTypeSnapshot.WorkType(
                 // Incoming network ID is always defined
@@ -386,7 +387,7 @@ extension NetworkWorksiteFull {
             .compactMap { $0?.hasChange == true ? $0 : nil }
 
         if (newWorkTypes.isEmpty && deletedWorkTypes.isEmpty && changedWorkTypes.isEmpty) {
-            return ([], [], [])
+            return ([:], [], [])
         }
 
         let modified = {
@@ -422,7 +423,7 @@ extension NetworkWorksiteFull {
             .filter { $0.hasChange }
         }()
         let create = modified.filter { $0.networkId <= 0 }
-            .map { ($0.localId, $0.workType) }
+            .associateBy { $0.workType.workType }
         let changing = modified.filter { $0.networkId > 0 }
 
         return (create, changing, deletedWorkTypes)

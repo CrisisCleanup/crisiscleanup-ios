@@ -5,6 +5,7 @@ class MenuViewModel: ObservableObject {
     private let incidentsRepository: IncidentsRepository
     private let worksitesRepository: WorksitesRepository
     private let accountDataRepository: AccountDataRepository
+    private let accountDataRefresher: AccountDataRefresher
     private let incidentSelector: IncidentSelector
     private let appVersionProvider: AppVersionProvider
     private let databaseVersionProvider: DatabaseVersionProvider
@@ -23,7 +24,7 @@ class MenuViewModel: ObservableObject {
 
     var versionText: String {
         let version = appVersionProvider.version
-        return isProduction ? version.1 : "\(version.1) (\(version.0))"
+        return "\(version.1) (\(version.0)) \(appEnv.apiEnvironment) iOS"
     }
 
     var databaseVersionText: String {
@@ -48,6 +49,7 @@ class MenuViewModel: ObservableObject {
         self.incidentsRepository = incidentsRepository
         self.worksitesRepository = worksitesRepository
         self.accountDataRepository = accountDataRepository
+        self.accountDataRefresher = accountDataRefresher
         self.incidentSelector = incidentSelector
         self.appVersionProvider = appVersionProvider
         self.databaseVersionProvider = databaseVersionProvider
@@ -60,11 +62,14 @@ class MenuViewModel: ObservableObject {
 
         Task {
             syncLogRepository.trimOldLogs()
-            await accountDataRefresher.updateProfilePicture()
         }
     }
 
     func onViewAppear() {
+        Task {
+            await accountDataRefresher.updateProfilePicture()
+        }
+
         subscribeLoading()
         subscribeIncidentsData()
         subscribeProfilePicture()
@@ -96,8 +101,7 @@ class MenuViewModel: ObservableObject {
     private func subscribeProfilePicture() {
         accountDataRepository.accountData
             .eraseToAnyPublisher()
-            .receive(on: RunLoop.main)
-            .map {
+            .compactMap {
                 let pictureUrl = $0.profilePictureUri
                 let isSvg = pictureUrl.hasSuffix(".svg")
                 if let escapedUrl = isSvg ? pictureUrl.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) : pictureUrl,
@@ -109,6 +113,7 @@ class MenuViewModel: ObservableObject {
                 }
                 return nil
             }
+            .receive(on: RunLoop.main)
             .assign(to: \.profilePicture, on: self)
             .store(in: &subscriptions)
     }
