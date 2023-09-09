@@ -272,21 +272,20 @@ class AppSyncer: SyncPuller, SyncPusher {
     }
 
     func syncPushWorksitesAsync() async {
-        // TODO: Move/call this in background task
-//        Task {
-        do {
-            if try await !validateAccountTokens() {
-                return
+        Task {
+            do {
+                if try await !validateAccountTokens() {
+                    return
+                }
+
+                try Task.checkCancellation()
+
+                _ = await worksiteChangeRepository.syncWorksites()
+            } catch {
+                // TODO: Handle proper
+                print(error)
             }
-
-            try Task.checkCancellation()
-
-            _ = await worksiteChangeRepository.syncWorksites()
-        } catch {
-            // TODO: Handle proper
-            print(error)
         }
-//        }
     }
 
     private let syncMediaGuard = ManagedAtomic(false)

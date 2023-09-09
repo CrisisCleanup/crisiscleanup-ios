@@ -55,6 +55,7 @@ class MainViewModel: ObservableObject {
 
         if viewData.isAuthenticated {
             syncPusher.scheduleSyncWorksites()
+            syncPusher.scheduleSyncMedia()
         }
     }
 
