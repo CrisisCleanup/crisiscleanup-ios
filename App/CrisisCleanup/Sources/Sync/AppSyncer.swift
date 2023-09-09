@@ -25,6 +25,8 @@ public protocol SyncPusher {
     func syncPushWorksitesAsync() async
 
     func scheduleSyncMedia()
+
+    func scheduleSyncWorksites()
 }
 
 class AppSyncer: SyncPuller, SyncPusher {
@@ -308,12 +310,7 @@ class AppSyncer: SyncPuller, SyncPusher {
                     }
                 }
 
-                let syncTransaction = self.syncMediaGuard.compareExchange(
-                    expected: false,
-                    desired: true,
-                    ordering: .sequentiallyConsistent
-                )
-                if syncTransaction.original == true {
+                if self.syncMediaGuard.exchange(true, ordering: .sequentiallyConsistent) {
                     return
                 }
 
@@ -324,6 +321,36 @@ class AppSyncer: SyncPuller, SyncPusher {
             } catch {
                 // TODO: Handle proper. Could be cancellation.
                 print("Sync media error \(error)")
+            }
+        }
+    }
+
+    private let syncWorksitesGuard = ManagedAtomic(false)
+    func scheduleSyncWorksites() {
+        var syncingTask: Task<Void, Error>? = nil
+
+        var bgTaskId: UIBackgroundTaskIdentifier = .invalid
+        bgTaskId = UIApplication.shared.beginBackgroundTask(withName: "sync-worksites") {
+            syncingTask?.cancel()
+            UIApplication.shared.endBackgroundTask(bgTaskId)
+        }
+
+        let bgTaskIdConst = bgTaskId
+        syncingTask = Task {
+            do {
+                defer {
+                    self.syncWorksitesGuard.store(false, ordering: .sequentiallyConsistent)
+
+                    Task { @MainActor in
+                        UIApplication.shared.endBackgroundTask(bgTaskIdConst)
+                    }
+                }
+
+                if self.syncWorksitesGuard.exchange(true, ordering: .sequentiallyConsistent) {
+                    return
+                }
+
+                _ = await worksiteChangeRepository.syncWorksites()
             }
         }
     }

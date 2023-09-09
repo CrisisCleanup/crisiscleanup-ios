@@ -227,7 +227,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
                     try Task.checkCancellation()
                 }
             } catch {
-
+                // TODO: Indicate error with notification
             }
         }
         return false

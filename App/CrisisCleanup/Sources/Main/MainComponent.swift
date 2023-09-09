@@ -32,6 +32,7 @@ public class MainComponent: BootstrapComponent,
             translationsRepository: languageTranslationsRepository,
             incidentSelector: incidentSelector,
             syncPuller: syncPuller,
+            syncPusher: syncPusher,
             accountDataRefresher: accountDataRefresher,
             logger: loggerFactory.getLogger("main"),
             appEnv: appEnv

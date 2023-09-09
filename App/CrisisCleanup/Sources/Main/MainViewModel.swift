@@ -8,6 +8,7 @@ class MainViewModel: ObservableObject {
     private let incidentSelector: IncidentSelector
     let translator: KeyAssetTranslator
     private let syncPuller: SyncPuller
+    private let syncPusher: SyncPusher
     private let accountDataRefresher: AccountDataRefresher
     private let logger: AppLogger
 
@@ -28,6 +29,7 @@ class MainViewModel: ObservableObject {
         translationsRepository: LanguageTranslationsRepository,
         incidentSelector: IncidentSelector,
         syncPuller: SyncPuller,
+        syncPusher: SyncPusher,
         accountDataRefresher: AccountDataRefresher,
         logger: AppLogger,
         appEnv: AppEnv
@@ -38,6 +40,7 @@ class MainViewModel: ObservableObject {
         translator = translationsRepository
         self.incidentSelector = incidentSelector
         self.syncPuller = syncPuller
+        self.syncPusher = syncPusher
         self.accountDataRefresher = accountDataRefresher
         self.logger = logger
 
@@ -49,14 +52,16 @@ class MainViewModel: ObservableObject {
     func onActivePhase() {
         appSupportRepository.onAppOpen()
         appSupportRepository.pullMinSupportedAppVersion()
+
+        if viewData.isAuthenticated {
+            syncPusher.scheduleSyncWorksites()
+        }
     }
 
     func onViewAppear() {
         subscribeIncidentsData()
         subscribeAccountData()
         subscribeAppSupport()
-
-        // TODO: Queue push sync (if logged in)
     }
 
     func onViewDisappear() {
