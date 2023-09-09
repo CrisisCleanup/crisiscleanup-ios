@@ -63,6 +63,11 @@ class CasesViewModel: ObservableObject {
     private let isGeneratingWorksiteMarkers = CurrentValueSubject<Bool, Never>(false)
     private let isDelayingRegionBug = CurrentValueSubject<Bool, Never>(false)
 
+    let mapMarkerZoomLevelHeight: Double = {
+        // TODO: Calculate based on InteractiveZoomLevel. Remove magic number.
+        620000.0
+    }()
+
     private let mapCaseDotProvider = InMemoryDotProvider()
     @Published private(set) var mapDotsOverlay: CasesMapDotsOverlay
     @Published private(set) var debugOverlay: MKTileOverlay?

@@ -319,8 +319,7 @@ private struct MapControls: View {
             map.setCamera(
                 MKMapCamera(
                     lookingAtCenter: map.centerCoordinate,
-                    // TODO: Calculate based on zoom level rather than distance
-                    fromDistance: CLLocationDistance(500*1000),
+                    fromDistance: CLLocationDistance(viewModel.mapMarkerZoomLevelHeight),
                     pitch: 0.0,
                     heading: 0.0
                 ),
