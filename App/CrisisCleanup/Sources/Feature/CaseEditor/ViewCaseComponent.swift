@@ -50,6 +50,7 @@ class ViewCaseComponent: Component<AppDependency>, ViewCaseViewBuilder {
             incidentsRepository: dependency.incidentsRepository,
             organizationsRepository: dependency.organizationsRepository,
             accountDataRefresher: dependency.accountDataRefresher,
+            organizationRefresher: dependency.organizationRefresher,
             incidentRefresher: dependency.incidentRefresher,
             incidentBoundsProvider: dependency.incidentBoundsProvider,
             locationManager: dependency.locationManager,

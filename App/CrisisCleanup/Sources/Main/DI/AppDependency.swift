@@ -39,6 +39,7 @@ public protocol AppDependency: Dependency {
     var authEventBus: AuthEventBus { get }
     var accountDataRepository: AccountDataRepository { get }
     var accountDataRefresher: AccountDataRefresher { get }
+    var organizationRefresher: OrganizationRefresher { get }
 
     var syncLoggerFactory: SyncLoggerFactory { get }
     var syncPuller: SyncPuller { get }
@@ -134,6 +135,11 @@ extension MainComponent {
                 organizationsRepository: organizationsRepository,
                 loggerFactory: loggerFactory
             )
+        }
+    }
+    public var organizationRefresher: OrganizationRefresher {
+        shared {
+            OrganizationRefresher(accountDataRefresher)
         }
     }
 

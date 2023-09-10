@@ -85,6 +85,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         incidentsRepository: IncidentsRepository,
         organizationsRepository: OrganizationsRepository,
         accountDataRefresher: AccountDataRefresher,
+        organizationRefresher: OrganizationRefresher,
         incidentRefresher: IncidentRefresher,
         incidentBoundsProvider: IncidentBoundsProvider,
         locationManager: LocationManager,
@@ -152,6 +153,8 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
 
         updateHeaderTitle()
         subscribeSubTitle()
+
+        organizationRefresher.pullOrganization(incidentIdIn)
     }
 
     deinit {

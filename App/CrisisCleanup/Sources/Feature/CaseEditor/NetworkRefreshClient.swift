@@ -50,3 +50,29 @@ public class LanguageRefresher {
         }
     }
 }
+
+public class OrganizationRefresher {
+    private let accountDataRefresher: AccountDataRefresher
+
+    private var incidentIdPull = EmptyIncident.id
+    private var pullTime = Date(timeIntervalSince1970: 0)
+
+    init(
+        _ accountDataRefresher: AccountDataRefresher
+    ) {
+        self.accountDataRefresher = accountDataRefresher
+    }
+
+    func pullOrganization(_ incidentId: Int64) {
+        if incidentIdPull == incidentId &&
+            pullTime.distance(to: Date.now) < 1.hours {
+            return
+        }
+        incidentIdPull = incidentId
+        pullTime = Date.now
+
+        Task {
+            await self.accountDataRefresher.updateMyOrganization(true)
+        }
+    }
+}
