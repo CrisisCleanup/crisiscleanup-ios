@@ -120,14 +120,14 @@ class OfflineFirstCaseHistoryRepository: CaseHistoryRepository {
     private func queryUpdateUsers(_ userIds: [Int64]) async {
         do {
             let networkUsers = try await networkDataSource.getUsers(userIds)
-            let entities = networkUsers.map { $0.asRecords() }
+            let records = networkUsers.compactMap { $0.asRecords() }
 
-            let organizations = entities.map { $0.organization }
-            let affiliates = entities.map { $0.organizationAffiliates }
+            let organizations = records.map { $0.organization }
+            let affiliates = records.map { $0.organizationAffiliates }
             try incidentOrganizationDao.saveMissing(organizations, affiliates)
 
-            let persons = entities.map { $0.personContact }
-            let personOrganizations = entities.map { $0.personToOrganization }
+            let persons = records.map { $0.personContact }
+            let personOrganizations = records.map { $0.personToOrganization }
             try personContactDao.savePersons(persons, personOrganizations)
         } catch {
             logger.logError(error)

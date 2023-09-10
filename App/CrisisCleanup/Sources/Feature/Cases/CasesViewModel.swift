@@ -65,7 +65,7 @@ class CasesViewModel: ObservableObject {
 
     let mapMarkerZoomLevelHeight: Double = {
         // TODO: Calculate based on InteractiveZoomLevel. Remove magic number.
-        620000.0
+        600000.0
     }()
 
     private let mapCaseDotProvider = InMemoryDotProvider()
