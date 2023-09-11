@@ -49,6 +49,7 @@ class CrisisCleanupLocalImageRepository: LocalImageRepository {
     private let localImageDao: LocalImageDao
     private let writeApi: CrisisCleanupWriteApi
     private let localFileCache: LocalFileCache
+    private let worksiteInteractor: WorksiteInteractor
     private var syncLogger: SyncLogger
     private let appLogger: AppLogger
 
@@ -66,6 +67,7 @@ class CrisisCleanupLocalImageRepository: LocalImageRepository {
         localImageDao: LocalImageDao,
         writeApi: CrisisCleanupWriteApi,
         localFileCache: LocalFileCache,
+        worksiteInteractor: WorksiteInteractor,
         syncLogger: SyncLogger,
         loggerFactory: AppLoggerFactory
     ) {
@@ -74,6 +76,7 @@ class CrisisCleanupLocalImageRepository: LocalImageRepository {
         self.localImageDao = localImageDao
         self.writeApi = writeApi
         self.localFileCache = localFileCache
+        self.worksiteInteractor = worksiteInteractor
         self.syncLogger = syncLogger
         appLogger = loggerFactory.getLogger("image-repository")
 
@@ -132,6 +135,7 @@ class CrisisCleanupLocalImageRepository: LocalImageRepository {
     ) async throws {
         let cached = try await localFileCache.cachePicked(incidentId, worksiteId, picked)
         try upsertCachedImages(worksiteId, tag, cached)
+        worksiteInteractor.onCaseChanged(incidentId, worksiteId)
     }
 
     func cacheImage(
@@ -142,6 +146,7 @@ class CrisisCleanupLocalImageRepository: LocalImageRepository {
     ) async throws {
         let cached = try await localFileCache.cacheImage(incidentId, worksiteId, image)
         try upsertCachedImages(worksiteId, tag, cached)
+        worksiteInteractor.onCaseChanged(incidentId, worksiteId)
     }
 
     func getLocalImage(

@@ -528,11 +528,15 @@ private struct BottomNav: View {
 
 private struct PropertyInformationView: View {
     @EnvironmentObject var viewModel: ViewCaseViewModel
+    @EnvironmentObject var router: NavigationRouter
+
     let worksite: Worksite
+
     @State private var namePressed: Bool = false
     @State private var phonePressed: Bool = false
     @State private var emailPressed: Bool = false
     @State private var addressPressed: Bool = false
+
     @State var map = MKMapView()
 
     var body: some View {
@@ -597,6 +601,23 @@ private struct PropertyInformationView: View {
                     Spacer()
                 }
                 .modifier(CopyWithAnimation(pressed: $addressPressed, copy: addressText))
+                .horizontalVerticalPadding(horizontalPadding, verticalPadding)
+
+                HStack {
+                    Image("ic_jump_to_case_on_map", bundle: .module)
+                        .renderingMode(.original)
+                        .resizable()
+                        .frame(width: iconSize, height: iconSize)
+
+                    let distanceAwayText = viewModel.distanceAway
+                    if distanceAwayText.isNotBlank {
+                        Text(distanceAwayText)
+                    }
+                }
+                .onTapGesture {
+                    viewModel.setEditedLocation()
+                    router.returnToWork()
+                }
                 .horizontalVerticalPadding(horizontalPadding, verticalPadding)
 
                 ViewCaseMapView(

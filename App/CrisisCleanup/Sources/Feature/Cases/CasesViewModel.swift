@@ -12,6 +12,7 @@ class CasesViewModel: ObservableObject {
     private let dataPullReporter: IncidentDataPullReporter
     private let worksiteLocationEditor: WorksiteLocationEditor
     private let mapCaseIconProvider: MapCaseIconProvider
+    private let worksiteInteractor: WorksiteInteractor
     private let locationManager: LocationManager
     private let worksiteProvider: WorksiteProvider
     private let transferWorkTypeProvider: TransferWorkTypeProvider
@@ -109,6 +110,7 @@ class CasesViewModel: ObservableObject {
         dataPullReporter: IncidentDataPullReporter,
         worksiteLocationEditor: WorksiteLocationEditor,
         mapCaseIconProvider: MapCaseIconProvider,
+        worksiteInteractor: WorksiteInteractor,
         locationManager: LocationManager,
         worksiteProvider: WorksiteProvider,
         transferWorkTypeProvider: TransferWorkTypeProvider,
@@ -125,6 +127,7 @@ class CasesViewModel: ObservableObject {
         self.dataPullReporter = dataPullReporter
         self.worksiteLocationEditor = worksiteLocationEditor
         self.mapCaseIconProvider = mapCaseIconProvider
+        self.worksiteInteractor = worksiteInteractor
         self.locationManager = locationManager
         self.worksiteProvider = worksiteProvider
         self.transferWorkTypeProvider = transferWorkTypeProvider
@@ -282,16 +285,17 @@ class CasesViewModel: ObservableObject {
     }
 
     private func subscribeWorksiteInBounds() {
-        let worksitesInBounds = Publishers.CombineLatest(
+        let worksitesInBounds = Publishers.CombineLatest3(
             qsm.worksiteQueryState,
-            incidentWorksitesCount
+            incidentWorksitesCount,
+            worksiteInteractor.caseChangesPublisher.eraseToAnyPublisher()
         )
             .throttle(
                 for: .seconds(0.15),
-                scheduler: RunLoop.main,
+                scheduler: RunLoop.current,
                 latest: true
             )
-            .map { (wqs, _) in
+            .map { (wqs, _, changedCase) in
                 self.latestBoundedMarkersPublisher.publisher {
                     let queryIncidentId = wqs.incidentId
                     let queryFilters = wqs.filters
@@ -310,7 +314,8 @@ class CasesViewModel: ObservableObject {
 
                     _ = self.mapAnnotationsExchanger.onAnnotationStateChange(
                         queryIncidentId,
-                        queryFilters
+                        queryFilters,
+                        changedCase
                     )
 
                     try Task.checkCancellation()
@@ -330,6 +335,7 @@ class CasesViewModel: ObservableObject {
                     return IncidentAnnotations(
                         queryIncidentId,
                         queryFilters,
+                        changedCase,
                         annotations
                     )
                 }
@@ -343,7 +349,8 @@ class CasesViewModel: ObservableObject {
                     if incidentAnnotations.isClean {
                         self.mapAnnotationsExchanger.onClean(
                             incidentAnnotations.incidentId,
-                            incidentAnnotations.filters
+                            incidentAnnotations.filters,
+                            incidentAnnotations.changedCase
                         )
                         throw CancellationError()
                     }
@@ -627,8 +634,6 @@ class CasesViewModel: ObservableObject {
         mapAnnotationsExchanger.onApplied(changes)
     }
 
-    private let zeroOffset = (0.0, 0.0)
-
     private func generateWorksiteMarkers(_ wqs: WorksiteQueryState) async throws -> [WorksiteAnnotationMapMark] {
         let id = wqs.incidentId
         let sw = wqs.coordinateBounds.southWest
@@ -636,13 +641,15 @@ class CasesViewModel: ObservableObject {
         let marksQuery = try await mapMarkerManager.queryWorksitesInBounds(id, sw, ne, wqs.filters)
 
         let marks = marksQuery.0
-        let markOffsets = try denseMarkerOffsets(marks)
+        let markOffsets = try mapMarkerManager.denseMarkerOffsets(marks, qsm.mapZoomSubject.value)
 
         try Task.checkCancellation()
 
+        let now = Date.now
         return marks.enumerated().map { (index, mark) in
-            let offset = index < markOffsets.count ? markOffsets[index] : zeroOffset
-            return mark.asAnnotationMapMark(mapCaseIconProvider, offset)
+            let isSelected = worksiteInteractor.wasCaseSelected(mark.incidentId, mark.id, reference: now)
+            let offset = index < markOffsets.count ? markOffsets[index] : mapMarkerManager.zeroOffset
+            return mark.asAnnotationMapMark(mapCaseIconProvider, isSelected, offset)
         }
     }
 
@@ -737,72 +744,6 @@ class CasesViewModel: ObservableObject {
         }
 
         return tableData
-    }
-
-    private let denseMarkCountThreshold = 15
-    private let denseMarkZoomThreshold = 14.0
-    private let denseDegreeThreshold = 0.0001
-    private let denseScreenOffsetScale = 0.6
-    private func denseMarkerOffsets(_ marks: [WorksiteMapMark]) throws -> [(Double, Double)] {
-        if marks.count > denseMarkCountThreshold ||
-            qsm.mapZoomSubject.value < denseMarkZoomThreshold
-        {
-            return []
-        }
-
-        try Task.checkCancellation()
-
-        var bucketIndices = Array(repeating: -1, count: marks.count)
-        var buckets = [[Int]]()
-        for i in 0 ..< max(0, marks.count - 1) {
-            let iMark = marks[i]
-            for j in i + 1 ..< max(1, marks.count) {
-                let jMark = marks[j]
-                if abs(iMark.latitude - jMark.latitude) < denseDegreeThreshold &&
-                    abs(iMark.longitude - jMark.longitude) < denseDegreeThreshold
-                {
-                    let bucketI = bucketIndices[i]
-                    if bucketI >= 0 {
-                        bucketIndices[j] = bucketI
-                        buckets[bucketI].append(j)
-                    } else {
-                        let bucketJ = bucketIndices[j]
-                        if bucketJ >= 0 {
-                            bucketIndices[i] = bucketJ
-                            buckets[bucketJ].append(i)
-                        } else {
-                            let bucketIndex = buckets.count
-                            bucketIndices[i] = bucketIndex
-                            bucketIndices[j] = bucketIndex
-                            buckets.append([i, j])
-                        }
-                    }
-                    break
-                }
-            }
-
-            try Task.checkCancellation()
-        }
-
-        var markOffsets = marks.map { _ in zeroOffset }
-        if buckets.isNotEmpty {
-            buckets.forEach {
-                let count = Double($0.count)
-                let offsetScale = denseScreenOffsetScale + max(count - 5.0, 0.0) * 0.2
-                if count > 1.0 {
-                    var offsetDir = .pi * 0.5
-                    let deltaDirDegrees = 2.0 * .pi / count
-                    $0.enumerated().forEach { (index, _) in
-                        markOffsets[index] = (
-                            offsetScale * cos(offsetDir),
-                            offsetScale * sin(offsetDir)
-                        )
-                        offsetDir += deltaDirDegrees
-                    }
-                }
-            }
-        }
-        return markOffsets
     }
 
     private func setSortBy(_ sortBy: WorksiteSortBy) {

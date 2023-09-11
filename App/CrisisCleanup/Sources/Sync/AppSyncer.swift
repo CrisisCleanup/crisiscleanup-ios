@@ -350,6 +350,8 @@ class AppSyncer: SyncPuller, SyncPusher {
                 }
 
                 _ = await worksiteChangeRepository.syncWorksites()
+
+                scheduleSyncMedia()
             }
         }
     }

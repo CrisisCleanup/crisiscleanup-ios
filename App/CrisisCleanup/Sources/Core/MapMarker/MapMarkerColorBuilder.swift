@@ -6,8 +6,8 @@ import SwiftUI
 extension MapMarkerColor {
 	// A default style constructor for the .copy fn to use
 	init(
-		fillLong: Int64,
-		strokeLong: Int64,
+		fillInt64: Int64,
+		strokeInt64: Int64,
 		fillInt: Int,
 		strokeInt: Int,
 		fill: Color,
@@ -15,8 +15,8 @@ extension MapMarkerColor {
 		// This is to prevent overriding the default init if it exists already
 		forCopyInit: Void? = nil
 	) {
-		self.fillLong = fillLong
-		self.strokeLong = strokeLong
+		self.fillInt64 = fillInt64
+		self.strokeInt64 = strokeInt64
 		self.fillInt = fillInt
 		self.strokeInt = strokeInt
 		self.fill = fill
@@ -32,16 +32,16 @@ extension MapMarkerColor {
 	}
 
 	struct Builder {
-		var fillLong: Int64
-		var strokeLong: Int64
+		var fillInt64: Int64
+		var strokeInt64: Int64
 		var fillInt: Int
 		var strokeInt: Int
 		var fill: Color
 		var stroke: Color
 
 		fileprivate init(original: MapMarkerColor) {
-			self.fillLong = original.fillLong
-			self.strokeLong = original.strokeLong
+			self.fillInt64 = original.fillInt64
+			self.strokeInt64 = original.strokeInt64
 			self.fillInt = original.fillInt
 			self.strokeInt = original.strokeInt
 			self.fill = original.fill
@@ -50,8 +50,8 @@ extension MapMarkerColor {
 
 		fileprivate func toMapMarkerColor() -> MapMarkerColor {
 			return MapMarkerColor(
-				fillLong: fillLong,
-				strokeLong: strokeLong,
+				fillInt64: fillInt64,
+				strokeInt64: strokeInt64,
 				fillInt: fillInt,
 				strokeInt: strokeInt,
 				fill: fill,

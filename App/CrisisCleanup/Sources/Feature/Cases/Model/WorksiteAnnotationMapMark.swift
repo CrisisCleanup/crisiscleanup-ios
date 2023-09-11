@@ -15,6 +15,7 @@ class WorksiteAnnotationMapMark: MKPointAnnotation {
 extension WorksiteMapMark {
     func asAnnotationMapMark(
         _ iconProvider: MapCaseIconProvider,
+        _ isVisited: Bool,
         _ additionalScreenOffset: (Double, Double)
     ) -> WorksiteAnnotationMapMark {
         // let (xOffset, yOffset) = additionalScreenOffset
@@ -33,7 +34,8 @@ extension WorksiteMapMark {
             hasMultipleWorkTypes,
             isFavorite: isFavorite,
             isImportant: isHighPriority,
-            isFilteredOut: isFilteredOut
+            isFilteredOut: isFilteredOut,
+            isVisited: isVisited
         )
 
         let statusId = statusClaim.status.literal
@@ -48,7 +50,11 @@ extension WorksiteMapMark {
         }
         let workTypeId = lookupKey.rawValue
 
-        point.reuseIdentifier = "\(statusId)-\(isClaimed)-\(workTypeId)-\(hasMultipleWorkTypes)-\(isFilteredOut)-\(isDuplicate)"
+        let flagIdentifier = (hasMultipleWorkTypes ? 1 << 1 : 0) |
+        (isFilteredOut ? 1 << 2 : 0) |
+        (isDuplicate ? 1 << 3 : 0) |
+        (isVisited ? 1 << 4 : 0)
+        point.reuseIdentifier = "\(statusId)-\(isClaimed)-\(workTypeId)-\(flagIdentifier)"
 
         // mapIconOffset = Offset(0.5f + xOffset, 0.5f + yOffset),
 

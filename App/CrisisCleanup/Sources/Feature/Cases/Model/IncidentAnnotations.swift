@@ -5,17 +5,20 @@ import Foundation
 struct IncidentAnnotations {
     let incidentId: Int64
     let filters: CasesFilter
+    let changedCase: CaseChangeTime
     let annotations: [WorksiteAnnotationMapMark]
     let isClean: Bool
 
     init(
         _ incidentId: Int64,
         _ filters: CasesFilter = CasesFilter(),
+        _ changedCase: CaseChangeTime = CaseChangeTime(ExistingWorksiteIdentifierNone),
         _ annotations: [WorksiteAnnotationMapMark] = [WorksiteAnnotationMapMark](),
         isClean: Bool = false
     ) {
         self.incidentId = incidentId
         self.filters = filters
+        self.changedCase = changedCase
         self.annotations = annotations
         self.isClean = isClean
     }
@@ -58,8 +61,12 @@ class MapAnnotationsExchanger {
         self.annotationsSubject = annotationsSubject
     }
 
-    func onClean(_ incidentId: Int64, _ filters: CasesFilter) {
-        let annotations = IncidentAnnotations(incidentId, filters)
+    func onClean(
+        _ incidentId: Int64,
+        _ filters: CasesFilter,
+        _ changedCase: CaseChangeTime
+    ) {
+        let annotations = IncidentAnnotations(incidentId, filters, changedCase)
         applyGuard.withLock {
             applyChangeSet = AnnotationsChangeSet(
                 annotations: annotations,
@@ -70,19 +77,29 @@ class MapAnnotationsExchanger {
         }
     }
 
-    func onAnnotationStateChange(_ incidentId: Int64, _ filters: CasesFilter) -> Bool {
+    func onAnnotationStateChange(
+        _ incidentId: Int64,
+        _ filters: CasesFilter,
+        _ changedCase: CaseChangeTime
+    ) -> Bool {
         applyGuard.withLock {
-            if isChanged(incidentId, filters) {
-                onClean(incidentId, filters)
+            if isChanged(incidentId, filters, changedCase) {
+                onClean(incidentId, filters, changedCase)
                 return true
             }
             return false
         }
     }
 
-    private func isChanged(_ incidentId: Int64, _ filters: CasesFilter) -> Bool {
+    private func isChanged(
+        _ incidentId: Int64,
+        _ filters: CasesFilter,
+        _ changedCase: CaseChangeTime
+    ) -> Bool {
         let state = applyChangeSet.annotations
-        return state.incidentId != incidentId || state.filters != filters
+        return state.incidentId != incidentId ||
+        state.filters != filters ||
+        state.changedCase != changedCase
     }
 
     func getChange(_ incidentAnnotations: IncidentAnnotations) throws -> AnnotationsChangeSet {
@@ -95,7 +112,8 @@ class MapAnnotationsExchanger {
             appliedIds = self.appliedIds
             isChanged = self.isChanged(
                 incidentAnnotations.incidentId,
-                incidentAnnotations.filters
+                incidentAnnotations.filters,
+                incidentAnnotations.changedCase
             )
         }
 

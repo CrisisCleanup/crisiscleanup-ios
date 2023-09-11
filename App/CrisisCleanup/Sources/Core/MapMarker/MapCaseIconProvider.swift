@@ -13,7 +13,8 @@ public protocol MapCaseIconProvider {
         isFavorite: Bool,
         isImportant: Bool,
         isFilteredOut: Bool,
-        isDuplicate: Bool
+        isDuplicate: Bool,
+        isVisited: Bool
     ) -> UIImage?
 
     func getIcon(
@@ -21,7 +22,8 @@ public protocol MapCaseIconProvider {
         _ workType: WorkTypeType,
         _ hasMultipleWorkTypes: Bool,
         isFilteredOut: Bool,
-        isDuplicate: Bool
+        isDuplicate: Bool,
+        isVisited: Bool
     ) -> UIImage?
 }
 
@@ -33,7 +35,8 @@ extension MapCaseIconProvider {
         isFavorite: Bool,
         isImportant: Bool,
         isFilteredOut: Bool = false,
-        isDuplicate: Bool = false
+        isDuplicate: Bool = false,
+        isVisited: Bool = false
     ) -> UIImage? {
         getIcon(
             statusClaim,
@@ -42,7 +45,8 @@ extension MapCaseIconProvider {
             isFavorite: isFavorite,
             isImportant: isImportant,
             isFilteredOut: isFilteredOut,
-            isDuplicate: isDuplicate
+            isDuplicate: isDuplicate,
+            isVisited: isVisited
         )
     }
 
@@ -51,14 +55,16 @@ extension MapCaseIconProvider {
         _ workType: WorkTypeType,
         _ hasMultipleWorkTypes: Bool,
         isFilteredOut: Bool = false,
-        isDuplicate: Bool = false
+        isDuplicate: Bool = false,
+        isVisited: Bool = false
     ) -> UIImage? {
         getIcon(
             statusClaim,
             workType,
             hasMultipleWorkTypes,
             isFilteredOut: isFilteredOut,
-            isDuplicate: isDuplicate
+            isDuplicate: isDuplicate,
+            isVisited: isVisited
         )
     }
 }

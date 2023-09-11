@@ -43,6 +43,7 @@ class InMemoryDotProvider: MapCaseDotProvider {
             cacheKey.statusClaim,
             isDuplicate: cacheKey.isDuplicate,
             isFilteredOut: cacheKey.isFilteredOut,
+            isVisited: false,
             isDot: true
         )
         let image = drawDot(colors, dotDrawProperties)
@@ -63,7 +64,8 @@ class InMemoryDotProvider: MapCaseDotProvider {
         isFavorite: Bool,
         isImportant: Bool,
         isFilteredOut: Bool,
-        isDuplicate: Bool
+        isDuplicate: Bool,
+        isVisited: Bool
     ) -> UIImage? {
         getIcon(
             statusClaim,
@@ -79,7 +81,8 @@ class InMemoryDotProvider: MapCaseDotProvider {
         _ workType: WorkTypeType,
         _ hasMultipleWorkTypes: Bool,
         isFilteredOut: Bool,
-        isDuplicate: Bool
+        isDuplicate: Bool,
+        isVisited: Bool
     ) -> UIImage? {
         let cacheKey = DotCacheKey(statusClaim, isDuplicate: isDuplicate, isFilteredOut: isFilteredOut)
         let cachedIcon = cacheLock.withLock {

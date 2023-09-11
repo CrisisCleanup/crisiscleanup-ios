@@ -82,6 +82,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
     private let organizationsRepository: OrganizationsRepository
     private let localImageRepository: LocalImageRepository
     private let authEventBus: AuthEventBus
+    private let worksiteInteractor: WorksiteInteractor
     private let appEnv: AppEnv
     private let syncLoggerFactory: SyncLoggerFactory
     private var syncLogger: SyncLogger
@@ -116,6 +117,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         organizationsRepository: OrganizationsRepository,
         localImageRepository: LocalImageRepository,
         authEventBus: AuthEventBus,
+        worksiteInteractor: WorksiteInteractor,
         appEnv: AppEnv,
         syncLoggerFactory: SyncLoggerFactory,
         loggerFactory: AppLoggerFactory
@@ -135,6 +137,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         self.organizationsRepository = organizationsRepository
         self.localImageRepository = localImageRepository
         self.authEventBus = authEventBus
+        self.worksiteInteractor = worksiteInteractor
         self.appEnv = appEnv
         self.syncLoggerFactory = syncLoggerFactory
         syncLogger = syncLoggerFactory.getLogger("")
@@ -152,12 +155,14 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         organizationId: Int64
     ) async throws -> Int64 {
         do {
-            return try await worksiteChangeDao.saveChange(
+            let id = try await worksiteChangeDao.saveChange(
                 worksiteStart: worksiteStart,
                 worksiteChange: worksiteChange,
                 primaryWorkType: primaryWorkType,
                 organizationId: organizationId
             )
+            worksiteInteractor.onCaseChanged(worksiteChange.incidentId, id)
+            return id
         } catch {
             appLogger.logError(error)
             throw error
@@ -176,6 +181,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
                 requestReason,
                 requests
             )
+            worksiteInteractor.onCaseChanged(worksite.incidentId, worksite.id)
             return true
         }
 

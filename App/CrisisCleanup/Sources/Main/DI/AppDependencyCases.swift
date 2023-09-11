@@ -67,4 +67,12 @@ extension MainComponent {
             )
         }
     }
+
+    public var worksiteInteractor: WorksiteInteractor {
+        shared {
+            CasesWorksiteInteractor(
+                incidentSelector: incidentSelector
+            )
+        }
+    }
 }

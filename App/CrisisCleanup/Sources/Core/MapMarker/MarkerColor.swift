@@ -23,25 +23,27 @@ let statusDoneByOthersNhwDiColor = Color(hex: statusDoneByOthersNhwColorCode)
 let statusOutOfScopeRejectedColor = Color(hex: statusOutOfScopeRejectedColorCode)
 let statusUnresponsiveColor = Color(hex: statusUnresponsiveColorCode)
 
+private let visitedMarkerColorCode: Int64 = 0xFF681da8
+
 // sourcery: copyBuilder
 struct MapMarkerColor {
-    let fillLong: Int64
-    let strokeLong: Int64
+    let fillInt64: Int64
+    let strokeInt64: Int64
     let fillInt: Int
     let strokeInt: Int
     let fill: Color
     let stroke: Color
 
     init(
-        _ fillLong: Int64,
-        _ strokeLong: Int64 = 0xFFFFFFFF
+        _ fillInt64: Int64,
+        _ strokeInt64: Int64 = 0xFFFFFFFF
     ) {
-        self.fillLong = fillLong
-        self.strokeLong = strokeLong
-        self.fillInt = Int(fillLong)
-        self.strokeInt = Int(strokeLong)
-        self.fill = Color(hex: fillLong)
-        self.stroke = Color(hex: strokeLong)
+        self.fillInt64 = fillInt64
+        self.strokeInt64 = strokeInt64
+        self.fillInt = Int(fillInt64)
+        self.strokeInt = Int(strokeInt64)
+        self.fill = Color(hex: fillInt64)
+        self.stroke = Color(hex: strokeInt64)
     }
 }
 
@@ -74,20 +76,44 @@ private let filteredOutDotStrokeAlpha = 0.2
 private let filteredOutDotFillAlpha = 0.05
 private let duplicateMarkerAlpha = 0.3
 
+func getWorkTypeFillColor(
+    _ status: WorkTypeStatus,
+    _ isClaimed: Bool
+) -> Color {
+    let statusClaim = WorkTypeStatusClaim(status, isClaimed)
+    return getMapMarkerColor(statusClaim).fill
+}
+
+internal func getMapMarkerColor(
+    _ statusClaim: WorkTypeStatusClaim,
+    isVisited: Bool = false
+) -> MapMarkerColor {
+    var markerColors = statusClaimMapMarkerColors[statusClaim]
+    if markerColors == nil,
+       let status = statusClaimToStatus[statusClaim] {
+        markerColors = statusMapMarkerColors[status]
+
+        if isVisited {
+            markerColors = MapMarkerColor(
+                markerColors!.fillInt64,
+                visitedMarkerColorCode
+            )
+        }
+    }
+    return markerColors ?? statusMapMarkerColors[.unknown]!
+}
+
 internal func getMapMarkerColors(
     _ statusClaim: WorkTypeStatusClaim,
     isDuplicate: Bool,
     isFilteredOut: Bool,
+    isVisited: Bool,
     isDot: Bool = false
 ) -> MapMarkerColor {
-    var colors = {
-        var markerColors = statusClaimMapMarkerColors[statusClaim]
-        if markerColors == nil,
-           let status = statusClaimToStatus[statusClaim] {
-            markerColors = statusMapMarkerColors[status]
-        }
-        return markerColors ?? statusMapMarkerColors[.unknown]!
-    }()
+    var colors = getMapMarkerColor(
+        statusClaim,
+        isVisited: isVisited && !(isDuplicate || isFilteredOut)
+    )
 
     if isDuplicate {
         colors = MapMarkerColor(

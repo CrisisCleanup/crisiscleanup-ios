@@ -8,6 +8,8 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     private let incidentsRepository: IncidentsRepository
     private let worksitesRepository: WorksitesRepository
     private let accountDataRefresher: AccountDataRefresher
+    private let worksiteInteractor: WorksiteInteractor
+    private let locationManager: LocationManager
     private var editableWorksiteProvider: EditableWorksiteProvider
     private let transferWorkTypeProvider: TransferWorkTypeProvider
     private let localImageRepository: LocalImageRepository
@@ -28,6 +30,8 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     @Published private(set) var subTitle = ""
 
     @Published private(set) var updatedAtText = ""
+
+    @Published private(set) var distanceAway = ""
 
     @Published private(set) var isLoading = true
 
@@ -86,6 +90,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         organizationsRepository: OrganizationsRepository,
         accountDataRefresher: AccountDataRefresher,
         organizationRefresher: OrganizationRefresher,
+        worksiteInteractor: WorksiteInteractor,
         incidentRefresher: IncidentRefresher,
         incidentBoundsProvider: IncidentBoundsProvider,
         locationManager: LocationManager,
@@ -107,6 +112,8 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         self.incidentsRepository = incidentsRepository
         self.worksitesRepository = worksitesRepository
         self.accountDataRefresher = accountDataRefresher
+        self.worksiteInteractor = worksiteInteractor
+        self.locationManager = locationManager
         self.editableWorksiteProvider = editableWorksiteProvider
         self.transferWorkTypeProvider = transferWorkTypeProvider
         self.localImageRepository = localImageRepository
@@ -152,7 +159,6 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         nextRecurDateFormat.dateFormat = "EEE MMMM d yyyy 'at' h:mm a"
 
         updateHeaderTitle()
-        subscribeSubTitle()
 
         organizationRefresher.pullOrganization(incidentIdIn)
     }
@@ -165,6 +171,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         let isFirstAppear = isFirstVisible.exchange(false, ordering: .sequentiallyConsistent)
 
         if isFirstAppear {
+            worksiteInteractor.onSelectCase(incidentIdIn, worksiteIdIn)
             editableWorksiteProvider.reset(incidentIdIn)
 
             Task {
@@ -176,6 +183,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         subscribeLoading()
         subscribeSyncing()
         subscribeSaving()
+        subscribeSubTitle()
         subscribePendingTransfer()
         subscribeEditableState()
         subscribeViewState()
@@ -185,6 +193,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         subscribeWorkTypeProfile()
         subscribeFilesNotes()
         subscribeLocalImages()
+        subscribeLocationState()
 
         if isFirstAppear {
             dataLoader.loadData(
@@ -234,6 +243,18 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         .receive(on: RunLoop.main)
         .assign(to: \.isSaving, on: self)
         .store(in: &subscriptions)
+    }
+
+    private func subscribeSubTitle() {
+        editableWorksite
+            .map { worksite in
+                worksite.isNew ? "" : [worksite.county, worksite.state]
+                    .filter { $0.isNotBlank }
+                    .joined(separator: ", ")
+            }
+            .receive(on: RunLoop.main)
+            .assign(to: \.subTitle, on: self)
+            .store(in: &subscriptions)
     }
 
     private func subscribePendingTransfer() {
@@ -301,6 +322,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
             .sink(receiveValue: { stateData in
                 self.caseData = stateData
                 self.statusOptions = stateData == nil ? [] : stateData!.statusOptions
+                self.setDistanceAway()
             })
             .store(in: &subscriptions)
     }
@@ -519,6 +541,16 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
             .store(in: &subscriptions)
     }
 
+    private func subscribeLocationState() {
+        locationManager.$location
+            .compactMap { $0 }
+            .receive(on: RunLoop.main)
+            .sink(receiveValue: { _ in
+                self.setDistanceAway()
+            })
+            .store(in: &subscriptions)
+    }
+
     private func getWorkTypeSummaries(
         _ worksiteWorkTypes: [WorkType],
         _ stateData: CaseEditorCaseData,
@@ -587,16 +619,28 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         : "\(localTranslate("actions.view")) \(caseNumber)"
     }
 
-    private func subscribeSubTitle() {
-        editableWorksite
-            .map { worksite in
-                worksite.isNew ? "" : [worksite.county, worksite.state]
-                    .filter { $0.isNotBlank }
-                    .joined(separator: ", ")
-            }
-            .receive(on: RunLoop.main)
-            .assign(to: \.subTitle, on: self)
-            .store(in: &subscriptions)
+    private func setDistanceAway() {
+        var distanceAwayText = ""
+        if let coordinates = locationManager.location?.coordinate,
+           let worksite = caseData?.worksite {
+            let worksiteLatRad = worksite.latitude.radians
+            let worksiteLngRad = worksite.longitude.radians
+            let latRad = coordinates.latitude.radians
+            let lngRad = coordinates.longitude.radians
+            let distanceAwayMi = haversineDistance(
+                latRad, lngRad,
+                worksiteLatRad, worksiteLngRad
+            ).kmToMiles
+            distanceAwayText = String(format: "%.01f", distanceAwayMi)
+            distanceAwayText = "\(distanceAwayText) \(t("caseView.miles_abbrv"))"
+        }
+        distanceAway = distanceAwayText
+    }
+
+    func setEditedLocation() {
+        if let coordinates = caseData?.worksite.coordinates {
+            editableWorksiteProvider.setEditedLocation(coordinates.coordinates)
+        }
     }
 
     private var organizationId: Int64? { caseData?.orgId }

@@ -60,6 +60,7 @@ public protocol AppDependency: Dependency {
     var transferWorkTypeProvider: TransferWorkTypeProvider { get }
     var worksiteProvider: WorksiteProvider { get }
     var existingWorksiteSelector: ExistingWorksiteSelector { get }
+    var worksiteInteractor: WorksiteInteractor { get }
 }
 
 extension MainComponent {

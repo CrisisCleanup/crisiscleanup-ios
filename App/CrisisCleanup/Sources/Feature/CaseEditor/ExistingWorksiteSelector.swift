@@ -1,6 +1,6 @@
 import Combine
 
-struct ExistingWorksiteIdentifier: Equatable {
+public struct ExistingWorksiteIdentifier: Hashable {
     let incidentId: Int64
     let worksiteId: Int64
 

@@ -57,7 +57,8 @@ class WorkTypeIconProvider: MapCaseIconProvider {
         isFavorite: Bool,
         isImportant: Bool,
         isFilteredOut: Bool,
-        isDuplicate: Bool
+        isDuplicate: Bool,
+        isVisited: Bool
     ) -> UIImage? {
         let cacheKey = CacheKey(
             statusClaim,
@@ -66,7 +67,8 @@ class WorkTypeIconProvider: MapCaseIconProvider {
             isFavorite: isFavorite,
             isImportant: isImportant,
             isFilteredOut: isFilteredOut,
-            isDuplicate: isDuplicate
+            isDuplicate: isDuplicate,
+            isVisited: isVisited
         )
         let existing = cacheLock.withLock { cache.value(forKey: cacheKey) }
         guard existing == nil else { return existing }
@@ -79,14 +81,16 @@ class WorkTypeIconProvider: MapCaseIconProvider {
         _ workType: WorkTypeType,
         _ hasMultipleWorkTypes: Bool,
         isFilteredOut: Bool,
-        isDuplicate: Bool
+        isDuplicate: Bool,
+        isVisited: Bool
     ) -> UIImage? {
         return getIcon(
             statusClaim,
             workType,
             hasMultipleWorkTypes,
             isFavorite: false,
-            isImportant: false
+            isImportant: false,
+            isVisited: false
         )
     }
 
@@ -121,10 +125,15 @@ class WorkTypeIconProvider: MapCaseIconProvider {
         let colors = getMapMarkerColors(
             cacheKey.statusClaim,
             isDuplicate: cacheKey.isDuplicate,
-            isFilteredOut: cacheKey.isFilteredOut
+            isFilteredOut: cacheKey.isFilteredOut,
+            isVisited: cacheKey.isVisited
         )
 
-        let filteredImage = grayscaleToColor(bwImage!, fromColorInt: colors.fillLong, toColorInt: colors.strokeLong)
+        let filteredImage = grayscaleToColor(
+            bwImage!,
+            fromColorInt: colors.fillInt64,
+            toColorInt: colors.strokeInt64
+        )
         let filteredUiImage = UIImage(cgImage: filteredImage)
 
         let shadowImage = cacheKey.isFilteredOut
@@ -174,6 +183,7 @@ private struct CacheKey: Hashable {
     let isImportant: Bool
     let isFilteredOut: Bool
     let isDuplicate: Bool
+    let isVisited: Bool
 
     init(
         _ statusClaim: WorkTypeStatusClaim,
@@ -182,7 +192,8 @@ private struct CacheKey: Hashable {
         isFavorite: Bool = false,
         isImportant: Bool = false,
         isFilteredOut: Bool = false,
-        isDuplicate: Bool = false
+        isDuplicate: Bool = false,
+        isVisited: Bool = false
     ) {
         self.statusClaim = statusClaim
         self.workType = workType
@@ -191,5 +202,6 @@ private struct CacheKey: Hashable {
         self.isImportant = isImportant
         self.isFilteredOut = isFilteredOut
         self.isDuplicate = isDuplicate
+        self.isVisited = isVisited
     }
 }

@@ -38,6 +38,7 @@ internal struct WorkTypeIconsView: View {
                 }
             }
         }
+        .background(.gray)
     }
 }
 
@@ -62,7 +63,8 @@ class WorkTypeIconImageGenerator {
                     workType,
                     i>0,
                     isFavorite: isFavorite,
-                    isImportant: isImportant
+                    isImportant: isImportant,
+                    isVisited: true
                 )
                 images.append(image ?? UIImage(named: "cases")!)
                 statusIndex += 1

@@ -46,6 +46,10 @@ class NavigationRouter: ObservableObject {
         }
     }
 
+    func returnToWork() {
+        clearNavigationStack()
+    }
+
     func openCaseAddNote() {
         path.append(.caseAddNote)
     }

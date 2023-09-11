@@ -222,6 +222,7 @@ extension MainComponent {
                 organizationsRepository: organizationsRepository,
                 localImageRepository: localImageRepository,
                 authEventBus: authEventBus,
+                worksiteInteractor: worksiteInteractor,
                 appEnv: appEnv,
                 syncLoggerFactory: syncLoggerFactory,
                 loggerFactory: loggerFactory
@@ -237,6 +238,7 @@ extension MainComponent {
                 localImageDao: localImageDao,
                 writeApi: writeApi,
                 localFileCache: localFileCache,
+                worksiteInteractor: worksiteInteractor,
                 syncLogger: syncLoggerFactory.getLogger("local-image"),
                 loggerFactory: loggerFactory
             )

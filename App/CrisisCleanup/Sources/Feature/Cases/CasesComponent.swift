@@ -18,6 +18,7 @@ class CasesComponent: Component<AppDependency>, CasesViewBuilder {
         dataPullReporter: dependency.incidentDataPullReporter,
         worksiteLocationEditor: dependency.worksiteLocationEditor,
         mapCaseIconProvider: dependency.mapCaseIconProvider,
+        worksiteInteractor: dependency.worksiteInteractor,
         locationManager: dependency.locationManager,
         worksiteProvider: dependency.worksiteProvider,
         transferWorkTypeProvider: dependency.transferWorkTypeProvider,
