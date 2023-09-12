@@ -8,12 +8,10 @@ enum CaseStatus: String, Identifiable, CaseIterable {
          needsFollowUp,
          completed,
 
-         // TODO Review colors (and names) on web. There are marker colors and status colors...
          /**
           * Nhw = no help wanted
-          * Pc = partially completed
           */
-         doneByOthersNhwPc,
+         doneByOthersNhw,
 
          /**
           * Du = Duplicate or unresponsive

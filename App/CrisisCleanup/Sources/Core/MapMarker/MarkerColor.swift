@@ -56,7 +56,7 @@ private let statusMapMarkerColors: [CaseStatus: MapMarkerColor] = [
     .partiallyCompleted: MapMarkerColor(statusPartiallyCompletedColorCode),
     .needsFollowUp: MapMarkerColor(statusNeedsFollowUpColorCode),
     .completed: MapMarkerColor(statusCompletedColorCode),
-    .doneByOthersNhwPc: MapMarkerColor(statusDoneByOthersNhwColorCode),
+    .doneByOthersNhw: MapMarkerColor(statusDoneByOthersNhwColorCode),
     // Unresponsive
     .outOfScopeDu: MapMarkerColor(statusOutOfScopeRejectedColorCode),
     .incomplete: MapMarkerColor(statusDoneByOthersNhwColorCode),

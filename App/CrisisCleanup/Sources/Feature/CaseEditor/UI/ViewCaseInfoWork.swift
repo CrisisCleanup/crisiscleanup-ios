@@ -154,6 +154,7 @@ private struct WorkTypeSummaryView: View {
                 WorkTypeStatusPicker(
                     translator: viewModel,
                     selectedStatus: summary.workType.status,
+                    isClaimed: summary.workType.orgClaim != nil,
                     statusOptions: viewModel.statusOptions,
                     spanWidth: true
                 ) { status in

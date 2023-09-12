@@ -9,7 +9,8 @@ internal let statusClaimToStatus: [WorkTypeStatusClaim: CaseStatus] = [
     WorkTypeStatusClaim(.closedIncomplete, true): .incomplete,
     WorkTypeStatusClaim(.closedOutOfScope, true): .outOfScopeDu,
     WorkTypeStatusClaim(.closedDuplicate, true): .outOfScopeDu,
-    WorkTypeStatusClaim(.closedDoneByOthers, true): .doneByOthersNhwPc,
+    WorkTypeStatusClaim(.closedDoneByOthers, true): .doneByOthersNhw,
+    WorkTypeStatusClaim(.closedNoHelpWanted, true): .doneByOthersNhw,
     WorkTypeStatusClaim(.unknown, false): .unknown,
     WorkTypeStatusClaim(.openAssigned, false): .unclaimed,
     WorkTypeStatusClaim(.openUnassigned, false): .unclaimed,
@@ -20,5 +21,6 @@ internal let statusClaimToStatus: [WorkTypeStatusClaim: CaseStatus] = [
     WorkTypeStatusClaim(.closedIncomplete, false): .incomplete,
     WorkTypeStatusClaim(.closedOutOfScope, false): .outOfScopeDu,
     WorkTypeStatusClaim(.closedDuplicate, false): .outOfScopeDu,
-    WorkTypeStatusClaim(.closedDoneByOthers, false): .doneByOthersNhwPc,
+    WorkTypeStatusClaim(.closedDoneByOthers, false): .doneByOthersNhw,
+    WorkTypeStatusClaim(.closedNoHelpWanted, false): .doneByOthersNhw,
 ]

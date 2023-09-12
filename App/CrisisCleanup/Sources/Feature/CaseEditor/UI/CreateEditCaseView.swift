@@ -135,7 +135,8 @@ private struct CreateEditCaseContentView: View {
                                                 statusData: $viewModel.workTypeStatusFormData,
                                                 statusTranslator: viewModel,
                                                 isNewCase: viewModel.isCreateWorksite,
-                                                node: child
+                                                node: child,
+                                                isWorkTypeClaimed: viewModel.isWorkTypeClaimed
                                             )
                                             .padding(.horizontal)
                                         }
@@ -700,6 +701,8 @@ struct DisplayFormField: View {
 
     let node: FormFieldNode
 
+    let isWorkTypeClaimed: (String) -> Bool
+
     @FocusState private var focusState: TextInputFocused?
 
     var body: some View {
@@ -839,6 +842,7 @@ struct DisplayFormField: View {
                             WorkTypeStatusPicker(
                                 translator: statusTranslator,
                                 selectedStatus: selectedStatus,
+                                isClaimed: isWorkTypeClaimed(node.formField.selectToggleWorkType),
                                 statusOptions: workTypeStatuses,
                                 spanWidth: false
                             ) {
@@ -863,7 +867,8 @@ struct DisplayFormField: View {
                                 statusData: $statusData,
                                 statusTranslator: statusTranslator,
                                 isNewCase: isNewCase,
-                                node: childNode
+                                node: childNode,
+                                isWorkTypeClaimed: isWorkTypeClaimed
                             )
                             .padding(.leading)
                         }

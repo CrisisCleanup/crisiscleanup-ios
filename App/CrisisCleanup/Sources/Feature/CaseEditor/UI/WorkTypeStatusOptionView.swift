@@ -16,6 +16,15 @@ let statusOptionColors = [
     WorkTypeStatus.closedRejected: statusOutOfScopeRejectedColor,
 ]
 
+let statusUnclaimedRed = Set([
+    WorkTypeStatus.openUnassigned,
+    WorkTypeStatus.openAssigned,
+    WorkTypeStatus.openPartiallyCompleted,
+    WorkTypeStatus.openNeedsFollowUp,
+    WorkTypeStatus.needUnfilled,
+    WorkTypeStatus.needOverdue,
+])
+
 private struct WorkTypeStatusOption : View {
     @EnvironmentObject var editableView: EditableView
 
@@ -24,14 +33,23 @@ private struct WorkTypeStatusOption : View {
     var showOpenIcon = false
     var isSelected = false
     var spanWidth = false
+    var isUnclaimedColor = false
 
     private let dotSize = 16.0
 
     var body: some View {
+        let color: Color = {
+            var c = statusOptionColors[status] ?? statusUnknownColor
+            if isUnclaimedColor,
+               statusUnclaimedRed.contains(status) {
+                c = statusUnclaimedColor
+            }
+            return c
+        }()
         HStack {
             Circle()
                 .frame(width: dotSize, height: dotSize)
-                .foregroundColor(statusOptionColors[status] ?? statusUnknownColor)
+                .foregroundColor(color)
             Text(translator.t(status.literal))
                 .tint(.blue)
                 // TODO: Common dimensions
@@ -56,6 +74,7 @@ struct WorkTypeStatusPicker: View {
 
     var translator: KeyTranslator
     var selectedStatus: WorkTypeStatus
+    var isClaimed: Bool
     var statusOptions: [WorkTypeStatus]
     var spanWidth: Bool
     var onOptionsOpen: () -> Void = {}
@@ -68,7 +87,8 @@ struct WorkTypeStatusPicker: View {
             translator: translator,
             status: selectedStatus,
             showOpenIcon: true,
-            spanWidth: spanWidth
+            spanWidth: spanWidth,
+            isUnclaimedColor: !isClaimed
         )
         .onTapGesture {
             showOptions.toggle()

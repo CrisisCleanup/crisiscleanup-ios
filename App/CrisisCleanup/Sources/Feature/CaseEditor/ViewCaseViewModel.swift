@@ -736,6 +736,34 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         }
     }
 
+    private func saveWorkTypeChange(
+        _ startingWorksite: Worksite,
+        _ changedWorksite: Worksite
+    ) {
+        var updatedWorksite = changedWorksite
+
+        var workTypes = changedWorksite.workTypes
+        if workTypes.isNotEmpty {
+            workTypes = workTypes.sorted { a, b in
+                a.workTypeLiteral.localizedCompare(b.workTypeLiteral) == .orderedAscending
+            }
+
+            var keyWorkType = workTypes.first!
+            if let keyWorkTypeLiteral = changedWorksite.keyWorkType?.workTypeLiteral,
+               let matchingWorkType = workTypes.first(where: {
+                    keyWorkTypeLiteral == $0.workTypeLiteral
+               }) {
+                keyWorkType = matchingWorkType
+            }
+
+            updatedWorksite = changedWorksite.copy {
+                $0.keyWorkType = keyWorkType
+            }
+        }
+
+        saveWorksiteChange(startingWorksite, updatedWorksite)
+    }
+
     func updateWorkType(_ workType: WorkType, _ isStatusChange: Bool) {
         let startingWorksite = referenceWorksite
         var updatedWorkTypes = startingWorksite.workTypes
@@ -748,7 +776,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         updatedWorkTypes.append(updatedWorkType)
 
         let changedWorksite = startingWorksite.copy { $0.workTypes = updatedWorkTypes }
-        saveWorksiteChange(startingWorksite, changedWorksite)
+        saveWorkTypeChange(startingWorksite, changedWorksite)
     }
 
     func requestWorkType(_ workType: WorkType) {
@@ -788,7 +816,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
                     $0.isClaimed ? $0: $0.copy { $0.orgClaim = orgId }
                 }
             let changedWorksite = startingWorksite.copy { $0.workTypes = updatedWorkTypes }
-            saveWorksiteChange(startingWorksite, changedWorksite)
+            saveWorkTypeChange(startingWorksite, changedWorksite)
         }
     }
 

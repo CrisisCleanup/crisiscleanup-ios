@@ -48,6 +48,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     let editableViewState = EditableView()
 
     private let editingWorksite: AnyPublisher<Worksite, Never>
+    private var workTypeLookup = [String: WorkType]()
 
     private let uiState: AnyPublisher<CaseEditorUiState, Never>
     @Published private(set) var caseData: CaseEditorCaseData? = nil
@@ -521,6 +522,8 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         isAssignedToOrgMember = worksite.isAssignedToOrgMember
         locationInputData.hasWrongLocation = worksite.hasWrongLocationFlag
 
+        workTypeLookup = worksite.workTypes.associateBy { $0.workTypeLiteral }
+
         configureNameSearch()
     }
 
@@ -584,6 +587,10 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         if locationManager.isDeniedLocationAccess {
             showExplainLocationPermission = true
         }
+    }
+
+    func isWorkTypeClaimed(workType: String) -> Bool {
+        workTypeLookup[workType]?.orgClaim != nil
     }
 
     private func clearInvalidWorksiteInfo() {

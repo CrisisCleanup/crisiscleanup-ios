@@ -381,6 +381,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         if let syncWorksite = syncNetworkWorksite,
            incidentId > 0 {
             _ = try await worksitesRepository.syncNetworkWorksite(syncWorksite)
+            worksiteInteractor.onCaseChanged(incidentId, worksiteId)
         }
 
         if let e = syncException { throw e }
