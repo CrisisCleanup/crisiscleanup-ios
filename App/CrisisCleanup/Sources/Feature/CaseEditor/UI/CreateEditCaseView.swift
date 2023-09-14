@@ -903,19 +903,19 @@ private struct CreateEditCaseSaveActions: View {
             .styleCancel()
 
             Button {
+                viewModel.saveChanges(false)
+            } label : {
+                Text(t.t("actions.save"))
+            }
+            .stylePrimary()
+
+            Button {
                 viewModel.saveChanges(true)
             } label : {
                 Text(t.t("actions.save_claim"))
             }
             .stylePrimary()
             .frame(maxWidth: .infinity)
-
-            Button {
-                viewModel.saveChanges(false)
-            } label : {
-                Text(t.t("actions.save"))
-            }
-            .stylePrimary()
         }
         .padding([.horizontal, .bottom], 8)
     }
