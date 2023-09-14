@@ -98,13 +98,17 @@ extension Worksite {
     // TODO: Test coverage
     func updateKeyWorkType(_ reference: Worksite) -> Worksite {
         copy {
-            var keyWorkType: WorkType? = nil
-            if let matchWorkType = reference.keyWorkType?.workType {
-                keyWorkType = workTypes.first(where: {
-                    $0.workType == matchWorkType
-                })
-            }
-            $0.keyWorkType = keyWorkType ?? workTypes.firstOrNil
+            $0.keyWorkType = workTypes.matchKeyWorkType(reference)
         }
+    }
+}
+
+extension Array where Element == WorkType {
+    func matchKeyWorkType(_ reference: Worksite) -> WorkType? {
+        var keyWorkType: WorkType? = nil
+        if let matchWorkType = reference.keyWorkType?.workType {
+            keyWorkType = first { $0.workType == matchWorkType }
+        }
+        return keyWorkType ?? firstOrNil
     }
 }

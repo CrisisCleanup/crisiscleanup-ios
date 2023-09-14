@@ -691,12 +691,14 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
                     return
                 }
 
+                var keyWorkType = worksite.keyWorkType
                 let orgId = caseData!.orgId
                 var workTypes = worksite.workTypes
                 if claimUnclaimed {
                     workTypes = workTypes.map {
                         $0.orgClaim != nil ? $0 : $0.copy { $0.orgClaim = orgId }
                     }
+                    keyWorkType = workTypes.matchKeyWorkType(initialWorksite)
                 }
 
                 let updatedIncidentId = isIncidentChange ? saveIncidentId : worksite.incidentId
@@ -708,6 +710,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
 
                 let updatedWorksite = worksite.copy {
                     $0.incidentId = updatedIncidentId
+                    $0.keyWorkType = keyWorkType
                     $0.workTypes = workTypes
                     $0.reportedBy = updatedReportedBy
                     $0.updatedAt = Date.now
