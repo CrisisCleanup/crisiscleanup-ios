@@ -24,7 +24,7 @@ extension WorksiteDao {
             let worksites: [PopulatedFilterDataWorksite]
             if filters.hasSviFilter {
                 worksites = getFilterWorksites(incidentId, stride, offset) {
-                    $0.bySviLte(filters.svi)
+                    $0.bySviGte(filters.svi)
                         .orderBySvi()
                 }
             } else if filters.hasUpdatedFilter {

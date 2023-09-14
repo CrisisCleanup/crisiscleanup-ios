@@ -192,7 +192,7 @@ private struct FilterSlidersSection: View {
             .onChange(of: svi) { newValue in
                 let actualSvi = newValue * 0.01
                 if abs(actualSvi - viewModel.casesFilters.svi) > 0.001 {
-                    viewModel.changeFilters { $0.svi = actualSvi }
+                    viewModel.changeFilters { $0.svi = (1.0 - actualSvi).clamp(lower: 0.0, upper: 1.0) }
                 }
             }
             .tint(.black)
@@ -203,7 +203,7 @@ private struct FilterSlidersSection: View {
             )
         }
         .onChange(of: viewModel.casesFilters) { newValue in
-            svi = newValue.svi * 100
+            svi = (1.0 - newValue.svi).clamp(lower: 0.0, upper: 1.0) * 100
         }
         .padding(.horizontal)
 
