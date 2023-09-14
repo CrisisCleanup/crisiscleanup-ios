@@ -334,9 +334,13 @@ internal class CaseEditorDataLoader {
                     var editSections = [translate("caseForm.property_information")]
                     let requiredGroups: Set = ["workInfo"]
                     ewp.formFields.map { node in
-                        let label = node.formField.label
+                        let labelTranslateKey = "formLabels.\(node.fieldKey)"
+                        var translatedLabel = translate(labelTranslateKey)
+                        if translatedLabel == labelTranslateKey {
+                            translatedLabel = node.formField.label
+                        }
                         let isRequired = requiredGroups.contains(node.formField.group)
-                        return isRequired ? "\(label) *" : label
+                        return isRequired ? "\(translatedLabel) *" : translatedLabel
                     }
                     .forEach {
                         editSections.append($0)

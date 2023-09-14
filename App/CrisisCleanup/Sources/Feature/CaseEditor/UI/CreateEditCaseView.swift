@@ -238,7 +238,15 @@ private struct CreateEditCaseSectionHeaderView: View {
                 ViewCaseRowHeader(rowNum: titleNumber, rowTitle: t.t(titleTranslateKey))
 
                 if helpText.isNotBlank {
-                    HelpIcon(helpText)
+                    let translatedHelp: String = {
+                        let translateKey = "formLabels.\(helpText)"
+                        var translated = t.t(translateKey)
+                        if translated == translateKey {
+                            translated = t.t(helpText)
+                        }
+                        return translated
+                    }()
+                    HelpIcon(translatedHelp)
                         .padding(.horizontal)
                 }
 
@@ -672,12 +680,18 @@ private struct CreateEditCaseNotesView: View {
 
 private struct DisplayFormFieldLabel: View {
     @Environment(\.translator) var t: KeyAssetTranslator
+
     let node: FormFieldNode
 
     var body: some View {
-        Text(t.t(node.formField.label))
+        Text(node.formField.translatedLabel(t))
         if node.formField.help.isNotBlank {
-            HelpIcon(node.formField.help)
+            let helpTranslateKey = "formLabels.\(node.formField.help)"
+            let helpText: String = {
+                let translated = t.t(helpTranslateKey)
+                return translated == helpTranslateKey ? t.t(node.formField.help) : translated
+            }()
+            HelpIcon(helpText)
         }
     }
 }
@@ -734,7 +748,7 @@ struct DisplayFormField: View {
                 HStack {
                     CheckboxView(
                         checked: $checkedData[node.fieldKey],
-                        text: node.formField.label
+                        text: node.formField.translatedLabel(statusTranslator)
                     )
                     .disabled(disabled)
                     if node.formField.help.isNotBlank {
@@ -822,13 +836,13 @@ struct DisplayFormField: View {
                 let isChecked = checkedData[node.fieldKey]
                 HStack {
                     if node.children.isEmpty || node.formField.isReadOnly {
-                        Text(t.t(node.formField.label))
+                        Text(node.formField.translatedLabel(statusTranslator))
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.vertical, appTheme.listItemVerticalPadding)
                     } else {
                         CheckboxView(
                             checked: $checkedData[node.fieldKey],
-                            text: t.t(node.formField.label)
+                            text: node.formField.translatedLabel(statusTranslator)
                         )
                         .disabled(disabled)
 
@@ -877,7 +891,7 @@ struct DisplayFormField: View {
                 }
             default:
                 HStack {
-                    Text(t.t(node.formField.label))
+                    Text(node.formField.translatedLabel(statusTranslator))
                 }
             }
         }

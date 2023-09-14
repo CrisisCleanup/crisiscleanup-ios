@@ -28,7 +28,7 @@ public struct NetworkLanguageTranslationResult: Codable, Equatable {
 public struct NetworkLanguageTranslation: Codable, Equatable {
     let subtag: String
     let name: String
-    let translations: [String: String]
+    let translations: [String: String?]
     enum CodingKeys: String, CodingKey {
         case subtag
         case name = "name_t"

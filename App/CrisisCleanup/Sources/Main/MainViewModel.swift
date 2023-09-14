@@ -6,6 +6,7 @@ class MainViewModel: ObservableObject {
     private let appSupportRepository: AppSupportRepository
     private let appVersionProvider: AppVersionProvider
     private let incidentSelector: IncidentSelector
+    private let translationsRepository: LanguageTranslationsRepository
     let translator: KeyAssetTranslator
     private let syncPuller: SyncPuller
     private let syncPusher: SyncPusher
@@ -37,6 +38,7 @@ class MainViewModel: ObservableObject {
         self.accountDataRepository = accountDataRepository
         self.appSupportRepository = appSupportRepository
         self.appVersionProvider = appVersionProvider
+        self.translationsRepository = translationsRepository
         translator = translationsRepository
         self.incidentSelector = incidentSelector
         self.syncPuller = syncPuller
@@ -50,6 +52,7 @@ class MainViewModel: ObservableObject {
     }
 
     func onActivePhase() {
+        translationsRepository.setLanguageFromSystem()
         appSupportRepository.onAppOpen()
         appSupportRepository.pullMinSupportedAppVersion()
 

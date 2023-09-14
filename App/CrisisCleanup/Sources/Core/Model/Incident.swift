@@ -159,6 +159,15 @@ public struct IncidentFormField: Equatable {
         isFrequency = htmlTypeLower == "cronselect"
         isSelectOption = htmlType.lowercased() == "select"
     }
+
+    func translatedLabel(_ translator: KeyTranslator) -> String {
+        let labelTranslateKey = "formLabels.\(fieldKey)"
+        var translatedLabel = translator.t(labelTranslateKey)
+        if translatedLabel == labelTranslateKey {
+            translatedLabel = label
+        }
+        return translatedLabel
+    }
 }
 
 public struct IncidentIdNameType {

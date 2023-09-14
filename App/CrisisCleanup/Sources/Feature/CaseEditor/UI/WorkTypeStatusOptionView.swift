@@ -50,7 +50,7 @@ private struct WorkTypeStatusOption : View {
             Circle()
                 .frame(width: dotSize, height: dotSize)
                 .foregroundColor(color)
-            Text(translator.t(status.literal))
+            Text(translator.t("status.\(status.literal)"))
                 .tint(.blue)
                 // TODO: Common dimensions
                 .frame(height: 48)

@@ -11,6 +11,8 @@ public protocol LanguageTranslationsRepository: KeyAssetTranslator {
     func loadLanguages(_ force: Bool) async
 
     func setLanguage(_ key: String)
+
+    func setLanguageFromSystem()
 }
 
 extension LanguageTranslationsRepository {
@@ -127,8 +129,16 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
             } else {
                 try await pullUpdatedTranslations()
             }
+
+            setLanguageFromSystem()
         } catch {
             logger.logError(error)
+        }
+    }
+
+    func setLanguageFromSystem() {
+        if let systemLocale = NSLocale.preferredLanguages.first {
+            setLanguage(systemLocale)
         }
     }
 
@@ -153,11 +163,15 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
             do {
                 defer { isSettingLanguageSubject.value = false }
 
-                try await pullUpdatedTranslations(key)
+                let languages = try await supportedLanguages.eraseToAnyPublisher().asyncFirst()
+                let languagesSet = Set(languages.map { $0.key })
+                let languageKey = languagesSet.contains(key) ? key : EnglishLanguage.key
+
+                try await pullUpdatedTranslations(languageKey)
 
                 try Task.checkCancellation()
 
-                appPreferencesDataStore.setLanguageKey(key)
+                appPreferencesDataStore.setLanguageKey(languageKey)
             } catch {
                 logger.logError(error)
             }

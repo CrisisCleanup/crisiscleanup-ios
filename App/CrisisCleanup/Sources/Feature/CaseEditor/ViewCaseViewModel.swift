@@ -562,9 +562,10 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     ) -> [WorkTypeSummary] {
         worksiteWorkTypes.map { workType in
             let workTypeLiteral = workType.workTypeLiteral
-            var name = localTranslate(workTypeLiteral)
+            let workTypeTranslateKey = "workType.\(workTypeLiteral)"
+            var name = localTranslate(workTypeTranslateKey)
             if name == workTypeLiteral {
-                name = localTranslate("workType.\(workTypeLiteral)")
+                name = localTranslate(workTypeLiteral)
             }
             let summaryJobTypes = worksite.summarizeWorkTypeJobs(
                 stateData.incident.workTypeLookup,
@@ -999,7 +1000,7 @@ fileprivate extension Worksite {
             return formData
                 .filter { formValue in workTypeLookup[formValue.key] == workTypeLiteral }
                 .filter { formValue in formValue.value.isBooleanTrue }
-                .map { formValue in translate(formValue.key) }
+                .map { formValue in translate("formLabels.\(formValue.key)") }
                 .filter { jobName in jobName != name }
                 .filter { $0.isNotBlank == true }
         }
