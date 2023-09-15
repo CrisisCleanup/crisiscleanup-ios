@@ -434,6 +434,14 @@ public enum WorksiteSortBy: String, Identifiable, CaseIterable, Codable {
         case .countyParish: return  "worksiteFilters.sort_by_county"
         }
     }
+
+    static let allCasesNotNone: [WorksiteSortBy] = [
+        .caseNumber,
+        .nearest,
+        .name,
+        .city,
+        .countyParish
+    ]
 }
 
 private let sortByLookup = WorksiteSortBy.allCases.associateBy{ $0.literal }

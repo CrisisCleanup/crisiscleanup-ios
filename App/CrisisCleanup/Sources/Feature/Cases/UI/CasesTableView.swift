@@ -41,8 +41,11 @@ struct CasesTableView: View {
 
                 Spacer()
 
+                let sortByOptions = viewModel.tableViewSort == .none
+                ? WorksiteSortBy.allCases
+                : WorksiteSortBy.allCasesNotNone
                 Picker("", selection: $viewModel.tableViewSort ) {
-                    ForEach(WorksiteSortBy.allCases, id: \.self) { sortBy in
+                    ForEach(sortByOptions, id: \.self) { sortBy in
                         Text(t.t(sortBy.translateKey))
                     }
                 }
