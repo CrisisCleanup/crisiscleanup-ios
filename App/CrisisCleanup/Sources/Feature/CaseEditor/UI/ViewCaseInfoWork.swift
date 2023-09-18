@@ -144,7 +144,6 @@ private struct WorkTypeSummaryView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             if summary.jobSummary.isNotBlank {
                 Text(summary.jobSummary)
-                    .font(.callout)
                     .padding(.vertical, 1.0)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .fontBodySmall()
