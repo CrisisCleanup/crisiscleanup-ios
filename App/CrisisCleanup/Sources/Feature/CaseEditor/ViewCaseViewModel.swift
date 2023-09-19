@@ -574,10 +574,9 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
                 name
             )
             let rRuleSummary: String? = {
-//                if let rRuleString = workType.recur {
-//                    // TODO: Use RRule library and customize where lacking
-//                     return RRule(rRuleString).toHumanReadableText(translator)
-//                }
+                if let rRuleString = workType.recur {
+                    return Rrule.from(rRuleString).toHumanReadableText(translator)
+                }
                 return nil
             }()
             let nextRecurSummary: String? = {

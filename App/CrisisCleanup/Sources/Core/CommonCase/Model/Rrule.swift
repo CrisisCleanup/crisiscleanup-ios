@@ -55,9 +55,14 @@ private let rruleWeekDayCoded: [RruleWeekDay: String] = [
 private let reverseWeekDayLookup = rruleWeekDayCoded.map { ($0.value, $0.key) }
     .associate { $0 }
 
-private let rruleDateFormatter = ISO8601DateFormatter()
 
 struct Rrule: Equatable {
+    private static let rruleDateFormatter = DateFormatter()
+    private static var dateFormatter: DateFormatter {
+        self.rruleDateFormatter.dateFormat = "yyyyMMdd'T'HHmmssZ"
+        return self.rruleDateFormatter
+    }
+
     let frequency: RruleFrequency
     let until: Date?
     let interval: Int
@@ -72,7 +77,7 @@ struct Rrule: Equatable {
     private var untilCoded: String {
         if let until = until,
            let date = Calendar.current.date(bySettingHour: 12, minute: 0, second: 0, of: until) {
-            return rruleDateFormatter.string(from: date)
+            return Self.dateFormatter.string(from: date)
         }
         return ""
     }
@@ -121,7 +126,7 @@ struct Rrule: Equatable {
         }
 
         if let untilCoded = partsLookup[RruleKey.until.keyValue],
-           let untilDecoded = rruleDateFormatter.date(from: untilCoded) {
+           let untilDecoded = dateFormatter.date(from: untilCoded) {
             until = untilDecoded
         }
 
