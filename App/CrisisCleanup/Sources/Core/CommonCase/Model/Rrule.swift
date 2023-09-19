@@ -1,6 +1,6 @@
 import Foundation
 
-enum RruleFrequency: String {
+internal enum RruleFrequency: String {
     case daily
     case weekly
 
@@ -32,7 +32,7 @@ private enum RruleKey: String, Identifiable {
     }
 }
 
-enum RruleWeekDay: Hashable {
+internal enum RruleWeekDay: Hashable {
     case sunday
     case monday
     case tuesday
@@ -106,17 +106,17 @@ struct Rrule: Equatable {
                 return (String(key), String(value))
             }
 
-        var frequency = RruleFrequency.daily
+        var frequency = RruleFrequency.weekly
         var until: Date? = nil
         var interval = 0
         var byDay = [RruleWeekDay]()
 
         if let frequencyCoded = partsLookup[RruleKey.freq.keyValue] {
             switch frequencyCoded {
-            case RruleFrequency.weekly.value:
-                frequency = .weekly
-            default:
+            case RruleFrequency.daily.value:
                 frequency = .daily
+            default:
+                frequency = .weekly
             }
         }
 
@@ -156,21 +156,136 @@ struct Rrule: Equatable {
         self.byDay = byDay
     }
 
-    //    init(from decoder: Decoder) throws {
-    //        var rrule = Rrule()
-    //        let container = try decoder.singleValueContainer()
-    //        if let value = try? container.decode(String.self) {
-    //            rrule = Rrule.from(value)
-    //        }
-    //
-    //        frequency = rrule.frequency
-    //        until = rrule.until
-    //        interval = rrule.interval
-    //        byDay = rrule.byDay
-    //    }
-    //
-    //    func encode(to encoder: Encoder) throws {
-    //        var container = encoder.singleValueContainer()
-    //        try container.encode(rruleString)
-    //    }
+    private func profile() -> RruleProfile {
+        let days = Set(byDay)
+        let hasWeekDays = days.contains(.monday) &&
+        days.contains(.tuesday) &&
+        days.contains(.wednesday) &&
+        days.contains(.thursday) &&
+        days.contains(.friday)
+        let isWeekdays = hasWeekDays &&
+        !days.contains(.saturday) &&
+        !days.contains(.sunday)
+        let isEveryDay = hasWeekDays &&
+        !isWeekdays &&
+        days.contains(.saturday) &&
+        days.contains(.sunday)
+        return RruleProfile(
+            isWeekdays: isWeekdays,
+            isAllDays: isEveryDay
+        )
+    }
+
+    func toHumanReadableText(
+        _ translator: KeyAssetTranslator
+    ) -> String {
+        let positiveInterval = max(interval, 1)
+        let frequencyPart = {
+            switch frequency {
+            case .daily:
+                if byDay.isEmpty {
+                    return positiveInterval == 1
+                    ? translator.t("recurringSchedule.n_days_one")
+                    : "\(positiveInterval) \(translator.t("recurringSchedule.n_days_other"))"
+                }
+                return translator.t("recurringSchedule.weekday_mtof")
+
+            case .weekly:
+                if !byDay.isEmpty {
+                    var weekPart = positiveInterval == 1
+                    ? translator.t("recurringSchedule.n_weeks_one")
+                    : "\(positiveInterval) \(translator.t("recurringSchedule.n_weeks_other"))"
+                    let profile = profile()
+                    if profile.isAllDays {
+                        let everyDay = translator.t("recurringSchedule.every_day")
+                        weekPart = "\(weekPart) \(everyDay)"
+                    } else if profile.isWeekdays {
+                        let onWeekdays = translator.t("recurringSchedule.on_weekdays")
+                        weekPart = "\(weekPart) \(onWeekdays)"
+                    } else {
+                        let sundayToSaturday = [
+                            "recurringSchedule.sunday",
+                            "recurringSchedule.monday",
+                            "recurringSchedule.tuesday",
+                            "recurringSchedule.wednesday",
+                            "recurringSchedule.thursday",
+                            "recurringSchedule.friday",
+                            "recurringSchedule.saturday",
+                        ].map { translator.t($0) }
+                        let sortedDaysSet = Set<RruleWeekDay>(byDay)
+                        let sortedDays = Array(sortedDaysSet)
+                            .compactMap { weekdayOrderLookup[$0] }
+                            .sorted(by: { a, b in a < b })
+                            .compactMap { $0 >= 0 && $0 < sundayToSaturday.count ? sundayToSaturday[$0] : nil }
+                        let onDays = {
+                            if sortedDays.count == 1 {
+                                let daysString = sortedDays.joined(separator: ", ")
+                                return "\(translator.t("recurringSchedule.on_days")) \(daysString)"
+                            } else if sortedDays.count > 1 {
+                                let startDays = Array(sortedDays[0..<sortedDays.count - 1])
+                                let daysString = startDays.joined(separator: ", ")
+                                if startDays.count == 1 {
+                                    return translator.t("recurringSchedule.on_and_days_one")
+                                        .replacingOccurrences(of: "{days}", with: daysString)
+                                        .replacingOccurrences(of: "{last_day}", with: sortedDays.last!)
+                                } else {
+                                    return translator.t("recurringSchedule.on_and_days_other")
+                                        .replacingOccurrences(of: "{days}", with: daysString)
+                                        .replacingOccurrences(of: "{last_day}", with: sortedDays.last!)
+                                }
+                            } else {
+                                return ""
+                            }
+                        }()
+                        if onDays.isNotBlank {
+                            weekPart = "\(weekPart) \(onDays)"
+                        }
+                    }
+
+                    return weekPart
+                }
+                return ""
+            }
+        }()
+
+        if frequencyPart.isNotBlank {
+            let every = translator.t("recurringSchedule.every")
+            var untilDate: String? = nil
+            if let until = until {
+                let untilDateFormat = DateFormatter()
+                untilDateFormat.dateFormat = "yyyy MMM d"
+                untilDate = untilDateFormat.string(from: until)
+            }
+            let untilPart = untilDate?.isNotBlank == true
+            ? "\(translator.t("recurringSchedule.until_date")) \(untilDate!)"
+            : ""
+            let frequencyString = [
+                every,
+                frequencyPart,
+                untilPart,
+            ].combineTrimText(" ")
+            return "\(frequencyString)."
+        }
+
+        return ""
+    }
+}
+
+
+private let weekdayOrderLookup: [RruleWeekDay: Int] = [
+    .sunday: 0,
+    .monday: 1,
+    .tuesday: 2,
+    .wednesday: 3,
+    .thursday: 4,
+    .friday: 5,
+    .saturday: 6,
+]
+
+fileprivate struct RruleProfile {
+    /**
+     * M-F
+     */
+    let isWeekdays: Bool
+    let isAllDays: Bool
 }

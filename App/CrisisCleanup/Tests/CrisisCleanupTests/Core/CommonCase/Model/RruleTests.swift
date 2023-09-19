@@ -74,4 +74,24 @@ final class RruleTests: XCTestCase {
         )
         XCTAssertEqual(expected, codedDecoded)
     }
+
+    func testFrequencyDecode() {
+        let rrule = Rrule.from("FREQ=MONTHLY")
+        let expected = Rrule(
+            frequency: .weekly
+        )
+        XCTAssertEqual(expected, rrule)
+
+        let dailyRrule = Rrule.from("FREQ=DAILY")
+        let expectedDaily = Rrule(
+            frequency: .daily
+        )
+        XCTAssertEqual(expectedDaily, dailyRrule)
+
+        let weeklyRrule = Rrule.from("FREQ=WEEKLY")
+        let expectedWeekly = Rrule(
+            frequency: .weekly
+        )
+        XCTAssertEqual(expectedWeekly, weeklyRrule)
+    }
 }
