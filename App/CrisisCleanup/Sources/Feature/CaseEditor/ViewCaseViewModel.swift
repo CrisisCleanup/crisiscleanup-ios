@@ -156,7 +156,8 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         editableWorksite = editableWorksiteProvider.editableWorksite.eraseToAnyPublisher()
 
         nextRecurDateFormat = DateFormatter()
-        nextRecurDateFormat.dateFormat = "EEE MMMM d yyyy 'at' h:mm a"
+            .format("EEE MMMM d yyyy 'at' h:mm a")
+            .utcTimeZone()
 
         updateHeaderTitle()
 

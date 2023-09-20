@@ -4,7 +4,6 @@ struct PrimaryButtonStyle: ButtonStyle {
     let disabled: Bool
     let maxWidth: CGFloat?
     var textSidePadding = 16.0
-    var weight: Font.Weight = .semibold
 
     init(
         _ disabled: Bool = false,
@@ -36,7 +35,6 @@ struct PrimaryButtonStyleModifier: ViewModifier {
 struct CancelButtonStyle: ButtonStyle {
     let disabled: Bool
     var textSidePadding = 16.0
-    var weight: Font.Weight = .semibold
 
     init(_ disabled: Bool = false) {
         self.disabled = disabled
@@ -61,7 +59,6 @@ struct CancelButtonSytleModifier: ViewModifier {
 struct BlackButtonStyle: ButtonStyle {
     let disabled: Bool
     var textSidePadding = 16.0
-    var weight: Font.Weight = .semibold
 
     init(_ disabled: Bool = false) {
         self.disabled = disabled

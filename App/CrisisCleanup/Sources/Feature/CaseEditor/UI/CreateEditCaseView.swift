@@ -785,8 +785,9 @@ struct DisplayFormField: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 FlowStack(
                     alignment: .leading,
-                    horizontalSpacing: 8,
-                    verticalSpacing: 8
+                    // TODO: Common dimensions
+                    horizontalSpacing: 16,
+                    verticalSpacing: 16
                 ) {
                     let selectionString = contentData[node.fieldKey]
                     var selected = { () -> Set<String> in
@@ -811,16 +812,7 @@ struct DisplayFormField: View {
                             multiSelected = selected
                         } label : {
                             Text(t.t(option))
-                                .padding()
-                                .background( isSelected ? appTheme.colors.themePrimaryContainer : Color.white)
-                                .cornerRadius(40)
-                                .overlay(
-                                    Capsule(style: .continuous)
-                                        .strokeBorder(
-                                            Color.black,
-                                            lineWidth: isSelected ? 0 : 1
-                                        )
-                                )
+                                .styleMultiSelectChip(isSelected)
                         }
                         .tint(.black)
                     }
@@ -830,7 +822,12 @@ struct DisplayFormField: View {
                 .padding([.bottom])
 
             case "cronselect":
-                Text("Frequency types under development")
+                FrequencySelectView(
+                    checkedData: $checkedData,
+                    rruleString: $contentData[node.fieldKey],
+                    node: node
+                )
+                .disabled(disabled)
 
             case "h4", "h5":
                 let isChecked = checkedData[node.fieldKey]

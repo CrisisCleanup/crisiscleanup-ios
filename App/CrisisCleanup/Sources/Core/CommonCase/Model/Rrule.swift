@@ -1,6 +1,6 @@
 import Foundation
 
-internal enum RruleFrequency: String {
+enum RruleFrequency: String {
     case daily
     case weekly
 
@@ -55,13 +55,10 @@ private let rruleWeekDayCoded: [RruleWeekDay: String] = [
 private let reverseWeekDayLookup = rruleWeekDayCoded.map { ($0.value, $0.key) }
     .associate { $0 }
 
-
+// sourcery: copyBuilder
 struct Rrule: Equatable {
-    private static let rruleDateFormatter = DateFormatter()
-    private static var dateFormatter: DateFormatter {
-        self.rruleDateFormatter.dateFormat = "yyyyMMdd'T'HHmmssZ"
-        return self.rruleDateFormatter
-    }
+    private static let rruleDateFormatter = DateFormatter().format("yyyyMMdd'T'HHmmssZZZZZ").utcTimeZone()
+    private static let untilDateFormatter = DateFormatter().format("yyyy MMM d").utcTimeZone()
 
     let frequency: RruleFrequency
     let until: Date?
@@ -77,7 +74,7 @@ struct Rrule: Equatable {
     private var untilCoded: String {
         if let until = until,
            let date = Calendar.current.date(bySettingHour: 12, minute: 0, second: 0, of: until) {
-            return Self.dateFormatter.string(from: date)
+            return Self.rruleDateFormatter.string(from: date)
         }
         return ""
     }
@@ -88,6 +85,7 @@ struct Rrule: Equatable {
         : byDay.map { rruleWeekDayCoded[$0] ?? "" }.combineTrimText(",")
     }
 
+    // sourcery:begin: skipCopy
     var rruleString: String {
         let untilCoded = untilCoded
         let byDayCoded = byDayCoded
@@ -98,6 +96,7 @@ struct Rrule: Equatable {
             byDayCoded.isBlank ? "" : "\(RruleKey.byDay.keyValue)=\(byDayCoded)",
         ].combineTrimText(";")
     }
+    // sourcery:end
 
     static func from(_ rruleString: String) -> Rrule {
         let parts = rruleString.split(separator: ";")
@@ -126,9 +125,10 @@ struct Rrule: Equatable {
         }
 
         if let untilCoded = partsLookup[RruleKey.until.keyValue],
-           let untilDecoded = dateFormatter.date(from: untilCoded) {
+           let untilDecoded = rruleDateFormatter.date(from: untilCoded) {
             until = untilDecoded
         }
+
 
         if let intervalCoded = partsLookup[RruleKey.interval.keyValue],
            let intervalValue = Int(intervalCoded) {
@@ -191,7 +191,8 @@ struct Rrule: Equatable {
                 if byDay.isEmpty {
                     return positiveInterval == 1
                     ? translator.t("recurringSchedule.n_days_one")
-                    : "\(positiveInterval) \(translator.t("recurringSchedule.n_days_other"))"
+                    : translator.t("recurringSchedule.n_days_other")
+                        .replacingOccurrences(of: "{value}", with: "\(positiveInterval)")
                 }
                 return translator.t("recurringSchedule.weekday_mtof")
 
@@ -199,7 +200,8 @@ struct Rrule: Equatable {
                 if !byDay.isEmpty {
                     var weekPart = positiveInterval == 1
                     ? translator.t("recurringSchedule.n_weeks_one")
-                    : "\(positiveInterval) \(translator.t("recurringSchedule.n_weeks_other"))"
+                    : translator.t("recurringSchedule.n_weeks_other")
+                        .replacingOccurrences(of: "{value}", with: "\(positiveInterval)")
                     let profile = profile()
                     if profile.isAllDays {
                         let everyDay = translator.t("recurringSchedule.every_day")
@@ -225,18 +227,19 @@ struct Rrule: Equatable {
                         let onDays = {
                             if sortedDays.count == 1 {
                                 let daysString = sortedDays.joined(separator: ", ")
-                                return "\(translator.t("recurringSchedule.on_days")) \(daysString)"
+                                return translator.t("recurringSchedule.on_days")
+                                    .replacingOccurrences(of: "{day}", with: daysString)
                             } else if sortedDays.count > 1 {
                                 let startDays = Array(sortedDays[0..<sortedDays.count - 1])
                                 let daysString = startDays.joined(separator: ", ")
                                 if startDays.count == 1 {
                                     return translator.t("recurringSchedule.on_and_days_one")
-                                        .replacingOccurrences(of: "{days}", with: daysString)
-                                        .replacingOccurrences(of: "{last_day}", with: sortedDays.last!)
+                                        .replacingOccurrences(of: "{day1}", with: daysString)
+                                        .replacingOccurrences(of: "{day2}", with: sortedDays.last!)
                                 } else {
                                     return translator.t("recurringSchedule.on_and_days_other")
-                                        .replacingOccurrences(of: "{days}", with: daysString)
-                                        .replacingOccurrences(of: "{last_day}", with: sortedDays.last!)
+                                        .replacingOccurrences(of: "{day1}", with: daysString)
+                                        .replacingOccurrences(of: "{day2}", with: sortedDays.last!)
                                 }
                             } else {
                                 return ""
@@ -254,15 +257,14 @@ struct Rrule: Equatable {
         }()
 
         if frequencyPart.isNotBlank {
-            let every = translator.t("recurringSchedule.every")
+            let every = translator.t("recurringSchedule.recur_every")
             var untilDate: String? = nil
             if let until = until {
-                let untilDateFormat = DateFormatter()
-                untilDateFormat.dateFormat = "yyyy MMM d"
-                untilDate = untilDateFormat.string(from: until)
+                untilDate = Rrule.untilDateFormatter.string(from: until)
             }
             let untilPart = untilDate?.isNotBlank == true
-            ? "\(translator.t("recurringSchedule.until_date")) \(untilDate!)"
+            ? translator.t("recurringSchedule.until_date")
+                .replacingOccurrences(of: "{date}", with: untilDate!)
             : ""
             let frequencyString = [
                 every,

@@ -25,26 +25,26 @@ final class RruleHumanReadableTextTest: XCTestCase {
 
     func testDailyEveryDay() {
         let actual = makeRrule(.daily).toHumanReadableText(translator)
-        let expected = "Every day."
+        let expected = "Recur Every day."
         XCTAssertEqual(expected, actual)
 
         let actualUntil = makeRrule(
             .daily,
             until: untilA
         ).toHumanReadableText(translator)
-        let expectedUntil = "Every day until \(untilADate)."
+        let expectedUntil = "Recur Every day Until \(untilADate)."
         XCTAssertEqual(expectedUntil, actualUntil)
     }
 
     func testDailyEveryOneDay() {
         let actual = makeRrule(.daily, 1).toHumanReadableText(translator)
-        let expected = "Every day."
+        let expected = "Recur Every day."
         XCTAssertEqual(expected, actual)
     }
 
     func testDailyEveryNDays() {
         let actual = makeRrule(.daily, 2).toHumanReadableText(translator)
-        let expected = "Every 2 days."
+        let expected = "Recur Every 2 days."
         XCTAssertEqual(expected, actual)
     }
 
@@ -54,7 +54,7 @@ final class RruleHumanReadableTextTest: XCTestCase {
             2,
             [.sunday]
         ).toHumanReadableText(translator)
-        let expected = "Every weekday (M-F)."
+        let expected = "Recur Every weekday (M-F)."
         XCTAssertEqual(expected, actual)
     }
 
@@ -80,7 +80,7 @@ final class RruleHumanReadableTextTest: XCTestCase {
                 .friday,
             ]
         ).toHumanReadableText(translator)
-        let expected = "Every 2 weeks every day."
+        let expected = "Recur Every 2 weeks Every day."
         XCTAssertEqual(expected, actual)
     }
 
@@ -96,7 +96,7 @@ final class RruleHumanReadableTextTest: XCTestCase {
                 .wednesday,
             ]
         ).toHumanReadableText(translator)
-        let expected = "Every week on weekdays (M-F)."
+        let expected = "Recur Every week on weekdays (M-F)."
         XCTAssertEqual(expected, actual)
     }
 
@@ -110,7 +110,7 @@ final class RruleHumanReadableTextTest: XCTestCase {
                 .wednesday,
             ]
         ).toHumanReadableText(translator)
-        let expectedA = "Every 3 weeks on Wednesday, Thursday, and Friday."
+        let expectedA = "Recur Every 3 weeks on Wednesday, Thursdays, and Fridays."
         XCTAssertEqual(expectedA, actualA)
 
         let actualB = makeRrule(
@@ -120,7 +120,7 @@ final class RruleHumanReadableTextTest: XCTestCase {
                 .wednesday,
             ]
         ).toHumanReadableText(translator)
-        let expectedB = "Every 6 weeks on Wednesday."
+        let expectedB = "Recur Every 6 weeks on Wednesdays."
         XCTAssertEqual(expectedB, actualB)
 
         let actualC = makeRrule(
@@ -137,7 +137,7 @@ final class RruleHumanReadableTextTest: XCTestCase {
             until: untilA
         ).toHumanReadableText(translator)
         let expectedC =
-        "Every week on Sunday, Monday, Wednesday, Thursday, Friday, and Saturday until \(untilADate)."
+        "Recur Every week on Sunday, Monday, Wednesday, Thursday, Fridays, and Saturdays Until \(untilADate)."
         XCTAssertEqual(expectedC, actualC)
 
         let actualD = makeRrule(
@@ -148,7 +148,7 @@ final class RruleHumanReadableTextTest: XCTestCase {
                 .sunday,
             ]
         ).toHumanReadableText(translator)
-        let expectedD = "Every 6 weeks on Sunday and Wednesday."
+        let expectedD = "Recur Every 6 weeks on Sundays and Wednesdays."
         XCTAssertEqual(expectedD, actualD)
     }
 }
@@ -168,11 +168,11 @@ fileprivate class RruleTranslator: KeyAssetTranslator {
     func translate(_ phraseKey: String) -> String? {
         switch phraseKey {
         case "recurringSchedule.n_days_one": return "day"
-        case "recurringSchedule.n_days_other": return "days"
+        case "recurringSchedule.n_days_other": return "{value} days"
         case "recurringSchedule.weekday_mtof": return "weekday (M-F)"
         case "recurringSchedule.n_weeks_one": return " week"
-        case "recurringSchedule.n_weeks_other": return "weeks"
-        case "recurringSchedule.every_day": return "every day"
+        case "recurringSchedule.n_weeks_other": return "{value} weeks"
+        case "recurringSchedule.every_day": return "Every day"
         case "recurringSchedule.on_weekdays": return "on weekdays (M-F)"
         case "recurringSchedule.sunday": return "Sunday"
         case "recurringSchedule.monday": return "Monday"
@@ -181,11 +181,11 @@ fileprivate class RruleTranslator: KeyAssetTranslator {
         case "recurringSchedule.thursday": return "Thursday"
         case "recurringSchedule.friday": return "Friday"
         case "recurringSchedule.saturday": return "Saturday"
-        case "recurringSchedule.on_days": return "on"
-        case "recurringSchedule.on_and_days_one": return "on {days} and {last_day}"
-        case "recurringSchedule.on_and_days_other": return "on {days}, and {last_day}"
-        case "recurringSchedule.every": return "Every"
-        case "recurringSchedule.until_date": return "until"
+        case "recurringSchedule.on_days": return "on {day}s"
+        case "recurringSchedule.on_and_days_one": return "on {day1}s and {day2}s"
+        case "recurringSchedule.on_and_days_other": return "on {day1}s, and {day2}s"
+        case "recurringSchedule.recur_every": return "Recur Every"
+        case "recurringSchedule.until_date": return "Until {date}"
         default: return nil
         }
     }
