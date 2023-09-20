@@ -81,6 +81,8 @@ private let weekdayTranslationLookup: [RruleWeekDay: String] = [
 private struct FrequencyDailyWeeklyViews: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
+    // TODO: Better state management of rrule and derived (@State) properties
+
     private let node: FormFieldNode
     private let rrule: Rrule
     private let updateRrule: (Rrule) -> Void
@@ -107,83 +109,65 @@ private struct FrequencyDailyWeeklyViews: View {
         _untilDate = State(initialValue: rrule.until)
     }
 
+    private func sortDays(_ days: Set<RruleWeekDay>) -> [RruleWeekDay] {
+        var sortedDays = Array(days)
+        sortedDays.sort { a, b in
+            (rruleDayOptions.firstIndex(of: a) ?? -1) < (rruleDayOptions.firstIndex(of: b) ?? -1)
+        }
+        return sortedDays
+    }
+
     var body: some View {
-        Group {
-            Picker("", selection: $frequency) {
-                // TODO: Update font styles
-                Text(t.t("dashboard.daily"))
-                    .fontHeader3()
-                    .tag(RruleFrequency.daily)
-                Text(t.t("dashboard.weekly"))
-                    .fontHeader3()
-                    .tag(RruleFrequency.weekly)
-            }
-            .pickerStyle(.segmented)
-            .onChange(of: frequency) { newValue in
-                updateRrule(rrule.copy {
-                    $0.frequency = newValue
-                })
-            }
-            .padding(.vertical, appTheme.listItemVerticalPadding)
-            .onChange(of: frequency) { newValue in
-                if newValue == .weekly {
-                    if selectedDays.isEmpty {
-                        selectedDays.insert(.sunday)
-                    }
-                } else if newValue == .daily {
-                    if !selectedDays.isEmpty {
-                        selectedDays = Set(rRuleWeekDays)
-                    }
+        Picker("", selection: $frequency) {
+            // TODO: Update font styles
+            Text(t.t("dashboard.daily"))
+                .fontHeader3()
+                .tag(RruleFrequency.daily)
+            Text(t.t("dashboard.weekly"))
+                .fontHeader3()
+                .tag(RruleFrequency.weekly)
+        }
+        .pickerStyle(.segmented)
+        .padding(.vertical, appTheme.listItemVerticalPadding)
+        .onChange(of: frequency) { newValue in
+            if newValue == .weekly {
+                if selectedDays.isEmpty {
+                    selectedDays.insert(.sunday)
+                }
+            } else if newValue == .daily {
+                if !selectedDays.isEmpty {
+                    interval = 1
+                    selectedDays = Set(rRuleWeekDays)
+                    showIntervalPicker = false
                 }
             }
 
-            if frequency == .daily {
-                let isEveryDay = selectedDays.isEmpty
-                let isEveryWeekday = !isEveryDay
-                VStack {
-                    ContentRadioButton(
-                        isEveryDay,
-                        {
-                            if !isEveryDay {
-                                selectedDays.removeAll()
-                            }
-                        },
-                        isListItem: true
-                    ) {
-                        Text(t.t("recurringSchedule.recur_every"))
-                        Button {
-                            showIntervalPicker.toggle()
-                        } label: {
-                            Text("\(rrule.interval)")
-                            // TODO: Common dimensions
-                                .padding(.horizontal, 24)
+            updateRrule(rrule.copy {
+                $0.frequency = newValue
+                $0.interval = interval
+                $0.byDay = sortDays(selectedDays)
+            })
+        }
+
+        if frequency == .daily {
+            let isEveryDay = selectedDays.isEmpty
+            let isEveryWeekday = !isEveryDay
+            VStack {
+                ContentRadioButton(
+                    isEveryDay,
+                    {
+                        if !isEveryDay {
+                            selectedDays.removeAll()
+
+                            updateRrule(rrule.copy {
+                                $0.frequency = frequency
+                                $0.interval = interval
+                                $0.byDay = []
+                            })
                         }
-                        .stylePrimary(true)
-                        .disabled(isEveryWeekday)
-
-                        Text(t.t("recurringSchedule.day_s"))
-                    }
-                    .buttonStyle(.plain)
-
-                    if showIntervalPicker {
-                        RruleIntervalPicker(
-                            showPicker: $showIntervalPicker,
-                            interval: $interval
-                        )
-                    }
-
-                    RadioButton(
-                        text: t.t("recurringSchedule.every_weekday"),
-                        isSelected: isEveryWeekday,
-                        isListItem: true
-                    ) {
-                        if !isEveryWeekday {
-                            selectedDays = Set(rRuleWeekDays)
-                        }
-                    }
-                }
-            } else {
-                HStack {
+                    },
+                    isListItem: true
+                ) {
                     Text(t.t("recurringSchedule.recur_every"))
                     Button {
                         showIntervalPicker.toggle()
@@ -193,53 +177,97 @@ private struct FrequencyDailyWeeklyViews: View {
                             .padding(.horizontal, 24)
                     }
                     .stylePrimary(true)
-                    Text(t.t("recurringSchedule.weeks_on"))
+                    .disabled(isEveryWeekday)
+
+                    Text(t.t("recurringSchedule.day_s"))
                 }
+                .buttonStyle(.plain)
+
                 if showIntervalPicker {
                     RruleIntervalPicker(
                         showPicker: $showIntervalPicker,
                         interval: $interval
                     )
+                    .onChange(of: interval) { newValue in
+                        updateRrule(rrule.copy {
+                            $0.frequency = frequency
+                            $0.interval = newValue
+                            $0.byDay = []
+                        })
+                    }
                 }
 
-                FlowStack(
-                    alignment: .leading,
-                    // TODO: Common dimensions
-                    horizontalSpacing: 16,
-                    verticalSpacing: 16
+                RadioButton(
+                    text: t.t("recurringSchedule.every_weekday"),
+                    isSelected: isEveryWeekday,
+                    isListItem: true
                 ) {
-                    ForEach(rruleDayOptions, id: \.self) { option in
-                        let isSelected = selectedDays.contains(option)
-                        Button {
-                            if isSelected {
-                                if selectedDays.count > 1 {
-                                    selectedDays.remove(option)
-                                }
-                            } else {
-                                selectedDays.insert(option)
-                            }
-                        } label : {
-                            Text(t.t(weekdayTranslationLookup[option]!))
-                                .styleMultiSelectChip(isSelected)
-                        }
-                        .tint(.black)
+                    if !isEveryWeekday {
+                        selectedDays = Set(rRuleWeekDays)
+
+                        updateRrule(rrule.copy {
+                            $0.frequency = frequency
+                            $0.interval = 1
+                            $0.byDay = rRuleWeekDays
+                        })
                     }
                 }
             }
-        }
-        .onChange(of: selectedDays) { newValue in
-            var sortedDays = Array(newValue)
-            sortedDays.sort { a, b in
-                (rruleDayOptions.firstIndex(of: a) ?? -1) < (rruleDayOptions.firstIndex(of: b) ?? -1)
+        } else {
+            HStack {
+                Text(t.t("recurringSchedule.recur_every"))
+                Button {
+                    showIntervalPicker.toggle()
+                } label: {
+                    Text("\(rrule.interval)")
+                    // TODO: Common dimensions
+                        .padding(.horizontal, 24)
+                }
+                .stylePrimary(true)
+                Text(t.t("recurringSchedule.weeks_on"))
             }
-            updateRrule(rrule.copy {
-                $0.byDay = sortedDays
-            })
-        }
-        .onChange(of: interval) { newValue in
-            updateRrule(rrule.copy {
-                $0.interval = newValue
-            })
+            if showIntervalPicker {
+                RruleIntervalPicker(
+                    showPicker: $showIntervalPicker,
+                    interval: $interval
+                )
+                .onChange(of: interval) { newValue in
+                    updateRrule(rrule.copy {
+                        $0.frequency = frequency
+                        $0.interval = newValue
+                    })
+                }
+            }
+
+            FlowStack(
+                alignment: .leading,
+                // TODO: Common dimensions
+                horizontalSpacing: 16,
+                verticalSpacing: 16
+            ) {
+                ForEach(rruleDayOptions, id: \.self) { option in
+                    let isSelected = selectedDays.contains(option)
+                    Button {
+                        if isSelected {
+                            if selectedDays.count > 1 {
+                                selectedDays.remove(option)
+                            }
+                        } else {
+                            selectedDays.insert(option)
+                        }
+                    } label : {
+                        Text(t.t(weekdayTranslationLookup[option]!))
+                            .styleMultiSelectChip(isSelected)
+                    }
+                    .tint(.black)
+                }
+                .onChange(of: selectedDays) { newValue in
+                    updateRrule(rrule.copy {
+                        $0.frequency = frequency
+                        $0.byDay = sortDays(newValue)
+                    })
+                }
+            }
         }
 
         SelectEndDate(
@@ -249,6 +277,7 @@ private struct FrequencyDailyWeeklyViews: View {
         .padding(.vertical)
         .onChange(of: untilDate) { newValue in
             updateRrule(rrule.copy {
+                $0.frequency = frequency
                 $0.until = newValue
             })
         }

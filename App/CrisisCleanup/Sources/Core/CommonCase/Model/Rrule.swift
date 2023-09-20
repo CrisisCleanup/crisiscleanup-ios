@@ -55,6 +55,8 @@ private let rruleWeekDayCoded: [RruleWeekDay: String] = [
 private let reverseWeekDayLookup = rruleWeekDayCoded.map { ($0.value, $0.key) }
     .associate { $0 }
 
+private let rruleStart = "RRULE:"
+
 // sourcery: copyBuilder
 struct Rrule: Equatable {
     private static let rruleDateFormatter = DateFormatter().format("yyyyMMdd'T'HHmmssZZZZZ").utcTimeZone()
@@ -66,9 +68,9 @@ struct Rrule: Equatable {
     let byDay: [RruleWeekDay]
 
     private var frequencyCoded: String {
-        frequency == .daily
-        ? RruleFrequency.daily.value
-        : RruleFrequency.weekly.value
+        (frequency == .daily
+         ? RruleFrequency.daily
+         : RruleFrequency.weekly).value
     }
 
     private var untilCoded: String {
@@ -80,7 +82,7 @@ struct Rrule: Equatable {
     }
 
     private var byDayCoded: String {
-        frequency == .daily || byDay.isEmpty
+        byDay.isEmpty
         ? ""
         : byDay.map { rruleWeekDayCoded[$0] ?? "" }.combineTrimText(",")
     }
@@ -89,17 +91,23 @@ struct Rrule: Equatable {
     var rruleString: String {
         let untilCoded = untilCoded
         let byDayCoded = byDayCoded
-        return [
+        let rruleSuffix = [
             "\(RruleKey.freq.keyValue)=\(frequencyCoded)",
             untilCoded.isBlank ? "" : "\(RruleKey.until.keyValue)=\(untilCoded)",
-            interval > 0 ? "\(RruleKey.interval.keyValue)=\(interval)" : "",
+            "\(RruleKey.interval.keyValue)=\(max(1, interval))",
             byDayCoded.isBlank ? "" : "\(RruleKey.byDay.keyValue)=\(byDayCoded)",
         ].combineTrimText(";")
+        return "\(rruleStart)\(rruleSuffix)"
     }
     // sourcery:end
 
     static func from(_ rruleString: String) -> Rrule {
-        let parts = rruleString.split(separator: ";")
+        let rruleString = rruleString.starts(with: rruleStart)
+        ? String(rruleString.suffix(rruleString.count - rruleStart.count))
+        : rruleString
+
+        let parts = rruleString
+            .split(separator: ";")
             .map { String($0) }
         let partsLookup = parts
             .associate { part in
