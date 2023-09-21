@@ -584,7 +584,8 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
                 if let nextRecurAt = workType.nextRecurAt,
                    nextRecurAt > Date.now {
                     let nextDate = nextRecurDateFormat.string(from: nextRecurAt)
-                    return "\(localTranslate("shareWorksite.next_recur")) \(nextDate)"
+                    return localTranslate("shareWorksite.next_recur")
+                        .replacingOccurrences(of: "{date}", with: nextDate)
                 }
                 return nil
             }()
