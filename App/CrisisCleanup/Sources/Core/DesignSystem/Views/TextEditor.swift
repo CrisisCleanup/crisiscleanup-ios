@@ -20,7 +20,7 @@ struct LargeTextEditor: View {
             .textFieldBorder()
             .tint(.black)
             .overlay(alignment: .topLeading) {
-                if $text.wrappedValue.isBlank && placeholder.isNotBlank {
+                if focusState == nil && $text.wrappedValue.isBlank && placeholder.isNotBlank {
                     Text(placeholder)
                         .foregroundColor(.gray)
                         .padding()
