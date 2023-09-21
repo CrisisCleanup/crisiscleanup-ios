@@ -156,7 +156,8 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         editableWorksite = editableWorksiteProvider.editableWorksite.eraseToAnyPublisher()
 
         nextRecurDateFormat = DateFormatter()
-        nextRecurDateFormat.dateFormat = "EEE MMMM d yyyy 'at' h:mm a"
+            .format("EEE MMMM d yyyy 'at' h:mm a")
+            .utcTimeZone()
 
         updateHeaderTitle()
 
@@ -574,17 +575,17 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
                 name
             )
             let rRuleSummary: String? = {
-//                if let rRuleString = workType.recur {
-//                    // TODO: Use RRule library and customize where lacking
-//                     return RRule(rRuleString).toHumanReadableText(translator)
-//                }
+                if let rRuleString = workType.recur {
+                    return Rrule.from(rRuleString).toHumanReadableText(translator)
+                }
                 return nil
             }()
             let nextRecurSummary: String? = {
                 if let nextRecurAt = workType.nextRecurAt,
                    nextRecurAt > Date.now {
                     let nextDate = nextRecurDateFormat.string(from: nextRecurAt)
-                    return "\(localTranslate("shareWorksite.next_recur")) \(nextDate)"
+                    return localTranslate("shareWorksite.next_recur")
+                        .replacingOccurrences(of: "{date}", with: nextDate)
                 }
                 return nil
             }()

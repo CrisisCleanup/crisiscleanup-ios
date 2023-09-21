@@ -41,8 +41,11 @@ struct CasesTableView: View {
 
                 Spacer()
 
+                let sortByOptions = viewModel.tableViewSort == .none
+                ? WorksiteSortBy.allCases
+                : WorksiteSortBy.allCasesNotNone
                 Picker("", selection: $viewModel.tableViewSort ) {
-                    ForEach(WorksiteSortBy.allCases, id: \.self) { sortBy in
+                    ForEach(sortByOptions, id: \.self) { sortBy in
                         Text(t.t(sortBy.translateKey))
                     }
                 }
@@ -67,13 +70,6 @@ struct CasesTableView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack {
-                        Rectangle()
-                            .fill(.clear)
-                            .background(.clear)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 0.01)
-                            .id("case-table-first")
-
                         ForEach(0..<casesData.count, id: \.self) { index in
                             if index > 0 {
                                 FormListSectionSeparator()
@@ -90,6 +86,9 @@ struct CasesTableView: View {
                                     viewModel.onWorksiteClaimAction(worksite, claimAction)
                                 }
                             )
+                            .if (index == 0) {
+                                $0.id("case-table-first")
+                            }
                         }
                     }
                 }

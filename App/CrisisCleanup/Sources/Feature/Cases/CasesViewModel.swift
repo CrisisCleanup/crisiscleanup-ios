@@ -498,7 +498,7 @@ class CasesViewModel: ObservableObject {
 
         $tableViewSort
             .removeDuplicates()
-            .filter { $0 != self.tableViewSort && $0 != .none }
+            .filter { $0 != .none }
             .sink { sortBy in
                 self.changeTableSort(sortBy)
             }

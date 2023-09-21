@@ -1,6 +1,6 @@
 import Foundation
 
-private let defaultSvi = 1.0
+private let defaultSvi = 0.0
 private let defaultFilterDistance = 0.0
 
 let CasesFilterMinDaysAgo = 3
@@ -133,11 +133,11 @@ public struct CasesFilter: Hashable, Codable {
      * - Returns TRUE if values meet local filters or FALSE otherwise
      */
     func passesFilter(
-        _ compareSvi: Double,
+        _ compareSvi: Double?,
         _ updatedAt: Date,
         _ haversineDistanceMiles: Double?
     ) -> Bool {
-        if hasSviFilter && compareSvi > svi {
+        if hasSviFilter && (compareSvi ?? 1.0) < svi {
             return false
         }
 

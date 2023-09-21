@@ -799,7 +799,8 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
 
             let managedGroups = formFieldsInputData.managedGroups
             var formData = [String: WorksiteFormValue]()
-            for (key, value) in contentFormData.data {
+            let contentData = contentFormData.data
+            for (key, value) in contentData {
                 if value.isNotBlank &&
                     !offFieldKeys.contains(key) &&
                     !managedGroups.contains(key) {
@@ -807,8 +808,9 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
                 }
             }
             for (key, value) in binaryFormData.data {
-                if value &&
-                    !offFieldKeys.contains(key) &&
+                if !contentData.keys.contains(key),
+                    value,
+                    !offFieldKeys.contains(key),
                     !managedGroups.contains(key) {
                     formData[key] = worksiteFormValueTrue
                 }

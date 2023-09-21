@@ -612,8 +612,8 @@ extension DerivableRequest<WorksiteRecord> {
         order(WorksiteColumns.id)
     }
 
-    func bySviLte(_ svi: Double) -> Self {
-        filter(WorksiteColumns.svi == nil || WorksiteColumns.svi <= svi)
+    func bySviGte(_ svi: Double) -> Self {
+        filter(WorksiteColumns.svi == nil || WorksiteColumns.svi >= svi)
     }
 
     func orderBySvi() -> Self {

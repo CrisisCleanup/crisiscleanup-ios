@@ -165,7 +165,18 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
 
                 let languages = try await supportedLanguages.eraseToAnyPublisher().asyncFirst()
                 let languagesSet = Set(languages.map { $0.key })
-                let languageKey = languagesSet.contains(key) ? key : EnglishLanguage.key
+                let languageKey = {
+                    if languagesSet.contains(key) {
+                        return key
+                    }
+                    if key.contains(where: { $0 == "-" }) {
+                        let designator = String(key.split(separator: "-")[0])
+                        if languagesSet.contains(designator) {
+                            return designator
+                        }
+                    }
+                    return EnglishLanguage.key
+                }()
 
                 try await pullUpdatedTranslations(languageKey)
 

@@ -24,7 +24,7 @@ extension Array where Element == PopulatedWorksiteMapVisual {
                 worksite.latitude.radians, worksite.longitude.radians
             ).kmToMiles : 0.0
             if !filters.passesFilter(
-                worksite.svi ?? 0.0,
+                worksite.svi,
                 worksite.updatedAt,
                 distance
             ) {

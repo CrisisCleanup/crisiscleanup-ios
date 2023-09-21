@@ -76,7 +76,7 @@ extension CasesFilter {
             worksite.latitude.radians, worksite.longitude.radians
         ).kmToMiles : 0.0
         if !passesFilter(
-            worksite.svi ?? 0.0,
+            worksite.svi,
             worksite.updatedAt,
             distance
         ) {
