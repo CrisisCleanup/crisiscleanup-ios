@@ -18,8 +18,19 @@ struct SurvivorNoteLegend: View {
 
 struct StaticNotesList: View {
     let notes: [WorksiteNote]
+    var otherNotes: [(String, String)] = []
 
     var body: some View {
+        ForEach(otherNotes, id: \.0) { (title, content) in
+            VStack(alignment: .leading, spacing: appTheme.gridItemSpacing) {
+                Text(title)
+                    .fontBodySmall()
+                NoteContentView(text: content)
+            }
+            .listItemModifier()
+            .background(.white)
+        }
+
         let idNotes: [(Int64, WorksiteNote)] = notes.map { note in
             let id = note.id > 0 ? note.id : Int64(note.createdAt.timeIntervalSince1970)
             return (id, note)

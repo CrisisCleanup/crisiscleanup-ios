@@ -77,7 +77,8 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     @Published var contentFormData = ObservableStringDictionary()
     @Published var workTypeStatusFormData = ObservableStringDictionary()
 
-    @Published private(set) var focusNoteCount = 0
+    @Published var editingNote = ""
+    @Published private(set) var otherNotes: [(String, String)] = []
 
     var hasInitialCoordinates: Bool { locationInputData.coordinates == caseData?.worksite.coordinates }
     @Published var showExplainLocationPermission = false
@@ -256,12 +257,6 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
                 }
             }
         }
-
-        if !isFirstAppear,
-           let addedNote = worksiteProvider.takeNote() {
-            worksiteNotes.insert(addedNote, at: 0)
-            focusNoteCount = worksiteNotes.count
-        }
     }
 
     func onViewDisappear() {
@@ -374,6 +369,14 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
             .receive(on: RunLoop.main)
             .assign(to: \.editSections, on: self)
             .store(in: &subscriptions)
+
+        editingWorksite.map { _ in
+            self.worksiteProvider.otherNotes.eraseToAnyPublisher()
+        }
+        .switchToLatest()
+        .receive(on: RunLoop.main)
+        .assign(to: \.otherNotes, on: self)
+        .store(in: &subscriptions)
     }
 
     private func subscribeWorksiteChange() {
@@ -589,6 +592,10 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         }
     }
 
+    func saveNote(_ note: WorksiteNote) {
+        worksiteNotes.insert(note, at: 0)
+    }
+
     func isWorkTypeClaimed(workType: String) -> Bool {
         workTypeLookup[workType]?.orgClaim != nil
     }
@@ -785,6 +792,15 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
                 }
             }
 
+            if editingNote.isNotBlank && (
+                worksiteNotes.isEmpty || worksiteNotes.first!.note.trim() != editingNote.trim()
+            ) {
+                let note = WorksiteNote.create().copy {
+                    $0.note = editingNote.trim()
+                }
+                worksiteNotes.insert(note, at: 0)
+                editingNote = ""
+            }
             if worksiteNotes.count > worksite!.notes.count {
                 worksite = worksite!.copy {
                     $0.notes = Array(worksiteNotes)

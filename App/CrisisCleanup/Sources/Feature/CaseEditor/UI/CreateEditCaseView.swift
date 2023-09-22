@@ -175,9 +175,6 @@ private struct CreateEditCaseContentView: View {
                     }
                 }
             }
-            .onChange(of: viewModel.focusNoteCount) { newValue in
-                proxy.scrollTo("section-notes", anchor: .top)
-            }
             .onChange(of: viewModel.invalidWorksiteInfo) { info in
                 isInvalidSave = info.invalidElement != .none || info.message.isNotBlank
             }
@@ -217,10 +214,6 @@ private struct CreateEditCaseContentView: View {
     }
 }
 
-private func collapseIconName(_ isCollapsed: Bool) -> String {
-    isCollapsed ? "chevron.up" : "chevron.down"
-}
-
 private struct CreateEditCaseSectionHeaderView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
@@ -252,7 +245,7 @@ private struct CreateEditCaseSectionHeaderView: View {
 
                 Spacer()
 
-                Image(systemName: collapseIconName(isCollapsed))
+                CollapsibleIcon(isCollapsed: isCollapsed)
             }
         }
         .padding()
@@ -647,17 +640,23 @@ private struct CreateEditCaseNotesView: View {
             let noteCount = min(notes.count, viewModel.visibleNoteCount)
             StaticNotesList(notes: Array(notes[0..<noteCount]))
 
-            Button {
-                router.openCaseAddNote()
-            } label : {
-                HStack {
-                    Image("ic_note", bundle: .module)
-                        .frame(width: 24, height: 24)
-                    Text(t.t("caseView.add_note"))
+            LargeTextEditor(
+                text: $viewModel.editingNote,
+                placeholder: t.t("caseView.note")
+            )
+                .id("note-input")
+                .listItemModifier()
+
+            Button(t.t("actions.add")) {
+                let note = WorksiteNote.create().copy {
+                    $0.note = viewModel.editingNote
                 }
+                viewModel.saveNote(note)
+                viewModel.editingNote = ""
             }
-            .listItemPadding()
-            .disabled(disabled)
+            .stylePrimary()
+            .padding(.horizontal)
+            .disabled(viewModel.editingNote.isBlank || disabled)
         }
         .sheet(isPresented: $showAllNotes) {
             let notes = viewModel.worksiteNotes
@@ -671,7 +670,10 @@ private struct CreateEditCaseNotesView: View {
                     .frame(height: 8)
             }
             ScrollLazyVGrid {
-                StaticNotesList(notes: notes)
+                StaticNotesList(
+                    notes: notes,
+                    otherNotes: viewModel.otherNotes
+                )
             }
         }
         .presentationDetents([.large])

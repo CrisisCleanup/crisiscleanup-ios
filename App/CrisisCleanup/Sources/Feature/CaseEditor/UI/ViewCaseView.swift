@@ -16,6 +16,8 @@ struct ViewCaseView: View {
     @State private var selectedTab: ViewCaseTabs = .info
     @State private var titlePressed: Bool = false
 
+    private let focusableViewState = TextInputFocusableView()
+
     private let infoTabs = Array([
         ViewCaseTabs.info,
         ViewCaseTabs.photos,
@@ -68,6 +70,9 @@ struct ViewCaseView: View {
                 Spacer()
 
                 BottomNav()
+            }
+            .onChange(of: selectedTab) { newValue in
+                focusableViewState.focusState = nil
             }
 
             if isBusy {
@@ -129,6 +134,7 @@ struct ViewCaseView: View {
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)
         .environmentObject(viewModel.editableViewState)
+        .environmentObject(focusableViewState)
         .onReceive(viewModel.$isPendingTransfer) { isPendingTransfer in
             let isTransferStarted = isPendingTransfer && viewModel.transferType != .none
             if isTransferStarted {
@@ -391,16 +397,67 @@ private struct MediaDisplay: View {
     }
 }
 
+private struct NoteCard: View {
+    let headerText: String
+    let bodyText: String
+    var isSurvivor = false
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text(headerText)
+                .fontBodySmall()
+                .padding(.bottom, appTheme.gridItemSpacing)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            NoteContentView(text: bodyText)
+        }
+        .padding()
+        .cardContainer(background: isSurvivor ? appTheme.colors.survivorNoteColorNoTransparency : Color.white)
+        .padding(.horizontal)
+        .padding(.bottom, appTheme.listItemVerticalPadding)
+    }
+}
+
 private struct ViewCaseNotes: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var viewModel: ViewCaseViewModel
+    @EnvironmentObject var focusableViewState: TextInputFocusableView
+    @EnvironmentObject var editableView: EditableView
+
+    @State private var editingNote = ""
+    @State private var hideOtherNotes = false
+    @State private var animateHideOtherNotes = false
+
+    // TODO: Configure to represent when input is scrolled out of view
+    @State private var isScrolledToTop = false
+
+    // TODO: Common dimensions
+    private let fabSize = 50.0
 
     var body: some View {
-        ZStack {
+        ScrollViewReader { proxy in
             ScrollView {
-                VStack {
+                LazyVStack {
+                    LargeTextEditor(
+                        text: $editingNote,
+                        placeholder: t.t("caseView.note")
+                    )
+                        .id("note-input")
+                        .listItemModifier()
+
+                    Button(t.t("actions.add")) {
+                        let note = WorksiteNote.create().copy {
+                            $0.note = editingNote
+                        }
+                        viewModel.saveNote(note)
+                        editingNote = ""
+                        hideOtherNotes = true
+                    }
+                    .stylePrimary()
+                    .padding(.horizontal)
+                    .disabled(editingNote.isBlank || editableView.disabled)
+
                     if viewModel.caseData?.worksite.notes.hasSurvivorNote == true {
                         SurvivorNoteLegend()
                             .padding()
@@ -411,53 +468,72 @@ private struct ViewCaseNotes: View {
                             .frame(height: 8.0)
                     }
 
+                    let otherNotes = viewModel.otherNotes
+                    if otherNotes.isNotEmpty {
+                        let otherNotesLabel = t.t("~~Other notes")
+
+                        Button {
+                            hideOtherNotes.toggle()
+                        } label: {
+                            HStack {
+                                Text(otherNotesLabel)
+
+                                Spacer()
+
+                                CollapsibleIcon(isCollapsed: hideOtherNotes)
+                            }
+                            .padding(.horizontal)
+                        }
+                        .foregroundColor(.black)
+
+                        if !animateHideOtherNotes {
+                            ForEach(otherNotes, id: \.0) { (title, content) in
+                                NoteCard(headerText: title, bodyText: content)
+                            }
+                        }
+                    }
+
                     if let notes = viewModel.caseData?.worksite.notes {
                         ForEach(notes, id: \.id) { note in
-                            VStack(alignment: .leading) {
-                                Text(note.createdAt.relativeTime)
-                                    .font(.caption)
-                                    .padding(.bottom, 4)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                NoteContentView(text: note.note)
-                            }
-                            .padding()
-                            .cardContainer(background: note.isSurvivor ? appTheme.colors.survivorNoteColorNoTransparency : Color.white)
-                            .padding(.horizontal)
-                            .padding(.bottom, 8)
+                            NoteCard(
+                                headerText: note.createdAt.relativeTime,
+                                bodyText: note.note,
+                                isSurvivor: note.isSurvivor
+                            )
                         }
 
-                        // Spacing
+                        // Spacer
                         Rectangle()
                             .fill(.clear)
                             .background(.clear)
-                        // TODO: Common dimensions
-                            .frame(height: 50.0)
-                            .padding(.vertical)
-}
+                            .frame(height: fabSize)
+                            .padding([.horizontal, .bottom])
+                    }
                 }
-                .padding(.bottom)
+                .onChange(of: hideOtherNotes) { newValue in
+                    withAnimation {
+                        animateHideOtherNotes = newValue
+                    }
+                }
             }
-
-            VStack{
-                Spacer()
-                HStack{
-                    Spacer()
+            .overlay(alignment: .bottomTrailing) {
+                if !focusableViewState.isFocused {
                     Button {
-                        router.openCaseAddNote()
+                        proxy.scrollTo("note-input", anchor: .top)
                     } label: {
-                        Image("ic_note", bundle: .module)
-                        // TODO: Common dimensions
-                            .frame(width: 50, height: 50)
+                        Image(systemName: "chevron.up")
+                            .frame(width: fabSize, height: fabSize)
                             .background(appTheme.colors.attentionBackgroundColor)
                             .tint(.black)
                             .clipShape(Circle())
-                            .shadow(radius: 3)
+                            .shadow(radius: appTheme.shadowRadius)
                             .padding()
 
                     }
-
+                    .disabled(isScrolledToTop)
                 }
             }
+            .scrollDismissesKeyboard(.immediately)
         }
     }
 }
@@ -497,32 +573,39 @@ private struct BottomNavButton: View {
 private struct BottomNav: View {
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var viewModel: ViewCaseViewModel
+    @EnvironmentObject var focusableViewState: TextInputFocusableView
 
     var body: some View {
-        HStack {
-            BottomNavButton("ic_case_share", "actions.share")
-            {
-                router.openCaseShare()
+        if focusableViewState.isFocused {
+            OpenKeyboardActionsView()
+        } else {
+            HStack {
+                BottomNavButton("ic_case_share", "actions.share")
+                {
+                    router.openCaseShare()
+                }
+                Spacer()
+                BottomNavButton("ic_case_flag", "nav.flag") {
+                    router.openCaseFlags(isFromCaseEdit: true)
+                }
+                Spacer()
+                BottomNavButton("ic_case_history", "actions.history") {
+                    router.openCaseHistory()
+                }
+                Spacer()
+                BottomNavButton("ic_case_edit", "actions.edit") {
+                    router.createEditCase(
+                        incidentId: viewModel.incidentIdIn,
+                        worksiteId: viewModel.worksiteIdIn
+                    )
+                }
             }
-            Spacer()
-            BottomNavButton("ic_case_flag", "nav.flag") {
-                router.openCaseFlags(isFromCaseEdit: true)
-            }
-            Spacer()
-            BottomNavButton("ic_case_history", "actions.history") {
-                router.openCaseHistory()
-            }
-            Spacer()
-            BottomNavButton("ic_case_edit", "actions.edit") {
-                router.createEditCase(
-                    incidentId: viewModel.incidentIdIn,
-                    worksiteId: viewModel.worksiteIdIn
-                )
-            }
+            // TODO: Common dimensions and styling
+            .padding(.horizontal, 24)
+            // TODO: Change padding on device and see if takes
+            .padding(.top)
+            .tint(.black)
         }
-        .padding(.horizontal, 24)
-        .padding(.top)
-        .tint(.black)
     }
 }
 

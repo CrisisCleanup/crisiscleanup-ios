@@ -134,7 +134,7 @@ private struct FilterSectionTitle: View {
 
                 Spacer()
 
-                Image(systemName: collapseIconName(isCollapsed))
+                CollapsibleIcon(isCollapsed: isCollapsed)
             }
         }
         .padding()
@@ -706,8 +706,4 @@ struct FilterButtons: View {
             .stylePrimary()
         }
     }
-}
-
-private func collapseIconName(_ isCollapsed: Bool) -> String {
-    isCollapsed ? "chevron.up" : "chevron.down"
 }

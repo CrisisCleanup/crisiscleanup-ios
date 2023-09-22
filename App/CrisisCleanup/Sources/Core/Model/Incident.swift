@@ -110,6 +110,7 @@ public struct IncidentFormField: Equatable {
     let isHidden: Bool
     let isFrequency: Bool
     let isSelectOption: Bool
+    let isTextArea: Bool
     // sourcery:end
 
     init(
@@ -157,7 +158,8 @@ public struct IncidentFormField: Equatable {
         isDivEnd = htmlTypeLower == "divend"
         isHidden = htmlTypeLower == "hidden"
         isFrequency = htmlTypeLower == "cronselect"
-        isSelectOption = htmlType.lowercased() == "select"
+        isSelectOption = htmlTypeLower == "select"
+        isTextArea = htmlTypeLower == "textarea"
     }
 
     func translatedLabel(_ translator: KeyTranslator) -> String {
