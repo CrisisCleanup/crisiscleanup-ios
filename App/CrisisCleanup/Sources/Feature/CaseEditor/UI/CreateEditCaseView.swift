@@ -667,7 +667,10 @@ private struct CreateEditCaseNotesView: View {
                     .frame(height: 8)
             }
             ScrollLazyVGrid {
-                StaticNotesList(notes: notes)
+                StaticNotesList(
+                    notes: notes,
+                    otherNotes: viewModel.otherNotes
+                )
             }
         }
         .presentationDetents([.large])

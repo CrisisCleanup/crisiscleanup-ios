@@ -77,6 +77,8 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
     @Published var contentFormData = ObservableStringDictionary()
     @Published var workTypeStatusFormData = ObservableStringDictionary()
 
+    @Published private(set) var otherNotes: [(String, String)] = []
+
     @Published private(set) var focusNoteCount = 0
 
     var hasInitialCoordinates: Bool { locationInputData.coordinates == caseData?.worksite.coordinates }
@@ -374,6 +376,14 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
             .receive(on: RunLoop.main)
             .assign(to: \.editSections, on: self)
             .store(in: &subscriptions)
+
+        editingWorksite.map { _ in
+            self.worksiteProvider.otherNotes.eraseToAnyPublisher()
+        }
+        .switchToLatest()
+        .receive(on: RunLoop.main)
+        .assign(to: \.otherNotes, on: self)
+        .store(in: &subscriptions)
     }
 
     private func subscribeWorksiteChange() {
