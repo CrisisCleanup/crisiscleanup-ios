@@ -15,8 +15,6 @@ internal struct FrequencySelectView: View {
     @State private var isFrequencyExpanded = false
 
     var body: some View {
-        // TODO: Disable throughout hierarchy when disabled (if not auto disabled from on high)
-
         VStack(alignment: .leading) {
             let isChecked = checkedData[node.fieldKey]
             let rRuleIn = rruleString.ifBlank { fallbackRrule }
@@ -317,6 +315,8 @@ private let untilDateFormatter = DateFormatter().format("yyyy-MM-dd").utcTimeZon
 
 private struct SelectEndDate: View {
     @Environment(\.translator) var t: KeyAssetTranslator
+    @Environment(\.isEnabled) var isEnabled
+
 
     @Binding var date: Date?
 
@@ -324,13 +324,24 @@ private struct SelectEndDate: View {
     @State var dateSelected = false
 
     var body: some View {
+        let disabled = !isEnabled
+        let color: Color = {
+            var color = Color.black
+            if disabled {
+                color = color.disabledAlpha()
+            }
+            return color
+        }()
+
         HStack {
             Image(systemName: "calendar")
+                .foregroundColor(color)
             Text(t.t("recurringSchedule.select_end_date"))
             if let endDate = date {
                 Text("(\(untilDateFormatter.string(from: endDate)))")
                 Spacer()
                 Image(systemName: "xmark")
+                    .foregroundColor(color)
                     .onTapGesture {
                         date = nil
                         dateSelected = false
