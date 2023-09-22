@@ -28,8 +28,6 @@ struct MainView: View {
     let userFeedbackViewBuilder: UserFeedbackViewBuilder
     let syncInsightsViewBuilder: SyncInsightsViewBuilder
 
-    @State var showAuthScreen = false
-
     @State private var selectedTab = TopLevelDestination.cases
 
     var body: some View {
@@ -46,12 +44,27 @@ struct MainView: View {
                 UnsupportedBuildView(supportedInfo: viewModel.minSupportedVersion)
             case .ready:
                 let hideAuthScreen = {
-                    showAuthScreen = false
-
+                    viewModel.showAuthScreen = false
                 }
-                if showAuthScreen || !viewModel.viewData.showMainContent {
-                    authenticateViewBuilder.authenticateView(dismissScreen: hideAuthScreen)
-                        .navigationBarHidden(true)
+                if viewModel.showAuthScreen ||
+                    !viewModel.viewData.showMainContent {
+                    NavigationStack(path: $router.path) {
+                        authenticateViewBuilder.authenticateView(dismissScreen: hideAuthScreen)
+                            .navigationDestination(for: NavigationRoute.self) { route in
+                                switch route {
+                                case .loginWithEmail:
+                                    Text("Login with email")
+                                case .loginWithPhone:
+                                    Text("Login with phone")
+                                case .recoverPassword:
+                                    Text("Recover password")
+                                case .resetPassword(let recoverCode):
+                                    Text("Reset password")
+                                default:
+                                    Text("Unplanned auth/account route \(route.id)")
+                                }
+                            }
+                    }
                 } else {
                     let navColor = appTheme.colors.navigationContainerColor
                     NavigationStack(path: $router.path) {
@@ -65,31 +78,29 @@ struct MainView: View {
                                     .background(.clear)
 
                                 TabView(selection: $selectedTab) {
-                                    Group {
-                                        let openAuthScreen = {
-                                            showAuthScreen = true
-                                        }
-                                        MainTabs(
-                                            viewModel: viewModel,
-                                            openAuthScreen: openAuthScreen,
-                                            casesViewBuilder: casesViewBuilder,
-                                            menuViewBuilder: menuViewBuilder,
-                                            casesFilterViewBuilder: casesFilterViewBuilder,
-                                            casesSearchViewBuilder: casesSearchViewBuilder,
-                                            viewCaseViewBuilder: viewCaseViewBuilder,
-                                            caseAddNoteViewBuilder: caseAddNoteViewBuilder,
-                                            createEditCaseViewBuilder: createEditCaseViewBuilder,
-                                            caseShareViewBuilder: caseShareViewBuilder,
-                                            caseFlagsViewBuilder: caseFlagsViewBuilder,
-                                            caseHistoryViewBuilder: caseHistoryViewBuilder,
-                                            transferWorkTypeViewBuilder: transferWorkTypeViewBuilder,
-                                            viewImageViewBuilder: viewImageViewBuilder,
-                                            caseSearchLocationViewBuilder: caseSearchLocationViewBuilder,
-                                            caseMoveOnMapViewBuilder: caseMoveOnMapViewBuilder,
-                                            userFeedbackViewBuilder: userFeedbackViewBuilder,
-                                            syncInsightsViewBuilder: syncInsightsViewBuilder
-                                        )
+                                    let openAuthScreen = {
+                                        viewModel.showAuthScreen = true
                                     }
+                                    MainTabs(
+                                        viewModel: viewModel,
+                                        openAuthScreen: openAuthScreen,
+                                        casesViewBuilder: casesViewBuilder,
+                                        menuViewBuilder: menuViewBuilder,
+                                        casesFilterViewBuilder: casesFilterViewBuilder,
+                                        casesSearchViewBuilder: casesSearchViewBuilder,
+                                        viewCaseViewBuilder: viewCaseViewBuilder,
+                                        caseAddNoteViewBuilder: caseAddNoteViewBuilder,
+                                        createEditCaseViewBuilder: createEditCaseViewBuilder,
+                                        caseShareViewBuilder: caseShareViewBuilder,
+                                        caseFlagsViewBuilder: caseFlagsViewBuilder,
+                                        caseHistoryViewBuilder: caseHistoryViewBuilder,
+                                        transferWorkTypeViewBuilder: transferWorkTypeViewBuilder,
+                                        viewImageViewBuilder: viewImageViewBuilder,
+                                        caseSearchLocationViewBuilder: caseSearchLocationViewBuilder,
+                                        caseMoveOnMapViewBuilder: caseMoveOnMapViewBuilder,
+                                        userFeedbackViewBuilder: userFeedbackViewBuilder,
+                                        syncInsightsViewBuilder: syncInsightsViewBuilder
+                                    )
                                 }
                                 .tabViewStyle(
                                     backgroundColor: appTheme.colors.navigationContainerColor,
@@ -144,7 +155,9 @@ private struct TabViewContainer<Content: View>: View {
 
 private struct MainTabs: View {
     @ObservedObject var viewModel: MainViewModel
+
     let openAuthScreen: () -> Void
+
     let casesViewBuilder: CasesViewBuilder
     let menuViewBuilder: MenuViewBuilder
     let casesFilterViewBuilder: CasesFilterViewBuilder

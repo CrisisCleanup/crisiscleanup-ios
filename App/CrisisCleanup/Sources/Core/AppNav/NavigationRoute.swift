@@ -15,7 +15,11 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
          caseAddNote,
          viewImage(_ imageId: Int64, _ isNetworkImage: Bool, _ screenTitle: String),
          syncInsights,
-         userFeedback
+         userFeedback,
+         loginWithEmail,
+         loginWithPhone,
+         recoverPassword,
+         resetPassword(_ recoverCode: String)
 
     public var id: Int {
         switch self {
@@ -35,6 +39,10 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
         case .caseMoveOnMap:return 14
         case .caseShareStep2:       return 15
         case .userFeedback: return 16
+        case .loginWithEmail:       return 17
+        case .loginWithPhone:       return 18
+        case .recoverPassword:      return 19
+        case .resetPassword:        return 20
 
         case .syncInsights: return 77
         }

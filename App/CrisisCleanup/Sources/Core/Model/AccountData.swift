@@ -15,9 +15,11 @@ public struct AccountData {
     let org: OrgData
     let areTokensValid: Bool
 
-    func hasAuthenticated() -> Bool { id > 0 }
+    // sourcery:begin: skipCopy
+    var hasAuthenticated: Bool { id > 0 }
 
-    func isAccessTokenExpired() -> Bool { tokenExpiry <= Date().addingTimeInterval(-10.minutes) }
+    var isAccessTokenExpired: Bool { tokenExpiry <= Date().addingTimeInterval(-10.minutes) }
+    // sourcery:end
 }
 
 let emptyOrgData = OrgData(id: 0, name: "")

@@ -17,6 +17,8 @@ class MainViewModel: ObservableObject {
 
     @Published private(set) var minSupportedVersion = supportedAppVersion
 
+    @Published var showAuthScreen = false
+
     let isNotProduction: Bool
 
     private var incidentsData: IncidentsData = LoadingIncidentsData
@@ -85,8 +87,12 @@ class MainViewModel: ObservableObject {
     }
 
     private func subscribeAccountData() {
+        let accountDataPublisher = accountDataRepository.accountData
+            .eraseToAnyPublisher()
+            .share()
+
         Publishers.CombineLatest3(
-            accountDataRepository.accountData.eraseToAnyPublisher(),
+            accountDataPublisher,
             translator.translationCount.eraseToAnyPublisher(),
             $minSupportedVersion
         )
@@ -103,7 +109,7 @@ class MainViewModel: ObservableObject {
         }
         .store(in: &subscriptions)
 
-        accountDataRepository.accountData
+        accountDataPublisher
             .sink { accountData in
                 if accountData.areTokensValid {
                     self.sync(false)
