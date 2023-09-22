@@ -397,6 +397,26 @@ private struct MediaDisplay: View {
     }
 }
 
+private struct NoteCard: View {
+    let headerText: String
+    let bodyText: String
+    var isSurvivor = false
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text(headerText)
+                .fontBodySmall()
+                .padding(.bottom, appTheme.gridItemSpacing)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            NoteContentView(text: bodyText)
+        }
+        .padding()
+        .cardContainer(background: isSurvivor ? appTheme.colors.survivorNoteColorNoTransparency : Color.white)
+        .padding(.horizontal)
+        .padding(.bottom, appTheme.listItemVerticalPadding)
+    }
+}
+
 private struct ViewCaseNotes: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
@@ -407,6 +427,7 @@ private struct ViewCaseNotes: View {
 
     @State private var editingNote = ""
     @State private var hideOtherNotes = false
+    @State private var animateHideOtherNotes = false
 
     // TODO: Configure to represent when input is scrolled out of view
     @State private var isScrolledToTop = false
@@ -447,19 +468,38 @@ private struct ViewCaseNotes: View {
                             .frame(height: 8.0)
                     }
 
+                    let otherNotes = viewModel.otherNotes
+                    if otherNotes.isNotEmpty {
+                        let otherNotesLabel = t.t("~~Other notes")
+
+                        Button {
+                            hideOtherNotes.toggle()
+                        } label: {
+                            HStack {
+                                Text(otherNotesLabel)
+
+                                Spacer()
+
+                                CollapsibleIcon(isCollapsed: hideOtherNotes)
+                            }
+                            .padding(.horizontal)
+                        }
+                        .foregroundColor(.black)
+
+                        if !animateHideOtherNotes {
+                            ForEach(otherNotes, id: \.0) { (title, content) in
+                                NoteCard(headerText: title, bodyText: content)
+                            }
+                        }
+                    }
+
                     if let notes = viewModel.caseData?.worksite.notes {
                         ForEach(notes, id: \.id) { note in
-                            VStack(alignment: .leading) {
-                                Text(note.createdAt.relativeTime)
-                                    .font(.caption)
-                                    .padding(.bottom, 4)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                NoteContentView(text: note.note)
-                            }
-                            .padding()
-                            .cardContainer(background: note.isSurvivor ? appTheme.colors.survivorNoteColorNoTransparency : Color.white)
-                            .padding(.horizontal)
-                            .padding(.bottom, 8)
+                            NoteCard(
+                                headerText: note.createdAt.relativeTime,
+                                bodyText: note.note,
+                                isSurvivor: note.isSurvivor
+                            )
                         }
 
                         // Spacer
@@ -468,6 +508,11 @@ private struct ViewCaseNotes: View {
                             .background(.clear)
                             .frame(height: fabSize)
                             .padding([.horizontal, .bottom])
+                    }
+                }
+                .onChange(of: hideOtherNotes) { newValue in
+                    withAnimation {
+                        animateHideOtherNotes = newValue
                     }
                 }
             }

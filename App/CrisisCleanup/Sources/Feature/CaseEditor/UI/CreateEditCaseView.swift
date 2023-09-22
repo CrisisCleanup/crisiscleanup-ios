@@ -217,10 +217,6 @@ private struct CreateEditCaseContentView: View {
     }
 }
 
-private func collapseIconName(_ isCollapsed: Bool) -> String {
-    isCollapsed ? "chevron.up" : "chevron.down"
-}
-
 private struct CreateEditCaseSectionHeaderView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
@@ -252,7 +248,7 @@ private struct CreateEditCaseSectionHeaderView: View {
 
                 Spacer()
 
-                Image(systemName: collapseIconName(isCollapsed))
+                CollapsibleIcon(isCollapsed: isCollapsed)
             }
         }
         .padding()

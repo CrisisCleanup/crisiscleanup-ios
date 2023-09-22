@@ -72,7 +72,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     @Published private(set) var statusOptions: [WorkTypeStatus] = []
     @Published private(set) var beforeAfterPhotos: [ImageCategory: [CaseImage]] = [:]
 
-    private let previousNoteCount = ManagedAtomic(0)
+    @Published private(set) var otherNotes: [(String, String)] = []
 
     var addImageCategory = ImageCategory.before
     @Published var cachingLocalImageCount = ObservableIntDictionary()
@@ -460,6 +460,14 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
     }
 
     private func subscribeFilesNotes() {
+        editableWorksite.map { _ in
+            self.editableWorksiteProvider.otherNotes.eraseToAnyPublisher()
+        }
+        .switchToLatest()
+        .receive(on: RunLoop.main)
+        .assign(to: \.otherNotes, on: self)
+        .store(in: &subscriptions)
+
         let filesNotes = Publishers.CombineLatest(
             editableWorksite,
             $caseData.eraseToAnyPublisher()
@@ -478,7 +486,12 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
             }
             .share()
 
-        filesNotes.map { (fileImages, localImages, notes) in
+        Publishers.CombineLatest(
+            filesNotes,
+            $otherNotes
+        )
+        .map { (fn, on) in
+            let (fileImages, localImages, notes) = fn
             let fileCount = fileImages.count + localImages.count
             var photosTitle = self.localTranslate("caseForm.photos")
             if fileCount > 0 {
@@ -486,7 +499,7 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
             }
 
             var notesTitle = self.localTranslate("formLabels.notes")
-            let noteCount = notes.count
+            let noteCount = notes.count + on.count
             if noteCount > 0 {
                 notesTitle = "\(notesTitle) (\(noteCount))"
             }

@@ -310,6 +310,27 @@ internal class CaseEditorDataLoader {
                         return (f.formField.selectToggleWorkType, name)
                     }
 
+                    let textAreaLookup = incident.formFields
+                        .filter { $0.isTextArea }
+                        .associateBy { $0.fieldKey }
+                    ewp.otherNotes = ewp.editableWorksite.compactMap { worksite in
+                        var sortedNotes: [(String, String)]? = nil
+                        if let worksiteFormData = worksite.formData {
+                            sortedNotes = worksiteFormData
+                                .filter { textAreaLookup.keys.contains($0.key) }
+                                .filter { $0.value.valueString.isNotBlank }
+                                .map {
+                                    let parentKey = textAreaLookup[$0.key]!.parentKey
+                                    let groupLabel = translate("formLabels.\(parentKey)")
+                                    let fieldLabel = translate("formLabels.\($0.key)")
+                                    let label = "\(groupLabel) - \(fieldLabel)"
+                                    return (label, $0.value.valueString.trim())
+                                }
+                                .sorted(by: { a, b in a.0.localizedCompare(b.0) == .orderedAscending })
+                        }
+                        return sortedNotes
+                    }
+
                     let localTranslate = { s in translate(s) }
                     self.incidentFieldLookupSubject.value = ewp.formFields.associate { node in
                         let groupFieldMap = node.children.associate { child in

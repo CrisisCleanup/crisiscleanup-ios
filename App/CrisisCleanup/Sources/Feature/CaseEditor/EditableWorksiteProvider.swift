@@ -9,6 +9,7 @@ public protocol EditableWorksiteProvider {
     var formFields: [FormFieldNode] { get set }
     var formFieldTranslationLookup: [String : String] { get set }
     var workTypeTranslationLookup: [String : String] { get set }
+    var otherNotes: any Publisher<[(String, String)], Never> { get set }
 
     var isStale: Bool { get }
     func setStale()
@@ -61,6 +62,7 @@ class SingleEditableWorksiteProvider: EditableWorksiteProvider, WorksiteLocation
     var formFields = [FormFieldNode]()
     var formFieldTranslationLookup = [String : String]()
     var workTypeTranslationLookup = [String : String]()
+    var otherNotes: any Publisher<[(String, String)], Never> = CurrentValueSubject<[(String, String)], Never>([])
 
     private var _isStale = ManagedAtomic(false)
     var isStale: Bool {
