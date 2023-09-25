@@ -5,11 +5,13 @@ import SwiftUI
 public protocol AuthenticateViewBuilder {
     func authenticateView(dismissScreen: @escaping () -> Void) -> AnyView
     func loginWithEmailView(dismissScreen: @escaping () -> Void) -> AnyView
+    func passwordRecoverView(showForgotPassword: Bool, showMagicLink: Bool) -> AnyView
 }
 
 class AuthenticateComponent: Component<AppDependency> {
-    private var viewModel: AuthenticateViewModel? = nil
-    private var _loginWithEmailViewModel: LoginWithEmailViewModel? = nil
+    internal var viewModel: AuthenticateViewModel? = nil
+    internal var _loginWithEmailViewModel: LoginWithEmailViewModel? = nil
+    internal var _passwordRecoverViewModel: PasswordRecoverViewModel? = nil
 
     private var disposables = Set<AnyCancellable>()
 
@@ -19,10 +21,14 @@ class AuthenticateComponent: Component<AppDependency> {
     ) {
         super.init(parent: parent)
 
+        let passwordRecoverId = NavigationRoute.recoverPassword().id
         routerObserver.pathIds
             .sink { pathIds in
                 if !pathIds.contains(NavigationRoute.loginWithEmail.id) {
                     self._loginWithEmailViewModel = nil
+                }
+                if !pathIds.contains(passwordRecoverId) {
+                    self._passwordRecoverViewModel = nil
                 }
             }
             .store(in: &disposables)
@@ -46,37 +52,6 @@ class AuthenticateComponent: Component<AppDependency> {
         return AnyView(
             AuthenticateView(
                 viewModel: authenticateViewModel,
-                dismiss: clearViewModelOnHide
-            )
-        )
-    }
-
-
-    private var loginWithEmailViewModel: LoginWithEmailViewModel {
-        if _loginWithEmailViewModel == nil {
-            _loginWithEmailViewModel = LoginWithEmailViewModel(
-                appEnv: dependency.appEnv,
-                appSettings: dependency.appSettingsProvider,
-                authApi: dependency.authApi,
-                inputValidator: dependency.inputValidator,
-                accessTokenDecoder: dependency.accessTokenDecoder,
-                accountDataRepository: dependency.accountDataRepository,
-                authEventBus: dependency.authEventBus,
-                translator: dependency.translator,
-                loggerFactory: dependency.loggerFactory
-            )
-        }
-        return _loginWithEmailViewModel!
-    }
-
-    func loginWithEmailView(dismissScreen: @escaping () -> Void) -> AnyView {
-        let clearViewModelOnHide = {
-            self.viewModel = nil
-            dismissScreen()
-        }
-        return AnyView(
-            LoginWithEmailView(
-                viewModel: loginWithEmailViewModel,
                 dismiss: clearViewModelOnHide
             )
         )

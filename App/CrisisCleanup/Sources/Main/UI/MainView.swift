@@ -56,8 +56,11 @@ struct MainView: View {
                                     authenticateViewBuilder.loginWithEmailView(dismissScreen: hideAuthScreen)
                                 case .loginWithPhone:
                                     Text("Login with phone")
-                                case .recoverPassword:
-                                    Text("Recover password")
+                                case .recoverPassword(let showForgotPassword, let showMagicLink):
+                                    authenticateViewBuilder.passwordRecoverView(
+                                        showForgotPassword: showForgotPassword,
+                                        showMagicLink: showMagicLink
+                                    )
                                 case .resetPassword(let recoverCode):
                                     Text("Reset password")
                                 default:

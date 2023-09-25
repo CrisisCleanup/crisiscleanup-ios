@@ -105,6 +105,10 @@ public class MainComponent: BootstrapComponent,
         authenticateComponent.loginWithEmailView(dismissScreen: dismissScreen)
     }
 
+    public func passwordRecoverView(showForgotPassword: Bool, showMagicLink: Bool) -> AnyView {
+        authenticateComponent.passwordRecoverView(showForgotPassword: showForgotPassword, showMagicLink: showMagicLink)
+    }
+
     // MARK: Incident select
 
     lazy var incidentSelectComponent: IncidentSelectComponent = IncidentSelectComponent(parent: self)
