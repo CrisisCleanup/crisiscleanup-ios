@@ -107,6 +107,38 @@ struct RoundedRectangleStyleModifier: ViewModifier {
     }
 }
 
+struct OutlineButtonStyle: ButtonStyle {
+    let disabled: Bool
+
+    init(_ disabled: Bool = false) {
+        self.disabled = disabled
+    }
+
+    func makeBody(configuration: Configuration) -> some View {
+        let color: Color = {
+            let color = Color.black
+            return disabled ? color.disabledAlpha() : color
+        }()
+        let buttonSize = appTheme.buttonSize
+        configuration.label
+            .frame(maxWidth: .infinity)
+            .frame(height: buttonSize)
+            .cornerRadius(appTheme.cornerRadius)
+            .foregroundColor(color)
+            .roundedBorder(
+                color: color,
+                lineWidth: appTheme.buttonOutlineWidth
+            )
+    }
+}
+
+struct OutlineStyleModifier: ViewModifier {
+    @Environment(\.isEnabled) var isEnabled
+    func body(content: Content) -> some View {
+        return content.buttonStyle(OutlineButtonStyle(!isEnabled))
+    }
+}
+
 struct BusyButtonContent: View {
     var isBusy: Bool
     var text: String
@@ -135,5 +167,9 @@ extension Button {
 
     func styleRoundedRectanglePrimary() -> some View {
         ModifiedContent(content: self, modifier: RoundedRectangleStyleModifier())
+    }
+
+    func styleOutline() -> some View {
+        ModifiedContent(content: self, modifier: OutlineStyleModifier())
     }
 }
