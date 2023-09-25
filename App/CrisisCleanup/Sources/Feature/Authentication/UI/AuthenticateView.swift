@@ -38,6 +38,8 @@ struct AuthenticateView: View {
 
 private struct LoginOptionsView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
+    @Environment(\.openURL) var openURL
+
     @EnvironmentObject var router: NavigationRouter
 
     @ObservedObject var viewModel: AuthenticateViewModel
@@ -56,36 +58,46 @@ private struct LoginOptionsView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.vertical)
 
-                    Button(t.t("loginForm.login_with_email")) {
+                    Button(t.translate("loginForm.login_with_email", "Login with email")) {
                         router.openEmailLogin()
                     }
                     .stylePrimary()
 
-                    Button(t.t("loginForm.login_with_cell")) {
-                        // TODO: Do
+                    Button(t.translate("loginForm.login_with_cell", "Login with phone")) {
+                        router.openPhoneLogin()
                     }
                     .stylePrimary()
                     .disabled(true)
 
-                    Button(t.t("actions.request_access")) {
+                    Button(t.translate("actions.request_access", "Volunteer with org")) {
                         // TODO: Do
                     }
                     .styleOutline()
                     .disabled(true)
 
-                    Button(t.t("loginForm.need_help_cleaning_up")) {
-                        // TODO: Do
+                    Button(t.translate("loginForm.need_help_cleaning_up", "I need cleanup")) {
+                        openURL(URL(string: "https://crisiscleanup.org/survivor")!)
                     }
                     .styleOutline()
 
                     VStack(alignment: .leading) {
-                        Text(t.t("publicNav.relief_orgs_only"))
+                        Text(t.translate("publicNav.relief_orgs_only", "Relief orgs and goverment only"))
 
-                        Button(t.t("actions.register")) {
-                            // TODO: Web link
-                        }
+                        Link(
+                            t.translate("actions.register", "Register action"),
+                            destination: URL(string: "https://crisiscleanup.org/register")!
+                        )
                     }
                     .padding(.top)
+
+                    if viewModel.viewData.hasAuthenticated {
+                        Button {
+                            dismissScreen()
+                        } label:  {
+                            Text(t.translate("actions.back", "Back action"))
+                        }
+                        .padding(.vertical, appTheme.listItemVerticalPadding)
+                    }
                 }
                 .padding()
             }

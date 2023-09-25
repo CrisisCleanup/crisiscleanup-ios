@@ -53,7 +53,7 @@ struct MainView: View {
                             .navigationDestination(for: NavigationRoute.self) { route in
                                 switch route {
                                 case .loginWithEmail:
-                                    Text("Login with email")
+                                    authenticateViewBuilder.loginWithEmailView(dismissScreen: hideAuthScreen)
                                 case .loginWithPhone:
                                     Text("Login with phone")
                                 case .recoverPassword:

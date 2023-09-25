@@ -95,10 +95,14 @@ public class MainComponent: BootstrapComponent,
 
     // MARK: Authenticate
 
-    lazy var authenticateComponent: AuthenticateComponent = AuthenticateComponent(parent: self)
+    lazy var authenticateComponent: AuthenticateComponent = AuthenticateComponent(parent: self, routerObserver: routerObserver)
 
     public func authenticateView(dismissScreen: @escaping () -> Void) -> AnyView {
         authenticateComponent.authenticateView(dismissScreen: dismissScreen)
+    }
+
+    public func loginWithEmailView(dismissScreen: @escaping () -> Void) -> AnyView {
+        authenticateComponent.loginWithEmailView(dismissScreen: dismissScreen)
     }
 
     // MARK: Incident select

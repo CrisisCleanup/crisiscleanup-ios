@@ -3,6 +3,8 @@ import SwiftUI
 struct LoginWithEmailView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
+    @EnvironmentObject var router: NavigationRouter
+
     @ObservedObject var viewModel: LoginWithEmailViewModel
 
     let dismiss: () -> Void
@@ -25,6 +27,7 @@ struct LoginWithEmailView: View {
         .onDisappear { viewModel.onViewDisappear() }
         .onReceive(viewModel.$isAuthenticateSuccessful) { b in
             if b {
+                router.returnToAuth()
                 dismiss()
             }
         }
@@ -117,16 +120,6 @@ private struct LoginView: View {
                     .stylePrimary()
                     .padding(.vertical, appTheme.listItemVerticalPadding)
                     .disabled(disabled)
-
-                    if viewModel.viewData.hasAuthenticated {
-                        Button {
-                            dismissScreen()
-                        } label:  {
-                            Text(t.t("actions.back"))
-                        }
-                        .padding(.vertical, appTheme.listItemVerticalPadding)
-                        .disabled(disabled)
-                    }
                 }
                 .onChange(of: viewModel.focusState) { focusState = $0 }
                 .padding()

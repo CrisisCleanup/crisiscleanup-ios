@@ -21,8 +21,16 @@ class NavigationRouter: ObservableObject {
         path.removeAll()
     }
 
+    func returnToAuth() {
+        clearNavigationStack()
+    }
+
     func openEmailLogin() {
         path.append(.loginWithEmail)
+    }
+
+    func openPhoneLogin() {
+        path.append(.loginWithPhone)
     }
 
     func openFilterCases() {
