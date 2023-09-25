@@ -99,6 +99,7 @@ private struct LoginView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .trailing)
                     .padding(.bottom)
+                    .disabled(disabled)
 
                     if viewModel.isDebuggable {
                         Button("Login Debug") {

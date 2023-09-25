@@ -18,6 +18,7 @@ public protocol AppDependency: Dependency {
     var translator: KeyAssetTranslator { get }
 
     var accessTokenDecoder: AccessTokenDecoder { get }
+    var accountUpdateRepository: AccountUpdateRepository { get }
 
     var incidentsRepository: IncidentsRepository { get }
     var languageTranslationsRepository: LanguageTranslationsRepository { get }

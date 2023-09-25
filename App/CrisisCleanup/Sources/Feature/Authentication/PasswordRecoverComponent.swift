@@ -11,7 +11,11 @@ extension AuthenticateComponent {
         if !isReusable {
             _passwordRecoverViewModel = PasswordRecoverViewModel(
                 showForgotPassword: showForgotPassword,
-                showMagicLink: showMagicLink
+                showMagicLink: showMagicLink,
+                accountDataRepository: dependency.accountDataRepository,
+                accountUpdateRepository: dependency.accountUpdateRepository,
+                inputValidator: dependency.inputValidator,
+                translator: dependency.translator
             )
         }
         return _passwordRecoverViewModel!
