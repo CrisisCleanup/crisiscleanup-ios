@@ -37,6 +37,8 @@ struct LoginWithEmailView: View {
 private struct LoginView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
+    @EnvironmentObject var router: NavigationRouter
+
     @ObservedObject var viewModel: LoginWithEmailViewModel
     @ObservedObject var focusableViewState = TextInputFocusableView()
 
@@ -92,11 +94,11 @@ private struct LoginView: View {
                     }
                     .onChange(of: focusState) { focusableViewState.focusState = $0 }
 
-                    HStack {
-                        // TODO: Email link when Universal links are ready
-
-                        // TODO: Forgot password action
+                    Button(t.t("invitationSignup.forgot_password")) {
+                        router.openForgotPassword()
                     }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.bottom)
 
                     if viewModel.isDebuggable {
                         Button("Login Debug") {

@@ -18,7 +18,10 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
          userFeedback,
          loginWithEmail,
          loginWithPhone,
-         recoverPassword,
+         recoverPassword(
+            showForgotPassword: Bool = false,
+            showMagicLink: Bool = false
+         ),
          resetPassword(_ recoverCode: String)
 
     public var id: Int {

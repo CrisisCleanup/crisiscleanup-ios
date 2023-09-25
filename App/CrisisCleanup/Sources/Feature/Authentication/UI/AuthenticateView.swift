@@ -91,10 +91,8 @@ private struct LoginOptionsView: View {
                     .padding(.top)
 
                     if viewModel.viewData.hasAuthenticated {
-                        Button {
+                        Button(t.translate("actions.back", "Back action")) {
                             dismissScreen()
-                        } label:  {
-                            Text(t.translate("actions.back", "Back action"))
                         }
                         .padding(.vertical, appTheme.listItemVerticalPadding)
                     }

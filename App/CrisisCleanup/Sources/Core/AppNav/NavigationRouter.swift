@@ -33,6 +33,14 @@ class NavigationRouter: ObservableObject {
         path.append(.loginWithPhone)
     }
 
+    func openForgotPassword() {
+        path.append(.recoverPassword(showForgotPassword: true, showMagicLink: false))
+    }
+
+    func openEmailMagicLink() {
+        path.append(.recoverPassword(showForgotPassword: false, showMagicLink: true))
+    }
+
     func openFilterCases() {
         path.append(.filterCases)
     }
