@@ -8,22 +8,41 @@ public protocol AccountUpdateRepository {
 }
 
 class CrisisCleanupAccountUpdateRepository: AccountUpdateRepository {
+    private let accountApi: CrisisCleanupAccountApi
+    private let logger: AppLogger
+
+    init(
+        accountApi: CrisisCleanupAccountApi,
+        loggerFactory: AppLoggerFactory
+    ) {
+        self.accountApi = accountApi
+        logger = loggerFactory.getLogger("account")
+    }
+
     func initiateEmailMagicLink(_ emailAddress: String) async -> Bool {
-        // TODO: Do
-        false
+        await accountApi.initiateMagicLink(emailAddress)
     }
 
     func initiatePasswordReset(_ emailAddress: String) async -> PasswordResetInitiation {
-        // TODO: Do
-        PasswordResetInitiation(nil)
-
+        do {
+            let result = try await accountApi.initiatePasswordReset(emailAddress)
+            if result.isValid,
+               result.expiresAt > Date.now {
+                return PasswordResetInitiation(result.expiresAt, "")
+            } else {
+                if result.invalidMessage?.isNotBlank == true {
+                    return PasswordResetInitiation(nil, result.invalidMessage!)
+                }
+            }
+        } catch {
+            logger.logError(error)
+        }
+        return PasswordResetInitiation(nil, "")
     }
 
     func changePassword(password: String, token: String) async -> Bool {
-        // TODO: Do
-        false
+        await accountApi.changePassword(password: password, token: token)
     }
-
 }
 
 public struct PasswordResetInitiation {

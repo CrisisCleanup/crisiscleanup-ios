@@ -3,7 +3,10 @@ extension MainComponent {
 
     public var accountUpdateRepository: AccountUpdateRepository {
         shared {
-            CrisisCleanupAccountUpdateRepository()
+            CrisisCleanupAccountUpdateRepository(
+                accountApi: accountApi,
+                loggerFactory: loggerFactory
+            )
         }
     }
 }

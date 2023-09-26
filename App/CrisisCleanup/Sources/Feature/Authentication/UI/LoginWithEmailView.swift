@@ -85,7 +85,11 @@ private struct LoginView: View {
                             .focused($focusState, equals: TextInputFocused.authEmailAddress)
                             .disabled(disabled)
                             .onSubmit { authenticate() }
-                            .onAppear { focusState = TextInputFocused.authEmailAddress }
+                            .onAppear {
+                                if emailAddress.isBlank {
+                                    focusState = TextInputFocused.authEmailAddress
+                                }
+                            }
                         ToggleSecureTextField(t.translate("loginForm.password_placeholder", "Password hint"), text: $password)
                             .padding([.vertical])
                             .focused($focusState, equals: TextInputFocused.authPassword)
@@ -93,6 +97,13 @@ private struct LoginView: View {
                             .onSubmit { authenticate() }
                     }
                     .onChange(of: focusState) { focusableViewState.focusState = $0 }
+
+                    Button(t.t("actions.request_magic_link")) {
+                        router.openEmailMagicLink()
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.bottom)
+                    .disabled(disabled)
 
                     Button(t.t("invitationSignup.forgot_password")) {
                         router.openForgotPassword()

@@ -113,6 +113,14 @@ extension MainComponent {
             )
         }
     }
+    var accountApi: CrisisCleanupAccountApi {
+        shared {
+            AccountApiClient(
+                networkRequestProvider: networkRequestProvider,
+                appEnv: appEnv
+            )
+        }
+    }
 
     public var appPreferences: AppPreferencesDataStore { shared { AppPreferencesUserDefaults() } }
 

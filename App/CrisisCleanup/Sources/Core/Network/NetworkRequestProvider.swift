@@ -294,6 +294,35 @@ extension NetworkRequestProvider {
         }
         return nil
     }
+
+    // MARK: Account requests
+
+    var initiateMagicLink: NetworkRequest {
+        NetworkRequest(
+            apiUrl("magic_link"),
+            method: .post
+        )
+    }
+
+    var initiatePasswordReset: NetworkRequest {
+        NetworkRequest(
+            apiUrl("password_reset_requests"),
+            method: .post
+        )
+    }
+
+    var resetPassword: NetworkRequest {
+        NetworkRequest(
+            apiUrl("password_reset_requests"),
+            method: .post
+        )
+    }
+
+    var resetPasswordStatus: NetworkRequest {
+        NetworkRequest(
+            apiUrl("password_reset_requests")
+        )
+    }
 }
 
 class CrisisCleanupNetworkRequestProvider: NetworkRequestProvider {
