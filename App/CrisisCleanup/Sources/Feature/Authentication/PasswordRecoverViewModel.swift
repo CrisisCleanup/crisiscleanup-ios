@@ -12,7 +12,9 @@ class PasswordRecoverViewModel: ObservableObject {
 
     let screenTitleKey: String
 
-    @Published private(set) var emailAddress: String? = nil
+    @Published private(set) var isLoadingAccountData = true
+    @Published var emailAddress = ""
+
     @Published private(set) var forgotPasswordErrorMessage = ""
     @Published private(set) var magicLinkErrorMessage = ""
 
@@ -29,6 +31,8 @@ class PasswordRecoverViewModel: ObservableObject {
 
     @Published private(set) var isPasswordResetInitiated = false
     @Published private(set) var isMagicLinkInitiated = false
+
+    let editableViewState = EditableView()
 
     @Published private(set) var isBusy = false
 
@@ -55,6 +59,7 @@ class PasswordRecoverViewModel: ObservableObject {
 
     func onViewAppear() {
         subscribeLoading()
+        subscribeEditableState()
         subscribeAccountData()
     }
 
@@ -82,13 +87,26 @@ class PasswordRecoverViewModel: ObservableObject {
         .store(in: &subscriptions)
     }
 
+    private func subscribeEditableState() {
+        Publishers.CombineLatest(
+            $isLoadingAccountData,
+            $isBusy
+        )
+        .map { (b0, b1) in b0 || b1 }
+        .sink { isTransient in
+            self.editableViewState.isEditable = !isTransient
+        }
+        .store(in: &subscriptions)
+    }
+
     private func subscribeAccountData() {
         accountDataRepository.accountData.eraseToAnyPublisher()
             .receive(on: RunLoop.main)
             .sink {
-                if (self.emailAddress?.isNotBlank != true) {
+                if (self.emailAddress.isBlank) {
                     self.emailAddress = $0.emailAddress
                 }
+                self.isLoadingAccountData = false
             }
             .store(in: &subscriptions)
     }
@@ -101,7 +119,7 @@ class PasswordRecoverViewModel: ObservableObject {
     func onInitiatePasswordReset() {
         forgotPasswordErrorMessage = ""
 
-        let email = emailAddress ?? ""
+        let email = emailAddress.trim()
         if email.isBlank ||
             !inputValidator.validateEmailAddress(email)
         {
@@ -109,6 +127,9 @@ class PasswordRecoverViewModel: ObservableObject {
             return
         }
 
+        if isInitiatingPasswordResetSubject.value {
+            return
+        }
         isInitiatingPasswordResetSubject.value = true
         Task {
             do {
@@ -141,7 +162,7 @@ class PasswordRecoverViewModel: ObservableObject {
     func onInitiateMagicLink() {
         magicLinkErrorMessage = ""
 
-        let email = emailAddress ?? ""
+        let email = emailAddress.trim()
         if email.isBlank ||
             !inputValidator.validateEmailAddress(email)
         {
@@ -149,6 +170,9 @@ class PasswordRecoverViewModel: ObservableObject {
             return
         }
 
+        if isInitiatingMagicLinkSubject.value {
+            return
+        }
         isInitiatingMagicLinkSubject.value = true
         Task {
             do {

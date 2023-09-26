@@ -9,7 +9,8 @@ class AFNetworkingClient {
 
     init(
         _ appEnv: AppEnv,
-        interceptor: RequestInterceptor? = nil
+        interceptor: RequestInterceptor? = nil,
+        jsonDecoder: JSONDecoder? = nil
     ) {
         self.appEnv = appEnv
 
@@ -29,7 +30,7 @@ class AFNetworkingClient {
             eventMonitors: eventMonitors
         )
 
-        jsonDecoder = JsonDecoderFactory().decoder()
+        self.jsonDecoder = jsonDecoder ?? JsonDecoderFactory().decoder()
     }
 
     func request(_ convertible: URLRequestConvertible) -> DataRequest {

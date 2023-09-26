@@ -5,16 +5,23 @@ class AccountApiClient : CrisisCleanupAccountApi {
     let networkClient: AFNetworkingClient
     let requestProvider: NetworkRequestProvider
 
-    private let jsonDecoder: JSONDecoder
-
     init(
         networkRequestProvider: NetworkRequestProvider,
         appEnv: AppEnv
     ) {
-        self.networkClient = AFNetworkingClient(appEnv)
-        requestProvider = networkRequestProvider
+        // TODO: Test coverage. Including locale and time zone.
+        let isoFormat = with(DateFormatter()) {
+            $0.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+        }
+        let millisecondsFormat = with(DateFormatter()) {
+            $0.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
+        }
+        let jsonDecoder = JsonDecoderFactory().decoder(
+            dateDecodingStrategy: .anyFormatter(in: [isoFormat, millisecondsFormat])
+        )
 
-        jsonDecoder = JsonDecoderFactory().decoder()
+        self.networkClient = AFNetworkingClient(appEnv, jsonDecoder: jsonDecoder)
+        requestProvider = networkRequestProvider
     }
 
     func initiateMagicLink(_ emailAddress: String) async -> Bool {
@@ -31,10 +38,13 @@ class AccountApiClient : CrisisCleanupAccountApi {
         let payload = NetworkEmailPayload(email: emailAddress)
         let request = requestProvider.initiatePasswordReset
             .setBody(payload)
-        return try await networkClient.callbackContinue(
+        guard let result = await networkClient.callbackContinue(
             requestConvertible: request,
             type: InitiatePasswordResetResult.self
-        ).value ?? { throw GenericError("No response for initiate password request") }()
+        ).value else {
+            throw GenericError("Unable to parse initiate password request response")
+        }
+        return result
     }
 
     func changePassword(password: String, token: String) async -> Bool {

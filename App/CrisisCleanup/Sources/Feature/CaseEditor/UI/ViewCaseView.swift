@@ -76,10 +76,7 @@ struct ViewCaseView: View {
             }
 
             if isBusy {
-                VStack {
-                    ProgressView()
-                        .frame(alignment: .center)
-                }
+                ProgressView()
             }
 
             VStack {

@@ -34,7 +34,7 @@ class NavigationRouter: ObservableObject {
     }
 
     func openForgotPassword() {
-        path.append(.recoverPassword(showForgotPassword: true, showMagicLink: false))
+        path.append(.recoverPassword(showForgotPassword: true, showMagicLink: true))
     }
 
     func openEmailMagicLink() {
