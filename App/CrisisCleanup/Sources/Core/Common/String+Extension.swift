@@ -3,7 +3,7 @@ import Foundation
 
 extension String {
     var isBlank: Bool { allSatisfy({ $0.isWhitespace }) }
-    var isNotBlank: Bool { !isBlank }
+    public var isNotBlank: Bool { !isBlank }
 
     var toDate: Date {
         let dateFormatter = ISO8601DateFormatter()

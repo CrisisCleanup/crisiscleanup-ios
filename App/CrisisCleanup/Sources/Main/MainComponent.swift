@@ -23,6 +23,7 @@ public class MainComponent: BootstrapComponent,
     public let appSettingsProvider: AppSettingsProvider
     public let loggerFactory: AppLoggerFactory
     public let addressSearchRepository: AddressSearchRepository
+    public let externalEventBus: ExternalEventBus
 
     var mainViewModel: MainViewModel {
         MainViewModel(
@@ -53,12 +54,14 @@ public class MainComponent: BootstrapComponent,
         appEnv: AppEnv,
         appSettingsProvider: AppSettingsProvider,
         loggerFactory: AppLoggerFactory,
-        addressSearchRepository: AddressSearchRepository
+        addressSearchRepository: AddressSearchRepository,
+        externalEventBus: ExternalEventBus
     ) {
         self.appEnv = appEnv
         self.appSettingsProvider = appSettingsProvider
         self.loggerFactory = loggerFactory
         self.addressSearchRepository = addressSearchRepository
+        self.externalEventBus = externalEventBus
     }
 
     var casesComponent: CasesComponent { CasesComponent(parent: self) }

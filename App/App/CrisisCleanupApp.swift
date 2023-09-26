@@ -10,6 +10,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     private(set) var appSettings: AppSettings = AppSettings()
     private(set) var appEnv: AppEnv = AppBuildEnv()
 
+    let externalEventBus = CrisisCleanupExternalEventBus()
+    private lazy var activityProcessor: ExternalActivityProcessor = {
+        ExternalActivityProcessor(externalEventBus: externalEventBus)
+    }()
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
 
         FontBlaster.blast()
@@ -25,6 +30,21 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
         return true
     }
+
+    func application(
+        _ application: UIApplication,
+        continue userActivity: NSUserActivity,
+        restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void
+    ) -> Bool {
+        // Get URL components from the incoming user activity.
+        guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
+              let incomingURL = userActivity.webpageURL,
+              let components = NSURLComponents(url: incomingURL, resolvingAgainstBaseURL: true) else {
+            return false
+        }
+
+        return activityProcessor.process(components)
+    }
 }
 
 @main
@@ -39,7 +59,8 @@ struct CrisisCleanupApp: App {
                 appEnv: appEnv,
                 appSettingsProvider: appDelegate.appSettings,
                 loggerFactory: AppLoggerProvider(appEnv),
-                addressSearchRepository: placesSearch
+                addressSearchRepository: placesSearch,
+                externalEventBus: appDelegate.externalEventBus
             )
             .mainView
         }
