@@ -42,6 +42,7 @@ class AppSyncer: SyncPuller, SyncPusher {
     private let worksitesRepository: WorksitesRepository
     private let worksiteChangeRepository: WorksiteChangeRepository
     private let localImageRepository: LocalImageRepository
+    private let appLogger: AppLogger
     private let syncLogger: SyncLogger
     private let authEventBus: AuthEventBus
 
@@ -62,6 +63,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         worksiteChangeRepository: WorksiteChangeRepository,
         appPreferencesDataStore: AppPreferencesDataStore,
         localImageRepository: LocalImageRepository,
+        appLoggerFactory: AppLoggerFactory,
         syncLoggerFactory: SyncLoggerFactory,
         authEventBus: AuthEventBus
     ) {
@@ -72,6 +74,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         self.worksitesRepository = worksitesRepository
         self.worksiteChangeRepository = worksiteChangeRepository
         self.localImageRepository = localImageRepository
+        appLogger = appLoggerFactory.getLogger("sync")
         syncLogger = syncLoggerFactory.getLogger("app-syncer")
         self.authEventBus = authEventBus
 
@@ -154,6 +157,7 @@ class AppSyncer: SyncPuller, SyncPusher {
                         self.syncLogger.log("Incident \(pullWorksitesIncidentId) worksites refreshed")
                     }
                 } catch {
+                    appLogger.logError(error)
                     // TODO: Handle proper
                     print(error)
                 }
