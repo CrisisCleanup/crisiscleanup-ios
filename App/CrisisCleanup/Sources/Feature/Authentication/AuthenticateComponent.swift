@@ -6,12 +6,14 @@ public protocol AuthenticateViewBuilder {
     func authenticateView(dismissScreen: @escaping () -> Void) -> AnyView
     func loginWithEmailView(dismissScreen: @escaping () -> Void) -> AnyView
     func passwordRecoverView(showForgotPassword: Bool, showMagicLink: Bool) -> AnyView
+    func resetPasswordView(_ resetCode: String) -> AnyView
 }
 
 class AuthenticateComponent: Component<AppDependency> {
     internal var viewModel: AuthenticateViewModel? = nil
     internal var _loginWithEmailViewModel: LoginWithEmailViewModel? = nil
     internal var _passwordRecoverViewModel: PasswordRecoverViewModel? = nil
+    internal var _resetPasswordViewModel: ResetPasswordViewModel? = nil
 
     private var disposables = Set<AnyCancellable>()
 
@@ -22,6 +24,7 @@ class AuthenticateComponent: Component<AppDependency> {
         super.init(parent: parent)
 
         let passwordRecoverId = NavigationRoute.recoverPassword().id
+        let resetPasswordId = NavigationRoute.resetPassword("").id
         routerObserver.pathIds
             .sink { pathIds in
                 if !pathIds.contains(NavigationRoute.loginWithEmail.id) {
@@ -29,6 +32,9 @@ class AuthenticateComponent: Component<AppDependency> {
                 }
                 if !pathIds.contains(passwordRecoverId) {
                     self._passwordRecoverViewModel = nil
+                }
+                if !pathIds.contains(resetPasswordId) {
+                    self._resetPasswordViewModel = nil
                 }
             }
             .store(in: &disposables)

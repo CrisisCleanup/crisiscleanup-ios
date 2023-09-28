@@ -4,21 +4,15 @@ struct ResetPasswordView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
     @Environment(\.dismiss) var dismiss
 
+    @ObservedObject var viewModel: ResetPasswordViewModel
+
     @State var password = ""
     @State var confirmPassword = ""
-
-    var error = true
 
     var body: some View {
         VStack(alignment: .leading) {
             Text(t.t("resetPassword.enter_new_password"))
                 .fontHeader3()
-
-            if(error) {
-                Text("t.tplace error message here")
-                    .foregroundColor(appTheme.colors.primaryRedColor)
-                    .padding(.top)
-            }
 
             ToggleSecureTextField(t.t("resetPassword.password"), text: $password)
                 .padding(.top)

@@ -112,6 +112,10 @@ public class MainComponent: BootstrapComponent,
         authenticateComponent.passwordRecoverView(showForgotPassword: showForgotPassword, showMagicLink: showMagicLink)
     }
 
+    public func resetPasswordView(_ resetCode: String) -> AnyView {
+        authenticateComponent.resetPasswordView(resetCode)
+    }
+
     // MARK: Incident select
 
     lazy var incidentSelectComponent: IncidentSelectComponent = IncidentSelectComponent(parent: self)
