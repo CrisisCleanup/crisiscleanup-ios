@@ -15,9 +15,19 @@ struct ToggleSecureTextField: View {
     @State private var isSecure: Bool = true
     private var title: String
 
-    init(_ title: String, text: Binding<String>) {
+    private let focusedKey: TextInputFocused
+    private var focusState: FocusState<TextInputFocused?>.Binding
+
+    init(
+        _ title: String,
+        text: Binding<String>,
+        focusState: FocusState<TextInputFocused?>.Binding,
+        focusedKey: TextInputFocused = .anyTextInput
+    ) {
         self.title = title
         self._text = text
+        self.focusState = focusState
+        self.focusedKey = focusedKey
     }
 
     var body: some View {
@@ -28,11 +38,13 @@ struct ToggleSecureTextField: View {
                         .textFieldStyle(.plain)
                         .autocapitalization(.none)
                         .disableAutocorrection(true)
+                        .focused(focusState, equals: focusedKey)
                 } else {
                     TextField(title, text: $text)
                         .textFieldStyle(.plain)
                         .autocapitalization(.none)
                         .disableAutocorrection(true)
+                        .focused(focusState, equals: focusedKey)
                 }
             }
             .padding(.trailing, 32)

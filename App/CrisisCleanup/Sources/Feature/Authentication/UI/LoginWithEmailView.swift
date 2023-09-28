@@ -90,9 +90,13 @@ private struct LoginView: View {
                                     focusState = TextInputFocused.authEmailAddress
                                 }
                             }
-                        ToggleSecureTextField(t.translate("loginForm.password_placeholder", "Password hint"), text: $password)
+                        ToggleSecureTextField(
+                            t.translate("loginForm.password_placeholder", "Password hint"),
+                            text: $password,
+                            focusState: $focusState,
+                            focusedKey: .authPassword
+                        )
                             .padding([.vertical])
-                            .focused($focusState, equals: TextInputFocused.authPassword)
                             .disabled(disabled)
                             .onSubmit { authenticate() }
                     }
@@ -146,5 +150,6 @@ private struct LoginView: View {
                 OpenKeyboardActionsView()
             }
         }
+        .environmentObject(focusableViewState)
     }
 }
