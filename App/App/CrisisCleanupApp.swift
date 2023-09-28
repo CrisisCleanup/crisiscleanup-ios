@@ -4,16 +4,12 @@ import GooglePlaces
 import NeedleFoundation
 import SwiftUI
 
-typealias RootComponent = CrisisCleanup.MainComponent
-
 class AppDelegate: NSObject, UIApplicationDelegate {
     private(set) var appSettings: AppSettings = AppSettings()
     private(set) var appEnv: AppEnv = AppBuildEnv()
 
     let externalEventBus = CrisisCleanupExternalEventBus()
-    private lazy var activityProcessor: ExternalActivityProcessor = {
-        ExternalActivityProcessor(externalEventBus: externalEventBus)
-    }()
+    private lazy var activityProcessor: ExternalActivityProcessor = ExternalActivityProcessor(externalEventBus: externalEventBus)
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
 
@@ -55,7 +51,7 @@ struct CrisisCleanupApp: App {
         WindowGroup {
             let appEnv = appDelegate.appEnv
             let placesSearch = GooglePlaceAddressSearchRepository()
-            RootComponent(
+            MainComponent(
                 appEnv: appEnv,
                 appSettingsProvider: appDelegate.appSettings,
                 loggerFactory: AppLoggerProvider(appEnv),

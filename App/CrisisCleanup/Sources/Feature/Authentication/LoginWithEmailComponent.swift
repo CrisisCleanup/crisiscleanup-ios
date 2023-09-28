@@ -18,10 +18,10 @@ extension AuthenticateComponent {
         return _loginWithEmailViewModel!
     }
 
-    func loginWithEmailView(dismissScreen: @escaping () -> Void) -> AnyView {
+    func loginWithEmailView(closeAuthFlow: @escaping () -> Void) -> AnyView {
         let clearViewModelOnHide = {
             self.viewModel = nil
-            dismissScreen()
+            closeAuthFlow()
         }
         return AnyView(
             LoginWithEmailView(

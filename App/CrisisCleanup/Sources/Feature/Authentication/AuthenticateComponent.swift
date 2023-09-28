@@ -4,9 +4,9 @@ import SwiftUI
 
 public protocol AuthenticateViewBuilder {
     func authenticateView(dismissScreen: @escaping () -> Void) -> AnyView
-    func loginWithEmailView(dismissScreen: @escaping () -> Void) -> AnyView
+    func loginWithEmailView(closeAuthFlow: @escaping () -> Void) -> AnyView
     func passwordRecoverView(showForgotPassword: Bool, showMagicLink: Bool) -> AnyView
-    func resetPasswordView(_ resetCode: String) -> AnyView
+    func resetPasswordView(closeAuthFlow: @escaping () -> Void, resetCode: String) -> AnyView
 }
 
 class AuthenticateComponent: Component<AppDependency> {

@@ -6,6 +6,8 @@ class NavigationRouter: ObservableObject {
 
     @Published var path = [NavigationRoute]()
 
+    private lazy var forgotPasswordPathId: Int = NavigationRoute.resetPassword("").id
+
     private var disposables = Set<AnyCancellable>()
 
     init(routerObserver: RouterObserver) {
@@ -35,6 +37,17 @@ class NavigationRouter: ObservableObject {
 
     func openForgotPassword() {
         path.append(.recoverPassword(showForgotPassword: true, showMagicLink: true))
+    }
+
+    func openResetPassword(_ code: String) {
+        let resetPasswordPath = NavigationRoute.resetPassword(code)
+        let pathIds = path.map { $0.id }
+        if let existingIndex = pathIds.firstIndex(of: forgotPasswordPathId) {
+            let trailingIndices = existingIndex..<pathIds.count
+            path.replaceSubrange(trailingIndices, with: [resetPasswordPath])
+        } else {
+            path.append(resetPasswordPath)
+        }
     }
 
     func openEmailMagicLink() {

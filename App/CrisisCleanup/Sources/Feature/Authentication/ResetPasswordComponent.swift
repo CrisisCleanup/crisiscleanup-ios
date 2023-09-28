@@ -12,10 +12,15 @@ extension AuthenticateComponent {
         return _resetPasswordViewModel!
     }
 
-    func resetPasswordView(_ resetCode: String) -> AnyView {
+    func resetPasswordView(closeAuthFlow: @escaping () -> Void, resetCode: String) -> AnyView {
+        let clearViewModelOnHide = {
+            self.viewModel = nil
+            closeAuthFlow()
+        }
         return AnyView(
             ResetPasswordView(
-                viewModel: resetPasswordViewModel(resetCode)
+                viewModel: resetPasswordViewModel(resetCode),
+                close: clearViewModelOnHide
             )
         )
     }

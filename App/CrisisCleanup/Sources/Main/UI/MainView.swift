@@ -5,7 +5,6 @@ struct MainView: View {
     @Environment(\.translator) var translator
 
     @ObservedObject var viewModel: MainViewModel
-    @ObservedObject var router: NavigationRouter
     @ObservedObject var appAlerts: AppAlertViewState
 
     let locationManager: LocationManager
@@ -48,12 +47,12 @@ struct MainView: View {
                 }
                 if viewModel.showAuthScreen ||
                     !viewModel.viewData.showMainContent {
-                    NavigationStack(path: $router.path) {
+                    NavigationStack(path: $viewModel.router.path) {
                         authenticateViewBuilder.authenticateView(dismissScreen: hideAuthScreen)
                             .navigationDestination(for: NavigationRoute.self) { route in
                                 switch route {
                                 case .loginWithEmail:
-                                    authenticateViewBuilder.loginWithEmailView(dismissScreen: hideAuthScreen)
+                                    authenticateViewBuilder.loginWithEmailView(closeAuthFlow: hideAuthScreen)
                                 case .loginWithPhone:
                                     Text("Login with phone")
                                 case .recoverPassword(let showForgotPassword, let showMagicLink):
@@ -62,15 +61,18 @@ struct MainView: View {
                                         showMagicLink: showMagicLink
                                     )
                                 case .resetPassword(let recoverCode):
-                                    Text("Reset password")
+                                    authenticateViewBuilder.resetPasswordView(
+                                        closeAuthFlow: hideAuthScreen,
+                                        resetCode: recoverCode
+                                    )
                                 default:
-                                    Text("Unplanned auth/account route \(route.id)")
+                                    Text("Pending auth/account route \(route.id)")
                                 }
                             }
                     }
                 } else {
                     let navColor = appTheme.colors.navigationContainerColor
-                    NavigationStack(path: $router.path) {
+                    NavigationStack(path: $viewModel.router.path) {
                         ZStack {
                             navColor.ignoresSafeArea()
                             VStack {
@@ -126,7 +128,7 @@ struct MainView: View {
         .onDisappear { viewModel.onViewDisappear() }
         .environment(\.translator, viewModel.translator)
         .environment(\.font, .bodyLarge)
-        .environmentObject(router)
+        .environmentObject(viewModel.router)
         .environmentObject(appAlerts)
         .environmentObject(locationManager)
     }

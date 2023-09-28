@@ -2,9 +2,10 @@ import SwiftUI
 
 struct ResetPasswordView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
-    @Environment(\.dismiss) var dismiss
 
     @ObservedObject var viewModel: ResetPasswordViewModel
+
+    let close: () -> Void
 
     @State var password = ""
     @State var confirmPassword = ""

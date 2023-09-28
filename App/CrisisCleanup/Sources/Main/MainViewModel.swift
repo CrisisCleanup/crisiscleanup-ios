@@ -6,6 +6,8 @@ class MainViewModel: ObservableObject {
     private let appSupportRepository: AppSupportRepository
     private let appVersionProvider: AppVersionProvider
     private let incidentSelector: IncidentSelector
+    private let externalEventBus: ExternalEventBus
+    var router: NavigationRouter
     private let translationsRepository: LanguageTranslationsRepository
     let translator: KeyAssetTranslator
     private let syncPuller: SyncPuller
@@ -24,6 +26,7 @@ class MainViewModel: ObservableObject {
     private var incidentsData: IncidentsData = LoadingIncidentsData
 
     private var subscriptions = Set<AnyCancellable>()
+    private var disposables = Set<AnyCancellable>()
 
     init(
         accountDataRepository: AccountDataRepository,
@@ -31,6 +34,8 @@ class MainViewModel: ObservableObject {
         appVersionProvider: AppVersionProvider,
         translationsRepository: LanguageTranslationsRepository,
         incidentSelector: IncidentSelector,
+        externalEventBus: ExternalEventBus,
+        navigationRouter: NavigationRouter,
         syncPuller: SyncPuller,
         syncPusher: SyncPusher,
         accountDataRefresher: AccountDataRefresher,
@@ -43,6 +48,8 @@ class MainViewModel: ObservableObject {
         self.translationsRepository = translationsRepository
         translator = translationsRepository
         self.incidentSelector = incidentSelector
+        self.externalEventBus = externalEventBus
+        router = navigationRouter
         self.syncPuller = syncPuller
         self.syncPusher = syncPusher
         self.accountDataRefresher = accountDataRefresher
@@ -51,6 +58,8 @@ class MainViewModel: ObservableObject {
         isNotProduction = appEnv.isNotProduction
 
         syncPuller.pullUnauthenticatedData()
+
+        subscribeExternalEvent()
     }
 
     func onActivePhase() {
@@ -71,6 +80,20 @@ class MainViewModel: ObservableObject {
 
     func onViewDisappear() {
         subscriptions = cancelSubscriptions(subscriptions)
+    }
+
+    private func subscribeExternalEvent() {
+        externalEventBus.emailLoginLinks.sink { magicLinkCode in
+            self.onEmailLoginLink(magicLinkCode)
+        }
+        .store(in: &disposables)
+
+        externalEventBus.resetPasswords.eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .sink { resetCode in
+                self.onResetPassword(resetCode)
+            }
+            .store(in: &disposables)
     }
 
     private func subscribeIncidentsData() {
@@ -134,6 +157,20 @@ class MainViewModel: ObservableObject {
             .receive(on: RunLoop.main)
             .assign(to: \.minSupportedVersion, on: self)
             .store(in: &subscriptions)
+    }
+
+    private func onEmailLoginLink(_ code: String) {
+        if !viewData.isAuthenticated {
+            // TODO: Login here (or upstream)
+            logger.logDebug("Login with code \(code)")
+        }
+    }
+
+    private func onResetPassword(_ code: String) {
+        if code.isNotBlank {
+            router.openResetPassword(code)
+            showAuthScreen = true
+        }
     }
 
     private func sync(_ cancelOngoing: Bool) {

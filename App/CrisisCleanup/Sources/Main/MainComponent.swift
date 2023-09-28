@@ -23,22 +23,22 @@ public class MainComponent: BootstrapComponent,
     public let appSettingsProvider: AppSettingsProvider
     public let loggerFactory: AppLoggerFactory
     public let addressSearchRepository: AddressSearchRepository
-    public let externalEventBus: ExternalEventBus
+    private let externalEventBus: ExternalEventBus
 
-    var mainViewModel: MainViewModel {
-        MainViewModel(
-            accountDataRepository: accountDataRepository,
-            appSupportRepository: appSupportRepository,
-            appVersionProvider: appVersionProvider,
-            translationsRepository: languageTranslationsRepository,
-            incidentSelector: incidentSelector,
-            syncPuller: syncPuller,
-            syncPusher: syncPusher,
-            accountDataRefresher: accountDataRefresher,
-            logger: loggerFactory.getLogger("main"),
-            appEnv: appEnv
-        )
-    }
+    lazy var mainViewModel: MainViewModel = MainViewModel(
+        accountDataRepository: accountDataRepository,
+        appSupportRepository: appSupportRepository,
+        appVersionProvider: appVersionProvider,
+        translationsRepository: languageTranslationsRepository,
+        incidentSelector: incidentSelector,
+        externalEventBus: externalEventBus,
+        navigationRouter: navigationRouter,
+        syncPuller: syncPuller,
+        syncPusher: syncPusher,
+        accountDataRefresher: accountDataRefresher,
+        logger: loggerFactory.getLogger("main"),
+        appEnv: appEnv
+    )
 
     private var routerObserver: RouterObserver {
         shared {
@@ -70,7 +70,6 @@ public class MainComponent: BootstrapComponent,
     public var mainView: some View {
         MainView(
             viewModel: mainViewModel,
-            router: navigationRouter,
             appAlerts: AppAlertViewState(
                 networkMonitor: networkMonitor,
                 accountDataRepository: accountDataRepository
@@ -104,16 +103,19 @@ public class MainComponent: BootstrapComponent,
         authenticateComponent.authenticateView(dismissScreen: dismissScreen)
     }
 
-    public func loginWithEmailView(dismissScreen: @escaping () -> Void) -> AnyView {
-        authenticateComponent.loginWithEmailView(dismissScreen: dismissScreen)
+    public func loginWithEmailView(closeAuthFlow: @escaping () -> Void) -> AnyView {
+        authenticateComponent.loginWithEmailView(closeAuthFlow: closeAuthFlow)
     }
 
     public func passwordRecoverView(showForgotPassword: Bool, showMagicLink: Bool) -> AnyView {
         authenticateComponent.passwordRecoverView(showForgotPassword: showForgotPassword, showMagicLink: showMagicLink)
     }
 
-    public func resetPasswordView(_ resetCode: String) -> AnyView {
-        authenticateComponent.resetPasswordView(resetCode)
+    public func resetPasswordView(closeAuthFlow: @escaping () -> Void, resetCode: String) -> AnyView {
+        authenticateComponent.resetPasswordView(
+            closeAuthFlow: closeAuthFlow,
+            resetCode: resetCode
+        )
     }
 
     // MARK: Incident select
