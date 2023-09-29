@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct PasswordRecoverView: View {
+    @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @ObservedObject var viewModel: PasswordRecoverViewModel
@@ -28,8 +29,8 @@ struct PasswordRecoverView: View {
                         }
 
                         if viewModel.showMagicLink {
-                            MagicLinkView()
-                            .padding(.bottom)
+//                            MagicLinkView()
+//                            .padding(.bottom)
                         }
                     }
                 }
@@ -42,6 +43,11 @@ struct PasswordRecoverView: View {
         .screenTitle(t.t(viewModel.screenTitleKey))
         .onChange(of: viewModel.isBusy, perform: { isBusy in
             animateIsBusy = isBusy
+        })
+        .onChange(of: viewModel.isPasswordChangedRecently, perform: { newValue in
+            if newValue {
+                dismiss()
+            }
         })
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }

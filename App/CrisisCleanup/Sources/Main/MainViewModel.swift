@@ -7,7 +7,7 @@ class MainViewModel: ObservableObject {
     private let appVersionProvider: AppVersionProvider
     private let incidentSelector: IncidentSelector
     private let externalEventBus: ExternalEventBus
-    var router: NavigationRouter
+    private let router: NavigationRouter
     private let translationsRepository: LanguageTranslationsRepository
     let translator: KeyAssetTranslator
     private let syncPuller: SyncPuller

@@ -5,11 +5,14 @@ public protocol AccountUpdateRepository {
     func initiateEmailMagicLink(_ emailAddress: String) async -> Bool
     func initiatePasswordReset(_ emailAddress: String) async -> PasswordResetInitiation
     func changePassword(password: String, token: String) async -> Bool
+    func takeWasPasswordResetRecent() -> Bool
 }
 
 class CrisisCleanupAccountUpdateRepository: AccountUpdateRepository {
     private let accountApi: CrisisCleanupAccountApi
     private let logger: AppLogger
+
+    private var passwordResetSuccessTime = Date.init(timeIntervalSince1970: 0)
 
     init(
         accountApi: CrisisCleanupAccountApi,
@@ -41,7 +44,17 @@ class CrisisCleanupAccountUpdateRepository: AccountUpdateRepository {
     }
 
     func changePassword(password: String, token: String) async -> Bool {
-        await accountApi.changePassword(password: password, token: token)
+        let isChanged = await accountApi.changePassword(password: password, token: token)
+        if isChanged {
+            passwordResetSuccessTime = Date.now
+        }
+        return isChanged
+    }
+
+    func takeWasPasswordResetRecent() -> Bool {
+        let isRecent = passwordResetSuccessTime.distance(to: Date.now) < 30.minutes
+        passwordResetSuccessTime = Date.init(timeIntervalSince1970: 0)
+        return isRecent
     }
 }
 

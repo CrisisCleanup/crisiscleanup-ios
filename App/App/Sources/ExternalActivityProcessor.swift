@@ -9,7 +9,6 @@ class ExternalActivityProcessor {
     }
 
     func process(_ components: NSURLComponents) -> Bool {
-        // Check for specific URL components that you need.
         guard let path = components.path else {
             return false
         }

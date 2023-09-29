@@ -47,7 +47,9 @@ public class MainComponent: BootstrapComponent,
     }
 
     var navigationRouter: NavigationRouter {
-        NavigationRouter(routerObserver: routerObserver)
+        shared {
+            NavigationRouter(routerObserver: routerObserver)
+        }
     }
 
     public init(
@@ -70,6 +72,7 @@ public class MainComponent: BootstrapComponent,
     public var mainView: some View {
         MainView(
             viewModel: mainViewModel,
+            router: navigationRouter,
             appAlerts: AppAlertViewState(
                 networkMonitor: networkMonitor,
                 accountDataRepository: accountDataRepository

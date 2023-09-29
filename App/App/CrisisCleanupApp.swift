@@ -16,6 +16,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         FontBlaster.blast()
 
         FirebaseApp.configure()
+
         registerProviderFactories()
 
         let config = loadConfigProperties()
@@ -27,19 +28,14 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         return true
     }
 
-    func application(
-        _ application: UIApplication,
-        continue userActivity: NSUserActivity,
-        restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void
-    ) -> Bool {
-        // Get URL components from the incoming user activity.
-        guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
-              let incomingURL = userActivity.webpageURL,
-              let components = NSURLComponents(url: incomingURL, resolvingAgainstBaseURL: true) else {
-            return false
+    fileprivate func onExternalLink(_ url: URL) {
+        guard let components = NSURLComponents(url: url, resolvingAgainstBaseURL: true) else {
+            return
         }
 
-        return activityProcessor.process(components)
+        if !activityProcessor.process(components) {
+            print("Unrecognized external URL \(url.absoluteString)")
+        }
     }
 }
 
@@ -59,6 +55,7 @@ struct CrisisCleanupApp: App {
                 externalEventBus: appDelegate.externalEventBus
             )
             .mainView
+            .onOpenURL { appDelegate.onExternalLink($0) }
         }
     }
 }

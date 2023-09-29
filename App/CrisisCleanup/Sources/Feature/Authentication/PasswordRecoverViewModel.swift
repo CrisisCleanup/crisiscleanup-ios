@@ -31,6 +31,7 @@ class PasswordRecoverViewModel: ObservableObject {
 
     @Published private(set) var isPasswordResetInitiated = false
     @Published private(set) var isMagicLinkInitiated = false
+    @Published private(set) var isPasswordChangedRecently = false
 
     let editableViewState = EditableView()
 
@@ -61,6 +62,8 @@ class PasswordRecoverViewModel: ObservableObject {
         subscribeLoading()
         subscribeEditableState()
         subscribeAccountData()
+
+        isPasswordChangedRecently = accountUpdateRepository.takeWasPasswordResetRecent()
     }
 
     func onViewDisappear() {

@@ -5,6 +5,7 @@ struct MainView: View {
     @Environment(\.translator) var translator
 
     @ObservedObject var viewModel: MainViewModel
+    @ObservedObject var router: NavigationRouter
     @ObservedObject var appAlerts: AppAlertViewState
 
     let locationManager: LocationManager
@@ -47,7 +48,7 @@ struct MainView: View {
                 }
                 if viewModel.showAuthScreen ||
                     !viewModel.viewData.showMainContent {
-                    NavigationStack(path: $viewModel.router.path) {
+                    NavigationStack(path: $router.path) {
                         authenticateViewBuilder.authenticateView(dismissScreen: hideAuthScreen)
                             .navigationDestination(for: NavigationRoute.self) { route in
                                 switch route {
@@ -72,7 +73,7 @@ struct MainView: View {
                     }
                 } else {
                     let navColor = appTheme.colors.navigationContainerColor
-                    NavigationStack(path: $viewModel.router.path) {
+                    NavigationStack(path: $router.path) {
                         ZStack {
                             navColor.ignoresSafeArea()
                             VStack {
@@ -128,7 +129,7 @@ struct MainView: View {
         .onDisappear { viewModel.onViewDisappear() }
         .environment(\.translator, viewModel.translator)
         .environment(\.font, .bodyLarge)
-        .environmentObject(viewModel.router)
+        .environmentObject(router)
         .environmentObject(appAlerts)
         .environmentObject(locationManager)
     }
