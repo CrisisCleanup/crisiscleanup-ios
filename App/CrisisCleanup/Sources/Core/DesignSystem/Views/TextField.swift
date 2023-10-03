@@ -17,17 +17,20 @@ struct ToggleSecureTextField: View {
 
     private let focusedKey: TextInputFocused
     private var focusState: FocusState<TextInputFocused?>.Binding
+    private let onSubmit: () -> Void
 
     init(
         _ title: String,
         text: Binding<String>,
         focusState: FocusState<TextInputFocused?>.Binding,
-        focusedKey: TextInputFocused = .anyTextInput
+        focusedKey: TextInputFocused = .anyTextInput,
+        onSubmit: @escaping () -> Void = {}
     ) {
         self.title = title
         self._text = text
         self.focusState = focusState
         self.focusedKey = focusedKey
+        self.onSubmit = onSubmit
     }
 
     var body: some View {
@@ -39,12 +42,14 @@ struct ToggleSecureTextField: View {
                         .autocapitalization(.none)
                         .disableAutocorrection(true)
                         .focused(focusState, equals: focusedKey)
+                        .onSubmit { onSubmit() }
                 } else {
                     TextField(title, text: $text)
                         .textFieldStyle(.plain)
                         .autocapitalization(.none)
                         .disableAutocorrection(true)
                         .focused(focusState, equals: focusedKey)
+                        .onSubmit { onSubmit() }
                 }
             }
             .padding(.trailing, 32)
