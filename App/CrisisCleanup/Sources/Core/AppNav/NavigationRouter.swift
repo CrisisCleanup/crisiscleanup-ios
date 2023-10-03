@@ -58,6 +58,14 @@ class NavigationRouter: ObservableObject {
         path.append(.recoverPassword(showForgotPassword: false, showMagicLink: true))
     }
 
+    func openRequestOrgAccess() {
+        path.append(.requestOrgAccess)
+    }
+
+    func openScanOrgQrCode() {
+        path.append(.scanOrgQrCode)
+    }
+
     func openFilterCases() {
         path.append(.filterCases)
     }
