@@ -17,7 +17,7 @@ struct MainViewData {
     ) {
         self.state = state
         self.accountData = accountData
-        isAuthenticated = accountData.hasAuthenticated()
+        isAuthenticated = accountData.hasAuthenticated
         self.showMainContent = state == .ready && isAuthenticated
     }
 }

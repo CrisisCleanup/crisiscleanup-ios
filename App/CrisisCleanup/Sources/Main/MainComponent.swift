@@ -23,21 +23,22 @@ public class MainComponent: BootstrapComponent,
     public let appSettingsProvider: AppSettingsProvider
     public let loggerFactory: AppLoggerFactory
     public let addressSearchRepository: AddressSearchRepository
+    private let externalEventBus: ExternalEventBus
 
-    var mainViewModel: MainViewModel {
-        MainViewModel(
-            accountDataRepository: accountDataRepository,
-            appSupportRepository: appSupportRepository,
-            appVersionProvider: appVersionProvider,
-            translationsRepository: languageTranslationsRepository,
-            incidentSelector: incidentSelector,
-            syncPuller: syncPuller,
-            syncPusher: syncPusher,
-            accountDataRefresher: accountDataRefresher,
-            logger: loggerFactory.getLogger("main"),
-            appEnv: appEnv
-        )
-    }
+    lazy var mainViewModel: MainViewModel = MainViewModel(
+        accountDataRepository: accountDataRepository,
+        appSupportRepository: appSupportRepository,
+        appVersionProvider: appVersionProvider,
+        translationsRepository: languageTranslationsRepository,
+        incidentSelector: incidentSelector,
+        externalEventBus: externalEventBus,
+        navigationRouter: navigationRouter,
+        syncPuller: syncPuller,
+        syncPusher: syncPusher,
+        accountDataRefresher: accountDataRefresher,
+        logger: loggerFactory.getLogger("main"),
+        appEnv: appEnv
+    )
 
     private var routerObserver: RouterObserver {
         shared {
@@ -46,19 +47,23 @@ public class MainComponent: BootstrapComponent,
     }
 
     var navigationRouter: NavigationRouter {
-        NavigationRouter(routerObserver: routerObserver)
+        shared {
+            NavigationRouter(routerObserver: routerObserver)
+        }
     }
 
     public init(
         appEnv: AppEnv,
         appSettingsProvider: AppSettingsProvider,
         loggerFactory: AppLoggerFactory,
-        addressSearchRepository: AddressSearchRepository
+        addressSearchRepository: AddressSearchRepository,
+        externalEventBus: ExternalEventBus
     ) {
         self.appEnv = appEnv
         self.appSettingsProvider = appSettingsProvider
         self.loggerFactory = loggerFactory
         self.addressSearchRepository = addressSearchRepository
+        self.externalEventBus = externalEventBus
     }
 
     var casesComponent: CasesComponent { CasesComponent(parent: self) }
@@ -95,10 +100,25 @@ public class MainComponent: BootstrapComponent,
 
     // MARK: Authenticate
 
-    lazy var authenticateComponent: AuthenticateComponent = AuthenticateComponent(parent: self)
+    lazy var authenticateComponent: AuthenticateComponent = AuthenticateComponent(parent: self, routerObserver: routerObserver)
 
     public func authenticateView(dismissScreen: @escaping () -> Void) -> AnyView {
         authenticateComponent.authenticateView(dismissScreen: dismissScreen)
+    }
+
+    public func loginWithEmailView(closeAuthFlow: @escaping () -> Void) -> AnyView {
+        authenticateComponent.loginWithEmailView(closeAuthFlow: closeAuthFlow)
+    }
+
+    public func passwordRecoverView(showForgotPassword: Bool, showMagicLink: Bool) -> AnyView {
+        authenticateComponent.passwordRecoverView(showForgotPassword: showForgotPassword, showMagicLink: showMagicLink)
+    }
+
+    public func resetPasswordView(closeAuthFlow: @escaping () -> Void, resetCode: String) -> AnyView {
+        authenticateComponent.resetPasswordView(
+            closeAuthFlow: closeAuthFlow,
+            resetCode: resetCode
+        )
     }
 
     // MARK: Incident select

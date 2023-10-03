@@ -120,6 +120,7 @@ struct AppAlertView: View {
                     Text(t.t(actionKey))
                         .padding(.vertical, appTheme.listItemVerticalPadding)
                         .fontHeader4()
+                        .foregroundColor(appTheme.colors.themePrimaryContainer)
                 }
             }
 

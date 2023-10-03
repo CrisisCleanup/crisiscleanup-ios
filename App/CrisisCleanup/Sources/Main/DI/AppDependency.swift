@@ -17,6 +17,9 @@ public protocol AppDependency: Dependency {
 
     var translator: KeyAssetTranslator { get }
 
+    var accessTokenDecoder: AccessTokenDecoder { get }
+    var accountUpdateRepository: AccountUpdateRepository { get }
+
     var incidentsRepository: IncidentsRepository { get }
     var languageTranslationsRepository: LanguageTranslationsRepository { get }
     var workTypeStatusRepository: WorkTypeStatusRepository { get }
@@ -106,6 +109,14 @@ extension MainComponent {
                 accountDataRepository: accountDataRepository,
                 authApiClient: authApi,
                 authEventBus: authEventBus,
+                appEnv: appEnv
+            )
+        }
+    }
+    var accountApi: CrisisCleanupAccountApi {
+        shared {
+            AccountApiClient(
+                networkRequestProvider: networkRequestProvider,
                 appEnv: appEnv
             )
         }

@@ -4,17 +4,19 @@ import GooglePlaces
 import NeedleFoundation
 import SwiftUI
 
-typealias RootComponent = CrisisCleanup.MainComponent
-
 class AppDelegate: NSObject, UIApplicationDelegate {
     private(set) var appSettings: AppSettings = AppSettings()
     private(set) var appEnv: AppEnv = AppBuildEnv()
+
+    let externalEventBus = CrisisCleanupExternalEventBus()
+    private lazy var activityProcessor: ExternalActivityProcessor = ExternalActivityProcessor(externalEventBus: externalEventBus)
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
 
         FontBlaster.blast()
 
         FirebaseApp.configure()
+
         registerProviderFactories()
 
         let config = loadConfigProperties()
@@ -24,6 +26,16 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         GMSPlacesClient.provideAPIKey(appSettings.googleMapsApiKey)
 
         return true
+    }
+
+    fileprivate func onExternalLink(_ url: URL) {
+        guard let components = NSURLComponents(url: url, resolvingAgainstBaseURL: true) else {
+            return
+        }
+
+        if !activityProcessor.process(components) {
+            print("Unrecognized external URL \(url.absoluteString)")
+        }
     }
 }
 
@@ -35,13 +47,15 @@ struct CrisisCleanupApp: App {
         WindowGroup {
             let appEnv = appDelegate.appEnv
             let placesSearch = GooglePlaceAddressSearchRepository()
-            RootComponent(
+            MainComponent(
                 appEnv: appEnv,
                 appSettingsProvider: appDelegate.appSettings,
                 loggerFactory: AppLoggerProvider(appEnv),
-                addressSearchRepository: placesSearch
+                addressSearchRepository: placesSearch,
+                externalEventBus: appDelegate.externalEventBus
             )
             .mainView
+            .onOpenURL { appDelegate.onExternalLink($0) }
         }
     }
 }

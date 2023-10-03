@@ -6,6 +6,7 @@ enum TextInputFocused: Hashable {
          querySuggestions,
          authEmailAddress,
          authPassword,
+         authConfirmPassword,
          caseInfoName,
          caseInfoPhone,
          caseInfoEmail,

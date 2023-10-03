@@ -53,7 +53,7 @@ class AccessTokenInterceptor: RequestInterceptor {
             throw ExpiredTokenError
         }
 
-        if accountData.isAccessTokenExpired(),
+        if accountData.isAccessTokenExpired,
            try await !refreshTokens() {
             throw ExpiredTokenError
         }

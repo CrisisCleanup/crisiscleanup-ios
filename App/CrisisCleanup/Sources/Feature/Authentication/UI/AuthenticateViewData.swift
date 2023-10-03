@@ -17,7 +17,7 @@ struct AuthenticateViewData {
         self.state = state
         self.accountData = accountData
 
-        hasAuthenticated = accountData.hasAuthenticated()
+        hasAuthenticated = accountData.hasAuthenticated
         isAccountValid = accountData.areTokensValid
     }
 }

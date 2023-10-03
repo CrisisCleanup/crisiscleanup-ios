@@ -1,4 +1,12 @@
 
+"Login with email" = "Login with Email";
+"Login with phone" = "Login with Cell Phone";
+"Volunteer with org" = "Volunteer with your Org";
+"I need cleanup" = "I need help cleaning up";
+"Relief orgs and goverment only" = "Relief organizations and government only.";
+"Register action" = "Register";
+"Back action" = "Back";
+
 "Email hint" = "Email";
 "Password hint" = "Password";
 "Login action" = "Login";

@@ -122,7 +122,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         let request = requestProvider.incidents.addQueryItems(
             "fields", fields.commaJoined,
             "limit", String(limit),
-            "ordering", ordering,
+            "sort", ordering,
             "start_at__gt", after == nil ? nil : dateFormatter.string(from: after!)
         )
         let response = await networkClient.callbackContinue(

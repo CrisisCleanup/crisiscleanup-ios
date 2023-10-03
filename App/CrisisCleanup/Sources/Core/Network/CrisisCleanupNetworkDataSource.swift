@@ -8,6 +8,17 @@ public protocol CrisisCleanupAuthApi {
     func refreshTokens(_ refreshToken: String) async throws -> NetworkOAuthResult?
 }
 
+public protocol CrisisCleanupAccountApi {
+    func initiateMagicLink(_ emailAddress: String) async -> Bool
+
+    func initiatePasswordReset(_ emailAddress: String) async throws -> InitiatePasswordResetResult
+
+    func changePassword(
+        password: String,
+        token: String
+    ) async -> Bool
+}
+
 public protocol CrisisCleanupNetworkDataSource {
     func getProfilePic() async throws -> String?
 

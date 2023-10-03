@@ -31,8 +31,12 @@ struct SyncAttempt: Codable {
             return false
         }
 
-        let intervalSeconds = max(backoffIntervalSeconds, 1)
         let deltaSeconds = max(nowSeconds - attemptedSeconds, 1)
+        if deltaSeconds > 3600 {
+            return false
+        }
+
+        let intervalSeconds = max(backoffIntervalSeconds, 1)
         // now < attempted + interval * 2^(tries-1)
         let lhs = log2(deltaSeconds / intervalSeconds)
         let rhs = Double(attemptedCounter - 1) * log2(2.0)

@@ -57,15 +57,15 @@ struct ViewCaseView: View {
                     }
                 }
 
-                // TODO: redraws the view when switching tabs? Change Zindex instead?
-                switch selectedTab {
-                case .info:
+                TabView(selection: $selectedTab) {
                     ViewCaseInfo()
-                case .photos:
+                        .tag(ViewCaseTabs.info)
                     ViewCasePhotos()
-                case .notes:
+                        .tag(ViewCaseTabs.photos)
                     ViewCaseNotes()
+                        .tag(ViewCaseTabs.notes)
                 }
+                .tabViewStyle(.page(indexDisplayMode: .never))
 
                 Spacer()
 
@@ -76,10 +76,7 @@ struct ViewCaseView: View {
             }
 
             if isBusy {
-                VStack {
-                    ProgressView()
-                        .frame(alignment: .center)
-                }
+                ProgressView()
             }
 
             VStack {
@@ -436,6 +433,8 @@ private struct ViewCaseNotes: View {
     private let fabSize = 50.0
 
     var body: some View {
+        let disabled = editableView.disabled
+
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack {
@@ -445,6 +444,7 @@ private struct ViewCaseNotes: View {
                     )
                         .id("note-input")
                         .listItemModifier()
+                        .disabled(disabled)
 
                     Button(t.t("actions.add")) {
                         let note = WorksiteNote.create().copy {
@@ -456,7 +456,7 @@ private struct ViewCaseNotes: View {
                     }
                     .stylePrimary()
                     .padding(.horizontal)
-                    .disabled(editingNote.isBlank || editableView.disabled)
+                    .disabled(editingNote.isBlank || disabled)
 
                     if viewModel.caseData?.worksite.notes.hasSurvivorNote == true {
                         SurvivorNoteLegend()

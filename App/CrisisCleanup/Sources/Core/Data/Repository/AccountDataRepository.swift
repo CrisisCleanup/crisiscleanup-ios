@@ -76,7 +76,7 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
             .eraseToAnyPublisher()
 
         isAuthenticated = accountDataShare
-            .map { $0.hasAuthenticated() }
+            .map { $0.hasAuthenticated }
 
         accountDataSource.accountData
             .eraseToAnyPublisher()

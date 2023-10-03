@@ -646,6 +646,7 @@ private struct CreateEditCaseNotesView: View {
             )
                 .id("note-input")
                 .listItemModifier()
+                .disabled(disabled)
 
             Button(t.t("actions.add")) {
                 let note = WorksiteNote.create().copy {
