@@ -127,6 +127,8 @@ public class MainComponent: BootstrapComponent,
 
     public var volunteerOrgView: AnyView { volunteerOrgComponent.volunteerOrgView }
 
+    public var requestOrgAccessView: AnyView { volunteerOrgComponent.requestOrgAccessView }
+
     // MARK: Incident select
 
     lazy var incidentSelectComponent: IncidentSelectComponent = IncidentSelectComponent(parent: self)

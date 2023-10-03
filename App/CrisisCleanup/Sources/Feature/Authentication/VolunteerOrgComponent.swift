@@ -4,10 +4,12 @@ import SwiftUI
 
 public protocol VolunteerOrgViewBuilder {
     var volunteerOrgView: AnyView { get }
+    var requestOrgAccessView: AnyView { get }
 }
 
 class VolunteerOrgComponent: Component<AppDependency>, VolunteerOrgViewBuilder {
     private var viewModel: VolunteerOrgViewModel? = nil
+    internal var _requestOrgAccessViewModel: RequestOrgAccessViewModel? = nil
 
     private var disposables = Set<AnyCancellable>()
 
@@ -21,6 +23,9 @@ class VolunteerOrgComponent: Component<AppDependency>, VolunteerOrgViewBuilder {
             .sink { pathIds in
                 if !pathIds.contains(NavigationRoute.volunteerOrg.id) {
                     self.viewModel = nil
+                }
+                if !pathIds.contains(NavigationRoute.requestOrgAccess.id) {
+                    self._requestOrgAccessViewModel = nil
                 }
             }
             .store(in: &disposables)

@@ -57,11 +57,6 @@ struct UserInfoInputView: View {
                     .autocapitalization(.words)
                     .focused(focusState, equals: TextInputFocused.userFirstName)
                     .onSubmit { focusState.wrappedValue = .userLastName }
-                    .onAppear {
-                        if info.firstName.isBlank {
-                            focusState.wrappedValue = .userFirstName
-                        }
-                    }
                     .padding(.bottom)
             }
 
