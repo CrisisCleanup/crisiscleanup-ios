@@ -22,7 +22,8 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
             showForgotPassword: Bool = false,
             showMagicLink: Bool = false
          ),
-         resetPassword(_ recoverCode: String)
+         resetPassword(_ recoverCode: String),
+         volunteerOrg
 
     public var id: Int {
         switch self {
@@ -46,6 +47,7 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
         case .loginWithPhone:       return 18
         case .recoverPassword:      return 19
         case .resetPassword:        return 20
+        case .volunteerOrg:         return 21
 
         case .syncInsights: return 77
         }

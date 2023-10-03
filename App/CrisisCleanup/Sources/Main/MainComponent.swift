@@ -3,6 +3,7 @@ import SwiftUI
 
 public class MainComponent: BootstrapComponent,
                             AuthenticateViewBuilder,
+                            VolunteerOrgViewBuilder,
                             IncidentSelectViewBuilder,
                             CasesFilterViewBuilder,
                             CasesSearchViewBuilder,
@@ -79,6 +80,7 @@ public class MainComponent: BootstrapComponent,
             ),
             locationManager: locationManager,
             authenticateViewBuilder: authenticateViewBuilder,
+            volunteerOrgViewBuilder: self,
             casesViewBuilder: casesComponent,
             menuViewBuilder: menuComponent,
             casesFilterViewBuilder: self,
@@ -98,7 +100,7 @@ public class MainComponent: BootstrapComponent,
         )
     }
 
-    // MARK: Authenticate
+    // MARK: Authenticate, onboarding
 
     lazy var authenticateComponent: AuthenticateComponent = AuthenticateComponent(parent: self, routerObserver: routerObserver)
 
@@ -120,6 +122,10 @@ public class MainComponent: BootstrapComponent,
             resetCode: resetCode
         )
     }
+
+    lazy var volunteerOrgComponent: VolunteerOrgComponent = VolunteerOrgComponent(parent: self, routerObserver: routerObserver)
+
+    public var volunteerOrgView: AnyView { volunteerOrgComponent.volunteerOrgView }
 
     // MARK: Incident select
 

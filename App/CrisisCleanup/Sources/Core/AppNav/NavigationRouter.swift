@@ -35,6 +35,10 @@ class NavigationRouter: ObservableObject {
         path.append(.loginWithPhone)
     }
 
+    func openVolunteerOrg() {
+        path.append(.volunteerOrg)
+    }
+
     func openForgotPassword() {
         path.append(.recoverPassword(showForgotPassword: true, showMagicLink: true))
     }

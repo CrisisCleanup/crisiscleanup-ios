@@ -11,6 +11,7 @@ struct MainView: View {
     let locationManager: LocationManager
 
     let authenticateViewBuilder: AuthenticateViewBuilder
+    let volunteerOrgViewBuilder: VolunteerOrgViewBuilder
     let casesViewBuilder: CasesViewBuilder
     let menuViewBuilder: MenuViewBuilder
     let casesFilterViewBuilder: CasesFilterViewBuilder
@@ -66,6 +67,8 @@ struct MainView: View {
                                         closeAuthFlow: hideAuthScreen,
                                         resetCode: recoverCode
                                     )
+                                case .volunteerOrg:
+                                    volunteerOrgViewBuilder.volunteerOrgView
                                 default:
                                     Text("Pending auth/account route \(route.id)")
                                 }

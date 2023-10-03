@@ -70,10 +70,9 @@ private struct LoginOptionsView: View {
                     .disabled(true)
 
                     Button(t.translate("actions.request_access", "Volunteer with org")) {
-                        // TODO: Do
+                        router.openVolunteerOrg()
                     }
                     .styleOutline()
-                    .disabled(true)
 
                     Button(t.translate("loginForm.need_help_cleaning_up", "I need cleanup")) {
                         openURL(URL(string: "https://crisiscleanup.org/survivor")!)
