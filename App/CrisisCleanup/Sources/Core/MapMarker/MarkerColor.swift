@@ -23,6 +23,8 @@ let statusDoneByOthersNhwDiColor = Color(hex: statusDoneByOthersNhwColorCode)
 let statusOutOfScopeRejectedColor = Color(hex: statusOutOfScopeRejectedColorCode)
 let statusUnresponsiveColor = Color(hex: statusUnresponsiveColorCode)
 
+let statusClosedColor = Color(hex: statusDuplicateClaimedColorCode)
+
 private let visitedMarkerColorCode: Int64 = 0xFF681da8
 
 // sourcery: copyBuilder

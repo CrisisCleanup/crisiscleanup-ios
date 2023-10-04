@@ -13,6 +13,8 @@ public protocol LanguageTranslationsRepository: KeyAssetTranslator {
     func setLanguage(_ key: String)
 
     func setLanguageFromSystem()
+
+    func getLanguageOptions() async -> [LanguageIdName]
 }
 
 extension LanguageTranslationsRepository {
@@ -187,6 +189,16 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
                 logger.logError(error)
             }
         }
+    }
+
+    func getLanguageOptions() async -> [LanguageIdName] {
+        do {
+            return try await dataSource.getLanguages().map { LanguageIdName($0.id, $0.name) }
+        } catch {
+            logger.logError(error)
+        }
+
+        return [LanguageIdName]()
     }
 
     // MARK: - KeyAssetTranslator

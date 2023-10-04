@@ -290,6 +290,15 @@ extension MainComponent {
         }
     }
 
+    public var orgVolunteerRepository: OrgVolunteerRepository {
+        shared {
+            CrisisCleanupOrgVolunteerRepository(
+                registerApi: registerApi,
+                loggerFactory: loggerFactory
+            )
+        }
+    }
+
     var pagingSyncLogRepository: PagingSyncLogRepository {
         shared {
             PagingSyncLogRepository(

@@ -4,19 +4,14 @@ public struct NetworkLanguagesResult: Codable, Equatable {
 }
 
 public struct NetworkLanguageDescription: Codable, Equatable {
+    let id: Int64
     let subtag: String
     let name: String
-    enum CodingKeys: String, CodingKey {
-        case subtag
-        case name = "name_t"
-    }
 
-    init(
-        _ subtag: String,
-        _ name: String
-    ) {
-        self.subtag = subtag
-        self.name = name
+    enum CodingKeys: String, CodingKey {
+        case id,
+             subtag,
+             name = "name_t"
     }
 }
 

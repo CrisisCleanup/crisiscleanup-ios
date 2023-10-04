@@ -35,6 +35,7 @@ public protocol AppDependency: Dependency {
     var casesFilterRepository: CasesFilterRepository { get }
     var caseHistoryRepository: CaseHistoryRepository { get }
     var appSupportRepository: AppSupportRepository { get }
+    var orgVolunteerRepository: OrgVolunteerRepository { get }
 
     var authenticateViewBuilder: AuthenticateViewBuilder { get }
     var incidentSelectViewBuilder: IncidentSelectViewBuilder { get }
@@ -116,6 +117,14 @@ extension MainComponent {
     var accountApi: CrisisCleanupAccountApi {
         shared {
             AccountApiClient(
+                networkRequestProvider: networkRequestProvider,
+                appEnv: appEnv
+            )
+        }
+    }
+    var registerApi: CrisisCleanupRegisterApi {
+        shared {
+            RegisterApiClient(
                 networkRequestProvider: networkRequestProvider,
                 appEnv: appEnv
             )

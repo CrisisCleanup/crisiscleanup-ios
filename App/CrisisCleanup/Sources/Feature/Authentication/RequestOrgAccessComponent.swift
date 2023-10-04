@@ -4,6 +4,11 @@ extension VolunteerOrgComponent {
     private var requestOrgAccessViewModel: RequestOrgAccessViewModel {
         if _requestOrgAccessViewModel == nil {
             _requestOrgAccessViewModel = RequestOrgAccessViewModel(
+                languageRepository: dependency.languageTranslationsRepository,
+                orgVolunteerRepository: dependency.orgVolunteerRepository,
+                inputValidator: dependency.inputValidator,
+                translator: dependency.translator,
+                showEmailInput: true
             )
         }
         return _requestOrgAccessViewModel!

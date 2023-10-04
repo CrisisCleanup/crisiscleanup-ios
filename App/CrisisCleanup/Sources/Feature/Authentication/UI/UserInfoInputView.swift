@@ -1,26 +1,16 @@
 import SwiftUI
 
-enum UserInfoInputFieldKey: String, Identifiable {
-    case firstName,
-         lastName,
-         title,
-         phone,
-         password,
-         confirmPassword,
-         languageKey
-
-    var id: String { rawValue }
-}
-
 struct UserInfoInputData {
+    var emailAddress: String = ""
     var firstName: String = ""
     var lastName: String = ""
     var title: String = ""
     var phone: String = ""
     var password: String = ""
     var confirmPassword: String = ""
-    var languageKey: String = ""
+    var language: LanguageIdName = LanguageIdName(0, "")
 
+    var emailAddressError: String = ""
     var firstNameError: String = ""
     var lastNameError: String = ""
     var phoneError: String = ""
@@ -42,7 +32,7 @@ private struct UserInfoErrorText: View {
 struct UserInfoInputView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    @Binding var languageOptions: [String]
+    @Binding var languageOptions: [LanguageIdName]
 
     @Binding var info: UserInfoInputData
 
@@ -50,6 +40,18 @@ struct UserInfoInputView: View {
 
     var body: some View {
         VStack(alignment: .leading) {
+            Group {
+                UserInfoErrorText(message: info.emailAddressError)
+                TextField(t.t("requestAccess.your_email"), text: $info.emailAddress)
+                    .textFieldBorder()
+                    .keyboardType(.emailAddress)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                    .focused(focusState, equals: TextInputFocused.userEmailAddress)
+                    .onSubmit { focusState.wrappedValue = .userLastName }
+                    .padding(.bottom)
+            }
+
             Group {
                 UserInfoErrorText(message: info.firstNameError)
                 TextField(t.t("invitationSignup.first_name_placeholder"), text: $info.firstName)
@@ -109,14 +111,14 @@ struct UserInfoInputView: View {
 }
 
             Menu {
-                ForEach(languageOptions, id: \.self) { key in
-                    Button(t.t(key)) {
-                        info.languageKey = key
+                ForEach(languageOptions, id: \.id) { language in
+                    Button(t.t(language.name)) {
+                        info.language = language
                     }
                 }
             } label: {
                 Group {
-                    Text(t.t(info.languageKey.ifBlank { "languages.en-us" }))
+                    Text(t.t(info.language.name.ifBlank { "languages.en-us" }))
                     Spacer()
                     Image(systemName: "chevron.up.chevron.down")
                 }

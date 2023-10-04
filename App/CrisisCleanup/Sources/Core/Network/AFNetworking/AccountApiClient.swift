@@ -20,7 +20,7 @@ class AccountApiClient : CrisisCleanupAccountApi {
             dateDecodingStrategy: .anyFormatter(in: [isoFormat, millisecondsFormat])
         )
 
-        self.networkClient = AFNetworkingClient(appEnv, jsonDecoder: jsonDecoder)
+        networkClient = AFNetworkingClient(appEnv, jsonDecoder: jsonDecoder)
         requestProvider = networkRequestProvider
     }
 

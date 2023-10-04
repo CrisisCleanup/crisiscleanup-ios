@@ -19,6 +19,10 @@ public protocol CrisisCleanupAccountApi {
     ) async -> Bool
 }
 
+public protocol CrisisCleanupRegisterApi {
+    func registerOrgVolunteer(_ invite: InvitationRequest) async -> NetworkAcceptedInvitationRequest?
+}
+
 public protocol CrisisCleanupNetworkDataSource {
     func getProfilePic() async throws -> String?
 

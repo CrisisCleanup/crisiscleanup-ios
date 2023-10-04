@@ -323,6 +323,15 @@ extension NetworkRequestProvider {
             apiUrl("password_reset_requests")
         )
     }
+
+    // MARK: Register
+
+    var requestInvitation: NetworkRequest {
+        NetworkRequest(
+            apiUrl("invitation_requests"),
+            method: .post
+        )
+    }
 }
 
 class CrisisCleanupNetworkRequestProvider: NetworkRequestProvider {
