@@ -259,6 +259,7 @@ class RequestOrgAccessViewModel: ObservableObject {
                 }
 
                 if showEmailInput {
+                    // TODO: Test
                     self.requestedOrgSubject.value = await self.orgVolunteerRepository.requestInvitation(
                         InvitationRequest(
                             firstName: userInfo.firstName,
@@ -272,8 +273,29 @@ class RequestOrgAccessViewModel: ObservableObject {
                         )
                     )
                 } else if invitationCode.isNotBlank {
-                    // TODO: Handle edge case where code was not expired when opened but expired on submit
-                    // TODO: Accept invite
+                    // TODO: Test
+                    let isRequested = await self.orgVolunteerRepository.acceptInvitation(
+                        CodeInviteAccept(
+                            firstName: userInfo.firstName,
+                            lastName: userInfo.lastName,
+                            emailAddress: userInfo.emailAddress,
+                            title: userInfo.title,
+                            password: userInfo.password,
+                            mobile: userInfo.phone,
+                            languageId: userInfo.language.id,
+                            invitationCode: invitationCode
+                        )
+                    )
+                    if isRequested {
+                        let inviteInfo = orgUserInviteInfo?.inviteInfo
+                        self.requestedOrgSubject.value = InvitationRequestResult(
+                            organizationName: inviteInfo?.orgName ?? "",
+                            organizationRecipient: inviteInfo?.inviterEmail ?? ""
+                        )
+                    } else {
+                        // TODO: Show error message
+                        // TODO: Also handle case where code was not expired when opened but expired on submit
+                    }
                 }
             }
         }

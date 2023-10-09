@@ -71,4 +71,24 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
 
         return nil
     }
+
+    func acceptOrgInvitation(_ invite: CodeInviteAccept) async -> Bool {
+        let payload = NetworkAcceptCodeInvite(
+            firstName: invite.firstName,
+            lastName: invite.lastName,
+            email: invite.emailAddress,
+            title: invite.title,
+            password: invite.password,
+            mobile: invite.mobile,
+            invitationToken: invite.invitationCode,
+            primaryLanguage: invite.languageId
+        )
+        let request = requestProvider.requestInvitationFromCode
+            .setBody(payload)
+        return await networkClient.callbackContinue(
+            requestConvertible: request,
+            // TODO: Determine response type and what constitutes success?
+            type: NetworkAcceptedInvitationRequest.self
+        ).value != nil
+    }
 }

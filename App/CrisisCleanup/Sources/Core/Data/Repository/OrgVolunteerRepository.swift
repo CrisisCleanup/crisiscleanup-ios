@@ -3,6 +3,7 @@ import Combine
 public protocol OrgVolunteerRepository {
     func requestInvitation(_ invite: InvitationRequest) async -> InvitationRequestResult?
     func getInvitationInfo(_ inviteCode: String) async -> OrgUserInviteInfo?
+    func acceptInvitation(_ invite: CodeInviteAccept) async -> Bool
 }
 
 class CrisisCleanupOrgVolunteerRepository: OrgVolunteerRepository {
@@ -31,6 +32,11 @@ class CrisisCleanupOrgVolunteerRepository: OrgVolunteerRepository {
 
     func getInvitationInfo(_ inviteCode: String) async -> OrgUserInviteInfo? {
         await registerApi.getInvitationInfo(inviteCode)
+    }
+
+    func acceptInvitation(_ invite: CodeInviteAccept) async -> Bool {
+        // TODO: Handle cases where an invite was already sent to the user from the org
+        await registerApi.acceptOrgInvitation(invite)
     }
 }
 

@@ -344,6 +344,13 @@ extension NetworkRequestProvider {
             apiUrl("users")
         )
     }
+
+    var requestInvitationFromCode: NetworkRequest {
+        NetworkRequest(
+            apiUrl("invitations/accept"),
+            method: .post
+        )
+    }
 }
 
 class CrisisCleanupNetworkRequestProvider: NetworkRequestProvider {

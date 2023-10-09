@@ -23,6 +23,8 @@ public protocol CrisisCleanupRegisterApi {
     func registerOrgVolunteer(_ invite: InvitationRequest) async -> NetworkAcceptedInvitationRequest?
 
     func getInvitationInfo(_ inviteCode: String) async -> OrgUserInviteInfo?
+
+    func acceptOrgInvitation(_ invite: CodeInviteAccept) async -> Bool
 }
 
 public protocol CrisisCleanupNetworkDataSource {
