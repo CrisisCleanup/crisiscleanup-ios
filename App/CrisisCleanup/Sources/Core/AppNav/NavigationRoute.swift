@@ -25,6 +25,7 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
          resetPassword(_ recoverCode: String),
          volunteerOrg,
          requestOrgAccess,
+         orgUserInvite(_ inviteCode: String),
          scanOrgQrCode
 
     public var id: Int {
@@ -51,7 +52,8 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
         case .resetPassword:        return 20
         case .volunteerOrg:         return 21
         case .requestOrgAccess:     return 22
-        case .scanOrgQrCode:        return 23
+        case .orgUserInvite:        return 23
+        case .scanOrgQrCode:        return 24
 
         case .syncInsights: return 77
         }

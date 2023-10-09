@@ -2,8 +2,8 @@ import Combine
 import SwiftUI
 
 class PasswordRecoverViewModel: ObservableObject {
-    let showForgotPassword: Bool
-    let showMagicLink: Bool
+    internal let showForgotPassword: Bool
+    internal let showMagicLink: Bool
 
     private let accountDataRepository: AccountDataRepository
     private let accountUpdateRepository: AccountUpdateRepository

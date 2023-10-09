@@ -2,6 +2,7 @@ import Combine
 
 public protocol OrgVolunteerRepository {
     func requestInvitation(_ invite: InvitationRequest) async -> InvitationRequestResult?
+    func getInvitationInfo(_ inviteCode: String) async -> OrgUserInviteInfo?
 }
 
 class CrisisCleanupOrgVolunteerRepository: OrgVolunteerRepository {
@@ -26,6 +27,10 @@ class CrisisCleanupOrgVolunteerRepository: OrgVolunteerRepository {
             organizationName: result.requestedOrganization,
             organizationRecipient: result.requestedTo
         )
+    }
+
+    func getInvitationInfo(_ inviteCode: String) async -> OrgUserInviteInfo? {
+        await registerApi.getInvitationInfo(inviteCode)
     }
 }
 

@@ -9,13 +9,24 @@ class RequestOrgAccessViewModel: ObservableObject {
 
     @Published var screenTitle = ""
 
-    let showEmailInput: Bool
+    internal let showEmailInput: Bool
     @Published var emailAddress = ""
     @Published var emailAddressError = ""
+
+    internal let invitationCode: String
+    internal let invitingUserId: Int64
 
     @Published var userInfo = UserInfoInputData()
 
     @Published var errorFocus: TextInputFocused?
+
+    private let isFetchingInviteInfoSubject = CurrentValueSubject<Bool, Never>(false)
+    @Published var isFetchingInviteInfo = false
+    private let orgUserInviteInfoSubject = CurrentValueSubject<InviterText?, Never>(nil)
+    @Published var orgUserInviteInfo: InviterText?
+
+    private let inviteInfoErrorMessageSubject = CurrentValueSubject<String, Never>("")
+    @Published var inviteInfoErrorMessage = ""
 
     private let isPullingLanguageOptions = CurrentValueSubject<Bool, Never>(false)
     private let languageOptionsSubject = CurrentValueSubject<[LanguageIdName], Never>([])
@@ -40,7 +51,9 @@ class RequestOrgAccessViewModel: ObservableObject {
         orgVolunteerRepository: OrgVolunteerRepository,
         inputValidator: InputValidator,
         translator: KeyAssetTranslator,
-        showEmailInput: Bool = false
+        showEmailInput: Bool = false,
+        invitationCode: String = "",
+        invitingUserId: Int64 = 0
     ) {
         self.languageRepository = languageRepository
         self.orgVolunteerRepository = orgVolunteerRepository
@@ -48,6 +61,8 @@ class RequestOrgAccessViewModel: ObservableObject {
         self.translator = translator
 
         self.showEmailInput = showEmailInput
+        self.invitationCode = invitationCode
+        self.invitingUserId = invitingUserId
     }
 
     func onViewAppear() {
@@ -55,6 +70,7 @@ class RequestOrgAccessViewModel: ObservableObject {
         subscribeLoading()
         subscribeLanguageOptions()
         subscribeEditableState()
+        subscribeInviteInfo()
     }
 
     func onViewDisappear() {
@@ -73,16 +89,22 @@ class RequestOrgAccessViewModel: ObservableObject {
     }
 
     private func subscribeLoading() {
+        isFetchingInviteInfoSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.isFetchingInviteInfo, on: self)
+            .store(in: &subscriptions)
+
         isRequestingInviteSubject
             .receive(on: RunLoop.main)
             .assign(to: \.isRequestingInvite, on: self)
             .store(in: &subscriptions)
 
-        Publishers.CombineLatest(
+        Publishers.CombineLatest3(
             isPullingLanguageOptions,
+            $isFetchingInviteInfo,
             $isRequestingInvite
         )
-        .map { b0, b1 in b0 || b1 }
+        .map { b0, b1, b2 in b0 || b1 || b2 }
         .receive(on: RunLoop.main)
         .assign(to: \.isLoading, on: self)
         .store(in: &subscriptions)
@@ -128,12 +150,57 @@ class RequestOrgAccessViewModel: ObservableObject {
     }
 
     private func subscribeEditableState() {
-        $isRequestingInvite
+        Publishers.CombineLatest(
+            $isFetchingInviteInfo,
+            $isRequestingInvite
+        )
+        .receive(on: RunLoop.main)
+        .sink(receiveValue: { b0, b1 in
+            self.editableViewState.isEditable = !(b0 || b1)
+        })
+        .store(in: &subscriptions)
+    }
+
+    private func subscribeInviteInfo() {
+        if showEmailInput ||
+            invitationCode.isBlank {
+            return
+        }
+
+        orgUserInviteInfoSubject
             .receive(on: RunLoop.main)
-            .sink(receiveValue: { isRequesting in
-                self.editableViewState.isEditable = !isRequesting
-            })
+            .assign(to: \.orgUserInviteInfo, on: self)
             .store(in: &subscriptions)
+
+        inviteInfoErrorMessageSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.inviteInfoErrorMessage, on: self)
+            .store(in: &subscriptions)
+
+        isFetchingInviteInfoSubject.value = true
+
+        inviteInfoErrorMessageSubject.value = ""
+
+        Task {
+            defer {
+                isFetchingInviteInfoSubject.value = false
+            }
+
+            if let inviteInfo = await orgVolunteerRepository.getInvitationInfo(invitationCode) {
+                if inviteInfo.isExpiredInvite {
+                    inviteInfoErrorMessageSubject.value = translator.t("~~This invite has expired. Ask for new invite or try a different invitation method.")
+                } else {
+                    orgUserInviteInfoSubject.value = InviterText(
+                        inviteInfo: inviteInfo,
+                        inviteMessage: translator.t("~~invited you ({email}) to join {organization}.")
+                            .replacingOccurrences(of: "{email}", with: inviteInfo.invitedEmail)
+                            .replacingOccurrences(of: "{organization}", with: inviteInfo.orgName)
+                    )
+                }
+            } else {
+                inviteInfoErrorMessageSubject.value = translator.t("~~There was a problem with invites. Try again later, ask for a new invite, or try a different invitation method.")
+            }
+        }
     }
 
     private func clearErrors() {
@@ -191,19 +258,33 @@ class RequestOrgAccessViewModel: ObservableObject {
                     isRequestingInviteSubject.value = false
                 }
 
-                self.requestedOrgSubject.value = await self.orgVolunteerRepository.requestInvitation(
-                    InvitationRequest(
-                        firstName: userInfo.firstName,
-                        lastName: userInfo.lastName,
-                        emailAddress: userInfo.emailAddress,
-                        title: userInfo.title,
-                        password: userInfo.password,
-                        mobile: userInfo.phone,
-                        languageId: userInfo.language.id,
-                        inviterEmailAddress: emailAddress
+                if showEmailInput {
+                    self.requestedOrgSubject.value = await self.orgVolunteerRepository.requestInvitation(
+                        InvitationRequest(
+                            firstName: userInfo.firstName,
+                            lastName: userInfo.lastName,
+                            emailAddress: userInfo.emailAddress,
+                            title: userInfo.title,
+                            password: userInfo.password,
+                            mobile: userInfo.phone,
+                            languageId: userInfo.language.id,
+                            inviterEmailAddress: emailAddress
+                        )
                     )
-                )
+                } else if invitationCode.isNotBlank {
+                    // TODO: Handle edge case where code was not expired when opened but expired on submit
+                    // TODO: Accept invite
+                }
             }
         }
     }
+}
+
+struct InviterText: Equatable {
+    let inviteInfo: OrgUserInviteInfo
+    let inviteMessage: String
+
+    var avatarUrl: URL? { inviteInfo.inviterAvatarUrl }
+    var isSvgAvatar: Bool { avatarUrl?.lastPathComponent.hasSuffix(".svg") == true }
+    var displayName: String { inviteInfo.displayName }
 }

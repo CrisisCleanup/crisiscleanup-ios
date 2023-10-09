@@ -1,5 +1,3 @@
-import CachedAsyncImage
-import SVGView
 import SwiftUI
 
 struct MenuView: View {
@@ -82,7 +80,6 @@ private struct TopBar: View {
 
     @State var showIncidentSelect = false
 
-    private let imageSize = 48.0
 
     var body: some View {
         HStack {
@@ -119,20 +116,12 @@ private struct TopBar: View {
                 openAuthScreen()
             } label: {
                 if let url = viewModel.profilePicture?.url {
-                    if viewModel.profilePicture?.isSvg == true {
-                        SVGView(contentsOf: url)
-                            .frame(width: imageSize, height: imageSize)
-                    } else {
-                        CachedAsyncImage(url: url) { image in
-                            image.resizable()
-                                .scaledToFill()
-                        } placeholder: {
-                            ProgressView()
-                        }
-                        .frame(width: imageSize, height: imageSize)
-                        .clipShape(Circle())
-                    }
+                    AvatarView(
+                        url: url,
+                        isSvg: viewModel.profilePicture?.isSvg == true
+                    )
                 } else {
+                    let imageSize = appTheme.avatarSize
                     Image(systemName: "person.circle")
                     .resizable()
                          .scaledToFill()

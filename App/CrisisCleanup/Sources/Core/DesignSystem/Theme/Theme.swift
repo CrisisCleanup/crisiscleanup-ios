@@ -20,6 +20,7 @@ class ThemeValues: ObservableObject {
     @Published var textListVerticalPadding: Double
     @Published var nestedItemPadding: Double
     @Published var listItemMapHeight: Double
+    @Published var avatarSize: Double
 
     // TODO: Group in timings object
     @Published var layoutAnimationDuration: Double
@@ -41,7 +42,8 @@ class ThemeValues: ObservableObject {
         layoutAnimationDuration: Double = 0.3,
         visibleSlowAnimationDuration: Double = 1.0,
         nestedItemPadding: Double = 16,
-        listItemMapHeight: Double = 180
+        listItemMapHeight: Double = 180,
+        avatarSize: Double = 48.0
     ) {
         self.textFieldInnerPadding = textFieldInnerPadding
         self.textFieldOutlineWidth = textFieldOutlineWidth
@@ -56,6 +58,7 @@ class ThemeValues: ObservableObject {
         self.textListVerticalPadding = textListVerticalPadding
         self.nestedItemPadding = nestedItemPadding
         self.listItemMapHeight = listItemMapHeight
+        self.avatarSize = avatarSize
 
         self.layoutAnimationDuration = layoutAnimationDuration
         self.visibleSlowAnimationDuration = visibleSlowAnimationDuration

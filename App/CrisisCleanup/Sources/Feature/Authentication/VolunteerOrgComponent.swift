@@ -5,6 +5,7 @@ import SwiftUI
 public protocol VolunteerOrgViewBuilder {
     var volunteerOrgView: AnyView { get }
     var requestOrgAccessView: AnyView { get }
+    func orgUserInviteView(_ code: String) -> AnyView
 }
 
 class VolunteerOrgComponent: Component<AppDependency>, VolunteerOrgViewBuilder {

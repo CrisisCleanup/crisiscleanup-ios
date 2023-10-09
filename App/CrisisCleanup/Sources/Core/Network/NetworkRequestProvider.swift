@@ -332,6 +332,18 @@ extension NetworkRequestProvider {
             method: .post
         )
     }
+
+    var invitationInfo: NetworkRequest {
+        NetworkRequest(
+            apiUrl("invitations")
+        )
+    }
+
+    var noAuthUser: NetworkRequest {
+        NetworkRequest(
+            apiUrl("users")
+        )
+    }
 }
 
 class CrisisCleanupNetworkRequestProvider: NetworkRequestProvider {

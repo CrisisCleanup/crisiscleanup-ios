@@ -32,4 +32,43 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
             type: NetworkAcceptedInvitationRequest.self
         ).value
     }
+
+    func getInvitationInfo(_ inviteCode: String) async -> OrgUserInviteInfo? {
+        let request = requestProvider.invitationInfo
+            .addPaths(inviteCode)
+        if let invitationInfo = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkInvitationInfo.self
+        ).value {
+            if invitationInfo.expiresAt < Date.now {
+                return ExpiredNetworkOrgInvite
+            }
+
+            let inviter = invitationInfo.inviter
+            let inviterId = inviter.id
+            let userRequest = requestProvider.noAuthUser
+                .addPaths("\(inviterId)")
+            var avatarUrl: URL? = nil
+            var orgName = ""
+            if let userInfo = await networkClient.callbackContinue(
+                requestConvertible: userRequest,
+                type: NetworkUser.self
+            ).value {
+                if let avatarUrlString = userInfo.files.first(where: { $0.isProfilePicture })?.largeThumbnailUrl {
+                    avatarUrl = URL(string: avatarUrlString)
+                }
+                orgName = userInfo.organization.name
+            }
+            return OrgUserInviteInfo(
+                displayName: "\(inviter.firstName) \(inviter.lastName)",
+                inviterEmail: inviter.email,
+                inviterAvatarUrl: avatarUrl,
+                invitedEmail: invitationInfo.inviteeEmail,
+                orgName: orgName,
+                isExpiredInvite: false
+            )
+        }
+
+        return nil
+    }
 }

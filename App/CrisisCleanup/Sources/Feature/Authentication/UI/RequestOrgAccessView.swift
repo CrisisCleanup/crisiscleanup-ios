@@ -13,7 +13,12 @@ struct RequestOrgAccessView: View {
 
     var body: some View {
         VStack {
-            if viewModel.isInviteRequested {
+            if viewModel.inviteInfoErrorMessage.isNotBlank {
+                Text(viewModel.inviteInfoErrorMessage)
+                    .fontHeader3()
+                    .padding()
+
+            } else if viewModel.isInviteRequested {
                 Spacer()
 
                 Image(systemName: "checkmark.circle.fill")
@@ -37,8 +42,11 @@ struct RequestOrgAccessView: View {
             } else {
                 RequestOrgUserInfoInputView(
                     showEmailInput: viewModel.showEmailInput,
+                    orgUserInviteInfo: $viewModel.orgUserInviteInfo,
                     focusState: $focusState
                 )
+
+                // TODO: Indicate loading
 
                 if isInputFocused {
                     OpenKeyboardActionsView()
@@ -73,6 +81,7 @@ private struct RequestOrgUserInfoInputView: View {
     @EnvironmentObject var editableView: EditableView
 
     var showEmailInput = false
+    @Binding var orgUserInviteInfo: InviterText?
 
     var focusState: FocusState<TextInputFocused?>.Binding
 
@@ -108,6 +117,23 @@ private struct RequestOrgUserInfoInputView: View {
                             }
                     }
                     .padding(.horizontal)
+                } else if let inviteInfo = orgUserInviteInfo {
+                    HStack(spacing: appTheme.gridItemSpacing) {
+                        if let avatarUrl = inviteInfo.avatarUrl {
+                            AvatarView(
+                                url: avatarUrl,
+                                isSvg: inviteInfo.isSvgAvatar
+                            )
+                        }
+
+                        VStack(alignment: .leading) {
+                            Text(inviteInfo.displayName)
+                                .fontHeader4()
+                            Text(inviteInfo.inviteMessage)
+                                .fontBodySmall()
+                        }
+                    }
+                    .padding(.horizontal)
                 }
 
                 Text(t.t("~~Fill out your information"))
@@ -125,6 +151,12 @@ private struct RequestOrgUserInfoInputView: View {
                     if !showEmailInput,
                        viewModel.userInfo.emailAddress.isBlank {
                         focusState.wrappedValue = .userEmailAddress
+                    }
+                }
+                .onChange(of: orgUserInviteInfo) { newValue in
+                    if let invitedEmail = orgUserInviteInfo?.inviteInfo.invitedEmail,
+                       viewModel.userInfo.emailAddress.isBlank {
+                        viewModel.userInfo.emailAddress = invitedEmail
                     }
                 }
 

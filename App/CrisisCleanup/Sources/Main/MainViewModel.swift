@@ -94,6 +94,11 @@ class MainViewModel: ObservableObject {
                 self.onResetPassword(resetCode)
             }
             .store(in: &disposables)
+
+        externalEventBus.orgUserInvites.sink { inviteCode in
+            self.onOrgUserInvite(inviteCode)
+        }
+        .store(in: &disposables)
     }
 
     private func subscribeIncidentsData() {
@@ -169,6 +174,13 @@ class MainViewModel: ObservableObject {
     private func onResetPassword(_ code: String) {
         if code.isNotBlank {
             router.openResetPassword(code)
+            showAuthScreen = true
+        }
+    }
+
+    private func onOrgUserInvite(_ code: String) {
+        if code.isNotBlank {
+            router.openOrgUserInvite(code)
             showAuthScreen = true
         }
     }

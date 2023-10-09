@@ -71,6 +71,8 @@ struct MainView: View {
                                     volunteerOrgViewBuilder.volunteerOrgView
                                 case .requestOrgAccess:
                                     volunteerOrgViewBuilder.requestOrgAccessView
+                                case .orgUserInvite(let inviteCode):
+                                    volunteerOrgViewBuilder.orgUserInviteView(inviteCode)
                                 default:
                                     Text("Pending auth/account route \(route.id)")
                                 }

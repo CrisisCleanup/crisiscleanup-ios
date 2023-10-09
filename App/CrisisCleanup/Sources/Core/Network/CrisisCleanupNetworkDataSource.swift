@@ -21,6 +21,8 @@ public protocol CrisisCleanupAccountApi {
 
 public protocol CrisisCleanupRegisterApi {
     func registerOrgVolunteer(_ invite: InvitationRequest) async -> NetworkAcceptedInvitationRequest?
+
+    func getInvitationInfo(_ inviteCode: String) async -> OrgUserInviteInfo?
 }
 
 public protocol CrisisCleanupNetworkDataSource {
