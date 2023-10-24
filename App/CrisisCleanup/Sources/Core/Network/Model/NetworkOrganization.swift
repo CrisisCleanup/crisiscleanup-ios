@@ -36,3 +36,9 @@ public struct NetworkOrganizationShort: Codable, Equatable {
         self.name = name
     }
 }
+
+public struct NetworkOrganizationsSearchResult: Codable, Equatable {
+    let errors: [NetworkCrisisCleanupApiError]?
+    let count: Int?
+    let results: [NetworkOrganizationShort]?
+}

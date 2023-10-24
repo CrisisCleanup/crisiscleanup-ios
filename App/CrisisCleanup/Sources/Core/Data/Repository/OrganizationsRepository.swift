@@ -21,6 +21,9 @@ public protocol OrganizationsRepository {
     func streamPrimarySecondaryAreas(_ organizationId: Int64) -> any Publisher<OrganizationLocationAreaBounds, Never>
 
     func getMatchingOrganizations(_ q: String) -> [OrganizationIdName]
+    func streamMatchingOrganizations(_ q: String) -> any Publisher<[OrganizationIdName], Never>
+
+    func searchOrganizations(_ q: String) async
 }
 
 extension OrganizationsRepository {
@@ -146,5 +149,22 @@ class OfflineFirstOrganizationsRepository: OrganizationsRepository {
 
     func getMatchingOrganizations(_ q: String) -> [OrganizationIdName] {
         incidentOrganizationDao.getMatchingOrganizations(q)
+    }
+
+    func streamMatchingOrganizations(_ q: String) -> any Publisher<[OrganizationIdName], Never> {
+        incidentOrganizationDao.streamMatchingOrganizations(q)
+            .assertNoFailure()
+    }
+
+    func searchOrganizations(_ q: String) async {
+        let organizations = await networkDataSource.searchOrganizations(q)
+        let organizationRecords = organizations.map {
+            IncidentOrganizationRecord(id: $0.id, name: $0.name, primaryLocation: nil, secondaryLocation: nil)
+        }
+        do {
+            try await incidentOrganizationDao.saveOrganizations(organizationRecords, [])
+        } catch {
+            logger.logError(error)
+        }
     }
 }

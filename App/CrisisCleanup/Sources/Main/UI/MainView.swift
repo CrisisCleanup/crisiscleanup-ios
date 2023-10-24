@@ -27,6 +27,7 @@ struct MainView: View {
     let caseSearchLocationViewBuilder: CaseSearchLocationViewBuilder
     let caseMoveOnMapViewBuilder: CaseMoveOnMapViewBuilder
     let userFeedbackViewBuilder: UserFeedbackViewBuilder
+    let inviteTeammateViewBuilder: InviteTeammateViewBuilder
     let syncInsightsViewBuilder: SyncInsightsViewBuilder
 
     @State private var selectedTab = TopLevelDestination.cases
@@ -73,6 +74,8 @@ struct MainView: View {
                                     volunteerOrgViewBuilder.requestOrgAccessView
                                 case .orgUserInvite(let inviteCode):
                                     volunteerOrgViewBuilder.orgUserInviteView(inviteCode)
+                                case .scanOrgQrCode:
+                                    Text("Scan QR code")
                                 default:
                                     Text("Pending auth/account route \(route.id)")
                                 }
@@ -112,7 +115,8 @@ struct MainView: View {
                                         caseSearchLocationViewBuilder: caseSearchLocationViewBuilder,
                                         caseMoveOnMapViewBuilder: caseMoveOnMapViewBuilder,
                                         userFeedbackViewBuilder: userFeedbackViewBuilder,
-                                        syncInsightsViewBuilder: syncInsightsViewBuilder
+                                        syncInsightsViewBuilder: syncInsightsViewBuilder,
+                                        inviteTeammateViewBuilder: inviteTeammateViewBuilder
                                     )
                                 }
                                 .tabViewStyle(
@@ -187,6 +191,7 @@ private struct MainTabs: View {
     let caseMoveOnMapViewBuilder: CaseMoveOnMapViewBuilder
     let userFeedbackViewBuilder: UserFeedbackViewBuilder
     let syncInsightsViewBuilder: SyncInsightsViewBuilder
+    let inviteTeammateViewBuilder: InviteTeammateViewBuilder
 
     var body: some View {
         TabViewContainer {
@@ -228,6 +233,8 @@ private struct MainTabs: View {
                         viewImageViewBuilder.viewImageView(imageId, isNetworkImage, screenTitle)
                     case .userFeedback:
                         userFeedbackViewBuilder.userFeedbackView
+                    case .inviteTeammate:
+                        inviteTeammateViewBuilder.inviteTeammateView
                     case .syncInsights:
                         if viewModel.isNotProduction {
                             syncInsightsViewBuilder.syncInsightsView

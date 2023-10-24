@@ -74,6 +74,16 @@ private struct LoginOptionsView: View {
                     }
                     .styleOutline()
 
+                    Button {
+                        router.openScanOrgQrCode()
+                    } label: {
+                        HStack {
+                            Image(systemName: "qrcode.viewfinder")
+                            Text(t.t("~~Join by QR code."))
+                        }
+                    }
+                    .styleOutline()
+
                     Button(t.translate("loginForm.need_help_cleaning_up", "I need cleanup")) {
                         openURL(URL(string: "https://crisiscleanup.org/survivor")!)
                     }

@@ -150,7 +150,7 @@ class LoginWithEmailViewModel: ObservableObject {
                     accessToken: accessToken,
                     expirySeconds: expirySeconds
                 )
-                return LoginResult(errorMessage: "", success: success   )
+                return LoginResult(errorMessage: "", success: success)
             }
         } catch {
             errorMessage = "Unknown auth error".localizedString

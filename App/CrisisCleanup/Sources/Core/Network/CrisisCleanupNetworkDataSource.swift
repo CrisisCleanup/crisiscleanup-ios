@@ -121,6 +121,8 @@ public protocol CrisisCleanupNetworkDataSource {
     func getAppSupportInfo(
         _ isTest: Bool
     ) async -> NetworkAppSupportInfo?
+
+    func searchOrganizations(_ q: String) async -> [NetworkOrganizationShort]
 }
 
 extension CrisisCleanupNetworkDataSource {

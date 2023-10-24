@@ -74,6 +74,10 @@ class NavigationRouter: ObservableObject {
         path.append(.filterCases)
     }
 
+    func openInviteTeammate() {
+        path.append(.inviteTeammate)
+    }
+
     func openSearchCases() {
         path.append(.searchCases)
     }

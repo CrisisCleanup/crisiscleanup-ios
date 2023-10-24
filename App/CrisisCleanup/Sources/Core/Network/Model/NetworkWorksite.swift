@@ -235,7 +235,6 @@ public struct NetworkWorksiteFull: Codable, Equatable {
     public struct FlagShort: Codable, Equatable {
         let isHighPriority: Bool?
         let reasonT: String?
-        // @Serializable(DateSerializer::class)
         let invalidatedAt: Date?
 
         enum CodingKeys: String, CodingKey {

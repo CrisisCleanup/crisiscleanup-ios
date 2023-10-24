@@ -18,6 +18,7 @@ public class MainComponent: BootstrapComponent,
                             CaseSearchLocationViewBuilder,
                             CaseMoveOnMapViewBuilder,
                             UserFeedbackViewBuilder,
+                            InviteTeammateViewBuilder,
                             SyncInsightsViewBuilder
 {
     public let appEnv: AppEnv
@@ -96,6 +97,7 @@ public class MainComponent: BootstrapComponent,
             caseSearchLocationViewBuilder: self,
             caseMoveOnMapViewBuilder: self,
             userFeedbackViewBuilder: self,
+            inviteTeammateViewBuilder: self,
             syncInsightsViewBuilder: self
         )
     }
@@ -242,6 +244,12 @@ public class MainComponent: BootstrapComponent,
     lazy var userFeedbackComponent: UserFeedbackComponent = UserFeedbackComponent(parent: self, routerObserver: routerObserver)
 
     public var userFeedbackView: AnyView { userFeedbackComponent.userFeedbackView }
+
+    // MARK: Organization
+
+    lazy var inviteTeammateComponent: InviteTeammateComponent = InviteTeammateComponent(parent: self, routerObserver: routerObserver)
+
+    public var inviteTeammateView: AnyView { inviteTeammateComponent.inviteTeammateView }
 
     // MARK: Sync insights
 

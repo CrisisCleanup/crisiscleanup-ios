@@ -443,6 +443,15 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         }
         return nil
     }
+
+    func searchOrganizations(_ q: String) async -> [NetworkOrganizationShort] {
+        let request = requestProvider.organizations
+            .addQueryItems("search", q)
+        return await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkOrganizationsSearchResult.self
+        ).value?.results ?? []
+    }
 }
 
 extension Array where Element == Int64 {

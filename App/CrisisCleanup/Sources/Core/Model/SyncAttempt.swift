@@ -48,7 +48,7 @@ struct SyncAttempt: Codable {
         backoffIntervalSeconds: Double = 15,
         nowSeconds: Double = Date.now.timeIntervalSince1970
     ) -> Bool {
-        return !(isRecent(recentIntervalSeconds, nowSeconds) ||
-                 isBackingOff(backoffIntervalSeconds, nowSeconds))
+        !(isRecent(recentIntervalSeconds, nowSeconds) ||
+          isBackingOff(backoffIntervalSeconds, nowSeconds))
     }
 }

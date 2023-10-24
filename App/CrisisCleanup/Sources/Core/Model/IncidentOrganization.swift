@@ -16,8 +16,8 @@ let EmptyIncidentOrganization = IncidentOrganization(
     affiliateIds: []
 )
 
-public struct OrganizationIdName {
-    let id: Int64
+public struct OrganizationIdName: Identifiable {
+    public let id: Int64
     let name: String
 }
 

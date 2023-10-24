@@ -1,4 +1,3 @@
-
 public struct WorksiteSyncResult {
     let changeResults: [ChangeResult]
     let changeIds: ChangeIds

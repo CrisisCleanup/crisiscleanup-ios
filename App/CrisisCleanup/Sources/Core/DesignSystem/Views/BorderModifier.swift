@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct BorderModifier: ViewModifier {
-    // TODO: Change text and border color based on state (disabled, selected, ...). Create style.
+    @Environment(\.isEnabled) var isEnabled
+
     var color: Color = .gray
     var lineWidth: CGFloat = 1.0
 
@@ -9,7 +10,7 @@ struct BorderModifier: ViewModifier {
         return content
             .overlay(
                 RoundedRectangle(cornerRadius: appTheme.cornerRadius)
-                    .stroke(color, lineWidth: lineWidth)
+                    .stroke(isEnabled ? color : color.disabledAlpha(), lineWidth: lineWidth)
             )
     }
 }

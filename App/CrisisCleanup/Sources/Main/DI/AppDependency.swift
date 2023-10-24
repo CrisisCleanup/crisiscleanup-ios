@@ -10,6 +10,8 @@ public protocol AppDependency: Dependency {
 
     var inputValidator: InputValidator { get }
 
+    var qrCodeGenerator: QrCodeGenerator { get }
+
     var networkRequestProvider: NetworkRequestProvider { get }
     var authApi: CrisisCleanupAuthApi { get }
 
@@ -78,6 +80,10 @@ extension MainComponent {
         shared {
             NetworkReachability(appSettingsProvider.reachabilityHost)
         }
+    }
+
+    public var qrCodeGenerator: QrCodeGenerator {
+        CoreImageQrCodeGenerator()
     }
 
     public var networkRequestProvider: NetworkRequestProvider {

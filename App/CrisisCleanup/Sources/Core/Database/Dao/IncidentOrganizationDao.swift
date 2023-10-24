@@ -37,7 +37,7 @@ public class IncidentOrganizationDao {
     }
 
     private func fetchOrganizations(_ db: Database) throws -> [PopulatedIncidentOrganization] {
-        return try IncidentOrganizationRecord
+        try IncidentOrganizationRecord
             .including(all: IncidentOrganizationRecord.primaryContacts)
             .including(all: IncidentOrganizationRecord.organizationAffiliates)
             .asRequest(of: PopulatedIncidentOrganization.self)
@@ -111,24 +111,39 @@ public class IncidentOrganizationDao {
     }
 
     func getMatchingOrganizations(_ q: String) -> [OrganizationIdName] {
-        try! reader.read { db in
-            let sql = """
+        try! reader.read { db in matchOrganizations(db, q) }
+            .map {
+                OrganizationIdName(id: $0.id, name: $0.name)
+            }
+    }
+
+    private func matchOrganizations(_ db: Database, _ q: String) -> [IncidentOrganizationRecord] {
+        let sql = """
                 SELECT o.id, o.name
                 FROM incidentOrganization o
                 JOIN incidentOrganization_ft fts
                     ON fts.rowid = o.rowid
                 WHERE incidentOrganization_ft MATCH ?
                 """
-            let pattern = FTS3Pattern(matchingAllPrefixesIn: q)
-            return try IncidentOrganizationRecord.fetchAll(
-                db,
-                sql: sql,
-                arguments: [pattern]
-            )
-        }
-        .map {
-            OrganizationIdName(id: $0.id, name: $0.name)
-        }
+        let pattern = FTS3Pattern(matchingAllPrefixesIn: q)
+        return try! IncidentOrganizationRecord.fetchAll(
+            db,
+            sql: sql,
+            arguments: [pattern]
+        )
+    }
+
+    func streamMatchingOrganizations(_ q: String) -> AnyPublisher<[OrganizationIdName], Error> {
+        ValueObservation
+            .tracking { db in
+                self.matchOrganizations(db, q)
+                    .map {
+                        OrganizationIdName(id: $0.id, name: $0.name)
+                    }
+            }
+            .shared(in: reader)
+            .publisher()
+            .eraseToAnyPublisher()
     }
 
     func findOrganization(_ id: Int64) -> Int64? {
@@ -167,6 +182,7 @@ extension AppDatabase {
         _ primaryContacts: [PersonContactRecord]
     ) async throws {
         try await dbWriter.write { db in
+            // TODO: Upsert here clears primary and secondary location values when it shouldn't
             for record in organizations {
                 try record.upsert(db)
             }

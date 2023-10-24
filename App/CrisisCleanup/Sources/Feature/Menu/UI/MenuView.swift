@@ -27,12 +27,21 @@ struct MenuView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Button {
+                router.openInviteTeammate()
+            } label: {
+                Text(t.t("usersVue.invite_new_user"))
+                    .padding(.horizontal)
+            }
+            .stylePrimary()
+            .padding([.horizontal, .bottom])
+
+            Button {
                 router.openUserFeedback()
             } label: {
                 Text(t.t("info.give_app_feedback"))
                     .padding(.horizontal)
             }
-            .stylePrimary(true)
+            .styleOutline()
             .padding(.horizontal)
 
             if !viewModel.isProduction {

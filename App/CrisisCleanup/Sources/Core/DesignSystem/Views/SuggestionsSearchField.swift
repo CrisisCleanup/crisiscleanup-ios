@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SuggestionsSearchField: View {
     @Environment(\.translator) var t: KeyAssetTranslator
+
     @EnvironmentObject var focusableViewState: TextInputFocusableView
 
     @Binding var q: String
