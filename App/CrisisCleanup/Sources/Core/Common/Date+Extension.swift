@@ -6,6 +6,10 @@ extension Date {
     var relativeTime: String {
         relativeTimeFormatter.localizedString(for: self, relativeTo: Date.now)
     }
+
+    var isPast: Bool {
+        self < Date.now
+    }
 }
 
 extension DateFormatter {

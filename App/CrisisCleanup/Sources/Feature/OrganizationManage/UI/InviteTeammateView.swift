@@ -56,7 +56,7 @@ private struct InviteTeammateContentView: View {
                     let inviteToAnotherOrg = viewModel.inviteToAnotherOrg
                     if !animateTopSearchBar {
                         Text(t.t("Invite new user via email invitation link"))
-                            .fontHeader3()
+                            .fontHeader4()
                             .padding(.vertical, appTheme.listItemVerticalPadding)
 
                         RadioButton(
@@ -114,7 +114,34 @@ private struct InviteTeammateContentView: View {
                             )
                         }
                         .stylePrimary()
-                        .padding(.vertical)
+                        .padding(.vertical, appTheme.listItemVerticalPadding * 2)
+
+                        let orText = t.t("~~Or")
+                        Text(orText)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .fontHeader4()
+                            .foregroundColor(appTheme.colors.neutralFontColor)
+                            .listItemModifier()
+
+                        Text(viewModel.scanQrCodeText)
+                            .fontHeader4()
+
+                        if viewModel.isGeneratingQrCode {
+                            HStack {
+                                ProgressView()
+                            }
+                            .frame(maxWidth: .infinity)
+                        } else {
+                            if viewModel.inviteToAnotherOrg {
+                            } else {
+                                if let qrCode = viewModel.myOrgInviteQrCode {
+                                    CenteredRowImage(image: qrCode)
+                                } else {
+                                    Text(t.t("~~We are having issues with organization invite codes."))
+                                        .padding(.vertical)
+                                }
+                            }
+                        }
 
                         Spacer()
                     }
@@ -128,26 +155,11 @@ private struct InviteTeammateContentView: View {
             .scrollDisabled(animateTopSearchBar)
 
             if animateTopSearchBar {
-                ScrollView {
-                    ForEach(viewModel.organizationsSearchResult) { organization in
-                        Text(organization.name)
-                            .onTapGesture {
-                                viewModel.onSelectOrganization(organization)
-                                focusState = nil
-                                withAnimation {
-                                    animateTopSearchBar = false
-                                }
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .frame(minHeight: appTheme.rowItemHeight)
-                            .padding(.horizontal)
-                    }
-
-                    Spacer()
-                }
-                .onChange(of: viewModel.isSearchingOrganizations) { newValue in
-                    animateSearchingOrganizations = newValue
-                }
+                SuggestedOrganizationsView(
+                    animateTopSearchBar: $animateTopSearchBar,
+                    animateSearchingOrganizations: $animateSearchingOrganizations,
+                    focusState: $focusState
+                )
             }
 
             Spacer()
@@ -163,5 +175,52 @@ private struct InviteTeammateContentView: View {
            animateSearchingOrganizations {
             ProgressView()
         }
+    }
+}
+
+private struct SuggestedOrganizationsView: View {
+    @EnvironmentObject var viewModel: InviteTeammateViewModel
+
+    @Binding var animateTopSearchBar: Bool
+    @Binding var animateSearchingOrganizations: Bool
+    var focusState: FocusState<TextInputFocused?>.Binding
+
+    var body: some View {
+        ScrollView {
+            ForEach(viewModel.organizationsSearchResult) { organization in
+                Text(organization.name)
+                    .onTapGesture {
+                        viewModel.onSelectOrganization(organization)
+                        focusState.wrappedValue = nil
+                        withAnimation {
+                            animateTopSearchBar = false
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(minHeight: appTheme.rowItemHeight)
+                    .padding(.horizontal)
+            }
+
+            Spacer()
+        }
+        .onChange(of: viewModel.isSearchingOrganizations) { newValue in
+            animateSearchingOrganizations = newValue
+        }
+    }
+}
+
+private struct CenteredRowImage: View {
+    var image: UIImage
+    var imageMaxSize: CGFloat = 240
+
+    var body: some View {
+        HStack {
+            Image(uiImage: image)
+                .interpolation(.none)
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: imageMaxSize)
+        }
+        .frame(maxWidth: .infinity)
     }
 }

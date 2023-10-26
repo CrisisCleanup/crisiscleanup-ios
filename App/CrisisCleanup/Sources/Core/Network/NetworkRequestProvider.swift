@@ -281,6 +281,8 @@ extension NetworkRequestProvider {
         )
     }
 
+    // MARK: Version support
+
     var minAppVersionSupport: NetworkRequest? {
         if let url = appSupportApiUrl("min-supported-version/ios") {
             return NetworkRequest(url)
@@ -349,6 +351,14 @@ extension NetworkRequestProvider {
         NetworkRequest(
             apiUrl("invitations/accept"),
             method: .post
+        )
+    }
+
+    var createPersistentInvitation: NetworkRequest {
+        NetworkRequest(
+            apiUrl("persistent_invitations"),
+            method: .post,
+            addTokenHeader: true
         )
     }
 }

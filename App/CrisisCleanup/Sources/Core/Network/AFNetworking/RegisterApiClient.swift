@@ -5,12 +5,26 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
     let networkClient: AFNetworkingClient
     let requestProvider: NetworkRequestProvider
 
+    private let networkError: Error
+
     init(
         networkRequestProvider: NetworkRequestProvider,
+        accountDataRepository: AccountDataRepository,
+        authApiClient: CrisisCleanupAuthApi,
+        authEventBus: AuthEventBus,
         appEnv: AppEnv
     ) {
-        networkClient = AFNetworkingClient(appEnv)
+        networkClient = AFNetworkingClient(
+            appEnv,
+            interceptor: AccessTokenInterceptor(
+                accountDataRepository: accountDataRepository,
+                authApiClient: authApiClient,
+                authEventBus: authEventBus
+            )
+        )
         requestProvider = networkRequestProvider
+
+        networkError = GenericError("Network error")
     }
 
     func registerOrgVolunteer(_ invite: InvitationRequest) async -> NetworkAcceptedInvitationRequest? {
@@ -40,7 +54,7 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
             requestConvertible: request,
             type: NetworkInvitationInfo.self
         ).value {
-            if invitationInfo.expiresAt < Date.now {
+            if invitationInfo.expiresAt.isPast {
                 return ExpiredNetworkOrgInvite
             }
 
@@ -90,5 +104,23 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
             // TODO: Determine response type and what constitutes success?
             type: NetworkAcceptedInvitationRequest.self
         ).value != nil
+    }
+
+    func createPersistentInvitation(
+        orgId: Int64,
+        userId: Int64
+    ) async throws -> NetworkPersistentInvitation {
+        let request = requestProvider.createPersistentInvitation
+            .setBody(NetworkCreateOrgInvitation(createdBy: userId, orgId: orgId))
+
+        let response = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkPersistentInvitationResult.self,
+            wrapResponseKey: "invite"
+        )
+        if let result = response.value?.invite {
+            return result
+        }
+        throw response.error ?? networkError
     }
 }

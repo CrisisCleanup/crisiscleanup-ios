@@ -4,6 +4,7 @@ import SwiftUI
 class InviteTeammateViewModel: ObservableObject {
     private let accountDataRepository: AccountDataRepository
     private let organizationsRepository: OrganizationsRepository
+    private let orgVolunteerRepository: OrgVolunteerRepository
     private let qrCodeGenerator: QrCodeGenerator
     private let translator: KeyAssetTranslator
     private let logger: AppLogger
@@ -16,9 +17,10 @@ class InviteTeammateViewModel: ObservableObject {
 
     @Published private(set) var myOrgInviteOptionText = ""
     @Published private(set) var anotherOrgInviteOptionText = ""
+    @Published private(set) var scanQrCodeText = ""
 
     @Published var inviteToAnotherOrg = false
-    private var myOrg = OrgData(id: 0, name: "")
+    @Published private(set) var accountData = emptyAccountData
     @Published private(set) var selectedOtherOrg = OrganizationIdName(id: 0, name: "")
     @Published var organizationNameQuery = ""
     private let isSearchingLocalOrganizationsSubject = CurrentValueSubject<Bool, Never>(false)
@@ -29,9 +31,11 @@ class InviteTeammateViewModel: ObservableObject {
     @Published var inviteEmailAddresses = ""
 
     private let inviteUrl: String
-    private let isGeneratingQrCodeSubject = CurrentValueSubject<Bool, Never>(true)
+    private let isCreatingMyOrgPersistentInvitation = CurrentValueSubject<Bool, Never>(false)
+    @Published private var joinMyOrgInvite: JoinOrgInvite?
+    private let isGeneratingMyOrgQrCodeSubject = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isGeneratingQrCode = false
-    @Published private(set) var inviteQrCode: UIImage?
+    @Published private(set) var myOrgInviteQrCode: UIImage?
 
     private let isSendingInviteSubject = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isSendingInvite = false
@@ -44,6 +48,7 @@ class InviteTeammateViewModel: ObservableObject {
     init(
         accountDataRepository: AccountDataRepository,
         organizationsRepository: OrganizationsRepository,
+        orgVolunteerRepository: OrgVolunteerRepository,
         settingsProvider: AppSettingsProvider,
         qrCodeGenerator: QrCodeGenerator,
         translator: KeyAssetTranslator,
@@ -51,6 +56,7 @@ class InviteTeammateViewModel: ObservableObject {
     ) {
         self.accountDataRepository = accountDataRepository
         self.organizationsRepository = organizationsRepository
+        self.orgVolunteerRepository = orgVolunteerRepository
         self.qrCodeGenerator = qrCodeGenerator
         self.translator = translator
         logger = loggerFactory.getLogger("invite-teammate")
@@ -58,9 +64,10 @@ class InviteTeammateViewModel: ObservableObject {
     }
 
     func onViewAppear() {
-        subscribeLoading()
+        subscribeViewState()
         subscribeAccountData()
         subscribeOrganizationState()
+        subscribeInviteQrCode()
         subscribeSendState()
     }
 
@@ -68,7 +75,9 @@ class InviteTeammateViewModel: ObservableObject {
         subscriptions = cancelSubscriptions(subscriptions)
     }
 
-    private func subscribeLoading() {
+    private func subscribeViewState() {
+        anotherOrgInviteOptionText = translator.t("~~From another organization")
+
         isValidatingAccount
             .receive(on: RunLoop.main)
             .assign(to: \.isLoading, on: self)
@@ -79,13 +88,28 @@ class InviteTeammateViewModel: ObservableObject {
                 self.editableView.isEditable = !b0
             }
             .store(in: &subscriptions)
+
+        Publishers.CombineLatest(
+            $accountData,
+            $inviteToAnotherOrg
+        )
+        .filter({ (account, _) in account.id > 0 })
+        .map { (account, inviteToOther) in
+            inviteToOther
+            ? self.translator.t("~~Invite via QR code")
+            : self.translator.t("~~Scan QR code to invite to {organization}")
+                .replacingOccurrences(of: "{organization}", with: account.org.name)
+        }
+        .receive(on: RunLoop.main)
+        .assign(to: \.scanQrCodeText, on: self)
+        .store(in: &subscriptions)
     }
 
     private func subscribeAccountData() {
         accountDataRepository.accountData.eraseToAnyPublisher()
             .receive(on: RunLoop.main)
             .sink { accountData in
-                self.myOrg = accountData.org
+                self.accountData = accountData
                 self.myOrgInviteOptionText = self.translator.t("~~Part of {my_organization}")
                     .replacingOccurrences(of: "{my_organization}", with: accountData.org.name)
                 self.hasValidTokens = accountData.areTokensValid
@@ -95,8 +119,6 @@ class InviteTeammateViewModel: ObservableObject {
     }
 
     private func subscribeOrganizationState() {
-        anotherOrgInviteOptionText = translator.t("~~From another organization")
-
         Publishers.CombineLatest(
             isSearchingLocalOrganizationsSubject,
             isSearchingNetworkOrganizationsSubject
@@ -154,27 +176,59 @@ class InviteTeammateViewModel: ObservableObject {
     }
 
     private func subscribeInviteQrCode() {
-        isGeneratingQrCodeSubject
+        Publishers.CombineLatest(
+            isCreatingMyOrgPersistentInvitation,
+            isGeneratingMyOrgQrCodeSubject
+        )
+        .map { (b0, b1) in b0 || b1 }
+        .receive(on: RunLoop.main)
+        .assign(to: \.isGeneratingQrCode, on: self)
+        .store(in: &subscriptions)
+
+        accountDataRepository.accountData.eraseToAnyPublisher()
+            .filter { $0.hasAuthenticated }
+            .asyncMap { data in
+                self.isCreatingMyOrgPersistentInvitation.value = true
+                do {
+                    defer {
+                        self.isCreatingMyOrgPersistentInvitation.value = false
+                    }
+
+                    let orgId = data.org.id
+
+                    if let invite = self.joinMyOrgInvite,
+                       invite.orgId == orgId,
+                       !invite.isExpired
+                    {
+                        return self.joinMyOrgInvite
+                    }
+
+                    let userId = data.id
+                    let invite = await self.orgVolunteerRepository.getOrgInvite(orgId: orgId, inviterUserId: userId)
+                    return invite
+                }
+            }
             .receive(on: RunLoop.main)
-            .assign(to: \.isGeneratingQrCode, on: self)
+            .assign(to: \.joinMyOrgInvite, on: self)
             .store(in: &subscriptions)
 
-//        accountDataRepository.accountData.eraseToAnyPublisher()
-//            .filter { $0.hasAuthenticated }
-//            .map { data in
-//                do {
-//                    defer {
-//                        self.isGeneratingQrCodeSubject.value = false
-//                    }
-//
-//                    let userId = data.id
-//                    let inviteUrl = "\(self.inviteUrl)?user-id=\(userId)"
-//                    return self.qrCodeGenerator.generate(inviteUrl)
-//                }
-//            }
-//            .receive(on: RunLoop.main)
-//            .assign(to: \.inviteQrCode, on: self)
-//            .store(in: &subscriptions)
+        $joinMyOrgInvite
+            .map { invite in
+                self.isGeneratingMyOrgQrCodeSubject.value = true
+                do {
+                    defer { self.isGeneratingMyOrgQrCodeSubject.value = false }
+
+                    if let invite = invite,
+                       !invite.isExpired {
+                        let inviteUrl = "\(self.inviteUrl)?org-id=\(invite.orgId)&invite-token=\(invite.token)"
+                        return self.qrCodeGenerator.generate(inviteUrl)
+                    }
+                }
+                return nil
+            }
+            .receive(on: RunLoop.main)
+            .assign(to: \.myOrgInviteQrCode, on: self)
+            .store(in: &subscriptions)
     }
 
     func onSelectOrganization(_ organization: OrganizationIdName) {

@@ -44,12 +44,7 @@ public struct WorkType: Equatable, Hashable {
         status = statusFromLiteral(statusLiteral)
         statusClaim = WorkTypeStatusClaim(status, isClaimed)
         workType = typeFromLiteral(workTypeLiteral)
-        isReleaseEligible = {
-            if let at = createdAt {
-                return at.addingTimeInterval(releaseDaysThreshold) < Date.now
-            }
-            return false
-        }()
+        isReleaseEligible = createdAt?.addingTimeInterval(releaseDaysThreshold).isPast == true
     }
 }
 

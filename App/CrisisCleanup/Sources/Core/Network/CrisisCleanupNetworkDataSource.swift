@@ -25,6 +25,11 @@ public protocol CrisisCleanupRegisterApi {
     func getInvitationInfo(_ inviteCode: String) async -> OrgUserInviteInfo?
 
     func acceptOrgInvitation(_ invite: CodeInviteAccept) async -> Bool
+
+    func createPersistentInvitation(
+        orgId: Int64,
+        userId: Int64
+    ) async throws -> NetworkPersistentInvitation
 }
 
 public protocol CrisisCleanupNetworkDataSource {

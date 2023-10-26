@@ -132,6 +132,9 @@ extension MainComponent {
         shared {
             RegisterApiClient(
                 networkRequestProvider: networkRequestProvider,
+                accountDataRepository: accountDataRepository,
+                authApiClient: authApi,
+                authEventBus: authEventBus,
                 appEnv: appEnv
             )
         }

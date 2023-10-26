@@ -141,7 +141,7 @@ public struct CasesFilter: Hashable, Codable {
             return false
         }
 
-        if hasUpdatedFilter && updatedAt.addingTimeInterval(Double(daysAgoUpdated).days) < Date.now {
+        if hasUpdatedFilter && updatedAt.addingTimeInterval(Double(daysAgoUpdated).days).isPast {
             return false
         }
 

@@ -170,12 +170,7 @@ public struct Worksite: Equatable {
         self.workTypeRequests = workTypeRequests
         self.isAssignedToOrgMember = isAssignedToOrgMember
 
-        isReleaseEligible = {
-            if let at = createdAt {
-                return at.addingTimeInterval(releaseDaysThreshold) < Date.now
-            }
-            return false
-        }()
+        isReleaseEligible = createdAt?.addingTimeInterval(releaseDaysThreshold).isPast == true
     }
 
     func toggleHighPriorityFlag() -> Worksite {
