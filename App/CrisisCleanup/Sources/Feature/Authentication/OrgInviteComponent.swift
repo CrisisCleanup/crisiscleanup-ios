@@ -28,4 +28,29 @@ extension VolunteerOrgComponent {
             )
         )
     }
+
+    private func persistentInviteViewModel(_ token: String) -> PersistentInviteViewModel {
+        var isReusable = false
+        if let vm = _persistentInviteViewModel {
+            isReusable = vm.inviteToken == token
+        }
+
+        if  !isReusable {
+            _persistentInviteViewModel = PersistentInviteViewModel(
+                orgVolunteerRepository: dependency.orgVolunteerRepository,
+                inputValidator: dependency.inputValidator,
+                translator: dependency.translator,
+                inviteToken: token
+            )
+        }
+        return _persistentInviteViewModel!
+    }
+
+    func orgPersistentInviteView(_ token: String) -> AnyView {
+        AnyView(
+            PersistentInviteView(
+                viewModel: persistentInviteViewModel(token)
+            )
+        )
+    }
 }

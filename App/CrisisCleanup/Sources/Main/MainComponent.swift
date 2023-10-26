@@ -133,6 +133,10 @@ public class MainComponent: BootstrapComponent,
 
     public func orgUserInviteView(_ code: String) -> AnyView { volunteerOrgComponent.orgUserInviteView(code) }
 
+    public func orgPersistentInviteView(_ inviteToken: String) -> AnyView {
+        volunteerOrgComponent.orgPersistentInviteView(inviteToken)
+    }
+
     // MARK: Incident select
 
     lazy var incidentSelectComponent: IncidentSelectComponent = IncidentSelectComponent(parent: self)

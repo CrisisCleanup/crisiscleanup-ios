@@ -8,11 +8,16 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     private(set) var appSettings: AppSettings = AppSettings()
     private(set) var appEnv: AppEnv = AppBuildEnv()
 
+    lazy var loggerFactory: AppLoggerFactory = AppLoggerProvider(appEnv)
     let externalEventBus = CrisisCleanupExternalEventBus()
     private lazy var activityProcessor: ExternalActivityProcessor = ExternalActivityProcessor(externalEventBus: externalEventBus)
 
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+    private lazy var externalEventLogger: AppLogger = loggerFactory.getLogger("external-event")
 
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
+    ) -> Bool {
         FontBlaster.blast()
 
         FirebaseApp.configure()
@@ -34,7 +39,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         }
 
         if !activityProcessor.process(components) {
-            print("Unrecognized external URL \(url.absoluteString)")
+            let path = components.path ?? ""
+            let error = GenericError("Unprocessed external event: \(path)")
+            externalEventLogger.logError(error)
         }
     }
 }
@@ -45,12 +52,11 @@ struct CrisisCleanupApp: App {
 
     var body: some Scene {
         WindowGroup {
-            let appEnv = appDelegate.appEnv
             let placesSearch = GooglePlaceAddressSearchRepository()
             MainComponent(
-                appEnv: appEnv,
+                appEnv: appDelegate.appEnv,
                 appSettingsProvider: appDelegate.appSettings,
-                loggerFactory: AppLoggerProvider(appEnv),
+                loggerFactory: appDelegate.loggerFactory,
                 addressSearchRepository: placesSearch,
                 externalEventBus: appDelegate.externalEventBus
             )

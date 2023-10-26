@@ -185,6 +185,7 @@ class InviteTeammateViewModel: ObservableObject {
         .assign(to: \.isGeneratingQrCode, on: self)
         .store(in: &subscriptions)
 
+        // TODO: Trigger refresh if cached invite is expired
         accountDataRepository.accountData.eraseToAnyPublisher()
             .filter { $0.hasAuthenticated }
             .asyncMap { data in

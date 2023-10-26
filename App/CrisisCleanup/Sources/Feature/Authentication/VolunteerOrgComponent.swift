@@ -6,11 +6,13 @@ public protocol VolunteerOrgViewBuilder {
     var volunteerOrgView: AnyView { get }
     var requestOrgAccessView: AnyView { get }
     func orgUserInviteView(_ code: String) -> AnyView
+    func orgPersistentInviteView(_ inviteToken: String) -> AnyView
 }
 
 class VolunteerOrgComponent: Component<AppDependency>, VolunteerOrgViewBuilder {
     private var viewModel: VolunteerOrgViewModel? = nil
     internal var _requestOrgAccessViewModel: RequestOrgAccessViewModel? = nil
+    internal var _persistentInviteViewModel: PersistentInviteViewModel?  = nil
 
     private var disposables = Set<AnyCancellable>()
 

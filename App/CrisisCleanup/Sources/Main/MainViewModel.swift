@@ -99,6 +99,11 @@ class MainViewModel: ObservableObject {
             self.onOrgUserInvite(inviteCode)
         }
         .store(in: &disposables)
+
+        externalEventBus.orgPersistentInvites.sink { inviteToken in
+            self.onPersistentInvite(inviteToken)
+        }
+        .store(in: &disposables)
     }
 
     private func subscribeIncidentsData() {
@@ -181,6 +186,13 @@ class MainViewModel: ObservableObject {
     private func onOrgUserInvite(_ code: String) {
         if code.isNotBlank {
             router.openOrgUserInvite(code)
+            showAuthScreen = true
+        }
+    }
+
+    private func onPersistentInvite(_ token: String) {
+        if token.isNotBlank {
+            router.openOrgPersistentInvite(token)
             showAuthScreen = true
         }
     }

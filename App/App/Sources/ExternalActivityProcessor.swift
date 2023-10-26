@@ -35,6 +35,13 @@ class ExternalActivityProcessor {
                   code.isNotBlank {
             externalEventBus.onOrgUserInvite(code)
             return true
+        } else if path.starts(with: "/mobile_app_user_invite") {
+            let params = components.queryItems
+            if let token = params?.first(where: { $0.name == "invite-token" })?.value {
+                externalEventBus.onOrgPersistentInvite(token)
+            } else {
+                return false
+            }
         }
 
         return false
