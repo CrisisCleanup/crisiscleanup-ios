@@ -16,6 +16,7 @@ class MainViewModel: ObservableObject {
     private let logger: AppLogger
 
     @Published private(set) var viewData: MainViewData = MainViewData()
+    private var isNotAuthenticated: Bool { !viewData.isAuthenticated }
 
     @Published private(set) var minSupportedVersion = supportedAppVersion
 
@@ -170,7 +171,7 @@ class MainViewModel: ObservableObject {
     }
 
     private func onEmailLoginLink(_ code: String) {
-        if !viewData.isAuthenticated {
+        if isNotAuthenticated {
             // TODO: Login here (or upstream)
             logger.logDebug("Login with code \(code)")
         }
@@ -184,14 +185,16 @@ class MainViewModel: ObservableObject {
     }
 
     private func onOrgUserInvite(_ code: String) {
-        if code.isNotBlank {
+        if isNotAuthenticated,
+           code.isNotBlank {
             router.openOrgUserInvite(code)
             showAuthScreen = true
         }
     }
 
     private func onPersistentInvite(_ inviteInfo: UserPersistentInvite) {
-        if inviteInfo.inviteToken.isNotBlank {
+        if isNotAuthenticated,
+           inviteInfo.inviteToken.isNotBlank {
             router.openOrgPersistentInvite(inviteInfo)
             showAuthScreen = true
         }
