@@ -1,5 +1,11 @@
 import Foundation
 
+public struct NetworkInvitationInfoResult: Codable, Equatable {
+    let errors: [NetworkCrisisCleanupApiError]?
+    let count: Int?
+    let invite: NetworkInvitationInfo?
+}
+
 struct NetworkInvitationInfo: Codable, Equatable {
     let inviteeEmail: String
     let expiresAt: Date

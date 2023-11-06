@@ -62,6 +62,13 @@ struct CrisisCleanupApp: App {
             )
             .mainView
             .onOpenURL { appDelegate.onExternalLink($0) }
+            .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { userActivity in
+                guard let url = userActivity.webpageURL else {
+                    return
+                }
+
+                appDelegate.onExternalLink(url)
+            }
         }
     }
 }

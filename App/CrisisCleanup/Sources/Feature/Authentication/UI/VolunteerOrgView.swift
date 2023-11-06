@@ -36,7 +36,7 @@ struct VolunteerOrgView: View {
                 StaticOrTextView()
 
                 InstructionAction(
-                    instruction: t.t("~~Find someone with QR code.")
+                    instruction: t.t("~~Find someone with an invitation QR code.")
                 ) {
                     Button {
                          router.openScanOrgQrCode()

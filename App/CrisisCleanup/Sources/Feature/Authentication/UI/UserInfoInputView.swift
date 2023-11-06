@@ -16,6 +16,56 @@ struct UserInfoInputData {
     var phoneError: String = ""
     var passwordError: String = ""
     var confirmPasswordError: String = ""
+
+    mutating func clearErrors() {
+        emailAddressError = ""
+        firstNameError = ""
+        lastNameError = ""
+        phoneError = ""
+        passwordError = ""
+        confirmPasswordError = ""
+    }
+
+    mutating func validateInput(
+        _ inputValidator: InputValidator,
+        _ translator: KeyTranslator
+    ) -> [TextInputFocused] {
+        var errorFocuses = [TextInputFocused]()
+
+        if !inputValidator.validateEmailAddress(emailAddress) {
+            emailAddressError = translator.t("invitationSignup.email_error")
+            errorFocuses.append(.userEmailAddress)
+        }
+
+        if firstName.isBlank {
+            firstNameError = translator.t("~~First name is required.")
+            errorFocuses.append(.userFirstName)
+        }
+
+        if lastName.isBlank {
+            lastNameError = translator.t("~~Last name is required.")
+            errorFocuses.append(.userLastName)
+        }
+
+        if password.trim().count < 8 {
+            passwordError = translator.t("invitationSignup.password_length_error")
+            errorFocuses.append(.userPassword)
+        }
+
+        if password != confirmPassword {
+            confirmPasswordError = translator.t("invitationSignup.password_match_error")
+            errorFocuses.append(.userConfirmPassword)
+        }
+
+        if phone.isBlank {
+            phoneError = translator.t("invitationSignup.mobile_error")
+            errorFocuses.append(.userPhone)
+        }
+
+        // Language defaults to US English
+
+        return errorFocuses
+    }
 }
 
 private struct UserInfoErrorText: View {
@@ -48,7 +98,7 @@ struct UserInfoInputView: View {
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
                     .focused(focusState, equals: TextInputFocused.userEmailAddress)
-                    .onSubmit { focusState.wrappedValue = .userLastName }
+                    .onSubmit { focusState.wrappedValue = .userFirstName }
                     .padding(.bottom)
             }
 
@@ -108,7 +158,7 @@ struct UserInfoInputView: View {
                     focusedKey: .userConfirmPassword
                 )
                 .padding(.bottom)
-}
+            }
 
             Menu {
                 ForEach(languageOptions, id: \.id) { language in
@@ -124,8 +174,6 @@ struct UserInfoInputView: View {
                 }
                 .foregroundColor(.black)
             }
-            .frame(maxWidth: .infinity)
-            .textFieldBorder()
             .padding(.bottom)
         }
     }

@@ -473,7 +473,7 @@ class CasesViewModel: ObservableObject {
 
     private func subscribeUiState() {
         qsm.isTableViewSubject
-            .subscribe(on: RunLoop.main)
+            .receive(on: RunLoop.main)
             .assign(to: \.isTableView, on: self)
             .store(in: &subscriptions)
     }

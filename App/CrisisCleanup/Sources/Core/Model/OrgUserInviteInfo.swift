@@ -6,6 +6,7 @@ public struct OrgUserInviteInfo: Equatable {
     let inviterAvatarUrl: URL?
     let invitedEmail: String
     let orgName: String
+    let expiration: Date
     let isExpiredInvite: Bool
 }
 
@@ -15,5 +16,6 @@ internal let ExpiredNetworkOrgInvite = OrgUserInviteInfo(
     inviterAvatarUrl: nil,
     invitedEmail: "",
     orgName: "",
+    expiration: Date(timeIntervalSince1970: 0),
     isExpiredInvite: true
 )

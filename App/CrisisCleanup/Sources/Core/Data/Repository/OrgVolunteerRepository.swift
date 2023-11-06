@@ -4,9 +4,11 @@ import Foundation
 public protocol OrgVolunteerRepository {
     func requestInvitation(_ invite: InvitationRequest) async -> InvitationRequestResult?
     func getInvitationInfo(_ inviteCode: String) async -> OrgUserInviteInfo?
-    func acceptInvitation(_ invite: CodeInviteAccept) async -> Bool
+    func getInvitationInfo(_ invite: UserPersistentInvite) async -> OrgUserInviteInfo?
+    func acceptInvitation(_ invite: CodeInviteAccept) async -> JoinOrgResult
 
     func getOrgInvite(orgId: Int64, inviterUserId: Int64) async -> JoinOrgInvite
+    func acceptPersistentInvitation(_ invite: CodeInviteAccept) async -> JoinOrgResult
 }
 
 class CrisisCleanupOrgVolunteerRepository: OrgVolunteerRepository {
@@ -37,7 +39,11 @@ class CrisisCleanupOrgVolunteerRepository: OrgVolunteerRepository {
         await registerApi.getInvitationInfo(inviteCode)
     }
 
-    func acceptInvitation(_ invite: CodeInviteAccept) async -> Bool {
+    func getInvitationInfo(_ invite: UserPersistentInvite) async -> OrgUserInviteInfo? {
+        await registerApi.getInvitationInfo(invite)
+    }
+
+    func acceptInvitation(_ invite: CodeInviteAccept) async -> JoinOrgResult {
         // TODO: Handle cases where an invite was already sent to the user from the org
         await registerApi.acceptOrgInvitation(invite)
     }
@@ -51,6 +57,10 @@ class CrisisCleanupOrgVolunteerRepository: OrgVolunteerRepository {
         }
 
         return JoinOrgInvite(token: "", orgId: 0, expiresAt: Date(timeIntervalSince1970: 0))
+    }
+
+    func acceptPersistentInvitation(_ invite: CodeInviteAccept) async -> JoinOrgResult {
+        await registerApi.acceptPersistentInvitation(invite)
     }
 }
 

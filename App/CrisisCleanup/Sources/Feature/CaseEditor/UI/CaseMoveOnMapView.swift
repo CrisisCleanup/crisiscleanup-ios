@@ -9,7 +9,7 @@ struct CaseMoveOnMapView: View {
 
     @ObservedObject var viewModel: CaseChangeLocationAddressViewModel
 
-    private let focusableViewState = TextInputFocusableView()
+    @ObservedObject var focusableViewState = TextInputFocusableView()
     @State private var animateTopSearchBar = false
 
     @State var map = MKMapView()
@@ -21,7 +21,7 @@ struct CaseMoveOnMapView: View {
 
     var body: some View {
         // TODO: Disable elements when uninterruptible operations are ongoing
-        let disabled = viewModel.isProcessingAction
+        // let disabled = viewModel.isProcessingAction
 
         VStack {
             if viewModel.hasInternetConnection {

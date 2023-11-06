@@ -8,7 +8,7 @@ struct CaseFlagsView: View {
 
     @State var selected: WorksiteFlagType? = nil
 
-    private let focusableViewState = TextInputFocusableView()
+    @ObservedObject var focusableViewState = TextInputFocusableView()
 
     var body: some View {
         VStack {

@@ -58,8 +58,8 @@ class NavigationRouter: ObservableObject {
         path.append(.orgUserInvite(code))
     }
 
-    func openOrgPersistentInvite(_ token: String) {
-        path.append(.orgPersistentInvite(token))
+    func openOrgPersistentInvite(_ invite: UserPersistentInvite) {
+        path.append(.orgPersistentInvite(invite))
     }
 
     func openEmailMagicLink() {

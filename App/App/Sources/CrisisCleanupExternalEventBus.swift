@@ -11,8 +11,8 @@ class CrisisCleanupExternalEventBus: ExternalEventBus {
     private let orgUserInvitesSubject = PassthroughSubject<String, Never>()
     let orgUserInvites: any Publisher<String, Never>
 
-    private let orgPersistentInvitesSubject = PassthroughSubject<String, Never>()
-    let orgPersistentInvites: any Publisher<String, Never>
+    private let orgPersistentInvitesSubject = PassthroughSubject<UserPersistentInvite, Never>()
+    let orgPersistentInvites: any Publisher<UserPersistentInvite, Never>
 
     init() {
         emailLoginLinks = emailLoginLinksSubject.share()
@@ -33,7 +33,11 @@ class CrisisCleanupExternalEventBus: ExternalEventBus {
         orgUserInvitesSubject.send(code)
     }
 
-    func onOrgPersistentInvite(_ inviteToken: String) {
-        orgPersistentInvitesSubject.send(inviteToken)
+    func onOrgPersistentInvite(_ inviterUserId: Int64, _ inviteToken: String) {
+        let invite = UserPersistentInvite(
+            inviterUserId: inviterUserId,
+            inviteToken: inviteToken
+        )
+        orgPersistentInvitesSubject.send(invite)
     }
 }

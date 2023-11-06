@@ -16,7 +16,7 @@ struct ViewCaseView: View {
     @State private var selectedTab: ViewCaseTabs = .info
     @State private var titlePressed: Bool = false
 
-    private let focusableViewState = TextInputFocusableView()
+    @ObservedObject var focusableViewState = TextInputFocusableView()
 
     private let infoTabs = Array([
         ViewCaseTabs.info,

@@ -28,7 +28,7 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
          orgUserInvite(_ inviteCode: String),
          scanOrgQrCode,
          inviteTeammate,
-         orgPersistentInvite(_ inviteToken: String)
+         orgPersistentInvite(_ invite: UserPersistentInvite)
 
     public var id: Int {
         switch self {

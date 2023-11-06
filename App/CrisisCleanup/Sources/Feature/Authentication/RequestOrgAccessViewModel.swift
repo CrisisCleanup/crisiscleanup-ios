@@ -14,33 +14,32 @@ class RequestOrgAccessViewModel: ObservableObject {
     @Published var emailAddressError = ""
 
     internal let invitationCode: String
-    internal let invitingUserId: Int64
 
     @Published var userInfo = UserInfoInputData()
 
     @Published var errorFocus: TextInputFocused?
 
     private let isFetchingInviteInfoSubject = CurrentValueSubject<Bool, Never>(false)
-    @Published var isFetchingInviteInfo = false
-    private let orgUserInviteInfoSubject = CurrentValueSubject<InviterText?, Never>(nil)
-    @Published var orgUserInviteInfo: InviterText?
+    @Published private(set) var isFetchingInviteInfo = false
+    private let inviteDisplaySubject = CurrentValueSubject<InviteDisplayInfo?, Never>(nil)
+    @Published var inviteDisplay: InviteDisplayInfo?
 
     private let inviteInfoErrorMessageSubject = CurrentValueSubject<String, Never>("")
-    @Published var inviteInfoErrorMessage = ""
+    @Published private(set) var inviteInfoErrorMessage = ""
 
     private let isPullingLanguageOptions = CurrentValueSubject<Bool, Never>(false)
     private let languageOptionsSubject = CurrentValueSubject<[LanguageIdName], Never>([])
     @Published var languageOptions = [LanguageIdName]()
 
     private let isRequestingInviteSubject = CurrentValueSubject<Bool, Never>(false)
-    @Published var isRequestingInvite = false
+    @Published private(set) var isRequestingInvite = false
 
-    @Published var isLoading = false
+    @Published private(set) var isLoading = false
 
     private let requestedOrgSubject = CurrentValueSubject<InvitationRequestResult?, Never>(nil)
-    @Published var isInviteRequested = false
-    @Published var requestSentTitle = ""
-    @Published var requestSentText = ""
+    @Published private(set) var isInviteRequested = false
+    @Published private(set) var requestSentTitle = ""
+    @Published private(set) var requestSentText = ""
 
     let editableViewState = EditableView()
 
@@ -52,8 +51,7 @@ class RequestOrgAccessViewModel: ObservableObject {
         inputValidator: InputValidator,
         translator: KeyAssetTranslator,
         showEmailInput: Bool = false,
-        invitationCode: String = "",
-        invitingUserId: Int64 = 0
+        invitationCode: String = ""
     ) {
         self.languageRepository = languageRepository
         self.orgVolunteerRepository = orgVolunteerRepository
@@ -62,7 +60,6 @@ class RequestOrgAccessViewModel: ObservableObject {
 
         self.showEmailInput = showEmailInput
         self.invitationCode = invitationCode
-        self.invitingUserId = invitingUserId
     }
 
     func onViewAppear() {
@@ -167,9 +164,9 @@ class RequestOrgAccessViewModel: ObservableObject {
             return
         }
 
-        orgUserInviteInfoSubject
+        inviteDisplaySubject
             .receive(on: RunLoop.main)
-            .assign(to: \.orgUserInviteInfo, on: self)
+            .assign(to: \.inviteDisplay, on: self)
             .store(in: &subscriptions)
 
         inviteInfoErrorMessageSubject
@@ -190,7 +187,7 @@ class RequestOrgAccessViewModel: ObservableObject {
                 if inviteInfo.isExpiredInvite {
                     inviteInfoErrorMessageSubject.value = translator.t("~~This invite has expired. Ask for new invite or try a different invitation method.")
                 } else {
-                    orgUserInviteInfoSubject.value = InviterText(
+                    inviteDisplaySubject.value = InviteDisplayInfo(
                         inviteInfo: inviteInfo,
                         inviteMessage: translator.t("~~invited you ({email}) to join {organization}.")
                             .replacingOccurrences(of: "{email}", with: inviteInfo.invitedEmail)
@@ -206,12 +203,7 @@ class RequestOrgAccessViewModel: ObservableObject {
     private func clearErrors() {
         errorFocus = nil
         emailAddressError = ""
-        userInfo.emailAddressError = ""
-        userInfo.firstNameError = ""
-        userInfo.lastNameError = ""
-        userInfo.phoneError = ""
-        userInfo.passwordError = ""
-        userInfo.confirmPasswordError = ""
+        userInfo.clearErrors()
     }
 
     func onVolunteerWithOrg() {
@@ -225,25 +217,11 @@ class RequestOrgAccessViewModel: ObservableObject {
             errorFocuses.append(.authEmailAddress)
         }
 
-        if !inputValidator.validateEmailAddress(userInfo.emailAddress) {
-            userInfo.emailAddressError = translator.t("invitationSignup.email_error")
-            errorFocuses.append(.userEmailAddress)
-        }
-        if userInfo.password.trim().count < 8 {
-            userInfo.passwordError = translator.t("invitationSignup.password_length_error")
-            errorFocuses.append(.userPassword)
-        }
-        if userInfo.password != userInfo.confirmPassword {
-            userInfo.confirmPasswordError = translator.t("invitationSignup.password_match_error")
-            errorFocuses.append(.userConfirmPassword)
-        }
-        if userInfo.phone.isBlank {
-            userInfo.phoneError = translator.t("invitationSignup.mobile_error")
-            errorFocuses.append(.userPhone)
-        }
+        errorFocuses.append(contentsOf: userInfo.validateInput(inputValidator, translator))
 
         errorFocus = errorFocuses.first
         if errorFocus != nil ||
+            // TODO: Default to US English when blank rather than silently exiting
             userInfo.language.name.isBlank {
             return
         }
@@ -260,7 +238,7 @@ class RequestOrgAccessViewModel: ObservableObject {
 
                 if showEmailInput {
                     // TODO: Test
-                    self.requestedOrgSubject.value = await self.orgVolunteerRepository.requestInvitation(
+                    requestedOrgSubject.value = await orgVolunteerRepository.requestInvitation(
                         InvitationRequest(
                             firstName: userInfo.firstName,
                             lastName: userInfo.lastName,
@@ -274,7 +252,7 @@ class RequestOrgAccessViewModel: ObservableObject {
                     )
                 } else if invitationCode.isNotBlank {
                     // TODO: Test
-                    let isRequested = await self.orgVolunteerRepository.acceptInvitation(
+                    let inviteResult = await orgVolunteerRepository.acceptInvitation(
                         CodeInviteAccept(
                             firstName: userInfo.firstName,
                             lastName: userInfo.lastName,
@@ -286,15 +264,19 @@ class RequestOrgAccessViewModel: ObservableObject {
                             invitationCode: invitationCode
                         )
                     )
-                    if isRequested {
-                        let inviteInfo = orgUserInviteInfo?.inviteInfo
-                        self.requestedOrgSubject.value = InvitationRequestResult(
+                    if inviteResult == .success {
+                        let inviteInfo = inviteDisplay?.inviteInfo
+                        requestedOrgSubject.value = InvitationRequestResult(
                             organizationName: inviteInfo?.orgName ?? "",
                             organizationRecipient: inviteInfo?.inviterEmail ?? ""
                         )
                     } else {
-                        // TODO: Show error message
-                        // TODO: Also handle case where code was not expired when opened but expired on submit
+                        var errorMessageTranslateKey = "~~There was an issue with joining the organization."
+                        if invitationCode.isBlank,
+                           inviteDisplay?.inviteInfo.expiration.isPast == true {
+                            errorMessageTranslateKey = "~~The invite is expired. Request a new invite."
+                        }
+                        inviteInfoErrorMessageSubject.value = translator.t(errorMessageTranslateKey)
                     }
                 }
             }
@@ -302,7 +284,7 @@ class RequestOrgAccessViewModel: ObservableObject {
     }
 }
 
-struct InviterText: Equatable {
+struct InviteDisplayInfo: Equatable {
     let inviteInfo: OrgUserInviteInfo
     let inviteMessage: String
 

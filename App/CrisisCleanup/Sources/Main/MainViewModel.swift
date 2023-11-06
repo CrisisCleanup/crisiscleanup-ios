@@ -100,8 +100,8 @@ class MainViewModel: ObservableObject {
         }
         .store(in: &disposables)
 
-        externalEventBus.orgPersistentInvites.sink { inviteToken in
-            self.onPersistentInvite(inviteToken)
+        externalEventBus.orgPersistentInvites.sink { inviteInfo in
+            self.onPersistentInvite(inviteInfo)
         }
         .store(in: &disposables)
     }
@@ -190,9 +190,9 @@ class MainViewModel: ObservableObject {
         }
     }
 
-    private func onPersistentInvite(_ token: String) {
-        if token.isNotBlank {
-            router.openOrgPersistentInvite(token)
+    private func onPersistentInvite(_ inviteInfo: UserPersistentInvite) {
+        if inviteInfo.inviteToken.isNotBlank {
+            router.openOrgPersistentInvite(inviteInfo)
             showAuthScreen = true
         }
     }

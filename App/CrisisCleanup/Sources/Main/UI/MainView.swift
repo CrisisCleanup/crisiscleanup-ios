@@ -74,15 +74,10 @@ struct MainView: View {
                                     volunteerOrgViewBuilder.requestOrgAccessView
                                 case .orgUserInvite(let inviteCode):
                                     volunteerOrgViewBuilder.orgUserInviteView(inviteCode)
-                                case .orgPersistentInvite(let inviteToken):
-                                    volunteerOrgViewBuilder.orgPersistentInviteView(inviteToken)
+                                case .orgPersistentInvite(let invite):
+                                    volunteerOrgViewBuilder.orgPersistentInviteView(invite)
                                 case .scanOrgQrCode:
-                                    VStack {
-                                        Text("Use the camera app to scan the QR code.")
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                            .padding()
-                                        Spacer()
-                                    }
+                                    volunteerOrgViewBuilder.scanQrCodeJoinOrgView
                                 default:
                                     Text("Pending auth/account route \(route.id)")
                                 }

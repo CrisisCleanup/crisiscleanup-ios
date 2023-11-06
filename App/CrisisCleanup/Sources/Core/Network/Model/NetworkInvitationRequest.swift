@@ -55,3 +55,27 @@ struct NetworkAcceptCodeInvite: Codable, Equatable {
              primaryLanguage = "primary_language"
     }
 }
+
+struct NetworkAcceptPersistentInvite: Codable, Equatable {
+    let firstName: String
+    let lastName: String
+    let email: String
+    let title: String
+    let password: String
+    let mobile: String
+    let token: String
+
+    enum CodingKeys: String, CodingKey {
+        case firstName = "first_name",
+             lastName = "last_name",
+             email,
+             title,
+             password,
+             mobile,
+             token
+    }
+}
+
+public struct NetworkAcceptedPersistentInvite: Codable, Equatable {
+    let detail: String
+}

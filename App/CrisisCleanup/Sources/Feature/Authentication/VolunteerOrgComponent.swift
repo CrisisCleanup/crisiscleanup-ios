@@ -6,7 +6,8 @@ public protocol VolunteerOrgViewBuilder {
     var volunteerOrgView: AnyView { get }
     var requestOrgAccessView: AnyView { get }
     func orgUserInviteView(_ code: String) -> AnyView
-    func orgPersistentInviteView(_ inviteToken: String) -> AnyView
+    func orgPersistentInviteView(_ invite: UserPersistentInvite) -> AnyView
+    var scanQrCodeJoinOrgView: AnyView { get }
 }
 
 class VolunteerOrgComponent: Component<AppDependency>, VolunteerOrgViewBuilder {
@@ -50,6 +51,12 @@ class VolunteerOrgComponent: Component<AppDependency>, VolunteerOrgViewBuilder {
             VolunteerOrgView(
                 viewModel: getViewModel()
             )
+        )
+    }
+
+    var scanQrCodeJoinOrgView: AnyView {
+        AnyView(
+            ScanQrCodeJoinOrgView()
         )
     }
 }

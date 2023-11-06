@@ -22,14 +22,18 @@ public protocol CrisisCleanupAccountApi {
 public protocol CrisisCleanupRegisterApi {
     func registerOrgVolunteer(_ invite: InvitationRequest) async -> NetworkAcceptedInvitationRequest?
 
+    func getInvitationInfo(_ invite: UserPersistentInvite) async -> OrgUserInviteInfo?
+
     func getInvitationInfo(_ inviteCode: String) async -> OrgUserInviteInfo?
 
-    func acceptOrgInvitation(_ invite: CodeInviteAccept) async -> Bool
+    func acceptOrgInvitation(_ invite: CodeInviteAccept) async -> JoinOrgResult
 
     func createPersistentInvitation(
         orgId: Int64,
         userId: Int64
     ) async throws -> NetworkPersistentInvitation
+
+    func acceptPersistentInvitation(_ invite: CodeInviteAccept) async -> JoinOrgResult
 }
 
 public protocol CrisisCleanupNetworkDataSource {

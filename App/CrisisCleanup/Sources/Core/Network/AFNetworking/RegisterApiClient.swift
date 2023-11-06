@@ -47,38 +47,58 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
         ).value
     }
 
+    private func getUserDetails(_ userId: Int64) async -> UserDetails {
+        let userRequest = requestProvider.noAuthUser
+            .addPaths("\(userId)")
+        var displayName = ""
+        var avatarUrl: URL? = nil
+        var orgName = ""
+        if let userInfo = await networkClient.callbackContinue(
+            requestConvertible: userRequest,
+            type: NetworkUser.self
+        ).value {
+            displayName = "\(userInfo.firstName) \(userInfo.lastName)"
+            if let avatarUrlString = userInfo.files.first(where: { $0.isProfilePicture })?.largeThumbnailUrl {
+                avatarUrl = URL(string: avatarUrlString)
+            }
+            let orgRequest = requestProvider.noAuthOrganization
+                .addPaths("\(userInfo.organization)")
+            if let organizationInfo = await networkClient.callbackContinue(
+                requestConvertible: orgRequest,
+                type: NetworkOrganizationShort.self
+            ).value {
+                orgName = organizationInfo.name
+            }
+        }
+
+        return UserDetails(
+            displayName: displayName,
+            organizationName: orgName,
+            avatarUrl: avatarUrl
+        )
+    }
+
     func getInvitationInfo(_ inviteCode: String) async -> OrgUserInviteInfo? {
         let request = requestProvider.invitationInfo
             .addPaths(inviteCode)
         if let invitationInfo = await networkClient.callbackContinue(
             requestConvertible: request,
-            type: NetworkInvitationInfo.self
-        ).value {
+            type: NetworkInvitationInfoResult.self,
+            wrapResponseKey: "invite"
+        ).value?.invite {
             if invitationInfo.expiresAt.isPast {
                 return ExpiredNetworkOrgInvite
             }
 
             let inviter = invitationInfo.inviter
-            let inviterId = inviter.id
-            let userRequest = requestProvider.noAuthUser
-                .addPaths("\(inviterId)")
-            var avatarUrl: URL? = nil
-            var orgName = ""
-            if let userInfo = await networkClient.callbackContinue(
-                requestConvertible: userRequest,
-                type: NetworkUser.self
-            ).value {
-                if let avatarUrlString = userInfo.files.first(where: { $0.isProfilePicture })?.largeThumbnailUrl {
-                    avatarUrl = URL(string: avatarUrlString)
-                }
-                orgName = userInfo.organization.name
-            }
+            let userDetails = await getUserDetails(inviter.id)
             return OrgUserInviteInfo(
                 displayName: "\(inviter.firstName) \(inviter.lastName)",
                 inviterEmail: inviter.email,
-                inviterAvatarUrl: avatarUrl,
+                inviterAvatarUrl: userDetails.avatarUrl,
                 invitedEmail: invitationInfo.inviteeEmail,
-                orgName: orgName,
+                orgName: userDetails.organizationName,
+                expiration: invitationInfo.expiresAt,
                 isExpiredInvite: false
             )
         }
@@ -86,7 +106,34 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
         return nil
     }
 
-    func acceptOrgInvitation(_ invite: CodeInviteAccept) async -> Bool {
+    func getInvitationInfo(_ invite: UserPersistentInvite) async -> OrgUserInviteInfo? {
+        let request = requestProvider.persistentInvitationInfo
+            .addPaths(invite.inviteToken)
+        if let invitationInfo = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkPersistentInvitationResult.self,
+            wrapResponseKey: "invite"
+        ).value?.invite {
+            if invitationInfo.expiresAt.isPast {
+                return ExpiredNetworkOrgInvite
+            }
+
+            let userDetails = await getUserDetails(invite.inviterUserId)
+            return OrgUserInviteInfo(
+                displayName: userDetails.displayName,
+                inviterEmail: "",
+                inviterAvatarUrl: userDetails.avatarUrl,
+                invitedEmail: "",
+                orgName: userDetails.organizationName,
+                expiration: invitationInfo.expiresAt,
+                isExpiredInvite: false
+            )
+        }
+
+        return nil
+    }
+
+    func acceptOrgInvitation(_ invite: CodeInviteAccept) async -> JoinOrgResult {
         let payload = NetworkAcceptCodeInvite(
             firstName: invite.firstName,
             lastName: invite.lastName,
@@ -97,13 +144,14 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
             invitationToken: invite.invitationCode,
             primaryLanguage: invite.languageId
         )
-        let request = requestProvider.requestInvitationFromCode
+        let request = requestProvider.acceptInvitationFromCode
             .setBody(payload)
-        return await networkClient.callbackContinue(
+        let isJoined = await networkClient.callbackContinue(
             requestConvertible: request,
             // TODO: Determine response type and what constitutes success?
             type: NetworkAcceptedInvitationRequest.self
         ).value != nil
+        return isJoined ? .success : .unknown
     }
 
     func createPersistentInvitation(
@@ -123,4 +171,36 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
         }
         throw response.error ?? networkError
     }
+
+    func acceptPersistentInvitation(_ invite: CodeInviteAccept) async -> JoinOrgResult {
+        let payload = NetworkAcceptPersistentInvite(
+            firstName: invite.firstName,
+            lastName: invite.lastName,
+            email: invite.emailAddress,
+            title: invite.title,
+            password: invite.password,
+            mobile: invite.mobile,
+            token: invite.invitationCode
+        )
+        let request = requestProvider.acceptPersistentInvitation
+            .setBody(payload)
+        let response = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkAcceptedPersistentInvite.self
+        ).value
+        switch response?.detail {
+        case "You have been added to the organization.":
+            return .success
+        case "User already a member of this organization.":
+            return .redundant
+        default:
+            return .unknown
+        }
+    }
+}
+
+private struct UserDetails {
+    let displayName: String
+    let organizationName: String
+    let avatarUrl: URL?
 }

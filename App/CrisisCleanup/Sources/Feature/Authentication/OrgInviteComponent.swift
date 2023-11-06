@@ -5,8 +5,7 @@ extension VolunteerOrgComponent {
         var isReusable = false
         if let vm = _requestOrgAccessViewModel {
             isReusable = vm.showEmailInput == false &&
-            vm.invitationCode == code &&
-            vm.invitingUserId == 0
+            vm.invitationCode == code
         }
 
         if  !isReusable {
@@ -29,27 +28,28 @@ extension VolunteerOrgComponent {
         )
     }
 
-    private func persistentInviteViewModel(_ token: String) -> PersistentInviteViewModel {
+    private func persistentInviteViewModel(_ invite: UserPersistentInvite) -> PersistentInviteViewModel {
         var isReusable = false
         if let vm = _persistentInviteViewModel {
-            isReusable = vm.inviteToken == token
+            isReusable = vm.invite == invite
         }
 
         if  !isReusable {
             _persistentInviteViewModel = PersistentInviteViewModel(
                 orgVolunteerRepository: dependency.orgVolunteerRepository,
+                languageRepository: dependency.languageTranslationsRepository,
                 inputValidator: dependency.inputValidator,
                 translator: dependency.translator,
-                inviteToken: token
+                invite: invite
             )
         }
         return _persistentInviteViewModel!
     }
 
-    func orgPersistentInviteView(_ token: String) -> AnyView {
+    func orgPersistentInviteView(_ invite: UserPersistentInvite) -> AnyView {
         AnyView(
             PersistentInviteView(
-                viewModel: persistentInviteViewModel(token)
+                viewModel: persistentInviteViewModel(invite)
             )
         )
     }

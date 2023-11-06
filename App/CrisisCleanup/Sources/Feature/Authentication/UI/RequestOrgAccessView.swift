@@ -5,11 +5,8 @@ struct RequestOrgAccessView: View {
 
     @ObservedObject var viewModel: RequestOrgAccessViewModel
 
+    @ObservedObject var focusableViewState = TextInputFocusableView()
     @FocusState private var focusState: TextInputFocused?
-
-    private let focusableViewState = TextInputFocusableView()
-    // TODO: Why is this necessary where other usages did not require additional state?
-    @State private var isInputFocused = false
 
     var body: some View {
         VStack {
@@ -19,36 +16,20 @@ struct RequestOrgAccessView: View {
                     .padding()
 
             } else if viewModel.isInviteRequested {
-                Spacer()
-
-                Image(systemName: "checkmark.circle.fill")
-                    .resizable()
-                    .frame(width: 64, height: 64)
-                    .foregroundColor(statusClosedColor)
-
-                Text(viewModel.requestSentTitle)
-                    .fontHeader1()
-                    .padding()
-
-                Text(viewModel.requestSentText)
-                    .padding(.horizontal)
-
-                Spacer()
-
-                Image("worker_wheelbarrow_world_background", bundle: .module)
-                    .padding(.leading, 180)
-
-                Spacer()
+                RegisterSuccessView(
+                    title: viewModel.requestSentTitle,
+                    message: viewModel.requestSentText
+                )
             } else {
                 RequestOrgUserInfoInputView(
                     showEmailInput: viewModel.showEmailInput,
-                    orgUserInviteInfo: $viewModel.orgUserInviteInfo,
+                    inviteDisplay: $viewModel.inviteDisplay,
                     focusState: $focusState
                 )
 
-                // TODO: Indicate loading
+                Spacer()
 
-                if isInputFocused {
+                if focusableViewState.isFocused {
                     OpenKeyboardActionsView()
                 }
             }
@@ -58,6 +39,7 @@ struct RequestOrgAccessView: View {
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)
         .environmentObject(viewModel.editableViewState)
+        .environmentObject(focusableViewState)
         .onChange(of: viewModel.errorFocus) { newValue in
             if let errorFocus = newValue {
                 focusState = errorFocus
@@ -66,10 +48,6 @@ struct RequestOrgAccessView: View {
         .onChange(of: focusState) {
             focusableViewState.focusState = $0
             viewModel.errorFocus = nil
-
-            withAnimation {
-                isInputFocused = focusState != nil
-            }
         }
     }
 }
@@ -81,7 +59,7 @@ private struct RequestOrgUserInfoInputView: View {
     @EnvironmentObject var editableView: EditableView
 
     var showEmailInput = false
-    @Binding var orgUserInviteInfo: InviterText?
+    @Binding var inviteDisplay: InviteDisplayInfo?
 
     var focusState: FocusState<TextInputFocused?>.Binding
 
@@ -117,19 +95,20 @@ private struct RequestOrgUserInfoInputView: View {
                             }
                     }
                     .padding(.horizontal)
-                } else if let inviteInfo = orgUserInviteInfo {
+                } else if let displayInfo = inviteDisplay,
+                          let avatarUrl = displayInfo.avatarUrl,
+                          displayInfo.displayName.isNotBlank,
+                          displayInfo.inviteMessage.isNotBlank {
                     HStack(spacing: appTheme.gridItemSpacing) {
-                        if let avatarUrl = inviteInfo.avatarUrl {
-                            AvatarView(
-                                url: avatarUrl,
-                                isSvg: inviteInfo.isSvgAvatar
-                            )
-                        }
+                        AvatarView(
+                            url: avatarUrl,
+                            isSvg: displayInfo.isSvgAvatar
+                        )
 
                         VStack(alignment: .leading) {
-                            Text(inviteInfo.displayName)
+                            Text(displayInfo.displayName)
                                 .fontHeader4()
-                            Text(inviteInfo.inviteMessage)
+                            Text(displayInfo.inviteMessage)
                                 .fontBodySmall()
                         }
                     }
@@ -153,8 +132,8 @@ private struct RequestOrgUserInfoInputView: View {
                         focusState.wrappedValue = .userEmailAddress
                     }
                 }
-                .onChange(of: orgUserInviteInfo) { newValue in
-                    if let invitedEmail = orgUserInviteInfo?.inviteInfo.invitedEmail,
+                .onChange(of: inviteDisplay) { newValue in
+                    if let invitedEmail = inviteDisplay?.inviteInfo.invitedEmail,
                        viewModel.userInfo.emailAddress.isBlank {
                         viewModel.userInfo.emailAddress = invitedEmail
                     }
@@ -182,5 +161,47 @@ private struct RequestOrgUserInfoInputView: View {
             .padding(.top)
         }
         .scrollDismissesKeyboard(.immediately)
+    }
+}
+
+internal struct RegisterSuccessView: View {
+    let title: String
+    let message: String
+
+    var body: some View {
+        Spacer()
+
+        Image(systemName: "checkmark.circle.fill")
+            .resizable()
+            .frame(width: 64, height: 64)
+            .foregroundColor(statusClosedColor)
+
+        Text(title)
+            .fontHeader1()
+            .padding()
+
+        Text(message)
+            .padding(.horizontal)
+
+        Spacer()
+
+        Image("worker_wheelbarrow_world_background", bundle: .module)
+            .offset(CGSize(width: 90.0, height: 0.0))
+
+        Spacer()
+    }
+}
+
+struct RegisterSuccessView_Previews: PreviewProvider {
+    struct Preview: View {
+        var body: some View {
+            RegisterSuccessView(
+                title: "A long wrapping title stretching beyond the thin screen",
+                message: "An even longer message unfit for single line display so must spill onto the untouched space below."
+            )
+        }
+    }
+    static var previews: some View {
+        Preview()
     }
 }

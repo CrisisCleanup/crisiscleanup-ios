@@ -133,9 +133,11 @@ public class MainComponent: BootstrapComponent,
 
     public func orgUserInviteView(_ code: String) -> AnyView { volunteerOrgComponent.orgUserInviteView(code) }
 
-    public func orgPersistentInviteView(_ inviteToken: String) -> AnyView {
-        volunteerOrgComponent.orgPersistentInviteView(inviteToken)
+    public func orgPersistentInviteView(_ invite: UserPersistentInvite) -> AnyView {
+        volunteerOrgComponent.orgPersistentInviteView(invite)
     }
+
+    public var scanQrCodeJoinOrgView: AnyView { volunteerOrgComponent.scanQrCodeJoinOrgView }
 
     // MARK: Incident select
 

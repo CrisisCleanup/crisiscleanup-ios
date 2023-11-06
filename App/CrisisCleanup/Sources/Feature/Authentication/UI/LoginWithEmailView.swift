@@ -84,10 +84,16 @@ private struct LoginView: View {
                             .disableAutocorrection(true)
                             .focused($focusState, equals: TextInputFocused.authEmailAddress)
                             .disabled(disabled)
-                            .onSubmit { authenticate() }
+                            .onSubmit {
+                                if password.isBlank {
+                                    focusState = .authPassword
+                                } else {
+                                    authenticate()
+                                }
+                            }
                             .onAppear {
                                 if emailAddress.isBlank {
-                                    focusState = TextInputFocused.authEmailAddress
+                                    focusState = .authEmailAddress
                                 }
                             }
                         ToggleSecureTextField(
@@ -96,9 +102,15 @@ private struct LoginView: View {
                             focusState: $focusState,
                             focusedKey: .authPassword
                         )
-                            .padding([.vertical])
-                            .disabled(disabled)
-                            .onSubmit { authenticate() }
+                        .padding([.vertical])
+                        .disabled(disabled)
+                        .onSubmit {
+                            if emailAddress.isBlank {
+                                focusState = .authEmailAddress
+                            } else {
+                                authenticate()
+                            }
+                        }
                     }
                     .onChange(of: focusState) { focusableViewState.focusState = $0 }
 

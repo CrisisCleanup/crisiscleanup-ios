@@ -5,7 +5,7 @@ struct InviteTeammateView: View {
 
     @ObservedObject var viewModel: InviteTeammateViewModel
 
-    private let focusableViewState = TextInputFocusableView()
+    @ObservedObject var focusableViewState = TextInputFocusableView()
 
     @State private var animateLoading = false
 

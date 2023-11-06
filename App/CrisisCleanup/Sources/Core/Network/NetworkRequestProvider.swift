@@ -341,13 +341,25 @@ extension NetworkRequestProvider {
         )
     }
 
+    var persistentInvitationInfo: NetworkRequest {
+        NetworkRequest(
+            apiUrl("persistent_invitations")
+        )
+    }
+
     var noAuthUser: NetworkRequest {
         NetworkRequest(
             apiUrl("users")
         )
     }
 
-    var requestInvitationFromCode: NetworkRequest {
+    var noAuthOrganization: NetworkRequest {
+        NetworkRequest(
+            apiUrl("organizations")
+        )
+    }
+
+    var acceptInvitationFromCode: NetworkRequest {
         NetworkRequest(
             apiUrl("invitations/accept"),
             method: .post
@@ -359,6 +371,13 @@ extension NetworkRequestProvider {
             apiUrl("persistent_invitations"),
             method: .post,
             addTokenHeader: true
+        )
+    }
+
+    var acceptPersistentInvitation: NetworkRequest {
+        NetworkRequest(
+            apiUrl("persistent_invitations/accept"),
+            method: .post
         )
     }
 }

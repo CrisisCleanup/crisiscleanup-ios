@@ -213,23 +213,29 @@ class InviteTeammateViewModel: ObservableObject {
             .assign(to: \.joinMyOrgInvite, on: self)
             .store(in: &subscriptions)
 
-        $joinMyOrgInvite
-            .map { invite in
-                self.isGeneratingMyOrgQrCodeSubject.value = true
-                do {
-                    defer { self.isGeneratingMyOrgQrCodeSubject.value = false }
+        Publishers.CombineLatest(
+            $accountData,
+            $joinMyOrgInvite
+        )
+        .filter { (account, invite) in
+            account.hasAuthenticated && invite?.isExpired == false
+        }
+        .map { (account, invite) in
+            self.isGeneratingMyOrgQrCodeSubject.value = true
+            do {
+                defer { self.isGeneratingMyOrgQrCodeSubject.value = false }
 
-                    if let invite = invite,
-                       !invite.isExpired {
-                        let inviteUrl = "\(self.inviteUrl)?org-id=\(invite.orgId)&invite-token=\(invite.token)"
-                        return self.qrCodeGenerator.generate(inviteUrl)
-                    }
+                if let invite = invite,
+                   !invite.isExpired {
+                    let inviteUrl = "\(self.inviteUrl)?org-id=\(invite.orgId)&user-id=\(account.id)&invite-token=\(invite.token)"
+                    return self.qrCodeGenerator.generate(inviteUrl)
                 }
-                return nil
             }
-            .receive(on: RunLoop.main)
-            .assign(to: \.myOrgInviteQrCode, on: self)
-            .store(in: &subscriptions)
+            return nil
+        }
+        .receive(on: RunLoop.main)
+        .assign(to: \.myOrgInviteQrCode, on: self)
+        .store(in: &subscriptions)
     }
 
     func onSelectOrganization(_ organization: OrganizationIdName) {

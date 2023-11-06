@@ -7,7 +7,7 @@ struct ResetPasswordView: View {
 
     let close: () -> Void
 
-    private let focusableViewState = TextInputFocusableView()
+    @ObservedObject var focusableViewState = TextInputFocusableView()
 
     @FocusState private var focusState: TextInputFocused?
 
