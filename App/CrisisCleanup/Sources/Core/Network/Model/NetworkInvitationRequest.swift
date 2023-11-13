@@ -1,3 +1,5 @@
+import Foundation
+
 struct NetworkInvitationRequest: Codable, Equatable {
     let firstName: String
     let lastName: String
@@ -78,4 +80,37 @@ struct NetworkAcceptPersistentInvite: Codable, Equatable {
 
 public struct NetworkAcceptedPersistentInvite: Codable, Equatable {
     let detail: String
+}
+
+struct NetworkOrganizationInvite: Codable {
+    let inviteeEmail: String
+    let organization: Int64?
+
+    enum CodingKeys: String, CodingKey {
+        case inviteeEmail = "invitee_email",
+             organization
+    }
+}
+
+struct NetworkOrganizationInviteResult: Codable {
+    let errors: [NetworkCrisisCleanupApiError]?
+    let invite: NetworkOrganizationInviteInfo?
+}
+
+struct NetworkOrganizationInviteInfo: Codable {
+    let id: Int64
+    let inviteeEmail: String
+    let invitationToken: String
+    let expiresAt: Date
+    let organization: Int64
+    let createdAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id,
+             inviteeEmail = "invitee_email",
+             invitationToken = "invitation_token",
+             expiresAt = "expires_at",
+             organization,
+             createdAt = "created_at"
+    }
 }

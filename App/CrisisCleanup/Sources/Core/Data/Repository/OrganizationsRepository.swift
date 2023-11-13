@@ -11,7 +11,7 @@ public protocol OrganizationsRepository {
         updateLocations: Bool
     ) async
 
-    func getOrganizationAffiliateIds(_ organizationId: Int64) -> Set<Int64>
+    func getOrganizationAffiliateIds(_ organizationId: Int64, addOrganizationId: Bool) -> Set<Int64>
 
     func getNearbyClaimingOrganizations(
         _ latitude: Double,
@@ -105,9 +105,11 @@ class OfflineFirstOrganizationsRepository: OrganizationsRepository {
         }
     }
 
-    func getOrganizationAffiliateIds(_ organizationId: Int64) -> Set<Int64> {
+    func getOrganizationAffiliateIds(_ organizationId: Int64, addOrganizationId: Bool) -> Set<Int64> {
         var affiliateIds = Set(incidentOrganizationDao.getAffiliateOrganizationIds(organizationId))
-        affiliateIds.insert(organizationId)
+        if addOrganizationId {
+            affiliateIds.insert(organizationId)
+        }
         return affiliateIds
     }
 

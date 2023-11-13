@@ -380,6 +380,14 @@ extension NetworkRequestProvider {
             method: .post
         )
     }
+
+    var inviteToOrganization: NetworkRequest {
+        NetworkRequest(
+            apiUrl("invitations"),
+            method: .post,
+            addTokenHeader: true
+        )
+    }
 }
 
 class CrisisCleanupNetworkRequestProvider: NetworkRequestProvider {

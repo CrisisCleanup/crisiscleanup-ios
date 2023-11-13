@@ -73,7 +73,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
             .map { $0.org.id }
             .eraseToAnyPublisher()
         organizationAffiliatesPublisher = orgIdPublisher
-            .map { orgId in organizationsRepository.getOrganizationAffiliateIds(orgId) }
+            .map { orgId in organizationsRepository.getOrganizationAffiliateIds(orgId, addOrganizationId: true) }
             .eraseToAnyPublisher()
 
         organizationLocationAreaBounds = orgIdPublisher

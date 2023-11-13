@@ -29,11 +29,13 @@ public protocol CrisisCleanupRegisterApi {
     func acceptOrgInvitation(_ invite: CodeInviteAccept) async -> JoinOrgResult
 
     func createPersistentInvitation(
-        orgId: Int64,
+        organizationId: Int64,
         userId: Int64
     ) async throws -> NetworkPersistentInvitation
 
     func acceptPersistentInvitation(_ invite: CodeInviteAccept) async -> JoinOrgResult
+
+    func inviteToOrganization(_ emailAddress: String, _ organizationId: Int64?) async -> Bool
 }
 
 public protocol CrisisCleanupNetworkDataSource {

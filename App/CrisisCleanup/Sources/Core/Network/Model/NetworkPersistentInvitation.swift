@@ -3,12 +3,12 @@ import Foundation
 public struct NetworkCreateOrgInvitation: Codable {
     let model: String = "organization_organizations"
     let createdBy: Int64
-    let orgId: Int64
+    let organizationId: Int64
 
     enum CodingKeys: String, CodingKey {
         case model,
              createdBy = "created_by",
-             orgId = "object_id"
+             organizationId = "object_id"
     }
 }
 

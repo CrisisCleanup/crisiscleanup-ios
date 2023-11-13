@@ -186,7 +186,7 @@ class CasesViewModel: ObservableObject {
         subscribeIncidentBounds()
         subscribeWorksiteInBounds()
         subscribeDataPullStats()
-        subscribeUiState()
+        subscribeViewState()
         subscribeSortBy()
         subscribeTableData()
         subscribeLocationStatus()
@@ -471,7 +471,7 @@ class CasesViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
-    private func subscribeUiState() {
+    private func subscribeViewState() {
         qsm.isTableViewSubject
             .receive(on: RunLoop.main)
             .assign(to: \.isTableView, on: self)

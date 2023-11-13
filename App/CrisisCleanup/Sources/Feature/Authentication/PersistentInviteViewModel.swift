@@ -52,7 +52,7 @@ class PersistentInviteViewModel: ObservableObject {
     }
 
     func onViewAppear() {
-        subscribeUiState()
+        subscribeViewState()
         subscribeLanguageOptions()
         subscribeTokenValidation()
     }
@@ -61,7 +61,7 @@ class PersistentInviteViewModel: ObservableObject {
         subscriptions = cancelSubscriptions(subscriptions)
     }
 
-    private func subscribeUiState() {
+    private func subscribeViewState() {
         Publishers.CombineLatest(
             $inviteDisplay,
             $isJoiningOrg

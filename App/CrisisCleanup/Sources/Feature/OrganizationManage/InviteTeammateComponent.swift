@@ -37,6 +37,7 @@ class InviteTeammateComponent: Component<AppDependency>, InviteTeammateViewBuild
                 organizationsRepository: dependency.organizationsRepository,
                 orgVolunteerRepository: dependency.orgVolunteerRepository,
                 settingsProvider: dependency.appSettingsProvider,
+                inputValidator: dependency.inputValidator,
                 qrCodeGenerator: dependency.qrCodeGenerator,
                 translator: dependency.translator,
                 loggerFactory: dependency.loggerFactory

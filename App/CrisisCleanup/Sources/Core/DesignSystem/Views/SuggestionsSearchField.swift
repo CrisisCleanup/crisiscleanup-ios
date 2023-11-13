@@ -11,10 +11,14 @@ struct SuggestionsSearchField: View {
     var focusedKey: TextInputFocused? = .querySuggestions
 
     let hint: String
+    var disableAutocorrect = false
+
+    var onClose: () -> Void = {}
 
     var body: some View {
         HStack {
             TextField(hint, text: $q)
+                .autocorrectionDisabled(disableAutocorrect)
                 .focused($focusState, equals: focusedKey)
                 .onChange(of: focusState) { isFocused in
                     withAnimation(.easeInOut(duration: appTheme.layoutAnimationDuration)) {
@@ -27,6 +31,7 @@ struct SuggestionsSearchField: View {
                 Button {
                     focusState = nil
                     animateSearchFieldFocus = false
+                    onClose()
                 } label: {
                     Text(t.t("actions.close"))
                 }

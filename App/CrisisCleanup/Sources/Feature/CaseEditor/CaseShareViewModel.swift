@@ -99,7 +99,7 @@ class CaseShareViewModel: ObservableObject {
     private func subscribeOrganization() {
         organizationId
             .map { orgId in
-                let affiliatedOrgIds = self.organizationsRepository.getOrganizationAffiliateIds(orgId)
+                let affiliatedOrgIds = self.organizationsRepository.getOrganizationAffiliateIds(orgId, addOrganizationId: true)
                 let claimedBys = Set(self.worksiteIn.workTypes.compactMap { $0.orgClaim })
                 let isClaimed = claimedBys.first(where: { claimedBy in
                     affiliatedOrgIds.contains(claimedBy)

@@ -424,8 +424,10 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
             let workTypeIdLookup = try workTypeDao.getNetworkedIdMap(worksiteId).asLookup()
             let accountData = try await accountDataPublisher.asyncFirst()
             let organizationId = accountData.org.id
-            let affiliateOrganizations =
-                organizationsRepository.getOrganizationAffiliateIds(organizationId)
+            let affiliateOrganizations = organizationsRepository.getOrganizationAffiliateIds(
+                organizationId,
+                addOrganizationId: true
+            )
             let syncResult = try await worksiteChangeSyncer.sync(
                 accountData,
                 oldestReferenceChange,

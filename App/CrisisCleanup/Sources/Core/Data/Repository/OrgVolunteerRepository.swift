@@ -7,8 +7,16 @@ public protocol OrgVolunteerRepository {
     func getInvitationInfo(_ invite: UserPersistentInvite) async -> OrgUserInviteInfo?
     func acceptInvitation(_ invite: CodeInviteAccept) async -> JoinOrgResult
 
-    func getOrgInvite(orgId: Int64, inviterUserId: Int64) async -> JoinOrgInvite
+    func getOrganizationInvite(organizationId: Int64, inviterUserId: Int64) async -> JoinOrgInvite
     func acceptPersistentInvitation(_ invite: CodeInviteAccept) async -> JoinOrgResult
+
+    func inviteToOrganization(_ emailAddress: String, organizationId: Int64?) async -> Bool
+}
+
+extension OrgVolunteerRepository {
+    func inviteToOrganization(_ emailAddress: String) async -> Bool {
+        await inviteToOrganization(emailAddress, organizationId: nil)
+    }
 }
 
 class CrisisCleanupOrgVolunteerRepository: OrgVolunteerRepository {
@@ -48,9 +56,9 @@ class CrisisCleanupOrgVolunteerRepository: OrgVolunteerRepository {
         await registerApi.acceptOrgInvitation(invite)
     }
 
-    func getOrgInvite(orgId: Int64, inviterUserId: Int64) async -> JoinOrgInvite {
+    func getOrganizationInvite(organizationId: Int64, inviterUserId: Int64) async -> JoinOrgInvite {
         do {
-            let invite = try await registerApi.createPersistentInvitation(orgId: orgId, userId: inviterUserId)
+            let invite = try await registerApi.createPersistentInvitation(organizationId: organizationId, userId: inviterUserId)
             return JoinOrgInvite(token: invite.token, orgId: invite.objectId, expiresAt: invite.expiresAt)
         } catch {
             logger.logError(error)
@@ -61,6 +69,10 @@ class CrisisCleanupOrgVolunteerRepository: OrgVolunteerRepository {
 
     func acceptPersistentInvitation(_ invite: CodeInviteAccept) async -> JoinOrgResult {
         await registerApi.acceptPersistentInvitation(invite)
+    }
+
+    func inviteToOrganization(_ emailAddress: String, organizationId: Int64?) async -> Bool {
+        await registerApi.inviteToOrganization(emailAddress, organizationId)
     }
 }
 

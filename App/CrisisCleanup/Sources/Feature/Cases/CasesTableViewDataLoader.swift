@@ -135,7 +135,7 @@ class CasesTableViewDataLoader {
 
         let myOrg = try await accountDataPublisher.asyncFirst().org
         let myOrgId = myOrg.id
-        let affiliateIds = organizationsRepository.getOrganizationAffiliateIds(myOrgId)
+        let affiliateIds = organizationsRepository.getOrganizationAffiliateIds(myOrgId, addOrganizationId: true)
 
         let claimStatus = worksite.getClaimStatus(affiliateIds)
 

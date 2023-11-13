@@ -155,11 +155,11 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
     }
 
     func createPersistentInvitation(
-        orgId: Int64,
+        organizationId: Int64,
         userId: Int64
     ) async throws -> NetworkPersistentInvitation {
         let request = requestProvider.createPersistentInvitation
-            .setBody(NetworkCreateOrgInvitation(createdBy: userId, orgId: orgId))
+            .setBody(NetworkCreateOrgInvitation(createdBy: userId, organizationId: organizationId))
 
         let response = await networkClient.callbackContinue(
             requestConvertible: request,
@@ -196,6 +196,18 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
         default:
             return .unknown
         }
+    }
+
+    func inviteToOrganization(_ emailAddress: String, _ organizationId: Int64?) async -> Bool {
+        let request = requestProvider.inviteToOrganization
+            .setBody(NetworkOrganizationInvite(inviteeEmail: emailAddress, organization: organizationId))
+
+        let response = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkOrganizationInviteResult.self,
+            wrapResponseKey: "invite"
+        )
+        return response.value?.invite?.inviteeEmail == emailAddress
     }
 }
 
