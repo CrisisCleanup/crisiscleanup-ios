@@ -530,9 +530,7 @@ class InviteTeammateViewModel: ObservableObject {
                     if inviteOrgState.new,
                        emailAddresses.count == 1 {
                         let incidentPublisher = self.incidentSelector.incidentsData.eraseToAnyPublisher()
-                        let incidents = try await incidentPublisher.asyncFirst().incidents.sorted { a, b in
-                            a.id > b.id
-                        }
+                        let incidents = try await incidentPublisher.asyncFirst().incidents
                         if let incidentId = incidents.firstOrNil?.id {
                             let organizationName = organizationNameQuery.trim()
                             let emailContact = emailAddresses[0]
@@ -573,7 +571,7 @@ class InviteTeammateViewModel: ObservableObject {
 
             } catch {
                 logger.logError(error)
-                // TODO: Error message
+                sendInviteErrorMessageSubject.value = translator.t("~~We are currently having issues with invites. Please try again later.")
             }
         }
     }
