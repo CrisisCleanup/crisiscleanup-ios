@@ -7,6 +7,7 @@ class InviteTeammateViewModel: ObservableObject {
     private let orgVolunteerRepository: OrgVolunteerRepository
     private let inputValidator: InputValidator
     private let qrCodeGenerator: QrCodeGenerator
+    private let incidentSelector: IncidentSelector
     private let translator: KeyAssetTranslator
     private let logger: AppLogger
 
@@ -71,6 +72,7 @@ class InviteTeammateViewModel: ObservableObject {
         settingsProvider: AppSettingsProvider,
         inputValidator: InputValidator,
         qrCodeGenerator: QrCodeGenerator,
+        incidentSelector: IncidentSelector,
         translator: KeyAssetTranslator,
         loggerFactory: AppLoggerFactory
     ) {
@@ -79,6 +81,7 @@ class InviteTeammateViewModel: ObservableObject {
         self.orgVolunteerRepository = orgVolunteerRepository
         self.inputValidator = inputValidator
         self.qrCodeGenerator = qrCodeGenerator
+        self.incidentSelector = incidentSelector
         self.translator = translator
         logger = loggerFactory.getLogger("invite-teammate")
         inviteUrl = "\(settingsProvider.baseUrl)/mobile_app_user_invite"
@@ -156,8 +159,7 @@ class InviteTeammateViewModel: ObservableObject {
             let orgId = accountData.org.id
             // TODO: Handle sync fail accordingly
             await self.organizationsRepository.syncOrganization(orgId, force: true, updateLocations: false)
-            var affiliateIds = self.organizationsRepository.getOrganizationAffiliateIds(orgId, addOrganizationId: false)
-            return affiliateIds
+            return self.organizationsRepository.getOrganizationAffiliateIds(orgId, addOrganizationId: false)
         }
         .receive(on: RunLoop.main)
         .assign(to: \.affiliateOrganizationIds, on: self)
@@ -468,10 +470,18 @@ class InviteTeammateViewModel: ObservableObject {
     }
 
     @MainActor
-    private func onInviteSentToOrgOrAffiliate(_ emailAddresses: [String]) {
-        inviteSentTitle = translator.t("~~Great. These users have received invites")
-        inviteSentText = translator.t(emailAddresses.joined(separator: "\n"))
+    private func onInviteSent(title: String, text: String) {
+        inviteSentTitle = title
+        inviteSentText = text
         isInviteSent = true
+    }
+
+    @MainActor
+    private func onInviteSentToOrgOrAffiliate(_ emailAddresses: [String]) {
+        onInviteSent(
+            title: translator.t("~~Great. These users have received invites"),
+            text: translator.t(emailAddresses.joined(separator: "\n"))
+        )
     }
 
     func sendInvites() {
@@ -517,8 +527,34 @@ class InviteTeammateViewModel: ObservableObject {
 
                 var isSentToOrgOrAffiliate = false
                 if inviteToAnotherOrg {
-                    if inviteOrgState.new {
-                        // TODO: Finish
+                    if inviteOrgState.new,
+                       emailAddresses.count == 1 {
+                        let incidentPublisher = self.incidentSelector.incidentsData.eraseToAnyPublisher()
+                        let incidents = try await incidentPublisher.asyncFirst().incidents.sorted { a, b in
+                            a.id > b.id
+                        }
+                        if let incidentId = incidents.firstOrNil?.id {
+                            let organizationName = organizationNameQuery.trim()
+                            let emailContact = emailAddresses[0]
+                            let isRegisterNewOrganization = await orgVolunteerRepository.createOrganization(
+                                referer: accountData.emailAddress,
+                                incidentId: incidentId,
+                                organizationName: organizationName,
+                                emailAddress: emailContact,
+                                phoneNumber: invitePhoneNumber
+                            )
+
+                            if isRegisterNewOrganization {
+                                Task {
+                                    await onInviteSent(
+                                        title: translator.t("~~Great. You have created {organization}")
+                                            .replacingOccurrences(of: "{organization}", with: organizationName),
+                                        text: translator.t("~~We will contact {email} to finalize the registration.")
+                                            .replacingOccurrences(of: "{email}", with: emailContact)
+                                    )
+                                }
+                            }
+                        }
 
                     } else if inviteOrgState.affiliate {
                         isSentToOrgOrAffiliate = await inviteToOrgOrAffiliate(emailAddresses, selectedOtherOrg.id)

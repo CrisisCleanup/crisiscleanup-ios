@@ -42,3 +42,33 @@ public struct NetworkOrganizationsSearchResult: Codable, Equatable {
     let count: Int?
     let results: [NetworkOrganizationShort]?
 }
+
+struct NetworkRegisterOrganizationResult: Codable {
+    let errors: [NetworkCrisisCleanupApiError]?
+    let organization: NetworkOrganizationShort
+}
+
+struct NetworkOrganizationRegistration: Codable {
+    let name: String
+    let referral: String
+    let incident: Int64
+    let contact: NetworkOrganizationContact
+}
+
+struct NetworkOrganizationContact: Codable {
+    let email: String
+    let firstName: String
+    let lastName: String
+    let mobile: String
+    let title: String?
+    let organization: Int64?
+
+    enum CodingKeys: String, CodingKey {
+        case email,
+             firstName = "first_name",
+             lastName = "last_name",
+             mobile,
+             title,
+             organization
+    }
+}

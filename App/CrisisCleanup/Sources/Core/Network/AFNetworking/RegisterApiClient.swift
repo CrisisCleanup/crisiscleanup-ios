@@ -209,6 +209,42 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
         )
         return response.value?.invite?.inviteeEmail == emailAddress
     }
+
+    func registerOrganization(
+        referer: String,
+        incidentId: Int64,
+        organizationName: String,
+        emailAddress: String,
+        phoneNumber: String
+    ) async -> Bool {
+        let request = requestProvider.registerOrganization
+            .setBody(NetworkOrganizationRegistration(
+                name: organizationName,
+                referral: referer,
+                incident: incidentId,
+                contact: NetworkOrganizationContact(
+                    email: emailAddress,
+                    firstName: organizationName,
+                    lastName: "Admin",
+                    mobile: phoneNumber,
+                    title: nil,
+                    organization: nil
+                )
+            ))
+
+        let response = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkRegisterOrganizationResult.self,
+            wrapResponseKey: "organization"
+        )
+        if let organization = response.value?.organization,
+           organization.id > 0,
+           organization.name.lowercased() == organizationName.lowercased()
+        {
+            return true
+        }
+        return false
+    }
 }
 
 private struct UserDetails {

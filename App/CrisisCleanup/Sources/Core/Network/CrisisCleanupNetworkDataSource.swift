@@ -36,6 +36,14 @@ public protocol CrisisCleanupRegisterApi {
     func acceptPersistentInvitation(_ invite: CodeInviteAccept) async -> JoinOrgResult
 
     func inviteToOrganization(_ emailAddress: String, _ organizationId: Int64?) async -> Bool
+
+    func registerOrganization(
+        referer: String,
+        incidentId: Int64,
+        organizationName: String,
+        emailAddress: String,
+        phoneNumber: String
+    ) async -> Bool
 }
 
 public protocol CrisisCleanupNetworkDataSource {

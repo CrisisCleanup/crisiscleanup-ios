@@ -388,6 +388,14 @@ extension NetworkRequestProvider {
             addTokenHeader: true
         )
     }
+
+    var registerOrganization: NetworkRequest {
+        NetworkRequest(
+            apiUrl("organizations"),
+            method: .post,
+            addTokenHeader: true
+        )
+    }
 }
 
 class CrisisCleanupNetworkRequestProvider: NetworkRequestProvider {

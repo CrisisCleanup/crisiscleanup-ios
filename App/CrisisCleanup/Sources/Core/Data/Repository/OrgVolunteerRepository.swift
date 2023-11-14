@@ -11,6 +11,13 @@ public protocol OrgVolunteerRepository {
     func acceptPersistentInvitation(_ invite: CodeInviteAccept) async -> JoinOrgResult
 
     func inviteToOrganization(_ emailAddress: String, organizationId: Int64?) async -> Bool
+    func createOrganization(
+        referer: String,
+        incidentId: Int64,
+        organizationName: String,
+        emailAddress: String,
+        phoneNumber: String
+    ) async -> Bool
 }
 
 extension OrgVolunteerRepository {
@@ -73,6 +80,22 @@ class CrisisCleanupOrgVolunteerRepository: OrgVolunteerRepository {
 
     func inviteToOrganization(_ emailAddress: String, organizationId: Int64?) async -> Bool {
         await registerApi.inviteToOrganization(emailAddress, organizationId)
+    }
+
+    func createOrganization(
+        referer: String,
+        incidentId: Int64,
+        organizationName: String,
+        emailAddress: String,
+        phoneNumber: String
+    ) async -> Bool {
+        await registerApi.registerOrganization(
+            referer: referer,
+            incidentId: incidentId,
+            organizationName: organizationName,
+            emailAddress: emailAddress,
+            phoneNumber: phoneNumber
+        )
     }
 }
 
