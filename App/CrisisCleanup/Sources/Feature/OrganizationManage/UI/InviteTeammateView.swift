@@ -24,7 +24,7 @@ struct InviteTeammateView: View {
                 InviteTeammateContentView()
             } else {
                 // TODO: Style accordingly
-                Text(t.t("Sign in to invite others"))
+                Text(t.t("~~Sign in to invite others"))
                     .fontHeader2()
             }
         }
@@ -110,7 +110,7 @@ private struct InviteTeammateContentView: View {
                                 if isNewOrganization {
                                     return "~~This organization does not yet have an account. We will create an account and contact this person to finalize the registration."
                                 } else if viewModel.inviteOrgState.nonAffiliate {
-                                    return "~~This user will need to be approved by somebody from the organization."
+                                    // return "~~This user will need to be approved by somebody from the organization."
                                 }
                                 return ""
                             }()
@@ -129,34 +129,40 @@ private struct InviteTeammateContentView: View {
                                 .foregroundColor(appTheme.colors.primaryRedColor)
                         }
 
-                        HStack(spacing: appTheme.gridItemSpacing) {
-                            Image(systemName: "envelope")
+                        if viewModel.inviteOrgState.nonAffiliate {
+                            Text(t.t("~~Inviting to non-affiliate organizations is not yet supported. Users can download and use the app to request an invite to this organization if they have a contact at this organization."))
+                                .foregroundColor(appTheme.colors.primaryBlueColor)
 
-                            TextField(t.t("invitationsVue.email"), text: $viewModel.inviteEmailAddresses)
-                                .keyboardType(.emailAddress)
-                                .autocapitalization(.none)
-                                .disableAutocorrection(true)
-                                .focused($focusState, equals: TextInputFocused.userEmailAddress)
-                                .onSubmit {
-                                    if isNewOrganization {
-                                        focusState = .userPhone
+                        } else {
+                            HStack(spacing: appTheme.gridItemSpacing) {
+                                Image(systemName: "envelope")
+
+                                TextField(t.t("invitationsVue.email"), text: $viewModel.inviteEmailAddresses)
+                                    .keyboardType(.emailAddress)
+                                    .autocapitalization(.none)
+                                    .disableAutocorrection(true)
+                                    .focused($focusState, equals: TextInputFocused.userEmailAddress)
+                                    .onSubmit {
+                                        if isNewOrganization {
+                                            focusState = .userPhone
+                                        }
                                     }
-                                }
-                        }
-                        .textFieldBorder()
-
-                        Group {
-                            if isNewOrganization {
-                                NewOrganizationInputView(
-                                    focusState: $focusState
-                                )
-                                .padding(.top, appTheme.listItemVerticalPadding)
-                            } else {
-                                Text(t.t("~~Use commas if inviting multiple email addresses"))
-                                    .fontBodySmall()
                             }
+                            .textFieldBorder()
+
+                            Group {
+                                if isNewOrganization {
+                                    NewOrganizationInputView(
+                                        focusState: $focusState
+                                    )
+                                    .padding(.top, appTheme.listItemVerticalPadding)
+                                } else {
+                                    Text(t.t("~~Use commas if inviting multiple email addresses"))
+                                        .fontBodySmall()
+                                }
+                            }
+                            .padding(.bottom)
                         }
-                        .padding(.bottom)
 
                         if viewModel.sendInviteErrorMessage.isNotBlank {
                             Text(viewModel.sendInviteErrorMessage)
@@ -172,6 +178,7 @@ private struct InviteTeammateContentView: View {
                             )
                         }
                         .stylePrimary()
+                        .disabled(viewModel.inviteOrgState.nonAffiliate)
                         .padding(.bottom)
 
                         if viewModel.inviteOrgState.ownOrAffiliate,
