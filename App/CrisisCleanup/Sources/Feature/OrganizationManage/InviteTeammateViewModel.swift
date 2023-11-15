@@ -36,11 +36,18 @@ class InviteTeammateViewModel: ObservableObject {
     @Published private(set) var inviteOrgState = InviteOrgState(own: false, affiliate: false, nonAffiliate: false, new: false)
 
     @Published var inviteEmailAddresses = ""
+    @Published var invitePhoneNumber = ""
     @Published var inviteFirstName = ""
     @Published var inviteLastName = ""
-    @Published var invitePhoneNumber = ""
-    @Published var firstNameError = ""
-    @Published var lastNameError = ""
+    @Published private(set) var emailAddressError = ""
+    @Published private(set) var phoneNumberError = ""
+    @Published private(set) var firstNameError = ""
+    @Published private(set) var lastNameError = ""
+    @Published private(set) var selectedIncidentError = ""
+
+    @Published private(set) var incidents = [Incident]()
+    @Published private(set) var incidentLookup = [Int64: Incident]()
+    @Published var selectedIncidentId = EmptyIncident.id
 
     private let inviteUrl: String
     private let isCreatingMyOrgPersistentInvitation = CurrentValueSubject<Bool, Never>(false)
@@ -60,8 +67,6 @@ class InviteTeammateViewModel: ObservableObject {
     @Published private(set) var isInviteSent = false
     @Published private(set) var inviteSentTitle = ""
     @Published private(set) var inviteSentText = ""
-
-    @Published private(set) var emailAddressErrorMessage = ""
 
     private let sendInviteErrorMessageSubject = CurrentValueSubject<String, Never>("")
     @Published private(set) var sendInviteErrorMessage = ""
@@ -107,11 +112,14 @@ class InviteTeammateViewModel: ObservableObject {
     private func subscribeViewState() {
         anotherOrgInviteOptionText = translator.t("~~From another organization")
 
-        Publishers.CombineLatest(
+        let incidentsPublisher = incidentSelector.incidentsData.eraseToAnyPublisher()
+
+        Publishers.CombineLatest3(
             isValidatingAccount,
-            $affiliateOrganizationIds
+            $affiliateOrganizationIds,
+            incidentsPublisher
         )
-        .map { (b0, affiliateIds) in b0 || affiliateIds == nil }
+        .map { (b0, affiliateIds, incidentsData) in b0 || affiliateIds == nil || incidentsData.isLoading }
         .receive(on: RunLoop.main)
         .assign(to: \.isLoading, on: self)
         .store(in: &subscriptions)
@@ -141,6 +149,15 @@ class InviteTeammateViewModel: ObservableObject {
         .receive(on: RunLoop.main)
         .assign(to: \.scanQrCodeText, on: self)
         .store(in: &subscriptions)
+
+        incidentsPublisher
+            .receive(on: RunLoop.main)
+            .sink { data in
+                self.incidents = data.incidents
+                self.incidentLookup = data.incidents.associateBy { $0.id }
+                self.selectedIncidentId = data.selected.id
+            }
+            .store(in: &subscriptions)
     }
 
     private func subscribeAccountData() {
@@ -430,7 +447,7 @@ class InviteTeammateViewModel: ObservableObject {
         }
 
         if errorMessage.isNotBlank {
-            emailAddressErrorMessage = errorMessage
+            emailAddressError = errorMessage
             errorFocus = .userEmailAddress
             return []
         }
@@ -486,9 +503,11 @@ class InviteTeammateViewModel: ObservableObject {
     }
 
     func sendInvites() {
-        emailAddressErrorMessage = ""
+        emailAddressError = ""
+        phoneNumberError = ""
         firstNameError = ""
         lastNameError = ""
+        selectedIncidentError = ""
 
         sendInviteErrorMessageSubject.value = ""
 
@@ -501,8 +520,14 @@ class InviteTeammateViewModel: ObservableObject {
 
         if inviteOrgState.new {
             if emailAddresses.count > 1 {
-                emailAddressErrorMessage = translator.t("~~Only one email is allowed when registering a new organization")
+                emailAddressError = translator.t("~~Only one email is allowed when registering a new organization.")
                 errorFocus = .userEmailAddress
+                return
+            }
+
+            if invitePhoneNumber.isBlank {
+                phoneNumberError = translator.t("~~Phone is required.")
+                errorFocus = .userPhone
                 return
             }
 
@@ -515,6 +540,11 @@ class InviteTeammateViewModel: ObservableObject {
             if inviteLastName.isBlank {
                 lastNameError = translator.t("~~Last name is required.")
                 errorFocus = .userLastName
+                return
+            }
+
+            if selectedIncidentId == EmptyIncident.id {
+                selectedIncidentError = translator.t("~~Select an incident to support.")
                 return
             }
         }
@@ -547,32 +577,28 @@ class InviteTeammateViewModel: ObservableObject {
                 if inviteToAnotherOrg {
                     if inviteOrgState.new,
                        emailAddresses.count == 1 {
-                        let incidentPublisher = self.incidentSelector.incidentsData.eraseToAnyPublisher()
-                        let incidents = try await incidentPublisher.asyncFirst().incidents
-                        if let incidentId = incidents.firstOrNil?.id {
-                            let organizationName = organizationNameQuery.trim()
-                            let emailContact = emailAddresses[0]
-                            let isRegisterNewOrganization = await orgVolunteerRepository.createOrganization(
-                                referer: accountData.emailAddress,
-                                invite: IncidentOrganizationInviteInfo(
-                                    incidentId: incidentId,
-                                    organizationName: organizationName,
-                                    emailAddress: emailContact,
-                                    firstName: inviteFirstName,
-                                    lastName: inviteLastName,
-                                    mobile: invitePhoneNumber
-                                )
+                        let organizationName = organizationNameQuery.trim()
+                        let emailContact = emailAddresses[0]
+                        let isRegisterNewOrganization = await orgVolunteerRepository.createOrganization(
+                            referer: accountData.emailAddress,
+                            invite: IncidentOrganizationInviteInfo(
+                                incidentId: selectedIncidentId,
+                                organizationName: organizationName,
+                                emailAddress: emailContact,
+                                mobile: invitePhoneNumber,
+                                firstName: inviteFirstName,
+                                lastName: inviteLastName
                             )
+                        )
 
-                            if isRegisterNewOrganization {
-                                Task {
-                                    await onInviteSent(
-                                        title: translator.t("~~Great. You have created {organization}")
-                                            .replacingOccurrences(of: "{organization}", with: organizationName),
-                                        text: translator.t("~~We will contact {email} to finalize the registration.")
-                                            .replacingOccurrences(of: "{email}", with: emailContact)
-                                    )
-                                }
+                        if isRegisterNewOrganization {
+                            Task {
+                                await onInviteSent(
+                                    title: translator.t("~~Great. You have created {organization}")
+                                        .replacingOccurrences(of: "{organization}", with: organizationName),
+                                    text: translator.t("~~We will contact {email} to finalize the registration.")
+                                        .replacingOccurrences(of: "{email}", with: emailContact)
+                                )
                             }
                         }
 
@@ -580,8 +606,7 @@ class InviteTeammateViewModel: ObservableObject {
                         isSentToOrgOrAffiliate = await inviteToOrgOrAffiliate(emailAddresses, selectedOtherOrg.id)
 
                     } else if inviteOrgState.nonAffiliate {
-                        // TODO: Finish
-
+                        // TODO: Finish when API supports a corresponding endpoint
                     }
                 } else {
                     isSentToOrgOrAffiliate = await inviteToOrgOrAffiliate(emailAddresses)
@@ -590,10 +615,6 @@ class InviteTeammateViewModel: ObservableObject {
                 if isSentToOrgOrAffiliate {
                     await onInviteSentToOrgOrAffiliate(emailAddresses)
                 }
-
-            } catch {
-                logger.logError(error)
-                sendInviteErrorMessageSubject.value = translator.t("~~We are currently having issues with invites. Please try again later.")
             }
         }
     }

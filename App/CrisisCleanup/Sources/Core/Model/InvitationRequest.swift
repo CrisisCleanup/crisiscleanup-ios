@@ -14,9 +14,9 @@ public struct IncidentOrganizationInviteInfo {
     let incidentId: Int64
     let organizationName: String
     let emailAddress: String
+    let mobile: String
     let firstName: String
     let lastName: String
-    let mobile: String
 }
 
 public struct CodeInviteAccept: Equatable {

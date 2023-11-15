@@ -124,8 +124,8 @@ private struct InviteTeammateContentView: View {
                     .padding(.bottom)
 
                     if !animateTopSearchBar {
-                        if viewModel.emailAddressErrorMessage.isNotBlank {
-                            Text(viewModel.emailAddressErrorMessage)
+                        if viewModel.emailAddressError.isNotBlank {
+                            Text(viewModel.emailAddressError)
                                 .foregroundColor(appTheme.colors.primaryRedColor)
                         }
 
@@ -137,6 +137,11 @@ private struct InviteTeammateContentView: View {
                                 .autocapitalization(.none)
                                 .disableAutocorrection(true)
                                 .focused($focusState, equals: TextInputFocused.userEmailAddress)
+                                .onSubmit {
+                                    if isNewOrganization {
+                                        focusState = .userPhone
+                                    }
+                                }
                         }
                         .textFieldBorder()
 
@@ -266,6 +271,20 @@ private struct NewOrganizationInputView: View {
         // TODO: Set to equivalent of .padding not a multiple of custom padding
         VStack(alignment: .leading, spacing: appTheme.listItemVerticalPadding * 2) {
             Group {
+                UserInfoErrorText(message: viewModel.phoneNumberError)
+                HStack(spacing: appTheme.gridItemSpacing) {
+                    Image(systemName: "phone.fill")
+
+                    TextField(t.t("invitationSignup.mobile_placeholder"), text: $viewModel.invitePhoneNumber)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                        .focused(focusState, equals: TextInputFocused.userPhone)
+                        .onSubmit { focusState.wrappedValue = .userFirstName }
+                }
+                .textFieldBorder()
+            }
+
+            Group {
                 UserInfoErrorText(message: viewModel.firstNameError)
                 TextField(t.t("invitationSignup.first_name_placeholder"), text: $viewModel.inviteFirstName)
                     .textFieldBorder()
@@ -280,18 +299,25 @@ private struct NewOrganizationInputView: View {
                     .textFieldBorder()
                     .autocapitalization(.words)
                     .focused(focusState, equals: TextInputFocused.userLastName)
-                    .onSubmit { focusState.wrappedValue = .userTitle }
             }
 
-            HStack(spacing: appTheme.gridItemSpacing) {
-                Image(systemName: "phone.fill")
-
-                TextField(t.t("~~Cell Phone (optional but really helpful)"), text: $viewModel.invitePhoneNumber)
-                    .autocapitalization(.none)
-                    .disableAutocorrection(true)
-                    .focused(focusState, equals: TextInputFocused.anyTextInput)
+            UserInfoErrorText(message: viewModel.selectedIncidentError)
+            let selectedIncident = viewModel.incidentLookup[viewModel.selectedIncidentId] ?? EmptyIncident
+            Menu {
+                Picker(selection: $viewModel.selectedIncidentId, label: Text("")) {
+                    ForEach(viewModel.incidents, id: \.id) { incident in
+                        Text(incident.name)
+                    }
+                }
+            } label: {
+                HStack {
+                    Text(selectedIncident.name)
+                    Spacer()
+                    Image(systemName: "chevron.up.chevron.down")
+                }
+                .textFieldBorder()
             }
-            .textFieldBorder()
+            .buttonStyle(.plain)
         }
     }
 }
