@@ -10,6 +10,15 @@ public struct InvitationRequest: Equatable {
     let inviterEmailAddress: String
 }
 
+public struct IncidentOrganizationInviteInfo {
+    let incidentId: Int64
+    let organizationName: String
+    let emailAddress: String
+    let firstName: String
+    let lastName: String
+    let mobile: String
+}
+
 public struct CodeInviteAccept: Equatable {
     let firstName: String
     let lastName: String

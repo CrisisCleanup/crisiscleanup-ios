@@ -13,10 +13,7 @@ public protocol OrgVolunteerRepository {
     func inviteToOrganization(_ emailAddress: String, organizationId: Int64?) async -> Bool
     func createOrganization(
         referer: String,
-        incidentId: Int64,
-        organizationName: String,
-        emailAddress: String,
-        phoneNumber: String
+        invite: IncidentOrganizationInviteInfo
     ) async -> Bool
 }
 
@@ -84,17 +81,11 @@ class CrisisCleanupOrgVolunteerRepository: OrgVolunteerRepository {
 
     func createOrganization(
         referer: String,
-        incidentId: Int64,
-        organizationName: String,
-        emailAddress: String,
-        phoneNumber: String
+        invite: IncidentOrganizationInviteInfo
     ) async -> Bool {
         await registerApi.registerOrganization(
             referer: referer,
-            incidentId: incidentId,
-            organizationName: organizationName,
-            emailAddress: emailAddress,
-            phoneNumber: phoneNumber
+            invite: invite
         )
     }
 }

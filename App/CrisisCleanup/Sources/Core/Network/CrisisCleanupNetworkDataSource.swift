@@ -39,10 +39,7 @@ public protocol CrisisCleanupRegisterApi {
 
     func registerOrganization(
         referer: String,
-        incidentId: Int64,
-        organizationName: String,
-        emailAddress: String,
-        phoneNumber: String
+        invite: IncidentOrganizationInviteInfo
     ) async -> Bool
 }
 

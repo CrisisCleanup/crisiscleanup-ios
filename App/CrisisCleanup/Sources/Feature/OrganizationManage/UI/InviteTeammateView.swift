@@ -136,21 +136,16 @@ private struct InviteTeammateContentView: View {
                                 .keyboardType(.emailAddress)
                                 .autocapitalization(.none)
                                 .disableAutocorrection(true)
-                                .focused($focusState, equals: TextInputFocused.anyTextInput)
+                                .focused($focusState, equals: TextInputFocused.userEmailAddress)
                         }
                         .textFieldBorder()
 
                         Group {
                             if isNewOrganization {
-                                HStack(spacing: appTheme.gridItemSpacing) {
-                                    Image(systemName: "phone.fill")
-
-                                    TextField(t.t("~~Cell Phone (optional but really helpful)"), text: $viewModel.invitePhoneNumber)
-                                        .autocapitalization(.none)
-                                        .disableAutocorrection(true)
-                                        .focused($focusState, equals: TextInputFocused.anyTextInput)
-                                }
-                                .textFieldBorder()
+                                NewOrganizationInputView(
+                                    focusState: $focusState
+                                )
+                                .padding(.top, appTheme.listItemVerticalPadding)
                             } else {
                                 Text(t.t("~~Use commas if inviting multiple email addresses"))
                                     .fontBodySmall()
@@ -232,11 +227,71 @@ private struct InviteTeammateContentView: View {
                 OpenKeyboardActionsView()
             }
         }
-        .onChange(of: focusState) { focusableViewState.focusState = $0 }
+        .onChange(of: viewModel.errorFocus) { newValue in
+            if let errorFocus = newValue {
+                focusState = errorFocus
+            }
+        }
+        .onChange(of: focusState) {
+            focusableViewState.focusState = $0
+            viewModel.errorFocus = nil
+        }
 
         if animateTopSearchBar,
            animateSearchingOrganizations {
             ProgressView()
+        }
+    }
+}
+
+private struct UserInfoErrorText: View {
+    let message: String
+
+    var body: some View {
+        if message.isNotBlank {
+            Text(message)
+                .foregroundColor(appTheme.colors.primaryRedColor)
+        }
+    }
+}
+
+private struct NewOrganizationInputView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @EnvironmentObject var viewModel: InviteTeammateViewModel
+
+    var focusState: FocusState<TextInputFocused?>.Binding
+
+    var body: some View {
+        // TODO: Set to equivalent of .padding not a multiple of custom padding
+        VStack(alignment: .leading, spacing: appTheme.listItemVerticalPadding * 2) {
+            Group {
+                UserInfoErrorText(message: viewModel.firstNameError)
+                TextField(t.t("invitationSignup.first_name_placeholder"), text: $viewModel.inviteFirstName)
+                    .textFieldBorder()
+                    .autocapitalization(.words)
+                    .focused(focusState, equals: TextInputFocused.userFirstName)
+                    .onSubmit { focusState.wrappedValue = .userLastName }
+            }
+
+            Group {
+                UserInfoErrorText(message: viewModel.lastNameError)
+                TextField(t.t("invitationSignup.last_name_placeholder"), text: $viewModel.inviteLastName)
+                    .textFieldBorder()
+                    .autocapitalization(.words)
+                    .focused(focusState, equals: TextInputFocused.userLastName)
+                    .onSubmit { focusState.wrappedValue = .userTitle }
+            }
+
+            HStack(spacing: appTheme.gridItemSpacing) {
+                Image(systemName: "phone.fill")
+
+                TextField(t.t("~~Cell Phone (optional but really helpful)"), text: $viewModel.invitePhoneNumber)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                    .focused(focusState, equals: TextInputFocused.anyTextInput)
+            }
+            .textFieldBorder()
         }
     }
 }

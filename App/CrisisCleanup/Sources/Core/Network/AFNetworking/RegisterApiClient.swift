@@ -212,21 +212,18 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
 
     func registerOrganization(
         referer: String,
-        incidentId: Int64,
-        organizationName: String,
-        emailAddress: String,
-        phoneNumber: String
+        invite: IncidentOrganizationInviteInfo
     ) async -> Bool {
         let request = requestProvider.registerOrganization
             .setBody(NetworkOrganizationRegistration(
-                name: organizationName,
+                name: invite.organizationName,
                 referral: referer,
-                incident: incidentId,
+                incident: invite.incidentId,
                 contact: NetworkOrganizationContact(
-                    email: emailAddress,
-                    firstName: organizationName,
-                    lastName: "Admin",
-                    mobile: phoneNumber,
+                    email: invite.emailAddress,
+                    firstName: invite.firstName,
+                    lastName: invite.lastName,
+                    mobile: invite.mobile,
                     title: nil,
                     organization: nil
                 )
@@ -239,7 +236,7 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
         )
         if let organization = response.value?.organization,
            organization.id > 0,
-           organization.name.lowercased() == organizationName.lowercased()
+           organization.name.lowercased() == invite.organizationName.lowercased()
         {
             return true
         }

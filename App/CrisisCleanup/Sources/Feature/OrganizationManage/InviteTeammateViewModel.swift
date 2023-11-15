@@ -15,6 +15,8 @@ class InviteTeammateViewModel: ObservableObject {
 
     @Published private(set) var isLoading = false
 
+    @Published var errorFocus: TextInputFocused?
+
     @Published private(set) var hasValidTokens = false
 
     @Published private(set) var myOrgInviteOptionText = ""
@@ -34,7 +36,11 @@ class InviteTeammateViewModel: ObservableObject {
     @Published private(set) var inviteOrgState = InviteOrgState(own: false, affiliate: false, nonAffiliate: false, new: false)
 
     @Published var inviteEmailAddresses = ""
+    @Published var inviteFirstName = ""
+    @Published var inviteLastName = ""
     @Published var invitePhoneNumber = ""
+    @Published var firstNameError = ""
+    @Published var lastNameError = ""
 
     private let inviteUrl: String
     private let isCreatingMyOrgPersistentInvitation = CurrentValueSubject<Bool, Never>(false)
@@ -55,7 +61,6 @@ class InviteTeammateViewModel: ObservableObject {
     @Published private(set) var inviteSentTitle = ""
     @Published private(set) var inviteSentText = ""
 
-    private let emailAddressErrorMessageSubject = CurrentValueSubject<String, Never>("")
     @Published private(set) var emailAddressErrorMessage = ""
 
     private let sendInviteErrorMessageSubject = CurrentValueSubject<String, Never>("")
@@ -110,11 +115,6 @@ class InviteTeammateViewModel: ObservableObject {
         .receive(on: RunLoop.main)
         .assign(to: \.isLoading, on: self)
         .store(in: &subscriptions)
-
-        emailAddressErrorMessageSubject
-            .receive(on: RunLoop.main)
-            .assign(to: \.emailAddressErrorMessage, on: self)
-            .store(in: &subscriptions)
 
         $isSendingInvite
             .sink { b0 in
@@ -430,7 +430,8 @@ class InviteTeammateViewModel: ObservableObject {
         }
 
         if errorMessage.isNotBlank {
-            emailAddressErrorMessageSubject.value = errorMessage
+            emailAddressErrorMessage = errorMessage
+            errorFocus = .userEmailAddress
             return []
         }
 
@@ -485,7 +486,10 @@ class InviteTeammateViewModel: ObservableObject {
     }
 
     func sendInvites() {
-        emailAddressErrorMessageSubject.value = ""
+        emailAddressErrorMessage = ""
+        firstNameError = ""
+        lastNameError = ""
+
         sendInviteErrorMessageSubject.value = ""
 
         let myEmailAddressLower = accountData.emailAddress.trim().lowercased()
@@ -495,10 +499,24 @@ class InviteTeammateViewModel: ObservableObject {
             return
         }
 
-        if inviteOrgState.new,
-           emailAddresses.count > 1 {
-            emailAddressErrorMessageSubject.value = translator.t("~~Only one email is allowed when registering a new organization")
-            return
+        if inviteOrgState.new {
+            if emailAddresses.count > 1 {
+                emailAddressErrorMessage = translator.t("~~Only one email is allowed when registering a new organization")
+                errorFocus = .userEmailAddress
+                return
+            }
+
+            if inviteFirstName.isBlank {
+                firstNameError = translator.t("~~First name is required.")
+                errorFocus = .userFirstName
+                return
+            }
+
+            if inviteLastName.isBlank {
+                lastNameError = translator.t("~~Last name is required.")
+                errorFocus = .userLastName
+                return
+            }
         }
 
         if inviteToAnotherOrg {
@@ -536,10 +554,14 @@ class InviteTeammateViewModel: ObservableObject {
                             let emailContact = emailAddresses[0]
                             let isRegisterNewOrganization = await orgVolunteerRepository.createOrganization(
                                 referer: accountData.emailAddress,
-                                incidentId: incidentId,
-                                organizationName: organizationName,
-                                emailAddress: emailContact,
-                                phoneNumber: invitePhoneNumber
+                                invite: IncidentOrganizationInviteInfo(
+                                    incidentId: incidentId,
+                                    organizationName: organizationName,
+                                    emailAddress: emailContact,
+                                    firstName: inviteFirstName,
+                                    lastName: inviteLastName,
+                                    mobile: invitePhoneNumber
+                                )
                             )
 
                             if isRegisterNewOrganization {
