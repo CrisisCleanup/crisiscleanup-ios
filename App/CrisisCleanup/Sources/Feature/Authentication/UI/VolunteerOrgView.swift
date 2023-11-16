@@ -18,10 +18,13 @@ struct VolunteerOrgView: View {
                     .padding()
                     .background(appTheme.colors.separatorColor)
 
-                Text(t.t("~~Click on the invitation link in an email invite."))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding()
+                InstructionTextAction(
+                    instruction: t.t("~~Click on the invitation link in an email invite. If nothing happens"),
+                    actionText: t.t("~~Paste invitation link"),
+                    onAction: {
+                     router.openPasteOrgInviteLink()
+                })
+                .padding()
 
                 StaticOrTextView()
 

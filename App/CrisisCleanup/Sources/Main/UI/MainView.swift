@@ -78,6 +78,8 @@ struct MainView: View {
                                     volunteerOrgViewBuilder.orgPersistentInviteView(invite)
                                 case .scanOrgQrCode:
                                     volunteerOrgViewBuilder.scanQrCodeJoinOrgView
+                                case .pasteOrgInviteLink:
+                                    volunteerOrgViewBuilder.pasteOrgInviteView
                                 default:
                                     Text("Pending auth/account route \(route.id)")
                                 }

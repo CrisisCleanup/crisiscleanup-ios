@@ -53,4 +53,21 @@ extension VolunteerOrgComponent {
             )
         )
     }
+
+    private func pasteOrgInviteViewModel() -> PasteOrgInviteViewModel {
+        if _pasteOrgInviteViewModel == nil {
+            _pasteOrgInviteViewModel = PasteOrgInviteViewModel(
+                orgVolunteerRepository: dependency.orgVolunteerRepository,
+                translator: dependency.translator
+            )
+        }
+        return _pasteOrgInviteViewModel!
+    }
+
+    var pasteOrgInviteView: AnyView {
+        AnyView(
+            PasteOrgInviteView(
+                viewModel: pasteOrgInviteViewModel())
+        )
+    }
 }

@@ -139,6 +139,8 @@ public class MainComponent: BootstrapComponent,
 
     public var scanQrCodeJoinOrgView: AnyView { volunteerOrgComponent.scanQrCodeJoinOrgView }
 
+    public var pasteOrgInviteView: AnyView { volunteerOrgComponent.pasteOrgInviteView }
+
     // MARK: Incident select
 
     lazy var incidentSelectComponent: IncidentSelectComponent = IncidentSelectComponent(parent: self)

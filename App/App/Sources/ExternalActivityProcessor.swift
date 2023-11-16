@@ -35,6 +35,7 @@ class ExternalActivityProcessor {
                   code.isNotBlank {
             externalEventBus.onOrgUserInvite(code)
             return true
+
         } else if path.starts(with: "/mobile_app_user_invite") {
             let params = components.queryItems
             if let inviterIdString = params?.find("user-id"),

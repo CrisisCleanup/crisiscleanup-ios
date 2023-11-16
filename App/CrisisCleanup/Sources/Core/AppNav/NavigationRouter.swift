@@ -54,7 +54,15 @@ class NavigationRouter: ObservableObject {
         }
     }
 
-    func openOrgUserInvite(_ code: String) {
+    func openPasteOrgInviteLink() {
+        path.append(.pasteOrgInviteLink)
+    }
+
+    func openOrgUserInvite(_ code: String, popPath: Bool = false) {
+        if popPath {
+            _ = path.popLast()
+        }
+
         path.append(.orgUserInvite(code))
     }
 

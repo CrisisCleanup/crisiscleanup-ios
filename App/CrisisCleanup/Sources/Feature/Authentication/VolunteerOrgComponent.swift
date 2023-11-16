@@ -8,12 +8,14 @@ public protocol VolunteerOrgViewBuilder {
     func orgUserInviteView(_ code: String) -> AnyView
     func orgPersistentInviteView(_ invite: UserPersistentInvite) -> AnyView
     var scanQrCodeJoinOrgView: AnyView { get }
+    var pasteOrgInviteView: AnyView { get }
 }
 
 class VolunteerOrgComponent: Component<AppDependency>, VolunteerOrgViewBuilder {
     private var viewModel: VolunteerOrgViewModel? = nil
     internal var _requestOrgAccessViewModel: RequestOrgAccessViewModel? = nil
     internal var _persistentInviteViewModel: PersistentInviteViewModel?  = nil
+    internal var _pasteOrgInviteViewModel: PasteOrgInviteViewModel?  = nil
 
     private var disposables = Set<AnyCancellable>()
 
@@ -30,6 +32,9 @@ class VolunteerOrgComponent: Component<AppDependency>, VolunteerOrgViewBuilder {
                 }
                 if !pathIds.contains(NavigationRoute.requestOrgAccess.id) {
                     self._requestOrgAccessViewModel = nil
+                }
+                if !pathIds.contains(NavigationRoute.pasteOrgInviteLink.id) {
+                    self._pasteOrgInviteViewModel = nil
                 }
             }
             .store(in: &disposables)
