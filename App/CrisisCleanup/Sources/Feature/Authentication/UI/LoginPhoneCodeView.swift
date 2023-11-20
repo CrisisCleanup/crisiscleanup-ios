@@ -1,7 +1,11 @@
 import SwiftUI
 
-struct LoginWithPhoneView: View {
+struct LoginPhoneCodeView: View {
+    @EnvironmentObject var router: NavigationRouter
+
     @ObservedObject var viewModel: LoginWithPhoneViewModel
+
+    let dismiss: () -> Void
 
     var body: some View {
         ZStack {
@@ -10,12 +14,19 @@ struct LoginWithPhoneView: View {
                     .frame(alignment: .center)
             } else {
                 LoginView(
-                    viewModel: viewModel
+                    viewModel: viewModel,
+                    dismissScreen: dismiss
                 )
             }
         }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
+        .onReceive(viewModel.$isAuthenticateSuccessful) { b in
+            if b {
+                router.returnToAuth()
+                dismiss()
+            }
+        }
     }
 }
 
@@ -27,12 +38,14 @@ private struct LoginView: View {
     @ObservedObject var viewModel: LoginWithPhoneViewModel
     @ObservedObject var focusableViewState = TextInputFocusableView()
 
-    @State var phoneNumber: String = ""
+    let dismissScreen: () -> Void
+
+    @State var phoneCode: String = ""
 
     @FocusState private var focusState: TextInputFocused?
 
-    func requestPhoneCode() {
-        viewModel.requestPhoneCode(phoneNumber)
+    func authenticate(_ code: String) {
+        viewModel.authenticate(code)
     }
 
     var body: some View {
@@ -40,14 +53,7 @@ private struct LoginView: View {
 
         VStack {
             ScrollView {
-                CrisisCleanupLogoView()
-
                 VStack {
-                    Text(t.translate("actions.login", "Login action"))
-                        .fontHeader2()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical)
-
                     let errorMessage = viewModel.errorMessage
                     if !errorMessage.isBlank {
                         // TODO: Common styles
@@ -57,41 +63,26 @@ private struct LoginView: View {
                             .padding([.vertical])
                     }
 
-                    TextField(t.t("~~Enter cell phone"), text: $phoneNumber)
-                        .textFieldBorder()
-                        .keyboardType(.phonePad)
-                        .padding(.top, appTheme.listItemVerticalPadding)
-                        .focused($focusState, equals: TextInputFocused.authPhone)
-                        .disabled(disabled)
-                        .onSubmit {
-                            if !phoneNumber.isBlank {
-                                requestPhoneCode()
-                            }
-                        }
-                        .onAppear {
-                            if phoneNumber.isBlank {
-                                focusState = .authPhone
-                            }
-                        }
-                        .onChange(of: focusState) { focusableViewState.focusState = $0 }
+                    // TODO: Code input and action
+                    //       t.t("~~Enter the 5 digit code we sent to")
+                    //       Partially obfuscated phone number
+                    //       Single digit code inputs
+                    //       Resend code link
+
+                    // TODO: Show account dropdown if there are multiple accounts linked to this number
+                    //.onChange(of: focusState) { focusableViewState.focusState = $0 }
 
                     Button {
-                        requestPhoneCode()
+                        authenticate(phoneCode)
                     } label: {
                         BusyButtonContent(
                             isBusy: viewModel.isAuthenticating,
-                            text: t.t("loginForm.login_with_cell")
+                            text: t.t("actions.submit")
                         )
                     }
                     .stylePrimary()
                     .padding(.vertical, appTheme.listItemVerticalPadding)
                     .disabled(disabled)
-                    .onChange(of: viewModel.openLoginPhoneCode) { newValue in
-                        if (newValue) {
-                            router.openPhoneLoginCode(phoneNumber)
-                            viewModel.openLoginPhoneCode = false
-                        }
-                    }
                 }
                 .onChange(of: viewModel.focusState) { focusState = $0 }
                 .padding()

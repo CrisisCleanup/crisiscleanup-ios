@@ -18,6 +18,7 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
          userFeedback,
          loginWithEmail,
          loginWithPhone,
+         phoneLoginCode(_ phoneNumber: String),
          recoverPassword(
             showForgotPassword: Bool = false,
             showMagicLink: Bool = false
@@ -51,15 +52,16 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
         case .userFeedback: return 16
         case .loginWithEmail:       return 17
         case .loginWithPhone:       return 18
-        case .recoverPassword:      return 19
-        case .resetPassword:        return 20
-        case .volunteerOrg:         return 21
-        case .requestOrgAccess:     return 22
-        case .orgUserInvite:        return 23
-        case .scanOrgQrCode:        return 24
-        case .inviteTeammate:       return 25
-        case .orgPersistentInvite:  return 26
-        case .pasteOrgInviteLink:   return 27
+        case .phoneLoginCode:       return 19
+        case .recoverPassword:      return 20
+        case .resetPassword:        return 21
+        case .volunteerOrg:         return 22
+        case .requestOrgAccess:     return 23
+        case .orgUserInvite:        return 24
+        case .scanOrgQrCode:        return 25
+        case .inviteTeammate:       return 26
+        case .orgPersistentInvite:  return 27
+        case .pasteOrgInviteLink:   return 28
 
         case .syncInsights: return 77
         }

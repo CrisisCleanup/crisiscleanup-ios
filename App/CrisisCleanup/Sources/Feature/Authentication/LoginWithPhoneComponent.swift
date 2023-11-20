@@ -18,13 +18,21 @@ extension AuthenticateComponent {
         return _loginWithPhoneViewModel!
     }
 
-    func loginWithPhoneView(closeAuthFlow: @escaping () -> Void) -> AnyView {
+    var loginWithPhoneView: AnyView {
+        AnyView(
+            LoginWithPhoneView(
+                viewModel: loginWithPhoneViewModel
+            )
+        )
+    }
+
+    func phoneLoginCodeView(_ phoneNumber: String, closeAuthFlow: @escaping () -> Void) -> AnyView {
         let clearViewModelOnHide = {
             self._loginWithPhoneViewModel = nil
             closeAuthFlow()
         }
         return AnyView(
-            LoginWithPhoneView(
+            LoginPhoneCodeView(
                 viewModel: loginWithPhoneViewModel,
                 dismiss: clearViewModelOnHide
             )

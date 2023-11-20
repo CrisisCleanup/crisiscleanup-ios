@@ -1,8 +1,6 @@
 import SwiftUI
 
 struct LoginWithEmailView: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
-
     @EnvironmentObject var router: NavigationRouter
 
     @ObservedObject var viewModel: LoginWithEmailViewModel

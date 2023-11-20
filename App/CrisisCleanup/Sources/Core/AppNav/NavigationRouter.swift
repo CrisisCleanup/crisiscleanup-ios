@@ -35,6 +35,10 @@ class NavigationRouter: ObservableObject {
         path.append(.loginWithPhone)
     }
 
+    func openPhoneLoginCode(_ phoneNumber: String) {
+        path.append(.phoneLoginCode(phoneNumber))
+    }
+
     func openVolunteerOrg() {
         path.append(.volunteerOrg)
     }

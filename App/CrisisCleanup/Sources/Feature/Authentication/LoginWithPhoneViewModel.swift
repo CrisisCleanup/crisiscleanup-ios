@@ -19,6 +19,7 @@ class LoginWithPhoneViewModel: ObservableObject {
 
     private let isAcceptingCodeSubject = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isAcceptingCode = false
+    @Published var openLoginPhoneCode = false
 
     @Published private(set) var isAuthenticating: Bool = false
     @Published private(set) var isAuthenticateSuccessful: Bool = false
