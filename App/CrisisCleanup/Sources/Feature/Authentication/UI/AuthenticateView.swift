@@ -67,7 +67,6 @@ private struct LoginOptionsView: View {
                         router.openPhoneLogin()
                     }
                     .stylePrimary()
-                    .disabled(true)
 
                     Button(t.translate("actions.request_access", "Volunteer with org")) {
                         router.openVolunteerOrg()

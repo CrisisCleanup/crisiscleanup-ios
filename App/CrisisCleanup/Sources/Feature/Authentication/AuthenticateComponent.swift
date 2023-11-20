@@ -5,6 +5,7 @@ import SwiftUI
 public protocol AuthenticateViewBuilder {
     func authenticateView(dismissScreen: @escaping () -> Void) -> AnyView
     func loginWithEmailView(closeAuthFlow: @escaping () -> Void) -> AnyView
+    func loginWithPhoneView(closeAuthFlow: @escaping () -> Void) -> AnyView
     func passwordRecoverView(showForgotPassword: Bool, showMagicLink: Bool) -> AnyView
     func resetPasswordView(closeAuthFlow: @escaping () -> Void, resetCode: String) -> AnyView
 }
@@ -12,6 +13,7 @@ public protocol AuthenticateViewBuilder {
 class AuthenticateComponent: Component<AppDependency> {
     internal var viewModel: AuthenticateViewModel? = nil
     internal var _loginWithEmailViewModel: LoginWithEmailViewModel? = nil
+    internal var _loginWithPhoneViewModel: LoginWithPhoneViewModel? = nil
     internal var _passwordRecoverViewModel: PasswordRecoverViewModel? = nil
     internal var _resetPasswordViewModel: ResetPasswordViewModel? = nil
 
@@ -29,6 +31,9 @@ class AuthenticateComponent: Component<AppDependency> {
             .sink { pathIds in
                 if !pathIds.contains(NavigationRoute.loginWithEmail.id) {
                     self._loginWithEmailViewModel = nil
+                }
+                if !pathIds.contains(NavigationRoute.loginWithPhone.id) {
+                    self._loginWithPhoneViewModel = nil
                 }
                 if !pathIds.contains(passwordRecoverId) {
                     self._passwordRecoverViewModel = nil

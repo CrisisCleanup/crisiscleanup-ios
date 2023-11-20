@@ -114,6 +114,10 @@ public class MainComponent: BootstrapComponent,
         authenticateComponent.loginWithEmailView(closeAuthFlow: closeAuthFlow)
     }
 
+    public func loginWithPhoneView(closeAuthFlow: @escaping () -> Void) -> AnyView {
+        authenticateComponent.loginWithPhoneView(closeAuthFlow: closeAuthFlow)
+    }
+
     public func passwordRecoverView(showForgotPassword: Bool, showMagicLink: Bool) -> AnyView {
         authenticateComponent.passwordRecoverView(showForgotPassword: showForgotPassword, showMagicLink: showMagicLink)
     }

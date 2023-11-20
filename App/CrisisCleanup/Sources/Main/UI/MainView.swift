@@ -57,7 +57,7 @@ struct MainView: View {
                                 case .loginWithEmail:
                                     authenticateViewBuilder.loginWithEmailView(closeAuthFlow: hideAuthScreen)
                                 case .loginWithPhone:
-                                    Text("Login with phone")
+                                    authenticateViewBuilder.loginWithPhoneView(closeAuthFlow: hideAuthScreen)
                                 case .recoverPassword(let showForgotPassword, let showMagicLink):
                                     authenticateViewBuilder.passwordRecoverView(
                                         showForgotPassword: showForgotPassword,

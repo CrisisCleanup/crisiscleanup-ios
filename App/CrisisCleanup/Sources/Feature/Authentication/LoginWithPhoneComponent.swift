@@ -1,9 +1,9 @@
 import SwiftUI
 
 extension AuthenticateComponent {
-    private var loginWithEmailViewModel: LoginWithEmailViewModel {
-        if _loginWithEmailViewModel == nil {
-            _loginWithEmailViewModel = LoginWithEmailViewModel(
+    private var loginWithPhoneViewModel: LoginWithPhoneViewModel {
+        if _loginWithPhoneViewModel == nil {
+            _loginWithPhoneViewModel = LoginWithPhoneViewModel(
                 appEnv: dependency.appEnv,
                 appSettings: dependency.appSettingsProvider,
                 authApi: dependency.authApi,
@@ -15,17 +15,17 @@ extension AuthenticateComponent {
                 loggerFactory: dependency.loggerFactory
             )
         }
-        return _loginWithEmailViewModel!
+        return _loginWithPhoneViewModel!
     }
 
-    func loginWithEmailView(closeAuthFlow: @escaping () -> Void) -> AnyView {
+    func loginWithPhoneView(closeAuthFlow: @escaping () -> Void) -> AnyView {
         let clearViewModelOnHide = {
-            self._loginWithEmailViewModel = nil
+            self._loginWithPhoneViewModel = nil
             closeAuthFlow()
         }
         return AnyView(
-            LoginWithEmailView(
-                viewModel: loginWithEmailViewModel,
+            LoginWithPhoneView(
+                viewModel: loginWithPhoneViewModel,
                 dismiss: clearViewModelOnHide
             )
         )

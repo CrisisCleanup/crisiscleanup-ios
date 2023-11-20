@@ -163,17 +163,17 @@ class LoginWithEmailViewModel: ObservableObject {
     }
 
     func authenticate(_ emailAddress: String, _ password: String) {
-        if isAuthenticating {
-            return
-        }
-
-        resetVisualState()
-
         if !validateInput(emailAddress, password) {
             return
         }
 
+        if isAuthenticating {
+            return
+        }
         isAuthenticating = true
+
+        resetVisualState()
+
         Task {
             defer {
                 Task { @MainActor in isAuthenticating = false }

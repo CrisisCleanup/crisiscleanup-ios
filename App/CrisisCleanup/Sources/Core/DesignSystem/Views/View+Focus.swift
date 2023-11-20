@@ -7,6 +7,7 @@ enum TextInputFocused: Hashable {
          authEmailAddress,
          authPassword,
          authConfirmPassword,
+         authPhone,
          userEmailAddress,
          userFirstName,
          userLastName,
