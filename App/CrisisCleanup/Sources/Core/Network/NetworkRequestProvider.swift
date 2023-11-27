@@ -326,6 +326,13 @@ extension NetworkRequestProvider {
         )
     }
 
+    var magicLinkCodeAuth: NetworkRequest {
+        NetworkRequest(
+            apiUrl("magic_link"),
+            method: .post
+        )
+    }
+
     // MARK: Register
 
     var requestInvitation: NetworkRequest {

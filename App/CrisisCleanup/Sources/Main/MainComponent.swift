@@ -120,6 +120,10 @@ public class MainComponent: BootstrapComponent,
         authenticateComponent.phoneLoginCodeView(phoneNumber, closeAuthFlow: closeAuthFlow)
     }
 
+    public func magicLinkLoginCodeView(_ code: String, closeAuthFlow: @escaping () -> Void) -> AnyView {
+        authenticateComponent.magicLinkLoginCodeView(code, closeAuthFlow: closeAuthFlow)
+    }
+
     public func passwordRecoverView(showForgotPassword: Bool, showMagicLink: Bool) -> AnyView {
         authenticateComponent.passwordRecoverView(showForgotPassword: showForgotPassword, showMagicLink: showMagicLink)
     }

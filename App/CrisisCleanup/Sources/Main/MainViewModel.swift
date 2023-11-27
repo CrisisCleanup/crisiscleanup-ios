@@ -172,8 +172,8 @@ class MainViewModel: ObservableObject {
 
     private func onEmailLoginLink(_ code: String) {
         if isNotAuthenticated {
-            // TODO: Login here (or upstream)
-            logger.logDebug("Login with code \(code)")
+            router.openMagicLinkLoginCode(code)
+            showAuthScreen = true
         }
     }
 

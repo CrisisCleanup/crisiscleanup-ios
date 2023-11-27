@@ -39,6 +39,16 @@ class AuthApiClient : CrisisCleanupAuthApi {
         ).value
     }
 
+    func magicLinkLogin(_ token: String) async throws -> NetworkOAuthTokens? {
+        let authRequest = requestProvider.magicLinkCodeAuth
+            .addPaths(token, "login")
+        return await networkClient.callbackContinue(
+            requestConvertible: authRequest,
+            type: NetworkCodeAuthResult.self,
+            wrapResponseKey: "authTokens"
+        ).value?.authTokens
+    }
+
     /**
      * - Returns nil if the network call was not attempted (due to onging call) or the result otherwise
      */

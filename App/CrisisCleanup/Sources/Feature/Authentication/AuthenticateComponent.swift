@@ -7,6 +7,7 @@ public protocol AuthenticateViewBuilder {
     func loginWithEmailView(closeAuthFlow: @escaping () -> Void) -> AnyView
     var loginWithPhoneView: AnyView { get }
     func phoneLoginCodeView(_ phoneNumber: String, closeAuthFlow: @escaping () -> Void) -> AnyView
+    func magicLinkLoginCodeView(_ code: String, closeAuthFlow: @escaping () -> Void) -> AnyView
     func passwordRecoverView(showForgotPassword: Bool, showMagicLink: Bool) -> AnyView
     func resetPasswordView(closeAuthFlow: @escaping () -> Void, resetCode: String) -> AnyView
 }
@@ -15,6 +16,7 @@ class AuthenticateComponent: Component<AppDependency> {
     internal var viewModel: AuthenticateViewModel? = nil
     internal var _loginWithEmailViewModel: LoginWithEmailViewModel? = nil
     internal var _loginWithPhoneViewModel: LoginWithPhoneViewModel? = nil
+    internal var _loginWithMagicLinkViewModel: LoginWithMagicLinkViewModel? = nil
     internal var _passwordRecoverViewModel: PasswordRecoverViewModel? = nil
     internal var _resetPasswordViewModel: ResetPasswordViewModel? = nil
 

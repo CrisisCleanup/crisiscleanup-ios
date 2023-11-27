@@ -17,12 +17,8 @@ class ExternalActivityProcessor {
             return false
         }
 
-        if path.starts(with: "/o/callback") {
-            guard let params = components.queryItems,
-                  let code = params.first(where: { $0.name == "code" } )?.value else {
-                return false
-            }
-
+        if let code = getTrailingPath(path: path, prefix: "/l/"),
+           code.isNotBlank {
             externalEventBus.onEmailLoginLink(code)
             return true
 

@@ -5,7 +5,7 @@ struct NetworkEmailPayload: Codable, Equatable {
 }
 
 struct NetworkMagicLinkResult: Codable, Equatable {
-    let detail: String
+    let errors: [NetworkCrisisCleanupApiError]?
 }
 
 public struct InitiatePasswordResetResult: Codable, Equatable {

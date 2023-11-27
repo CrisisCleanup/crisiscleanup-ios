@@ -28,10 +28,13 @@ class AccountApiClient : CrisisCleanupAccountApi {
         let payload = NetworkEmailPayload(email: emailAddress)
         let request = requestProvider.initiateMagicLink
             .setBody(payload)
-        return await networkClient.callbackContinue(
+        let result = await networkClient.callbackContinue(
             requestConvertible: request,
             type: NetworkMagicLinkResult.self
-        ).value?.detail.isNotBlank == true
+        )
+        // TODO: Alert if account does not exist
+        //       message = "User with this email does not exist."
+        return result.response?.statusCode == 201 && result.value?.errors == nil
     }
 
     func initiatePasswordReset(_ emailAddress: String) async throws -> InitiatePasswordResetResult {

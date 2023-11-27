@@ -30,4 +30,38 @@ extension AuthenticateComponent {
             )
         )
     }
+
+    private func loginWithMagicLinkViewModel(_ code: String) -> LoginWithMagicLinkViewModel {
+        var isReusable = false
+        if let vm = _loginWithMagicLinkViewModel {
+            isReusable = vm.authCode == code
+        }
+
+        if !isReusable {
+            _loginWithMagicLinkViewModel = LoginWithMagicLinkViewModel(
+                appSettings: dependency.appSettingsProvider,
+                authApi: dependency.authApi,
+                accessTokenDecoder: dependency.accessTokenDecoder,
+                accountDataRepository: dependency.accountDataRepository,
+                authEventBus: dependency.authEventBus,
+                translator: dependency.translator,
+                loggerFactory: dependency.loggerFactory,
+                authCode: code
+            )
+        }
+        return _loginWithMagicLinkViewModel!
+    }
+
+    func magicLinkLoginCodeView(_ code: String, closeAuthFlow: @escaping () -> Void) -> AnyView {
+        let clearViewModelOnHide = {
+            self._loginWithMagicLinkViewModel = nil
+            closeAuthFlow()
+        }
+        return AnyView(
+            LoginMagicLinkCodeView(
+                viewModel: loginWithMagicLinkViewModel(code),
+                dismiss: clearViewModelOnHide
+            )
+        )
+    }
 }

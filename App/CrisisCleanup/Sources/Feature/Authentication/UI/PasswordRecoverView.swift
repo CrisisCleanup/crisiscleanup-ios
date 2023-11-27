@@ -29,8 +29,8 @@ struct PasswordRecoverView: View {
                         }
 
                         if viewModel.showMagicLink {
-//                            MagicLinkView()
-//                            .padding(.bottom)
+                            MagicLinkView()
+                                .padding(.bottom)
                         }
                     }
                 }
