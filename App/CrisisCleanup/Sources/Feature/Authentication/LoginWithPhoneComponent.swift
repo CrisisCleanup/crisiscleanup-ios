@@ -1,8 +1,13 @@
 import SwiftUI
 
 extension AuthenticateComponent {
-    private var loginWithPhoneViewModel: LoginWithPhoneViewModel {
-        if _loginWithPhoneViewModel == nil {
+    private func loginWithPhoneViewModel(_ phoneNumber: String = "") -> LoginWithPhoneViewModel {
+        var isReusable = false
+        if let vm = _loginWithPhoneViewModel {
+            isReusable = vm.phoneNumber == phoneNumber
+        }
+
+        if !isReusable {
             _loginWithPhoneViewModel = LoginWithPhoneViewModel(
                 appEnv: dependency.appEnv,
                 appSettings: dependency.appSettingsProvider,
@@ -13,7 +18,8 @@ extension AuthenticateComponent {
                 accountDataRepository: dependency.accountDataRepository,
                 authEventBus: dependency.authEventBus,
                 translator: dependency.translator,
-                loggerFactory: dependency.loggerFactory
+                loggerFactory: dependency.loggerFactory,
+                phoneNumber: phoneNumber
             )
         }
         return _loginWithPhoneViewModel!
@@ -22,7 +28,7 @@ extension AuthenticateComponent {
     var loginWithPhoneView: AnyView {
         AnyView(
             LoginWithPhoneView(
-                viewModel: loginWithPhoneViewModel
+                viewModel: loginWithPhoneViewModel()
             )
         )
     }
@@ -34,7 +40,7 @@ extension AuthenticateComponent {
         }
         return AnyView(
             LoginPhoneCodeView(
-                viewModel: loginWithPhoneViewModel,
+                viewModel: loginWithPhoneViewModel(phoneNumber),
                 dismiss: clearViewModelOnHide
             )
         )

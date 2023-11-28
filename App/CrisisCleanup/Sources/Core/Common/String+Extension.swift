@@ -23,6 +23,15 @@ extension String {
     func ifBlank(_ closure: () -> String) -> String {
         isBlank ? closure() : self
     }
+
+    private func range(_ start: Int, _ end: Int) -> Range<String.Index> {
+        index(startIndex, offsetBy: start)..<index(startIndex, offsetBy: end)
+    }
+
+    func substring(_ start: Int, _ end: Int) -> String {
+        let s = self[range(start, end)]
+        return String(s)
+    }
 }
 
 extension Array where Element == Optional<String> {

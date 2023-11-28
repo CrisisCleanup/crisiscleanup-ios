@@ -13,10 +13,14 @@ class LoginWithPhoneViewModel: ObservableObject {
     private let translator: KeyAssetTranslator
     private let logger: AppLogger
 
+    let phoneNumber: String
+    let obfuscatedPhoneNumber: String
+
     @Published private(set) var viewData: AuthenticateViewData = AuthenticateViewData()
 
     @Published var errorMessage: String = ""
     @Published private(set) var focusState: TextInputFocused?
+    @Published private(set) var codeFocusState: SingleCodeFocused?
 
     private let isRequestingCodeSubject = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isRequestingCode = false
@@ -39,7 +43,8 @@ class LoginWithPhoneViewModel: ObservableObject {
         accountDataRepository: AccountDataRepository,
         authEventBus: AuthEventBus,
         translator: KeyAssetTranslator,
-        loggerFactory: AppLoggerFactory
+        loggerFactory: AppLoggerFactory,
+        phoneNumber: String
     ) {
         self.appEnv = appEnv
         self.appSettings = appSettings
@@ -51,6 +56,30 @@ class LoginWithPhoneViewModel: ObservableObject {
         self.authEventBus = authEventBus
         self.translator = translator
         logger = loggerFactory.getLogger("auth")
+
+        self.phoneNumber = phoneNumber
+        obfuscatedPhoneNumber = {
+            let nonNumberRegex = #/[^\d]/#
+            var s = phoneNumber.replacing(nonNumberRegex, with: "")
+            if s.count > 4 {
+                let startIndex = max(0, s.count - 4)
+                let endIndex = s.count
+                let lastFour = s.substring(startIndex, endIndex)
+                let firstCount = s.count - 4
+                func obfuscated(_ count: Int) -> String {
+                    String(repeating: "•", count: count)
+                }
+                if firstCount > 3 {
+                    let obfuscatedStart = obfuscated(firstCount - 3)
+                    let obfuscatedMiddle = obfuscated(3)
+                    s = "(\(obfuscatedStart)) \(obfuscatedMiddle) - \(lastFour)"
+                } else {
+                    let obfuscated = obfuscated(firstCount)
+                    s = "\(obfuscated) - \(lastFour)"
+                }
+            }
+            return s
+        }()
     }
 
     func onViewAppear() {
