@@ -39,6 +39,18 @@ class AccountApiClient : CrisisCleanupAccountApi {
         return result.response?.statusCode == 201 && result.value?.errors == nil
     }
 
+    func initiatePhoneLogin(_ phoneNumber: String) async -> Bool {
+        let payload = NetworkPhonePayload(phone: phoneNumber)
+        let request = requestProvider.initiatePhoneLogin
+            .setBody(payload)
+        let result = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkPhoneCodeResult.self
+        )
+        // TODO: Capture and report errors accordingly
+        return result.response?.statusCode == 201 && result.value?.errors == nil
+    }
+
     func initiatePasswordReset(_ emailAddress: String) async throws -> InitiatePasswordResetResult {
         let payload = NetworkEmailPayload(email: emailAddress)
         let request = requestProvider.initiatePasswordReset

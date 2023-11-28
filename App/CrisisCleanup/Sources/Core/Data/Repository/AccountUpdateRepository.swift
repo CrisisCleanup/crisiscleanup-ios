@@ -3,6 +3,7 @@ import Foundation
 
 public protocol AccountUpdateRepository {
     func initiateEmailMagicLink(_ emailAddress: String) async -> Bool
+    func initiatePhoneLogin(_ phoneNumber: String) async -> Bool
     func initiatePasswordReset(_ emailAddress: String) async -> PasswordResetInitiation
     func changePassword(password: String, token: String) async -> Bool
     func takeWasPasswordResetRecent() -> Bool
@@ -24,6 +25,10 @@ class CrisisCleanupAccountUpdateRepository: AccountUpdateRepository {
 
     func initiateEmailMagicLink(_ emailAddress: String) async -> Bool {
         await accountApi.initiateMagicLink(emailAddress)
+    }
+
+    func initiatePhoneLogin(_ phoneNumber: String) async -> Bool {
+        await accountApi.initiatePhoneLogin(phoneNumber)
     }
 
     func initiatePasswordReset(_ emailAddress: String) async -> PasswordResetInitiation {

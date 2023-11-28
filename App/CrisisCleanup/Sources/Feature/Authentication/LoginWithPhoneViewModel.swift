@@ -7,6 +7,7 @@ class LoginWithPhoneViewModel: ObservableObject {
     private let authApi: CrisisCleanupAuthApi
     private let inputValidator: InputValidator
     private let accessTokenDecoder: AccessTokenDecoder
+    private let accountUpdateRepository: AccountUpdateRepository
     private let accountDataRepository: AccountDataRepository
     private let authEventBus: AuthEventBus
     private let translator: KeyAssetTranslator
@@ -17,12 +18,14 @@ class LoginWithPhoneViewModel: ObservableObject {
     @Published var errorMessage: String = ""
     @Published private(set) var focusState: TextInputFocused?
 
-    private let isAcceptingCodeSubject = CurrentValueSubject<Bool, Never>(false)
-    @Published private(set) var isAcceptingCode = false
-    @Published var openLoginPhoneCode = false
+    private let isRequestingCodeSubject = CurrentValueSubject<Bool, Never>(false)
+    @Published private(set) var isRequestingCode = false
+    @Published var openPhoneCodeLogin = false
 
     @Published private(set) var isAuthenticating: Bool = false
     @Published private(set) var isAuthenticateSuccessful: Bool = false
+
+    private let numberRegex = #/^[\d -]+$/#
 
     private var subscriptions = Set<AnyCancellable>()
 
@@ -32,6 +35,7 @@ class LoginWithPhoneViewModel: ObservableObject {
         authApi: CrisisCleanupAuthApi,
         inputValidator: InputValidator,
         accessTokenDecoder: AccessTokenDecoder,
+        accountUpdateRepository: AccountUpdateRepository,
         accountDataRepository: AccountDataRepository,
         authEventBus: AuthEventBus,
         translator: KeyAssetTranslator,
@@ -42,6 +46,7 @@ class LoginWithPhoneViewModel: ObservableObject {
         self.authApi = authApi
         self.inputValidator = inputValidator
         self.accessTokenDecoder = accessTokenDecoder
+        self.accountUpdateRepository = accountUpdateRepository
         self.accountDataRepository = accountDataRepository
         self.authEventBus = authEventBus
         self.translator = translator
@@ -58,9 +63,9 @@ class LoginWithPhoneViewModel: ObservableObject {
     }
 
     private func subscribeViewState() {
-        isAcceptingCodeSubject
+        isRequestingCodeSubject
             .receive(on: RunLoop.main)
-            .assign(to: \.isAcceptingCode, on: self)
+            .assign(to: \.isRequestingCode, on: self)
             .store(in: &subscriptions)
     }
 
@@ -84,9 +89,39 @@ class LoginWithPhoneViewModel: ObservableObject {
     }
 
     func requestPhoneCode(_ phoneNumber: String) {
-        // TODO: Validate
-        //       Request phone code
-        //       Show code input on successful code request or error otherwise
+        let trimPhoneNumber = phoneNumber.trim()
+        guard ((try? numberRegex.wholeMatch(in: trimPhoneNumber) != nil) == true) else {
+            errorMessage = translator.t("info.enter_valid_phone")
+            return
+        }
+
+        guard !isRequestingCodeSubject.value else {
+            return
+        }
+        isRequestingCodeSubject.value = true
+        Task {
+            do {
+                defer { isRequestingCodeSubject.value = false }
+
+                var isInitiated = false
+                var message = ""
+
+                if await accountUpdateRepository.initiatePhoneLogin(trimPhoneNumber) {
+                    isInitiated = true
+                } else {
+                    // TODO: Be more specific
+                    // TODO: Capture error and report to backend
+                    message = translator.t("~~Phone number is invalid or phone login is down. Try again later.")
+                }
+
+                let openPhoneCodeLogin = isInitiated
+                let errorMessage = message
+                Task { @MainActor in
+                    self.openPhoneCodeLogin = openPhoneCodeLogin
+                    self.errorMessage = errorMessage
+                }
+            }
+        }
     }
 
     func authenticate(_ code: String) {

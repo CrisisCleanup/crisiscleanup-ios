@@ -312,6 +312,13 @@ extension NetworkRequestProvider {
         )
     }
 
+    var initiatePhoneLogin: NetworkRequest {
+        NetworkRequest(
+            apiUrl("otp"),
+            method: .post
+        )
+    }
+
     var initiatePasswordReset: NetworkRequest {
         NetworkRequest(
             apiUrl("password_reset_requests"),

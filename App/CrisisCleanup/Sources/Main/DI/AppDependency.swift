@@ -152,6 +152,7 @@ extension MainComponent {
                 secureDataSource,
                 authEventBus,
                 authApi,
+                accountApi,
                 loggerFactory,
                 appEnv
             )

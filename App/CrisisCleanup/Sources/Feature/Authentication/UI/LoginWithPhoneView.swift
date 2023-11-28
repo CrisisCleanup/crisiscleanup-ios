@@ -86,10 +86,10 @@ private struct LoginView: View {
                     .stylePrimary()
                     .padding(.vertical, appTheme.listItemVerticalPadding)
                     .disabled(disabled)
-                    .onChange(of: viewModel.openLoginPhoneCode) { newValue in
+                    .onChange(of: viewModel.openPhoneCodeLogin) { newValue in
                         if (newValue) {
                             router.openPhoneLoginCode(phoneNumber)
-                            viewModel.openLoginPhoneCode = false
+                            viewModel.openPhoneCodeLogin = false
                         }
                     }
                 }

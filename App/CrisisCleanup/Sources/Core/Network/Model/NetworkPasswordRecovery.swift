@@ -8,6 +8,19 @@ struct NetworkMagicLinkResult: Codable, Equatable {
     let errors: [NetworkCrisisCleanupApiError]?
 }
 
+struct NetworkPhonePayload: Codable {
+    let phone: String
+
+    enum CodingKeys: String, CodingKey {
+        case phone = "phone_number"
+    }
+}
+
+struct NetworkPhoneCodeResult: Codable, Equatable {
+    let errors: [NetworkCrisisCleanupApiError]?
+    let message: String?
+}
+
 public struct InitiatePasswordResetResult: Codable, Equatable {
     let id: Int64
     let expiresAt: Date

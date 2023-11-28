@@ -9,6 +9,7 @@ extension AuthenticateComponent {
                 authApi: dependency.authApi,
                 inputValidator: dependency.inputValidator,
                 accessTokenDecoder: dependency.accessTokenDecoder,
+                accountUpdateRepository: dependency.accountUpdateRepository,
                 accountDataRepository: dependency.accountDataRepository,
                 authEventBus: dependency.authEventBus,
                 translator: dependency.translator,
