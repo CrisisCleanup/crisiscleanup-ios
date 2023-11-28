@@ -58,7 +58,7 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
             type: NetworkUser.self
         ).value {
             displayName = "\(userInfo.firstName) \(userInfo.lastName)"
-            if let avatarUrlString = userInfo.files.first(where: { $0.isProfilePicture })?.largeThumbnailUrl {
+            if let avatarUrlString = userInfo.files.profilePictureUrl {
                 avatarUrl = URL(string: avatarUrlString)
             }
             let orgRequest = requestProvider.noAuthOrganization

@@ -4,6 +4,7 @@ import SwiftUI
 class LoginWithMagicLinkViewModel: ObservableObject {
     let appSettings: AppSettingsProvider
     private let authApi: CrisisCleanupAuthApi
+    private let dataApi: CrisisCleanupNetworkDataSource
     private let accessTokenDecoder: AccessTokenDecoder
     private let accountDataRepository: AccountDataRepository
     private let authEventBus: AuthEventBus
@@ -22,6 +23,7 @@ class LoginWithMagicLinkViewModel: ObservableObject {
     init(
         appSettings: AppSettingsProvider,
         authApi: CrisisCleanupAuthApi,
+        dataApi: CrisisCleanupNetworkDataSource,
         accessTokenDecoder: AccessTokenDecoder,
         accountDataRepository: AccountDataRepository,
         authEventBus: AuthEventBus,
@@ -31,6 +33,7 @@ class LoginWithMagicLinkViewModel: ObservableObject {
     ) {
         self.appSettings = appSettings
         self.authApi = authApi
+        self.dataApi = dataApi
         self.accessTokenDecoder = accessTokenDecoder
         self.accountDataRepository = accountDataRepository
         self.authEventBus = authEventBus
@@ -48,7 +51,8 @@ class LoginWithMagicLinkViewModel: ObservableObject {
     }
 
     private func subscribeAuthenticate() {
-        if authCode.isBlank {
+        let magicLinkCode = authCode
+        if magicLinkCode.isBlank {
             errorMessage = translator.t("~~Magic link is invalid. Request another magic link.")
             return
         }
@@ -66,14 +70,32 @@ class LoginWithMagicLinkViewModel: ObservableObject {
                     Task { @MainActor in self.isAuthenticating = false }
                 }
 
-                if let tokens = try await self.authApi.magicLinkLogin(authCode) {
-                    let expirySeconds = Int64(Date().timeIntervalSince1970) + Int64(tokens.expiresIn)
-                    accountDataRepository.updateAccountTokens(
-                        refreshToken: tokens.refreshToken,
-                        accessToken: tokens.accessToken,
-                        expirySeconds: expirySeconds
-                    )
-                    isSuccessful = true
+                let accountData = try await accountDataRepository.accountData.eraseToAnyPublisher().asyncFirst()
+                if let tokens = try await self.authApi.magicLinkLogin(magicLinkCode),
+                   let accountProfile = await dataApi.getProfile(tokens.accessToken) {
+                    let emailAddress = accountData.emailAddress
+                    if emailAddress.isNotBlank && emailAddress != accountProfile.email {
+                        message = translator.t("~~Logging in with an account different from the currently signed in account is not supported. Logout of the signed in account first then login with a different account.")
+
+                        // TODO: Clear account data and support logging in with different email address?
+                    } else {
+                        let expirySeconds = Int64(Date().timeIntervalSince1970) + Int64(tokens.expiresIn)
+                        accountDataRepository.setAccount(
+                            refreshToken: tokens.refreshToken,
+                            accessToken: tokens.accessToken,
+                            id: accountProfile.id,
+                            email: accountProfile.email,
+                            firstName: accountProfile.firstName,
+                            lastName: accountProfile.lastName,
+                            expirySeconds: expirySeconds,
+                            profilePictureUri: accountProfile.profilePicUrl ?? "",
+                            org: OrgData(
+                                id: accountProfile.organization.id,
+                                name: accountProfile.organization.name
+                            )
+                        )
+                        isSuccessful = true
+                    }
                 } else {
                     message = translator.t("~~Login failed. Try requesting a new magic link.")
                 }

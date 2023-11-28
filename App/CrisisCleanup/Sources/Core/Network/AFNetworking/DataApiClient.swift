@@ -85,7 +85,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         )
         if let result = response.value {
             try result.errors?.tryThrowException()
-            return result.files?.first(where: { $0.isProfilePicture })?.largeThumbnailUrl
+            return result.files?.profilePictureUrl
         }
         throw response.error ?? networkError
     }
@@ -451,6 +451,15 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
             requestConvertible: request,
             type: NetworkOrganizationsSearchResult.self
         ).value?.results ?? []
+    }
+
+    func getProfile(_ accessToken: String) async -> NetworkUserProfile? {
+        let request = requestProvider.accountProfileNoToken
+            .addHeaders(["Authorization": accessToken])
+        return await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkUserProfile.self
+        ).value
     }
 }
 

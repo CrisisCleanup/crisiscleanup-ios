@@ -35,6 +35,12 @@ extension NetworkRequestProvider {
         )
     }
 
+    var accountProfileNoToken: NetworkRequest {
+        NetworkRequest(
+            apiUrl("users/me")
+        )
+    }
+
     var organizations: NetworkRequest {
         NetworkRequest(
             apiUrl("organizations"),

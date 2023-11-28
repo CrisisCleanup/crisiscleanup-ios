@@ -34,6 +34,12 @@ public struct NetworkFile: Codable, Equatable {
     var isProfilePicture: Bool { fileTypeT == "fileTypes.user_profile_picture" }
 }
 
+extension Array where Element == NetworkFile {
+    var profilePictureUrl: String? {
+        first { $0.isProfilePicture }?.largeThumbnailUrl
+    }
+}
+
 public struct NetworkFilePush: Codable, Equatable {
     let file: Int64
     let tag: String?

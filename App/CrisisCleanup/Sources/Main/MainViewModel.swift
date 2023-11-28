@@ -17,6 +17,7 @@ class MainViewModel: ObservableObject {
 
     @Published private(set) var viewData: MainViewData = MainViewData()
     private var isNotAuthenticated: Bool { !viewData.isAuthenticated }
+    private var areTokensInvalid: Bool { !viewData.areTokensValid }
 
     @Published private(set) var minSupportedVersion = supportedAppVersion
 
@@ -171,7 +172,7 @@ class MainViewModel: ObservableObject {
     }
 
     private func onEmailLoginLink(_ code: String) {
-        if isNotAuthenticated {
+        if areTokensInvalid {
             router.openMagicLinkLoginCode(code)
             showAuthScreen = true
         }

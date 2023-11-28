@@ -41,6 +41,7 @@ extension AuthenticateComponent {
             _loginWithMagicLinkViewModel = LoginWithMagicLinkViewModel(
                 appSettings: dependency.appSettingsProvider,
                 authApi: dependency.authApi,
+                dataApi: dependency.networkDataSource,
                 accessTokenDecoder: dependency.accessTokenDecoder,
                 accountDataRepository: dependency.accountDataRepository,
                 authEventBus: dependency.authEventBus,

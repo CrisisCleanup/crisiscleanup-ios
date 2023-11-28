@@ -28,6 +28,8 @@ class AccountApiClient : CrisisCleanupAccountApi {
         let payload = NetworkEmailPayload(email: emailAddress)
         let request = requestProvider.initiateMagicLink
             .setBody(payload)
+        // Due to CSRF error
+            .addHeaders(["Cookie": ""])
         let result = await networkClient.callbackContinue(
             requestConvertible: request,
             type: NetworkMagicLinkResult.self

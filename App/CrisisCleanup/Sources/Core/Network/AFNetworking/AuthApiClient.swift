@@ -42,6 +42,8 @@ class AuthApiClient : CrisisCleanupAuthApi {
     func magicLinkLogin(_ token: String) async throws -> NetworkOAuthTokens? {
         let authRequest = requestProvider.magicLinkCodeAuth
             .addPaths(token, "login")
+        // Due to CSRF error
+            .addHeaders(["Cookie": ""])
         return await networkClient.callbackContinue(
             requestConvertible: authRequest,
             type: NetworkCodeAuthResult.self,

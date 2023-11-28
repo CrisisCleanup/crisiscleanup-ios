@@ -129,7 +129,7 @@ class LoginWithEmailViewModel: ObservableObject {
                 let expirySeconds = Int64(Date().timeIntervalSince1970) + Int64(oauthResult.expiresIn!)
 
                 let claims = result.claims!
-                let profilePicUri = claims.files?.filter { $0.isProfilePicture }.firstOrNil?.largeThumbnailUrl ?? ""
+                let profilePicUri = claims.files?.profilePictureUrl ?? ""
 
                 let organization = result.organizations
                 var orgData = emptyOrgData

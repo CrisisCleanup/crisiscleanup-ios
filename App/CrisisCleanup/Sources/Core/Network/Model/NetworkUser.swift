@@ -15,3 +15,23 @@ struct NetworkUser: Codable, Equatable {
              files
     }
 }
+
+public struct NetworkUserProfile: Codable {
+    let id: Int64
+    let email: String
+    let firstName: String
+    let lastName: String
+    let files: [NetworkFile]?
+    let organization: NetworkOrganizationShort
+
+    enum CodingKeys: String, CodingKey {
+        case id,
+             email,
+             firstName = "first_name",
+             lastName = "last_name",
+             files,
+             organization
+    }
+
+    var profilePicUrl: String? { files?.profilePictureUrl }
+}

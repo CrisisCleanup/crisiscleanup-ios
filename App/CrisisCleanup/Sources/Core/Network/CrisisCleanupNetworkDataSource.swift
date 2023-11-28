@@ -141,6 +141,8 @@ public protocol CrisisCleanupNetworkDataSource {
     ) async -> NetworkAppSupportInfo?
 
     func searchOrganizations(_ q: String) async -> [NetworkOrganizationShort]
+
+    func getProfile(_ accessToken: String) async -> NetworkUserProfile?
 }
 
 extension CrisisCleanupNetworkDataSource {
