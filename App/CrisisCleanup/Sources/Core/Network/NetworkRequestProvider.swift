@@ -308,14 +308,16 @@ extension NetworkRequestProvider {
     var initiateMagicLink: NetworkRequest {
         NetworkRequest(
             apiUrl("magic_link"),
-            method: .post
+            method: .post,
+            clearCookies: true
         )
     }
 
     var initiatePhoneLogin: NetworkRequest {
         NetworkRequest(
             apiUrl("otp"),
-            method: .post
+            method: .post,
+            clearCookies: true
         )
     }
 
@@ -342,6 +344,21 @@ extension NetworkRequestProvider {
     var magicLinkCodeAuth: NetworkRequest {
         NetworkRequest(
             apiUrl("magic_link"),
+            method: .post,
+            clearCookies: true
+        )
+    }
+
+    var verifyOneTimePassword: NetworkRequest {
+        NetworkRequest(
+            apiUrl("otp/verify"),
+            method: .post
+        )
+    }
+
+    var oneTimePasswordAuth: NetworkRequest {
+        NetworkRequest(
+            apiUrl("otp/generate_token"),
             method: .post
         )
     }

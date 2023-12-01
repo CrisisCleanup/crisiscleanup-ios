@@ -7,6 +7,10 @@ public protocol CrisisCleanupAuthApi {
 
     func magicLinkLogin(_ token: String) async throws -> NetworkOAuthTokens?
 
+    func verifyPhoneCode(phoneNumber: String, code: String) async -> NetworkOneTimePasswordResult?
+
+    func oneTimePasswordLogin(accountId: Int64, oneTimePasswordId: Int64) async throws -> NetworkOAuthTokens?
+
     func refreshTokens(_ refreshToken: String) async throws -> NetworkOAuthResult?
 }
 

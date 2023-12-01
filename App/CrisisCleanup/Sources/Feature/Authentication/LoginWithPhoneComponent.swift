@@ -12,6 +12,7 @@ extension AuthenticateComponent {
                 appEnv: dependency.appEnv,
                 appSettings: dependency.appSettingsProvider,
                 authApi: dependency.authApi,
+                dataApi: dependency.networkDataSource,
                 inputValidator: dependency.inputValidator,
                 accessTokenDecoder: dependency.accessTokenDecoder,
                 accountUpdateRepository: dependency.accountUpdateRepository,

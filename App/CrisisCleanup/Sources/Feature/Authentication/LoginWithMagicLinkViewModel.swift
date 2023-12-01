@@ -96,12 +96,14 @@ class LoginWithMagicLinkViewModel: ObservableObject {
                         )
                         isSuccessful = true
                     }
-                } else {
-                    message = translator.t("~~Login failed. Try requesting a new magic link.")
                 }
             } catch {
                 logger.logError(error)
-                message = translator.t("~~Unable to login with magic link. Try again later.")
+            }
+
+            if !isSuccessful,
+               errorMessage.isBlank {
+                message = translator.t("~~Login failed. Try requesting a new magic link.")
             }
 
             let errorMessage = message

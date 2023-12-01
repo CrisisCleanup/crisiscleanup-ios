@@ -42,8 +42,30 @@ class AuthApiClient : CrisisCleanupAuthApi {
     func magicLinkLogin(_ token: String) async throws -> NetworkOAuthTokens? {
         let authRequest = requestProvider.magicLinkCodeAuth
             .addPaths(token, "login")
-        // Due to CSRF error
-            .addHeaders(["Cookie": ""])
+        return await networkClient.callbackContinue(
+            requestConvertible: authRequest,
+            type: NetworkCodeAuthResult.self,
+            wrapResponseKey: "authTokens"
+        ).value?.authTokens
+    }
+
+    func verifyPhoneCode(phoneNumber: String, code: String) async -> NetworkOneTimePasswordResult? {
+        let payload = NetworkPhoneCodePayload(phone: phoneNumber, code: code)
+        let request = requestProvider.verifyOneTimePassword
+            .setBody(payload)
+        let result = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkPhoneOneTimePasswordResult.self,
+            wrapResponseKey: "otpResult"
+        )
+        // TODO: Capture and report errors accordingly
+        return result.value?.otpResult
+    }
+
+    func oneTimePasswordLogin(accountId: Int64, oneTimePasswordId: Int64) async throws -> NetworkOAuthTokens? {
+        let payload = NetworkOneTimePasswordPayload(accountId: accountId, otpId: oneTimePasswordId)
+        let authRequest = requestProvider.oneTimePasswordAuth
+            .setBody(payload)
         return await networkClient.callbackContinue(
             requestConvertible: authRequest,
             type: NetworkCodeAuthResult.self,

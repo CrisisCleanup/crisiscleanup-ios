@@ -174,6 +174,7 @@ struct UserInfoInputView: View {
                 }
                 .foregroundColor(.black)
             }
+            .textFieldBorder()
             .padding(.bottom)
         }
     }

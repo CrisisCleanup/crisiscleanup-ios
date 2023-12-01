@@ -36,7 +36,7 @@ private struct LoginView: View {
     }
 
     var body: some View {
-        let disabled = viewModel.isAuthenticating
+        let disabled = viewModel.isRequestingCode
 
         VStack {
             ScrollView {
@@ -79,7 +79,7 @@ private struct LoginView: View {
                         requestPhoneCode()
                     } label: {
                         BusyButtonContent(
-                            isBusy: viewModel.isAuthenticating,
+                            isBusy: viewModel.isRequestingCode,
                             text: t.t("loginForm.login_with_cell")
                         )
                     }

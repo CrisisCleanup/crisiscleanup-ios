@@ -16,6 +16,53 @@ struct NetworkPhonePayload: Codable {
     }
 }
 
+struct NetworkPhoneCodePayload: Codable {
+    let phone: String
+    let code: String
+
+    enum CodingKeys: String, CodingKey {
+        case phone = "phone_number",
+             code = "otp"
+    }
+}
+
+struct NetworkPhoneOneTimePasswordResult: Codable, Equatable {
+    let errors: [NetworkCrisisCleanupApiError]?
+    let otpResult: NetworkOneTimePasswordResult
+}
+
+public struct NetworkOneTimePasswordResult: Codable, Equatable {
+    let accounts: [OneTimePasswordPhoneAccount]
+    let otpId: Int64
+
+    enum CodingKeys: String, CodingKey {
+        case accounts,
+             otpId = "otp_id"
+    }
+}
+
+struct OneTimePasswordPhoneAccount: Codable, Equatable {
+    let id: Int64
+    let email: String
+    let organizationName: String
+
+    enum CodingKeys: String, CodingKey {
+        case id,
+             email,
+             organizationName = "organization"
+    }
+}
+
+struct NetworkOneTimePasswordPayload: Codable {
+    let accountId: Int64
+    let otpId: Int64
+
+    enum CodingKeys: String, CodingKey {
+        case accountId = "user",
+             otpId = "otp_id"
+    }
+}
+
 struct NetworkPhoneCodeResult: Codable, Equatable {
     let errors: [NetworkCrisisCleanupApiError]?
     let message: String?

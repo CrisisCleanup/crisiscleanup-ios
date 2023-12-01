@@ -11,6 +11,7 @@ struct NetworkRequest: URLRequestConvertible {
     let formParameters: Encodable?
     let bodyParameters: Encodable?
     let addTokenHeader: Bool
+    let clearCookies: Bool
 
     init(
         _ url: URL,
@@ -20,7 +21,8 @@ struct NetworkRequest: URLRequestConvertible {
         queryParameters: [URLQueryItem]? = nil,
         formParameters: Encodable? = nil,
         bodyParameters: Encodable? = nil,
-        addTokenHeader: Bool = false
+        addTokenHeader: Bool = false,
+        clearCookies: Bool = false
     ) {
         self.url = url
         self.method = method
@@ -30,6 +32,7 @@ struct NetworkRequest: URLRequestConvertible {
         self.formParameters = formParameters
         self.bodyParameters = bodyParameters
         self.addTokenHeader = addTokenHeader
+        self.clearCookies = clearCookies
     }
 
     func addPaths(_ paths: String...) -> Self {
@@ -89,6 +92,10 @@ struct NetworkRequest: URLRequestConvertible {
             }
 
             request.url = url
+
+            if clearCookies {
+                request.setValue("", forHTTPHeaderField: "Cookie")
+            }
 
             if addTokenHeader {
                 request.setValue("", forHTTPHeaderField: "Authorization")
