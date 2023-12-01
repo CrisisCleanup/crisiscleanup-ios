@@ -85,7 +85,7 @@ private struct LoginView: View {
             ScrollView {
                 VStack(alignment: .leading) {
                     let errorMessage = viewModel.errorMessage
-                    if !errorMessage.isBlank {
+                    if errorMessage.isNotBlank {
                         // TODO: Common styles
                         Text(errorMessage)
                             .foregroundColor(appTheme.colors.primaryRedColor)

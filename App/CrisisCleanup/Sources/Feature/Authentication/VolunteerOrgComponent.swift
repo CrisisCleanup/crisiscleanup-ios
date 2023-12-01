@@ -16,6 +16,7 @@ class VolunteerOrgComponent: Component<AppDependency>, VolunteerOrgViewBuilder {
     internal var _requestOrgAccessViewModel: RequestOrgAccessViewModel? = nil
     internal var _persistentInviteViewModel: PersistentInviteViewModel?  = nil
     internal var _pasteOrgInviteViewModel: PasteOrgInviteViewModel?  = nil
+    internal var _scanQrCodeJoinOrgViewModel: ScanQrCodeJoinOrgViewModel?  = nil
 
     private var disposables = Set<AnyCancellable>()
 
@@ -35,6 +36,9 @@ class VolunteerOrgComponent: Component<AppDependency>, VolunteerOrgViewBuilder {
                 }
                 if !pathIds.contains(NavigationRoute.pasteOrgInviteLink.id) {
                     self._pasteOrgInviteViewModel = nil
+                }
+                if !pathIds.contains(NavigationRoute.scanOrgQrCode.id) {
+                    self._scanQrCodeJoinOrgViewModel = nil
                 }
             }
             .store(in: &disposables)
@@ -56,12 +60,6 @@ class VolunteerOrgComponent: Component<AppDependency>, VolunteerOrgViewBuilder {
             VolunteerOrgView(
                 viewModel: getViewModel()
             )
-        )
-    }
-
-    var scanQrCodeJoinOrgView: AnyView {
-        AnyView(
-            ScanQrCodeJoinOrgView()
         )
     }
 }

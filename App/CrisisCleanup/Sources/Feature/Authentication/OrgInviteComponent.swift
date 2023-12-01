@@ -54,7 +54,7 @@ extension VolunteerOrgComponent {
         )
     }
 
-    private func pasteOrgInviteViewModel() -> PasteOrgInviteViewModel {
+    private var pasteOrgInviteViewModel: PasteOrgInviteViewModel {
         if _pasteOrgInviteViewModel == nil {
             _pasteOrgInviteViewModel = PasteOrgInviteViewModel(
                 orgVolunteerRepository: dependency.orgVolunteerRepository,
@@ -67,7 +67,25 @@ extension VolunteerOrgComponent {
     var pasteOrgInviteView: AnyView {
         AnyView(
             PasteOrgInviteView(
-                viewModel: pasteOrgInviteViewModel())
+                viewModel: pasteOrgInviteViewModel
+            )
+        )
+    }
+
+    private var scanQrCodeJoinOrgViewModel: ScanQrCodeJoinOrgViewModel {
+        if _scanQrCodeJoinOrgViewModel == nil {
+            _scanQrCodeJoinOrgViewModel = ScanQrCodeJoinOrgViewModel(
+                translator: dependency.translator
+            )
+        }
+        return _scanQrCodeJoinOrgViewModel!
+    }
+
+    var scanQrCodeJoinOrgView: AnyView {
+        AnyView(
+            ScanQrCodeJoinOrgView(
+                viewModel: scanQrCodeJoinOrgViewModel
+            )
         )
     }
 }
