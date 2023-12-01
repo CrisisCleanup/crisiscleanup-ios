@@ -33,22 +33,12 @@ class ExternalActivityProcessor {
             return true
 
         } else if path.starts(with: "/mobile_app_user_invite") {
-            let params = components.queryItems
-            if let inviterIdString = params?.find("user-id"),
-               let inviterId = Int64(inviterIdString),
-               let token = params?.find("invite-token") {
-                externalEventBus.onOrgPersistentInvite(inviterId, token)
-            } else {
-                return false
+            if let query = components.queryItems {
+                return externalEventBus.onOrgPersistentInvite(query)
             }
+            return false
         }
 
         return false
-    }
-}
-
-fileprivate extension [URLQueryItem] {
-    func find(_ name: String) -> String? {
-        first(where: { $0.name == name })?.value
     }
 }

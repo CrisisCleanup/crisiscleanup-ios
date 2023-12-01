@@ -25,7 +25,7 @@ public class MainComponent: BootstrapComponent,
     public let appSettingsProvider: AppSettingsProvider
     public let loggerFactory: AppLoggerFactory
     public let addressSearchRepository: AddressSearchRepository
-    private let externalEventBus: ExternalEventBus
+    public let externalEventBus: ExternalEventBus
 
     lazy var mainViewModel: MainViewModel = MainViewModel(
         accountDataRepository: accountDataRepository,

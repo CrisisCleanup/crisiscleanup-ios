@@ -1,5 +1,6 @@
 import Combine
 import CrisisCleanup
+import Foundation
 
 class CrisisCleanupExternalEventBus: ExternalEventBus {
     private let emailLoginLinksSubject = PassthroughSubject<String, Never>()
@@ -39,5 +40,15 @@ class CrisisCleanupExternalEventBus: ExternalEventBus {
             inviteToken: inviteToken
         )
         orgPersistentInvitesSubject.send(invite)
+    }
+
+    func onOrgPersistentInvite(_ query: [URLQueryItem]) -> Bool {
+        if let inviterIdString = query.find("user-id"),
+           let inviterId = Int64(inviterIdString),
+           let token = query.find("invite-token") {
+            onOrgPersistentInvite(inviterId, token)
+            return true
+        }
+        return false
     }
 }

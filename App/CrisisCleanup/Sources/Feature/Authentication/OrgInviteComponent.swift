@@ -75,7 +75,9 @@ extension VolunteerOrgComponent {
     private var scanQrCodeJoinOrgViewModel: ScanQrCodeJoinOrgViewModel {
         if _scanQrCodeJoinOrgViewModel == nil {
             _scanQrCodeJoinOrgViewModel = ScanQrCodeJoinOrgViewModel(
-                translator: dependency.translator
+                externalEventBus: dependency.externalEventBus,
+                translator: dependency.translator,
+                loggerFactory: dependency.loggerFactory
             )
         }
         return _scanQrCodeJoinOrgViewModel!

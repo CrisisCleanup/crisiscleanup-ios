@@ -1,10 +1,12 @@
 import AVKit
 import Combine
 import SwiftUI
-import VisionKit
+import Vision
 
 class ScanQrCodeJoinOrgViewModel: ObservableObject {
+    private let externalEventBus: ExternalEventBus
     private let translator: KeyTranslator
+    private let logger: AppLogger
 
     private let isSeekingAccessSubject = CurrentValueSubject<Bool, Never>(true)
     @Published private(set) var isSeekingAccess = true
@@ -21,25 +23,41 @@ class ScanQrCodeJoinOrgViewModel: ObservableObject {
     @Published private(set) var frameImage: CGImage?
 
     let videoOutputQueue = DispatchQueue(
-      label: "com.crisiscleanup.ScanQRCodeVideoOutput",
-      qos: .userInitiated,
-      attributes: [],
-      autoreleaseFrequency: .workItem
+        label: "com.crisiscleanup.ScanQRCodeVideoOutput",
+        qos: .userInitiated,
+        attributes: [],
+        autoreleaseFrequency: .workItem
     )
 
     private let frameManager = FrameManager()
 
+    lazy var detectBarcodeRequest = VNDetectBarcodesRequest { request, error in
+        guard error == nil else {
+            self.errorMessageSubject.value = error?.localizedDescription ?? "Detection error"
+            return
+        }
+
+        self.onBarcodeResult(request)
+    }
+
+    private let qrCodeResultSubject = CurrentValueSubject<String, Never>("")
+
     private var subscriptions = Set<AnyCancellable>()
 
     init(
-        translator: KeyTranslator
+        externalEventBus: ExternalEventBus,
+        translator: KeyTranslator,
+        loggerFactory: AppLoggerFactory
     ) {
+        self.externalEventBus = externalEventBus
         self.translator = translator
+        logger = loggerFactory.getLogger("onboarding")
     }
 
     func onViewAppear() {
         subscribeToViewState()
         subscribeToCamera()
+        subscribeToQrCode()
 
         checkCameraPermissions()
         startCamera()
@@ -89,6 +107,33 @@ class ScanQrCodeJoinOrgViewModel: ObservableObject {
             .receive(on: RunLoop.main)
             .assign(to: \.frameImage, on: self)
             .store(in: &subscriptions)
+
+        frameManager.cameraFrameSubject
+            .sink(receiveValue: { buffer in
+                if let buffer = buffer {
+                    let imageRequestHandler = VNImageRequestHandler(
+                        cvPixelBuffer: buffer,
+                        orientation: .up
+                    )
+                    do {
+                        try imageRequestHandler.perform([self.detectBarcodeRequest])
+                    } catch {
+                        self.logger.logError(error)
+                    }
+                }
+            })
+            .store(in: &subscriptions)
+    }
+
+    private func subscribeToQrCode() {
+        qrCodeResultSubject.value = ""
+
+        qrCodeResultSubject
+            .filter { $0.isNotBlank }
+            .compactMap { URL(string: $0) }
+            .receive(on: RunLoop.main)
+            .sink { url in self.onQrCodeUrl(url) }
+            .store(in: &subscriptions)
     }
 
     private func startCamera() {
@@ -135,7 +180,7 @@ class ScanQrCodeJoinOrgViewModel: ObservableObject {
         if let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
            let deviceInput = try? AVCaptureDeviceInput(device: device),
            captureSession.canAddInput(deviceInput) {
-            captureSession.sessionPreset = .high
+            captureSession.sessionPreset = .medium
             captureSession.addInput(deviceInput)
         } else if captureSession.inputs.isEmpty {
             errorMessageSubject.value = translator.t("~~Camera could not be found. Retry on a device with a camera.")
@@ -144,6 +189,7 @@ class ScanQrCodeJoinOrgViewModel: ObservableObject {
         if captureSession.inputs.isNotEmpty,
            captureSession.outputs.isEmpty {
             captureSession.addOutput(captureOutput)
+            captureOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA)]
             captureOutput.setSampleBufferDelegate(frameManager, queue: self.videoOutputQueue)
 
             if let videoConnection = captureOutput.connection(with: .video) {
@@ -154,6 +200,29 @@ class ScanQrCodeJoinOrgViewModel: ObservableObject {
         captureSession.commitConfiguration()
 
         startCamera()
+    }
+
+    private func onBarcodeResult(_ request: VNRequest) {
+        guard qrCodeResultSubject.value.isBlank else {
+            return
+        }
+
+        request.results?.forEach({ observation in
+            if let qrCode = observation as? VNBarcodeObservation {
+                qrCodeResultSubject.value = qrCode.payloadStringValue ?? ""
+            }
+        })
+    }
+
+    private func onQrCodeUrl(_ url: URL) {
+        if let lastPath = url.pathComponents.last,
+           // TODO: Move into and read from application constants
+           lastPath == "mobile_app_user_invite",
+           let components = NSURLComponents(url: url, resolvingAgainstBaseURL: true),
+           let query = components.queryItems {
+            // TODO: Should this be allowed if tokens expired?
+            _ = externalEventBus.onOrgPersistentInvite(query)
+        }
     }
 }
 

@@ -12,6 +12,8 @@ public protocol AppDependency: Dependency {
 
     var qrCodeGenerator: QrCodeGenerator { get }
 
+    var externalEventBus: ExternalEventBus { get }
+
     var networkRequestProvider: NetworkRequestProvider { get }
     var authApi: CrisisCleanupAuthApi { get }
     var networkDataSource: CrisisCleanupNetworkDataSource { get }

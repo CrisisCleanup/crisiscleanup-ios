@@ -11,6 +11,7 @@ public protocol ExternalEventBus {
     func onResetPassword(_ code: String)
     func onOrgUserInvite(_ code: String)
     func onOrgPersistentInvite(_ inviterUserId: Int64, _ inviteToken: String)
+    func onOrgPersistentInvite(_ query: [URLQueryItem]) -> Bool
 }
 
 public struct UserPersistentInvite: Hashable, Codable {

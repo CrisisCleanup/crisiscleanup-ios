@@ -28,7 +28,6 @@ struct ScanQrCodeJoinOrgView: View {
 
                         Spacer()
                     } else {
-
                         if let image = viewModel.frameImage {
                             GeometryReader { geometry in
                                 let label = t.t("~~Camera")
@@ -64,6 +63,5 @@ struct ScanQrCodeJoinOrgView: View {
         .screenTitle(t.t("~~Scan QR Code"))
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
-        .environmentObject(viewModel)
     }
 }
