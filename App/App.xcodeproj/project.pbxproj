@@ -13,6 +13,8 @@
 		4E0CCF032A19889B00EC6906 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 4E0CCF022A19889B00EC6906 /* FirebaseCrashlytics */; };
 		4E0CCF052A19889B00EC6906 /* FirebasePerformance in Frameworks */ = {isa = PBXBuildFile; productRef = 4E0CCF042A19889B00EC6906 /* FirebasePerformance */; };
 		4E0CCF082A1989FB00EC6906 /* AppLoggerProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0CCF072A1989FB00EC6906 /* AppLoggerProvider.swift */; };
+		4E2637D72B1E47380064424E /* Release-auConfig.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 4E2637D62B1E47380064424E /* Release-auConfig.xcconfig */; };
+		4E2637D92B1E48530064424E /* GoogleService-Info-release-au.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4E2637D82B1E48530064424E /* GoogleService-Info-release-au.plist */; };
 		4E342A4D2A7A0CA600B55713 /* AppFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E342A4C2A7A0CA600B55713 /* AppFont.swift */; };
 		4E342A4F2A7A0F2600B55713 /* FontBlaster.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E342A4E2A7A0F2600B55713 /* FontBlaster.swift */; };
 		4E342A592A7A1B4C00B55713 /* NunitoSans_10pt-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4E342A572A7A1AA600B55713 /* NunitoSans_10pt-Bold.ttf */; };
@@ -96,6 +98,9 @@
 		4E0CCEF42A196D4F00EC6906 /* AppBuildEnv.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBuildEnv.swift; sourceTree = "<group>"; };
 		4E0CCEF82A1970E200EC6906 /* ConfigProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigProperties.swift; sourceTree = "<group>"; };
 		4E0CCF072A1989FB00EC6906 /* AppLoggerProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLoggerProvider.swift; sourceTree = "<group>"; };
+		4E2637D52B1E42750064424E /* AppRelease-au.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "AppRelease-au.entitlements"; sourceTree = "<group>"; };
+		4E2637D62B1E47380064424E /* Release-auConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Release-auConfig.xcconfig"; sourceTree = "<group>"; };
+		4E2637D82B1E48530064424E /* GoogleService-Info-release-au.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info-release-au.plist"; sourceTree = "<group>"; };
 		4E342A4C2A7A0CA600B55713 /* AppFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFont.swift; sourceTree = "<group>"; };
 		4E342A4E2A7A0F2600B55713 /* FontBlaster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontBlaster.swift; sourceTree = "<group>"; };
 		4E342A542A7A1AA600B55713 /* NunitoSans_10pt-Light.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NunitoSans_10pt-Light.ttf"; sourceTree = "<group>"; };
@@ -132,6 +137,7 @@
 		4ED625902A25160800C33EAB /* AppConfig.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = AppConfig.xcconfig; sourceTree = "<group>"; };
 		66A43D788AD300B2668BE9DD /* Pods-App.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.debug.xcconfig"; path = "../../Pods/Target Support Files/Pods-App/Pods-App.debug.xcconfig"; sourceTree = "<group>"; };
 		BD001814E75AB030A11B38B1 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "../../Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
+		BFF302A7DE276EB4D0EEE995 /* Pods-App.release-au.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release-au.xcconfig"; path = "../../Pods/Target Support Files/Pods-App/Pods-App.release-au.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -171,10 +177,12 @@
 				4ED625892A25160800C33EAB /* DebugConfig.xcconfig */,
 				4ED6258C2A25160800C33EAB /* StagingConfig.xcconfig */,
 				4ED6258E2A25160800C33EAB /* ReleaseConfig.xcconfig */,
+				4E2637D62B1E47380064424E /* Release-auConfig.xcconfig */,
 				4ED6258B2A25160800C33EAB /* GoogleService-Info.plist */,
 				4ED6258D2A25160800C33EAB /* GoogleService-Info-debug.plist */,
 				4ED6258F2A25160800C33EAB /* GoogleService-Info-staging.plist */,
 				4ED6258A2A25160800C33EAB /* GoogleService-Info-release.plist */,
+				4E2637D82B1E48530064424E /* GoogleService-Info-release-au.plist */,
 			);
 			path = Config;
 			sourceTree = "<group>";
@@ -217,6 +225,7 @@
 		4E46478829EEE23B0062147F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				4E2637D52B1E42750064424E /* AppRelease-au.entitlements */,
 				4E4975C02A4E264400EEC7A2 /* Filters */,
 				4E0CCEED2A19679D00EC6906 /* Config */,
 				4EBFB4502A19122100DA7C84 /* Sources */,
@@ -305,6 +314,7 @@
 				BD001814E75AB030A11B38B1 /* Pods-App.release.xcconfig */,
 				07C7FE66F28D0CCBD1B23467 /* Pods-App.nonp.xcconfig */,
 				0760C4A36014EDF906435725 /* Pods-App.staging.xcconfig */,
+				BFF302A7DE276EB4D0EEE995 /* Pods-App.release-au.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -443,12 +453,14 @@
 			files = (
 				4ED625982A25160800C33EAB /* AppConfig.xcconfig in Resources */,
 				4E342A592A7A1B4C00B55713 /* NunitoSans_10pt-Bold.ttf in Resources */,
+				4E2637D72B1E47380064424E /* Release-auConfig.xcconfig in Resources */,
 				4E342A5A2A7A1B4C00B55713 /* NunitoSans_10pt-Italic.ttf in Resources */,
 				4E46479229EEE23D0062147F /* Preview Assets.xcassets in Resources */,
 				4E342A5C2A7A1B4C00B55713 /* NunitoSans_10pt-Light.ttf in Resources */,
 				4E59A32F2A117606006F2130 /* Localizable.strings in Resources */,
 				4E46478E29EEE23D0062147F /* Assets.xcassets in Resources */,
 				4E342A5B2A7A1B4C00B55713 /* NunitoSans_10pt-Regular.ttf in Resources */,
+				4E2637D92B1E48530064424E /* GoogleService-Info-release-au.plist in Resources */,
 				4ED625932A25160800C33EAB /* GoogleService-Info.plist in Resources */,
 				4E4B06452A84037F000CD2EB /* InfoPlist.strings in Resources */,
 			);
@@ -549,15 +561,17 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
+				"$(SRCROOT)/App/Config/GoogleService-Info-${CONFIGURATION}.plist",
 			);
 			name = "Overwrite GoogleService-Info";
 			outputFileListPaths = (
 			);
 			outputPaths = (
+				"$(SRCROOT)/App/Config/GoogleService-Info.plist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "googleServiceInfo=\"GoogleService-Info\"\nconfigFileName=\"${googleServiceInfo}-${CONFIGURATION}.plist\"\n\nconfigDir=\"./App/Config\"\nconfigFile=\"${configDir}/${configFileName}\"\nreplaceFile=\"${configDir}/${googleServiceInfo}.plist\"\nif [ -f \"${configFile}\" ]; then\n    cp \"${configFile}\" \"${replaceFile}\"\n    echo \"Copied ${configFileName}\"\nelse\n    echo \"GoogleService-Info not found for ${CONFIGURATION}\"\n    exit 1\nfi\n";
+			shellScript = "if [ -f \"${SCRIPT_INPUT_FILE_0}\" ]; then\n    cp \"${SCRIPT_INPUT_FILE_0}\" \"${SCRIPT_OUTPUT_FILE_0}\"\n    configFileName=$(basename \"${SCRIPT_INPUT_FILE_0}\")\n    echo \"Copied ${configFileName}\"\nelse\n    echo \"GoogleService-Info not found for ${CONFIGURATION}\"\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 		4EBFB44D2A1910D800DA7C84 /* Generate Needle Dependency Graph */ = {
@@ -675,6 +689,153 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		4E2637D12B1E41370064424E /* Release-au */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4ED625902A25160800C33EAB /* AppConfig.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = "Release-au";
+		};
+		4E2637D22B1E41370064424E /* Release-au */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = BFF302A7DE276EB4D0EEE995 /* Pods-App.release-au.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconAu;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "App/AppRelease-au.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 82;
+				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
+				DEVELOPMENT_TEAM = ZM286L3HTV;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = App/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Crisis Cleanup";
+				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = "Crisis Cleanup";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access reason";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location access reason";
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 0.9.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.aussie;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = "Release-au";
+		};
+		4E2637D32B1E41370064424E /* Release-au */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = AYLY2UUH8J;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/App";
+			};
+			name = "Release-au";
+		};
+		4E2637D42B1E41370064424E /* Release-au */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = AYLY2UUH8J;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = App;
+			};
+			name = "Release-au";
+		};
 		4E4647A929EEE23E0062147F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4ED625902A25160800C33EAB /* AppConfig.xcconfig */;
@@ -795,14 +956,14 @@
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 81;
+				CURRENT_PROJECT_VERSION = 82;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = ZM286L3HTV;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = App/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = ccu;
+				INFOPLIST_KEY_CFBundleDisplayName = "Crisis Cleanup";
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = ccu;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access reason";
@@ -822,7 +983,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.9.0;
+				MARKETING_VERSION = 0.9.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.dev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -845,14 +1006,14 @@
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 81;
+				CURRENT_PROJECT_VERSION = 82;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = ZM286L3HTV;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = App/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = ccu;
+				INFOPLIST_KEY_CFBundleDisplayName = "Crisis Cleanup";
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = "Crisis Cleanup";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access reason";
@@ -872,7 +1033,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.9.0;
+				MARKETING_VERSION = 0.9.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.prod;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1038,7 +1199,7 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 81;
+				CURRENT_PROJECT_VERSION = 82;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = AYLY2UUH8J;
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = ZM286L3HTV;
@@ -1047,7 +1208,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = App/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = ccu;
+				INFOPLIST_KEY_CFBundleDisplayName = "Crisis Cleanup";
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = "Crisis Cleanup";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access reason";
@@ -1067,7 +1228,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.9.0;
+				MARKETING_VERSION = 0.9.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.stg;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1135,6 +1296,7 @@
 			buildConfigurations = (
 				4E4647A929EEE23E0062147F /* Debug */,
 				4E4647AA29EEE23E0062147F /* Release */,
+				4E2637D12B1E41370064424E /* Release-au */,
 				4E4647B429EEE4D10062147F /* Staging */,
 			);
 			defaultConfigurationIsVisible = 0;
@@ -1145,6 +1307,7 @@
 			buildConfigurations = (
 				4E4647AC29EEE23E0062147F /* Debug */,
 				4E4647AD29EEE23E0062147F /* Release */,
+				4E2637D22B1E41370064424E /* Release-au */,
 				4E4647B529EEE4D10062147F /* Staging */,
 			);
 			defaultConfigurationIsVisible = 0;
@@ -1155,6 +1318,7 @@
 			buildConfigurations = (
 				4E4647AF29EEE23E0062147F /* Debug */,
 				4E4647B029EEE23E0062147F /* Release */,
+				4E2637D32B1E41370064424E /* Release-au */,
 				4E4647B629EEE4D10062147F /* Staging */,
 			);
 			defaultConfigurationIsVisible = 0;
@@ -1165,6 +1329,7 @@
 			buildConfigurations = (
 				4E4647B229EEE23E0062147F /* Debug */,
 				4E4647B329EEE23E0062147F /* Release */,
+				4E2637D42B1E41370064424E /* Release-au */,
 				4E4647B729EEE4D10062147F /* Staging */,
 			);
 			defaultConfigurationIsVisible = 0;

@@ -2,3 +2,4 @@ DebugConfig.xcconfig
 NonpConfig.xcconfig
 StagingConfig.xcconfig
 ReleaseConfig.xcconfig
+Release-auConfig.xcconfig
