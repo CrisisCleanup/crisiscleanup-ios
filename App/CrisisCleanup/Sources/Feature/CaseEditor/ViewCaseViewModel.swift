@@ -4,7 +4,7 @@ import Foundation
 import PhotosUI
 import SwiftUI
 
-class ViewCaseViewModel: ObservableObject, KeyTranslator {
+class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
     private let incidentsRepository: IncidentsRepository
     private let worksitesRepository: WorksitesRepository
     private let accountDataRefresher: AccountDataRefresher
@@ -933,16 +933,20 @@ class ViewCaseViewModel: ObservableObject, KeyTranslator {
         }
     }
 
-    // MARK: KeyTranslator
+    // MARK: KeyAssetTranslator
 
     let translationCount: any Publisher<Int, Never>
 
     func translate(_ phraseKey: String) -> String? {
-        localTranslate(phraseKey)
+        t(phraseKey)
     }
 
     func t(_ phraseKey: String) -> String {
         localTranslate(phraseKey)
+    }
+
+    func translate(_ phraseKey: String, _ fallbackAssetKey: String) -> String {
+        t(phraseKey)
     }
 }
 

@@ -41,6 +41,7 @@ struct CreateEditCaseView: View {
         }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
+        .environment(\.translator, viewModel)
         .environmentObject(viewModel)
         .environmentObject(viewModel.editableViewState)
         .environmentObject(focusableViewState)
@@ -133,7 +134,6 @@ private struct CreateEditCaseContentView: View {
                                                 contentData: $viewModel.contentFormData,
                                                 workTypeStatuses: $viewModel.statusOptions,
                                                 statusData: $viewModel.workTypeStatusFormData,
-                                                statusTranslator: viewModel,
                                                 isNewCase: viewModel.isCreateWorksite,
                                                 node: child,
                                                 isWorkTypeClaimed: viewModel.isWorkTypeClaimed
@@ -712,8 +712,6 @@ struct DisplayFormField: View {
 
     @State private var multiSelected: Set<String> = []
 
-    let statusTranslator: KeyTranslator
-
     let isNewCase: Bool
 
     let node: FormFieldNode
@@ -751,7 +749,7 @@ struct DisplayFormField: View {
                 HStack {
                     CheckboxView(
                         checked: $checkedData[node.fieldKey],
-                        text: node.formField.translatedLabel(statusTranslator)
+                        text: node.formField.translatedLabel(t)
                     )
                     .disabled(disabled)
                     if node.formField.help.isNotBlank {
@@ -836,13 +834,13 @@ struct DisplayFormField: View {
                 let isChecked = checkedData[node.fieldKey]
                 HStack {
                     if node.children.isEmpty || node.formField.isReadOnly {
-                        Text(node.formField.translatedLabel(statusTranslator))
+                        Text(node.formField.translatedLabel(t))
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.vertical, appTheme.listItemVerticalPadding)
                     } else {
                         CheckboxView(
                             checked: $checkedData[node.fieldKey],
-                            text: node.formField.translatedLabel(statusTranslator)
+                            text: node.formField.translatedLabel(t)
                         )
                         .disabled(disabled)
 
@@ -854,7 +852,6 @@ struct DisplayFormField: View {
                             let selectedStatusLiteral = statusData[workTypeLiteral]
                             let selectedStatus = statusFromLiteral(selectedStatusLiteral, .openUnassigned)
                             WorkTypeStatusPicker(
-                                translator: statusTranslator,
                                 selectedStatus: selectedStatus,
                                 isClaimed: isWorkTypeClaimed(node.formField.selectToggleWorkType),
                                 statusOptions: workTypeStatuses,
@@ -879,7 +876,6 @@ struct DisplayFormField: View {
                                 contentData: $contentData,
                                 workTypeStatuses: $workTypeStatuses,
                                 statusData: $statusData,
-                                statusTranslator: statusTranslator,
                                 isNewCase: isNewCase,
                                 node: childNode,
                                 isWorkTypeClaimed: isWorkTypeClaimed
@@ -891,7 +887,7 @@ struct DisplayFormField: View {
                 }
             default:
                 HStack {
-                    Text(node.formField.translatedLabel(statusTranslator))
+                    Text(node.formField.translatedLabel(t))
                 }
             }
         }

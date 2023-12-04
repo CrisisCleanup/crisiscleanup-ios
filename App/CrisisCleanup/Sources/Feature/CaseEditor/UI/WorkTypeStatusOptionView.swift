@@ -26,9 +26,10 @@ let statusUnclaimedRed = Set([
 ])
 
 private struct WorkTypeStatusOption : View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
     @EnvironmentObject var editableView: EditableView
 
-    var translator: KeyTranslator
     var status: WorkTypeStatus
     var showOpenIcon = false
     var isSelected = false
@@ -50,7 +51,7 @@ private struct WorkTypeStatusOption : View {
             Circle()
                 .frame(width: dotSize, height: dotSize)
                 .foregroundColor(color)
-            Text(translator.t("status.\(status.literal)"))
+            Text(t.t("status.\(status.literal)"))
                 .tint(.blue)
                 // TODO: Common dimensions
                 .frame(height: 48)
@@ -70,9 +71,10 @@ private struct WorkTypeStatusOption : View {
 }
 
 struct WorkTypeStatusPicker: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
     @EnvironmentObject var editableView: EditableView
 
-    var translator: KeyTranslator
     var selectedStatus: WorkTypeStatus
     var isClaimed: Bool
     var statusOptions: [WorkTypeStatus]
@@ -84,7 +86,6 @@ struct WorkTypeStatusPicker: View {
 
     var body: some View {
         WorkTypeStatusOption(
-            translator: translator,
             status: selectedStatus,
             showOpenIcon: true,
             spanWidth: spanWidth,
@@ -99,7 +100,6 @@ struct WorkTypeStatusPicker: View {
             ScrollLazyVGrid {
                 ForEach(statusOptions) { status in
                     WorkTypeStatusOption(
-                        translator: translator,
                         status: status,
                         isSelected: selectedStatus == status
                     )
@@ -112,7 +112,7 @@ struct WorkTypeStatusPicker: View {
                 }
             }
 
-            Button(translator.t("actions.cancel")) {
+            Button(t.t("actions.cancel")) {
                 showOptions = false
             }
             .padding()

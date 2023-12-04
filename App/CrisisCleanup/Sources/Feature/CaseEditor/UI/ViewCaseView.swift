@@ -189,6 +189,7 @@ private struct ViewCaseInfo: View {
 
                     if let workTypeProfile = viewModel.workTypeProfile {
                         InfoWorkView(profile: workTypeProfile)
+                            .environment(\.translator, viewModel)
                     }
                 }
             }

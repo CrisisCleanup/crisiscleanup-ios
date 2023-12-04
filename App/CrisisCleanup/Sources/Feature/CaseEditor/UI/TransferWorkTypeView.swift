@@ -44,6 +44,7 @@ struct TransferWorkTypeView: View {
             .hideNavBarUnderSpace()
             .onAppear { viewModel.onViewAppear() }
             .onDisappear { viewModel.onViewDisappear() }
+            .environment(\.translator, viewModel)
             .environmentObject(viewModel)
             .environmentObject(focusableViewState)
         } else {
@@ -176,6 +177,8 @@ private struct TransferWorkTypeReasonSection: View {
 }
 
 private struct TransferWorkTypeSection: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
     @EnvironmentObject var viewModel: TransferWorkTypeViewModel
 
     var body: some View {
@@ -190,7 +193,7 @@ private struct TransferWorkTypeSection: View {
             HStack {
                 StatelessCheckboxView(
                     checked: isChecked,
-                    text: viewModel.t(workType.workTypeLiteral)
+                    text: t.t(workType.workTypeLiteral)
                 ) {
                     viewModel.workTypesState[id] = !isChecked
                 }

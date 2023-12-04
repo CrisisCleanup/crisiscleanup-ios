@@ -3,7 +3,7 @@ import Combine
 import Foundation
 import SwiftUI
 
-class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
+class TransferWorkTypeViewModel: ObservableObject, KeyAssetTranslator {
     private let organizationsRepository: OrganizationsRepository
     private let worksiteChangeRepository: WorksiteChangeRepository
     private let editableWorksiteProvider: EditableWorksiteProvider
@@ -255,7 +255,7 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
         }
     }
 
-    // MARK: KeyTranslator
+    // MARK: KeyAssetTranslator
 
     let translationCount: any Publisher<Int, Never>
 
@@ -265,6 +265,10 @@ class TransferWorkTypeViewModel: ObservableObject, KeyTranslator {
 
     func t(_ phraseKey: String) -> String {
         editableWorksiteProvider.translate(key: phraseKey) ?? translator.translate(phraseKey, phraseKey)
+    }
+
+    func translate(_ phraseKey: String, _ fallbackAssetKey: String) -> String {
+        t(phraseKey)
     }
 }
 

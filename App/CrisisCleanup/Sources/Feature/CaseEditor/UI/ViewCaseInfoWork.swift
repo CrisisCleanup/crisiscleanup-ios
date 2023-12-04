@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct InfoWorkView : View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var viewModel: ViewCaseViewModel
 
@@ -8,23 +10,23 @@ struct InfoWorkView : View {
 
     var body: some View {
         HStack(alignment: .center) {
-            ViewCaseRowHeader(rowNum: 3, rowTitle: viewModel.t("caseForm.work"))
+            ViewCaseRowHeader(rowNum: 3, rowTitle: t.t("caseForm.work"))
 
             Spacer()
 
             VStack (alignment: .trailing) {
                 if profile.unclaimed.isNotEmpty {
-                    WorkTypeAction(viewModel.t("actions.claim_all_alt"), true) {
+                    WorkTypeAction(t.t("actions.claim_all_alt"), true) {
                         viewModel.claimAll()
                     }
                 }
 
                 if profile.releasableCount > 0 {
-                    WorkTypeAction(viewModel.t("actions.release_all"), false) {
+                    WorkTypeAction(t.t("actions.release_all"), false) {
                         viewModel.releaseAll()
                     }
                 } else if profile.requestableCount > 0 {
-                    WorkTypeAction(viewModel.t("actions.request_all"), false) {
+                    WorkTypeAction(t.t("actions.request_all"), false) {
                         viewModel.requestAll()
                     }
                 }
@@ -44,7 +46,7 @@ struct InfoWorkView : View {
         }
 
         if profile.unclaimed.isNotEmpty {
-            WorkTypeSectionTitle(viewModel.t("caseView.unclaimed_work_types"))
+            WorkTypeSectionTitle(t.t("caseView.unclaimed_work_types"))
             ExistingWorkTypeItems(summaries: profile.unclaimed)
         }
 
@@ -134,6 +136,8 @@ private struct WorkTypeSectionTitle: View {
 }
 
 private struct WorkTypeSummaryView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
     @EnvironmentObject var viewModel: ViewCaseViewModel
 
     var summary: WorkTypeSummary
@@ -151,7 +155,6 @@ private struct WorkTypeSummaryView: View {
 
             HStack {
                 WorkTypeStatusPicker(
-                    translator: viewModel,
                     selectedStatus: summary.workType.status,
                     isClaimed: summary.workType.orgClaim != nil,
                     statusOptions: viewModel.statusOptions,
@@ -167,25 +170,25 @@ private struct WorkTypeSummaryView: View {
 
                 if summary.workType.isClaimed {
                     if summary.isClaimedByMyOrg {
-                        WorkTypeAction(viewModel.t("actions.unclaim"), false) {
+                        WorkTypeAction(t.t("actions.unclaim"), false) {
                             viewModel.updateWorkType(
                                 summary.workType.copy { $0.orgClaim = nil },
                                 false
                             )
                         }
                     } else if summary.isReleasable {
-                        WorkTypeAction(viewModel.t("actions.release"), false) {
+                        WorkTypeAction(t.t("actions.release"), false) {
                             viewModel.releaseWorkType(summary.workType)
                         }
                     } else if summary.isRequested {
-                        Text(viewModel.t("caseView.requested"))
+                        Text(t.t("caseView.requested"))
                     } else {
-                        WorkTypeAction(viewModel.t("actions.request"), false) {
+                        WorkTypeAction(t.t("actions.request"), false) {
                             viewModel.requestWorkType(summary.workType)
                         }
                     }
                 } else {
-                    WorkTypeAction(viewModel.t("actions.claim"), true) {
+                    WorkTypeAction(t.t("actions.claim"), true) {
                         viewModel.updateWorkType(
                             summary.workType.copy { $0.orgClaim = summary.myOrgId },
                             false
@@ -212,16 +215,16 @@ private struct ExistingWorkTypeItems: View {
 }
 
 private struct OrganizationWorkClaims: View {
-    @EnvironmentObject var viewModel: ViewCaseViewModel
+    @Environment(\.translator) var t: KeyAssetTranslator
 
     var orgClaimWorkType: OrgClaimWorkType
 
     var body: some View {
         if orgClaimWorkType.isMyOrg {
-            WorkTypeSectionTitle(viewModel.t("caseView.claimed_by_my_org"))
+            WorkTypeSectionTitle(t.t("caseView.claimed_by_my_org"))
         } else {
-            WorkTypeSectionTitle(viewModel.t("caseView.claimed_by"), true)
-            WorkTypeSectionTitle(viewModel.t(orgClaimWorkType.orgName))
+            WorkTypeSectionTitle(t.t("caseView.claimed_by"), true)
+            WorkTypeSectionTitle(t.t(orgClaimWorkType.orgName))
         }
 
         ExistingWorkTypeItems(

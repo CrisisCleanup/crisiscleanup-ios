@@ -8,7 +8,7 @@ let wrongLocationLabelKey = "caseForm.address_problems"
 let highPriorityLabelKey = "flag.flag_high_priority"
 let orgMemberLabelKey = "actions.member_of_my_org"
 
-class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
+class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     private let incidentsRepository: IncidentsRepository
     private let worksitesRepository: WorksitesRepository
     private var worksiteProvider: EditableWorksiteProvider
@@ -865,16 +865,20 @@ class CreateEditCaseViewModel: ObservableObject, KeyTranslator {
         return true
     }
 
-    // MARK: KeyTranslator
+    // MARK: KeyAssetTranslator
 
     let translationCount: any Publisher<Int, Never>
 
     func translate(_ phraseKey: String) -> String? {
-        localTranslate(phraseKey)
+        t(phraseKey)
     }
 
     func t(_ phraseKey: String) -> String {
         localTranslate(phraseKey)
+    }
+
+    func translate(_ phraseKey: String, _ fallbackAssetKey: String) -> String {
+        t(phraseKey)
     }
 }
 
