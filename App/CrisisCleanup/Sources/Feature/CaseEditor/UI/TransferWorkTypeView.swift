@@ -193,7 +193,7 @@ private struct TransferWorkTypeSection: View {
             HStack {
                 StatelessCheckboxView(
                     checked: isChecked,
-                    text: t.t(workType.workTypeLiteral)
+                    text: t.t("workType.\(workType.workTypeLiteral)")
                 ) {
                     viewModel.workTypesState[id] = !isChecked
                 }
