@@ -24,7 +24,8 @@ extension NetworkRequestProvider {
     var refreshAccountTokens: NetworkRequest {
         NetworkRequest(
             apiUrl("api-mobile-refresh-token"),
-            method: .post
+            method: .post,
+            clearCookies: true
         )
     }
 

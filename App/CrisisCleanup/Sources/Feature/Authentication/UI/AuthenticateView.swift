@@ -72,6 +72,7 @@ private struct LoginOptionsView: View {
                         router.openVolunteerOrg()
                     }
                     .styleOutline()
+                    .disabled(viewModel.viewData.hasAuthenticated)
 
                     Button(t.translate("loginForm.need_help_cleaning_up", "I need cleanup")) {
                         openURL(URL(string: "https://crisiscleanup.org/survivor")!)
