@@ -21,6 +21,30 @@ extension NetworkRequestProvider {
         )
     }
 
+    var magicLinkCodeAuth: NetworkRequest {
+        NetworkRequest(
+            apiUrl("magic_link"),
+            method: .post,
+            clearCookies: true
+        )
+    }
+
+    var verifyOneTimePassword: NetworkRequest {
+        NetworkRequest(
+            apiUrl("otp/verify"),
+            method: .post,
+            clearCookies: true
+        )
+    }
+
+    var oneTimePasswordAuth: NetworkRequest {
+        NetworkRequest(
+            apiUrl("otp/generate_token"),
+            method: .post,
+            clearCookies: true
+        )
+    }
+
     var refreshAccountTokens: NetworkRequest {
         NetworkRequest(
             apiUrl("api-mobile-refresh-token"),
@@ -339,28 +363,6 @@ extension NetworkRequestProvider {
     var resetPasswordStatus: NetworkRequest {
         NetworkRequest(
             apiUrl("password_reset_requests")
-        )
-    }
-
-    var magicLinkCodeAuth: NetworkRequest {
-        NetworkRequest(
-            apiUrl("magic_link"),
-            method: .post,
-            clearCookies: true
-        )
-    }
-
-    var verifyOneTimePassword: NetworkRequest {
-        NetworkRequest(
-            apiUrl("otp/verify"),
-            method: .post
-        )
-    }
-
-    var oneTimePasswordAuth: NetworkRequest {
-        NetworkRequest(
-            apiUrl("otp/generate_token"),
-            method: .post
         )
     }
 

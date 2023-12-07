@@ -44,7 +44,7 @@ private struct LoginView: View {
 
                 VStack {
                     Text(t.translate("actions.login", "Login action"))
-                        .fontHeader2()
+                        .fontHeader1()
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.vertical)
 

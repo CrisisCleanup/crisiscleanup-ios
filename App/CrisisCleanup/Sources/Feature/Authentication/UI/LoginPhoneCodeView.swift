@@ -60,13 +60,13 @@ private struct LoginView: View {
     @FocusState private var focusState: SingleCodeFocused?
 
     func authenticate(_ singleCodes: [String]) {
-        let codeLength = singleCodes
+        let fullCode = singleCodes
             .map { $0.trim() }
             .filter { $0.isNotBlank }
             .map { $0.substring($0.count-1, $0.count) }
             .joined(separator: "")
 
-        if codeLength.count < singleCodes.count {
+        if fullCode.count < singleCodes.count {
             singleCodes.enumerated().forEach { (i, s) in
                 if s.isBlank {
                     focusState = .code(index: i)
@@ -105,6 +105,8 @@ private struct LoginView: View {
                                 .focused($focusState, equals: .code(index: i))
                                 .disabled(disabled || viewModel.isSelectAccount)
                                 .onChange(of: singleCodes[i], perform: { newValue in
+                                    // TODO: Set entire code if length matches and code is blank
+
                                     if newValue.count > 1 {
                                         singleCodes[i] = String(newValue[newValue.index(newValue.endIndex, offsetBy: -1)])
                                     }
@@ -133,13 +135,11 @@ private struct LoginView: View {
                         Text(t.t("~~This phone number is associated with multiple accounts."))
                             .padding(.top)
 
-                        // TODO: Style
                         Text(t.t("~~Select Account"))
                             .fontHeader4()
 
                         Menu {
                             ForEach(viewModel.accountOptions, id: \.userId) { accountInfo in
-                                // TODO: Menu options
                                 Button(accountInfo.accountDisplay) {
                                     viewModel.selectedAccount = accountInfo
                                 }

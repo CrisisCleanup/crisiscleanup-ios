@@ -9,15 +9,10 @@ extension AuthenticateComponent {
 
         if !isReusable {
             _loginWithPhoneViewModel = LoginWithPhoneViewModel(
-                appEnv: dependency.appEnv,
-                appSettings: dependency.appSettingsProvider,
                 authApi: dependency.authApi,
                 dataApi: dependency.networkDataSource,
-                inputValidator: dependency.inputValidator,
-                accessTokenDecoder: dependency.accessTokenDecoder,
                 accountUpdateRepository: dependency.accountUpdateRepository,
                 accountDataRepository: dependency.accountDataRepository,
-                authEventBus: dependency.authEventBus,
                 translator: dependency.translator,
                 loggerFactory: dependency.loggerFactory,
                 phoneNumber: phoneNumber

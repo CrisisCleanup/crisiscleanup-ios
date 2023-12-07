@@ -455,7 +455,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
 
     func getProfile(_ accessToken: String) async -> NetworkUserProfile? {
         let request = requestProvider.accountProfileNoToken
-            .addHeaders(["Authorization": accessToken])
+            .addHeaders(["Authorization": "Bearer \(accessToken)"])
         return await networkClient.callbackContinue(
             requestConvertible: request,
             type: NetworkUserProfile.self

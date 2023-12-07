@@ -2,15 +2,10 @@ import Combine
 import SwiftUI
 
 class LoginWithPhoneViewModel: ObservableObject {
-    private let appEnv: AppEnv
-    let appSettings: AppSettingsProvider
     private let authApi: CrisisCleanupAuthApi
     private let dataApi: CrisisCleanupNetworkDataSource
-    private let inputValidator: InputValidator
-    private let accessTokenDecoder: AccessTokenDecoder
     private let accountUpdateRepository: AccountUpdateRepository
     private let accountDataRepository: AccountDataRepository
-    private let authEventBus: AuthEventBus
     private let translator: KeyAssetTranslator
     private let logger: AppLogger
 
@@ -47,28 +42,18 @@ class LoginWithPhoneViewModel: ObservableObject {
     private var subscriptions = Set<AnyCancellable>()
 
     init(
-        appEnv: AppEnv,
-        appSettings: AppSettingsProvider,
         authApi: CrisisCleanupAuthApi,
         dataApi: CrisisCleanupNetworkDataSource,
-        inputValidator: InputValidator,
-        accessTokenDecoder: AccessTokenDecoder,
         accountUpdateRepository: AccountUpdateRepository,
         accountDataRepository: AccountDataRepository,
-        authEventBus: AuthEventBus,
         translator: KeyAssetTranslator,
         loggerFactory: AppLoggerFactory,
         phoneNumber: String
     ) {
-        self.appEnv = appEnv
-        self.appSettings = appSettings
         self.authApi = authApi
         self.dataApi = dataApi
-        self.inputValidator = inputValidator
-        self.accessTokenDecoder = accessTokenDecoder
         self.accountUpdateRepository = accountUpdateRepository
         self.accountDataRepository = accountDataRepository
-        self.authEventBus = authEventBus
         self.translator = translator
         logger = loggerFactory.getLogger("auth")
 
@@ -172,6 +157,7 @@ class LoginWithPhoneViewModel: ObservableObject {
     }
 
     func requestPhoneCode(_ phoneNumber: String) {
+        resetVisualState()
         clearAccountSelect()
 
         let trimPhoneNumber = phoneNumber.trim()
