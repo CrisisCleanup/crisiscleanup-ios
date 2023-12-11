@@ -115,22 +115,7 @@ struct MainView: View {
                                         viewModel: viewModel,
                                         openAuthScreen: openAuthScreen,
                                         casesViewBuilder: casesViewBuilder,
-                                        menuViewBuilder: menuViewBuilder,
-                                        casesFilterViewBuilder: casesFilterViewBuilder,
-                                        casesSearchViewBuilder: casesSearchViewBuilder,
-                                        viewCaseViewBuilder: viewCaseViewBuilder,
-                                        caseAddNoteViewBuilder: caseAddNoteViewBuilder,
-                                        createEditCaseViewBuilder: createEditCaseViewBuilder,
-                                        caseShareViewBuilder: caseShareViewBuilder,
-                                        caseFlagsViewBuilder: caseFlagsViewBuilder,
-                                        caseHistoryViewBuilder: caseHistoryViewBuilder,
-                                        transferWorkTypeViewBuilder: transferWorkTypeViewBuilder,
-                                        viewImageViewBuilder: viewImageViewBuilder,
-                                        caseSearchLocationViewBuilder: caseSearchLocationViewBuilder,
-                                        caseMoveOnMapViewBuilder: caseMoveOnMapViewBuilder,
-                                        userFeedbackViewBuilder: userFeedbackViewBuilder,
-                                        syncInsightsViewBuilder: syncInsightsViewBuilder,
-                                        inviteTeammateViewBuilder: inviteTeammateViewBuilder
+                                        menuViewBuilder: menuViewBuilder
                                     )
                                 }
                                 .tabViewStyle(
@@ -141,6 +126,53 @@ struct MainView: View {
                         }
                         .toolbarBackground(.visible, for: .navigationBar)
                         .toolbarColorScheme(.light, for: .navigationBar)
+                        .navigationDestination(for: NavigationRoute.self) { route in
+                            switch route {
+                            case .filterCases:
+                                casesFilterViewBuilder.casesFilterView
+                            case .searchCases:
+                                casesSearchViewBuilder.casesSearchView
+                                    .navigationBarHidden(true)
+                            case .viewCase(let incidentId, let worksiteId):
+                                viewCaseViewBuilder.viewCaseView(
+                                    incidentId: incidentId,
+                                    worksiteId: worksiteId
+                                )
+                            case .caseAddNote:
+                                caseAddNoteViewBuilder.caseAddNoteView
+                            case .createEditCase(let incidentId, let worksiteId):
+                                createEditCaseViewBuilder.createEditCaseView(
+                                    incidentId: incidentId,
+                                    worksiteId: worksiteId
+                                )
+                            case .caseSearchLocation:
+                                caseSearchLocationViewBuilder.caseSearchLocationView
+                            case .caseMoveOnMap:
+                                caseMoveOnMapViewBuilder.caseMoveOnMapView
+                            case .caseShare:
+                                caseShareViewBuilder.caseShareView
+                            case .caseShareStep2:
+                                caseShareViewBuilder.caseShareStep2View
+                            case .caseFlags(let isFromCaseEdit):
+                                caseFlagsViewBuilder.caseFlagsView(isFromCaseEdit: isFromCaseEdit)
+                            case .caseHistory:
+                                caseHistoryViewBuilder.caseHistoryView
+                            case .caseWorkTypeTransfer:
+                                transferWorkTypeViewBuilder.transferWorkTypeView
+                            case .viewImage(let imageId, let isNetworkImage, let screenTitle):
+                                viewImageViewBuilder.viewImageView(imageId, isNetworkImage, screenTitle)
+                            case .userFeedback:
+                                userFeedbackViewBuilder.userFeedbackView
+                            case .inviteTeammate:
+                                inviteTeammateViewBuilder.inviteTeammateView
+                            case .syncInsights:
+                                if viewModel.isNotProduction {
+                                    syncInsightsViewBuilder.syncInsightsView
+                                }
+                            default:
+                                Text("Route \(route.id) needs implementing")
+                            }
+                        }
                     }
                 }
             }
@@ -191,72 +223,10 @@ private struct MainTabs: View {
 
     let casesViewBuilder: CasesViewBuilder
     let menuViewBuilder: MenuViewBuilder
-    let casesFilterViewBuilder: CasesFilterViewBuilder
-    let casesSearchViewBuilder: CasesSearchViewBuilder
-    let viewCaseViewBuilder: ViewCaseViewBuilder
-    let caseAddNoteViewBuilder: CaseAddNoteViewBuilder
-    let createEditCaseViewBuilder: CreateEditCaseViewBuilder
-    let caseShareViewBuilder: CaseShareViewBuilder
-    let caseFlagsViewBuilder: CaseFlagsViewBuilder
-    let caseHistoryViewBuilder: CaseHistoryViewBuilder
-    let transferWorkTypeViewBuilder: TransferWorkTypeViewBuilder
-    let viewImageViewBuilder: ViewImageViewBuilder
-    let caseSearchLocationViewBuilder: CaseSearchLocationViewBuilder
-    let caseMoveOnMapViewBuilder: CaseMoveOnMapViewBuilder
-    let userFeedbackViewBuilder: UserFeedbackViewBuilder
-    let syncInsightsViewBuilder: SyncInsightsViewBuilder
-    let inviteTeammateViewBuilder: InviteTeammateViewBuilder
 
     var body: some View {
         TabViewContainer {
             casesViewBuilder.casesView(openAuthScreen)
-                .navigationDestination(for: NavigationRoute.self) { route in
-                    switch route {
-                    case .filterCases:
-                        casesFilterViewBuilder.casesFilterView
-                    case .searchCases:
-                        casesSearchViewBuilder.casesSearchView
-                            .navigationBarHidden(true)
-                    case .viewCase(let incidentId, let worksiteId):
-                        viewCaseViewBuilder.viewCaseView(
-                            incidentId: incidentId,
-                            worksiteId: worksiteId
-                        )
-                    case .caseAddNote:
-                        caseAddNoteViewBuilder.caseAddNoteView
-                    case .createEditCase(let incidentId, let worksiteId):
-                        createEditCaseViewBuilder.createEditCaseView(
-                            incidentId: incidentId,
-                            worksiteId: worksiteId
-                        )
-                    case .caseSearchLocation:
-                        caseSearchLocationViewBuilder.caseSearchLocationView
-                    case .caseMoveOnMap:
-                        caseMoveOnMapViewBuilder.caseMoveOnMapView
-                    case .caseShare:
-                        caseShareViewBuilder.caseShareView
-                    case .caseShareStep2:
-                        caseShareViewBuilder.caseShareStep2View
-                    case .caseFlags(let isFromCaseEdit):
-                        caseFlagsViewBuilder.caseFlagsView(isFromCaseEdit: isFromCaseEdit)
-                    case .caseHistory:
-                        caseHistoryViewBuilder.caseHistoryView
-                    case .caseWorkTypeTransfer:
-                        transferWorkTypeViewBuilder.transferWorkTypeView
-                    case .viewImage(let imageId, let isNetworkImage, let screenTitle):
-                        viewImageViewBuilder.viewImageView(imageId, isNetworkImage, screenTitle)
-                    case .userFeedback:
-                        userFeedbackViewBuilder.userFeedbackView
-                    case .inviteTeammate:
-                        inviteTeammateViewBuilder.inviteTeammateView
-                    case .syncInsights:
-                        if viewModel.isNotProduction {
-                            syncInsightsViewBuilder.syncInsightsView
-                        }
-                    default:
-                        Text("Route \(route.id) needs implementing")
-                    }
-                }
         }
         .navTabItem(.cases, viewModel.translator)
         .tag(TopLevelDestination.cases)

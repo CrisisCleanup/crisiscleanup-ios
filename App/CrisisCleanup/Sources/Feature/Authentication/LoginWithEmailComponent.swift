@@ -39,12 +39,9 @@ extension AuthenticateComponent {
 
         if !isReusable {
             _loginWithMagicLinkViewModel = LoginWithMagicLinkViewModel(
-                appSettings: dependency.appSettingsProvider,
                 authApi: dependency.authApi,
                 dataApi: dependency.networkDataSource,
-                accessTokenDecoder: dependency.accessTokenDecoder,
                 accountDataRepository: dependency.accountDataRepository,
-                authEventBus: dependency.authEventBus,
                 translator: dependency.translator,
                 loggerFactory: dependency.loggerFactory,
                 authCode: code

@@ -2,12 +2,9 @@ import Combine
 import SwiftUI
 
 class LoginWithMagicLinkViewModel: ObservableObject {
-    let appSettings: AppSettingsProvider
     private let authApi: CrisisCleanupAuthApi
     private let dataApi: CrisisCleanupNetworkDataSource
-    private let accessTokenDecoder: AccessTokenDecoder
     private let accountDataRepository: AccountDataRepository
-    private let authEventBus: AuthEventBus
     private let translator: KeyAssetTranslator
     private let logger: AppLogger
 
@@ -21,22 +18,16 @@ class LoginWithMagicLinkViewModel: ObservableObject {
     private var subscriptions = Set<AnyCancellable>()
 
     init(
-        appSettings: AppSettingsProvider,
         authApi: CrisisCleanupAuthApi,
         dataApi: CrisisCleanupNetworkDataSource,
-        accessTokenDecoder: AccessTokenDecoder,
         accountDataRepository: AccountDataRepository,
-        authEventBus: AuthEventBus,
         translator: KeyAssetTranslator,
         loggerFactory: AppLoggerFactory,
         authCode: String
     ) {
-        self.appSettings = appSettings
         self.authApi = authApi
         self.dataApi = dataApi
-        self.accessTokenDecoder = accessTokenDecoder
         self.accountDataRepository = accountDataRepository
-        self.authEventBus = authEventBus
         self.translator = translator
         logger = loggerFactory.getLogger("auth")
         self.authCode = authCode
@@ -70,9 +61,9 @@ class LoginWithMagicLinkViewModel: ObservableObject {
                     Task { @MainActor in self.isAuthenticating = false }
                 }
 
-                let accountData = try await accountDataRepository.accountData.eraseToAnyPublisher().asyncFirst()
                 if let tokens = try await self.authApi.magicLinkLogin(magicLinkCode),
                    let accountProfile = await dataApi.getProfile(tokens.accessToken) {
+                    let accountData = try await accountDataRepository.accountData.eraseToAnyPublisher().asyncFirst()
                     let emailAddress = accountData.emailAddress
                     if emailAddress.isNotBlank && emailAddress != accountProfile.email {
                         message = translator.t("~~Logging in with an account different from the currently signed in account is not supported. Logout of the signed in account first then login with a different account.")
