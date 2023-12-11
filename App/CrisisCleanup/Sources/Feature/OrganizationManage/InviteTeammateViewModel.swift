@@ -458,6 +458,7 @@ class InviteTeammateViewModel: ObservableObject {
     func onOrgQueryClose() {
         var matchingOrg = OrganizationIdName(id: 0, name: "")
         let orgQueryLower = organizationNameQuery.trim().lowercased()
+        // TODO: Optimize matching if result set is computationally large
         for result in organizationsSearchResult {
             if result.name.trim().lowercased() == orgQueryLower {
                 matchingOrg = result
@@ -465,6 +466,10 @@ class InviteTeammateViewModel: ObservableObject {
             }
         }
         if selectedOtherOrg.id != matchingOrg.id {
+            matchingOrg = OrganizationIdName(
+                id: 0,
+                name: organizationNameQuery.trim()
+            )
             selectedOtherOrg = matchingOrg
             organizationNameQuery = matchingOrg.name
         }

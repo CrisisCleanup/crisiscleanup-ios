@@ -110,6 +110,7 @@ private struct InviteTeammateContentView: View {
                                 if isNewOrganization {
                                     return "~~This organization does not yet have an account. We will create an account and contact this person to finalize the registration."
                                 } else if viewModel.inviteOrgState.nonAffiliate {
+                                    // TODO: Update once logic is decided
                                     // return "~~This user will need to be approved by somebody from the organization."
                                 }
                                 return ""
