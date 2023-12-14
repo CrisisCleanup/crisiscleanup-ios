@@ -16,6 +16,7 @@ struct AppBuildEnv : AppEnv {
             if apiUrl.starts(with: "https://api.dev.crisiscleanup.io") { return "Dev" }
             else if apiUrl.starts(with: "https://api.staging.crisiscleanup.io") { return "Staging" }
             else if apiUrl.starts(with: "https://api.crisiscleanup.org") { return "Production" }
+            else if apiUrl.starts(with: "https://api.au.crisiscleanup.io") { return "Prodauction" }
             else { return "Local?" }
         }()
     }
