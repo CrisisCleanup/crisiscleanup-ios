@@ -77,7 +77,7 @@ class RequestOrgAccessViewModel: ObservableObject {
     private func subscribeScreenTitle() {
         requestedOrgSubject
             .map {
-                let key = $0 == nil ? "~~Signup" : "nav.request_access"
+                let key = $0 == nil ? "actions.sign_up" : "actions.request_access"
                 return self.translator.t(key)
             }
             .receive(on: RunLoop.main)
@@ -113,7 +113,7 @@ class RequestOrgAccessViewModel: ObservableObject {
 
                 if let result = result {
                     let t = self.translator
-                    self.requestSentTitle = t.t("~~Your request has been sent")
+                    self.requestSentTitle = t.t("requestAccess.request_sent")
                     self.requestSentText = t.t("requestAccess.request_sent_to_org")
                         .replacingOccurrences(of: "{organization}", with: result.organizationName)
                         .replacingOccurrences(of: "{requested_to}", with: result.organizationRecipient)
@@ -185,17 +185,17 @@ class RequestOrgAccessViewModel: ObservableObject {
 
             if let inviteInfo = await orgVolunteerRepository.getInvitationInfo(invitationCode) {
                 if inviteInfo.isExpiredInvite {
-                    inviteInfoErrorMessageSubject.value = translator.t("~~This invite has expired. Ask for new invite or try a different invitation method.")
+                    inviteInfoErrorMessageSubject.value = translator.t("requestAccess.invite_expired_try_again")
                 } else {
                     inviteDisplaySubject.value = InviteDisplayInfo(
                         inviteInfo: inviteInfo,
-                        inviteMessage: translator.t("~~invited you ({email}) to join {organization}.")
+                        inviteMessage: translator.t("requestAccess.invited_you_to_join_org")
                             .replacingOccurrences(of: "{email}", with: inviteInfo.invitedEmail)
                             .replacingOccurrences(of: "{organization}", with: inviteInfo.orgName)
                     )
                 }
             } else {
-                inviteInfoErrorMessageSubject.value = translator.t("~~There was a problem with invites. Try again later, ask for a new invite, or try a different invitation method.")
+                inviteInfoErrorMessageSubject.value = translator.t("requestAccess.invite_error")
             }
         }
     }
@@ -271,10 +271,10 @@ class RequestOrgAccessViewModel: ObservableObject {
                             organizationRecipient: inviteInfo?.inviterEmail ?? ""
                         )
                     } else {
-                        var errorMessageTranslateKey = "~~There was an issue with joining the organization."
+                        var errorMessageTranslateKey = "requestAccess.join_org_error"
                         if invitationCode.isBlank,
                            inviteDisplay?.inviteInfo.expiration.isPast == true {
-                            errorMessageTranslateKey = "~~The invite is expired. Request a new invite."
+                            errorMessageTranslateKey = "requestAccess.invite_expired_try_again"
                         }
                         inviteInfoErrorMessageSubject.value = translator.t(errorMessageTranslateKey)
                     }

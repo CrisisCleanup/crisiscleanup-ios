@@ -13,7 +13,7 @@ struct PasteOrgInviteView: View {
         ZStack {
             VStack(spacing: appTheme.listItemVerticalPadding) {
                 Group {
-                    Text(t.t("~~Paste invitation link below and accept the invite"))
+                    Text(t.t("pasteInvite.paste_invitation_link_and_accept"))
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     let errorMessage = viewModel.inviteCodeError
@@ -24,13 +24,13 @@ struct PasteOrgInviteView: View {
                             .padding(.top, appTheme.listItemVerticalPadding)
                     }
 
-                    TextField(t.t("~~Invitation link"), text: $invitationLink)
+                    TextField(t.t("pasteInvite.invite_link"), text: $invitationLink)
                         .textFieldBorder()
                         .onSubmit { viewModel.onSubmitLink(invitationLink) }
                         .padding(.bottom)
                 }
 
-                Button(t.t("~~Accept invite")) {
+                Button(t.t("actions.accept_invite")) {
                     viewModel.onSubmitLink(invitationLink)
                 }
                 .stylePrimary()
@@ -40,7 +40,7 @@ struct PasteOrgInviteView: View {
             }
             .padding(.horizontal)
         }
-        .navigationTitle(t.t("~~Invitation link"))
+        .navigationTitle(t.t("nav.invitation_link"))
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .onChange(of: viewModel.inviteCode) { newValue in

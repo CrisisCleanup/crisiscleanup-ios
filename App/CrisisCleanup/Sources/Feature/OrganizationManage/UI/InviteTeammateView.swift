@@ -24,12 +24,12 @@ struct InviteTeammateView: View {
                 InviteTeammateContentView()
             } else {
                 // TODO: Style accordingly
-                Text(t.t("~~Sign in to invite others"))
+                Text(t.t("inviteTeammates.sign_in_to_invite"))
                     .fontHeader2()
             }
         }
         .hideNavBarUnderSpace()
-        .screenTitle(t.t("~~Invite others"))
+        .screenTitle(t.t("nav.invite_teammates"))
         .onChange(of: viewModel.isLoading) { newValue in
             animateLoading = newValue
         }
@@ -108,10 +108,13 @@ private struct InviteTeammateContentView: View {
                            inviteToAnotherOrg {
                             let messageKey: String = {
                                 if isNewOrganization {
-                                    return "~~This organization does not yet have an account. We will create an account and contact this person to finalize the registration."
+
+// I think this needs to be translated
+
+                                    return "inviteTeammates.org_does_not_have_account"
                                 } else if viewModel.inviteOrgState.nonAffiliate {
                                     // TODO: Update once logic is decided
-                                    // return "~~This user will need to be approved by somebody from the organization."
+                                    // return "inviteTeammates.user_needs_approval_from_org"
                                 }
                                 return ""
                             }()
@@ -131,7 +134,7 @@ private struct InviteTeammateContentView: View {
                         }
 
                         if viewModel.inviteOrgState.nonAffiliate {
-                            Text(t.t("~~Inviting to non-affiliate organizations is not yet supported. Users can download and use the app to request an invite to this organization if they have a contact at this organization."))
+                            Text(t.t("inviteTeammates.no_unaffiliated_invitations_allowed"))
                                 .foregroundColor(appTheme.colors.primaryBlueColor)
 
                         } else {
@@ -158,7 +161,7 @@ private struct InviteTeammateContentView: View {
                                     )
                                     .padding(.top, appTheme.listItemVerticalPadding)
                                 } else {
-                                    Text(t.t("~~Use commas if inviting multiple email addresses"))
+                                    Text(t.t("inviteTeammates.use_commas_multiple_emails"))
                                         .fontBodySmall()
                                 }
                             }
@@ -184,7 +187,7 @@ private struct InviteTeammateContentView: View {
 
                         if viewModel.inviteOrgState.ownOrAffiliate,
                            viewModel.scanQrCodeText.isNotBlank {
-                            let orText = t.t("~~Or")
+                            let orText = t.t("inviteTeammates.or")
                             Text(orText)
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .fontHeader4()
@@ -208,7 +211,7 @@ private struct InviteTeammateContentView: View {
                                     if let qrCode = viewModel.myOrgInviteQrCode {
                                         CenteredRowImage(image: qrCode)
                                     } else {
-                                        Text(t.t("~~We are having issues with organization invite codes."))
+                                        Text(t.t("inviteTeammates.invite_error"))
                                             .padding(.vertical)
                                     }
                                 }
