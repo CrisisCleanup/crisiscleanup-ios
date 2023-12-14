@@ -12,10 +12,8 @@ struct ScanQrCodeJoinOrgView: View {
             VStack {
                 if viewModel.isCameraDenied {
                     Text(t.t("info.camera_access_needed"))
-                    Button {
+                    Button(t.t("info.grant_camera_access")) {
                         showOpenSettings = true
-                    } label: {
-                        text: t.t("info.grant_camera_access")
                     }
                     .stylePrimary()
                     .padding()
