@@ -40,7 +40,7 @@ class PasteOrgInviteViewModel: ObservableObject {
 
     func onSubmitLink(_ link: String) {
         if link.isBlank {
-            inviteCodeError = translator.t("~~Paste an invite link.")
+            inviteCodeError = translator.t("volunteerOrg.paste_invitation_link")
             return
         }
 
@@ -59,15 +59,15 @@ class PasteOrgInviteViewModel: ObservableObject {
                     let code = String(match.output.1)
                     if let info = await orgVolunteerRepository.getInvitationInfo(code) {
                         if info.isExpiredInvite {
-                            errorMessageKey = "~~The link is expired."
+                            errorMessageKey = "pasteInvite.link_expired"
                         } else {
                             inviteCode = code
                         }
                     } else {
-                        errorMessageKey = "~~The link is invalid."
+                        errorMessageKey = "pasteInvite.link_invalid"
                     }
                 } else {
-                    errorMessageKey = "~~The link is not an invite link."
+                    errorMessageKey = "pasteInvite.link_not_invitation"
                 }
 
                 if errorMessageKey.isNotBlank {

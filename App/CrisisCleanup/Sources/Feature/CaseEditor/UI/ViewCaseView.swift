@@ -471,7 +471,7 @@ private struct ViewCaseNotes: View {
 
                     let otherNotes = viewModel.otherNotes
                     if otherNotes.isNotEmpty {
-                        let otherNotesLabel = t.t("~~Other notes")
+                        let otherNotesLabel = t.t("caseView.other_notes")
 
                         Button {
                             hideOtherNotes.toggle()

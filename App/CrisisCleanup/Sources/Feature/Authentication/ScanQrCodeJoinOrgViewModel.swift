@@ -183,7 +183,7 @@ class ScanQrCodeJoinOrgViewModel: ObservableObject {
             captureSession.sessionPreset = .medium
             captureSession.addInput(deviceInput)
         } else if captureSession.inputs.isEmpty {
-            errorMessageSubject.value = translator.t("~~Camera could not be found. Retry on a device with a camera.")
+            errorMessageSubject.value = translator.t("info.camera_not_found")
         }
 
         if captureSession.inputs.isNotEmpty,

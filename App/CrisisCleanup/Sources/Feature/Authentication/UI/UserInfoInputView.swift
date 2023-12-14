@@ -38,12 +38,12 @@ struct UserInfoInputData {
         }
 
         if firstName.isBlank {
-            firstNameError = translator.t("~~First name is required.")
+            firstNameError = translator.t("invitationSignup.first_name_required")
             errorFocuses.append(.userFirstName)
         }
 
         if lastName.isBlank {
-            lastNameError = translator.t("~~Last name is required.")
+            lastNameError = translator.t("invitationSignup.last_name_required")
             errorFocuses.append(.userLastName)
         }
 

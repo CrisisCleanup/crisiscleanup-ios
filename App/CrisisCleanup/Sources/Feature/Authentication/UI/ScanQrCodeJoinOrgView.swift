@@ -11,8 +11,8 @@ struct ScanQrCodeJoinOrgView: View {
         ZStack {
             VStack {
                 if viewModel.isCameraDenied {
-                    Text(t.t("~~Access to the camera is needed to scan QR codes"))
-                    Button("Grant camera access") {
+                    Text(t.t("info.camera_access_needed"))
+                    Button(t.t("info.grant_camera_access")) {
                         showOpenSettings = true
                     }
                     .stylePrimary()
@@ -30,7 +30,7 @@ struct ScanQrCodeJoinOrgView: View {
                     } else {
                         if let image = viewModel.frameImage {
                             GeometryReader { geometry in
-                                let label = t.t("~~Camera")
+                                let label = t.t("nav.camera")
                                 Image(image, scale: 1.0, orientation: .up, label: Text(label))
                                     .resizable()
                                     .scaledToFill()
@@ -52,15 +52,15 @@ struct ScanQrCodeJoinOrgView: View {
 
             if showOpenSettings {
                 OpenAppSettingsDialog(
-                    title: t.t("~~Allow access to camera"),
+                    title: t.t("info.allow_camera_access"),
                     dismissDialog: { showOpenSettings = false }
                 ) {
-                    Text(t.t("~~Open settings to grant access to camera."))
+                    Text(t.t("info.open_settings_to_grant_camera_access"))
                         .padding(.horizontal)
                 }
             }
         }
-        .screenTitle(t.t("~~Scan QR Code"))
+        .screenTitle(t.t("volunteerOrg.scan_qr_code"))
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
     }
