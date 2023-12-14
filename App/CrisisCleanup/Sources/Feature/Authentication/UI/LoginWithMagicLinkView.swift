@@ -14,7 +14,7 @@ struct LoginMagicLinkCodeView: View {
             if viewModel.errorMessage.isNotBlank {
                 VStack {
                     Text(viewModel.errorMessage)
-                        .padding()
+                        .listItemModifier()
 
                     Spacer()
                 }

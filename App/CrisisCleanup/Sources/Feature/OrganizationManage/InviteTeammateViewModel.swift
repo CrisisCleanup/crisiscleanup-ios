@@ -56,6 +56,7 @@ class InviteTeammateViewModel: ObservableObject {
     @Published private(set) var isGeneratingQrCode = false
     @Published private(set) var myOrgInviteQrCode: UIImage?
 
+    // TODO: Test affiliate org features when supported
     private let affiliateInviteLatestPublisher = LatestAsyncThrowsPublisher<OrgQrCode>()
     private let generatingAffiliateOrgQrCodeSubject = CurrentValueSubject<Int64, Never>(0)
     @Published private(set) var isGeneratingAffiliateQrCode = false
@@ -214,6 +215,7 @@ class InviteTeammateViewModel: ObservableObject {
         qPublisher
             .filter { $0.count > 1 }
             .sink(receiveValue: { q in
+                // TODO: Review loading pattern
                 self.isSearchingNetworkOrganizationsSubject.value = true
                 do {
                     defer {
@@ -290,15 +292,13 @@ class InviteTeammateViewModel: ObservableObject {
     }
 
     private func subscribeInviteQrCode() {
-        let isGeneratingAffiliateInvite = Publishers.CombineLatest(
+        Publishers.CombineLatest(
             generatingAffiliateOrgQrCodeSubject,
             $selectedOtherOrg
         )
             .map { (generatingOrgId, selectedOrg) in
                 generatingOrgId > 0 && generatingOrgId == selectedOrg.id
             }
-
-        isGeneratingAffiliateInvite
             .receive(on: RunLoop.main)
             .assign(to: \.isGeneratingAffiliateQrCode, on: self)
             .store(in: &subscriptions)
@@ -306,7 +306,7 @@ class InviteTeammateViewModel: ObservableObject {
         Publishers.CombineLatest3(
             isCreatingMyOrgPersistentInvitation,
             isGeneratingMyOrgQrCodeSubject,
-            isGeneratingAffiliateInvite
+            $isGeneratingAffiliateQrCode
         )
         .map { (b0, b1, b2) in b0 || b1 || b2 }
         .receive(on: RunLoop.main)
@@ -376,18 +376,22 @@ class InviteTeammateViewModel: ObservableObject {
         }
         .map { (account, otherOrgIdName, _) in
             self.affiliateInviteLatestPublisher.publisher {
-                self.generatingAffiliateOrgQrCodeSubject.value = otherOrgIdName.id
+                let otherOrgId = otherOrgIdName.id
+
+                self.generatingAffiliateOrgQrCodeSubject.value = otherOrgId
                 do {
                     defer {
                         // TODO: Atomic update
-                        if self.generatingAffiliateOrgQrCodeSubject.value == otherOrgIdName.id {
+                        if self.generatingAffiliateOrgQrCodeSubject.value == otherOrgId {
                             self.generatingAffiliateOrgQrCodeSubject.value = 0
                         }
                     }
 
-                    let orgId = otherOrgIdName.id
                     let userId = account.id
-                    let invite = await self.orgVolunteerRepository.getOrganizationInvite(organizationId: orgId, inviterUserId: userId)
+                    let invite = await self.orgVolunteerRepository.getOrganizationInvite(
+                        organizationId: otherOrgId,
+                        inviterUserId: userId
+                    )
 
                     try Task.checkCancellation()
 
@@ -396,7 +400,7 @@ class InviteTeammateViewModel: ObservableObject {
 
                     try Task.checkCancellation()
 
-                    return OrgQrCode(orgId: orgId, qrCode: qrCode)
+                    return OrgQrCode(orgId: otherOrgId, qrCode: qrCode)
                 }
             }
         }
@@ -457,7 +461,8 @@ class InviteTeammateViewModel: ObservableObject {
 
     func onOrgQueryClose() {
         var matchingOrg = OrganizationIdName(id: 0, name: "")
-        let orgQueryLower = organizationNameQuery.trim().lowercased()
+        let q = organizationNameQuery.trim()
+        let orgQueryLower = q.lowercased()
         // TODO: Optimize matching if result set is computationally large
         for result in organizationsSearchResult {
             if result.name.trim().lowercased() == orgQueryLower {
@@ -468,7 +473,7 @@ class InviteTeammateViewModel: ObservableObject {
         if selectedOtherOrg.id != matchingOrg.id {
             matchingOrg = OrganizationIdName(
                 id: 0,
-                name: organizationNameQuery.trim()
+                name: q
             )
             selectedOtherOrg = matchingOrg
             organizationNameQuery = matchingOrg.name
