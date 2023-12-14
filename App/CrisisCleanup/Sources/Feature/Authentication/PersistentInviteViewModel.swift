@@ -129,7 +129,7 @@ class PersistentInviteViewModel: ObservableObject {
                 let inviteInfo = await orgVolunteerRepository.getInvitationInfo(invite) ?? ExpiredNetworkOrgInvite
                 let inviterText = InviteDisplayInfo(
                     inviteInfo: inviteInfo,
-                    inviteMessage: translator.t("~~invites you to join {organization}.")
+                    inviteMessage: translator.t("persistentInvitations.is_inviting_to_join_org")
                         .replacingOccurrences(of: "{organization}", with: inviteInfo.orgName)
                 )
 
@@ -181,17 +181,17 @@ class PersistentInviteViewModel: ObservableObject {
                 )
                 if joinResult == .success {
                     Task { @MainActor in
-                        acceptedTitle = translator.t("~~Your account has been created")
+                        acceptedTitle = translator.t("persistentInvitations.account_created")
                         isInviteAcceptedSubject.value = true
                     }
                 } else {
-                    var errorMessageTranslateKey = "~~There was an issue with joining the organization. Try logging in. If unable to login try joining again later."
+                    var errorMessageTranslateKey = "persistentInvitations.join_org_error"
                     switch joinResult {
                     case .redundant:
-                        errorMessageTranslateKey = "~~You are in this organization."
+                        errorMessageTranslateKey = "persistentInvitations.already_in_org_error"
                     default:
                         if inviteDisplay?.inviteInfo.expiration.isPast == true {
-                            errorMessageTranslateKey = "~~The invite is expired. Request a new invite."
+                            errorMessageTranslateKey = "persistentInvitations.invite_expired_try_again"
                         }
                     }
                     inviteFailMessageSubject.value = translator.t(errorMessageTranslateKey)

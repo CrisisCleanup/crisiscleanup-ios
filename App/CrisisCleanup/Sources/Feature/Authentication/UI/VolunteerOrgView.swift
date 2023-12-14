@@ -10,7 +10,7 @@ struct VolunteerOrgView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading) {
-                let getStartedInstruction = t.t("~~To get started you need to join an organization. There are three ways to join.")
+                let getStartedInstruction = t.t("volunteerOrg.get_started_join_org")
                 Text(getStartedInstruction)
                     .fontHeader2()
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -19,8 +19,8 @@ struct VolunteerOrgView: View {
                     .background(appTheme.colors.separatorColor)
 
                 InstructionTextAction(
-                    instruction: t.t("~~Click on the invitation link in an email invite. If nothing happens"),
-                    actionText: t.t("~~Paste invitation link"),
+                    instruction: t.t("volunteerOrg.click_inviation_link"),
+                    actionText: t.t("volunteerOrg.paste_invitation_link"),
                     onAction: {
                      router.openPasteOrgInviteLink()
                 })
@@ -29,8 +29,8 @@ struct VolunteerOrgView: View {
                 StaticOrTextView()
 
                 InstructionTextAction(
-                    instruction: t.t("~~If you know an email of someone in your organization who already has an account."),
-                    actionText: t.t("nav.request_access"),
+                    instruction: t.t("volunteerOrg.if_you_know_email"),
+                    actionText: t.t("volunteerOrg.request_access"),
                     onAction: {
                      router.openRequestOrgAccess()
                 })
@@ -39,14 +39,14 @@ struct VolunteerOrgView: View {
                 StaticOrTextView()
 
                 InstructionAction(
-                    instruction: t.t("~~Find someone with an invitation QR code.")
+                    instruction: t.t("volunteerOrg.find_qr_code")
                 ) {
                     Button {
                          router.openScanOrgQrCode()
                     } label: {
                         HStack {
                             Image(systemName: "qrcode.viewfinder")
-                            Text(t.t("Scan QR code"))
+                            Text(t.t("volunteerOrg.scan_qr_code"))
                         }
                     }
                     .stylePrimary()
@@ -54,7 +54,7 @@ struct VolunteerOrgView: View {
                 .padding()
 
                 VStack(alignment: .leading) {
-                    Text(t.t("~~If your organization does not have an account:"))
+                    Text(t.t("volunteerOrg.if_no_account"))
 
                     Link(
                         t.t("registerOrg.register_org"),
@@ -67,7 +67,7 @@ struct VolunteerOrgView: View {
             }
             .frame(maxWidth: .infinity)
         }
-        .navigationTitle(t.t("~~Signup"))
+        .navigationTitle(t.t("actions.sign_up"))
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
     }
@@ -77,7 +77,7 @@ private struct StaticOrTextView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     var body: some View {
-        let orText = t.t("~~Or")
+        let orText = t.t("volunteerOrg.or")
         Text(orText)
             .frame(maxWidth: .infinity, alignment: .center)
             .fontHeader4()

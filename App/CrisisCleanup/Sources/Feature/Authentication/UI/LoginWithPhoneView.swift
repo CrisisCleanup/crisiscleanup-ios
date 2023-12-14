@@ -57,7 +57,7 @@ private struct LoginView: View {
                             .padding([.vertical])
                     }
 
-                    TextField(t.t("~~Enter cell phone"), text: $phoneNumber)
+                    TextField(t.t("loginWithPhone.enter_cell"), text: $phoneNumber)
                         .textFieldBorder()
                         .keyboardType(.phonePad)
                         .padding(.top, appTheme.listItemVerticalPadding)

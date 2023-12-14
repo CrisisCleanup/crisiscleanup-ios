@@ -67,7 +67,7 @@ private struct RequestOrgUserInfoInputView: View {
         let disabled = editableView.disabled
         let isRequestingInvite = viewModel.isRequestingInvite
 
-        let requestInstructions = t.t("~~Request access by entering the email address of someone in your organization who already has an account.")
+        let requestInstructions = t.t("requestAccess.request_access_enter_email")
 
         ScrollView {
             VStack(alignment: .leading) {
@@ -115,7 +115,7 @@ private struct RequestOrgUserInfoInputView: View {
                     .padding(.horizontal)
                 }
 
-                Text(t.t("~~Fill out your information"))
+                Text(t.t("requestAccess.complete_form_request_access"))
                     .fontHeader3()
                     .padding()
 

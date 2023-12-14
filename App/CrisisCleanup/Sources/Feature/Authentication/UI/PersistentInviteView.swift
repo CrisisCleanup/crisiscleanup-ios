@@ -27,7 +27,7 @@ struct PersistentInviteView: View {
                 } else if let inviteDisplay = viewModel.inviteDisplay {
                     let inviteInfo = inviteDisplay.inviteInfo
                     if inviteInfo.isExpiredInvite {
-                        Text(t.t("~~This invite is invalid or has expired. Have the inviter refresh/renew their invite."))
+                        Text(t.t("persistentInvitations.expired_or_invalid"))
                             .fontHeader3()
                             .listItemModifier()
 
@@ -51,7 +51,7 @@ struct PersistentInviteView: View {
                 ProgressView()
             }
         }
-        .navigationTitle(t.t("~~Signup"))
+        .navigationTitle(t.t("actions.sign_up"))
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)
@@ -86,7 +86,10 @@ private struct PersistentInviteInfoInputView: View {
         ScrollView {
             VStack(alignment: .leading) {
                 if Date.now.distance(to: inviteDisplay.inviteInfo.expiration) < 1.days {
-                    let expirationText = t.t("~~Invite expires in {relative_time}")
+
+// {relative_time} needs to be passed to localization, persistentInvitations.invite_expires_in_x_days as variable, {relative_time}
+
+                    let expirationText = t.t("persistentInvitations.invite_expires_in_x_days")
                         .replacingOccurrences(of: "{relative_time}", with: inviteDisplay.inviteInfo.expiration.relativeTime)
                     Text(expirationText)
                         .listItemModifier()
@@ -111,7 +114,7 @@ private struct PersistentInviteInfoInputView: View {
                     .padding([.horizontal, .bottom])
                 }
 
-                Text(t.t("~~Fill out your information"))
+                Text(t.t("persistentInvitations.enter_user_info"))
                     .fontHeader3()
                     .padding([.horizontal, .bottom])
 

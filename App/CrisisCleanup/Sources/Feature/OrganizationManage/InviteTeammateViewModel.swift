@@ -110,7 +110,7 @@ class InviteTeammateViewModel: ObservableObject {
     }
 
     private func subscribeViewState() {
-        anotherOrgInviteOptionText = translator.t("~~From another organization")
+        anotherOrgInviteOptionText = translator.t("inviteTeammates.from_another_org")
 
         let incidentsPublisher = incidentSelector.incidentsData.eraseToAnyPublisher()
 
@@ -142,8 +142,8 @@ class InviteTeammateViewModel: ObservableObject {
         .filter({ (account, _) in account.id > 0 })
         .map { (account, inviteToOther) in
             inviteToOther
-            ? self.translator.t("~~Invite via QR code")
-            : self.translator.t("~~Scan QR code to invite to {organization}")
+            ? self.translator.t("inviteTeammates.invite_via_qr")
+            : self.translator.t("inviteTeammates.scan_qr_code_to_invite")
                 .replacingOccurrences(of: "{organization}", with: account.org.name)
         }
         .receive(on: RunLoop.main)
@@ -165,7 +165,7 @@ class InviteTeammateViewModel: ObservableObject {
             .receive(on: RunLoop.main)
             .sink { accountData in
                 self.accountData = accountData
-                self.myOrgInviteOptionText = self.translator.t("~~Part of {my_organization}")
+                self.myOrgInviteOptionText = self.translator.t("inviteTeammates.part_of_my_org")
                     .replacingOccurrences(of: "{my_organization}", with: accountData.org.name)
                 self.hasValidTokens = accountData.areTokensValid
                 self.isValidatingAccount.value = false
@@ -434,12 +434,12 @@ class InviteTeammateViewModel: ObservableObject {
             .map { s in String(s).trim() }
             .filter { s in s.isNotBlank }
         if emailAddresses.isEmpty {
-            errorMessage = translator.t("~~Enter email addresses to invite.")
+            errorMessage = translator.t("inviteTeammates.enter_invited_emails")
         } else {
             let invalidEmailAddresses = emailAddresses.map { s in
                 inputValidator.validateEmailAddress(s)
                 ? ""
-                : translator.t("~~{email} is not a valid email address")
+                : translator.t("inviteTeammates.invalid_email_error")
                     .replacingOccurrences(of: "{email}", with: s)
             }
             errorMessage = invalidEmailAddresses.filter { s in s.isNotBlank }
@@ -485,7 +485,7 @@ class InviteTeammateViewModel: ObservableObject {
         }
 
         if notInvited.isNotEmpty {
-            sendInviteErrorMessage = translator.t("~~There were issues during invite. The following were not invited: {email_addresses}.")
+            sendInviteErrorMessage = translator.t("inviteTeammates.emails_not_invited_error")
                 .replacingOccurrences(of: "{email_addresses}", with: notInvited.joined(separator: "\n  "))
             return false
         }
@@ -502,7 +502,7 @@ class InviteTeammateViewModel: ObservableObject {
     @MainActor
     private func onInviteSentToOrgOrAffiliate(_ emailAddresses: [String]) {
         onInviteSent(
-            title: translator.t("~~Great. These users have received invites"),
+            title: translator.t("inviteTeammates.invitations_sent"),
             text: translator.t(emailAddresses.joined(separator: "\n"))
         )
     }
@@ -525,31 +525,31 @@ class InviteTeammateViewModel: ObservableObject {
 
         if inviteOrgState.new {
             if emailAddresses.count > 1 {
-                emailAddressError = translator.t("~~Only one email is allowed when registering a new organization.")
+                emailAddressError = translator.t("registerOrg.only_one_email_allowed")
                 errorFocus = .userEmailAddress
                 return
             }
 
             if invitePhoneNumber.isBlank {
-                phoneNumberError = translator.t("~~Phone is required.")
+                phoneNumberError = translator.t("registerOrg.phone_required")
                 errorFocus = .userPhone
                 return
             }
 
             if inviteFirstName.isBlank {
-                firstNameError = translator.t("~~First name is required.")
+                firstNameError = translator.t("registerOrg.first_name_required")
                 errorFocus = .userFirstName
                 return
             }
 
             if inviteLastName.isBlank {
-                lastNameError = translator.t("~~Last name is required.")
+                lastNameError = translator.t("registerOrg.last_name_required")
                 errorFocus = .userLastName
                 return
             }
 
             if selectedIncidentId == EmptyIncident.id {
-                selectedIncidentError = translator.t("~~Select an incident to support.")
+                selectedIncidentError = translator.t("registerOrg.select_incident")
                 return
             }
         }
@@ -557,12 +557,12 @@ class InviteTeammateViewModel: ObservableObject {
         if inviteToAnotherOrg {
             if selectedOtherOrg.id > 0 {
                 if selectedOtherOrg.name != organizationNameQuery {
-                    sendInviteErrorMessageSubject.value = translator.t("~~Search and select an organization to invite to. Select one of the organization options.")
+                    sendInviteErrorMessageSubject.value = translator.t("registerOrg.search_and_select_org")
                     return
                 }
             } else {
                 if organizationNameQuery.trim().isBlank {
-                    sendInviteErrorMessageSubject.value = translator.t("~~Enter or search and select an organization to invite to.")
+                    sendInviteErrorMessageSubject.value = translator.t("registerOrg.search_and_select_org_blank")
                     return
                 }
             }
@@ -599,9 +599,9 @@ class InviteTeammateViewModel: ObservableObject {
                         if isRegisterNewOrganization {
                             Task {
                                 await onInviteSent(
-                                    title: translator.t("~~Great. You have created {organization}")
+                                    title: translator.t("registerOrg.you_have_registered_org")
                                         .replacingOccurrences(of: "{organization}", with: organizationName),
-                                    text: translator.t("~~We will contact {email} to finalize the registration.")
+                                    text: translator.t("registerOrg.we_will_finalize_registration")
                                         .replacingOccurrences(of: "{email}", with: emailContact)
                                 )
                             }

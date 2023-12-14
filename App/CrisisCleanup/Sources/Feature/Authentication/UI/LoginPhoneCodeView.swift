@@ -16,7 +16,7 @@ struct LoginPhoneCodeView: View {
                     .frame(alignment: .center)
             } else if viewModel.phoneNumber.isBlank {
                 VStack(alignment: .leading) {
-                    Text(t.t("~~Invalid phone number. Go back and retry phone login."))
+                    Text(t.t("loginWithPhone.invalid_phone_try_again"))
 
                     Spacer()
                 }
@@ -92,7 +92,11 @@ private struct LoginView: View {
                             .padding([.vertical])
                     }
 
-                    Text(t.t("~~Enter the \(singleCodes.count) digit code we sent to"))
+
+// \(singleCodes.count) needs to be passed as the variable {codeCount} to the localization, loginWithPhone.enter_x_digit_code
+
+
+                    Text(t.t("loginWithPhone.enter_x_digit_code"))
                     Text(viewModel.obfuscatedPhoneNumber)
 
                     // TODO: Autofill from text messages
@@ -124,7 +128,7 @@ private struct LoginView: View {
                     }
 
                     Group {
-                        Button(t.t("~~Resend Code")) {
+                        Button(t.t("actions.resend_code")) {
                             viewModel.requestPhoneCode(viewModel.phoneNumber)
                         }
                         .disabled(disabled)
@@ -132,10 +136,10 @@ private struct LoginView: View {
                     .frame(maxWidth: .infinity, alignment: .trailing)
 
                     if viewModel.accountOptions.count > 1 {
-                        Text(t.t("~~This phone number is associated with multiple accounts."))
+                        Text(t.t("loginWithPhone.phone_associated_multiple_users"))
                             .padding(.top)
 
-                        Text(t.t("~~Select Account"))
+                        Text(t.t("actions.select_account"))
                             .fontHeader4()
 
                         Menu {

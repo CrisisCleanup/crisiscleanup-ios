@@ -182,7 +182,7 @@ class LoginWithPhoneViewModel: ObservableObject {
                 } else {
                     // TODO: Be more specific
                     // TODO: Capture error and report to backend
-                    message = translator.t("~~Phone number is invalid or phone login is down. Try again later.")
+                    message = translator.t("loginWithPhone.invalid_phone_unavailable_try_again")
                 }
 
                 let openPhoneCodeLogin = isInitiated
@@ -218,7 +218,7 @@ class LoginWithPhoneViewModel: ObservableObject {
     func authenticate(_ code: String) {
         if isSelectAccount,
            selectedAccount.userId == 0 {
-            errorMessage = translator.t("~~Select an account to login with.")
+            errorMessage = translator.t("loginWithPhone.select_account")
             return
         }
 
@@ -226,7 +226,7 @@ class LoginWithPhoneViewModel: ObservableObject {
            accountOptions.first(where: { $0.userId == selectedAccount.userId }) == nil {
             selectedAccountSubject.value = PhoneNumberAccountNone
             isSelectAccountSubject.value = true
-            errorMessage = translator.t("~~Select an account to login with.")
+            errorMessage = translator.t("loginWithPhone.select_account")
             return
         }
 
@@ -248,7 +248,7 @@ class LoginWithPhoneViewModel: ObservableObject {
             if oneTimePasswordId == 0 {
                 let result = await verifyPhoneCode(phoneNumber: phoneNumber, code: code)
                 if result.associatedAccounts.isEmpty {
-                    message = translator.t("~~There are no accounts associated with this phone number.")
+                    message = translator.t("loginWithPhone.no_account_error")
                 } else {
                     oneTimePasswordId = result.otpId
 
@@ -277,7 +277,7 @@ class LoginWithPhoneViewModel: ObservableObject {
                     let emailAddress = accountData.emailAddress
                     if emailAddress.isNotBlank,
                        emailAddress != accountProfile.email {
-                        message = translator.t("~~Logging in with an account different from the currently signed in account is not supported. Logout of the signed in account first then login with a different account.")
+                        message = translator.t("loginWithPhone.log_out_before_different_account")
 
                         // TODO: Clear account data and support logging in with different email address?
                     } else {
@@ -303,7 +303,7 @@ class LoginWithPhoneViewModel: ObservableObject {
 
             if !isSuccessful,
                errorMessage.isBlank {
-                message = translator.t("~~Login failed. Try requesting a new magic link.")
+                message = translator.t("loginWithPhone.login_failed_try_magic_link")
             }
 
             let errorMessage = message

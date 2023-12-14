@@ -44,7 +44,7 @@ class LoginWithMagicLinkViewModel: ObservableObject {
     private func subscribeAuthenticate() {
         let magicLinkCode = authCode
         if magicLinkCode.isBlank {
-            errorMessage = translator.t("~~Magic link is invalid. Request another magic link.")
+            errorMessage = translator.t("magicLink.invalid_link")
             return
         }
 
@@ -66,7 +66,7 @@ class LoginWithMagicLinkViewModel: ObservableObject {
                     let accountData = try await accountDataRepository.accountData.eraseToAnyPublisher().asyncFirst()
                     let emailAddress = accountData.emailAddress
                     if emailAddress.isNotBlank && emailAddress != accountProfile.email {
-                        message = translator.t("~~Logging in with an account different from the currently signed in account is not supported. Logout of the signed in account first then login with a different account.")
+                        message = translator.t("magicLink.log_out_before_different_account")
 
                         // TODO: Clear account data and support logging in with different email address?
                     } else {
@@ -94,7 +94,7 @@ class LoginWithMagicLinkViewModel: ObservableObject {
 
             if !isSuccessful,
                errorMessage.isBlank {
-                message = translator.t("~~Login failed. Try requesting a new magic link.")
+                message = translator.t("magicLink.login_failed_try_again")
             }
 
             let errorMessage = message
