@@ -92,11 +92,8 @@ private struct LoginView: View {
                             .padding([.vertical])
                     }
 
-
-// \(singleCodes.count) needs to be passed as the variable {codeCount} to the localization, loginWithPhone.enter_x_digit_code
-
-
-                    Text(t.t("loginWithPhone.enter_x_digit_code"))
+                    Text(t.t("loginWithPhone.enter_x_digit_code")
+                        .replacingOccurrences(of: "{codeCount}", with: "\(singleCodes.count)"))
                     Text(viewModel.obfuscatedPhoneNumber)
 
                     // TODO: Autofill from text messages

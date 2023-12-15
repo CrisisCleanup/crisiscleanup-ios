@@ -86,9 +86,6 @@ private struct PersistentInviteInfoInputView: View {
         ScrollView {
             VStack(alignment: .leading) {
                 if Date.now.distance(to: inviteDisplay.inviteInfo.expiration) < 1.days {
-
-// {relative_time} needs to be passed to localization, persistentInvitations.invite_expires_in_x_days as variable, {relative_time}
-
                     let expirationText = t.t("persistentInvitations.invite_expires_in_x_days")
                         .replacingOccurrences(of: "{relative_time}", with: inviteDisplay.inviteInfo.expiration.relativeTime)
                     Text(expirationText)

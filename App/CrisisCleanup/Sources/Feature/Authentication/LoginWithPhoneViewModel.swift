@@ -303,7 +303,7 @@ class LoginWithPhoneViewModel: ObservableObject {
 
             if !isSuccessful,
                errorMessage.isBlank {
-                message = translator.t("loginWithPhone.login_failed_try_magic_link")
+                message = translator.t("loginWithPhone.login_failed_try_again")
             }
 
             let errorMessage = message

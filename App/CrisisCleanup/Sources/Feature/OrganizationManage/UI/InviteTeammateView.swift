@@ -108,9 +108,6 @@ private struct InviteTeammateContentView: View {
                            inviteToAnotherOrg {
                             let messageKey: String = {
                                 if isNewOrganization {
-
-// I think this needs to be translated
-
                                     return "inviteTeammates.org_does_not_have_account"
                                 } else if viewModel.inviteOrgState.nonAffiliate {
                                     // TODO: Update once logic is decided
@@ -121,6 +118,7 @@ private struct InviteTeammateContentView: View {
                             if messageKey.isNotBlank {
                                 Text(t.t(messageKey))
                                     .foregroundColor(appTheme.colors.primaryBlueColor)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                             }
                         }
                     }
