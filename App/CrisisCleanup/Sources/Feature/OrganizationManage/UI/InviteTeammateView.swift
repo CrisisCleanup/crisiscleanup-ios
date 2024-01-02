@@ -24,8 +24,13 @@ struct InviteTeammateView: View {
                 InviteTeammateContentView()
             } else {
                 // TODO: Style accordingly
-                Text(t.t("inviteTeammates.sign_in_to_invite"))
-                    .fontHeader2()
+                VStack{
+                    Text(t.t("inviteTeammates.sign_in_to_invite"))
+                        .fontHeader2()
+                        .listItemModifier()
+
+                    Spacer()
+                }
             }
         }
         .hideNavBarUnderSpace()
@@ -59,7 +64,7 @@ private struct InviteTeammateContentView: View {
                 VStack(alignment: .leading) {
                     let inviteToAnotherOrg = viewModel.inviteToAnotherOrg
                     if !animateTopSearchBar {
-                        Text(t.t("Invite new user via email invitation link"))
+                        Text(t.t("~~Invite new user via email invitation link"))
                             .fontHeader4()
                             .padding(.vertical, appTheme.listItemVerticalPadding)
 

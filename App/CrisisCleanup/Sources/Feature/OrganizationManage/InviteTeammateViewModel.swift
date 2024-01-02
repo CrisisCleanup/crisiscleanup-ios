@@ -333,7 +333,10 @@ class InviteTeammateViewModel: ObservableObject {
                     }
 
                     let userId = data.id
-                    let invite = await self.orgVolunteerRepository.getOrganizationInvite(organizationId: orgId, inviterUserId: userId)
+                    let invite = await self.orgVolunteerRepository.getOrganizationInvite(
+                        organizationId: orgId,
+                        inviterUserId: userId
+                    )
                     return invite
                 }
             }

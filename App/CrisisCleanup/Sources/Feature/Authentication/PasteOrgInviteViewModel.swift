@@ -43,6 +43,7 @@ class PasteOrgInviteViewModel: ObservableObject {
             inviteCodeError = translator.t("volunteerOrg.paste_invitation_link")
             return
         }
+        inviteCodeError = ""
 
         guard !isVerifyingCodeSubject.value else {
             return

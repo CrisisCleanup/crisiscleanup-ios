@@ -55,6 +55,8 @@ class ScanQrCodeJoinOrgViewModel: ObservableObject {
     }
 
     func onViewAppear() {
+        qrCodeResultSubject.value = ""
+
         subscribeToViewState()
         subscribeToCamera()
         subscribeToQrCode()

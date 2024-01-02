@@ -20,20 +20,20 @@ struct VolunteerOrgView: View {
 
                 InstructionTextAction(
                     instruction: t.t("volunteerOrg.click_inviation_link"),
-                    actionText: t.t("volunteerOrg.paste_invitation_link"),
-                    onAction: {
-                     router.openPasteOrgInviteLink()
-                })
+                    actionText: t.t("volunteerOrg.paste_invitation_link")
+                ) {
+                    router.openPasteOrgInviteLink()
+                }
                 .padding()
 
                 StaticOrTextView()
 
                 InstructionTextAction(
                     instruction: t.t("volunteerOrg.if_you_know_email"),
-                    actionText: t.t("volunteerOrg.request_access"),
-                    onAction: {
-                     router.openRequestOrgAccess()
-                })
+                    actionText: t.t("volunteerOrg.request_access")
+                ) {
+                    router.openRequestOrgAccess()
+                }
                 .padding()
 
                 StaticOrTextView()

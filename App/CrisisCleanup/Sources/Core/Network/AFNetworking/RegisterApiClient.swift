@@ -149,8 +149,8 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
         let isJoined = await networkClient.callbackContinue(
             requestConvertible: request,
             // TODO: Determine response type and what constitutes success?
-            type: NetworkAcceptedInvitationRequest.self
-        ).value != nil
+            type: NetworkAcceptedCodeInvitationRequest.self
+        ).value?.status == "invitation_accepted"
         return isJoined ? .success : .unknown
     }
 

@@ -36,6 +36,10 @@ public struct NetworkAcceptedInvitationRequest: Codable, Equatable {
     }
 }
 
+public struct NetworkAcceptedCodeInvitationRequest: Codable, Equatable {
+    let status: String
+}
+
 struct NetworkAcceptCodeInvite: Codable, Equatable {
     let firstName: String
     let lastName: String

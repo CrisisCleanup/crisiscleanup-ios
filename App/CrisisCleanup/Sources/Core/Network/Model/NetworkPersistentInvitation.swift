@@ -14,7 +14,6 @@ public struct NetworkCreateOrgInvitation: Codable {
 
 public struct NetworkPersistentInvitationResult: Codable, Equatable {
     let errors: [NetworkCrisisCleanupApiError]?
-    let count: Int?
     let invite: NetworkPersistentInvitation?
 }
 

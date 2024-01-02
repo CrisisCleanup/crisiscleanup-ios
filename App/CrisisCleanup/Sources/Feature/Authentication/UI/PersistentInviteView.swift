@@ -9,7 +9,6 @@ struct PersistentInviteView: View {
     @FocusState private var focusState: TextInputFocused?
 
     var body: some View {
-
         ZStack {
             VStack {
                 if viewModel.inviteFailMessage.isNotBlank {

@@ -68,10 +68,16 @@ class PersistentInviteViewModel: ObservableObject {
         )
         .map { (info, b1) in info == nil || b1 }
         .receive(on: RunLoop.main)
-        .sink { isLoading in
-            self.isLoading = isLoading
-            self.editableViewState.isEditable = !isLoading
-        }
+        .assign(to: \.isLoading, on: self)
+        .store(in: &subscriptions)
+
+        Publishers.CombineLatest(
+            $isJoiningOrg,
+            $isInviteAccepted
+        )
+        .map { (b0, b1) in !(b0 || b1) }
+        .receive(on: RunLoop.main)
+        .assign(to: \.isEditable, on: self.editableViewState)
         .store(in: &subscriptions)
 
         isJoiningOrgSubject
@@ -141,6 +147,7 @@ class PersistentInviteViewModel: ObservableObject {
     }
 
     private func clearErrors() {
+        inviteFailMessageSubject.value = ""
         errorFocus = nil
         userInfo.clearErrors()
     }
@@ -184,6 +191,8 @@ class PersistentInviteViewModel: ObservableObject {
                         acceptedTitle = translator.t("persistentInvitations.account_created")
                         isInviteAcceptedSubject.value = true
                     }
+                    // TODO: Back to sign in with email?
+                    //       Or retrieve and set tokens?
                 } else {
                     var errorMessageTranslateKey = "persistentInvitations.join_org_error"
                     switch joinResult {

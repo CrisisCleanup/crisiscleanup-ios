@@ -32,7 +32,7 @@ class RequestOrgAccessViewModel: ObservableObject {
     @Published var languageOptions = [LanguageIdName]()
 
     private let isRequestingInviteSubject = CurrentValueSubject<Bool, Never>(false)
-    @Published private(set) var isRequestingInvite = false
+    @Published private var isRequestingInvite = false
 
     @Published private(set) var isLoading = false
 
@@ -109,8 +109,6 @@ class RequestOrgAccessViewModel: ObservableObject {
         requestedOrgSubject
             .receive(on: RunLoop.main)
             .sink(receiveValue: { result in
-                self.isInviteRequested = result != nil
-
                 if let result = result {
                     let t = self.translator
                     self.requestSentTitle = t.t("requestAccess.request_sent")
@@ -118,6 +116,8 @@ class RequestOrgAccessViewModel: ObservableObject {
                         .replacingOccurrences(of: "{organization}", with: result.organizationName)
                         .replacingOccurrences(of: "{requested_to}", with: result.organizationRecipient)
                 }
+
+                self.isInviteRequested = result != nil
             })
             .store(in: &subscriptions)
     }

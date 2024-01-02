@@ -1,8 +1,6 @@
 import SwiftUI
 
 struct RequestOrgAccessView: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
-
     @ObservedObject var viewModel: RequestOrgAccessViewModel
 
     @ObservedObject var focusableViewState = TextInputFocusableView()
@@ -65,14 +63,13 @@ private struct RequestOrgUserInfoInputView: View {
 
     var body: some View {
         let disabled = editableView.disabled
-        let isRequestingInvite = viewModel.isRequestingInvite
-
-        let requestInstructions = t.t("requestAccess.request_access_enter_email")
+        let isLoading = viewModel.isLoading
 
         ScrollView {
             VStack(alignment: .leading) {
                 if showEmailInput {
                     Group {
+                        let requestInstructions = t.t("requestAccess.request_access_enter_email")
                         Text(requestInstructions)
                             .padding(.bottom, appTheme.listItemVerticalPadding)
 
@@ -95,24 +92,29 @@ private struct RequestOrgUserInfoInputView: View {
                             }
                     }
                     .padding(.horizontal)
-                } else if let displayInfo = inviteDisplay,
-                          let avatarUrl = displayInfo.avatarUrl,
-                          displayInfo.displayName.isNotBlank,
-                          displayInfo.inviteMessage.isNotBlank {
-                    HStack(spacing: appTheme.gridItemSpacing) {
-                        AvatarView(
-                            url: avatarUrl,
-                            isSvg: displayInfo.isSvgAvatar
-                        )
+                } else {
+                    if let displayInfo = inviteDisplay {
+                        if let avatarUrl = displayInfo.avatarUrl,
+                           displayInfo.displayName.isNotBlank,
+                           displayInfo.inviteMessage.isNotBlank {
+                            HStack(spacing: appTheme.gridItemSpacing) {
+                                AvatarView(
+                                    url: avatarUrl,
+                                    isSvg: displayInfo.isSvgAvatar
+                                )
 
-                        VStack(alignment: .leading) {
-                            Text(displayInfo.displayName)
-                                .fontHeader4()
-                            Text(displayInfo.inviteMessage)
-                                .fontBodySmall()
+                                VStack(alignment: .leading) {
+                                    Text(displayInfo.displayName)
+                                        .fontHeader4()
+                                    Text(displayInfo.inviteMessage)
+                                        .fontBodySmall()
+                                }
+                            }
+                            .padding(.horizontal)
                         }
+                    } else {
+                        // TODO: Show loading
                     }
-                    .padding(.horizontal)
                 }
 
                 Text(t.t("requestAccess.complete_form_request_access"))
@@ -148,7 +150,7 @@ private struct RequestOrgUserInfoInputView: View {
                         viewModel.onVolunteerWithOrg()
                     } label: {
                         BusyButtonContent(
-                            isBusy: isRequestingInvite,
+                            isBusy: isLoading,
                             text: t.t("actions.request_access")
                         )
                     }
