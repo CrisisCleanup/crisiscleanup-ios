@@ -1,56 +1,5 @@
 import Foundation
 
-public protocol CrisisCleanupAuthApi {
-    func login(_ email: String, _ password: String) async throws -> NetworkAuthResult?
-
-    func oauthLogin(_ email: String, _ password: String) async throws -> NetworkOAuthResult?
-
-    func magicLinkLogin(_ token: String) async throws -> NetworkOAuthTokens?
-
-    func verifyPhoneCode(phoneNumber: String, code: String) async -> NetworkOneTimePasswordResult?
-
-    func oneTimePasswordLogin(accountId: Int64, oneTimePasswordId: Int64) async throws -> NetworkOAuthTokens?
-
-    func refreshTokens(_ refreshToken: String) async throws -> NetworkOAuthResult?
-}
-
-public protocol CrisisCleanupAccountApi {
-    func initiateMagicLink(_ emailAddress: String) async -> Bool
-
-    func initiatePhoneLogin(_ phoneNumber: String) async -> Bool
-
-    func initiatePasswordReset(_ emailAddress: String) async throws -> InitiatePasswordResetResult
-
-    func changePassword(
-        password: String,
-        token: String
-    ) async -> Bool
-}
-
-public protocol CrisisCleanupRegisterApi {
-    func registerOrgVolunteer(_ invite: InvitationRequest) async -> NetworkAcceptedInvitationRequest?
-
-    func getInvitationInfo(_ invite: UserPersistentInvite) async -> OrgUserInviteInfo?
-
-    func getInvitationInfo(_ inviteCode: String) async -> OrgUserInviteInfo?
-
-    func acceptOrgInvitation(_ invite: CodeInviteAccept) async -> JoinOrgResult
-
-    func createPersistentInvitation(
-        organizationId: Int64,
-        userId: Int64
-    ) async throws -> NetworkPersistentInvitation
-
-    func acceptPersistentInvitation(_ invite: CodeInviteAccept) async -> JoinOrgResult
-
-    func inviteToOrganization(_ emailAddress: String, _ organizationId: Int64?) async -> Bool
-
-    func registerOrganization(
-        referer: String,
-        invite: IncidentOrganizationInviteInfo
-    ) async -> Bool
-}
-
 public protocol CrisisCleanupNetworkDataSource {
     func getProfilePic() async throws -> String?
 
