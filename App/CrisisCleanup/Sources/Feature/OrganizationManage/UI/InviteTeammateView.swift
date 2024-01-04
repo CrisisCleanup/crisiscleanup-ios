@@ -98,7 +98,8 @@ private struct InviteTeammateContentView: View {
                             animateSearchFieldFocus: $animateTopSearchBar,
                             focusState: _focusState,
                             hint: t.t("profileOrg.organization_name"),
-                            disableAutocorrect: true
+                            disableAutocorrect: true,
+                            autocapitalization: .words
                         ) {
                             viewModel.onOrgQueryClose()
                         }

@@ -12,6 +12,7 @@ struct SuggestionsSearchField: View {
 
     let hint: String
     var disableAutocorrect = false
+    var autocapitalization: TextInputAutocapitalization = .sentences
 
     var onClose: () -> Void = {}
 
@@ -19,6 +20,7 @@ struct SuggestionsSearchField: View {
         HStack {
             TextField(hint, text: $q)
                 .autocorrectionDisabled(disableAutocorrect)
+                .textInputAutocapitalization(autocapitalization)
                 .focused($focusState, equals: focusedKey)
                 .onChange(of: focusState) { isFocused in
                     withAnimation(.easeInOut(duration: appTheme.layoutAnimationDuration)) {
