@@ -24,9 +24,9 @@ class InviteTeammateViewModel: ObservableObject {
     @Published private(set) var scanQrCodeText = ""
 
     @Published var inviteToAnotherOrg = false
-    @Published private(set) var accountData = emptyAccountData
+    @Published private var accountData = emptyAccountData
     @Published private var affiliateOrganizationIds: Set<Int64>?
-    @Published private(set) var selectedOtherOrg = OrganizationIdName(id: 0, name: "")
+    @Published private var selectedOtherOrg = OrganizationIdName(id: 0, name: "")
     @Published var organizationNameQuery = ""
     private let isSearchingLocalOrganizationsSubject = CurrentValueSubject<Bool, Never>(false)
     private let isSearchingNetworkOrganizationsSubject = CurrentValueSubject<Bool, Never>(false)
@@ -196,9 +196,10 @@ class InviteTeammateViewModel: ObservableObject {
 
         // TODO: Indicate loading when querying local matches
         let qPublisher = $organizationNameQuery
-            .debounce(
+            .throttle(
                 for: .seconds(0.3),
-                scheduler: RunLoop.current
+                scheduler: RunLoop.current,
+                latest: true
             )
             .map { q in q.trim() }
         qPublisher
@@ -278,6 +279,17 @@ class InviteTeammateViewModel: ObservableObject {
                 }
             }
             .store(in: &subscriptions)
+
+        $inviteOrgState
+            .throttle(
+                for: .seconds(0.3),
+                scheduler: RunLoop.current,
+                latest: true
+            )
+            .sink { state in
+                self.clearErrors()
+            }
+            .store(in: &subscriptions)
     }
 
     private func subscribeSendState() {
@@ -285,6 +297,16 @@ class InviteTeammateViewModel: ObservableObject {
             .receive(on: RunLoop.main)
             .assign(to: \.isSendingInvite, on: self)
             .store(in: &subscriptions)
+    }
+
+    private func clearErrors() {
+        emailAddressError = ""
+        phoneNumberError = ""
+        firstNameError = ""
+        lastNameError = ""
+        selectedIncidentError = ""
+
+        sendInviteErrorMessageSubject.value = ""
     }
 
     private func makeInviteUrl(_ userId: Int64, _ invite: JoinOrgInvite) -> String {
@@ -473,14 +495,12 @@ class InviteTeammateViewModel: ObservableObject {
                 break
             }
         }
-        if selectedOtherOrg.id != matchingOrg.id {
-            matchingOrg = OrganizationIdName(
-                id: 0,
-                name: q
-            )
-            selectedOtherOrg = matchingOrg
-            organizationNameQuery = matchingOrg.name
+        if ((selectedOtherOrg.id == 0 || selectedOtherOrg.id != matchingOrg.id) &&
+            matchingOrg.id == 0) {
+            matchingOrg = OrganizationIdName(id: 0, name: q)
         }
+        selectedOtherOrg = matchingOrg
+        organizationNameQuery = matchingOrg.name
     }
 
     private func inviteToOrgOrAffiliate(_ emailAddresses: [String], _ organizationId: Int64? = nil) async -> Bool {
@@ -587,9 +607,9 @@ class InviteTeammateViewModel: ObservableObject {
                 }
 
                 var isSentToOrgOrAffiliate = false
+                var isInviteSuccessful = false
                 if inviteToAnotherOrg {
-                    if inviteOrgState.new,
-                       emailAddresses.count == 1 {
+                    if inviteOrgState.new {
                         let organizationName = organizationNameQuery.trim()
                         let emailContact = emailAddresses[0]
                         let isRegisterNewOrganization = await orgVolunteerRepository.createOrganization(
@@ -613,20 +633,29 @@ class InviteTeammateViewModel: ObservableObject {
                                         .replacingOccurrences(of: "{email}", with: emailContact)
                                 )
                             }
+
+                            isInviteSuccessful = true
                         }
 
                     } else if inviteOrgState.affiliate {
                         isSentToOrgOrAffiliate = await inviteToOrgOrAffiliate(emailAddresses, selectedOtherOrg.id)
+                        isInviteSuccessful = isSentToOrgOrAffiliate
 
                     } else if inviteOrgState.nonAffiliate {
                         // TODO: Finish when API supports a corresponding endpoint
                     }
                 } else {
                     isSentToOrgOrAffiliate = await inviteToOrgOrAffiliate(emailAddresses)
+                    isInviteSuccessful = isSentToOrgOrAffiliate
                 }
 
                 if isSentToOrgOrAffiliate {
                     await onInviteSentToOrgOrAffiliate(emailAddresses)
+                }
+
+                if (!isInviteSuccessful) {
+                    sendInviteErrorMessageSubject.value =
+                    translator.t("~~Invites are not working at the moment. Please try again later.")
                 }
             }
         }

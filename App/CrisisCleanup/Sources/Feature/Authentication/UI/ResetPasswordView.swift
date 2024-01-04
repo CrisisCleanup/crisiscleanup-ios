@@ -5,6 +5,7 @@ struct ResetPasswordView: View {
 
     @ObservedObject var viewModel: ResetPasswordViewModel
 
+    // TODO: Incorporate or remove
     let close: () -> Void
 
     @ObservedObject var focusableViewState = TextInputFocusableView()
