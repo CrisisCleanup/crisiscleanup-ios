@@ -1,3 +1,4 @@
+import Atomics
 import AVKit
 import Combine
 import SwiftUI
@@ -17,6 +18,7 @@ class ScanQrCodeJoinOrgViewModel: ObservableObject {
     private let errorMessageSubject = CurrentValueSubject<String, Never>("")
     @Published private(set) var errorMessage = ""
 
+    private let guardConfigureCamera = ManagedAtomic(false)
     private let captureSession = AVCaptureSession()
     private let captureOutput = AVCaptureVideoDataOutput()
 
@@ -177,6 +179,15 @@ class ScanQrCodeJoinOrgViewModel: ObservableObject {
     }
 
     private func configureVideoCapture() {
+        let isConfiguring = guardConfigureCamera.compareExchange(
+            expected: false,
+            desired: true,
+            ordering: .sequentiallyConsistent
+        )
+        if isConfiguring.original {
+            return
+        }
+
         captureSession.beginConfiguration()
 
         if let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),

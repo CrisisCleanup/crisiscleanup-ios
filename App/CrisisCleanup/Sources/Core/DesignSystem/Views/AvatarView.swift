@@ -10,7 +10,9 @@ struct AvatarView: View {
         let imageSize = appTheme.avatarSize
 
         if isSvg {
-            SVGView(contentsOf: url)
+            // TODO: Update URL or fix SVG render
+//            SVGView(contentsOf: url)
+            Image(systemName: "person")
                 .frame(width: imageSize, height: imageSize)
         } else {
             CachedAsyncImage(url: url) { image in

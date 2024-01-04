@@ -389,13 +389,15 @@ extension NetworkRequestProvider {
 
     var noAuthUser: NetworkRequest {
         NetworkRequest(
-            apiUrl("users")
+            apiUrl("users"),
+            clearCookies: true
         )
     }
 
     var noAuthOrganization: NetworkRequest {
         NetworkRequest(
-            apiUrl("organizations")
+            apiUrl("organizations"),
+            clearCookies: true
         )
     }
 
