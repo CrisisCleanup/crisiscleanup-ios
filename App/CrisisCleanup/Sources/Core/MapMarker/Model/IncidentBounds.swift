@@ -75,8 +75,28 @@ struct LatLngBounds: Equatable {
             if isBuilding {
                 south = min(south, latLng.latitude)
                 north = max(north, latLng.latitude)
-                west = min(west, latLng.longitude)
-                east = max(east, latLng.longitude)
+
+                let lng = latLng.longitude
+                var lngWest = west
+                let lngEast = east
+
+                // No change in longitude bounds
+                if lngWest <= lngEast {
+                    if lngWest <= lng,
+                       lng <= lngEast {
+                        return
+                    }
+                } else if lngWest <= lng || lng <= lngEast {
+                    return
+                }
+
+                let lngDelta = lngWest - lng
+                lngWest = lng - east + 360.0
+                if (lngDelta + 360.0).truncatingRemainder(dividingBy: 360.0) < lngWest.truncatingRemainder(dividingBy: 360.0) {
+                    west = lng
+                } else {
+                    east = lng
+                }
             } else {
                 isBuilding = true
                 south = latLng.latitude

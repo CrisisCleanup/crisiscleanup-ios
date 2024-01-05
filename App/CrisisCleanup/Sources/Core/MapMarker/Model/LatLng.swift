@@ -6,8 +6,18 @@ public struct LatLng: Equatable, CustomStringConvertible {
     public let longitude: Double
 
     public init(_ latitude: Double, _ longitude: Double) {
-        self.latitude = latitude
-        self.longitude = longitude
+        self.latitude = max(-90.0, min(90.0, latitude))
+        if longitude > -180,
+           longitude <= 180 {
+            self.longitude = longitude;
+        } else {
+            var l = longitude + 180.0
+            l = l.truncatingRemainder(dividingBy: 360.0)
+            if l <= 0 {
+                l += 360
+            }
+            self.longitude = l - 180.0
+        }
     }
 
     public var description: String { "lat/lng \(latitude)/\(longitude)" }
