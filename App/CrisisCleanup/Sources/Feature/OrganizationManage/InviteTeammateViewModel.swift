@@ -655,7 +655,7 @@ class InviteTeammateViewModel: ObservableObject {
 
                 if (!isInviteSuccessful) {
                     sendInviteErrorMessageSubject.value =
-                    translator.t("~~Invites are not working at the moment. Please try again later.")
+                    translator.t("registerOrg.invitations_not_working")
                 }
             }
         }
