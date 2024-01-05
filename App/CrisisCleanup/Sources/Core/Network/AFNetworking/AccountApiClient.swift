@@ -1,4 +1,3 @@
-import Atomics
 import Foundation
 
 class AccountApiClient : CrisisCleanupAccountApi {

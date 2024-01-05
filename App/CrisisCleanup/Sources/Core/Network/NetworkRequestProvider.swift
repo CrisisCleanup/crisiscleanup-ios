@@ -62,7 +62,8 @@ extension NetworkRequestProvider {
 
     var accountProfileNoToken: NetworkRequest {
         NetworkRequest(
-            apiUrl("users/me")
+            apiUrl("users/me"),
+            clearCookies: true
         )
     }
 
