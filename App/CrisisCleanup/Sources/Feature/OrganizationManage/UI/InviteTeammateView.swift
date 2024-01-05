@@ -64,7 +64,7 @@ private struct InviteTeammateContentView: View {
                 VStack(alignment: .leading) {
                     let inviteToAnotherOrg = viewModel.inviteToAnotherOrg
                     if !animateTopSearchBar {
-                        Text(t.t("~~Invite new user via email invitation link"))
+                        Text(t.t("inviteTeammates.invite_new_user_via_email"))
                             .fontHeader4()
                             .padding(.vertical, appTheme.listItemVerticalPadding)
 
