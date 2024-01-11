@@ -3,6 +3,8 @@ public protocol AppEnv {
     var isProduction: Bool { get }
     var isNotProduction: Bool { get }
 
+    var isAustraliaBuild: Bool { get}
+
     var apiEnvironment: String { get }
 
     func runInNonProd(block: () -> Void)

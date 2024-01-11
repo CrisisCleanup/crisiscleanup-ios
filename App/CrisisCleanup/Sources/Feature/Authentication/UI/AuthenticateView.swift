@@ -79,15 +79,17 @@ private struct LoginOptionsView: View {
                     }
                     .styleOutline()
 
-                    VStack(alignment: .leading) {
-                        Text(t.translate("publicNav.relief_orgs_only", "Relief orgs and goverment only"))
+                    if viewModel.showRegister {
+                        VStack(alignment: .leading) {
+                            Text(t.translate("publicNav.relief_orgs_only", "Relief orgs and goverment only"))
 
-                        Link(
-                            t.translate("actions.register", "Register action"),
-                            destination: URL(string: "https://crisiscleanup.org/register")!
-                        )
+                            Link(
+                                t.translate("actions.register", "Register action"),
+                                destination: URL(string: "https://crisiscleanup.org/register")!
+                            )
+                        }
+                        .padding(.top)
                     }
-                    .padding(.top)
 
                     if viewModel.viewData.hasAuthenticated {
                         Button(t.translate("actions.back", "Back action")) {

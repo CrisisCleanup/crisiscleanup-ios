@@ -9,7 +9,6 @@ class CasesFilterViewModel: ObservableObject {
     private let incidentsRepository: IncidentsRepository
     private let languageRepository: LanguageTranslationsRepository
     private let locationManager: LocationManager
-    let translator: KeyTranslator
     private let logger: AppLogger
 
     private let isInitialFilterValue = ManagedAtomic(true)
@@ -64,7 +63,6 @@ class CasesFilterViewModel: ObservableObject {
         self.incidentsRepository = incidentsRepository
         self.languageRepository = languageRepository
         self.locationManager = locationManager
-        self.translator = translator
         logger = loggerFactory.getLogger("filter-cases")
 
         let sectionTranslationKey: [CollapsibleFilterSection: String] = [
