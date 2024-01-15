@@ -297,7 +297,7 @@ class CasesViewModel: ObservableObject {
                     let queryIncidentId = wqs.incidentId
                     let queryFilters = wqs.filters
 
-                    let isZoomedOut = self.mapDotsOverlay.rendersAt(wqs.zoom)
+                    let isZoomedOut = wqs.zoom < CasesConstant.MapMarkersZoomLevel
                     if wqs.isTableView ||
                         queryIncidentId == EmptyIncident.id ||
                         isZoomedOut

@@ -1,3 +1,4 @@
 struct CasesConstant {
-    static let InteractiveZoomLevel = 10
+    static let MapDotsZoomLevel = 12
+    static let MapMarkersZoomLevel = 10.0
 }
