@@ -1,3 +1,3 @@
 struct CasesConstant {
-    static let InteractiveZoomLevel = 9
+    static let InteractiveZoomLevel = 10
 }

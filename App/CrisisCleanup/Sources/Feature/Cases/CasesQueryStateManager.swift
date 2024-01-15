@@ -38,9 +38,10 @@ internal class CasesQueryStateManager {
             .store(in: &disposables)
 
         mapZoomSubject
-            .debounce(
+            .throttle(
                 for: .seconds(mapChangeDebounceTimeout),
-                scheduler: RunLoop.main
+                scheduler: RunLoop.main,
+                latest: true
             )
             .sink(receiveValue: { zoom in
                 self.updateState { $0.zoom = zoom }
@@ -48,9 +49,10 @@ internal class CasesQueryStateManager {
             .store(in: &disposables)
 
         mapBoundsSubject
-            .debounce(
+            .throttle(
                 for: .seconds(mapChangeDebounceTimeout),
-                scheduler: RunLoop.main
+                scheduler: RunLoop.main,
+                latest: true
             )
             .sink(receiveValue: { bounds in
                 self.updateState { $0.coordinateBounds = bounds }
