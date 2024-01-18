@@ -7,14 +7,22 @@ struct PopulatedTableDataWorksite: Equatable, Decodable, FetchableRecord {
     let workTypes: [WorkTypeRecord]
     let worksiteWorkTypeRequests: [WorkTypeRequestRecord]
 
-    // For filtering
     let worksiteFormData: [WorksiteFormDataRecord]
     let worksiteFlags: [WorksiteFlagRecord]
 
     func asExternalModel() -> Worksite {
         Worksite.from(worksiteRoot, worksite, workTypes)
-            .copy {
-                $0.workTypeRequests = worksiteWorkTypeRequests.map { $0.asExternalModel() }
+            .copy { w in
+                w.workTypeRequests = worksiteWorkTypeRequests.map { $0.asExternalModel() }
+                w.formData = worksiteFormData.associate { fd in
+                    let formValue = WorksiteFormValue(
+                        isBoolean: fd.isBoolValue,
+                        valueString: fd.valueString,
+                        valueBoolean: fd.valueBool
+                    )
+                    return (fd.fieldKey, formValue)
+                }
+                w.flags = worksiteFlags.map { $0.asExternalModel() }
             }
     }
 

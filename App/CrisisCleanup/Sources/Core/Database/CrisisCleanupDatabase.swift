@@ -840,6 +840,16 @@ extension AppDatabase {
             }
         }
 
+        migrator.registerMigration(
+            "worksite-case-number-index",
+            foreignKeyChecks: .immediate
+        ) { db in
+            try db.create(
+                indexOn: "worksite",
+                columns: ["incidentId", "caseNumber"]
+            )
+        }
+
         return migrator
     }
 }

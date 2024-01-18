@@ -48,10 +48,6 @@ class CasesMapDotsOverlay: MKTileOverlay {
         maximumZ = zoomThreshold
     }
 
-    func rendersAt(_ zoom: Double) -> Bool {
-        Int(zoom.rounded(.up)) < zoomThreshold + 1
-    }
-
     func onStateChange(
         _ id: Int64,
         _ worksitesCount: Int,

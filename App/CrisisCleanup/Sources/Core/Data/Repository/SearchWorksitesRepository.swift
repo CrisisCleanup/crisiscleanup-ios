@@ -16,6 +16,11 @@ public protocol SearchWorksitesRepository {
         _ incidentId: Int64,
         _ q: String
     ) -> [WorksiteSummary]
+
+    func getWorksiteByCaseNumber(
+        _ incidentId: Int64,
+        _ caseNumber: String
+    ) -> WorksiteSummary?
 }
 
 class MemorySearchWorksitesRepository: SearchWorksitesRepository {
@@ -148,6 +153,14 @@ class MemorySearchWorksitesRepository: SearchWorksitesRepository {
 
     func getMatchingLocalWorksites(_ incidentId: Int64, _ q: String) -> [WorksiteSummary] {
         worksiteDao.getMatchingWorksites(incidentId, q)
+    }
+
+    func getWorksiteByCaseNumber(_ incidentId: Int64, _ caseNumber: String) -> WorksiteSummary? {
+        guard caseNumber.isNotBlank else {
+            return nil
+        }
+
+        return worksiteDao.getWorksiteByCaseNumber(incidentId, caseNumber)
     }
 }
 
