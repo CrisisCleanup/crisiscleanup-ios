@@ -9,6 +9,8 @@ struct CasesTableView: View {
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
     let hasNoIncidents: Bool
 
+    @State private var showWrongLocationDialog = false
+
     var body: some View {
         let isLoadingData = viewModel.isLoadingData
         let isEditable = viewModel.isTableEditable
@@ -84,7 +86,8 @@ struct CasesTableView: View {
                                 isChangingClaim: isChangingClaim,
                                 onWorksiteClaimAction: { claimAction in
                                     viewModel.onWorksiteClaimAction(worksite, claimAction)
-                                }
+                                },
+                                showWrongLocationDialog: $showWrongLocationDialog
                             )
                             .if (index == 0) {
                                 $0.id("case-table-first")
@@ -204,6 +207,8 @@ private struct CaseTableItemCard: View {
     let isChangingClaim: Bool
     let onWorksiteClaimAction: (TableWorksiteClaimAction) -> Void
 
+    @Binding var showWrongLocationDialog: Bool
+
     var body: some View {
         VStack(alignment: .leading) {
             HStack {
@@ -257,11 +262,10 @@ private struct CaseTableItemCard: View {
                     .foregroundColor(Color.gray)
 
                 Text(fullAddress)
-
-                Spacer()
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
                 if worksite.hasWrongLocationFlag {
-                    // TODO: Button when clicked pops message about wrong location flag is set
+                    ExplainWrongLocationDialog(showDialog: _showWrongLocationDialog)
                 }
             }
             .padding(.bottom, 4)

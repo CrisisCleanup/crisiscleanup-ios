@@ -623,6 +623,8 @@ private struct PropertyInformationView: View {
 
     @State var map = MKMapView()
 
+    @State private var showWrongLocationDialog = false
+
     var body: some View {
         ZStack {
             VStack(alignment: .leading) {
@@ -634,11 +636,10 @@ private struct PropertyInformationView: View {
                     Image(systemName: "person.fill")
                         .frame(width: iconSize, height: iconSize)
                     Text(worksite.name)
-                    Spacer()
-
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .modifier(CopyWithAnimation(pressed: $namePressed, copy: worksite.name))
                 .horizontalVerticalPadding(horizontalPadding, verticalPadding)
+                .modifier(CopyWithAnimation(pressed: $namePressed, copy: worksite.name))
 
                 let phoneText = [worksite.phone1, worksite.phone2]
                     .filter { $0?.isNotBlank == true }
@@ -650,11 +651,10 @@ private struct PropertyInformationView: View {
                     // TODO: Custom link won't work with the two numbers combined into one text
                     Text(phoneText)
                         .customLink(urlString: "tel:\(phoneText)")
-
-                    Spacer()
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .modifier(CopyWithAnimation(pressed: $phonePressed, copy: phoneText))
                 .horizontalVerticalPadding(horizontalPadding, verticalPadding)
+                .modifier(CopyWithAnimation(pressed: $phonePressed, copy: phoneText))
 
                 if worksite.email?.isNotBlank == true {
                     HStack {
@@ -662,10 +662,10 @@ private struct PropertyInformationView: View {
                             .frame(width: iconSize, height: iconSize)
                         Text(worksite.email!)
                             .customLink(urlString: "mailto:\(worksite.email!)")
-                        Spacer()
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .modifier(CopyWithAnimation(pressed: $emailPressed, copy: worksite.email!))
                     .horizontalVerticalPadding(horizontalPadding, verticalPadding)
+                    .modifier(CopyWithAnimation(pressed: $emailPressed, copy: worksite.email!))
                 }
 
                 let (addressText, addressMapItem) = worksite.addressQuery
@@ -674,18 +674,20 @@ private struct PropertyInformationView: View {
                         .frame(width: iconSize, height: iconSize)
 
                     Button {
-                        // TODO: Alert if wrong location flag was set
                         addressMapItem.openInMaps()
                     } label : {
                         Text(addressText)
                             .underline()
                             .multilineTextAlignment(.leading)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-                    Spacer()
+                    if worksite.hasWrongLocationFlag {
+                        ExplainWrongLocationDialog(showDialog: $showWrongLocationDialog)
+                    }
                 }
-                .modifier(CopyWithAnimation(pressed: $addressPressed, copy: addressText))
                 .horizontalVerticalPadding(horizontalPadding, verticalPadding)
+                .modifier(CopyWithAnimation(pressed: $addressPressed, copy: addressText))
 
                 HStack {
                     Image("ic_jump_to_case_on_map", bundle: .module)

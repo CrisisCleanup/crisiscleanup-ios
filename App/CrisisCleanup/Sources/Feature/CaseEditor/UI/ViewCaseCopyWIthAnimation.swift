@@ -9,11 +9,8 @@ struct CopyWithAnimation: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .background {
-                Color.gray.opacity(pressed ? 0.5 : 0)
-                    .animation(.easeInOut(duration: 0.25), value: pressed)
-                    .cornerRadius(appTheme.cornerRadius)
-            }
+            .background()
+            // TODO: Ripple on initiated/activated
             .gesture(
                 LongPressGesture()
                     .onEnded { _ in
