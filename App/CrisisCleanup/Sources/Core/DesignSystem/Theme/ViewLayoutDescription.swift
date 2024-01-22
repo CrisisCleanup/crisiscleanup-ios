@@ -16,8 +16,6 @@ struct ViewLayoutDescription {
         let isListDetailLayout = size.width > size.height && size.width > 600
         isWide = size.width > 600
 
-        print("Is wide \(isWide) \(size)")
-
         self.isPortrait = isPortrait
         isLandscape = !isPortrait
         self.isListDetailLayout = isListDetailLayout

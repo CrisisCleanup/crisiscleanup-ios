@@ -959,20 +959,21 @@ private struct SaveActions: View {
 private struct CreateEditCaseSaveActions: View {
     var isVertical = false
 
+    // TODO: Common dimensions for all spacing below
     var body: some View {
         if isVertical {
-            VStack(spacing: appTheme.listItemVerticalPadding) {
+            VStack(spacing: 24) {
                 Spacer()
 
                 SaveActions()
             }
-            .padding([.horizontal, .bottom], appTheme.listItemVerticalPadding)
+            .padding([.horizontal, .bottom], 8)
         } else {
             // TODO: Better fit on thinner screen. Use app theme.
             HStack {
                 SaveActions()
             }
-            .padding([.horizontal, .bottom], appTheme.listItemVerticalPadding)
+            .padding([.horizontal, .bottom], 8)
         }
     }
 }

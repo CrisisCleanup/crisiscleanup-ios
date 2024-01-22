@@ -77,7 +77,8 @@ internal struct ViewCaseSideHeader: View {
 
                 Spacer()
 
-                HStack {
+                // TODO: Common dimensions
+                HStack(spacing: 24) {
                     ViewCaseHeaderActions()
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
