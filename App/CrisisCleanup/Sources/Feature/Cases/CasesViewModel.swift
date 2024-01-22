@@ -64,6 +64,7 @@ class CasesViewModel: ObservableObject {
     private let isGeneratingWorksiteMarkers = CurrentValueSubject<Bool, Never>(false)
     private let isDelayingRegionBug = CurrentValueSubject<Bool, Never>(false)
 
+    // TODO: Derive value from MapMarkersZoomLevel and map camera
     let mapMarkerZoomLevelHeight = 330_000
 
     private let mapCaseDotProvider = InMemoryDotProvider()

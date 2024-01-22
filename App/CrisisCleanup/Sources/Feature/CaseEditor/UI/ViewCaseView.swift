@@ -7,129 +7,80 @@ import PhotosUI
 import CachedAsyncImage
 
 struct ViewCaseView: View {
+    @ObservedObject var viewModel: ViewCaseViewModel
+
+    var body: some View {
+        GeometryReader { geometry in
+            ViewCaseLayoutView(viewLayout: ViewLayoutDescription(geometry.size))
+                .environmentObject(viewModel)
+        }
+    }
+}
+
+private struct ViewCaseLayoutView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewModel: ViewCaseViewModel
 
-    @ObservedObject var viewModel: ViewCaseViewModel
+    var viewLayout = ViewLayoutDescription()
 
     @State private var selectedTab: ViewCaseTabs = .info
     @State private var titlePressed: Bool = false
 
     @ObservedObject var focusableViewState = TextInputFocusableView()
 
-    private let infoTabs = Array([
-        ViewCaseTabs.info,
-        ViewCaseTabs.photos,
-        ViewCaseTabs.notes
-    ].enumerated())
-
     var body: some View {
         let isBusy = viewModel.isLoading || viewModel.isSaving
-        let disableMutation = viewModel.editableViewState.disabled
 
         ZStack {
-            VStack {
-                let updatedAt = viewModel.updatedAtText
-                if updatedAt.isNotBlank {
-                    Text(updatedAt)
-                        .fontBodySmall()
-                        .listItemModifier()
-                }
+            if viewLayout.isListDetailLayout {
+                GeometryReader { proxy in
+                    HStack {
+                        ViewCaseSideHeader()
+                            .frame(width: proxy.size.width * listDetailListFractionalWidth)
 
-                HStack {
-                    let tabTitles = viewModel.tabTitles
-                    ForEach(infoTabs, id: \.offset) { (index, tab) in
-                        VStack {
-                            HStack{
-                                Spacer()
-                                Text(tabTitles[tab] ?? "")
-                                    .fontHeader4()
-                                    .onTapGesture {
-                                        selectedTab = tab
-                                    }
-                                Spacer()
-                            }
-                            Divider()
-                                .frame(height: 2)
-                                .background(selectedTab == tab ? Color.orange : Color.gray)
-                        }
+                        MainContent(
+                            selectedTab: $selectedTab,
+                            isOneColumnLayout: viewLayout.isOneColumnLayout,
+                            isBusy: isBusy
+                        )
+                        .frame(width: proxy.size.width * listDetailDetailFractionalWidth)
                     }
                 }
-
-                TabView(selection: $selectedTab) {
-                    ViewCaseInfo()
-                        .tag(ViewCaseTabs.info)
-                    ViewCasePhotos()
-                        .tag(ViewCaseTabs.photos)
-                    ViewCaseNotes()
-                        .tag(ViewCaseTabs.notes)
-                }
-                .tabViewStyle(.page(indexDisplayMode: .never))
-
-                Spacer()
-
-                BottomNav()
+            } else {
+                MainContent(
+                    selectedTab: $selectedTab,
+                    isOneColumnLayout: viewLayout.isOneColumnLayout,
+                    isBusy: isBusy
+                )
             }
-            .onChange(of: selectedTab) { newValue in
-                focusableViewState.focusState = nil
-            }
-
-            if isBusy {
-                ProgressView()
-            }
-
-            VStack {
-                HStack {
-                    Text(viewModel.alertMessage)
-                        .foregroundColor(Color.white)
-                        .padding()
-                }
-                .background(viewModel.alert ? appTheme.colors.navigationContainerColor : Color.clear)
-                .cornerRadius(appTheme.cornerRadius)
-                .animation(.easeInOut(duration: 0.25), value: viewModel.alert)
-                Spacer()
-            }
-            .padding(.top)
         }
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                VStack {
-                    Text(viewModel.headerTitle)
-                        .fontHeader3()
-                    Text(viewModel.subTitle)
-                        .fontBodySmall()
+        .if (viewLayout.isOneColumnLayout) {
+            $0.toolbar {
+                ToolbarItem(placement: .principal) {
+                    VStack {
+                        ViewCaseHeaderText(
+                            headerTitle: viewModel.headerTitle,
+                            headerSubTitle: viewModel.subTitle
+                        )
+                        .modifier(CopyWithAnimation(pressed: $titlePressed, copy: viewModel.headerTitle))
+                    }
                 }
-                .modifier(CopyWithAnimation(pressed: $titlePressed, copy: viewModel.headerTitle))
-            }
 
-            ToolbarItem(placement: .navigationBarTrailing) {
-                HStack {
-                    Button {
-                        viewModel.toggleHighPriority()
-                    } label: {
-                        let tint = getTopIconActionColor(viewModel.referenceWorksite.hasHighPriorityFlag)
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .tint(tint)
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    HStack {
+                        ViewCaseHeaderActions()
                     }
-                    .disabled(disableMutation)
-
-                    Button {
-                        viewModel.toggleFavorite()
-                    } label: {
-                        let isFavorite = viewModel.referenceWorksite.isLocalFavorite
-                        let tint = getTopIconActionColor(isFavorite)
-                        Image(systemName: isFavorite ? "heart.fill" : "heart")
-                            .tint(tint)
-                    }
-                    .disabled(disableMutation)
                 }
             }
+        }
+        .if (viewLayout.isListDetailLayout) {
+            $0.navigationTitle(viewModel.headerTitle)
         }
         .hideNavBarUnderSpace()
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
-        .environmentObject(viewModel)
         .environmentObject(viewModel.editableViewState)
         .environmentObject(focusableViewState)
         .onReceive(viewModel.$isPendingTransfer) { isPendingTransfer in
@@ -138,10 +89,98 @@ struct ViewCaseView: View {
                 router.openWorkTypeTransfer()
             }
         }
+        .onChange(of: selectedTab) { newValue in
+            focusableViewState.focusState = nil
+            UIApplication.shared.closeKeyboard()
+        }
     }
+}
 
-    private func getTopIconActionColor(_ isActive: Bool) -> Color {
-        isActive ? appTheme.colors.primaryRedColor : appTheme.colors.neutralIconColor
+private struct TabContentView: View {
+    @Binding var selectedTab: ViewCaseTabs
+
+    let tabTitles: [ViewCaseTabs: String]
+
+    private let infoTabs = Array([
+        ViewCaseTabs.info,
+        ViewCaseTabs.photos,
+        ViewCaseTabs.notes
+    ].enumerated())
+
+    var body: some View {
+        HStack {
+            ForEach(infoTabs, id: \.offset) { (index, tab) in
+                VStack {
+                    HStack{
+                        Spacer()
+                        Text(tabTitles[tab] ?? "")
+                            .fontHeader4()
+                            .onTapGesture {
+                                selectedTab = tab
+                            }
+                        Spacer()
+                    }
+                    Divider()
+                        .frame(height: 2)
+                        .background(selectedTab == tab ? Color.orange : Color.gray)
+                }
+            }
+        }
+
+        TabView(selection: $selectedTab) {
+            ViewCaseInfo()
+                .tag(ViewCaseTabs.info)
+            ViewCasePhotos()
+                .tag(ViewCaseTabs.photos)
+            ViewCaseNotes()
+                .tag(ViewCaseTabs.notes)
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+    }
+}
+
+private struct MainContent: View {
+    @EnvironmentObject var viewModel: ViewCaseViewModel
+
+    @Binding var selectedTab: ViewCaseTabs
+
+    var isOneColumnLayout = true
+    var isBusy = false
+
+    var body: some View {
+        VStack {
+            if isOneColumnLayout {
+                ViewCaseUpdatedAtView(updatedAt: viewModel.updatedAtText, addPadding: true)
+            }
+
+            TabContentView(
+                selectedTab: $selectedTab,
+                tabTitles: viewModel.tabTitles
+            )
+
+            Spacer()
+
+            if isOneColumnLayout {
+                ViewCaseNav(isSideNav: false)
+            }
+        }
+
+        if isBusy {
+            ProgressView()
+        }
+
+        VStack {
+            HStack {
+                Text(viewModel.alertMessage)
+                    .foregroundColor(Color.white)
+                    .padding()
+            }
+            .background(viewModel.alert ? appTheme.colors.navigationContainerColor : Color.clear)
+            .cornerRadius(appTheme.cornerRadius)
+            .animation(.easeInOut(duration: 0.25), value: viewModel.alert)
+            Spacer()
+        }
+        .padding(.top)
     }
 }
 
@@ -535,77 +574,6 @@ private struct ViewCaseNotes: View {
                 }
             }
             .scrollDismissesKeyboard(.immediately)
-        }
-    }
-}
-
-private struct BottomNavButton: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
-    @EnvironmentObject var editableView: EditableView
-
-    private let action: () -> Void
-    private let imageName: String
-    private let textTranslateKey: String
-
-    init(
-        _ imageName: String,
-        _ textTranslateKey: String,
-        _ action: @escaping () -> Void
-    ) {
-        self.imageName = imageName
-        self.textTranslateKey = textTranslateKey
-        self.action = action
-    }
-
-    var body: some View {
-        Button {
-            action()
-        } label: {
-            VStack {
-                Image(imageName, bundle: .module)
-                Text(t.t(textTranslateKey))
-                    .fontBodySmall()
-            }
-        }
-        .disabled(editableView.disabled)
-    }
-}
-
-private struct BottomNav: View {
-    @EnvironmentObject var router: NavigationRouter
-    @EnvironmentObject var viewModel: ViewCaseViewModel
-    @EnvironmentObject var focusableViewState: TextInputFocusableView
-
-    var body: some View {
-        if focusableViewState.isFocused {
-            OpenKeyboardActionsView()
-        } else {
-            HStack {
-                BottomNavButton("ic_case_share", "actions.share")
-                {
-                    router.openCaseShare()
-                }
-                Spacer()
-                BottomNavButton("ic_case_flag", "nav.flag") {
-                    router.openCaseFlags(isFromCaseEdit: true)
-                }
-                Spacer()
-                BottomNavButton("ic_case_history", "actions.history") {
-                    router.openCaseHistory()
-                }
-                Spacer()
-                BottomNavButton("ic_case_edit", "actions.edit") {
-                    router.createEditCase(
-                        incidentId: viewModel.incidentIdIn,
-                        worksiteId: viewModel.worksiteIdIn
-                    )
-                }
-            }
-            // TODO: Common dimensions and styling
-            .padding(.horizontal, 24)
-            // TODO: Change padding on device and see if takes
-            .padding(.top)
-            .tint(.black)
         }
     }
 }
