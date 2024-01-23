@@ -115,19 +115,22 @@ struct LogoutView: View {
             CrisisCleanupLogoView()
                 .padding(.bottom)
 
-            VStack{
+            VStack(alignment: .leading) {
+                Text(viewModel.accountInfo)
+                    .accessibilityIdentifier("authedAccountInfoText")
+
                 Button(t.t("actions.logout")) {
                     logout()
                 }
                 .stylePrimary()
-                .padding([.vertical])
+                .padding(.vertical)
+                .accessibilityIdentifier("authedLogoutAction")
 
-                Button {
+                Button(t.t("actions.back")) {
                     dismissScreen()
-                } label:  {
-                    Text(t.t("actions.back"))
                 }
                 .padding(.vertical, appTheme.listItemVerticalPadding)
+                .accessibilityIdentifier("authedCloseScreenAction")
             }
             .padding()
         }
