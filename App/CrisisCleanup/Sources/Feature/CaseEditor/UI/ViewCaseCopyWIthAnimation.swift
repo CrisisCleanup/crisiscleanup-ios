@@ -9,8 +9,12 @@ struct CopyWithAnimation: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .background()
-            // TODO: Ripple on initiated/activated
+        // TODO: How to long press even on white space without interfering with scroll interactions
+            .background {
+                Color.gray.opacity(pressed ? 0.5 : 0)
+                    .animation(.easeInOut(duration: 0.25), value: pressed)
+                    .cornerRadius(appTheme.cornerRadius)
+            }
             .gesture(
                 LongPressGesture()
                     .onEnded { _ in

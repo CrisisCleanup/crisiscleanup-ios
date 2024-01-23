@@ -40,11 +40,13 @@ private struct ViewCaseLayoutView: View {
                         ViewCaseSideHeader()
                             .frame(width: proxy.size.width * listDetailListFractionalWidth)
 
-                        MainContent(
-                            selectedTab: $selectedTab,
-                            isOneColumnLayout: viewLayout.isOneColumnLayout,
-                            isBusy: isBusy
-                        )
+                        ZStack {
+                            MainContent(
+                                selectedTab: $selectedTab,
+                                isOneColumnLayout: viewLayout.isOneColumnLayout,
+                                isBusy: isBusy
+                            )
+                        }
                         .frame(width: proxy.size.width * listDetailDetailFractionalWidth)
                     }
                 }

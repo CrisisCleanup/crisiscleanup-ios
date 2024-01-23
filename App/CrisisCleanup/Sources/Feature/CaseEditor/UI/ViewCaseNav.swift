@@ -108,7 +108,7 @@ private struct SideNav: View {
                 )
             }
         }
-        .padding(.horizontal, appTheme.listItemVerticalPadding)
+        .padding(.all, appTheme.listItemVerticalPadding)
         .tint(.black)
     }
 }

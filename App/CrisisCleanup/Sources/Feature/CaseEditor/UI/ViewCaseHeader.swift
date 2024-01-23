@@ -83,6 +83,7 @@ internal struct ViewCaseSideHeader: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
             }
+            .padding(.vertical, appTheme.listItemVerticalPadding)
             .frame(maxWidth: .infinity)
         }
     }
