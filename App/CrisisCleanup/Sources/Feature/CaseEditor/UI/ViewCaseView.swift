@@ -44,6 +44,7 @@ private struct ViewCaseLayoutView: View {
                             MainContent(
                                 selectedTab: $selectedTab,
                                 isOneColumnLayout: viewLayout.isOneColumnLayout,
+                                isCompactLayout: viewLayout.isShort,
                                 isBusy: isBusy
                             )
                         }
@@ -54,6 +55,7 @@ private struct ViewCaseLayoutView: View {
                 MainContent(
                     selectedTab: $selectedTab,
                     isOneColumnLayout: viewLayout.isOneColumnLayout,
+                    isCompactLayout: viewLayout.isShort,
                     isBusy: isBusy
                 )
             }
@@ -101,7 +103,9 @@ private struct ViewCaseLayoutView: View {
 private struct TabContentView: View {
     @Binding var selectedTab: ViewCaseTabs
 
-    let tabTitles: [ViewCaseTabs: String]
+    var tabTitles: [ViewCaseTabs: String]
+
+    var isCompactLayout = false
 
     private let infoTabs = Array([
         ViewCaseTabs.info,
@@ -132,7 +136,7 @@ private struct TabContentView: View {
         TabView(selection: $selectedTab) {
             ViewCaseInfo()
                 .tag(ViewCaseTabs.info)
-            ViewCasePhotos()
+            ViewCasePhotos(isCompactLayout: isCompactLayout)
                 .tag(ViewCaseTabs.photos)
             ViewCaseNotes()
                 .tag(ViewCaseTabs.notes)
@@ -147,6 +151,7 @@ private struct MainContent: View {
     @Binding var selectedTab: ViewCaseTabs
 
     var isOneColumnLayout = true
+    var isCompactLayout = false
     var isBusy = false
 
     var body: some View {
@@ -157,7 +162,8 @@ private struct MainContent: View {
 
             TabContentView(
                 selectedTab: $selectedTab,
-                tabTitles: viewModel.tabTitles
+                tabTitles: viewModel.tabTitles,
+                isCompactLayout: isCompactLayout
             )
 
             Spacer()
@@ -244,161 +250,37 @@ private struct ViewCasePhotos: View {
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var viewModel: ViewCaseViewModel
 
+    var isCompactLayout = false
+
+    @State private var photoDetents: Bool = false
+    @State private var presentCamera: Bool = false
+    @State private var takePhotoImage: UIImage = UIImage()
+    @State private var results: [PhotosPickerItem] = []
+
+    private func onTakePhotoSelectImage(_ category: ImageCategory) {
+        viewModel.addImageCategory = category
+        photoDetents.toggle()
+    }
+
     var body: some View {
         VStack (alignment: .leading) {
-            ViewCasePhotosSection(category: .before)
-            ViewCasePhotosSection(category: .after)
+            ViewCasePhotosSection(
+                category: .before,
+                isCompactLayout: isCompactLayout,
+                onTakePhotoSelectImage: onTakePhotoSelectImage
+            )
+            ViewCasePhotosSection(
+                category: .after,
+                isCompactLayout: isCompactLayout,
+                onTakePhotoSelectImage: onTakePhotoSelectImage
+            )
+
             Spacer()
         }
-    }
-}
-
-private struct ViewCasePhotosSection: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
-
-    let category: ImageCategory
-
-    var body: some View {
-        let sectionTranslateKey = category == .before
-        ? "caseForm.before_photos"
-        : "caseForm.after_photos"
-        Text(t.t(sectionTranslateKey))
-            .fontHeader4()
-            .padding([.horizontal, .top])
-        ScrollView(.horizontal, showsIndicators: false) {
-            MediaDisplay(category: category)
-        }
-    }
-}
-
-private struct MediaDisplay: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
-
-    @EnvironmentObject var router: NavigationRouter
-    @EnvironmentObject var viewModel: ViewCaseViewModel
-
-    var category: ImageCategory
-    @State var photoDetents: Bool = false
-
-    @State var results: [PhotosPickerItem] = []
-    @State var mediaImages: [Image] = []
-    @State var presentCamera: Bool = false
-    @State var takePhotoImage: UIImage = UIImage()
-
-    // TODO: Size relative to remaining screen height
-    let oneRowHeight = 172.0
-
-    func openViewImage(_ caseImage: CaseImage) {
-        router.viewImage(
-            caseImage.id,
-            caseImage.isNetworkImage,
-            viewModel.headerTitle
-        )
-    }
-
-    var body: some View {
-        let beforeAfterImages = viewModel.beforeAfterPhotos[category] ?? []
-        let rowHeight = oneRowHeight
-        let rowActionHeight = rowHeight - 12
-        let iconFont = Font.system(size: rowHeight * 0.8)
-        HStack {
-            Rectangle()
-                .fill(.clear)
-                .frame(width: 0.1, height: rowHeight)
-
-            let r = appTheme.cornerRadius
-            ZStack {
-                let strokeColor = appTheme.colors.primaryBlueColor
-                let cornerSize = CGSize(width: r, height: r)
-                RoundedRectangle(cornerSize: cornerSize)
-                    .fill(appTheme.colors.addMediaBackgroundColor)
-                    .frame(width: 120, height: rowActionHeight)
-                    .overlay {
-                        RoundedRectangle(cornerSize: cornerSize)
-                            .stroke(strokeColor, style: StrokeStyle(lineWidth: 2, dash: [5]))
-                    }
-
-                VStack {
-                    Image(systemName: "plus")
-                        .foregroundColor(strokeColor)
-                    Text(t.t("actions.add_media"))
-                        .foregroundColor(strokeColor)
-                }
-            }
-            .padding(.all, r * 0.55)
-            .onTapGesture {
-                viewModel.addImageCategory = category
-                photoDetents.toggle()
-            }
-            .onChange(of: results) { _ in
-                photoDetents = false
-                viewModel.onMediaSelected(results)
-                results = []
-            }
-
-            ForEach(0..<viewModel.cachingLocalImageCount[category.literal], id: \.self) { index in
-                Image(systemName: "photo")
-                    .foregroundColor(appTheme.colors.addMediaBackgroundColor)
-                    .font(iconFont)
-            }
-
-            ForEach(beforeAfterImages, id: \.id) { caseImage in
-                if caseImage.isNetworkImage {
-                    CachedAsyncImage(url: URL(string: caseImage.thumbnailUri)) { phase in
-                        if let image = phase.image {
-                            image
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height: rowHeight)
-                                .cornerRadius(appTheme.cornerRadius)
-                                .onTapGesture { openViewImage(caseImage) }
-                        } else if phase.error != nil {
-                            Image(systemName: "exclamationmark.circle")
-                                .foregroundColor(appTheme.colors.primaryRedColor)
-                                .font(iconFont)
-                        } else {
-                            Image(systemName: "photo.circle")
-                                .foregroundColor(.gray)
-                                .font(iconFont)
-                        }
-                    }
-                } else {
-                    if let image = viewModel.localImageCache[caseImage.imageUri] {
-                        let isSyncing = viewModel.syncingWorksiteImage == caseImage.id
-                        let alignment: Alignment = isSyncing ? .center : .topTrailing
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: rowHeight)
-                            .cornerRadius(appTheme.cornerRadius)
-                            .onTapGesture { openViewImage(caseImage) }
-                            .overlay(alignment: alignment) {
-                                if isSyncing {
-                                    Image(systemName: "cloud.fill")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 48, height: 48)
-                                        .padding()
-                                        .background(.white.opacity(0.8))
-                                        .clipShape(Circle())
-                                } else {
-                                    Image(systemName: "cloud.fill")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 16, height: 16)
-                                        .padding(4)
-                                        .background(.white.opacity(0.5))
-                                        .clipShape(Circle())
-                                        .padding(8)
-                                }
-                            }
-                    }
-                }
-            }
-
-            Rectangle()
-                .fill(.clear)
-                .frame(width: 0.1, height: rowHeight)
+        .onChange(of: results) { _ in
+            photoDetents = false
+            viewModel.onMediaSelected(results)
+            results = []
         }
         .sheet(isPresented: $photoDetents) {
             ZStack {
@@ -421,9 +303,11 @@ private struct MediaDisplay: View {
                         }
                     }
 
-                    PhotosPicker(selection: $results,
-                                 matching: .images,
-                                 photoLibrary: .shared()) {
+                    PhotosPicker(
+                        selection: $results,
+                        matching: .images,
+                        photoLibrary: .shared()
+                    ) {
                         Text(t.t("fileUpload.select_file_upload"))
                             .padding()
                     }
@@ -433,6 +317,168 @@ private struct MediaDisplay: View {
             }
             .presentationDetents([.medium, .fraction(0.25)])
         }
+    }
+}
+
+private struct ViewCasePhotosSection: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @EnvironmentObject var viewModel: ViewCaseViewModel
+
+    var category: ImageCategory
+
+    var isCompactLayout = false
+
+    var onTakePhotoSelectImage: (ImageCategory) -> Void = {_ in}
+
+    var body: some View {
+        let sectionTranslateKey = category == .before
+        ? "caseForm.before_photos"
+        : "caseForm.after_photos"
+        let sectionTitle = t.t(sectionTranslateKey)
+        if !isCompactLayout {
+            Text(sectionTitle)
+                .fontHeader4()
+                .padding(.leading, appTheme.gridItemSpacing)
+                .padding(.top)
+        }
+
+        ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(alignment: .top, content: {
+                MediaDisplay(
+                    category: category,
+                    sectionTitle: isCompactLayout ? sectionTitle : "",
+                    onTakePhotoSelectImage: onTakePhotoSelectImage
+                )
+            })
+        }
+        .frame(maxHeight: 180)
+    }
+}
+
+private struct MediaDisplay: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewModel: ViewCaseViewModel
+
+    var category: ImageCategory
+    var sectionTitle = ""
+    var onTakePhotoSelectImage: (ImageCategory) -> Void = {_ in}
+
+    @State var mediaImages: [Image] = []
+
+    func openViewImage(_ caseImage: CaseImage) {
+        router.viewImage(
+            caseImage.id,
+            caseImage.isNetworkImage,
+            viewModel.headerTitle
+        )
+    }
+
+    var body: some View {
+        let beforeAfterImages = viewModel.beforeAfterPhotos[category] ?? []
+        let iconFont = Font.system(size: 16.0)
+
+        Rectangle()
+            .fill(.clear)
+            .frame(width: 0.1)
+
+        if sectionTitle.isNotBlank {
+            Text(sectionTitle.replacingOccurrences(of: " ", with: "\n"))
+                .fontHeader4()
+                .listItemPadding()
+        }
+
+        let r = appTheme.cornerRadius
+        ZStack {
+            let strokeColor = appTheme.colors.primaryBlueColor
+            let cornerSize = CGSize(width: r, height: r)
+            RoundedRectangle(cornerSize: cornerSize)
+                .fill(appTheme.colors.addMediaBackgroundColor)
+                .frame(width: 120)
+                .overlay {
+                    RoundedRectangle(cornerSize: cornerSize)
+                        .stroke(strokeColor, style: StrokeStyle(lineWidth: 2, dash: [5]))
+                }
+
+            VStack {
+                Image(systemName: "plus")
+                    .foregroundColor(strokeColor)
+                Text(t.t("actions.add_media"))
+                    .foregroundColor(strokeColor)
+            }
+        }
+        .padding(.vertical, r * 0.55)
+        .onTapGesture {
+            onTakePhotoSelectImage(category)
+        }
+
+        ForEach(0..<viewModel.cachingLocalImageCount[category.literal], id: \.self) { index in
+            Image(systemName: "photo")
+                .foregroundColor(appTheme.colors.addMediaBackgroundColor)
+                .font(iconFont)
+        }
+
+        ForEach(beforeAfterImages, id: \.id) { caseImage in
+            if caseImage.isNetworkImage {
+                CachedAsyncImage(url: URL(string: caseImage.thumbnailUri)) { phase in
+                    if let image = phase.image {
+                        image
+                            .resizable()
+                            .scaledToFit()
+                            .cornerRadius(appTheme.cornerRadius)
+                            .onTapGesture { openViewImage(caseImage) }
+                    } else if phase.error != nil {
+                        Image(systemName: "exclamationmark.circle")
+                            .resizable()
+                            .scaledToFit()
+                            .foregroundColor(appTheme.colors.primaryRedColor)
+                            .padding()
+                    } else {
+                        Image(systemName: "photo.circle")
+                            .resizable()
+                            .scaledToFit()
+                            .foregroundColor(.gray)
+                            .padding()
+                    }
+                }
+            } else {
+                if let image = viewModel.localImageCache[caseImage.imageUri] {
+                    let isSyncing = viewModel.syncingWorksiteImage == caseImage.id
+                    let alignment: Alignment = isSyncing ? .center : .topTrailing
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .cornerRadius(appTheme.cornerRadius)
+                        .onTapGesture { openViewImage(caseImage) }
+                        .overlay(alignment: alignment) {
+                            if isSyncing {
+                                Image(systemName: "cloud.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 48, height: 48)
+                                    .padding()
+                                    .background(.white.opacity(0.8))
+                                    .clipShape(Circle())
+                            } else {
+                                Image(systemName: "cloud.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 16, height: 16)
+                                    .padding(4)
+                                    .background(.white.opacity(0.5))
+                                    .clipShape(Circle())
+                                    .padding(8)
+                            }
+                        }
+                }
+            }
+        }
+
+        Rectangle()
+            .fill(.clear)
+            .frame(width: 0.1)
     }
 }
 
