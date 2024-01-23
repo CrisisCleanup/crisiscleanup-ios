@@ -57,6 +57,7 @@ private struct LoginOptionsView: View {
                         .fontHeader1()
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.vertical)
+                        .accessibilityIdentifier("loginHeaderText")
 
                     Button(t.translate("loginForm.login_with_email", "Login with email")) {
                         router.openEmailLogin()
