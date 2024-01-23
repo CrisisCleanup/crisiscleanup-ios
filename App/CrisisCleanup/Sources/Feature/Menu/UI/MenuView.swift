@@ -12,7 +12,7 @@ struct MenuView: View {
     var body: some View {
         let hasNoIncidents = viewModel.incidentsData.incidents.isEmpty
 
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 0) {
             TopBar(
                 viewModel: viewModel,
                 incidentSelectViewBuilder: incidentSelectViewBuilder,
@@ -22,30 +22,34 @@ struct MenuView: View {
             .tint(.black)
             .padding()
 
-            Text(viewModel.versionText)
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
+            ScrollView {
+                VStack {
+                    Text(viewModel.versionText)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
-            Button {
-                router.openInviteTeammate()
-            } label: {
-                Text(t.t("usersVue.invite_new_user"))
+                    Button {
+                        router.openInviteTeammate()
+                    } label: {
+                        Text(t.t("usersVue.invite_new_user"))
+                            .padding(.horizontal)
+                    }
+                    .stylePrimary()
+                    .padding([.horizontal, .bottom])
+
+                    Button {
+                        router.openUserFeedback()
+                    } label: {
+                        Text(t.t("info.give_app_feedback"))
+                            .padding(.horizontal)
+                    }
+                    .styleOutline()
                     .padding(.horizontal)
-            }
-            .stylePrimary()
-            .padding([.horizontal, .bottom])
 
-            Button {
-                router.openUserFeedback()
-            } label: {
-                Text(t.t("info.give_app_feedback"))
-                    .padding(.horizontal)
-            }
-            .styleOutline()
-            .padding(.horizontal)
-
-            if !viewModel.isProduction {
-                MenuScreenNonProductionView(viewModel: viewModel)
+                    if !viewModel.isProduction {
+                        MenuScreenNonProductionView(viewModel: viewModel)
+                    }
+                }
             }
 
             Spacer()
@@ -61,7 +65,7 @@ struct MenuView: View {
                     destination: URL(string: "https://crisiscleanup.org/privacy")!
                 )
             }
-            .padding()
+            .padding(.vertical, appTheme.listItemVerticalPadding)
             .frame(maxWidth: .infinity, alignment: .center)
 
             if appAlertState.showAlert,
@@ -88,7 +92,6 @@ private struct TopBar: View {
     let hasNoIncidents: Bool
 
     @State var showIncidentSelect = false
-
 
     var body: some View {
         HStack {
@@ -121,6 +124,7 @@ private struct TopBar: View {
             .disabled(hasNoIncidents)
 
             Spacer()
+
             Button {
                 openAuthScreen()
             } label: {
