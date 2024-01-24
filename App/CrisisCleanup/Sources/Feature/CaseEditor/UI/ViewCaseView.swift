@@ -7,129 +7,84 @@ import PhotosUI
 import CachedAsyncImage
 
 struct ViewCaseView: View {
+    @ObservedObject var viewModel: ViewCaseViewModel
+
+    var body: some View {
+        GeometryReader { geometry in
+            ViewCaseLayoutView(viewLayout: ViewLayoutDescription(geometry.size))
+                .environmentObject(viewModel)
+        }
+    }
+}
+
+private struct ViewCaseLayoutView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewModel: ViewCaseViewModel
 
-    @ObservedObject var viewModel: ViewCaseViewModel
+    var viewLayout = ViewLayoutDescription()
 
     @State private var selectedTab: ViewCaseTabs = .info
     @State private var titlePressed: Bool = false
 
     @ObservedObject var focusableViewState = TextInputFocusableView()
 
-    private let infoTabs = Array([
-        ViewCaseTabs.info,
-        ViewCaseTabs.photos,
-        ViewCaseTabs.notes
-    ].enumerated())
-
     var body: some View {
         let isBusy = viewModel.isLoading || viewModel.isSaving
-        let disableMutation = viewModel.editableViewState.disabled
 
         ZStack {
-            VStack {
-                let updatedAt = viewModel.updatedAtText
-                if updatedAt.isNotBlank {
-                    Text(updatedAt)
-                        .fontBodySmall()
-                        .listItemModifier()
-                }
+            if viewLayout.isListDetailLayout {
+                GeometryReader { proxy in
+                    HStack {
+                        ViewCaseSideHeader()
+                            .frame(width: proxy.size.width * listDetailListFractionalWidth)
 
-                HStack {
-                    let tabTitles = viewModel.tabTitles
-                    ForEach(infoTabs, id: \.offset) { (index, tab) in
-                        VStack {
-                            HStack{
-                                Spacer()
-                                Text(tabTitles[tab] ?? "")
-                                    .fontHeader4()
-                                    .onTapGesture {
-                                        selectedTab = tab
-                                    }
-                                Spacer()
-                            }
-                            Divider()
-                                .frame(height: 2)
-                                .background(selectedTab == tab ? Color.orange : Color.gray)
+                        ZStack {
+                            MainContent(
+                                selectedTab: $selectedTab,
+                                isOneColumnLayout: viewLayout.isOneColumnLayout,
+                                isCompactLayout: viewLayout.isShort,
+                                isBusy: isBusy
+                            )
                         }
+                        .frame(width: proxy.size.width * listDetailDetailFractionalWidth)
                     }
                 }
-
-                TabView(selection: $selectedTab) {
-                    ViewCaseInfo()
-                        .tag(ViewCaseTabs.info)
-                    ViewCasePhotos()
-                        .tag(ViewCaseTabs.photos)
-                    ViewCaseNotes()
-                        .tag(ViewCaseTabs.notes)
-                }
-                .tabViewStyle(.page(indexDisplayMode: .never))
-
-                Spacer()
-
-                BottomNav()
+            } else {
+                MainContent(
+                    selectedTab: $selectedTab,
+                    isOneColumnLayout: viewLayout.isOneColumnLayout,
+                    isCompactLayout: viewLayout.isShort,
+                    isBusy: isBusy
+                )
             }
-            .onChange(of: selectedTab) { newValue in
-                focusableViewState.focusState = nil
-            }
-
-            if isBusy {
-                ProgressView()
-            }
-
-            VStack {
-                HStack {
-                    Text(viewModel.alertMessage)
-                        .foregroundColor(Color.white)
-                        .padding()
-                }
-                .background(viewModel.alert ? appTheme.colors.navigationContainerColor : Color.clear)
-                .cornerRadius(appTheme.cornerRadius)
-                .animation(.easeInOut(duration: 0.25), value: viewModel.alert)
-                Spacer()
-            }
-            .padding(.top)
         }
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                VStack {
-                    Text(viewModel.headerTitle)
-                        .fontHeader3()
-                    Text(viewModel.subTitle)
-                        .fontBodySmall()
+        .if (viewLayout.isOneColumnLayout) {
+            $0.toolbar {
+                ToolbarItem(placement: .principal) {
+                    VStack {
+                        ViewCaseHeaderText(
+                            headerTitle: viewModel.headerTitle,
+                            headerSubTitle: viewModel.subTitle
+                        )
+                        .modifier(CopyWithAnimation(pressed: $titlePressed, copy: viewModel.headerTitle))
+                    }
                 }
-                .modifier(CopyWithAnimation(pressed: $titlePressed, copy: viewModel.headerTitle))
-            }
 
-            ToolbarItem(placement: .navigationBarTrailing) {
-                HStack {
-                    Button {
-                        viewModel.toggleHighPriority()
-                    } label: {
-                        let tint = getTopIconActionColor(viewModel.referenceWorksite.hasHighPriorityFlag)
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .tint(tint)
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    HStack {
+                        ViewCaseHeaderActions()
                     }
-                    .disabled(disableMutation)
-
-                    Button {
-                        viewModel.toggleFavorite()
-                    } label: {
-                        let isFavorite = viewModel.referenceWorksite.isLocalFavorite
-                        let tint = getTopIconActionColor(isFavorite)
-                        Image(systemName: isFavorite ? "heart.fill" : "heart")
-                            .tint(tint)
-                    }
-                    .disabled(disableMutation)
                 }
             }
+        }
+        .if (viewLayout.isListDetailLayout) {
+            $0.navigationTitle(viewModel.headerTitle)
         }
         .hideNavBarUnderSpace()
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
-        .environmentObject(viewModel)
         .environmentObject(viewModel.editableViewState)
         .environmentObject(focusableViewState)
         .onReceive(viewModel.$isPendingTransfer) { isPendingTransfer in
@@ -138,10 +93,102 @@ struct ViewCaseView: View {
                 router.openWorkTypeTransfer()
             }
         }
+        .onChange(of: selectedTab) { newValue in
+            focusableViewState.focusState = nil
+            UIApplication.shared.closeKeyboard()
+        }
     }
+}
 
-    private func getTopIconActionColor(_ isActive: Bool) -> Color {
-        isActive ? appTheme.colors.primaryRedColor : appTheme.colors.neutralIconColor
+private struct TabContentView: View {
+    @Binding var selectedTab: ViewCaseTabs
+
+    var tabTitles: [ViewCaseTabs: String]
+
+    var isCompactLayout = false
+
+    private let infoTabs = Array([
+        ViewCaseTabs.info,
+        ViewCaseTabs.photos,
+        ViewCaseTabs.notes
+    ].enumerated())
+
+    var body: some View {
+        HStack {
+            ForEach(infoTabs, id: \.offset) { (index, tab) in
+                VStack {
+                    HStack{
+                        Spacer()
+                        Text(tabTitles[tab] ?? "")
+                            .fontHeader4()
+                            .onTapGesture {
+                                selectedTab = tab
+                            }
+                        Spacer()
+                    }
+                    Divider()
+                        .frame(height: 2)
+                        .background(selectedTab == tab ? Color.orange : Color.gray)
+                }
+            }
+        }
+
+        TabView(selection: $selectedTab) {
+            ViewCaseInfo()
+                .tag(ViewCaseTabs.info)
+            ViewCasePhotos(isCompactLayout: isCompactLayout)
+                .tag(ViewCaseTabs.photos)
+            ViewCaseNotes()
+                .tag(ViewCaseTabs.notes)
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+    }
+}
+
+private struct MainContent: View {
+    @EnvironmentObject var viewModel: ViewCaseViewModel
+
+    @Binding var selectedTab: ViewCaseTabs
+
+    var isOneColumnLayout = true
+    var isCompactLayout = false
+    var isBusy = false
+
+    var body: some View {
+        VStack {
+            if isOneColumnLayout {
+                ViewCaseUpdatedAtView(updatedAt: viewModel.updatedAtText, addPadding: true)
+            }
+
+            TabContentView(
+                selectedTab: $selectedTab,
+                tabTitles: viewModel.tabTitles,
+                isCompactLayout: isCompactLayout
+            )
+
+            Spacer()
+
+            if isOneColumnLayout {
+                ViewCaseNav(isSideNav: false)
+            }
+        }
+
+        if isBusy {
+            ProgressView()
+        }
+
+        VStack {
+            HStack {
+                Text(viewModel.alertMessage)
+                    .foregroundColor(Color.white)
+                    .padding()
+            }
+            .background(viewModel.alert ? appTheme.colors.navigationContainerColor : Color.clear)
+            .cornerRadius(appTheme.cornerRadius)
+            .animation(.easeInOut(duration: 0.25), value: viewModel.alert)
+            Spacer()
+        }
+        .padding(.top)
     }
 }
 
@@ -203,161 +250,37 @@ private struct ViewCasePhotos: View {
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var viewModel: ViewCaseViewModel
 
+    var isCompactLayout = false
+
+    @State private var photoDetents: Bool = false
+    @State private var presentCamera: Bool = false
+    @State private var takePhotoImage: UIImage = UIImage()
+    @State private var results: [PhotosPickerItem] = []
+
+    private func onTakePhotoSelectImage(_ category: ImageCategory) {
+        viewModel.addImageCategory = category
+        photoDetents.toggle()
+    }
+
     var body: some View {
         VStack (alignment: .leading) {
-            ViewCasePhotosSection(category: .before)
-            ViewCasePhotosSection(category: .after)
+            ViewCasePhotosSection(
+                category: .before,
+                isCompactLayout: isCompactLayout,
+                onTakePhotoSelectImage: onTakePhotoSelectImage
+            )
+            ViewCasePhotosSection(
+                category: .after,
+                isCompactLayout: isCompactLayout,
+                onTakePhotoSelectImage: onTakePhotoSelectImage
+            )
+
             Spacer()
         }
-    }
-}
-
-private struct ViewCasePhotosSection: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
-
-    let category: ImageCategory
-
-    var body: some View {
-        let sectionTranslateKey = category == .before
-        ? "caseForm.before_photos"
-        : "caseForm.after_photos"
-        Text(t.t(sectionTranslateKey))
-            .fontHeader4()
-            .padding([.horizontal, .top])
-        ScrollView(.horizontal, showsIndicators: false) {
-            MediaDisplay(category: category)
-        }
-    }
-}
-
-private struct MediaDisplay: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
-
-    @EnvironmentObject var router: NavigationRouter
-    @EnvironmentObject var viewModel: ViewCaseViewModel
-
-    var category: ImageCategory
-    @State var photoDetents: Bool = false
-
-    @State var results: [PhotosPickerItem] = []
-    @State var mediaImages: [Image] = []
-    @State var presentCamera: Bool = false
-    @State var takePhotoImage: UIImage = UIImage()
-
-    // TODO: Size relative to remaining screen height
-    let oneRowHeight = 172.0
-
-    func openViewImage(_ caseImage: CaseImage) {
-        router.viewImage(
-            caseImage.id,
-            caseImage.isNetworkImage,
-            viewModel.headerTitle
-        )
-    }
-
-    var body: some View {
-        let beforeAfterImages = viewModel.beforeAfterPhotos[category] ?? []
-        let rowHeight = oneRowHeight
-        let rowActionHeight = rowHeight - 12
-        let iconFont = Font.system(size: rowHeight * 0.8)
-        HStack {
-            Rectangle()
-                .fill(.clear)
-                .frame(width: 0.1, height: rowHeight)
-
-            let r = appTheme.cornerRadius
-            ZStack {
-                let strokeColor = appTheme.colors.primaryBlueColor
-                let cornerSize = CGSize(width: r, height: r)
-                RoundedRectangle(cornerSize: cornerSize)
-                    .fill(appTheme.colors.addMediaBackgroundColor)
-                    .frame(width: 120, height: rowActionHeight)
-                    .overlay {
-                        RoundedRectangle(cornerSize: cornerSize)
-                            .stroke(strokeColor, style: StrokeStyle(lineWidth: 2, dash: [5]))
-                    }
-
-                VStack {
-                    Image(systemName: "plus")
-                        .foregroundColor(strokeColor)
-                    Text(t.t("actions.add_media"))
-                        .foregroundColor(strokeColor)
-                }
-            }
-            .padding(.all, r * 0.55)
-            .onTapGesture {
-                viewModel.addImageCategory = category
-                photoDetents.toggle()
-            }
-            .onChange(of: results) { _ in
-                photoDetents = false
-                viewModel.onMediaSelected(results)
-                results = []
-            }
-
-            ForEach(0..<viewModel.cachingLocalImageCount[category.literal], id: \.self) { index in
-                Image(systemName: "photo")
-                    .foregroundColor(appTheme.colors.addMediaBackgroundColor)
-                    .font(iconFont)
-            }
-
-            ForEach(beforeAfterImages, id: \.id) { caseImage in
-                if caseImage.isNetworkImage {
-                    CachedAsyncImage(url: URL(string: caseImage.thumbnailUri)) { phase in
-                        if let image = phase.image {
-                            image
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height: rowHeight)
-                                .cornerRadius(appTheme.cornerRadius)
-                                .onTapGesture { openViewImage(caseImage) }
-                        } else if phase.error != nil {
-                            Image(systemName: "exclamationmark.circle")
-                                .foregroundColor(appTheme.colors.primaryRedColor)
-                                .font(iconFont)
-                        } else {
-                            Image(systemName: "photo.circle")
-                                .foregroundColor(.gray)
-                                .font(iconFont)
-                        }
-                    }
-                } else {
-                    if let image = viewModel.localImageCache[caseImage.imageUri] {
-                        let isSyncing = viewModel.syncingWorksiteImage == caseImage.id
-                        let alignment: Alignment = isSyncing ? .center : .topTrailing
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: rowHeight)
-                            .cornerRadius(appTheme.cornerRadius)
-                            .onTapGesture { openViewImage(caseImage) }
-                            .overlay(alignment: alignment) {
-                                if isSyncing {
-                                    Image(systemName: "cloud.fill")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 48, height: 48)
-                                        .padding()
-                                        .background(.white.opacity(0.8))
-                                        .clipShape(Circle())
-                                } else {
-                                    Image(systemName: "cloud.fill")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 16, height: 16)
-                                        .padding(4)
-                                        .background(.white.opacity(0.5))
-                                        .clipShape(Circle())
-                                        .padding(8)
-                                }
-                            }
-                    }
-                }
-            }
-
-            Rectangle()
-                .fill(.clear)
-                .frame(width: 0.1, height: rowHeight)
+        .onChange(of: results) { _ in
+            photoDetents = false
+            viewModel.onMediaSelected(results)
+            results = []
         }
         .sheet(isPresented: $photoDetents) {
             ZStack {
@@ -380,9 +303,11 @@ private struct MediaDisplay: View {
                         }
                     }
 
-                    PhotosPicker(selection: $results,
-                                 matching: .images,
-                                 photoLibrary: .shared()) {
+                    PhotosPicker(
+                        selection: $results,
+                        matching: .images,
+                        photoLibrary: .shared()
+                    ) {
                         Text(t.t("fileUpload.select_file_upload"))
                             .padding()
                     }
@@ -392,6 +317,168 @@ private struct MediaDisplay: View {
             }
             .presentationDetents([.medium, .fraction(0.25)])
         }
+    }
+}
+
+private struct ViewCasePhotosSection: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @EnvironmentObject var viewModel: ViewCaseViewModel
+
+    var category: ImageCategory
+
+    var isCompactLayout = false
+
+    var onTakePhotoSelectImage: (ImageCategory) -> Void = {_ in}
+
+    var body: some View {
+        let sectionTranslateKey = category == .before
+        ? "caseForm.before_photos"
+        : "caseForm.after_photos"
+        let sectionTitle = t.t(sectionTranslateKey)
+        if !isCompactLayout {
+            Text(sectionTitle)
+                .fontHeader4()
+                .padding(.leading, appTheme.gridItemSpacing)
+                .padding(.top)
+        }
+
+        ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(alignment: .top, content: {
+                MediaDisplay(
+                    category: category,
+                    sectionTitle: isCompactLayout ? sectionTitle : "",
+                    onTakePhotoSelectImage: onTakePhotoSelectImage
+                )
+            })
+        }
+        .frame(maxHeight: 180)
+    }
+}
+
+private struct MediaDisplay: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewModel: ViewCaseViewModel
+
+    var category: ImageCategory
+    var sectionTitle = ""
+    var onTakePhotoSelectImage: (ImageCategory) -> Void = {_ in}
+
+    @State var mediaImages: [Image] = []
+
+    func openViewImage(_ caseImage: CaseImage) {
+        router.viewImage(
+            caseImage.id,
+            caseImage.isNetworkImage,
+            viewModel.headerTitle
+        )
+    }
+
+    var body: some View {
+        let beforeAfterImages = viewModel.beforeAfterPhotos[category] ?? []
+        let iconFont = Font.system(size: 16.0)
+
+        Rectangle()
+            .fill(.clear)
+            .frame(width: 0.1)
+
+        if sectionTitle.isNotBlank {
+            Text(sectionTitle.replacingOccurrences(of: " ", with: "\n"))
+                .fontHeader4()
+                .listItemPadding()
+        }
+
+        let r = appTheme.cornerRadius
+        ZStack {
+            let strokeColor = appTheme.colors.primaryBlueColor
+            let cornerSize = CGSize(width: r, height: r)
+            RoundedRectangle(cornerSize: cornerSize)
+                .fill(appTheme.colors.addMediaBackgroundColor)
+                .frame(width: 120)
+                .overlay {
+                    RoundedRectangle(cornerSize: cornerSize)
+                        .stroke(strokeColor, style: StrokeStyle(lineWidth: 2, dash: [5]))
+                }
+
+            VStack {
+                Image(systemName: "plus")
+                    .foregroundColor(strokeColor)
+                Text(t.t("actions.add_media"))
+                    .foregroundColor(strokeColor)
+            }
+        }
+        .padding(.vertical, r * 0.55)
+        .onTapGesture {
+            onTakePhotoSelectImage(category)
+        }
+
+        ForEach(0..<viewModel.cachingLocalImageCount[category.literal], id: \.self) { index in
+            Image(systemName: "photo")
+                .foregroundColor(appTheme.colors.addMediaBackgroundColor)
+                .font(iconFont)
+        }
+
+        ForEach(beforeAfterImages, id: \.id) { caseImage in
+            if caseImage.isNetworkImage {
+                CachedAsyncImage(url: URL(string: caseImage.thumbnailUri)) { phase in
+                    if let image = phase.image {
+                        image
+                            .resizable()
+                            .scaledToFit()
+                            .cornerRadius(appTheme.cornerRadius)
+                            .onTapGesture { openViewImage(caseImage) }
+                    } else if phase.error != nil {
+                        Image(systemName: "exclamationmark.circle")
+                            .resizable()
+                            .scaledToFit()
+                            .foregroundColor(appTheme.colors.primaryRedColor)
+                            .padding()
+                    } else {
+                        Image(systemName: "photo.circle")
+                            .resizable()
+                            .scaledToFit()
+                            .foregroundColor(.gray)
+                            .padding()
+                    }
+                }
+            } else {
+                if let image = viewModel.localImageCache[caseImage.imageUri] {
+                    let isSyncing = viewModel.syncingWorksiteImage == caseImage.id
+                    let alignment: Alignment = isSyncing ? .center : .topTrailing
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .cornerRadius(appTheme.cornerRadius)
+                        .onTapGesture { openViewImage(caseImage) }
+                        .overlay(alignment: alignment) {
+                            if isSyncing {
+                                Image(systemName: "cloud.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 48, height: 48)
+                                    .padding()
+                                    .background(.white.opacity(0.8))
+                                    .clipShape(Circle())
+                            } else {
+                                Image(systemName: "cloud.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 16, height: 16)
+                                    .padding(4)
+                                    .background(.white.opacity(0.5))
+                                    .clipShape(Circle())
+                                    .padding(8)
+                            }
+                        }
+                }
+            }
+        }
+
+        Rectangle()
+            .fill(.clear)
+            .frame(width: 0.1)
     }
 }
 
@@ -539,77 +626,6 @@ private struct ViewCaseNotes: View {
     }
 }
 
-private struct BottomNavButton: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
-    @EnvironmentObject var editableView: EditableView
-
-    private let action: () -> Void
-    private let imageName: String
-    private let textTranslateKey: String
-
-    init(
-        _ imageName: String,
-        _ textTranslateKey: String,
-        _ action: @escaping () -> Void
-    ) {
-        self.imageName = imageName
-        self.textTranslateKey = textTranslateKey
-        self.action = action
-    }
-
-    var body: some View {
-        Button {
-            action()
-        } label: {
-            VStack {
-                Image(imageName, bundle: .module)
-                Text(t.t(textTranslateKey))
-                    .fontBodySmall()
-            }
-        }
-        .disabled(editableView.disabled)
-    }
-}
-
-private struct BottomNav: View {
-    @EnvironmentObject var router: NavigationRouter
-    @EnvironmentObject var viewModel: ViewCaseViewModel
-    @EnvironmentObject var focusableViewState: TextInputFocusableView
-
-    var body: some View {
-        if focusableViewState.isFocused {
-            OpenKeyboardActionsView()
-        } else {
-            HStack {
-                BottomNavButton("ic_case_share", "actions.share")
-                {
-                    router.openCaseShare()
-                }
-                Spacer()
-                BottomNavButton("ic_case_flag", "nav.flag") {
-                    router.openCaseFlags(isFromCaseEdit: true)
-                }
-                Spacer()
-                BottomNavButton("ic_case_history", "actions.history") {
-                    router.openCaseHistory()
-                }
-                Spacer()
-                BottomNavButton("ic_case_edit", "actions.edit") {
-                    router.createEditCase(
-                        incidentId: viewModel.incidentIdIn,
-                        worksiteId: viewModel.worksiteIdIn
-                    )
-                }
-            }
-            // TODO: Common dimensions and styling
-            .padding(.horizontal, 24)
-            // TODO: Change padding on device and see if takes
-            .padding(.top)
-            .tint(.black)
-        }
-    }
-}
-
 private struct PropertyInformationView: View {
     @EnvironmentObject var viewModel: ViewCaseViewModel
     @EnvironmentObject var router: NavigationRouter
@@ -623,6 +639,8 @@ private struct PropertyInformationView: View {
 
     @State var map = MKMapView()
 
+    @State private var showWrongLocationDialog = false
+
     var body: some View {
         ZStack {
             VStack(alignment: .leading) {
@@ -634,11 +652,10 @@ private struct PropertyInformationView: View {
                     Image(systemName: "person.fill")
                         .frame(width: iconSize, height: iconSize)
                     Text(worksite.name)
-                    Spacer()
-
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .modifier(CopyWithAnimation(pressed: $namePressed, copy: worksite.name))
                 .horizontalVerticalPadding(horizontalPadding, verticalPadding)
+                .modifier(CopyWithAnimation(pressed: $namePressed, copy: worksite.name))
 
                 let phoneText = [worksite.phone1, worksite.phone2]
                     .filter { $0?.isNotBlank == true }
@@ -650,11 +667,10 @@ private struct PropertyInformationView: View {
                     // TODO: Custom link won't work with the two numbers combined into one text
                     Text(phoneText)
                         .customLink(urlString: "tel:\(phoneText)")
-
-                    Spacer()
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .modifier(CopyWithAnimation(pressed: $phonePressed, copy: phoneText))
                 .horizontalVerticalPadding(horizontalPadding, verticalPadding)
+                .modifier(CopyWithAnimation(pressed: $phonePressed, copy: phoneText))
 
                 if worksite.email?.isNotBlank == true {
                     HStack {
@@ -662,10 +678,10 @@ private struct PropertyInformationView: View {
                             .frame(width: iconSize, height: iconSize)
                         Text(worksite.email!)
                             .customLink(urlString: "mailto:\(worksite.email!)")
-                        Spacer()
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .modifier(CopyWithAnimation(pressed: $emailPressed, copy: worksite.email!))
                     .horizontalVerticalPadding(horizontalPadding, verticalPadding)
+                    .modifier(CopyWithAnimation(pressed: $emailPressed, copy: worksite.email!))
                 }
 
                 let (addressText, addressMapItem) = worksite.addressQuery
@@ -674,18 +690,20 @@ private struct PropertyInformationView: View {
                         .frame(width: iconSize, height: iconSize)
 
                     Button {
-                        // TODO: Alert if wrong location flag was set
                         addressMapItem.openInMaps()
                     } label : {
                         Text(addressText)
                             .underline()
                             .multilineTextAlignment(.leading)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-                    Spacer()
+                    if worksite.hasWrongLocationFlag {
+                        ExplainWrongLocationDialog(showDialog: $showWrongLocationDialog)
+                    }
                 }
-                .modifier(CopyWithAnimation(pressed: $addressPressed, copy: addressText))
                 .horizontalVerticalPadding(horizontalPadding, verticalPadding)
+                .modifier(CopyWithAnimation(pressed: $addressPressed, copy: addressText))
 
                 HStack {
                     Image("ic_jump_to_case_on_map", bundle: .module)

@@ -13,7 +13,7 @@ class CasesMapDotsOverlay: MKTileOverlay {
     private let renderingCount = CurrentValueSubject<Int, Never>(0)
     var isBusy: any Publisher<Bool, Never>
 
-    var zoomThreshold = CasesConstant.InteractiveZoomLevel
+    var zoomThreshold = CasesConstant.MapDotsZoomLevel
 
     private let cacheLock = NSLock()
     private var tileCache = TileDataCache(3000)
@@ -46,10 +46,6 @@ class CasesMapDotsOverlay: MKTileOverlay {
 
         super.init(urlTemplate: nil)
         maximumZ = zoomThreshold
-    }
-
-    func rendersAt(_ zoom: Double) -> Bool {
-        Int(zoom.rounded(.up)) < zoomThreshold + 1
     }
 
     func onStateChange(

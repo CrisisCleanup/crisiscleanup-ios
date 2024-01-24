@@ -64,10 +64,8 @@ class CasesViewModel: ObservableObject {
     private let isGeneratingWorksiteMarkers = CurrentValueSubject<Bool, Never>(false)
     private let isDelayingRegionBug = CurrentValueSubject<Bool, Never>(false)
 
-    let mapMarkerZoomLevelHeight: Double = {
-        // TODO: Calculate based on InteractiveZoomLevel. Remove magic number.
-        600000.0
-    }()
+    // TODO: Derive value from MapMarkersZoomLevel and map camera
+    let mapMarkerZoomLevelHeight = 330_000
 
     private let mapCaseDotProvider = InMemoryDotProvider()
     @Published private(set) var mapDotsOverlay: CasesMapDotsOverlay
@@ -300,7 +298,7 @@ class CasesViewModel: ObservableObject {
                     let queryIncidentId = wqs.incidentId
                     let queryFilters = wqs.filters
 
-                    let isZoomedOut = self.mapDotsOverlay.rendersAt(wqs.zoom)
+                    let isZoomedOut = wqs.zoom < CasesConstant.MapMarkersZoomLevel
                     if wqs.isTableView ||
                         queryIncidentId == EmptyIncident.id ||
                         isZoomedOut

@@ -1,15 +1,20 @@
 import CrisisCleanup
+import Foundation
 
 struct AppBuildEnv : AppEnv {
     let isDebuggable: Bool
     let isProduction: Bool
     var isNotProduction: Bool { !isProduction }
 
+    let isAustraliaBuild: Bool
+
     let apiEnvironment: String
 
     init(_ config: ConfigProperties) {
         self.isDebuggable = config.isDebuggable=="YES"
         self.isProduction = config.isProduction=="YES"
+
+        isAustraliaBuild = Bundle(for: AppDelegate.self).bundleIdentifier == "com.crisiscleanup.aus"
 
         apiEnvironment = {
             let apiUrl = config.apiBaseUrl
@@ -25,6 +30,7 @@ struct AppBuildEnv : AppEnv {
         isDebuggable = false
         isProduction = true
         apiEnvironment = "?"
+        isAustraliaBuild = false
     }
 
     func runInNonProd(block: () -> Void) {

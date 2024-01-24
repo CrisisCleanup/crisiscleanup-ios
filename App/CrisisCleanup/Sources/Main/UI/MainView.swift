@@ -96,33 +96,23 @@ struct MainView: View {
                             }
                     }
                 } else {
-                    let navColor = appTheme.colors.navigationContainerColor
                     NavigationStack(path: $router.path) {
                         ZStack {
-                            navColor.ignoresSafeArea()
-                            VStack {
-                                // TODO: Why is a view required to change system bar (and tab bar) backgrounds?
-                                Rectangle()
-                                    .fill(.clear)
-                                    .frame(height: 0)
-                                    .background(.clear)
-
-                                TabView(selection: $selectedTab) {
-                                    let openAuthScreen = {
-                                        viewModel.showAuthScreen = true
-                                    }
-                                    MainTabs(
-                                        viewModel: viewModel,
-                                        openAuthScreen: openAuthScreen,
-                                        casesViewBuilder: casesViewBuilder,
-                                        menuViewBuilder: menuViewBuilder
-                                    )
+                            TabView(selection: $selectedTab) {
+                                let openAuthScreen = {
+                                    viewModel.showAuthScreen = true
                                 }
-                                .tabViewStyle(
-                                    backgroundColor: appTheme.colors.navigationContainerColor,
-                                    selectedItemColor: .white
+                                MainTabs(
+                                    viewModel: viewModel,
+                                    openAuthScreen: openAuthScreen,
+                                    casesViewBuilder: casesViewBuilder,
+                                    menuViewBuilder: menuViewBuilder
                                 )
                             }
+                            .tabViewStyle(
+                                backgroundColor: appTheme.colors.navigationContainerColor,
+                                selectedItemColor: .white
+                            )
                         }
                         .toolbarBackground(.visible, for: .navigationBar)
                         .toolbarColorScheme(.light, for: .navigationBar)

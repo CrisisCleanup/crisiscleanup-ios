@@ -646,6 +646,19 @@ extension DerivableRequest<WorksiteRecord> {
     func orderByCreatedAt() -> Self {
         order(WorksiteColumns.createdAt)
     }
+
+    func byCaseNumber(
+        _ incidentId: Int64,
+        _ caseNumber: String
+    ) -> Self {
+        filter(
+            WorksiteColumns.incidentId == incidentId &&
+            (
+                WorksiteColumns.caseNumber == caseNumber.uppercased() ||
+                WorksiteColumns.caseNumber == caseNumber.lowercased()
+            )
+        )
+    }
 }
 
 // MARK: - Work type

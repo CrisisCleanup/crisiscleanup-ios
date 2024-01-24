@@ -5,9 +5,22 @@ import MapKit
 import FlowStackLayout
 
 struct CreateEditCaseView: View {
+    @ObservedObject var viewModel: CreateEditCaseViewModel
+
+    var body: some View {
+        GeometryReader { geometry in
+            CreateEditCaseLayoutView(viewLayout: ViewLayoutDescription(geometry.size))
+                .environmentObject(viewModel)
+        }
+    }
+}
+
+private struct CreateEditCaseLayoutView: View {
     @Environment(\.dismiss) var dismiss
 
-    @ObservedObject var viewModel: CreateEditCaseViewModel
+    @EnvironmentObject var viewModel: CreateEditCaseViewModel
+
+    var viewLayout = ViewLayoutDescription()
 
     @ObservedObject private var focusableViewState = TextInputFocusableView()
 
@@ -15,7 +28,22 @@ struct CreateEditCaseView: View {
 
     var body: some View {
         ZStack {
-            CreateEditCaseContentView()
+            if viewLayout.isListDetailLayout {
+                GeometryReader { proxy in
+                    HStack {
+                        CreateEditCaseSaveActions(isVertical: true)
+                            .frame(width: proxy.size.width * listDetailListFractionalWidth)
+
+                        CreateEditCaseContentView(isSaveBarVisible: false)
+                            .frame(width: proxy.size.width * listDetailDetailFractionalWidth)
+                    }
+                }
+            } else {
+                CreateEditCaseContentView(
+                    isSaveBarVisible: true,
+                    isWideScreen: viewLayout.isWide
+                )
+            }
 
             if showBusyIndicator {
                 ProgressView()
@@ -42,7 +70,6 @@ struct CreateEditCaseView: View {
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .environment(\.translator, viewModel)
-        .environmentObject(viewModel)
         .environmentObject(viewModel.editableViewState)
         .environmentObject(focusableViewState)
     }
@@ -53,6 +80,9 @@ private struct CreateEditCaseContentView: View {
 
     @EnvironmentObject var viewModel: CreateEditCaseViewModel
     @EnvironmentObject private var focusableViewState: TextInputFocusableView
+
+    var isSaveBarVisible = false
+    var isWideScreen = false
 
     @State var sectionCollapse = [
         false,
@@ -78,15 +108,13 @@ private struct CreateEditCaseContentView: View {
             ScrollView {
                 VStack {
                     if let caseState = viewModel.caseData {
-                        HStack{
-                            CaseIncidentView(
-                                incident: caseState.incident,
-                                isPendingSync: caseState.isPendingSync,
-                                isSyncing: viewModel.isSyncing,
-                                scheduleSync: { viewModel.scheduleSync() }
-                            )
-                            .padding()
-                        }
+                        CaseIncidentView(
+                            incident: caseState.incident,
+                            isPendingSync: caseState.isPendingSync,
+                            isSyncing: viewModel.isSyncing,
+                            scheduleSync: { viewModel.scheduleSync() }
+                        )
+                        .padding()
                     }
 
                     Group {
@@ -204,11 +232,13 @@ private struct CreateEditCaseContentView: View {
                 .presentationDetents([.fraction(0.35)])
             }
 
-            if focusableViewState.isFocused {
-                OpenKeyboardActionsView()
-            } else {
-                CreateEditCaseSaveActions()
-                    .disabled(disableMutation)
+            if isSaveBarVisible {
+                if focusableViewState.isFocused {
+                    OpenKeyboardActionsView()
+                } else {
+                    CreateEditCaseSaveActions(isVertical: !isWideScreen)
+                        .disabled(disableMutation)
+                }
             }
         }
     }
@@ -421,7 +451,8 @@ struct PropertyInformation: View {
                         .padding()
                 }
             }
-            .frame(width: UIScreen.main.bounds.width, height: appTheme.listItemMapHeight)
+            .frame(maxWidth: .infinity)
+            .frame(height: appTheme.listItemMapHeight)
 
             HStack {
                 Button {
@@ -895,38 +926,54 @@ struct DisplayFormField: View {
     }
 }
 
-private struct CreateEditCaseSaveActions: View {
+private struct SaveActions: View {
     @Environment(\.translator) var t: KeyAssetTranslator
     @Environment(\.dismiss) var dismiss
 
     @EnvironmentObject var viewModel: CreateEditCaseViewModel
 
-
     var body: some View {
-        // TODO: Better fit on thinner screen. Use app theme.
-        HStack {
-            Button {
-                dismiss()
-            } label : {
-                Text(t.t("actions.cancel"))
-            }
-            .styleCancel()
-
-            Button {
-                viewModel.saveChanges(false)
-            } label : {
-                Text(t.t("actions.save"))
-            }
-            .stylePrimary()
-
-            Button {
-                viewModel.saveChanges(true)
-            } label : {
-                Text(t.t("actions.save_claim"))
-            }
-            .stylePrimary()
-            .frame(maxWidth: .infinity)
+        Button {
+            dismiss()
+        } label : {
+            Text(t.t("actions.cancel"))
         }
-        .padding([.horizontal, .bottom], 8)
+        .styleCancel()
+
+        Button {
+            viewModel.saveChanges(false)
+        } label : {
+            Text(t.t("actions.save"))
+        }
+        .stylePrimary()
+
+        Button {
+            viewModel.saveChanges(true)
+        } label : {
+            Text(t.t("actions.save_claim"))
+        }
+        .stylePrimary()
+    }
+}
+
+private struct CreateEditCaseSaveActions: View {
+    var isVertical = false
+
+    // TODO: Common dimensions for all spacing below
+    var body: some View {
+        if isVertical {
+            VStack(spacing: 24) {
+                Spacer()
+
+                SaveActions()
+            }
+            .padding([.horizontal, .bottom], 8)
+        } else {
+            // TODO: Better fit on thinner screen. Use app theme.
+            HStack {
+                SaveActions()
+            }
+            .padding([.horizontal, .bottom], 8)
+        }
     }
 }

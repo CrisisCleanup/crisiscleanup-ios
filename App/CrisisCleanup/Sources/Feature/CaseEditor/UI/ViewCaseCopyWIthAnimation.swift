@@ -9,6 +9,7 @@ struct CopyWithAnimation: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+        // TODO: How to long press even on white space without interfering with scroll interactions
             .background {
                 Color.gray.opacity(pressed ? 0.5 : 0)
                     .animation(.easeInOut(duration: 0.25), value: pressed)

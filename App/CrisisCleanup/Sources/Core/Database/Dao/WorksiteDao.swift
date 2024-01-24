@@ -552,10 +552,24 @@ public class WorksiteDao {
         }
     }
 
+    func getWorksiteByCaseNumber(
+        _ incidentId: Int64,
+        _ caseNumber: String
+    ) -> WorksiteSummary? {
+        let matchingRecord = try! reader.read { db in
+            try WorksiteRecord
+                .all()
+                .byCaseNumber(incidentId, caseNumber)
+                .fetchOne(db)
+        }
+        return matchingRecord?.asSummary()
+    }
+
+    // TODO: Test speed on large data set and update as necessary
     func getMatchingWorksites(
         _ incidentId: Int64,
         _ q: String,
-        limit: Int = 20,
+        limit: Int = 250,
         offset: Int = 0
     ) -> [WorksiteSummary] {
         let records = try! reader.read { db in
@@ -564,7 +578,7 @@ public class WorksiteDao {
                 FROM worksite w
                 JOIN worksiteSearch_ft fts
                     ON fts.rowid = w.rowid
-                WHERE incidentId=:incidentId AND worksiteSearch_ft MATCH :pattern
+                WHERE worksiteSearch_ft MATCH :pattern
                 LIMIT :limit
                 OFFSET :offset
                 """
@@ -580,7 +594,9 @@ public class WorksiteDao {
                 ]
             )
         }
-        return records.map { $0.asSummary() }
+        return records
+            .filter { $0.incidentId == incidentId }
+            .map { $0.asSummary() }
     }
 }
 

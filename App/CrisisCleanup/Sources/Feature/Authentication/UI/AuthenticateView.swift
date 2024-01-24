@@ -57,6 +57,7 @@ private struct LoginOptionsView: View {
                         .fontHeader1()
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.vertical)
+                        .accessibilityIdentifier("loginHeaderText")
 
                     Button(t.translate("loginForm.login_with_email", "Login with email")) {
                         router.openEmailLogin()
@@ -79,15 +80,17 @@ private struct LoginOptionsView: View {
                     }
                     .styleOutline()
 
-                    VStack(alignment: .leading) {
-                        Text(t.translate("publicNav.relief_orgs_only", "Relief orgs and goverment only"))
+                    if viewModel.showRegister {
+                        VStack(alignment: .leading) {
+                            Text(t.translate("publicNav.relief_orgs_only", "Relief orgs and goverment only"))
 
-                        Link(
-                            t.translate("actions.register", "Register action"),
-                            destination: URL(string: "https://crisiscleanup.org/register")!
-                        )
+                            Link(
+                                t.translate("actions.register", "Register action"),
+                                destination: URL(string: "https://crisiscleanup.org/register")!
+                            )
+                        }
+                        .padding(.top)
                     }
-                    .padding(.top)
 
                     if viewModel.viewData.hasAuthenticated {
                         Button(t.translate("actions.back", "Back action")) {
@@ -113,19 +116,22 @@ struct LogoutView: View {
             CrisisCleanupLogoView()
                 .padding(.bottom)
 
-            VStack{
+            VStack(alignment: .leading) {
+                Text(viewModel.accountInfo)
+                    .accessibilityIdentifier("authedAccountInfoText")
+
                 Button(t.t("actions.logout")) {
                     logout()
                 }
                 .stylePrimary()
-                .padding([.vertical])
+                .padding(.vertical)
+                .accessibilityIdentifier("authedLogoutAction")
 
-                Button {
+                Button(t.t("actions.back")) {
                     dismissScreen()
-                } label:  {
-                    Text(t.t("actions.back"))
                 }
                 .padding(.vertical, appTheme.listItemVerticalPadding)
+                .accessibilityIdentifier("authedCloseScreenAction")
             }
             .padding()
         }

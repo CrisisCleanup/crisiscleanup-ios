@@ -4,10 +4,31 @@ import SVGView
 import SwiftUI
 
 struct CasesView: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
-    @EnvironmentObject var router: NavigationRouter
-
     @ObservedObject var viewModel: CasesViewModel
+
+    let incidentSelectViewBuilder: IncidentSelectViewBuilder
+    let openAuthScreen: () -> Void
+
+    var body: some View {
+        GeometryReader { geometry in
+            CasesLayoutView(
+                viewLayout: ViewLayoutDescription(geometry.size),
+                incidentSelectViewBuilder: incidentSelectViewBuilder,
+                openAuthScreen: openAuthScreen
+            )
+            .environmentObject(viewModel)
+        }
+    }
+}
+
+struct CasesLayoutView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewModel: CasesViewModel
+
+    var viewLayout = ViewLayoutDescription()
+
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
     let openAuthScreen: () -> Void
 
@@ -85,7 +106,8 @@ struct CasesView: View {
                 map: $map,
                 incidentSelectViewBuilder: incidentSelectViewBuilder,
                 hasNoIncidents: hasNoIncidents,
-                animateToSelectedIncidentBounds: animateToSelectedIncidentBounds
+                animateToSelectedIncidentBounds: animateToSelectedIncidentBounds,
+                isShortScreen: viewLayout.isShort
             )
 
             if viewModel.showExplainLocationPermission {
@@ -108,11 +130,104 @@ struct CasesView: View {
     }
 }
 
+private struct MapViewTopActions: View {
+    @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewModel: CasesViewModel
+
+    let incidentSelectViewBuilder: IncidentSelectViewBuilder
+
+    let hasNoIncidents: Bool
+
+    @State private var openIncidentSelect = false
+
+    @State private var showCountProgress = false
+
+    var body: some View {
+        HStack {
+            Button {
+                openIncidentSelect.toggle()
+            } label: {
+                IncidentDisasterImage(
+                    viewModel.incidentsData.selected,
+                    disabled: hasNoIncidents,
+                    background: .white
+                )
+                .shadow(radius: appTheme.shadowRadius)
+            }
+            .sheet(
+                isPresented: $openIncidentSelect,
+                onDismiss: {
+                    incidentSelectViewBuilder.onIncidentSelectDismiss()
+                }
+            ) {
+                incidentSelectViewBuilder.incidentSelectView(
+                    onDismiss: { openIncidentSelect = false }
+                )
+            }
+            .disabled(hasNoIncidents)
+
+            Spacer()
+
+            if showCountProgress {
+                HStack(spacing: appTheme.gridItemSpacing) {
+                    let mapCount = viewModel.casesCountMapText
+                    if mapCount.isNotBlank {
+                        Text(mapCount)
+                            .foregroundColor(Color.white)
+                    }
+                    if viewModel.isLoadingData {
+                        ProgressView()
+                            .circularProgress()
+                            .tint(.white)
+                    }
+                }
+                .onTapGesture {
+                    viewModel.syncWorksitesData()
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .cardContainer(background: appTheme.colors.navigationContainerColor)
+            }
+
+            Spacer()
+
+            HStack(spacing: 0) {
+                Button {
+                    router.openSearchCases()
+                } label: {
+                    Image("ic_search", bundle: .module)
+                        .mapOverlayButton()
+                }
+
+                Divider()
+                    .frame(height: appTheme.buttonSize)
+
+                Button {
+                    router.openFilterCases()
+                } label: {
+                    Image("ic_dials", bundle: .module)
+                        .mapOverlayButton()
+                }
+            }
+            .cornerRadius(appTheme.cornerRadius)
+            .shadow(radius: appTheme.shadowRadius)
+            .if (viewModel.filtersCount > 0) {
+                $0.overlay(alignment: .topTrailing) {
+                    filterBadge(viewModel.filtersCount)
+                }
+            }
+        }
+        .onChange(of: viewModel.hasCasesCountProgress) { b in
+            withAnimation(.easeIn(duration: appTheme.visibleSlowAnimationDuration)) {
+                showCountProgress = b
+            }
+        }
+    }
+}
+
 private struct CasesOverlayElements: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var appAlertState: AppAlertViewState
-
     @EnvironmentObject var viewModel: CasesViewModel
 
     let openAuthScreen: () -> Void
@@ -120,121 +235,50 @@ private struct CasesOverlayElements: View {
     @Binding var map: MKMapView
 
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
+
     let hasNoIncidents: Bool
+
     let animateToSelectedIncidentBounds: (_ bounds: LatLngBounds) -> Void
 
-    @State var openIncidentSelect = false
-
-    @State var showCountProgress = false
+    var isShortScreen = false
 
     var body: some View {
         let isMapView = !viewModel.isTableView
+        let isCompactLayout = appAlertState.showAlert && isShortScreen
 
         VStack {
             if isMapView {
-                HStack {
-                    VStack(spacing: 0) {
-                        Button {
-                            openIncidentSelect.toggle()
-                        } label: {
-                            IncidentDisasterImage(
-                                viewModel.incidentsData.selected,
-                                disabled: hasNoIncidents,
-                                background: .white
-                            )
-                            .shadow(radius: appTheme.shadowRadius)
-                        }
-                        .sheet(
-                            isPresented: $openIncidentSelect,
-                            onDismiss: {
-                                incidentSelectViewBuilder.onIncidentSelectDismiss()
-                            }
-                        ) {
-                            incidentSelectViewBuilder.incidentSelectView(
-                                onDismiss: { openIncidentSelect = false }
-                            )
-                        }
-                        .disabled(hasNoIncidents)
+                MapViewTopActions(
+                    incidentSelectViewBuilder: incidentSelectViewBuilder,
+                    hasNoIncidents: hasNoIncidents
+                )
+                .padding(.bottom)
+            }
 
+            HStack(spacing: 0) {
+                if isMapView {
+                    // TODO: Common dimensions
+                    VStack(alignment: .leading, spacing: 16) {
                         MapControls(
-                            viewModel: viewModel,
                             map: map,
-                            animateToSelectedIncidentBounds: animateToSelectedIncidentBounds
+                            animateToSelectedIncidentBounds: animateToSelectedIncidentBounds,
+                            isCompactLayout: isCompactLayout
                         )
 
-                        Spacer()
-
-                    }
-                    VStack {
-                        HStack {
+                        if !isCompactLayout {
                             Spacer()
-
-                            if showCountProgress {
-                                HStack(spacing: appTheme.gridItemSpacing) {
-                                    let mapCount = viewModel.casesCountMapText
-                                    if mapCount.isNotBlank {
-                                        Text(mapCount)
-                                            .foregroundColor(Color.white)
-                                    }
-                                    if viewModel.isLoadingData {
-                                        ProgressView()
-                                            .circularProgress()
-                                            .tint(.white)
-                                    }
-                                }
-                                .onTapGesture {
-                                    viewModel.syncWorksitesData()
-                                }
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .cardContainer(background: appTheme.colors.navigationContainerColor)
-                            }
-
-                            Spacer()
-
-                            HStack(spacing: 0) {
-                                Button {
-                                    router.openSearchCases()
-                                } label: {
-                                    Image("ic_search", bundle: .module)
-                                        .mapOverlayButton()
-                                }
-
-                                Divider()
-                                    .frame(height: appTheme.buttonSize)
-
-                                Button {
-                                    router.openFilterCases()
-                                } label: {
-                                    Image("ic_dials", bundle: .module)
-                                        .mapOverlayButton()
-                                }
-                            }
-                            .cornerRadius(appTheme.cornerRadius)
-                            .shadow(radius: appTheme.shadowRadius)
-                            .if (viewModel.filtersCount > 0) {
-                                $0.overlay(alignment: .topTrailing) {
-                                    filterBadge(viewModel.filtersCount)
-                                }
-                            }
-                     }
-                        Spacer()
-                    }
-                    .onChange(of: viewModel.hasCasesCountProgress) { b in
-                        withAnimation(.easeIn(duration: appTheme.visibleSlowAnimationDuration)) {
-                            showCountProgress = b
                         }
                     }
                 }
-            }
 
-            Spacer()
-
-            HStack {
                 Spacer()
 
                 // TODO: Common dimensions
                 VStack(spacing: 16) {
+                    if !isCompactLayout {
+                        Spacer()
+                    }
+
                     Button {
                         if viewModel.useMyLocation() {
                             map.userTrackingMode = .follow
@@ -271,18 +315,66 @@ private struct CasesOverlayElements: View {
                     appAlert,
                     openAuthScreen
                 )
-            }
+                .padding(.top)
+}
         }
         .padding()
+    }
+}
+
+private struct MapResponsiveControls: View {
+    @EnvironmentObject var viewModel: CasesViewModel
+
+    let map: MKMapView
+
+    let animateToSelectedIncidentBounds: (LatLngBounds) -> Void
+
+    var body: some View {
+        Button {
+            map.setCamera(
+                MKMapCamera(
+                    lookingAtCenter: map.centerCoordinate,
+                    fromDistance: CLLocationDistance(viewModel.mapMarkerZoomLevelHeight),
+                    pitch: 0.0,
+                    heading: 0.0
+                ),
+                animated: true
+            )
+        } label: {
+            Image("ic_zoom_incident", bundle: .module)
+                .mapOverlayButton()
+                .cornerRadius(appTheme.cornerRadius)
+                .shadow(radius: appTheme.shadowRadius)
+        }
+
+        Button {
+            let bounds = viewModel.incidentLocationBounds.bounds
+            animateToSelectedIncidentBounds(bounds)
+        } label: {
+            Image("ic_zoom_interactive", bundle: .module)
+                .mapOverlayButton()
+                .cornerRadius(appTheme.cornerRadius)
+                .shadow(radius: appTheme.shadowRadius)
+        }
+
+//        Button {
+//        } label: {
+//            Image("ic_layers", bundle: .module)
+//                .mapOverlayButton()
+//                .cornerRadius(appTheme.cornerRadius)
+//                .shadow(radius: appTheme.shadowRadius)
+//        }
     }
 }
 
 private struct MapControls: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    @ObservedObject var viewModel: CasesViewModel
+    @EnvironmentObject var viewModel: CasesViewModel
+
     let map: MKMapView
     let animateToSelectedIncidentBounds: (LatLngBounds) -> Void
+    var isCompactLayout = false
 
     func zoomDelta(scale: Double) {
         var region = map.region
@@ -313,45 +405,22 @@ private struct MapControls: View {
         }
         .cornerRadius(appTheme.cornerRadius)
         .shadow(radius: appTheme.shadowRadius)
-        .padding(.top)
 
-        Button {
-            map.setCamera(
-                MKMapCamera(
-                    lookingAtCenter: map.centerCoordinate,
-                    fromDistance: CLLocationDistance(viewModel.mapMarkerZoomLevelHeight),
-                    pitch: 0.0,
-                    heading: 0.0
-                ),
-                animated: true
+        if isCompactLayout {
+            // TODO: Common dimensions
+            HStack(spacing: 16) {
+                MapResponsiveControls(
+                    map: map,
+                    animateToSelectedIncidentBounds: animateToSelectedIncidentBounds
+                )
+            }
+        } else {
+            MapResponsiveControls(
+                map: map,
+                animateToSelectedIncidentBounds: animateToSelectedIncidentBounds
             )
-        } label: {
-            Image("ic_zoom_incident", bundle: .module)
-                .mapOverlayButton()
-                .cornerRadius(appTheme.cornerRadius)
-                .shadow(radius: appTheme.shadowRadius)
-                .padding(.top)
         }
 
-        Button {
-            let bounds = viewModel.incidentLocationBounds.bounds
-            animateToSelectedIncidentBounds(bounds)
-        } label: {
-            Image("ic_zoom_interactive", bundle: .module)
-                .mapOverlayButton()
-                .cornerRadius(appTheme.cornerRadius)
-                .shadow(radius: appTheme.shadowRadius)
-                .padding(.top)
-        }
-
-//        Button {
-//        } label: {
-//            Image("ic_layers", bundle: .module)
-//                .mapOverlayButton()
-//                .cornerRadius(appTheme.cornerRadius)
-//                .shadow(radius: appTheme.shadowRadius)
-//                .padding(.top)
-//        }
     }
 }
 

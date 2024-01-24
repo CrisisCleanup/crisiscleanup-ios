@@ -12,6 +12,7 @@ struct CasesSearchView: View {
 
     var body: some View {
         let isLoading = viewModel.isLoading
+        let isSearching = viewModel.isSearching
         let isSelectingResult = viewModel.isSelectingResult
         let onCaseSelect = { result in viewModel.onSelectWorksite(result) }
         let disable = isSelectingResult
@@ -57,7 +58,8 @@ struct CasesSearchView: View {
                         RecentCasesView(
                             recents: viewModel.recentWorksites,
                             onSelect: onCaseSelect,
-                            isEditable: isEditable)
+                            isEditable: isEditable
+                        )
                     } else {
                         let searchResults = viewModel.searchResults.options
                         if searchResults.isNotEmpty {
@@ -66,7 +68,7 @@ struct CasesSearchView: View {
                                 onSelect: onCaseSelect,
                                 isEditable: isEditable
                             )
-                        } else {
+                        } else if !isSearching {
                             let message = viewModel.searchResults.isShortQ
                             ? t.t("info.search_query_is_short")
                             : t.t("info.no_search_results")
