@@ -2,14 +2,26 @@ import MapKit
 import SwiftUI
 
 struct CaseMoveOnMapView: View {
+    @ObservedObject var viewModel: CaseChangeLocationAddressViewModel
+
+    var body: some View {
+        GeometryReader { geometry in
+            CaseMoveOnMapLayoutView(viewLayout: ViewLayoutDescription(geometry.size))
+                .environmentObject(viewModel)
+        }
+    }
+}
+
+private struct CaseMoveOnMapLayoutView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewModel: CaseChangeLocationAddressViewModel
 
-    @ObservedObject var viewModel: CaseChangeLocationAddressViewModel
+    var viewLayout = ViewLayoutDescription()
 
-    @ObservedObject var focusableViewState = TextInputFocusableView()
+    @ObservedObject private var focusableViewState = TextInputFocusableView()
     @State private var animateTopSearchBar = false
 
     @State var map = MKMapView()
@@ -23,51 +35,60 @@ struct CaseMoveOnMapView: View {
         // TODO: Disable elements when uninterruptible operations are ongoing
         // let disabled = viewModel.isProcessingAction
 
-        VStack {
-            if viewModel.hasInternetConnection {
-                let hint = t.t("caseView.full_address")
-                SuggestionsSearchField(
-                    q: $viewModel.locationQuery,
-                    animateSearchFieldFocus: $animateTopSearchBar,
-                    focusState: _focusState,
-                    hint: "\(hint) *"
-                )
-                .onChange(of: viewModel.closeSearchBarTrigger, perform: { _ in
-                    if viewModel.locationQuery.isBlank {
-                        animateTopSearchBar = false
-                    }
-                })
-                .padding([.horizontal, .top])
-            }
+        ZStack {
+            if viewLayout.isListDetailLayout {
+                GeometryReader { proxy in
+                    HStack {
+                        VStack {
+                            SearchInputView(
+                                hasInternetConnection: viewModel.hasInternetConnection,
+                                animateTopSearchBar: $animateTopSearchBar,
+                                locationQuery: $viewModel.locationQuery,
+                                closeSearchBarTrigger: $viewModel.closeSearchBarTrigger,
+                                focusState: _focusState
+                            )
 
-            if animateTopSearchBar {
-                ZStack {
-                    VStack {
-                        WorksiteAddressSearchResultsView(
-                            isSearching: $viewModel.isLocationSearching,
-                            isShortQuery: $viewModel.isShortQuery,
-                            locationQuery: $viewModel.locationQuery,
-                            results: $viewModel.searchResults,
-                            onCaseSelect: {
-                                viewModel.onExistingWorksiteSelected($0)
-                            },
-                            onAddressSelect: {
-                                viewModel.onSearchAddressSelected($0)
+                            Spacer()
+
+                            if !animateTopSearchBar {
+
+                                UseMyLocationButton(useMyLocation: viewModel.useMyLocation)
+
+                                MoveOnMapBottomActions(isVertical: true)
                             }
-                        )
+                        }
+                        .frame(width: proxy.size.width * listDetailListFractionalWidth)
 
-                        Spacer()
-                    }
-
-                    if showSearchingIndicator {
-                        ProgressView()
-                            .padding(48)
+                        VStack {
+                            if animateTopSearchBar {
+                                SearchResultsView(showSearchingIndicator: $showSearchingIndicator)
+                            } else {
+                                MoveOnMapView()
+                            }
+                        }
+                        .frame(width: proxy.size.width * listDetailDetailFractionalWidth)
                     }
                 }
             } else {
-                MoveOnMapView()
+                VStack {
+                    SearchInputView(
+                        hasInternetConnection: viewModel.hasInternetConnection,
+                        animateTopSearchBar: $animateTopSearchBar,
+                        locationQuery: $viewModel.locationQuery,
+                        closeSearchBarTrigger: $viewModel.closeSearchBarTrigger,
+                        focusState: _focusState
+                    )
 
-                MoveOnMapBottomActions()
+                    if animateTopSearchBar {
+                        SearchResultsView(showSearchingIndicator: $showSearchingIndicator)
+                    } else {
+                        MoveOnMapView()
+
+                        UseMyLocationButton(useMyLocation: viewModel.useMyLocation)
+
+                        MoveOnMapBottomActions()
+                    }
+                }
             }
         }
         .onReceive(viewModel.$locationOutOfBounds) { data in
@@ -105,8 +126,85 @@ struct CaseMoveOnMapView: View {
         }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
-        .environmentObject(viewModel)
         .onChange(of: focusState) { focusableViewState.focusState = $0 }
+    }
+}
+
+private struct SearchInputView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    var hasInternetConnection: Bool
+
+    @Binding var animateTopSearchBar: Bool
+    @Binding var locationQuery: String
+    @Binding var closeSearchBarTrigger: Bool
+
+    var focusState: FocusState<TextInputFocused?>
+
+    var body: some View {
+        if hasInternetConnection {
+            let hint = t.t("caseView.full_address")
+            SuggestionsSearchField(
+                q: $locationQuery,
+                animateSearchFieldFocus: $animateTopSearchBar,
+                focusState: focusState,
+                hint: "\(hint) *"
+            )
+            .onChange(of: closeSearchBarTrigger, perform: { _ in
+                if locationQuery.isBlank {
+                    animateTopSearchBar = false
+                }
+            })
+            .padding(.horizontal)
+            .padding(.top, appTheme.listItemVerticalPadding)
+        }
+    }
+}
+private struct SearchResultsView: View {
+    @EnvironmentObject var viewModel: CaseChangeLocationAddressViewModel
+
+    @Binding var showSearchingIndicator: Bool
+
+    var body: some View {
+        ZStack {
+            VStack {
+                WorksiteAddressSearchResultsView(
+                    isSearching: $viewModel.isLocationSearching,
+                    isShortQuery: $viewModel.isShortQuery,
+                    locationQuery: $viewModel.locationQuery,
+                    results: $viewModel.searchResults,
+                    onCaseSelect: {
+                        viewModel.onExistingWorksiteSelected($0)
+                    },
+                    onAddressSelect: {
+                        viewModel.onSearchAddressSelected($0)
+                    }
+                )
+
+                Spacer()
+            }
+
+            if showSearchingIndicator {
+                ProgressView()
+                    .padding(48)
+            }
+        }
+    }
+}
+
+private struct UseMyLocationButton: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    var useMyLocation: () -> Void
+
+    var body: some View {
+        Button {
+            useMyLocation()
+        } label: {
+            Image("ic_use_my_location", bundle: .module)
+            Text(t.t("caseForm.use_my_location"))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -118,57 +216,62 @@ private struct MoveOnMapView: View {
     @State private var map = MKMapView()
 
     var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            let outOfBoundsMessage = viewModel.locationOutOfBoundsMessage
-            MoveOnMapMapView(
-                map: $map,
-                caseCoordinates: $viewModel.mapCoordinates,
-                viewModel: viewModel
-            )
-            .if (outOfBoundsMessage.isNotBlank) { view in
-                view.overlay(alignment: .bottomLeading) {
-                    Text(outOfBoundsMessage)
-                        .fontBodySmall()
-                        .padding()
-                        .background(.white.disabledAlpha())
-                        .padding()
-                }
+        let outOfBoundsMessage = viewModel.locationOutOfBoundsMessage
+        MoveOnMapMapView(
+            map: $map,
+            caseCoordinates: $viewModel.mapCoordinates,
+            viewModel: viewModel
+        )
+        .if (outOfBoundsMessage.isNotBlank) { view in
+            view.overlay(alignment: .bottomLeading) {
+                Text(outOfBoundsMessage)
+                    .fontBodySmall()
+                    .padding()
+                    .background(.white.disabledAlpha())
+                    .padding()
             }
         }
-
-        Button {
-            viewModel.useMyLocation()
-        } label: {
-            Image("ic_use_my_location", bundle: .module)
-            Text(t.t("caseForm.use_my_location"))
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
-private struct MoveOnMapBottomActions: View {
+private struct BottomActions: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewModel: CaseChangeLocationAddressViewModel
 
     var body: some View {
-        HStack{
-            Button {
-                dismiss()
-            } label: {
-                Text(t.t("actions.cancel"))
-            }
-            .styleCancel()
-
-            Button {
-                 viewModel.onSaveMapMove()
-            } label: {
-                Text(t.t("actions.save"))
-            }
-            .stylePrimary()
+        Button {
+            dismiss()
+        } label: {
+            Text(t.t("actions.cancel"))
         }
-        .listItemModifier()
+        .styleCancel()
+
+        Button {
+             viewModel.onSaveMapMove()
+        } label: {
+            Text(t.t("actions.save"))
+        }
+        .stylePrimary()
+    }
+}
+
+private struct MoveOnMapBottomActions: View {
+    var isVertical = false
+
+    var body: some View {
+        if isVertical {
+            // TODO: Common dimensions
+            VStack(spacing: 24) {
+                BottomActions()
+            }
+        } else {
+            HStack{
+                BottomActions()
+            }
+            .listItemModifier()
+        }
     }
 }
 
