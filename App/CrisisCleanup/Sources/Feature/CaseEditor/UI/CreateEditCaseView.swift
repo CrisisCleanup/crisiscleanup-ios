@@ -39,10 +39,7 @@ private struct CreateEditCaseLayoutView: View {
                     }
                 }
             } else {
-                CreateEditCaseContentView(
-                    isSaveBarVisible: true,
-                    isWideScreen: viewLayout.isWide
-                )
+                CreateEditCaseContentView(isSaveBarVisible: true)
             }
 
             if showBusyIndicator {
@@ -82,7 +79,7 @@ private struct CreateEditCaseContentView: View {
     @EnvironmentObject private var focusableViewState: TextInputFocusableView
 
     var isSaveBarVisible = false
-    var isWideScreen = false
+
 
     @State var sectionCollapse = [
         false,
@@ -236,7 +233,7 @@ private struct CreateEditCaseContentView: View {
                 if focusableViewState.isFocused {
                     OpenKeyboardActionsView()
                 } else {
-                    CreateEditCaseSaveActions(isVertical: !isWideScreen)
+                    CreateEditCaseSaveActions(isVertical: false)
                         .disabled(disableMutation)
                 }
             }

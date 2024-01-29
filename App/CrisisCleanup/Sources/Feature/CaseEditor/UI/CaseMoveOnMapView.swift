@@ -77,7 +77,7 @@ struct CaseMoveOnMapView: View {
             if let outOfBoundsData = viewModel.locationOutOfBounds {
                 LocationOutOfBoundsAlert(outOfBoundsData: outOfBoundsData)
                     .interactiveDismissDisabled()
-                    .presentationDetents([.medium])
+                    .presentationDetents([.fraction(0.33), .medium])
             } else {
                 // Should never happen if state is consistent
                 Text("A bug in the code")

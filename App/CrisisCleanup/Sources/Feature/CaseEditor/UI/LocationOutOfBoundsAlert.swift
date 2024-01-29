@@ -8,7 +8,7 @@ internal struct LocationOutOfBoundsAlert: View {
     let outOfBoundsData: LocationOutOfBounds
 
     var body: some View {
-        VStack {
+        VStack(alignment: .leading) {
             let isInRecentIncidentBounds = outOfBoundsData.recentIncident != nil
 
             let incident = outOfBoundsData.recentIncident ?? outOfBoundsData.incident
@@ -28,7 +28,10 @@ internal struct LocationOutOfBoundsAlert: View {
             Text(text)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .listItemModifier()
-            HStack(spacing: appTheme.gridItemSpacing) {
+
+            Spacer()
+
+            HStack(spacing: appTheme.nestedItemPadding) {
                 Button {
                     viewModel.acceptOutOfBounds(outOfBoundsData)
                 } label: {
@@ -51,9 +54,6 @@ internal struct LocationOutOfBoundsAlert: View {
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
             .padding()
-
-            Spacer()
         }
-        .padding()
     }
 }
