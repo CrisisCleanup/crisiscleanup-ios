@@ -81,6 +81,7 @@ class ViewCaseComponent: Component<AppDependency>, ViewCaseViewBuilder {
                     worksiteId: worksiteId
                 )
             )
+            .id("view-case-\(incidentId)-\(worksiteId)")
         )
     }
 }

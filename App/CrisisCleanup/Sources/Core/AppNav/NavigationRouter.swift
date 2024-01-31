@@ -19,8 +19,12 @@ class NavigationRouter: ObservableObject {
         .store(in: &disposables)
     }
 
-    private func clearNavigationStack() {
-        path.removeAll()
+    private func clearNavigationStack(_ replaceRoutes: [NavigationRoute] = []) {
+        if replaceRoutes.isEmpty {
+            path.removeAll()
+        } else {
+            path.replaceSubrange(0..<path.count, with: replaceRoutes)
+        }
     }
 
     func returnToAuth() {
@@ -108,14 +112,16 @@ class NavigationRouter: ObservableObject {
         popToRoot: Bool = false
     ) {
         if incidentId > 0 && worksiteId > 0 {
-            if popToRoot {
-                clearNavigationStack()
-            }
-
-            path.append(.viewCase(
+            let viewCasePath = NavigationRoute.viewCase(
                 incidentId: incidentId,
                 worksiteId: worksiteId
-            ))
+            )
+
+            if popToRoot {
+                clearNavigationStack([viewCasePath])
+            } else {
+                path.append(viewCasePath)
+            }
         }
     }
 
@@ -175,5 +181,18 @@ class NavigationRouter: ObservableObject {
 
     func openSyncInsights() {
         path.append(.syncInsights)
+    }
+
+    func changeCaseIncident(_ incidentId: Int64) {
+        clearNavigationStack([
+            .createEditCase(
+                incidentId: incidentId,
+                worksiteId: nil
+            )
+        ])
+    }
+
+    func changeCaseIncident(_ ids: ExistingWorksiteIdentifier) {
+        viewCase(incidentId: ids.incidentId, worksiteId: ids.worksiteId, popToRoot: true)
     }
 }

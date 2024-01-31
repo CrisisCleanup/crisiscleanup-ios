@@ -76,13 +76,16 @@ class CreateEditCaseComponent: Component<AppDependency>, CreateEditCaseViewBuild
     }
 
     func createEditCaseView(incidentId: Int64, worksiteId: Int64?) -> AnyView {
-        AnyView(
+        let idPostfix = worksiteId == nil ? "" : "-\(worksiteId!)"
+        let viewId = "create-edit-case-\(incidentId)\(idPostfix)"
+        return AnyView(
             CreateEditCaseView(
                 viewModel: getViewModel(
                     incidentId: incidentId,
                     worksiteId: worksiteId
                 )
             )
+            .id(viewId)
         )
     }
 }

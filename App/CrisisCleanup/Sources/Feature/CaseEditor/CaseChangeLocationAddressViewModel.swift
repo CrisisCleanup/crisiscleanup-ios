@@ -426,11 +426,9 @@ internal class LocationOutOfBoundsManager {
                 defer { isCheckingOutOfBounds.value = false }
 
                 let recentIncident = try boundsProvider.isInRecentIncidentBounds(coordinates)
-                // TODO: Delete line. Uncomment under. Complete flow. Test.
-                locationOutOfBounds.value = outOfBoundsData
-//                locationOutOfBounds.value = recentIncident == nil
-//                ? outOfBoundsData
-//                : outOfBoundsData.copy { $0.recentIncident = recentIncident }
+                locationOutOfBounds.value = recentIncident == nil
+                ? outOfBoundsData
+                : outOfBoundsData.copy { $0.recentIncident = recentIncident }
             } catch {
                 logger.logError(error)
             }

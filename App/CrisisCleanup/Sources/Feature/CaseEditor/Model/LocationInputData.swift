@@ -236,4 +236,18 @@ class LocationInputData: ObservableObject {
         }
         return InvalidWorksiteInfo(focusElement, message)
     }
+
+    func assumeLocationAddressChanges(_ worksite: Worksite) {
+        wasGeocodeAddressSelected = true
+        coordinates = worksite.coordinates
+        streetAddress = worksite.address
+        city = worksite.city
+        county = worksite.county
+        zipCode = worksite.postalCode
+        state = worksite.state
+
+        if isIncompleteAddress {
+            isEditingAddress = true
+        }
+    }
 }

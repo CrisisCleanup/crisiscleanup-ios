@@ -51,7 +51,6 @@ private struct CaseMoveOnMapLayoutView: View {
                             Spacer()
 
                             if !animateTopSearchBar {
-
                                 UseMyLocationButton(useMyLocation: viewModel.useMyLocation)
 
                                 MoveOnMapBottomActions(isVertical: true)
@@ -98,7 +97,7 @@ private struct CaseMoveOnMapLayoutView: View {
             if let outOfBoundsData = viewModel.locationOutOfBounds {
                 LocationOutOfBoundsAlert(outOfBoundsData: outOfBoundsData)
                     .interactiveDismissDisabled()
-                    .presentationDetents([.fraction(0.33), .medium])
+                    .presentationDetents([.fraction(0.40), .medium])
             } else {
                 // Should never happen if state is consistent
                 Text("A bug in the code")
@@ -148,7 +147,8 @@ private struct SearchInputView: View {
                 q: $locationQuery,
                 animateSearchFieldFocus: $animateTopSearchBar,
                 focusState: focusState,
-                hint: "\(hint) *"
+                hint: "\(hint) *",
+                autocapitalization: .words
             )
             .onChange(of: closeSearchBarTrigger, perform: { _ in
                 if locationQuery.isBlank {

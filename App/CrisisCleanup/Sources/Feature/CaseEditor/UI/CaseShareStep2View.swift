@@ -64,6 +64,7 @@ struct CaseShareStep2View: View {
                         )
                         .if (shareByEmail) {
                             $0.keyboardType(.emailAddress)
+                                .autocapitalization(.none)
                         }
                         .textFieldBorder()
                         .focused($focusState, equals: .anyTextInput)
