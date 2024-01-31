@@ -111,13 +111,17 @@ class RequestOrgAccessViewModel: ObservableObject {
             .sink(receiveValue: { result in
                 if let result = result {
                     let t = self.translator
-                    self.requestSentTitle = t.t("requestAccess.request_sent")
-                    self.requestSentText = t.t("requestAccess.request_sent_to_org")
-                        .replacingOccurrences(of: "{organization}", with: result.organizationName)
-                        .replacingOccurrences(of: "{requested_to}", with: result.organizationRecipient)
+                    if result.isNewAccountRequest {
+                        self.requestSentTitle = t.t("requestAccess.request_sent")
+                        self.requestSentText = t.t("requestAccess.request_sent_to_org")
+                            .replacingOccurrences(of: "{organization}", with: result.organizationName)
+                            .replacingOccurrences(of: "{requested_to}", with: result.organizationRecipient)
+                    } else {
+                        self.inviteInfoErrorMessageSubject.value = t.t("requestAccess.already_in_org_error")
+                    }
                 }
 
-                self.isInviteRequested = result != nil
+                self.isInviteRequested = result?.isNewAccountRequest == true
             })
             .store(in: &subscriptions)
     }
@@ -159,6 +163,12 @@ class RequestOrgAccessViewModel: ObservableObject {
     }
 
     private func subscribeInviteInfo() {
+        inviteInfoErrorMessageSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.inviteInfoErrorMessage, on: self)
+            .store(in: &subscriptions)
+        inviteInfoErrorMessageSubject.value = ""
+
         if showEmailInput ||
             invitationCode.isBlank {
             return
@@ -169,15 +179,7 @@ class RequestOrgAccessViewModel: ObservableObject {
             .assign(to: \.inviteDisplay, on: self)
             .store(in: &subscriptions)
 
-        inviteInfoErrorMessageSubject
-            .receive(on: RunLoop.main)
-            .assign(to: \.inviteInfoErrorMessage, on: self)
-            .store(in: &subscriptions)
-
         isFetchingInviteInfoSubject.value = true
-
-        inviteInfoErrorMessageSubject.value = ""
-
         Task {
             defer {
                 isFetchingInviteInfoSubject.value = false
@@ -237,7 +239,6 @@ class RequestOrgAccessViewModel: ObservableObject {
                 }
 
                 if showEmailInput {
-                    // TODO: Test
                     requestedOrgSubject.value = await orgVolunteerRepository.requestInvitation(
                         InvitationRequest(
                             firstName: userInfo.firstName,
@@ -251,8 +252,8 @@ class RequestOrgAccessViewModel: ObservableObject {
                         )
                     )
                 } else if invitationCode.isNotBlank {
-                    // TODO: Test
-                    let inviteResult = await orgVolunteerRepository.acceptInvitation(
+                    // TODO: Test success and account already exists
+                    let inviteResult = await self.orgVolunteerRepository.acceptInvitation(
                         CodeInviteAccept(
                             firstName: userInfo.firstName,
                             lastName: userInfo.lastName,
@@ -266,9 +267,11 @@ class RequestOrgAccessViewModel: ObservableObject {
                     )
                     if inviteResult == .success {
                         let inviteInfo = inviteDisplay?.inviteInfo
+                        let orgName = inviteInfo?.orgName ?? ""
                         requestedOrgSubject.value = InvitationRequestResult(
-                            organizationName: inviteInfo?.orgName ?? "",
-                            organizationRecipient: inviteInfo?.inviterEmail ?? ""
+                            organizationName: orgName,
+                            organizationRecipient: inviteInfo?.inviterEmail ?? "",
+                            isNewAccountRequest: orgName.isNotBlank
                         )
                     } else {
                         var errorMessageTranslateKey = "requestAccess.join_org_error"

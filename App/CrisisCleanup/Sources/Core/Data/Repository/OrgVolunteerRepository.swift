@@ -36,15 +36,7 @@ class CrisisCleanupOrgVolunteerRepository: OrgVolunteerRepository {
     }
 
     func requestInvitation(_ invite: InvitationRequest) async -> InvitationRequestResult? {
-        guard let result = await registerApi.registerOrgVolunteer(invite) else {
-            // TODO: Handle cases where an invite was already sent to the user from the org
-            return nil
-        }
-
-        return InvitationRequestResult(
-            organizationName: result.requestedOrganization,
-            organizationRecipient: result.requestedTo
-        )
+        await registerApi.registerOrgVolunteer(invite)
     }
 
     func getInvitationInfo(_ inviteCode: String) async -> OrgUserInviteInfo? {
@@ -93,4 +85,5 @@ class CrisisCleanupOrgVolunteerRepository: OrgVolunteerRepository {
 public struct InvitationRequestResult {
     let organizationName: String
     let organizationRecipient: String
+    let isNewAccountRequest: Bool
 }

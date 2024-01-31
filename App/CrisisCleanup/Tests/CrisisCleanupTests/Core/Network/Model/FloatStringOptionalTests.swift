@@ -19,9 +19,10 @@ final class FloatStringOptionalTests: XCTestCase {
         let svi = try? jsonDecoder.decode(OnlySvi.self, from: sviData)
         XCTAssertEqual(OnlySvi(), svi)
 
-        let sviJsonData = try! jsonEncoder.encode(svi)
-        let sviJsonContent = String(decoding: sviJsonData, as: UTF8.self)
-        XCTAssertEqual(sviContent, sviJsonContent)
+        // let sviJsonData = try! jsonEncoder.encode(svi)
+        // let sviJsonContent = String(decoding: sviJsonData, as: UTF8.self)
+        // Object property ordering is not guaranteed
+        // XCTAssertTrue(sviContent == sviJsonContent)
 
         let decodedSviData = Data(sviContent.utf8)
         let decodedSvi = try? jsonDecoder.decode(OnlySvi.self, from: decodedSviData)

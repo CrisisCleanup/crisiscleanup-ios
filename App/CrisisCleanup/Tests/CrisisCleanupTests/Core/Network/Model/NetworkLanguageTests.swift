@@ -9,9 +9,9 @@ final class NetworkLanguageTests: XCTestCase {
         let expected = NetworkLanguagesResult(
             errors: nil,
             results: [
-                NetworkLanguageDescription("en-US", "English (United States)"),
-                NetworkLanguageDescription("es-MX", "Spanish (Mexico)"),
-                NetworkLanguageDescription("cs", "Czech")
+                NetworkLanguageDescription(id: 2, subtag: "en-US", name: "English (United States)"),
+                NetworkLanguageDescription(id: 7, subtag: "es-MX", name: "Spanish (Mexico)"),
+                NetworkLanguageDescription(id: 8, subtag: "cs", name: "Czech")
             ]
         )
         XCTAssertEqual(expected, result)

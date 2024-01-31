@@ -26,7 +26,7 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
         networkError = GenericError("Network error")
     }
 
-    func registerOrgVolunteer(_ invite: InvitationRequest) async -> NetworkAcceptedInvitationRequest? {
+    func registerOrgVolunteer(_ invite: InvitationRequest) async -> InvitationRequestResult? {
         let payload = NetworkInvitationRequest(
             firstName: invite.firstName,
             lastName: invite.lastName,
@@ -40,10 +40,28 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
         )
         let request = requestProvider.requestInvitation
             .setBody(payload)
-        return await networkClient.callbackContinue(
+        let response = await networkClient.callbackContinue(
             requestConvertible: request,
             type: NetworkAcceptedInvitationRequest.self
-        ).value
+        )
+
+        if let result = response.value {
+            if let errors = result.errors {
+                if errors.condenseMessages.contains("already have an account") == true {
+                    return InvitationRequestResult(organizationName: "", organizationRecipient: "", isNewAccountRequest: false)
+                }
+            } else if let organization = result.requestedOrganization,
+                      let requestedTo = result.requestedTo {
+                return InvitationRequestResult(
+                    organizationName: organization,
+                    organizationRecipient: requestedTo,
+                    isNewAccountRequest: true
+                )
+            }
+        }
+
+        // TODO: Be explicit in result
+        return nil
     }
 
     private func getUserDetails(_ userId: Int64) async -> UserDetails {

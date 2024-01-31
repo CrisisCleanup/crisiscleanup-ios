@@ -24,13 +24,16 @@ struct NetworkInvitationRequest: Codable, Equatable {
     }
 }
 
-public struct NetworkAcceptedInvitationRequest: Codable, Equatable {
-    let id: Int64
-    let requestedTo: String
-    let requestedOrganization: String
+public struct NetworkAcceptedInvitationRequest: Codable {
+    let errors: [NetworkCrisisCleanupApiError]?
+
+    let id: Int64?
+    let requestedTo: String?
+    let requestedOrganization: String?
 
     enum CodingKeys: String, CodingKey {
-        case id,
+        case errors,
+             id,
              requestedTo = "requested_to",
              requestedOrganization = "requested_to_organization"
     }

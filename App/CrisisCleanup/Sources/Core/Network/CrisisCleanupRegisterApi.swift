@@ -1,5 +1,5 @@
 public protocol CrisisCleanupRegisterApi {
-    func registerOrgVolunteer(_ invite: InvitationRequest) async -> NetworkAcceptedInvitationRequest?
+    func registerOrgVolunteer(_ invite: InvitationRequest) async -> InvitationRequestResult?
 
     func getInvitationInfo(_ invite: UserPersistentInvite) async -> OrgUserInviteInfo?
 
