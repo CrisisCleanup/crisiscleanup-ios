@@ -370,13 +370,11 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
             .assign(to: \.editSections, on: self)
             .store(in: &subscriptions)
 
-        editingWorksite.map { _ in
-            self.worksiteProvider.otherNotes.eraseToAnyPublisher()
-        }
-        .switchToLatest()
-        .receive(on: RunLoop.main)
-        .assign(to: \.otherNotes, on: self)
-        .store(in: &subscriptions)
+        worksiteProvider.otherNotes
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.otherNotes, on: self)
+            .store(in: &subscriptions)
     }
 
     private func subscribeWorksiteChange() {
