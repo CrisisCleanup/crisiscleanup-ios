@@ -923,7 +923,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
 
             worksite = transferFlags(worksite!)
 
-            worksite = transferNotes(worksite!)
+            worksite = transferNotes(worksite!, takeEditingNote: true)
 
             worksite = transferFormData(worksite!)
 
