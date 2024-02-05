@@ -87,7 +87,7 @@ private struct ViewCaseLayoutView: View {
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel.editableViewState)
         .environmentObject(focusableViewState)
-        .onReceive(viewModel.$isPendingTransfer) { isPendingTransfer in
+        .onChange(of: viewModel.isPendingTransfer) { isPendingTransfer in
             let isTransferStarted = isPendingTransfer && viewModel.transferType != .none
             if isTransferStarted {
                 router.openWorkTypeTransfer()

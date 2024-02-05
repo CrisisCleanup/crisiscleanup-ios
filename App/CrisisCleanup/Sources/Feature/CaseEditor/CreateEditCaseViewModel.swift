@@ -95,7 +95,9 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     private let isSavingWorksite = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isSaving = false
 
+    private let isChangingIncidentSubject = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var changeWorksiteIncidentId = EmptyIncident.id
+    private let changeExistingWorksiteSubject = CurrentValueSubject<ExistingWorksiteIdentifier, Never>(ExistingWorksiteIdentifierNone)
     @Published private(set) var changeExistingWorksite = ExistingWorksiteIdentifierNone
     private var saveChangeIncident = EmptyIncident
     private var changingIncidentWorksite = EmptyWorksite
@@ -237,6 +239,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         subscribeNameSearch()
         subscribeValidation()
         subscribeNavigation()
+        subscribeIncidentChange()
 
         if isFirstAppear {
             dataLoader.loadData(
@@ -253,6 +256,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
                 if incidentChangeId != EmptyIncident.id,
                    incidentChangeId != incidentIdIn {
                     // TODO: Change Case incident reliably without the delay hack?
+                    isChangingIncidentSubject.value = true
                     Task {
                         do {
                             defer {
@@ -262,9 +266,10 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
                                         changeData.incident,
                                         changeData.worksite
                                     )
+                                    isChangingIncidentSubject.value = false
                                 }
                             }
-                            try await Task.sleep(for: .seconds(1))
+                            try await Task.sleep(for: .seconds(1.0))
                         }
                     }
                 }
@@ -310,11 +315,16 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     }
 
     private func subscribeEditableState() {
+        let isTransientPublisher = Publishers.CombineLatest(
+            $isSelectingWorksite,
+            isChangingIncidentSubject
+        )
+            .map { (b0, b1) in b0 || b1 }
         Publishers.CombineLatest4(
             $isLoading,
             $isSaving,
             $areEditorsReady,
-            $isSelectingWorksite
+            isTransientPublisher
         )
         .map { (b0, b1, editorsReady, b2) in
             b0 || b1 || !editorsReady || b2 }
@@ -468,6 +478,13 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         navigateBackSubject
             .receive(on: RunLoop.main)
             .assign(to: \.navigateBack, on: self)
+            .store(in: &subscriptions)
+    }
+
+    private func subscribeIncidentChange() {
+        changeExistingWorksiteSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.changeExistingWorksite, on: self)
             .store(in: &subscriptions)
     }
 
@@ -774,7 +791,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
                 syncPusher.appPushWorksite(worksiteId)
 
                 if isIncidentChange {
-                    changeExistingWorksite = ExistingWorksiteIdentifier(
+                    changeExistingWorksiteSubject.value = ExistingWorksiteIdentifier(
                         incidentId: saveIncidentId,
                         worksiteId: worksiteId
                     )

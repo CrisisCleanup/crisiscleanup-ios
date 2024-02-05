@@ -38,6 +38,8 @@ public class RecentWorksiteDao {
             .including(required: RecentWorksiteRecord.worksite)
             .asRequest(of: PopulatedRecentWorksite.self)
             .fetchAll(db)
+        // TODO: Move filter into SQL
+            .filter { $0.worksite.incidentId == incidentId }
     }
 
     func upsert(_ recentWorksite: RecentWorksiteRecord) async throws {

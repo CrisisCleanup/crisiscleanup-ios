@@ -15,10 +15,11 @@ class CaseFlagsViewModel: ObservableObject {
 
     private let editableWorksite: AnyPublisher<Worksite, Never>
     private let worksiteIn: Worksite
+    var incidentIdIn: Int64 { worksiteIn.incidentId }
     private let flagsIn: Set<WorksiteFlagType>
 
-    @Published private(set) var incidentWorksiteChange = (0, 0)
     private let incidentWorksiteChangeSubject = CurrentValueSubject<(Int64, Int64), Never>((0, 0))
+    @Published private(set) var incidentWorksiteChange: (Int64, Int64) = (0, 0)
 
     @Published private(set) var screenTitle = ""
 
@@ -128,6 +129,7 @@ class CaseFlagsViewModel: ObservableObject {
         subscribeQueryIncidentManager()
         subscribeNearbyOrganizations()
         subscribeOtherOrgResults()
+        subscribeChangeIncidentState()
     }
 
     func onViewDisappear() {
@@ -227,6 +229,13 @@ class CaseFlagsViewModel: ObservableObject {
             }
             .receive(on: RunLoop.main)
             .assign(to: \.otherOrgResults, on: self)
+            .store(in: &subscriptions)
+    }
+
+    private func subscribeChangeIncidentState() {
+        incidentWorksiteChangeSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.incidentWorksiteChange, on: self)
             .store(in: &subscriptions)
     }
 

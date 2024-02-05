@@ -81,7 +81,7 @@ struct ResetPasswordView: View {
                     updateFocus(.authPassword)
                 }
             }
-            .onReceive(viewModel.$resetPasswordConfirmErrorMessage) { newValue in
+            .onChange(of: viewModel.resetPasswordConfirmErrorMessage) { newValue in
                 if newValue.isNotBlank {
                     updateFocus(.authConfirmPassword)
                 }

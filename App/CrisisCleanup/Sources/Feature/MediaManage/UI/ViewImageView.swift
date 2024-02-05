@@ -67,7 +67,7 @@ struct ViewImageView: View {
         }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
-        .onReceive(viewModel.$isDeleted) { isDeleted in
+        .onChange(of: viewModel.isDeleted) { isDeleted in
             if isDeleted {
                 dismiss()
             }

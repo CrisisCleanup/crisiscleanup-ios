@@ -4,6 +4,8 @@ struct CaseFlagsView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
+    @EnvironmentObject var router: NavigationRouter
+
     @ObservedObject var viewModel: CaseFlagsViewModel
 
     @State var selected: WorksiteFlagType? = nil
@@ -69,9 +71,17 @@ struct CaseFlagsView: View {
                 Spacer()
             }
         }
-        .onReceive(viewModel.$isSaved) { isSaved in
+        .onChange(of: viewModel.isSaved) { isSaved in
             if isSaved {
                 dismiss()
+            }
+        }
+        .onReceive(viewModel.$incidentWorksiteChange) { newValue in
+            let incidentId = newValue.0
+            if incidentId != EmptyIncident.id,
+               incidentId != viewModel.incidentIdIn,
+               newValue.1 != EmptyWorksite.id {
+                router.viewCase(incidentId: incidentId, worksiteId: newValue.1, popToRoot: true)
             }
         }
         .screenTitle(viewModel.screenTitle)

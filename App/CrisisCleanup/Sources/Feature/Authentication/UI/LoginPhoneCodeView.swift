@@ -33,7 +33,7 @@ struct LoginPhoneCodeView: View {
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)
-        .onReceive(viewModel.$isAuthenticateSuccessful) { b in
+        .onChange(of: viewModel.isAuthenticateSuccessful) { b in
             if b {
                 router.returnToAuth()
                 dismiss()
