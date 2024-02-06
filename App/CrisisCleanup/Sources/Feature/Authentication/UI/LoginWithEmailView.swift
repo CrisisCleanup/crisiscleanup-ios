@@ -23,7 +23,7 @@ struct LoginWithEmailView: View {
         }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
-        .onReceive(viewModel.$isAuthenticateSuccessful) { b in
+        .onChange(of: viewModel.isAuthenticateSuccessful) { b in
             if b {
                 router.returnToAuth()
                 dismiss()

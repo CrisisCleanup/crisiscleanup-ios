@@ -16,6 +16,7 @@ struct CaseSearchLocationView: View {
             if viewModel.hasInternetConnection {
                 let hint = t.t("caseView.full_address")
                 TextField("\(hint) *", text: $viewModel.locationQuery)
+                    .textInputAutocapitalization(.words)
                     .textFieldBorder()
                     .padding([.horizontal, .top])
             }
@@ -51,7 +52,7 @@ struct CaseSearchLocationView: View {
             if let outOfBoundsData = viewModel.locationOutOfBounds {
                 LocationOutOfBoundsAlert(outOfBoundsData: outOfBoundsData)
                     .interactiveDismissDisabled()
-                    .presentationDetents([.medium])
+                    .presentationDetents([.fraction(0.40), .medium])
             } else {
                 // Should never happen if state is consistent
                 Text("A bug in the code")

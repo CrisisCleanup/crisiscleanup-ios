@@ -94,7 +94,7 @@ struct Rrule: Equatable {
         let rruleSuffix = [
             "\(RruleKey.freq.keyValue)=\(frequencyCoded)",
             untilCoded.isBlank ? "" : "\(RruleKey.until.keyValue)=\(untilCoded)",
-            "\(RruleKey.interval.keyValue)=\(max(1, interval))",
+            interval > 1 ? "\(RruleKey.interval.keyValue)=\(max(1, interval))" : "",
             byDayCoded.isBlank ? "" : "\(RruleKey.byDay.keyValue)=\(byDayCoded)",
         ].combineTrimText(";")
         return "\(rruleStart)\(rruleSuffix)"

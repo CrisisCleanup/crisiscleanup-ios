@@ -29,4 +29,17 @@ final class NetworkErrorTests: XCTestCase {
             XCTAssertEqual(actual, expected)
         }
     }
+
+    func testInvitationRequestError() throws {
+        let errorString = #"{"errors": [{"field": "non_field_errors","message": ["It appears you already have an account."]}],"data": null}"#
+        let decoder = JsonDecoderFactory().decoder()
+        let data = Data(errorString.utf8)
+        let actual = try! decoder.decode(NetworkAcceptedInvitationRequest.self, from: data)
+        let expectedErrors = [NetworkCrisisCleanupApiError("non_field_errors", ["It appears you already have an account."])]
+        XCTAssertEqual(actual.errors, expectedErrors)
+        XCTAssertEqual(actual.errors?.condenseMessages, "It appears you already have an account.")
+        XCTAssertNil(actual.id)
+        XCTAssertNil(actual.requestedOrganization)
+        XCTAssertNil(actual.requestedTo)
+    }
 }

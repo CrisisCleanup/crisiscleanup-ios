@@ -18,6 +18,7 @@ struct CreateEditCaseView: View {
 private struct CreateEditCaseLayoutView: View {
     @Environment(\.dismiss) var dismiss
 
+    @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var viewModel: CreateEditCaseViewModel
 
     var viewLayout = ViewLayoutDescription()
@@ -39,10 +40,7 @@ private struct CreateEditCaseLayoutView: View {
                     }
                 }
             } else {
-                CreateEditCaseContentView(
-                    isSaveBarVisible: true,
-                    isWideScreen: viewLayout.isWide
-                )
+                CreateEditCaseContentView(isSaveBarVisible: true)
             }
 
             if showBusyIndicator {
@@ -72,6 +70,14 @@ private struct CreateEditCaseLayoutView: View {
         .environment(\.translator, viewModel)
         .environmentObject(viewModel.editableViewState)
         .environmentObject(focusableViewState)
+        .onChange(of: viewModel.changeWorksiteIncidentId) { newValue in
+            if newValue != EmptyIncident.id {
+                router.changeCaseIncident(newValue)
+            }
+        }
+        .onChange(of: viewModel.changeExistingWorksite.isDefined) { newValue in
+            router.changeCaseIncident(viewModel.changeExistingWorksite)
+        }
     }
 }
 
@@ -82,7 +88,6 @@ private struct CreateEditCaseContentView: View {
     @EnvironmentObject private var focusableViewState: TextInputFocusableView
 
     var isSaveBarVisible = false
-    var isWideScreen = false
 
     @State var sectionCollapse = [
         false,
@@ -236,7 +241,7 @@ private struct CreateEditCaseContentView: View {
                 if focusableViewState.isFocused {
                     OpenKeyboardActionsView()
                 } else {
-                    CreateEditCaseSaveActions(isVertical: !isWideScreen)
+                    CreateEditCaseSaveActions(isVertical: false)
                         .disabled(disableMutation)
                 }
             }
@@ -367,6 +372,7 @@ struct PropertyInformation: View {
                     .id("property-email-error")
                 TextField(t.t("formLabels.email"), text: $propertyData.email)
                     .keyboardType(.emailAddress)
+                    .autocapitalization(.none)
                     .focused($focusState, equals: .caseInfoEmail)
                     .textFieldBorder()
                     .disabled(disabled)

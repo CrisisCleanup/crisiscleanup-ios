@@ -26,6 +26,7 @@ class VolunteerOrgComponent: Component<AppDependency>, VolunteerOrgViewBuilder {
     ) {
         super.init(parent: parent)
 
+        let orgPersistentInvitePathId = NavigationRoute.orgPersistentInvite(UserPersistentInvite(inviterUserId: 0, inviteToken: "")).id
         routerObserver.pathIds
             .sink { pathIds in
                 if !pathIds.contains(NavigationRoute.volunteerOrg.id) {
@@ -33,6 +34,9 @@ class VolunteerOrgComponent: Component<AppDependency>, VolunteerOrgViewBuilder {
                 }
                 if !pathIds.contains(NavigationRoute.requestOrgAccess.id) {
                     self._requestOrgAccessViewModel = nil
+                }
+                if !pathIds.contains(orgPersistentInvitePathId) {
+                    self._persistentInviteViewModel = nil
                 }
                 if !pathIds.contains(NavigationRoute.pasteOrgInviteLink.id) {
                     self._pasteOrgInviteViewModel = nil

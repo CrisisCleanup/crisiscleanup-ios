@@ -10,7 +10,7 @@ public protocol OrgVolunteerRepository {
     func getOrganizationInvite(organizationId: Int64, inviterUserId: Int64) async -> JoinOrgInvite
     func acceptPersistentInvitation(_ invite: CodeInviteAccept) async -> JoinOrgResult
 
-    func inviteToOrganization(_ emailAddress: String, organizationId: Int64?) async -> Bool
+    func inviteToOrganization(_ emailAddress: String, organizationId: Int64?) async -> OrgInviteResult
     func createOrganization(
         referer: String,
         invite: IncidentOrganizationInviteInfo
@@ -18,7 +18,7 @@ public protocol OrgVolunteerRepository {
 }
 
 extension OrgVolunteerRepository {
-    func inviteToOrganization(_ emailAddress: String) async -> Bool {
+    func inviteToOrganization(_ emailAddress: String) async -> OrgInviteResult {
         await inviteToOrganization(emailAddress, organizationId: nil)
     }
 }
@@ -36,15 +36,7 @@ class CrisisCleanupOrgVolunteerRepository: OrgVolunteerRepository {
     }
 
     func requestInvitation(_ invite: InvitationRequest) async -> InvitationRequestResult? {
-        guard let result = await registerApi.registerOrgVolunteer(invite) else {
-            // TODO: Handle cases where an invite was already sent to the user from the org
-            return nil
-        }
-
-        return InvitationRequestResult(
-            organizationName: result.requestedOrganization,
-            organizationRecipient: result.requestedTo
-        )
+        await registerApi.registerOrgVolunteer(invite)
     }
 
     func getInvitationInfo(_ inviteCode: String) async -> OrgUserInviteInfo? {
@@ -75,7 +67,7 @@ class CrisisCleanupOrgVolunteerRepository: OrgVolunteerRepository {
         await registerApi.acceptPersistentInvitation(invite)
     }
 
-    func inviteToOrganization(_ emailAddress: String, organizationId: Int64?) async -> Bool {
+    func inviteToOrganization(_ emailAddress: String, organizationId: Int64?) async -> OrgInviteResult {
         await registerApi.inviteToOrganization(emailAddress, organizationId)
     }
 
@@ -88,9 +80,4 @@ class CrisisCleanupOrgVolunteerRepository: OrgVolunteerRepository {
             invite: invite
         )
     }
-}
-
-public struct InvitationRequestResult {
-    let organizationName: String
-    let organizationRecipient: String
 }

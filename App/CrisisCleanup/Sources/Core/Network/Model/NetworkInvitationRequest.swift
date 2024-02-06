@@ -24,13 +24,16 @@ struct NetworkInvitationRequest: Codable, Equatable {
     }
 }
 
-public struct NetworkAcceptedInvitationRequest: Codable, Equatable {
-    let id: Int64
-    let requestedTo: String
-    let requestedOrganization: String
+public struct NetworkAcceptedInvitationRequest: Codable {
+    let errors: [NetworkCrisisCleanupApiError]?
+
+    let id: Int64?
+    let requestedTo: String?
+    let requestedOrganization: String?
 
     enum CodingKeys: String, CodingKey {
-        case id,
+        case errors,
+             id,
              requestedTo = "requested_to",
              requestedOrganization = "requested_to_organization"
     }
@@ -96,21 +99,19 @@ struct NetworkOrganizationInvite: Codable {
     }
 }
 
-struct NetworkOrganizationInviteResult: Codable {
-    let errors: [NetworkCrisisCleanupApiError]?
-    let invite: NetworkOrganizationInviteInfo?
-}
-
 struct NetworkOrganizationInviteInfo: Codable {
-    let id: Int64
-    let inviteeEmail: String
-    let invitationToken: String
-    let expiresAt: Date
-    let organization: Int64
-    let createdAt: Date
+    let errors: [NetworkCrisisCleanupApiError]?
+
+    let id: Int64?
+    let inviteeEmail: String?
+    let invitationToken: String?
+    let expiresAt: Date?
+    let organization: Int64?
+    let createdAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id,
+        case errors,
+             id,
              inviteeEmail = "invitee_email",
              invitationToken = "invitation_token",
              expiresAt = "expires_at",

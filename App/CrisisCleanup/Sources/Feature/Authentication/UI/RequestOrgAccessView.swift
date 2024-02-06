@@ -11,7 +11,10 @@ struct RequestOrgAccessView: View {
             if viewModel.inviteInfoErrorMessage.isNotBlank {
                 Text(viewModel.inviteInfoErrorMessage)
                     .fontHeader3()
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
+
+                Spacer()
 
             } else if viewModel.isInviteRequested {
                 RegisterSuccessView(

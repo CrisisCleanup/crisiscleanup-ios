@@ -46,13 +46,13 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
 
     @Published private(set) var isLocationCommitted = false
 
-    @Published private(set) var closeSearchBarTrigger = false
+    @Published var closeSearchBarTrigger = false
 
     private let mapCoordinatesSubject = CurrentValueSubject<CLLocationCoordinate2D, Never>(DefaultCoordinates2d)
     @Published var mapCoordinates = DefaultCoordinates2d
     private(set) var isPinCenterScreen: Bool = false
     @Published var showExplainLocationPermission = false
-    private var useMyLocationActionTime = Date.now
+    private var useMyLocationActionTime = Date(timeIntervalSince1970: 0)
 
     @Published var locationOutOfBoundsMessage = ""
 
@@ -426,11 +426,9 @@ internal class LocationOutOfBoundsManager {
                 defer { isCheckingOutOfBounds.value = false }
 
                 let recentIncident = try boundsProvider.isInRecentIncidentBounds(coordinates)
-                // TODO: Delete line. Uncomment under. Complete flow. Test.
-                locationOutOfBounds.value = outOfBoundsData
-//                locationOutOfBounds.value = recentIncident == nil
-//                ? outOfBoundsData
-//                : outOfBoundsData.copy { $0.recentIncident = recentIncident }
+                locationOutOfBounds.value = recentIncident == nil
+                ? outOfBoundsData
+                : outOfBoundsData.copy { $0.recentIncident = recentIncident }
             } catch {
                 logger.logError(error)
             }

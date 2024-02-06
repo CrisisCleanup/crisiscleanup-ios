@@ -64,6 +64,7 @@ struct CaseShareStep2View: View {
                         )
                         .if (shareByEmail) {
                             $0.keyboardType(.emailAddress)
+                                .autocapitalization(.none)
                         }
                         .textFieldBorder()
                         .focused($focusState, equals: .anyTextInput)
@@ -89,7 +90,7 @@ struct CaseShareStep2View: View {
                         text: $viewModel.receiverContactSuggestion
                     )
                     .focused($focusState, equals: .querySuggestions)
-                    .onReceive(focusableViewState.$isQueryInputFocused) { b in
+                    .onChange(of: focusableViewState.isQueryInputFocused) { b in
                         withAnimation(.easeInOut(duration: 0.3)) {
                             animateTopSearchBar = b
                         }

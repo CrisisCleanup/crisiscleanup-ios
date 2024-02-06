@@ -35,7 +35,7 @@ struct TransferWorkTypeView: View {
    }
             }
             .frame(maxWidth: UIScreen.main.bounds.size.width)
-            .onReceive(viewModel.$isTransferred) { b in
+            .onChange(of: viewModel.isTransferred) { b in
                 if (b) {
                     dismiss()
                 }
@@ -63,7 +63,7 @@ struct RequestView: View {
 
     var body: some View {
         Text(reqtDescAS)
-            .onReceive(viewModel.$requestDescription) { desc in
+            .onChange(of: viewModel.requestDescription) { desc in
                 DispatchQueue.main.async {
                     let data = Data(desc.utf8)
                     if let attributedString = try? NSMutableAttributedString(

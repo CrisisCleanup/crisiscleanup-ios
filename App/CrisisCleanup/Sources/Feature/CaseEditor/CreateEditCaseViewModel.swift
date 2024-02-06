@@ -82,7 +82,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
 
     var hasInitialCoordinates: Bool { locationInputData.coordinates == caseData?.worksite.coordinates }
     @Published var showExplainLocationPermission = false
-    private var useMyLocationActionTime = Date.now
+    private var useMyLocationActionTime = Date(timeIntervalSince1970: 0)
     @Published var locationOutOfBoundsMessage = ""
 
     private let invalidWorksiteInfoSubject = CurrentValueSubject<InvalidWorksiteInfo, Never>(InvalidWorksiteInfo())
@@ -95,7 +95,9 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     private let isSavingWorksite = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isSaving = false
 
+    private let isChangingIncidentSubject = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var changeWorksiteIncidentId = EmptyIncident.id
+    private let changeExistingWorksiteSubject = CurrentValueSubject<ExistingWorksiteIdentifier, Never>(ExistingWorksiteIdentifierNone)
     @Published private(set) var changeExistingWorksite = ExistingWorksiteIdentifierNone
     private var saveChangeIncident = EmptyIncident
     private var changingIncidentWorksite = EmptyWorksite
@@ -237,6 +239,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         subscribeNameSearch()
         subscribeValidation()
         subscribeNavigation()
+        subscribeIncidentChange()
 
         if isFirstAppear {
             dataLoader.loadData(
@@ -247,13 +250,28 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         } else if worksiteProvider.isAddressChanged {
             let worksite = worksiteProvider.editableWorksite.value
             locationInputData.load(worksite, true)
-
         } else if worksiteProvider.incidentIdChange != EmptyIncident.id {
             if let changeData = worksiteProvider.peekIncidentChange {
                 let incidentChangeId = changeData.incident.id
                 if incidentChangeId != EmptyIncident.id,
                    incidentChangeId != incidentIdIn {
-                    // TODO: Initiate change
+                    // TODO: Change Case incident reliably without the delay hack?
+                    isChangingIncidentSubject.value = true
+                    Task {
+                        do {
+                            defer {
+                                Task { @MainActor in
+                                    onIncidentChange(
+                                        locationInputData,
+                                        changeData.incident,
+                                        changeData.worksite
+                                    )
+                                    isChangingIncidentSubject.value = false
+                                }
+                            }
+                            try await Task.sleep(for: .seconds(1.0))
+                        }
+                    }
                 }
             }
         }
@@ -297,11 +315,16 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     }
 
     private func subscribeEditableState() {
+        let isTransientPublisher = Publishers.CombineLatest(
+            $isSelectingWorksite,
+            isChangingIncidentSubject
+        )
+            .map { (b0, b1) in b0 || b1 }
         Publishers.CombineLatest4(
             $isLoading,
             $isSaving,
             $areEditorsReady,
-            $isSelectingWorksite
+            isTransientPublisher
         )
         .map { (b0, b1, editorsReady, b2) in
             b0 || b1 || !editorsReady || b2 }
@@ -370,13 +393,11 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
             .assign(to: \.editSections, on: self)
             .store(in: &subscriptions)
 
-        editingWorksite.map { _ in
-            self.worksiteProvider.otherNotes.eraseToAnyPublisher()
-        }
-        .switchToLatest()
-        .receive(on: RunLoop.main)
-        .assign(to: \.otherNotes, on: self)
-        .store(in: &subscriptions)
+        worksiteProvider.otherNotes
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.otherNotes, on: self)
+            .store(in: &subscriptions)
     }
 
     private func subscribeWorksiteChange() {
@@ -457,6 +478,13 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         navigateBackSubject
             .receive(on: RunLoop.main)
             .assign(to: \.navigateBack, on: self)
+            .store(in: &subscriptions)
+    }
+
+    private func subscribeIncidentChange() {
+        changeExistingWorksiteSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.changeExistingWorksite, on: self)
             .store(in: &subscriptions)
     }
 
@@ -649,8 +677,27 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         return InvalidWorksiteInfo()
     }
 
-    private func onIncidentChange() {
-        // TODO: Do
+    private func onIncidentChange(
+        _ inputData: LocationInputData,
+        _ changeIncident: Incident,
+        _ addressChangeWorksite: Worksite
+    ) {
+        inputData.assumeLocationAddressChanges(addressChangeWorksite)
+
+        var copiedWorksite = copyChanges()
+        if copiedWorksite != EmptyWorksite {
+            if copiedWorksite.isNew {
+                copiedWorksite = transferNotes(copiedWorksite, takeEditingNote: true)
+                worksiteProvider.updateIncidentChangeWorksite(copiedWorksite)
+                incidentSelector.setIncident(changeIncident)
+                changeWorksiteIncidentId = changeIncident.id
+            } else {
+                _ = worksiteProvider.takeIncidentChanged()
+
+                saveChangeIncident = changeIncident
+                saveChanges(false, backOnSuccess: false)
+            }
+        }
     }
 
     func saveChanges(
@@ -744,7 +791,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
                 syncPusher.appPushWorksite(worksiteId)
 
                 if isIncidentChange {
-                    changeExistingWorksite = ExistingWorksiteIdentifier(
+                    changeExistingWorksiteSubject.value = ExistingWorksiteIdentifier(
                         incidentId: saveIncidentId,
                         worksiteId: worksiteId
                     )
@@ -757,6 +804,117 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
                 // TODO: Show dialog save failed. Try again. If still fails seek help.
             }
         }
+    }
+
+    private func transferFlags(_ worksite: Worksite) -> Worksite {
+        var worksite = worksite
+
+        worksite = worksite.copyModifiedFlag(isHighPriority) {
+            $0.isHighPriority || $0.isHighPriorityFlag
+        } _: {
+            WorksiteFlag.highPriority()
+        }
+
+        if isCreateWorksite {
+            worksite = worksite.copy {
+                $0.isAssignedToOrgMember = isAssignedToOrgMember
+            }
+        }
+
+        return worksite
+    }
+
+    private func transferNotes(_ worksite: Worksite, takeEditingNote: Bool = false) -> Worksite {
+        var worksite = worksite
+
+        if takeEditingNote &&
+            editingNote.isNotBlank && (
+                worksiteNotes.isEmpty || worksiteNotes.first!.note.trim() != editingNote.trim()
+            ) {
+            let note = WorksiteNote.create().copy {
+                $0.note = editingNote.trim()
+            }
+            worksiteNotes.insert(note, at: 0)
+            editingNote = ""
+        }
+
+        if worksiteNotes.count > worksite.notes.count {
+            worksite = worksite.copy {
+                $0.notes = Array(worksiteNotes)
+            }
+        }
+
+        return worksite
+    }
+
+    private func transferFormData(_ worksite: Worksite) -> Worksite {
+        var worksite = worksite
+
+        let offFieldKeys = Set(
+            formFieldsInputData.groupFields
+                .filter { $0.dynamicValue.isBool && binaryFormData[$0.key] != true }
+                .flatMap { $0.childKeys }
+        )
+
+        let managedGroups = formFieldsInputData.managedGroups
+        var formData = [String: WorksiteFormValue]()
+        let contentData = contentFormData.data
+        for (key, value) in contentData {
+            if value.isNotBlank &&
+                !offFieldKeys.contains(key) &&
+                !managedGroups.contains(key) {
+                formData[key] = WorksiteFormValue(valueString: value)
+            }
+        }
+        for (key, value) in binaryFormData.data {
+            if !contentData.keys.contains(key),
+               value,
+               !offFieldKeys.contains(key),
+               !managedGroups.contains(key) {
+                formData[key] = worksiteFormValueTrue
+            }
+        }
+        worksite = worksite.copy {
+            $0.formData = formData
+        }
+
+        return worksite
+    }
+
+    private func copyUnchangedData(initialWorksite: Worksite, worksite: Worksite) -> Worksite {
+        var worksite = worksite
+
+        if (initialWorksite.flags ?? []).isEmpty &&
+            (worksite.flags ?? []).isEmpty {
+            worksite = worksite.copy {
+                $0.flags = initialWorksite.flags
+            }
+        }
+
+        if (initialWorksite.formData ?? [:]).isEmpty &&
+            (worksite.formData ?? [:]).isEmpty {
+            worksite = worksite.copy {
+                $0.formData = initialWorksite.formData
+            }
+        }
+
+        return worksite
+    }
+
+    private func transferWorkTypesStatus(incident: Incident, worksite: Worksite) -> Worksite {
+        var worksite = worksite
+
+        var workTypeStatusLookup = [String: WorkTypeStatus]()
+        for (key, value) in workTypeStatusFormData.data {
+            workTypeStatusLookup[key] = statusFromLiteral(value, .openUnassigned)
+        }
+        worksite = worksite.updateWorkTypeStatuses(
+            incident.workTypeLookup,
+            incident.formFieldLookup,
+            workTypeStatusLookup
+        )
+
+        return worksite
     }
 
     private func transferChanges(_ indicateInvalidSection: Bool = false) -> Bool {
@@ -780,89 +938,49 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
                 return false
             }
 
-            worksite = worksite!.copyModifiedFlag(isHighPriority) {
-                $0.isHighPriority || $0.isHighPriorityFlag
-            } _: {
-                WorksiteFlag.highPriority()
-            }
+            worksite = transferFlags(worksite!)
 
-            if isCreateWorksite {
-                worksite = worksite!.copy {
-                    $0.isAssignedToOrgMember = isAssignedToOrgMember
-                }
-            }
+            worksite = transferNotes(worksite!, takeEditingNote: true)
 
-            if editingNote.isNotBlank && (
-                worksiteNotes.isEmpty || worksiteNotes.first!.note.trim() != editingNote.trim()
-            ) {
-                let note = WorksiteNote.create().copy {
-                    $0.note = editingNote.trim()
-                }
-                worksiteNotes.insert(note, at: 0)
-                editingNote = ""
-            }
-            if worksiteNotes.count > worksite!.notes.count {
-                worksite = worksite!.copy {
-                    $0.notes = Array(worksiteNotes)
-                }
-            }
+            worksite = transferFormData(worksite!)
 
-            let offFieldKeys = Set(
-                formFieldsInputData.groupFields
-                    .filter { $0.dynamicValue.isBool && binaryFormData[$0.key] != true }
-                    .flatMap { $0.childKeys }
-            )
+            worksite = copyUnchangedData(initialWorksite: initialWorksite, worksite: worksite!)
 
-            let managedGroups = formFieldsInputData.managedGroups
-            var formData = [String: WorksiteFormValue]()
-            let contentData = contentFormData.data
-            for (key, value) in contentData {
-                if value.isNotBlank &&
-                    !offFieldKeys.contains(key) &&
-                    !managedGroups.contains(key) {
-                    formData[key] = WorksiteFormValue(valueString: value)
-                }
-            }
-            for (key, value) in binaryFormData.data {
-                if !contentData.keys.contains(key),
-                    value,
-                    !offFieldKeys.contains(key),
-                    !managedGroups.contains(key) {
-                    formData[key] = worksiteFormValueTrue
-                }
-            }
-            worksite = worksite!.copy {
-                $0.formData = formData
-            }
-
-            if (initialWorksite.flags ?? []).isEmpty &&
-                (worksite!.flags ?? []).isEmpty {
-                worksite = worksite!.copy {
-                    $0.flags = initialWorksite.flags
-                }
-            }
-
-            if (initialWorksite.formData ?? [:]).isEmpty &&
-                (worksite!.formData ?? [:]).isEmpty {
-                worksite = worksite!.copy {
-                    $0.formData = initialWorksite.formData
-                }
-            }
-
-            var workTypeStatusLookup = [String: WorkTypeStatus]()
-            for (key, value) in workTypeStatusFormData.data {
-                workTypeStatusLookup[key] = statusFromLiteral(value, .openUnassigned)
-            }
-            worksite = worksite!.updateWorkTypeStatuses(
-                caseData.incident.workTypeLookup,
-                caseData.incident.formFieldLookup,
-                workTypeStatusLookup
-            )
+            worksite = transferWorkTypesStatus(incident: caseData.incident, worksite: worksite!)
 
             worksiteProvider.editableWorksite.value = worksite!
         }
 
         return true
+    }
+
+    private func copyChanges() -> Worksite {
+        if let caseData = caseData {
+            let initialWorksite = caseData.worksite
+            var worksite: Worksite? = initialWorksite
+
+            if let propertyWorksite = propertyInputData.updateCase(worksite!, inputValidator, t) {
+                worksite = propertyWorksite
+            }
+
+            if let locationWorksite = locationInputData.updateCase(worksite!, t) {
+                worksite = locationWorksite
+            }
+
+            worksite = transferFlags(worksite!)
+
+            worksite = transferNotes(worksite!)
+
+            worksite = transferFormData(worksite!)
+
+            worksite = copyUnchangedData(initialWorksite: initialWorksite, worksite: worksite!)
+
+            worksite = transferWorkTypesStatus(incident: caseData.incident, worksite: worksite!)
+
+            return worksite!
+        }
+
+        return EmptyWorksite
     }
 
     // MARK: KeyAssetTranslator

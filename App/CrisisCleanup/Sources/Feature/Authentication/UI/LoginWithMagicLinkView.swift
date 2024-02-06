@@ -28,7 +28,7 @@ struct LoginMagicLinkCodeView: View {
         .screenTitle(t.t("actions.login"))
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
-        .onReceive(viewModel.$isAuthenticateSuccessful) { b in
+        .onChange(of: viewModel.isAuthenticateSuccessful) { b in
             if b {
                 router.returnToAuth()
                 dismiss()

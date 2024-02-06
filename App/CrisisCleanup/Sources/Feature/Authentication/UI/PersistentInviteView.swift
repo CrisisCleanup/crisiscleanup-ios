@@ -14,6 +14,7 @@ struct PersistentInviteView: View {
                 if viewModel.inviteFailMessage.isNotBlank {
                     Text(viewModel.inviteFailMessage)
                         .fontHeader3()
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .padding()
 
                     Spacer()

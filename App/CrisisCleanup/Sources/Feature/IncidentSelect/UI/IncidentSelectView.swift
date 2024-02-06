@@ -28,7 +28,7 @@ struct IncidentSelectView: View {
                 .task {
                     viewModel.onOptionsRendered()
                 }
-                .onReceive(viewModel.$selectedIncidentId) { id in
+                .onChange(of: viewModel.selectedIncidentId) { id in
                     if id > -1 {
                         scrollView.scrollTo(id, anchor: .top)
                     }
