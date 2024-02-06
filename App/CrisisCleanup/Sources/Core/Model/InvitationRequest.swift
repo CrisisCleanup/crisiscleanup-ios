@@ -10,6 +10,12 @@ public struct InvitationRequest: Equatable {
     let inviterEmailAddress: String
 }
 
+public struct InvitationRequestResult {
+    let organizationName: String
+    let organizationRecipient: String
+    let isNewAccountRequest: Bool
+}
+
 public struct IncidentOrganizationInviteInfo {
     let incidentId: Int64
     let organizationName: String
@@ -29,4 +35,10 @@ public struct CodeInviteAccept: Equatable {
     let languageId: Int64
 
     let invitationCode: String
+}
+
+public enum OrgInviteResult {
+    case invited,
+         redundant,
+         unknown
 }

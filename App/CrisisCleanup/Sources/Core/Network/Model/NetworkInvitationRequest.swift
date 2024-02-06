@@ -99,21 +99,19 @@ struct NetworkOrganizationInvite: Codable {
     }
 }
 
-struct NetworkOrganizationInviteResult: Codable {
-    let errors: [NetworkCrisisCleanupApiError]?
-    let invite: NetworkOrganizationInviteInfo?
-}
-
 struct NetworkOrganizationInviteInfo: Codable {
-    let id: Int64
-    let inviteeEmail: String
-    let invitationToken: String
-    let expiresAt: Date
-    let organization: Int64
-    let createdAt: Date
+    let errors: [NetworkCrisisCleanupApiError]?
+
+    let id: Int64?
+    let inviteeEmail: String?
+    let invitationToken: String?
+    let expiresAt: Date?
+    let organization: Int64?
+    let createdAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id,
+        case errors,
+             id,
              inviteeEmail = "invitee_email",
              invitationToken = "invitation_token",
              expiresAt = "expires_at",

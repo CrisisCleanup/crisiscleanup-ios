@@ -503,21 +503,16 @@ class InviteTeammateViewModel: ObservableObject {
         organizationNameQuery = matchingOrg.name
     }
 
-    private func inviteToOrgOrAffiliate(_ emailAddresses: [String], _ organizationId: Int64? = nil) async -> Bool {
-        var notInvited = [String]()
+    private func inviteToOrgOrAffiliate(
+        _ emailAddresses: [String],
+        _ organizationId: Int64? = nil
+    ) async -> [InviteResult] {
+        var inviteResults = [InviteResult]()
         for emailAddress in emailAddresses {
-            let invited = await orgVolunteerRepository.inviteToOrganization(emailAddress, organizationId: organizationId)
-            if !invited {
-                notInvited.append(emailAddress)
-            }
+            let result = await orgVolunteerRepository.inviteToOrganization(emailAddress, organizationId: organizationId)
+            inviteResults.append(InviteResult(emailAddress: emailAddress, inviteResult: result))
         }
-
-        if notInvited.isNotEmpty {
-            sendInviteErrorMessage = translator.t("inviteTeammates.emails_not_invited_error")
-                .replacingOccurrences(of: "{email_addresses}", with: notInvited.joined(separator: "\n  "))
-            return false
-        }
-        return true
+        return inviteResults
     }
 
     @MainActor
@@ -606,7 +601,7 @@ class InviteTeammateViewModel: ObservableObject {
                     isSendingInviteSubject.value = false
                 }
 
-                var isSentToOrgOrAffiliate = false
+                var inviteResults = [InviteResult]()
                 var isInviteSuccessful = false
                 if inviteToAnotherOrg {
                     if inviteOrgState.new {
@@ -638,24 +633,35 @@ class InviteTeammateViewModel: ObservableObject {
                         }
 
                     } else if inviteOrgState.affiliate {
-                        isSentToOrgOrAffiliate = await inviteToOrgOrAffiliate(emailAddresses, selectedOtherOrg.id)
-                        isInviteSuccessful = isSentToOrgOrAffiliate
+                        inviteResults = await inviteToOrgOrAffiliate(emailAddresses, selectedOtherOrg.id)
+                        isInviteSuccessful = inviteResults.filter { $0.inviteResult == .invited }.isNotEmpty
 
                     } else if inviteOrgState.nonAffiliate {
                         // TODO: Finish when API supports a corresponding endpoint
                     }
                 } else {
-                    isSentToOrgOrAffiliate = await inviteToOrgOrAffiliate(emailAddresses)
-                    isInviteSuccessful = isSentToOrgOrAffiliate
+                    inviteResults = await inviteToOrgOrAffiliate(emailAddresses)
+                    isInviteSuccessful = inviteResults.filter { $0.inviteResult == .invited }.isNotEmpty
                 }
 
-                if isSentToOrgOrAffiliate {
-                    await onInviteSentToOrgOrAffiliate(emailAddresses)
+                let invited = inviteResults
+                    .filter { $0.inviteResult == .invited }
+                    .map { $0.emailAddress }
+                if invited.isNotEmpty {
+                    await onInviteSentToOrgOrAffiliate(invited)
                 }
 
                 if (!isInviteSuccessful) {
-                    sendInviteErrorMessageSubject.value =
-                    translator.t("registerOrg.invitations_not_working")
+                    let uninvited = inviteResults
+                        .filter { $0.inviteResult != .invited }
+                        .map { $0.emailAddress }
+                    var uninvitedMessage = ""
+                    if uninvited.isNotEmpty {
+                        uninvitedMessage =
+                        translator.t("inviteTeammates.emails_not_invited_error")
+                            .replacingOccurrences(of: "{email_addresses}", with: uninvited.joined(separator: ", "))
+                    }
+                    sendInviteErrorMessageSubject.value = uninvitedMessage.ifBlank { translator.t("inviteTeammates.invite_error") }
                 }
             }
         }
@@ -679,4 +685,9 @@ internal struct InviteOrgState {
     let new: Bool
 
     var ownOrAffiliate: Bool { own || affiliate }
+}
+
+fileprivate struct InviteResult {
+    let emailAddress: String
+    let inviteResult: OrgInviteResult
 }

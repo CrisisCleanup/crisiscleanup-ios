@@ -10,7 +10,7 @@ public protocol OrgVolunteerRepository {
     func getOrganizationInvite(organizationId: Int64, inviterUserId: Int64) async -> JoinOrgInvite
     func acceptPersistentInvitation(_ invite: CodeInviteAccept) async -> JoinOrgResult
 
-    func inviteToOrganization(_ emailAddress: String, organizationId: Int64?) async -> Bool
+    func inviteToOrganization(_ emailAddress: String, organizationId: Int64?) async -> OrgInviteResult
     func createOrganization(
         referer: String,
         invite: IncidentOrganizationInviteInfo
@@ -18,7 +18,7 @@ public protocol OrgVolunteerRepository {
 }
 
 extension OrgVolunteerRepository {
-    func inviteToOrganization(_ emailAddress: String) async -> Bool {
+    func inviteToOrganization(_ emailAddress: String) async -> OrgInviteResult {
         await inviteToOrganization(emailAddress, organizationId: nil)
     }
 }
@@ -67,7 +67,7 @@ class CrisisCleanupOrgVolunteerRepository: OrgVolunteerRepository {
         await registerApi.acceptPersistentInvitation(invite)
     }
 
-    func inviteToOrganization(_ emailAddress: String, organizationId: Int64?) async -> Bool {
+    func inviteToOrganization(_ emailAddress: String, organizationId: Int64?) async -> OrgInviteResult {
         await registerApi.inviteToOrganization(emailAddress, organizationId)
     }
 
@@ -80,10 +80,4 @@ class CrisisCleanupOrgVolunteerRepository: OrgVolunteerRepository {
             invite: invite
         )
     }
-}
-
-public struct InvitationRequestResult {
-    let organizationName: String
-    let organizationRecipient: String
-    let isNewAccountRequest: Bool
 }

@@ -215,16 +215,23 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
         }
     }
 
-    func inviteToOrganization(_ emailAddress: String, _ organizationId: Int64?) async -> Bool {
+    func inviteToOrganization(_ emailAddress: String, _ organizationId: Int64?) async -> OrgInviteResult {
         let request = requestProvider.inviteToOrganization
             .setBody(NetworkOrganizationInvite(inviteeEmail: emailAddress, organization: organizationId))
 
-        let response = await networkClient.callbackContinue(
+        let result = await networkClient.callbackContinue(
             requestConvertible: request,
-            type: NetworkOrganizationInviteResult.self,
-            wrapResponseKey: "invite"
-        )
-        return response.value?.invite?.inviteeEmail == emailAddress
+            type: NetworkOrganizationInviteInfo.self
+        ).value
+        if result?.inviteeEmail == emailAddress {
+            return .invited
+        }
+
+        if result?.errors?.condenseMessages.contains("is already a part of this organization") == true {
+            return .redundant
+        }
+
+        return .unknown
     }
 
     func registerOrganization(
