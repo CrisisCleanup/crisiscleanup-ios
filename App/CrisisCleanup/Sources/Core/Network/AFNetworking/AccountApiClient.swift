@@ -36,7 +36,7 @@ class AccountApiClient : CrisisCleanupAccountApi {
         return result.response?.statusCode == 201 && result.value?.errors == nil
     }
 
-    func initiatePhoneLogin(_ phoneNumber: String) async -> Bool {
+    func initiatePhoneLogin(_ phoneNumber: String) async -> InitiatePhoneLoginResult {
         let payload = NetworkPhonePayload(phone: phoneNumber)
         let request = requestProvider.initiatePhoneLogin
             .setBody(payload)
@@ -45,7 +45,19 @@ class AccountApiClient : CrisisCleanupAccountApi {
             type: NetworkPhoneCodeResult.self
         )
         // TODO: Capture and report errors accordingly
-        return result.response?.statusCode == 201 && result.value?.errors == nil
+        if result.response?.statusCode == 201,
+           result.value?.errors == nil {
+            return .success
+        }
+
+        if let data = result.data {
+            let resultMessage = String(decoding: data, as: UTF8.self)
+            if resultMessage.contains("Invalid phone number") {
+                return .phoneNotRegistered
+            }
+        }
+
+        return .unknown
     }
 
     func initiatePasswordReset(_ emailAddress: String) async throws -> InitiatePasswordResetResult {

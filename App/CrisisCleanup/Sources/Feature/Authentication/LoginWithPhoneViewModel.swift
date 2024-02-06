@@ -177,11 +177,14 @@ class LoginWithPhoneViewModel: ObservableObject {
                 var isInitiated = false
                 var message = ""
 
-                if await accountUpdateRepository.initiatePhoneLogin(trimPhoneNumber) {
+                let result = await accountUpdateRepository.initiatePhoneLogin(trimPhoneNumber)
+
+                switch result {
+                    case .success:
                     isInitiated = true
-                } else {
-                    // TODO: Be more specific
-                    // TODO: Capture error and report to backend
+                case .phoneNotRegistered:
+                    message = translator.t("~~\(phoneNumber) is not registered. Enter a registered phone number and try again.")
+                default:
                     message = translator.t("loginWithPhone.invalid_phone_unavailable_try_again")
                 }
 
