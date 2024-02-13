@@ -17,6 +17,7 @@ struct VolunteerOrgView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .padding()
                     .background(appTheme.colors.separatorColor)
+                    .accessibilityIdentifier("volunteerGetStartedText")
 
                 InstructionTextAction(
                     instruction: t.t("volunteerOrg.click_inviation_link"),
@@ -25,6 +26,7 @@ struct VolunteerOrgView: View {
                     router.openPasteOrgInviteLink()
                 }
                 .padding()
+                .accessibilityIdentifier("volunteerPasteLinkAction")
 
                 StaticOrTextView()
 
@@ -35,6 +37,7 @@ struct VolunteerOrgView: View {
                     router.openRequestOrgAccess()
                 }
                 .padding()
+                .accessibilityIdentifier("volunteerRequestAccessAction")
 
                 StaticOrTextView()
 
@@ -50,6 +53,7 @@ struct VolunteerOrgView: View {
                         }
                     }
                     .stylePrimary()
+                    .accessibilityIdentifier("volunteerScanQrCodeAction")
                 }
                 .padding()
 
@@ -60,6 +64,7 @@ struct VolunteerOrgView: View {
                         t.t("registerOrg.register_org"),
                         destination: URL(string: "https://crisiscleanup.org/register")!
                     )
+                    .accessibilityIdentifier("volunteerRegisterOrgAction")
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()

@@ -63,6 +63,7 @@ private struct LoginView: View {
                         .fontHeader1()
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.vertical)
+                        .accessibilityIdentifier("loginEmailHeaderText")
 
                     let errorMessage = viewModel.errorMessage
                     if !errorMessage.isBlank {
@@ -118,6 +119,7 @@ private struct LoginView: View {
                     .frame(maxWidth: .infinity, alignment: .trailing)
                     .padding(.bottom)
                     .disabled(disabled)
+                    .accessibilityIdentifier("loginRequestMagicLinkAction")
 
                     Button(t.t("invitationSignup.forgot_password")) {
                         router.openForgotPassword()
@@ -125,6 +127,7 @@ private struct LoginView: View {
                     .frame(maxWidth: .infinity, alignment: .trailing)
                     .padding(.bottom)
                     .disabled(disabled)
+                    .accessibilityIdentifier("loginForgotPasswordAction")
 
                     if viewModel.isDebuggable {
                         Button("Login Debug") {
