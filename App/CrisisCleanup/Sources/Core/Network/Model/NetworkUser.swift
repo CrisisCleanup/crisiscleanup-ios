@@ -4,6 +4,7 @@ struct NetworkUser: Codable, Equatable {
     let id: Int64
     let firstName: String
     let lastName: String
+    let hasAcceptedTerms: Bool?
     let organization: Int64
     let files: [NetworkFile]
 
@@ -11,6 +12,7 @@ struct NetworkUser: Codable, Equatable {
         case id,
              firstName = "first_name",
              lastName = "last_name",
+             hasAcceptedTerms = "accepted_terms",
              organization,
              files
     }
@@ -21,6 +23,7 @@ public struct NetworkUserProfile: Codable {
     let email: String
     let firstName: String
     let lastName: String
+    let hasAcceptedTerms: Bool?
     let files: [NetworkFile]?
     let organization: NetworkOrganizationShort
 
@@ -29,6 +32,7 @@ public struct NetworkUserProfile: Codable {
              email,
              firstName = "first_name",
              lastName = "last_name",
+             hasAcceptedTerms = "accepted_terms",
              files,
              organization
     }

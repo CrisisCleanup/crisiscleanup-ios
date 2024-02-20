@@ -8,14 +8,16 @@ public struct NetworkAuthUserClaims: Codable, Equatable {
     let email: String
     let firstName: String
     let lastName: String
+    let hasAcceptedTerms: Bool?
     let files: [NetworkFile]?
 
     enum CodingKeys: String, CodingKey {
-        case id
-        case email
-        case firstName = "first_name"
-        case lastName = "last_name"
-        case files
+        case id,
+             email,
+             firstName = "first_name",
+             lastName = "last_name",
+             hasAcceptedTerms = "accepted_terms",
+             files
     }
 }
 

@@ -4,6 +4,7 @@ extension MainComponent {
     public var accountUpdateRepository: AccountUpdateRepository {
         shared {
             CrisisCleanupAccountUpdateRepository(
+                accountDataRepository: accountDataRepository,
                 accountApi: accountApi,
                 loggerFactory: loggerFactory
             )

@@ -95,6 +95,25 @@ struct MainView: View {
                                 }
                             }
                     }
+                } else if !viewModel.viewData.hasAcceptedTerms {
+                    ZStack {
+                        let isFetchingTerms = viewModel.isFetchingTermsAcceptance
+                        if !isFetchingTerms {
+                            AcceptTermsView(
+                                termsUrl: viewModel.termsOfServiceUrl,
+                                isLoading: viewModel.isLoadingTermsAcceptance,
+                                onRequireCheckAcceptTerms: viewModel.onRequireCheckAcceptTerms,
+                                onRejectTerms: viewModel.onRejectTerms,
+                                onAcceptTerms: viewModel.onAcceptTerms,
+                                errorMessage: viewModel.acceptTermsErrorMessage
+                            )
+                        }
+
+                        if isFetchingTerms {
+                            ProgressView()
+                                .circularProgress()
+                        }
+                    }
                 } else {
                     NavigationStack(path: $router.path) {
                         ZStack {

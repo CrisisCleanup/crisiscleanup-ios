@@ -3,22 +3,26 @@ import Foundation
 
 public protocol AccountUpdateRepository {
     func initiateEmailMagicLink(_ emailAddress: String) async -> Bool
-    func initiatePhoneLogin(_ phoneNumber: String) async -> Bool
+    func initiatePhoneLogin(_ phoneNumber: String) async -> InitiatePhoneLoginResult
     func initiatePasswordReset(_ emailAddress: String) async -> PasswordResetInitiation
     func changePassword(password: String, token: String) async -> Bool
     func takeWasPasswordResetRecent() -> Bool
+    func acceptTerms() async -> Bool
 }
 
 class CrisisCleanupAccountUpdateRepository: AccountUpdateRepository {
+    private let accountDataRepository: AccountDataRepository
     private let accountApi: CrisisCleanupAccountApi
     private let logger: AppLogger
 
     private var passwordResetSuccessTime = Date.init(timeIntervalSince1970: 0)
 
     init(
+        accountDataRepository: AccountDataRepository,
         accountApi: CrisisCleanupAccountApi,
         loggerFactory: AppLoggerFactory
     ) {
+        self.accountDataRepository = accountDataRepository
         self.accountApi = accountApi
         logger = loggerFactory.getLogger("account")
     }
@@ -27,7 +31,7 @@ class CrisisCleanupAccountUpdateRepository: AccountUpdateRepository {
         await accountApi.initiateMagicLink(emailAddress)
     }
 
-    func initiatePhoneLogin(_ phoneNumber: String) async -> Bool {
+    func initiatePhoneLogin(_ phoneNumber: String) async -> InitiatePhoneLoginResult {
         await accountApi.initiatePhoneLogin(phoneNumber)
     }
 
@@ -60,6 +64,16 @@ class CrisisCleanupAccountUpdateRepository: AccountUpdateRepository {
         let isRecent = passwordResetSuccessTime.distance(to: Date.now) < 30.minutes
         passwordResetSuccessTime = Date.init(timeIntervalSince1970: 0)
         return isRecent
+    }
+
+    func acceptTerms() async -> Bool {
+        do {
+            let userId = try await accountDataRepository.accountData.eraseToAnyPublisher().asyncFirst().id
+            return await accountApi.acceptTerms(userId)
+        } catch {
+            logger.logError(error)
+        }
+        return false
     }
 }
 

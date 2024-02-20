@@ -47,6 +47,7 @@ private struct LoginView: View {
                         .fontHeader1()
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.vertical)
+                        .accessibilityIdentifier("phoneLoginHeaderText")
 
                     let errorMessage = viewModel.errorMessage
                     if !errorMessage.isBlank {

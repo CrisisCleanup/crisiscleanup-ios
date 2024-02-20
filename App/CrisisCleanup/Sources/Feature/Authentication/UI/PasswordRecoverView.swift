@@ -101,6 +101,7 @@ private struct ForgotPasswordView: View {
         .stylePrimary()
         .padding(.horizontal)
         .disabled(disabled)
+        .accessibilityIdentifier("forgotPasswordAction")
     }
 }
 
@@ -149,5 +150,6 @@ private struct MagicLinkView: View {
         .stylePrimary()
         .padding(.horizontal)
         .disabled(disabled)
+        .accessibilityIdentifier("emailMagicLinkAction")
     }
 }

@@ -461,6 +461,14 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
             type: NetworkUserProfile.self
         ).value
     }
+
+    func getProfileAcceptedTerms() async -> Bool {
+        let request = requestProvider.accountProfile
+        return await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkAccountProfileResult.self
+        ).value?.hasAcceptedTerms == true
+    }
 }
 
 extension Array where Element == Int64 {

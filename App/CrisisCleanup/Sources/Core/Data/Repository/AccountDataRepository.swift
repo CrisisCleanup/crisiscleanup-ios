@@ -19,7 +19,8 @@ public protocol AccountDataRepository {
         lastName: String,
         expirySeconds: Int64,
         profilePictureUri: String,
-        org: OrgData
+        org: OrgData,
+        hasAcceptedTerms: Bool
     )
 
     func updateAccountTokens(
@@ -50,6 +51,7 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
 
     private let accountDataSource: AccountInfoDataSource
     private let secureDataSource: SecureDataSource
+    private let preferencesDataSource: AppPreferencesDataStore
     private let authApi: CrisisCleanupAuthApi
     private let accountApi: CrisisCleanupAccountApi
     private let logger: AppLogger
@@ -60,6 +62,7 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
     init(
         _ accountDataSource: AccountInfoDataSource,
         _ secureDataSource: SecureDataSource,
+        _ preferencesDataSource: AppPreferencesDataStore,
         _ authEventBus: AuthEventBus,
         _ authApi: CrisisCleanupAuthApi,
         _ accountApi: CrisisCleanupAccountApi,
@@ -68,6 +71,7 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
     ) {
         self.accountDataSource = accountDataSource
         self.secureDataSource = secureDataSource
+        self.preferencesDataSource = preferencesDataSource
         self.authApi = authApi
         self.accountApi = accountApi
         logger = loggerFactory.getLogger("account")
@@ -109,7 +113,8 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
         lastName: String,
         expirySeconds: Int64,
         profilePictureUri: String,
-        org: OrgData
+        org: OrgData,
+        hasAcceptedTerms: Bool
     ) {
         do {
             try secureDataSource.saveAuthTokens(id, refreshToken, accessToken)
@@ -122,7 +127,8 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
                 profilePictureUri: profilePictureUri,
                 accessToken: "",
                 orgId: org.id,
-                orgName: org.name
+                orgName: org.name,
+                hasAcceptedTerms: hasAcceptedTerms
             ))
         } catch {
             logger.logError(error)
@@ -189,6 +195,8 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
 
     private func onLogout() {
         clearAccount()
+        // TODO: Clear other preferences?
+        preferencesDataSource.setHideOnboarding(true)
     }
 
     private let skipChangeGuard = ManagedAtomic(false)

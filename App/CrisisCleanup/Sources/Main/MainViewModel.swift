@@ -7,17 +7,28 @@ class MainViewModel: ObservableObject {
     private let appVersionProvider: AppVersionProvider
     private let incidentSelector: IncidentSelector
     private let externalEventBus: ExternalEventBus
+    private let authEventBus: AuthEventBus
     private let router: NavigationRouter
     private let translationsRepository: LanguageTranslationsRepository
     let translator: KeyAssetTranslator
     private let syncPuller: SyncPuller
     private let syncPusher: SyncPusher
     private let accountDataRefresher: AccountDataRefresher
+    private let accountUpdateRepository: AccountUpdateRepository
+    private let networkMonitor: NetworkMonitor
     private let logger: AppLogger
 
     @Published private(set) var viewData: MainViewData = MainViewData()
     private var isNotAuthenticated: Bool { !viewData.isAuthenticated }
     private var areTokensInvalid: Bool { !viewData.areTokensValid }
+
+    let termsOfServiceUrl: URL
+    private let isFetchingTermsAcceptanceSubject = CurrentValueSubject<Bool, Never>(false)
+    @Published private(set) var isFetchingTermsAcceptance = false
+    private let isUpdatingTermsAcceptanceSubject = CurrentValueSubject<Bool, Never>(false)
+    @Published private var isUpdatingTermsAcceptance = false
+    @Published private(set) var isLoadingTermsAcceptance = false
+    @Published private(set) var acceptTermsErrorMessage = ""
 
     @Published private(set) var minSupportedVersion = supportedAppVersion
 
@@ -34,13 +45,17 @@ class MainViewModel: ObservableObject {
         accountDataRepository: AccountDataRepository,
         appSupportRepository: AppSupportRepository,
         appVersionProvider: AppVersionProvider,
+        appSettingsProvider: AppSettingsProvider,
         translationsRepository: LanguageTranslationsRepository,
         incidentSelector: IncidentSelector,
         externalEventBus: ExternalEventBus,
+        authEventBus: AuthEventBus,
         navigationRouter: NavigationRouter,
         syncPuller: SyncPuller,
         syncPusher: SyncPusher,
         accountDataRefresher: AccountDataRefresher,
+        accountUpdateRepository: AccountUpdateRepository,
+        networkMonitor: NetworkMonitor,
         logger: AppLogger,
         appEnv: AppEnv
     ) {
@@ -51,13 +66,18 @@ class MainViewModel: ObservableObject {
         translator = translationsRepository
         self.incidentSelector = incidentSelector
         self.externalEventBus = externalEventBus
+        self.authEventBus = authEventBus
         router = navigationRouter
         self.syncPuller = syncPuller
         self.syncPusher = syncPusher
         self.accountDataRefresher = accountDataRefresher
+        self.accountUpdateRepository = accountUpdateRepository
+        self.networkMonitor = networkMonitor
         self.logger = logger
 
         isNotProduction = appEnv.isNotProduction
+
+        termsOfServiceUrl = URL(string: "\(appSettingsProvider.baseUrl)/terms?view=plain")!
 
         syncPuller.pullUnauthenticatedData()
 
@@ -77,6 +97,7 @@ class MainViewModel: ObservableObject {
     func onViewAppear() {
         subscribeIncidentsData()
         subscribeAccountData()
+        subscribeTermsAcceptanceState()
         subscribeAppSupport()
     }
 
@@ -162,6 +183,48 @@ class MainViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
+    private func subscribeTermsAcceptanceState() {
+        isFetchingTermsAcceptanceSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.isFetchingTermsAcceptance, on: self)
+            .store(in: &subscriptions)
+
+        isUpdatingTermsAcceptanceSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.isUpdatingTermsAcceptance, on: self)
+            .store(in: &subscriptions)
+
+        Publishers.CombineLatest(
+            $isFetchingTermsAcceptance,
+            $isUpdatingTermsAcceptance
+        )
+        .map { b0, b1 in b0 || b1 }
+        .receive(on: RunLoop.main)
+        .assign(to: \.isLoadingTermsAcceptance, on: self)
+        .store(in: &subscriptions)
+
+        accountDataRepository.accountData.eraseToAnyPublisher()
+            .filter { !$0.hasAcceptedTerms }
+            .removeDuplicates()
+            .throttle(
+                for: .seconds(0.25),
+                scheduler: RunLoop.current,
+                latest: true
+            )
+            .sink { data in
+                print("Account data change \(data)")
+                self.isFetchingTermsAcceptanceSubject.value = true
+                do {
+                    defer {
+                        self.isFetchingTermsAcceptanceSubject.value = false
+                    }
+
+                    await self.accountDataRefresher.updateAcceptedTerms()
+                }
+            }
+            .store(in: &subscriptions)
+    }
+
     private func subscribeAppSupport() {
         appSupportRepository.appMetrics
             .eraseToAnyPublisher()
@@ -169,6 +232,43 @@ class MainViewModel: ObservableObject {
             .receive(on: RunLoop.main)
             .assign(to: \.minSupportedVersion, on: self)
             .store(in: &subscriptions)
+    }
+
+    func onRequireCheckAcceptTerms() {
+        acceptTermsErrorMessage = translator.t("~~You must check the box accepting the terms of service.")
+    }
+
+    func onRejectTerms() {
+        acceptTermsErrorMessage = ""
+        authEventBus.onLogout()
+    }
+
+    func onAcceptTerms() {
+        acceptTermsErrorMessage = ""
+
+        if isUpdatingTermsAcceptanceSubject.value {
+            return
+        }
+        isUpdatingTermsAcceptanceSubject.value = true
+        Task {
+            do {
+                defer {
+                    isUpdatingTermsAcceptanceSubject.value = false
+                }
+
+                let isAccepted = await accountUpdateRepository.acceptTerms()
+                if isAccepted {
+                    await accountDataRefresher.updateAcceptedTerms()
+                } else {
+                    let errorMessage = try await networkMonitor.isOnline.eraseToAnyPublisher().asyncFirst()
+                    ? translator.t("~~Something went wrong. Please try again later.")
+                    : translator.t("~~Connect to the internet and try again.")
+                    Task { @MainActor in
+                        acceptTermsErrorMessage = errorMessage
+                    }
+                }
+            }
+        }
     }
 
     private func onEmailLoginLink(_ code: String) {
