@@ -95,6 +95,7 @@ private struct LoginView: View {
                                     focusState = .authEmailAddress
                                 }
                             }
+                            .accessibilityIdentifier("loginEmailTextField")
                         ToggleSecureTextField(
                             t.translate("loginForm.password_placeholder", "Password hint"),
                             text: $password,
@@ -110,6 +111,7 @@ private struct LoginView: View {
                                 authenticate()
                             }
                         }
+                        .accessibilityIdentifier("loginPasswordTextField")
                     }
                     .onChange(of: focusState) { focusableViewState.focusState = $0 }
 
@@ -138,6 +140,7 @@ private struct LoginView: View {
                         .stylePrimary()
                         .padding(.vertical, appTheme.listItemVerticalPadding)
                         .disabled(disabled)
+                        .accessibilityIdentifier("emailLoginDebugLoginAction")
                     }
 
                     Button {
@@ -151,6 +154,7 @@ private struct LoginView: View {
                     .stylePrimary()
                     .padding(.vertical, appTheme.listItemVerticalPadding)
                     .disabled(disabled)
+                    .accessibilityIdentifier("emailLoginLoginAction")
                 }
                 .onChange(of: viewModel.focusState) { focusState = $0 }
                 .padding()
