@@ -98,6 +98,8 @@ public protocol CrisisCleanupNetworkDataSource {
     func searchOrganizations(_ q: String) async -> [NetworkOrganizationShort]
 
     func getProfile(_ accessToken: String) async -> NetworkUserProfile?
+
+    func getProfileAcceptedTerms() async -> Bool
 }
 
 extension CrisisCleanupNetworkDataSource {

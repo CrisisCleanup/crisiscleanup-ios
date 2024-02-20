@@ -297,7 +297,8 @@ class LoginWithPhoneViewModel: ObservableObject {
                             org: OrgData(
                                 id: accountProfile.organization.id,
                                 name: accountProfile.organization.name
-                            )
+                            ),
+                            hasAcceptedTerms: accountProfile.hasAcceptedTerms == true
                         )
                         isSuccessful = true
                     }

@@ -367,6 +367,14 @@ extension NetworkRequestProvider {
         )
     }
 
+    var acceptTerms: NetworkRequest {
+        NetworkRequest(
+            apiUrl("users"),
+            method: .patch,
+            addTokenHeader: true
+        )
+    }
+
     // MARK: Register
 
     var requestInvitation: NetworkRequest {

@@ -939,24 +939,18 @@ private struct SaveActions: View {
     @EnvironmentObject var viewModel: CreateEditCaseViewModel
 
     var body: some View {
-        Button {
+        Button(t.t("actions.cancel")) {
             dismiss()
-        } label : {
-            Text(t.t("actions.cancel"))
         }
         .styleCancel()
 
-        Button {
+        Button(t.t("actions.save")) {
             viewModel.saveChanges(false)
-        } label : {
-            Text(t.t("actions.save"))
         }
         .stylePrimary()
 
-        Button {
+        Button(t.t("actions.save_claim")) {
             viewModel.saveChanges(true)
-        } label : {
-            Text(t.t("actions.save_claim"))
         }
         .stylePrimary()
     }

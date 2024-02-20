@@ -4,10 +4,14 @@ class AccountApiClient : CrisisCleanupAccountApi {
     let networkClient: AFNetworkingClient
     let requestProvider: NetworkRequestProvider
 
+    private let dateFormatter: ISO8601DateFormatter
+
     init(
         networkRequestProvider: NetworkRequestProvider,
         appEnv: AppEnv
     ) {
+        dateFormatter = ISO8601DateFormatter()
+
         // TODO: Test coverage. Including locale and time zone.
         let isoFormat = with(DateFormatter()) {
             $0.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
@@ -83,5 +87,20 @@ class AccountApiClient : CrisisCleanupAccountApi {
             type: NetworkPasswordResetResult.self
         ).value?.status ?? ""
         return status.isNotBlank && status != "invalid"
+    }
+
+    func acceptTerms(_ userId: Int64, _ timestamp: Date) async -> Bool {
+        let payload = NetworkAcceptTermsPayload(
+            acceptedTerms: true,
+            acceptedTermsTimestamp: dateFormatter.string(from: timestamp)
+        )
+        let request = requestProvider.acceptTerms
+            .addPaths("\(userId)")
+            .setBody(payload)
+        let result = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkAccountProfileResult.self
+        )
+        return result.value?.hasAcceptedTerms == true
     }
 }

@@ -145,13 +145,19 @@ extension MainComponent {
 
     public var appPreferences: AppPreferencesDataStore { shared { AppPreferencesUserDefaults() } }
 
+    var accountDataSource: AccountInfoDataSource {
+        shared {
+            AccountInfoUserDefaults()
+        }
+    }
+
     public var accountDataRepository: AccountDataRepository {
-        let accountDataSource = AccountInfoUserDefaults()
         let secureDataSource = KeychainDataSource()
         return shared {
             CrisisCleanupAccountDataRepository(
                 accountDataSource,
                 secureDataSource,
+                appPreferences,
                 authEventBus,
                 authApi,
                 accountApi,
@@ -164,6 +170,7 @@ extension MainComponent {
     public var accountDataRefresher: AccountDataRefresher {
         shared {
             AccountDataRefresher(
+                dataSource: accountDataSource,
                 networkDataSource: networkDataSource,
                 accountDataRepository: accountDataRepository,
                 organizationsRepository: organizationsRepository,

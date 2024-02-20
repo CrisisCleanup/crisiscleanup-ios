@@ -6,13 +6,14 @@ public struct OrgData: Equatable {
 }
 
 // sourcery: copyBuilder
-public struct AccountData {
+public struct AccountData: Equatable {
     let id: Int64
     let tokenExpiry: Date
     let fullName: String
     let emailAddress: String
     let profilePictureUri: String
     let org: OrgData
+    let hasAcceptedTerms: Bool
     let areTokensValid: Bool
 
     // sourcery:begin: skipCopy
@@ -30,5 +31,6 @@ let emptyAccountData = AccountData(
     emailAddress: "",
     profilePictureUri: "",
     org: emptyOrgData,
+    hasAcceptedTerms: false,
     areTokensValid: false
 )

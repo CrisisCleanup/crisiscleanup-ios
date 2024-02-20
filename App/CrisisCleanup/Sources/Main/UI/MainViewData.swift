@@ -11,6 +11,7 @@ struct MainViewData {
 
     let isAuthenticated: Bool
     let areTokensValid: Bool
+    let hasAcceptedTerms: Bool
 
     init(
         state: MainViewState = .loading,
@@ -21,5 +22,6 @@ struct MainViewData {
         isAuthenticated = accountData.hasAuthenticated
         areTokensValid = accountData.areTokensValid
         self.showMainContent = state == .ready && isAuthenticated
+        hasAcceptedTerms = accountData.hasAcceptedTerms
     }
 }

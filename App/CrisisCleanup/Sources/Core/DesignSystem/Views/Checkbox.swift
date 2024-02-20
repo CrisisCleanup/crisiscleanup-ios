@@ -21,6 +21,18 @@ struct CheckboxViews: View {
     }
 }
 
+struct CheckboxImageView: View {
+    @Environment(\.isEnabled) var isEnabled
+
+    var isChecked: Bool
+
+    var body: some View {
+        let checkImg = isChecked ? "checkmark.square.fill" : "square"
+        Image(systemName: checkImg)
+            .foregroundColor(isChecked && isEnabled ? Color.black : Color.gray)
+    }
+}
+
 struct CheckboxTextView : View {
     @Environment(\.isEnabled) var isEnabled
 
@@ -32,9 +44,7 @@ struct CheckboxTextView : View {
 
     var body: some View {
         HStack{
-            let checkImg = isChecked ? "checkmark.square.fill" : "square"
-            Image(systemName: checkImg)
-                .foregroundColor(isChecked && isEnabled ? Color.black : Color.gray)
+            CheckboxImageView(isChecked: isChecked)
                 .if(nestedLevel != nil) {
                     $0.padding(.leading, Double(nestedLevel!) * appTheme.nestedItemPadding)
                 }
