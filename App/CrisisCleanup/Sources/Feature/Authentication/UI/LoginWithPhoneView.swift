@@ -75,6 +75,7 @@ private struct LoginView: View {
                             }
                         }
                         .onChange(of: focusState) { focusableViewState.focusState = $0 }
+                        .accessibilityIdentifier("loginPhoneTextField")
 
                     Button {
                         requestPhoneCode()
@@ -93,6 +94,7 @@ private struct LoginView: View {
                             viewModel.openPhoneCodeLogin = false
                         }
                     }
+                    .accessibilityIdentifier("phoneLoginAction")
                 }
                 .onChange(of: viewModel.focusState) { focusState = $0 }
                 .padding()
