@@ -23,6 +23,7 @@ class MainViewModel: ObservableObject {
     private var areTokensInvalid: Bool { !viewData.areTokensValid }
 
     let termsOfServiceUrl: URL
+    let privacyPolicyUrl: URL
     private let isFetchingTermsAcceptanceSubject = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isFetchingTermsAcceptance = false
     private let isUpdatingTermsAcceptanceSubject = CurrentValueSubject<Bool, Never>(false)
@@ -78,6 +79,7 @@ class MainViewModel: ObservableObject {
         isNotProduction = appEnv.isNotProduction
 
         termsOfServiceUrl = URL(string: "\(appSettingsProvider.baseUrl)/terms?view=plain")!
+        privacyPolicyUrl = URL(string: "\(appSettingsProvider.baseUrl)/privacy?view=plain")!
 
         syncPuller.pullUnauthenticatedData()
 
@@ -235,7 +237,7 @@ class MainViewModel: ObservableObject {
     }
 
     func onRequireCheckAcceptTerms() {
-        acceptTermsErrorMessage = translator.t("~~You must check the box accepting the terms of service.")
+        acceptTermsErrorMessage = translator.t("termsConditionsModal.must_check_box")
     }
 
     func onRejectTerms() {
@@ -261,8 +263,8 @@ class MainViewModel: ObservableObject {
                     await accountDataRefresher.updateAcceptedTerms()
                 } else {
                     let errorMessage = try await networkMonitor.isOnline.eraseToAnyPublisher().asyncFirst()
-                    ? translator.t("~~Something went wrong. Please try again later.")
-                    : translator.t("~~Connect to the internet and try again.")
+                    ? translator.t("termsConditionsModal.online_but_error")
+                    : translator.t("termsConditionsModal.offline_error")
                     Task { @MainActor in
                         acceptTermsErrorMessage = errorMessage
                     }

@@ -101,6 +101,7 @@ struct MainView: View {
                         if !isFetchingTerms {
                             AcceptTermsView(
                                 termsUrl: viewModel.termsOfServiceUrl,
+                                privacyUrl: viewModel.privacyPolicyUrl,
                                 isLoading: viewModel.isLoadingTermsAcceptance,
                                 onRequireCheckAcceptTerms: viewModel.onRequireCheckAcceptTerms,
                                 onRejectTerms: viewModel.onRejectTerms,

@@ -183,7 +183,8 @@ class LoginWithPhoneViewModel: ObservableObject {
                     case .success:
                     isInitiated = true
                 case .phoneNotRegistered:
-                    message = translator.t("~~\(phoneNumber) is not registered. Enter a registered phone number and try again.")
+                    message = translator.t("loginWithPhone.phone_number_not_registered")
+                        .replacingOccurrences(of: "{phoneNumber}", with: phoneNumber)
                 default:
                     message = translator.t("loginWithPhone.invalid_phone_unavailable_try_again")
                 }

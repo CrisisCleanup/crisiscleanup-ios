@@ -5,10 +5,10 @@ import SwiftUI
 struct HtmlTextView: View {
     let htmlContent: String
 
-    @State var textAS: AttributedString = AttributedString()
+    @State private var contentAttributedString = AttributedString()
 
     var body: some View {
-        Text(textAS)
+        Text(contentAttributedString)
             .onAppear {
                 DispatchQueue.main.async {
                     let data = Data(self.htmlContent.utf8)
@@ -20,38 +20,11 @@ struct HtmlTextView: View {
                         documentAttributes: nil
                     ) {
                         attributedString.replaceFontBodyLarge()
-                        textAS = AttributedString(attributedString)
+                        contentAttributedString = AttributedString(attributedString)
                     }
                 }
             }
             .multilineTextAlignment(.leading)
             .disabled(true)
     }
-}
-
-// TODO: Test URLs aren't linked before using
-private struct StaticLinkHtmlTextView: UIViewRepresentable {
-    let htmlContent: String
-
-    func makeUIView(context: UIViewRepresentableContext<Self>) -> UITextView {
-        let label = UITextView()
-        DispatchQueue.main.async {
-            let data = Data(self.htmlContent.utf8)
-            if let attributedString = try? NSAttributedString(
-                data: data,
-                options: [
-                    .documentType: NSAttributedString.DocumentType.html
-                ],
-                documentAttributes: nil
-            ) {
-                label.isEditable = false
-                label.attributedText = attributedString
-                label.font = .bodyLarge
-            }
-        }
-
-        return label
-    }
-
-    func updateUIView(_ uiView: UITextView, context: Context) {}
 }

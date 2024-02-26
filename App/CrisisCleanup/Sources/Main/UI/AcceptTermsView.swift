@@ -4,6 +4,7 @@ struct AcceptTermsView: View {
     @Environment(\.translator) var t
 
     var termsUrl: URL
+    var privacyUrl: URL
     var isLoading: Bool
     var onRequireCheckAcceptTerms: () -> Void
     var onRejectTerms: () -> Void = {}
@@ -18,7 +19,7 @@ struct AcceptTermsView: View {
         VStack(alignment: .leading) {
             // TODO: Change background colors below accordingly
 
-            Text(t.t("~~Using the Crisis Cleanup mobile app requires agreement with the following terms."))
+            Text(t.t("termsConditionsModal.must_agree_to_use_ccu"))
                 .listItemModifier()
                 .accessibilityIdentifier("acceptTermsAgreeAgreementText")
 
@@ -32,10 +33,11 @@ struct AcceptTermsView: View {
                     .accessibilityIdentifier("acceptTermsErrorMessage")
             }
 
-            let linkText = "[\(termsUrl.absoluteString)](\(termsUrl.absoluteString))"
-            let acceptText = t.t("~~I accept the terms of service from {terms_url}")
-                .replacingOccurrences(of: "{terms_url}", with: linkText)
-            let markdownString = try! AttributedString(markdown: acceptText)
+            let termsAbsoluteUrl = termsUrl.absoluteString
+            let privacyAbsoluteUrl = privacyUrl.absoluteString
+            let acceptText = t.t("termsConditionsModal.accept_toc_privacy")
+                .replacingOccurrences(of: "{terms_url}", with: termsAbsoluteUrl)
+                .replacingOccurrences(of: "{privacy_url}", with: privacyAbsoluteUrl)
             HStack(alignment: .top) {
                 CheckboxImageView(isChecked: isAcceptingTerms)
                     .onTapGesture {
@@ -43,7 +45,7 @@ struct AcceptTermsView: View {
                     }
                     .padding(.vertical, appTheme.gridItemSpacing)
                     .accessibilityIdentifier("acceptTermsAcceptToggle")
-                Text(markdownString)
+                HtmlTextView(htmlContent: acceptText)
                     .accessibilityIdentifier("acceptTermsAcceptText")
             }
             .listItemModifier()
@@ -74,12 +76,16 @@ struct AcceptTermsView: View {
                 showRejectTermsDialog = false
             }
         ) {
-            VStack {
-                Text(
-                    t.t("~~Rejecting the terms of service will log you out from the app. You will not be able to use the app unless you log back in and accept the terms of service.")
-                )
-                .listItemModifier()
-                .accessibilityIdentifier("rejectTermsConfirmText")
+            VStack(alignment: .leading) {
+                Text(t.t("termsConditionsModal.are_you_sure"))
+                    .fontHeader3()
+                    .padding()
+
+                Text(t.t("termsConditionsModal.if_reject_cannot_use"))
+                    .listItemModifier()
+                    .accessibilityIdentifier("rejectTermsConfirmText")
+
+                Spacer()
 
                 HStack {
                     Button(t.t("actions.cancel")) {
@@ -96,7 +102,7 @@ struct AcceptTermsView: View {
                 }
                 .listItemModifier()
             }
-            .presentationDetents([.fraction(0.25), .medium])
+            .presentationDetents([.fraction(0.33), .medium])
         }
     }
 }
