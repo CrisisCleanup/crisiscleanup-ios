@@ -89,6 +89,7 @@ private struct ForgotPasswordView: View {
             .disableAutocorrection(true)
             .disabled(disabled)
             .onSubmit { viewModel.onInitiatePasswordReset() }
+            .accessibilityIdentifier("forgotPasswordTextField")
 
         Button {
             viewModel.onInitiatePasswordReset()
@@ -138,6 +139,7 @@ private struct MagicLinkView: View {
             .disableAutocorrection(true)
             .disabled(disabled)
             .onSubmit { viewModel.onInitiateMagicLink() }
+            .accessibilityIdentifier("magicLinkTextField")
 
         Button {
             viewModel.onInitiateMagicLink()
