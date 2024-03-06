@@ -28,6 +28,7 @@ struct MainView: View {
     let caseMoveOnMapViewBuilder: CaseMoveOnMapViewBuilder
     let userFeedbackViewBuilder: UserFeedbackViewBuilder
     let inviteTeammateViewBuilder: InviteTeammateViewBuilder
+    let requestRedeployViewBuilder: RequestRedeployViewBuilder
     let syncInsightsViewBuilder: SyncInsightsViewBuilder
 
     @State private var selectedTab = TopLevelDestination.cases
@@ -175,6 +176,8 @@ struct MainView: View {
                                 userFeedbackViewBuilder.userFeedbackView
                             case .inviteTeammate:
                                 inviteTeammateViewBuilder.inviteTeammateView
+                            case .requestRedeploy:
+                                requestRedeployViewBuilder.requestRedeployView
                             case .syncInsights:
                                 if viewModel.isNotProduction {
                                     syncInsightsViewBuilder.syncInsightsView

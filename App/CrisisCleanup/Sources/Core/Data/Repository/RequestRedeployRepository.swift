@@ -1,6 +1,6 @@
 public protocol RequestRedeployRepository {
     func getRequestedIncidents() async -> Set<Int64>
-    func requestRedeploy(incidentId: Int64) async -> Bool
+    func requestRedeploy(_ incidentId: Int64) async -> Bool
 }
 
 class CrisisCleanupRequestRedeployRepository: RequestRedeployRepository {
@@ -25,7 +25,7 @@ class CrisisCleanupRequestRedeployRepository: RequestRedeployRepository {
         await networkDataSource.getRequestRedeployIncidentIds()
     }
 
-    func requestRedeploy(incidentId: Int64) async -> Bool {
+    func requestRedeploy(_ incidentId: Int64) async -> Bool {
         do {
             let organizationId = try await accountDataRepository.accountData.eraseToAnyPublisher().asyncFirst().org.id
             return try await accountApi.requestRedeploy(organizationId: organizationId, incidentId: incidentId)

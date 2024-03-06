@@ -38,6 +38,15 @@ struct MenuView: View {
                     .padding([.horizontal, .bottom])
 
                     Button {
+                        router.openRequesetRedeploy()
+                    } label: {
+                        Text(t.t("requestRedeploy.request_redeploy"))
+                            .padding(.horizontal)
+                    }
+                    .styleOutline()
+                    .padding([.horizontal, .bottom])
+
+                    Button {
                         router.openUserFeedback()
                     } label: {
                         Text(t.t("info.give_app_feedback"))
