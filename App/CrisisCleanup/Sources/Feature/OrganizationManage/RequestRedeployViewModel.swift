@@ -1,4 +1,5 @@
 import Combine
+import Foundation
 
 class RequestRedeployViewModel: ObservableObject {
     private let incidentsRepository: IncidentsRepository
@@ -10,12 +11,21 @@ class RequestRedeployViewModel: ObservableObject {
 
     @Published private(set) var isLoading = false
 
+    @Published private(set) var viewState = RequestRedeployViewState(isLoading: true, incidents: [])
+
     private let isRequestingRedeploySubject = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isRequestingRedeploy = false
     private let isRedeployRequestedSubject = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isRedeployRequested = false
+    @Published private(set) var isTransient = false
 
+    private let redeployErrorMessageSubject = CurrentValueSubject<String, Never>("")
     @Published private(set) var redeployErrorMessage = ""
+
+    private let requestedIncidentIdsSubject = CurrentValueSubject<Set<Int64>, Never>(Set())
+    @Published private(set) var requestedIncidentIds = Set<Int64>()
+
+    private var isFirstAppear = true
 
     private var subscriptions = Set<AnyCancellable>()
 
@@ -36,8 +46,62 @@ class RequestRedeployViewModel: ObservableObject {
     }
 
     func onViewAppear() {
+        subscribeViewState()
+        subscribeIncidentData()
+
+        if isFirstAppear {
+            isFirstAppear = false
+
+            Task {
+                await accountDataRefresher.updateApprovedIncidents(true)
+
+                requestedIncidentIdsSubject.value = await requestRedeployRepository.getRequestedIncidents()
+            }
+        }
     }
 
+    private func subscribeViewState() {
+        Publishers.CombineLatest(
+            incidentsRepository.incidents.eraseToAnyPublisher(),
+            accountDataRepository.accountData.eraseToAnyPublisher()
+        )
+        .map { (incidents, accountData) in
+            let approvedIncidents = accountData.approvedIncidents
+            let incidentOptions = incidents
+                .filter { !approvedIncidents.contains($0.id) }
+                .sorted { a, b in b.id > a.id }
+            return RequestRedeployViewState(isLoading: false, incidents: incidentOptions)
+        }
+        .receive(on: RunLoop.main)
+        .assign(to: \.viewState, on: self)
+        .store(in: &subscriptions)
+
+        isRequestingRedeploySubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.isRequestingRedeploy, on: self)
+            .store(in: &subscriptions)
+
+        isRedeployRequestedSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.isRedeployRequested, on: self)
+            .store(in: &subscriptions)
+
+        Publishers.CombineLatest(
+            $viewState,
+            $isRequestingRedeploy
+        )
+        .map { (state, b0) in state.isLoading || b0 }
+        .receive(on: RunLoop.main)
+        .assign(to: \.isTransient, on: self)
+        .store(in: &subscriptions)
+    }
+
+    private func subscribeIncidentData() {
+        requestedIncidentIdsSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.requestedIncidentIds, on: self)
+            .store(in: &subscriptions)
+    }
 
     func onViewDisappear() {
         subscriptions = cancelSubscriptions(subscriptions)
@@ -53,7 +117,7 @@ class RequestRedeployViewModel: ObservableObject {
         }
         isRequestingRedeploySubject.value = true
 
-        redeployErrorMessage = ""
+        redeployErrorMessageSubject.value = ""
 
         Task {
             do {
@@ -66,11 +130,16 @@ class RequestRedeployViewModel: ObservableObject {
                     isRedeployRequestedSubject.value = true
                 } else {
                     // TODO: More informative error state where possible
-                    redeployErrorMessage =
+                    redeployErrorMessageSubject.value =
                     translator.t("~~Request redeploy of {incident_name} failed.")
                         .replacingOccurrences(of: "{incident_name}", with: incident.shortName)
                 }
             }
         }
     }
+}
+
+struct RequestRedeployViewState {
+    let isLoading : Bool
+    let incidents: [Incident]
 }

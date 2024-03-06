@@ -12,6 +12,7 @@ struct AccountInfo: Codable {
     let orgId: Int64
     let orgName: String
     let hasAcceptedTerms: Bool
+    let incidentIds: Set<Int64>
 
     init(
         id: Int64 = 0,
@@ -23,7 +24,8 @@ struct AccountInfo: Codable {
         accessToken: String = "",
         orgId: Int64 = 0,
         orgName: String = "",
-        hasAcceptedTerms: Bool = false
+        hasAcceptedTerms: Bool = false,
+        incidentIds: Set<Int64> = Set()
     ) {
         self.id = id
         self.email = email
@@ -35,6 +37,7 @@ struct AccountInfo: Codable {
         self.orgId = orgId
         self.orgName = orgName
         self.hasAcceptedTerms = hasAcceptedTerms
+        self.incidentIds = incidentIds
     }
 }
 
@@ -56,6 +59,7 @@ extension AccountInfo {
             profilePictureUri: ppUri,
             org: orgData,
             hasAcceptedTerms: hasAcceptedTerms,
+            approvedIncidents: incidentIds,
             // Overwrite downstream
             areTokensValid: tokenExpiry > Date()
         )

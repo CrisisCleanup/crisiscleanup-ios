@@ -13,6 +13,7 @@ extension AccountData {
 		profilePictureUri: String,
 		org: OrgData,
 		hasAcceptedTerms: Bool,
+		approvedIncidents: Set<Int64>,
 		areTokensValid: Bool,
 		// This is to prevent overriding the default init if it exists already
 		forCopyInit: Void? = nil
@@ -24,6 +25,7 @@ extension AccountData {
 		self.profilePictureUri = profilePictureUri
 		self.org = org
 		self.hasAcceptedTerms = hasAcceptedTerms
+		self.approvedIncidents = approvedIncidents
 		self.areTokensValid = areTokensValid
 	}
 
@@ -43,6 +45,7 @@ extension AccountData {
 		var profilePictureUri: String
 		var org: OrgData
 		var hasAcceptedTerms: Bool
+		var approvedIncidents: Set<Int64>
 		var areTokensValid: Bool
 
 		fileprivate init(original: AccountData) {
@@ -53,6 +56,7 @@ extension AccountData {
 			self.profilePictureUri = original.profilePictureUri
 			self.org = original.org
 			self.hasAcceptedTerms = original.hasAcceptedTerms
+			self.approvedIncidents = original.approvedIncidents
 			self.areTokensValid = original.areTokensValid
 		}
 
@@ -65,6 +69,7 @@ extension AccountData {
 				profilePictureUri: profilePictureUri,
 				org: org,
 				hasAcceptedTerms: hasAcceptedTerms,
+				approvedIncidents: approvedIncidents,
 				areTokensValid: areTokensValid
 			)
 		}

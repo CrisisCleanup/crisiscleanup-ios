@@ -22,7 +22,13 @@ class CrisisCleanupRequestRedeployRepository: RequestRedeployRepository {
     }
 
     func getRequestedIncidents() async -> Set<Int64> {
-        await networkDataSource.getRequestRedeployIncidentIds()
+        do {
+            let ids = try await networkDataSource.getRequestRedeployIncidentIds()
+            return ids
+        } catch {
+            logger.logError(error)
+        }
+        return Set()
     }
 
     func requestRedeploy(_ incidentId: Int64) async -> Bool {

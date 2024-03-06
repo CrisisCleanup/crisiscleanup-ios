@@ -32,8 +32,6 @@ public protocol AccountDataRepository {
     func updateAccountTokens() async
 
     func clearAccountTokens()
-
-    func updateProfilePicture(_ pictureUrl: String)
 }
 
 class CrisisCleanupAccountDataRepository: AccountDataRepository {
@@ -205,9 +203,5 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
             accessToken = ""
             accountDataSource.expireAccessToken()
         }
-    }
-
-    func updateProfilePicture(_ pictureUrl: String) {
-        accountDataSource.updateProfilePicture(pictureUrl)
     }
 }

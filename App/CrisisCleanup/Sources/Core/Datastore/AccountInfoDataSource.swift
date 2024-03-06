@@ -8,8 +8,7 @@ protocol AccountInfoDataSource {
     func clearAccount()
     func updateExpiry(_ expirySeconds: Int64)
     func expireAccessToken()
-    func updateProfilePicture(_ pictureUrl: String)
-    func updateAcceptedTerms(_ isAccepted: Bool)
+    func update(_ pictureUrl: String?, _ isAcceptedTerms: Bool, _ incidentIds: Set<Int64>)
 }
 
 fileprivate let jsonDecoder = JsonDecoderFactory().decoder()
@@ -55,23 +54,16 @@ class AccountInfoUserDefaults: AccountInfoDataSource {
         updateExpiry(1)
     }
 
-    func updateProfilePicture(_ pictureUrl: String) {
+    func update(_ pictureUrl: String?, _ isAcceptedTerms: Bool, _ incidentIds: Set<Int64>) {
         let info = UserDefaults.standard.accountInfo
         if info.id > 0 {
             setAccount(
                 info.copy {
-                    $0.profilePictureUri = pictureUrl
-                }
-            )
-        }
-    }
-
-    func updateAcceptedTerms(_ isAccepted: Bool) {
-        let info = UserDefaults.standard.accountInfo
-        if info.id > 0 {
-            setAccount(
-                info.copy {
-                    $0.hasAcceptedTerms = isAccepted
+                    if let p = pictureUrl {
+                        $0.profilePictureUri = p
+                    }
+                    $0.hasAcceptedTerms = isAcceptedTerms
+                    $0.incidentIds = incidentIds
                 }
             )
         }
