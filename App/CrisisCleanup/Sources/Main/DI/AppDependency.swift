@@ -41,6 +41,7 @@ public protocol AppDependency: Dependency {
     var caseHistoryRepository: CaseHistoryRepository { get }
     var appSupportRepository: AppSupportRepository { get }
     var orgVolunteerRepository: OrgVolunteerRepository { get }
+    var requestRedeployRepository: RequestRedeployRepository { get }
 
     var authenticateViewBuilder: AuthenticateViewBuilder { get }
     var incidentSelectViewBuilder: IncidentSelectViewBuilder { get }

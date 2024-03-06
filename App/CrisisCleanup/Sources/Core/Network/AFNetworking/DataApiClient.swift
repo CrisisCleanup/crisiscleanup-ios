@@ -469,6 +469,18 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
             type: NetworkAccountProfileResult.self
         ).value?.hasAcceptedTerms == true
     }
+
+    func getRequestRedeployIncidentIds() async -> Set<Int64> {
+        let request = requestProvider.redeployRequests
+        let result = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkRedeployRequestsResult.self
+        ).value
+        if let incidentResults = result?.results {
+            return Set(incidentResults.map { $0.incident} )
+        }
+        return Set()
+    }
 }
 
 extension Array where Element == Int64 {

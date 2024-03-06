@@ -100,6 +100,8 @@ public protocol CrisisCleanupNetworkDataSource {
     func getProfile(_ accessToken: String) async -> NetworkUserProfile?
 
     func getProfileAcceptedTerms() async -> Bool
+
+    func getRequestRedeployIncidentIds() async -> Set<Int64>
 }
 
 extension CrisisCleanupNetworkDataSource {

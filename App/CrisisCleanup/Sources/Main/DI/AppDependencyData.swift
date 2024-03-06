@@ -299,6 +299,17 @@ extension MainComponent {
         }
     }
 
+    public var requestRedeployRepository: RequestRedeployRepository {
+        shared {
+            CrisisCleanupRequestRedeployRepository(
+                networkDataSource: networkDataSource,
+                accountDataRepository: accountDataRepository,
+                accountApi: accountApi,
+                loggerFactory: loggerFactory
+            )
+        }
+    }
+
     var pagingSyncLogRepository: PagingSyncLogRepository {
         shared {
             PagingSyncLogRepository(
