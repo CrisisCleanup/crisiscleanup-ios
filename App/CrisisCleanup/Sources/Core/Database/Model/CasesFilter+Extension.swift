@@ -26,10 +26,11 @@ extension CasesFilter {
 
             workTypes.forEach { workType in
                 if let orgClaim = workType.orgClaim {
+                    // TODO: Review logic below and simplify or document
                     if organizationAffiliates.contains(orgClaim) {
                         assignedToMyTeamCount += 1
                     }
-                    if (organizationAffiliates.contains(orgClaim)) {
+                    if organizationAffiliates.contains(orgClaim) {
                         claimedByMyOrgCount += 1
                     }
                 } else {

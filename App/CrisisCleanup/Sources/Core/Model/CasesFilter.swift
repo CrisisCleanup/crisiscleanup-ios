@@ -177,10 +177,10 @@ public struct CasesFilter: Hashable, Codable {
     var matchingStatuses: Set<String> {
         var statuses: Set<WorkTypeStatus> = []
         statuses.formUnion(workTypeStatuses)
-        if (isStatusOpen) {
+        if isStatusOpen {
             statuses.formUnion(openWorkTypeStatuses)
         }
-        if (isStatusClosed) {
+        if isStatusClosed {
             statuses.formUnion(closedWorkTypeStatuses)
         }
         return Set(statuses.map { $0.literal })

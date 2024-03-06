@@ -15,7 +15,7 @@ extension String {
 }
 
 internal func baseChange(_ base: String?, _ from: String?, _ to: String?) -> String? {
-    if (base == nil) {
+    if base == nil {
         return to?.diffFrom(from)
     } else {
         let nFrom = from?.trim() ?? ""

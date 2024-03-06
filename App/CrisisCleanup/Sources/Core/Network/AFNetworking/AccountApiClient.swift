@@ -19,8 +19,11 @@ class AccountApiClient : CrisisCleanupAccountApi {
         let millisecondsFormat = with(DateFormatter()) {
             $0.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
         }
+        let secondsFormat = with(DateFormatter()) {
+            $0.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+        }
         let jsonDecoder = JsonDecoderFactory().decoder(
-            dateDecodingStrategy: .anyFormatter(in: [isoFormat, millisecondsFormat])
+            dateDecodingStrategy: .anyFormatter(in: [isoFormat, millisecondsFormat, secondsFormat])
         )
 
         networkClient = AFNetworkingClient(appEnv, jsonDecoder: jsonDecoder)
@@ -102,5 +105,18 @@ class AccountApiClient : CrisisCleanupAccountApi {
             type: NetworkAccountProfileResult.self
         )
         return result.value?.hasAcceptedTerms == true
+    }
+
+    func requestRedeploy(organizationId: Int64, incidentId: Int64) async throws -> Bool {
+        let payload = NetworkRequestRedeploy(organization: organizationId, incident: incidentId)
+        let request = requestProvider.requestRedeploy
+            .setBody(payload)
+        if let result = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkIncidentRedeployRequest.self
+        ).value {
+            return result.organization == organizationId && result.incident == incidentId
+        }
+        return false
     }
 }

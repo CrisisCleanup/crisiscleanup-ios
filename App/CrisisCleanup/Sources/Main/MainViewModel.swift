@@ -168,18 +168,18 @@ class MainViewModel: ObservableObject {
         .store(in: &subscriptions)
 
         accountDataPublisher
+            .removeDuplicates()
+            .filter { $0.areTokensValid }
             .sink { accountData in
-                if accountData.areTokensValid {
-                    self.sync(false)
+                self.sync(false)
 
-                    let data = self.incidentsData
-                    if !data.isEmpty {
-                        self.syncPuller.appPullIncident(data.selectedId)
-                    }
+                let data = self.incidentsData
+                if !data.isEmpty {
+                    self.syncPuller.appPullIncident(data.selectedId)
+                }
 
-                    Task {
-                        await self.accountDataRefresher.updateMyOrganization(true)
-                    }
+                Task {
+                    await self.accountDataRefresher.updateMyOrganization(true)
                 }
             }
             .store(in: &subscriptions)
@@ -214,7 +214,6 @@ class MainViewModel: ObservableObject {
                 latest: true
             )
             .sink { data in
-                print("Account data change \(data)")
                 self.isFetchingTermsAcceptanceSubject.value = true
                 do {
                     defer {

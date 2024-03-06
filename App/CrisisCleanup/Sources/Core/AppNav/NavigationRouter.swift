@@ -102,6 +102,10 @@ class NavigationRouter: ObservableObject {
         path.append(.inviteTeammate)
     }
 
+    func openRequesetRedeploy() {
+        path.append(.requestRedeploy)
+    }
+
     func openSearchCases() {
         path.append(.searchCases)
     }

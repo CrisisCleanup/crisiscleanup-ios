@@ -77,7 +77,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         networkError = GenericError("Network error")
     }
 
-    func getProfilePic() async throws -> String? {
+    func getProfileData() async throws -> NetworkAccountProfileResult {
         let request = requestProvider.accountProfile
         let response = await networkClient.callbackContinue(
             requestConvertible: request,
@@ -85,7 +85,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         )
         if let result = response.value {
             try result.errors?.tryThrowException()
-            return result.files?.profilePictureUrl
+            return result
         }
         throw response.error ?? networkError
     }
@@ -462,12 +462,21 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         ).value
     }
 
-    func getProfileAcceptedTerms() async -> Bool {
-        let request = requestProvider.accountProfile
-        return await networkClient.callbackContinue(
+    func getRequestRedeployIncidentIds() async throws -> Set<Int64> {
+        let request = requestProvider.redeployRequests
+        let response = await networkClient.callbackContinue(
             requestConvertible: request,
-            type: NetworkAccountProfileResult.self
-        ).value?.hasAcceptedTerms == true
+            type: NetworkRedeployRequestsResult.self
+        )
+
+        if let result = response.value {
+            try result.errors?.tryThrowException()
+            if let incidentResults = result.results {
+                return Set(incidentResults.map { $0.incident} )
+            }
+        }
+
+        throw response.error ?? networkError
     }
 }
 

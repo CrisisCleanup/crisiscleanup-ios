@@ -5,6 +5,7 @@ import Foundation
 public protocol AppPreferencesDataStore {
     var preferences: any Publisher<AppPreferences, Never> { get }
 
+    func reset()
     func setHideOnboarding(_ hide: Bool)
     func setSyncAttempt(
         _ isSuccessful: Bool,
@@ -44,6 +45,18 @@ class AppPreferencesUserDefaults: AppPreferencesDataStore {
 
     private func update(_ preferences: AppPreferences) {
         UserDefaults.standard.appPreferences = preferences
+    }
+
+    func reset() {
+        update(
+            UserDefaults.standard.appPreferences.copy {
+                $0.hideOnboarding = false
+                $0.selectedIncidentId = 0
+                $0.languageKey = ""
+                $0.syncAttempt = SyncAttempt()
+                $0.tableViewSortBy = .none
+            }
+        )
     }
 
     func setHideOnboarding(_ hide: Bool) {

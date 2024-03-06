@@ -10,7 +10,7 @@ struct IncidentSelectView: View {
         VStack {
             Text(t.t("nav.change_incident"))
                 .fontHeader3()
-                .padding()
+                .padding(.top)
 
             let selectedId = viewModel.incidentsData.selectedId
             ScrollViewReader { scrollView in
@@ -18,12 +18,11 @@ struct IncidentSelectView: View {
                     let isSelected = selectedId == incident.id
                     Text(incident.name)
                         .bold(isSelected)
+                        .fullWidthSelector()
                         .onTapGesture {
                             viewModel.incidentSelector.setIncident(incident)
                             onDismiss()
                         }
-                        // TODO: Common dimensions
-                        .frame(height: 48)
                 }
                 .task {
                     viewModel.onOptionsRendered()

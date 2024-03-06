@@ -106,7 +106,7 @@ class PasswordRecoverViewModel: ObservableObject {
         accountDataRepository.accountData.eraseToAnyPublisher()
             .receive(on: RunLoop.main)
             .sink {
-                if (self.emailAddress.isBlank) {
+                if self.emailAddress.isBlank {
                     self.emailAddress = $0.emailAddress
                 }
                 self.isLoadingAccountData = false
@@ -186,7 +186,7 @@ class PasswordRecoverViewModel: ObservableObject {
                 let isInitiated = await accountUpdateRepository.initiateEmailMagicLink(email)
 
                 Task { @MainActor in
-                    if (isInitiated) {
+                    if isInitiated {
                         isMagicLinkInitiated = true
                     } else {
                         magicLinkErrorMessage = translator.t("info.magic_link_error")

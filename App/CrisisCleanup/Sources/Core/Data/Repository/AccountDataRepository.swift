@@ -32,8 +32,6 @@ public protocol AccountDataRepository {
     func updateAccountTokens() async
 
     func clearAccountTokens()
-
-    func updateProfilePicture(_ pictureUrl: String)
 }
 
 class CrisisCleanupAccountDataRepository: AccountDataRepository {
@@ -195,8 +193,7 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
 
     private func onLogout() {
         clearAccount()
-        // TODO: Clear other preferences?
-        preferencesDataSource.setHideOnboarding(true)
+        preferencesDataSource.reset()
     }
 
     private let skipChangeGuard = ManagedAtomic(false)
@@ -206,9 +203,5 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
             accessToken = ""
             accountDataSource.expireAccessToken()
         }
-    }
-
-    func updateProfilePicture(_ pictureUrl: String) {
-        accountDataSource.updateProfilePicture(pictureUrl)
     }
 }

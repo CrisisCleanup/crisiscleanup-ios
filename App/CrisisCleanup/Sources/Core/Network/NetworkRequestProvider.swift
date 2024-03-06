@@ -183,6 +183,13 @@ extension NetworkRequestProvider {
         )
     }
 
+    var redeployRequests: NetworkRequest {
+        NetworkRequest(
+            apiUrl("incident_requests"),
+            addTokenHeader: true
+        )
+    }
+
     // MARK: Write requests
 
     var newWorksite: NetworkRequest {
@@ -371,6 +378,14 @@ extension NetworkRequestProvider {
         NetworkRequest(
             apiUrl("users"),
             method: .patch,
+            addTokenHeader: true
+        )
+    }
+
+    var requestRedeploy: NetworkRequest {
+        NetworkRequest(
+            apiUrl("incident_requests"),
+            method: .post,
             addTokenHeader: true
         )
     }

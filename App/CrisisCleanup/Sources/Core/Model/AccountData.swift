@@ -14,6 +14,7 @@ public struct AccountData: Equatable {
     let profilePictureUri: String
     let org: OrgData
     let hasAcceptedTerms: Bool
+    let approvedIncidents: Set<Int64>
     let areTokensValid: Bool
 
     // sourcery:begin: skipCopy
@@ -32,5 +33,6 @@ let emptyAccountData = AccountData(
     profilePictureUri: "",
     org: emptyOrgData,
     hasAcceptedTerms: false,
+    approvedIncidents: Set(),
     areTokensValid: false
 )

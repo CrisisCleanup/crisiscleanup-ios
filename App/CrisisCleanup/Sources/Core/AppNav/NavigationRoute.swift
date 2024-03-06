@@ -31,7 +31,8 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
          scanOrgQrCode,
          inviteTeammate,
          orgPersistentInvite(_ invite: UserPersistentInvite),
-         pasteOrgInviteLink
+         pasteOrgInviteLink,
+         requestRedeploy
 
     public var id: Int {
         switch self {
@@ -64,6 +65,7 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
         case .inviteTeammate:       return 27
         case .orgPersistentInvite:  return 28
         case .pasteOrgInviteLink:   return 29
+        case .requestRedeploy:      return 30
 
         case .syncInsights: return 77
         }

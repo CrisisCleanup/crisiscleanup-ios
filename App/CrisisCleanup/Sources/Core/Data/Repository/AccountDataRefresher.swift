@@ -7,7 +7,7 @@ public class AccountDataRefresher {
     private let organizationsRepository: OrganizationsRepository
     private let logger: AppLogger
 
-    private var profilePictureUpdateTime = Date(timeIntervalSince1970: 0)
+    private var accountDataUpdateTime = Date(timeIntervalSince1970: 0)
 
     init(
         dataSource: AccountInfoDataSource,
@@ -23,20 +23,37 @@ public class AccountDataRefresher {
         self.logger = loggerFactory.getLogger("account-data-refresher")
     }
 
-    func updateProfilePicture() async {
-        if accountDataRepository.refreshToken.isBlank ||
-            profilePictureUpdateTime.addingTimeInterval(1.days) > Date.now
-        {
-            return
-        }
+    private func refreshAccountData(
+           _ syncTag: String,
+           _ force: Bool,
+           cacheTimeSpan: Double = 1.days
+       ) async {
+           if accountDataRepository.refreshToken.isBlank {
+               return
+           }
+           if !force && accountDataUpdateTime.addingTimeInterval(cacheTimeSpan) > Date.now {
+               return
+           }
 
-        do {
-            if let pictureUrl = try await networkDataSource.getProfilePic() {
-                accountDataRepository.updateProfilePicture(pictureUrl)
-            }
-        } catch {
-            logger.logError(error)
-        }
+           logger.logCapture("Syncing \(syncTag)")
+           do {
+               let profile = try await networkDataSource.getProfileData()
+               if profile.hasAcceptedTerms != nil {
+                   dataSource.update(
+                       profile.files?.profilePictureUrl,
+                       profile.hasAcceptedTerms!,
+                       profile.approvedIncidents!
+                   )
+
+                   accountDataUpdateTime = Date.now
+               }
+           } catch {
+               logger.logError(error)
+           }
+       }
+
+    func updateProfilePicture() async {
+        await refreshAccountData("profile pic", false)
     }
 
     func updateMyOrganization(_ force: Bool) async {
@@ -55,7 +72,10 @@ public class AccountDataRefresher {
     }
 
     func updateAcceptedTerms() async {
-        let hasAcceptedTerms = await networkDataSource.getProfileAcceptedTerms()
-        dataSource.updateAcceptedTerms(hasAcceptedTerms)
+        await refreshAccountData("accept terms", true)
+    }
+
+    func updateApprovedIncidents(_ force: Bool = false) async {
+        await refreshAccountData("approved incidents", force)
     }
 }
