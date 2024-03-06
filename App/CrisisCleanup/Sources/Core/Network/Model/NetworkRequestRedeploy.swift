@@ -5,7 +5,7 @@ struct NetworkRequestRedeploy: Codable {
     let incident: Int64
 }
 
-struct NetworkIncidentRedeployRequest: Codable {
+struct NetworkIncidentRedeployRequest: Codable, Equatable {
     let id: Int64
     let organization: Int64
     let incident: Int64
@@ -16,7 +16,7 @@ struct NetworkIncidentRedeployRequest: Codable {
     enum CodingKeys: String, CodingKey {
         case id,
              organization,
-             incident = "object_id",
+             incident,
              createdAt = "created_at",
              organizationName = "organization_name",
              incidentName = "incident_name"

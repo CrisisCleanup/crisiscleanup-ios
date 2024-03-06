@@ -35,7 +35,7 @@ public class AccountDataRefresher {
                return
            }
 
-           logger.logCapture("Syncing $syncTag")
+           logger.logCapture("Syncing \(syncTag)")
            do {
                let profile = try await networkDataSource.getProfileData()
                if profile.hasAcceptedTerms != nil {

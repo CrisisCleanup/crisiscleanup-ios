@@ -9,7 +9,7 @@ class RequestRedeployViewModel: ObservableObject {
     private let translator: KeyTranslator
     private let logger: AppLogger
 
-    @Published private(set) var isLoading = false
+    @Published private(set) var isLoading = true
 
     @Published private(set) var viewState = RequestRedeployViewState(isLoading: true, incidents: [])
 
@@ -69,12 +69,18 @@ class RequestRedeployViewModel: ObservableObject {
             let approvedIncidents = accountData.approvedIncidents
             let incidentOptions = incidents
                 .filter { !approvedIncidents.contains($0.id) }
-                .sorted { a, b in b.id > a.id }
+                .sorted { a, b in a.id > b.id }
             return RequestRedeployViewState(isLoading: false, incidents: incidentOptions)
         }
         .receive(on: RunLoop.main)
         .assign(to: \.viewState, on: self)
         .store(in: &subscriptions)
+
+        $viewState
+            .map { $0.isLoading }
+            .receive(on: RunLoop.main)
+            .assign(to: \.isLoading, on: self)
+            .store(in: &subscriptions)
 
         isRequestingRedeploySubject
             .receive(on: RunLoop.main)

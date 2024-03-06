@@ -19,8 +19,11 @@ class AccountApiClient : CrisisCleanupAccountApi {
         let millisecondsFormat = with(DateFormatter()) {
             $0.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
         }
+        let secondsFormat = with(DateFormatter()) {
+            $0.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+        }
         let jsonDecoder = JsonDecoderFactory().decoder(
-            dateDecodingStrategy: .anyFormatter(in: [isoFormat, millisecondsFormat])
+            dateDecodingStrategy: .anyFormatter(in: [isoFormat, millisecondsFormat, secondsFormat])
         )
 
         networkClient = AFNetworkingClient(appEnv, jsonDecoder: jsonDecoder)

@@ -2,20 +2,26 @@ import SwiftUI
 
 struct RequestRedeployView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
+    @Environment(\.dismiss) var dismiss
 
     @ObservedObject var viewModel: RequestRedeployViewModel
 
-    @State private var animateLoading = false
+    @State private var animateLoading = true
 
     @State private var selectedIncident = EmptyIncident
+
+    @State private var showIncidentOptions = false
 
     var body: some View {
         ZStack {
             if animateLoading {
                 ProgressView()
             } else if viewModel.isRedeployRequested {
-                Text(t.t("requestRedeploy.request_redeploy_success"))
-                    .listItemModifier()
+                VStack {
+                    Text(t.t("requestRedeploy.request_redeploy_success"))
+                        .listItemModifier()
+                    Spacer()
+                }
             } else {
                 let incidents = viewModel.viewState.incidents
 
@@ -27,21 +33,84 @@ struct RequestRedeployView: View {
                     let isRequestingRedeploy = viewModel.isRequestingRedeploy
 
                     let selectIncidentHint = t.t("actions.select_incident")
+                    let selectedIncidentText = selectedIncident.name.ifBlank { selectIncidentHint }
 
                     VStack {
-                        RequestRedeployContent(
-                            isEditable: isEditable,
-                            incidents: incidents,
-                            requestedIncidentIds: requestedIncidentIds,
-                            errorMessage: errorMessage,
-                            selectedIncidentText: selectedIncident.name.ifBlank { selectIncidentHint },
-                            selectIncidentHint: selectIncidentHint,
-                            selectedIncident: $selectedIncident
-                        )
+                        if !showIncidentOptions {
+                            Text(t.t("requestRedeploy.choose_an_incident"))
+                                .listItemModifier()
 
-                        Spacer()
+                            if errorMessage.isNotBlank {
+                                Text(errorMessage)
+                                    .listItemPadding()
+                                    .foregroundColor(appTheme.colors.primaryRedColor)
+                            }
 
-                        // TODO: Actions
+                            HStack {
+                                Text(selectedIncidentText)
+                                Spacer()
+                                Image(systemName: "chevron.up.chevron.down")
+                            }
+                            .textFieldBorder()
+                            .listItemModifier()
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                showIncidentOptions = true
+                            }
+
+                            Spacer()
+
+                            HStack {
+                                Button(t.t("actions.cancel")) {
+                                    dismiss()
+                                }
+                                .styleCancel()
+                                .disabled(!isEditable)
+
+                                Button {
+                                    viewModel.requestRedeploy(incident: selectedIncident)
+                                } label: {
+                                    BusyButtonContent(
+                                        isBusy: isRequestingRedeploy,
+                                        text: t.t("actions.submit")
+                                    )
+                                }
+                                .stylePrimary()
+                                .disabled(!isEditable || selectedIncident == EmptyIncident)
+                            }
+                            .listItemPadding()
+                        }
+                    }
+                    .sheet(isPresented: $showIncidentOptions) {
+                        Text(selectIncidentHint)
+                            .fontHeader3()
+                            .padding(.top)
+
+                        List(incidents, id: \.id) { incident in
+                            let isSelected = incident.id == selectedIncident.id
+                            let isRequested = requestedIncidentIds.contains(incident.id)
+                            Text(incident.name)
+                                .bold(isSelected)
+                                .fullWidthSelector()
+                                // TODO: Use newer APIs where possible
+                                // if #available(iOS 17, *) {
+                                //    .selectionDisabled(isRequested)
+                                .if (isRequested) {
+                                    $0.tag("disabled")
+                                        .foregroundColor(.black.disabledAlpha())
+                                }
+                                .onTapGesture {
+                                    if !isRequested {
+                                        selectedIncident = incident
+                                        showIncidentOptions = false
+                                    }
+                                }
+                        }
+
+                        Button(t.t("actions.close")) {
+                            showIncidentOptions = false
+                        }
+                        .padding()
                     }
                 }
             }
@@ -54,24 +123,5 @@ struct RequestRedeployView: View {
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)
-    }
-}
-
-private struct RequestRedeployContent: View {
-    var isEditable: Bool
-    var incidents: [Incident]
-    var requestedIncidentIds: Set<Int64>
-    var errorMessage: String
-    var selectedIncidentText: String
-    var selectIncidentHint: String
-
-    @Binding var selectedIncident: Incident
-
-    @State private var showIncidentOptions = false
-
-    var body: some View {
-        if incidents.isNotEmpty {
-            Text("Request redeploy \(incidents.count)")
-        }
     }
 }
