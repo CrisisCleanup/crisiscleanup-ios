@@ -71,6 +71,7 @@ struct OpenAppSettingsDialog<Content>: View where Content : View {
 
     let title: String
     let dismissDialog: () -> Void
+    var accessibilityIdentifier = "openSettingsDialog"
 
     @ViewBuilder let content: () -> Content
 
@@ -87,6 +88,7 @@ struct OpenAppSettingsDialog<Content>: View where Content : View {
             },
             content: content
         )
+        .accessibilityIdentifier(accessibilityIdentifier)
     }
 }
 

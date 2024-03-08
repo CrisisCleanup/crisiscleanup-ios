@@ -13,6 +13,7 @@ struct PasteOrgInviteView: View {
         VStack(spacing: appTheme.listItemVerticalPadding) {
             Text(t.t("pasteInvite.paste_invitation_link_and_accept"))
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("pasteOrgInviteText")
 
             let errorMessage = viewModel.inviteCodeError
             if errorMessage.isNotBlank {
@@ -20,12 +21,14 @@ struct PasteOrgInviteView: View {
                     .foregroundColor(appTheme.colors.primaryRedColor)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, appTheme.listItemVerticalPadding)
+                    .accessibilityIdentifier("pasteOrgInviteError")
             }
 
             TextField(t.t("pasteInvite.invite_link"), text: $invitationLink)
                 .textFieldBorder()
                 .onSubmit { viewModel.onSubmitLink(invitationLink) }
                 .padding(.bottom)
+                .accessibilityIdentifier("pasteOrgInviteTextField")
 
 
             Button {
@@ -38,6 +41,7 @@ struct PasteOrgInviteView: View {
             }
             .stylePrimary()
             .disabled(viewModel.isVerifyingCode)
+            .accessibilityIdentifier("pasteOrgInviteSubmitAction")
 
             Spacer()
         }

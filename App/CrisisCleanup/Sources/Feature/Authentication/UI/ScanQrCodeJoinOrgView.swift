@@ -12,10 +12,12 @@ struct ScanQrCodeJoinOrgView: View {
             VStack {
                 if viewModel.isCameraDenied {
                     Text(t.t("info.camera_access_needed"))
+                        .accessibilityIdentifier("scanQrCodeCameraExplainer")
                     Button(t.t("info.grant_camera_access")) {
                         showOpenSettings = true
                     }
                     .stylePrimary()
+                    .accessibilityIdentifier("scanQrCodeGrantCameraAccessAction")
                     .padding()
 
                     Spacer()
@@ -25,6 +27,7 @@ struct ScanQrCodeJoinOrgView: View {
                         // TODO: Common styles
                         Text(errorMessage)
                             .padding()
+                            .accessibilityIdentifier("scanQrCodeError")
 
                         Spacer()
                     } else {
@@ -39,6 +42,7 @@ struct ScanQrCodeJoinOrgView: View {
                                         height: geometry.size.height,
                                         alignment: .center)
                                     .clipped()
+                                    .accessibilityIdentifier("scanQrCodeCameraView")
                             }
                         }
                     }

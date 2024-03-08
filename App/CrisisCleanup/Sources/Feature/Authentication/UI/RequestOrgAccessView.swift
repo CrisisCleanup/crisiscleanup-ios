@@ -13,6 +13,7 @@ struct RequestOrgAccessView: View {
                     .fontHeader3()
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
+                    .accessibilityIdentifier("requestAccessInviteInfoError")
 
                 Spacer()
 
@@ -75,10 +76,12 @@ private struct RequestOrgUserInfoInputView: View {
                         let requestInstructions = t.t("requestAccess.request_access_enter_email")
                         Text(requestInstructions)
                             .padding(.bottom, appTheme.listItemVerticalPadding)
+                            .accessibilityIdentifier("requestAccessByEmailInstructions")
 
                         if viewModel.emailAddressError.isNotBlank {
                             Text(viewModel.emailAddressError)
                                 .foregroundColor(appTheme.colors.primaryRedColor)
+                                .accessibilityIdentifier("requestAccessByEmailError")
                         }
                         TextField(t.t("requestAccess.existing_member_email"), text: $viewModel.emailAddress)
                             .textFieldBorder()
@@ -93,6 +96,7 @@ private struct RequestOrgUserInfoInputView: View {
                                     focusState.wrappedValue = .authEmailAddress
                                 }
                             }
+                            .accessibilityIdentifier("requestAccessByEmailTextField")
                     }
                     .padding(.horizontal)
                 } else {
@@ -100,19 +104,12 @@ private struct RequestOrgUserInfoInputView: View {
                         if let avatarUrl = displayInfo.avatarUrl,
                            displayInfo.displayName.isNotBlank,
                            displayInfo.inviteMessage.isNotBlank {
-                            HStack(spacing: appTheme.gridItemSpacing) {
-                                AvatarView(
-                                    url: avatarUrl,
-                                    isSvg: displayInfo.isSvgAvatar
-                                )
-
-                                VStack(alignment: .leading) {
-                                    Text(displayInfo.displayName)
-                                        .fontHeader4()
-                                    Text(displayInfo.inviteMessage)
-                                        .fontBodySmall()
-                                }
-                            }
+                            InviterAvatarView(
+                                avatarUrl: avatarUrl,
+                                isSvgAvatar: displayInfo.isSvgAvatar,
+                                displayName: displayInfo.displayName,
+                                inviteMessage: displayInfo.inviteMessage
+                            )
                             .padding(.horizontal)
                         }
                     } else {
@@ -123,6 +120,7 @@ private struct RequestOrgUserInfoInputView: View {
                 Text(t.t("requestAccess.complete_form_request_access"))
                     .fontHeader3()
                     .padding()
+                    .accessibilityIdentifier("requestAccessInputInstruction")
 
                 UserInfoInputView(
                     languageOptions: $viewModel.languageOptions,
@@ -148,6 +146,7 @@ private struct RequestOrgUserInfoInputView: View {
                     Text(t.t("requestAccess.request_will_be_sent"))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("requestAccessSubmitExplainer")
 
                     Button {
                         viewModel.onVolunteerWithOrg()
@@ -160,6 +159,7 @@ private struct RequestOrgUserInfoInputView: View {
                     .stylePrimary()
                     .padding(.bottom)
                     .disabled(disabled)
+                    .accessibilityIdentifier("requestAccessSubmitAction")
                 }
                 .padding(.horizontal)
             }
@@ -169,45 +169,27 @@ private struct RequestOrgUserInfoInputView: View {
     }
 }
 
-// TODO: Move (and preview) into DesignSystem or UI module
-internal struct RegisterSuccessView: View {
-    let title: String
-    let message: String
+internal struct InviterAvatarView: View {
+    var avatarUrl: URL
+    var isSvgAvatar: Bool
+    var displayName: String
+    var inviteMessage: String
 
     var body: some View {
-        Spacer()
-
-        Image(systemName: "checkmark.circle.fill")
-            .resizable()
-            .frame(width: 64, height: 64)
-            .foregroundColor(statusClosedColor)
-
-        Text(title)
-            .fontHeader1()
-            .padding()
-
-        Text(message)
-            .padding(.horizontal)
-
-        Spacer()
-
-        Image("worker_wheelbarrow_world_background", bundle: .module)
-            .offset(CGSize(width: 90.0, height: 0.0))
-
-        Spacer()
-    }
-}
-
-struct RegisterSuccessView_Previews: PreviewProvider {
-    struct Preview: View {
-        var body: some View {
-            RegisterSuccessView(
-                title: "A long wrapping title stretching beyond the thin screen",
-                message: "An even longer message unfit for single line display so must spill onto the untouched space below."
+        HStack(spacing: appTheme.gridItemSpacing) {
+            AvatarView(
+                url: avatarUrl,
+                isSvg: isSvgAvatar
             )
+
+            VStack(alignment: .leading) {
+                Text(displayName)
+                    .fontHeader4()
+                    .accessibilityIdentifier("inviterAvatarDisplayName")
+                Text(inviteMessage)
+                    .fontBodySmall()
+                    .accessibilityIdentifier("inviterAvatarMessage")
+            }
         }
-    }
-    static var previews: some View {
-        Preview()
     }
 }
