@@ -21,23 +21,23 @@ struct VolunteerOrgView: View {
 
                 InstructionTextAction(
                     instruction: t.t("volunteerOrg.click_inviation_link"),
-                    actionText: t.t("volunteerOrg.paste_invitation_link")
+                    actionText: t.t("volunteerOrg.paste_invitation_link"),
+                    accessibilityIdentifier: "volunteerPasteLinkAction"
                 ) {
                     router.openPasteOrgInviteLink()
                 }
                 .padding()
-                .accessibilityIdentifier("volunteerPasteLinkAction")
 
                 StaticOrTextView()
 
                 InstructionTextAction(
                     instruction: t.t("volunteerOrg.if_you_know_email"),
-                    actionText: t.t("volunteerOrg.request_access")
+                    actionText: t.t("volunteerOrg.request_access"),
+                    accessibilityIdentifier: "volunteerRequestAccessAction"
                 ) {
                     router.openRequestOrgAccess()
                 }
                 .padding()
-                .accessibilityIdentifier("volunteerRequestAccessAction")
 
                 StaticOrTextView()
 
@@ -45,7 +45,7 @@ struct VolunteerOrgView: View {
                     instruction: t.t("volunteerOrg.find_qr_code")
                 ) {
                     Button {
-                         router.openScanOrgQrCode()
+                        router.openScanOrgQrCode()
                     } label: {
                         HStack {
                             Image(systemName: "qrcode.viewfinder")
@@ -118,15 +118,18 @@ private struct InstructionAction<Content>: View where Content: View {
 private struct InstructionTextAction: View {
     let instruction: String
     let actionText: String
+    let accessibilityIdentifier: String
     let onAction: () -> Void
 
     init(
         instruction: String,
         actionText: String,
+        accessibilityIdentifier: String = "",
         onAction: @escaping () -> Void
     ) {
         self.instruction = instruction
         self.actionText = actionText
+        self.accessibilityIdentifier = accessibilityIdentifier
         self.onAction = onAction
     }
 
@@ -136,6 +139,7 @@ private struct InstructionTextAction: View {
                 onAction()
             }
             .stylePrimary()
+            .accessibilityIdentifier(accessibilityIdentifier)
         }
     }
 }

@@ -8,6 +8,7 @@ struct PasteOrgInviteView: View {
     @ObservedObject var viewModel: PasteOrgInviteViewModel
 
     @State private var invitationLink = ""
+    @FocusState private var focusState: TextInputFocused?
 
     var body: some View {
         VStack(spacing: appTheme.listItemVerticalPadding) {
@@ -26,10 +27,15 @@ struct PasteOrgInviteView: View {
 
             TextField(t.t("pasteInvite.invite_link"), text: $invitationLink)
                 .textFieldBorder()
+                .focused($focusState, equals: .anyTextInput)
                 .onSubmit { viewModel.onSubmitLink(invitationLink) }
                 .padding(.bottom)
+                .onAppear {
+                    if invitationLink.isBlank {
+                        focusState = .anyTextInput
+                    }
+                }
                 .accessibilityIdentifier("pasteOrgInviteTextField")
-
 
             Button {
                 viewModel.onSubmitLink(invitationLink)
