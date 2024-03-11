@@ -1,5 +1,5 @@
-import SwiftUI
 import Combine
+import SwiftUI
 
 class MenuViewModel: ObservableObject {
     private let incidentsRepository: IncidentsRepository
@@ -15,6 +15,9 @@ class MenuViewModel: ObservableObject {
 
     let isDebuggable: Bool
     let isProduction: Bool
+
+    let termsOfServiceUrl: URL
+    let privacyPolicyUrl: URL
 
     @Published private(set) var showHeaderLoading = false
 
@@ -41,6 +44,7 @@ class MenuViewModel: ObservableObject {
         syncLogRepository: SyncLogRepository,
         incidentSelector: IncidentSelector,
         appVersionProvider: AppVersionProvider,
+        appSettingsProvider: AppSettingsProvider,
         databaseVersionProvider: DatabaseVersionProvider,
         authEventBus: AuthEventBus,
         appEnv: AppEnv,
@@ -59,6 +63,9 @@ class MenuViewModel: ObservableObject {
 
         isDebuggable = appEnv.isDebuggable
         isProduction = appEnv.isProduction
+
+        termsOfServiceUrl = appSettingsProvider.termsOfServiceUrl!
+        privacyPolicyUrl = appSettingsProvider.privacyPolicyUrl!
 
         Task {
             syncLogRepository.trimOldLogs()

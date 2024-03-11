@@ -67,11 +67,11 @@ struct MenuView: View {
             HStack(alignment: .center, spacing: 16) {
                 Link(
                     t.t("publicNav.terms"),
-                    destination: URL(string: "https://crisiscleanup.org/terms")!
+                    destination: viewModel.termsOfServiceUrl
                 )
                 Link(
                     t.t("nav.privacy"),
-                    destination: URL(string: "https://crisiscleanup.org/privacy")!
+                    destination: viewModel.privacyPolicyUrl
                 )
             }
             .padding(.vertical, appTheme.listItemVerticalPadding)

@@ -1,4 +1,5 @@
 import CrisisCleanup
+import Foundation
 
 struct AppSettings : AppSettingsProvider {
     let apiBaseUrl: String
@@ -6,6 +7,8 @@ struct AppSettings : AppSettingsProvider {
     let baseUrl: String
     let reachabilityHost: String
     let googleMapsApiKey: String
+    let termsOfServiceUrl: URL?
+    let privacyPolicyUrl: URL?
     let debugEmailAddress: String
     let debugAccountPassword: String
 
@@ -15,6 +18,8 @@ struct AppSettings : AppSettingsProvider {
         self.baseUrl = config.baseUrl
         self.reachabilityHost = config.reachabilityHost
         self.googleMapsApiKey = config.googleMapsApiKey
+        termsOfServiceUrl = URL(string: "\(baseUrl)/terms?view=plain")
+        privacyPolicyUrl = URL(string: "\(baseUrl)/privacy?view=plain")
         self.debugEmailAddress = config.debugEmailAddress
         self.debugAccountPassword = config.debugAccountPassword
     }
@@ -25,6 +30,8 @@ struct AppSettings : AppSettingsProvider {
         baseUrl = ""
         reachabilityHost = ""
         googleMapsApiKey = ""
+        termsOfServiceUrl = nil
+        privacyPolicyUrl = nil
         debugEmailAddress = ""
         debugAccountPassword = ""
     }

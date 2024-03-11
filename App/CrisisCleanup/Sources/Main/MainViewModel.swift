@@ -1,5 +1,5 @@
-import SwiftUI
 import Combine
+import SwiftUI
 
 class MainViewModel: ObservableObject {
     private let accountDataRepository: AccountDataRepository
@@ -78,8 +78,8 @@ class MainViewModel: ObservableObject {
 
         isNotProduction = appEnv.isNotProduction
 
-        termsOfServiceUrl = URL(string: "\(appSettingsProvider.baseUrl)/terms?view=plain")!
-        privacyPolicyUrl = URL(string: "\(appSettingsProvider.baseUrl)/privacy?view=plain")!
+        termsOfServiceUrl = appSettingsProvider.termsOfServiceUrl!
+        privacyPolicyUrl = appSettingsProvider.privacyPolicyUrl!
 
         syncPuller.pullUnauthenticatedData()
 
