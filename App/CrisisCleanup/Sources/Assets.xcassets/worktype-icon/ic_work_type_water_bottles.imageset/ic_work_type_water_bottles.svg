@@ -1,17 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="42" height="57" viewBox="0 0 42 57">
     <defs>
-        <filter id="water_bottles__a" width="166.7%" height="129.2%" x="-33.3%" y="-10.4%" filterUnits="objectBoundingBox">
-            <feOffset dy="2" in="SourceAlpha" result="shadowOffsetOuter1"/>
-            <feGaussianBlur in="shadowOffsetOuter1" result="shadowBlurOuter1" stdDeviation="2"/>
-            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"/>
-            <feColorMatrix in="shadowBlurOuter1" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.5 0"/>
-        </filter>
-        <filter id="water_bottles__c" width="187.5%" height="187.5%" x="-43.8%" y="-31.2%" filterUnits="objectBoundingBox">
-            <feOffset dy="2" in="SourceAlpha" result="shadowOffsetOuter1"/>
-            <feGaussianBlur in="shadowOffsetOuter1" result="shadowBlurOuter1" stdDeviation="2"/>
-            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"/>
-            <feColorMatrix in="shadowBlurOuter1" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.5 0"/>
-        </filter>
         <rect id="water_bottles__d" width="16" height="16" x="0" y="0" rx="2"/>
         <path id="water_bottles__b" d="M32.936 13c2.271 1.356 3.978 3.552 4.737 6.189.207.387.327.834.327 1.311 0 1.398-.987 2.526-2.283 2.856C37.073 24.13 38 25.576 38 27.25c0 1.677-.927 3.12-2.286 3.894C37.016 31.471 38 32.596 38 34v15c0 1.656-1.344 3-3 3H20c-1.656 0-3-1.344-3-3V34c0-1.401.984-2.526 2.286-2.853C17.927 30.37 17 28.927 17 27.25c0-1.674.927-3.12 2.283-3.897C17.987 23.023 17 21.895 17 20.5c0-.474.12-.921.324-1.311.762-2.637 2.466-4.833 4.74-6.189zM32 4c.828 0 1.5.672 1.5 1.5v3c0 .828-.672 1.5-1.5 1.5h-9c-.828 0-1.5-.672-1.5-1.5v-3c0-.828.672-1.5 1.5-1.5z"/>
     </defs>

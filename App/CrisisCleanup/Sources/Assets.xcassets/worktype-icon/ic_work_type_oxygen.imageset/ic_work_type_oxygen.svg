@@ -1,11 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="54" height="54" viewBox="0 0 54 54">
     <defs>
-        <filter id="oxygen__a" width="130.4%" height="130.4%" x="-15.2%" y="-10.9%" filterUnits="objectBoundingBox">
-            <feOffset dy="2" in="SourceAlpha" result="shadowOffsetOuter1"/>
-            <feGaussianBlur in="shadowOffsetOuter1" result="shadowBlurOuter1" stdDeviation="2"/>
-            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"/>
-            <feColorMatrix in="shadowBlurOuter1" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.5 0"/>
-        </filter>
         <path id="oxygen__b" d="M47 40.129C47 46.88 43.473 51 37.566 51c-5.906 0-9.433-4.12-9.433-10.871zm-4.043-27.043c.745 0 1.348.603 1.348 1.348v5.39c0 .745-.603 1.348-1.348 1.348-.745 0-1.348-.603-1.348-1.348v-1.347h-2.695v5.597c4.04 1.137 7.169 7.297 7.913 13.36H28.306c.744-6.063 3.872-12.223 7.913-13.36v-5.597h-2.944c-.487 1.367-1.697 2.353-3.16 2.593.43-1.242.713-2.554.713-3.941s-.283-2.699-.713-3.941c1.463.24 2.673 1.226 3.16 2.593h8.334v-1.347c0-.745.603-1.348 1.348-1.348zM3.695 5c1.489 0 2.696 1.207 2.696 2.695v18.867c0 1.489-1.207 2.696-2.696 2.696C2.207 29.258 1 28.05 1 26.563V7.695C1 6.207 2.207 5 3.695 5zM18.7 7.695c5.201 0 9.434 4.233 9.434 9.434s-4.233 9.433-9.434 9.433H9.086V7.695zm0 5.39c-2.23 0-4.043 1.815-4.043 4.044 0 2.23 1.814 4.043 4.043 4.043 2.23 0 4.043-1.814 4.043-4.043 0-2.23-1.813-4.043-4.043-4.043zm0 2.696c.744 0 1.348.604 1.348 1.348 0 .743-.604 1.348-1.348 1.348-.743 0-1.347-.605-1.347-1.348 0-.744.604-1.348 1.347-1.348z"/>
     </defs>
     <g fill="none" fill-rule="evenodd" transform="translate(3 -3)">

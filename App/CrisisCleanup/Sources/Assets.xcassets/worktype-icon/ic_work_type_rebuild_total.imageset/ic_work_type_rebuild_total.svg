@@ -1,12 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="59" height="58" viewBox="0 0 59 58">
     <defs>
         <path id="b" d="M553.009 166.628l8.79 6.191-3.295.946c3.419 5.912 9.98 10.131 17.544 10.131 9.02 0 16.425-6.024 18.967-13.584l.109-.334 5.075 1.097-.107.368C597.023 181.699 587.225 189 576.048 189c-9.741 0-18.384-5.591-22.475-13.821l-3.56 1.02 2.996-9.57zm22.97-14.559l12.083 9.715v3.482l-2.362-1.923v9.607a1 1 0 0 1-.883.994l-.117.006h-17.44a1 1 0 0 1-.993-.883l-.007-.117v-9.538l-2.258 1.854v-3.482l11.978-9.715zm.053-13.069c9.893 0 18.64 5.753 22.647 14.191l3.304-.485-1.927 4.123.036.123-.104.022-2.216 4.745-7.605-7.276 3.165-.465c-3.364-5.562-9.851-9.866-17.3-9.866-8.907 0-16.595 5.963-19.016 13.592l-.102.333-4.943-1.068.107-.367c3.07-10.257 12.777-17.602 23.954-17.602z"/>
-        <filter id="a" width="126.9%" height="128%" x="-13.4%" filterUnits="objectBoundingBox">
-            <feOffset dy="2" in="SourceAlpha" result="shadowOffsetOuter1"/>
-            <feGaussianBlur in="shadowOffsetOuter1" result="shadowBlurOuter1" stdDeviation="2"/>
-            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"/>
-            <feColorMatrix in="shadowBlurOuter1" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.523601399 0"/>
-        </filter>
     </defs>
     <g fill="none" fill-rule="evenodd" transform="translate(-546 -137)">
         <use fill="#000" filter="url(#a)" xlink:href="#b"/>

@@ -1,19 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="58" height="58" viewBox="0 0 58 58">
     <defs>
         <path id="b" d="M42 15.083a1 1 0 0 1 .993.884l.007.116v17.532l-13.826.001-.001 15.383L1 49a1 1 0 0 1-.993-.883L0 48V16.083a1 1 0 0 1 .883-.993L1 15.083h41zM30.382 34.99h12.115L30.382 48.181V34.99zM6.275 18.549a2.512 2.512 0 1 0 2.512 2.51 2.512 2.512 0 0 0-2.512-2.51zM22.257 3.022l.077.1 2.045 2.997c.39.52.69 1.119.788 1.779.353 2.386-1.64 3.967-3.665 3.967-2.024 0-4.04-1.58-3.664-3.967.104-.66.407-1.259.799-1.78l2.044-2.997a1 1 0 0 1 1.576-.1zM9.359.342l.077.1 2.045 2.997c.39.52.69 1.12.788 1.78.353 2.386-1.64 3.966-3.665 3.966-2.024 0-4.041-1.58-3.664-3.966.104-.66.407-1.26.799-1.78L7.783.442a1 1 0 0 1 1.576-.1zm25.543 0l.077.1 2.045 2.997c.39.52.691 1.12.789 1.78.352 2.386-1.641 3.966-3.665 3.966s-4.041-1.58-3.665-3.966c.104-.66.408-1.26.8-1.78L33.326.442a1 1 0 0 1 1.575-.1z"/>
-        <filter id="a" width="132.6%" height="128.6%" x="-16.3%" y="-10.2%" filterUnits="objectBoundingBox">
-            <feOffset dy="2" in="SourceAlpha" result="shadowOffsetOuter1"/>
-            <feGaussianBlur in="shadowOffsetOuter1" result="shadowBlurOuter1" stdDeviation="2"/>
-            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"/>
-            <feColorMatrix in="shadowBlurOuter1" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.523601399 0"/>
-        </filter>
         <rect id="d" width="16" height="16" rx="2"/>
-        <filter id="c" width="187.5%" height="187.5%" x="-43.8%" y="-31.2%" filterUnits="objectBoundingBox">
-            <feOffset dy="2" in="SourceAlpha" result="shadowOffsetOuter1"/>
-            <feGaussianBlur in="shadowOffsetOuter1" result="shadowBlurOuter1" stdDeviation="2"/>
-            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"/>
-            <feColorMatrix in="shadowBlurOuter1" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.5 0"/>
-        </filter>
     </defs>
     <g fill="none" fill-rule="evenodd">
         <g transform="translate(4 2)">

@@ -1,12 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="51" height="53" viewBox="0 0 51 53">
     <defs>
         <path id="b" d="M319.367 239L298 261.315l.067 21.688a1 1 0 0 0 1 .997h10.093a1 1 0 0 0 .577-.184c3.101-2.194 5.308-5.012 6.62-8.454 1.35-3.538 2.214-6.89 2.594-10.054a.477.477 0 0 1 .944-.05l.01.05c.772 3.451.444 4.755 2.35 10.054 1.256 3.496 3.535 6.32 6.835 8.475a1 1 0 0 0 .546.163h10.36a1 1 0 0 0 1-1.005l-.105-21.68L319.367 239z"/>
-        <filter id="a" width="132.5%" height="131.1%" x="-16.3%" y="-11.1%" filterUnits="objectBoundingBox">
-            <feOffset dy="2" in="SourceAlpha" result="shadowOffsetOuter1"/>
-            <feGaussianBlur in="shadowOffsetOuter1" result="shadowBlurOuter1" stdDeviation="2"/>
-            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"/>
-            <feColorMatrix in="shadowBlurOuter1" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.523601399 0"/>
-        </filter>
     </defs>
     <g fill="none" fill-rule="evenodd" transform="translate(-294 -237)">
         <use fill="#000" filter="url(#a)" xlink:href="#b"/>
