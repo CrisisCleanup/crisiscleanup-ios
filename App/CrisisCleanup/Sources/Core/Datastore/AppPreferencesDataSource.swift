@@ -7,6 +7,7 @@ public protocol AppPreferencesDataStore {
 
     func reset()
     func setHideOnboarding(_ hide: Bool)
+    func setHideGettingStartedVideo(_ hide: Bool)
     func setSyncAttempt(
         _ isSuccessful: Bool,
         _ attemptedSeconds: Double
@@ -63,6 +64,14 @@ class AppPreferencesUserDefaults: AppPreferencesDataStore {
         update(
             UserDefaults.standard.appPreferences.copy {
                 $0.hideOnboarding = hide
+            }
+        )
+    }
+
+    func setHideGettingStartedVideo(_ hide: Bool) {
+        update(
+            UserDefaults.standard.appPreferences.copy {
+                $0.hideGettingStartedVideo = hide
             }
         )
     }

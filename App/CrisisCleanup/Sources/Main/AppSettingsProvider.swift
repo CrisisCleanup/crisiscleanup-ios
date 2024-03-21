@@ -10,6 +10,7 @@ public protocol AppSettingsProvider {
 
     var termsOfServiceUrl: URL? { get}
     var privacyPolicyUrl: URL? { get}
+    var gettingStartedVideoUrl: URL? { get}
 
     var debugEmailAddress: String { get }
     var debugAccountPassword: String { get }

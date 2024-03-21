@@ -24,9 +24,13 @@ struct MenuView: View {
 
             ScrollView {
                 VStack {
-                    Text(viewModel.versionText)
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    GettingStartedView(
+                        showContent: viewModel.menuItemVisibility.showGettingStartedVideo,
+                        hideGettingStartedVideo: { viewModel.showGettingStartedVideo(false) },
+                        gettingStartedUrl: viewModel.gettingStartedVideoUrl,
+                        isNonProduction: !viewModel.isProduction,
+                        toggleGettingStartedSection: { viewModel.showGettingStartedVideo(true) }
+                    )
 
                     Button {
                         router.openInviteTeammate()
@@ -55,27 +59,32 @@ struct MenuView: View {
                     .styleOutline()
                     .padding(.horizontal)
 
+                    Text(viewModel.versionText)
+                        .foregroundStyle(appTheme.colors.neutralFontColor)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Spacer()
+
+                    // TODO: Common dimensions
+                    HStack(alignment: .center, spacing: 16) {
+                        Link(
+                            t.t("publicNav.terms"),
+                            destination: viewModel.termsOfServiceUrl
+                        )
+                        Link(
+                            t.t("nav.privacy"),
+                            destination: viewModel.privacyPolicyUrl
+                        )
+                    }
+                    .padding(.vertical, appTheme.listItemVerticalPadding)
+                    .frame(maxWidth: .infinity, alignment: .center)
+
                     if !viewModel.isProduction {
                         MenuScreenNonProductionView(viewModel: viewModel)
                     }
                 }
             }
-
-            Spacer()
-
-            // TODO: Common dimensions
-            HStack(alignment: .center, spacing: 16) {
-                Link(
-                    t.t("publicNav.terms"),
-                    destination: viewModel.termsOfServiceUrl
-                )
-                Link(
-                    t.t("nav.privacy"),
-                    destination: viewModel.privacyPolicyUrl
-                )
-            }
-            .padding(.vertical, appTheme.listItemVerticalPadding)
-            .frame(maxWidth: .infinity, alignment: .center)
 
             if appAlertState.showAlert,
                let appAlert = appAlertState.alertType {
@@ -150,6 +159,57 @@ private struct TopBar: View {
                          .frame(width: imageSize, height: imageSize)
                 }
             }
+        }
+    }
+}
+
+private struct GettingStartedView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    var showContent: Bool
+    var hideGettingStartedVideo: () -> Void
+    var gettingStartedUrl: URL
+    var isNonProduction: Bool = false
+    var toggleGettingStartedSection: () -> Void = {}
+
+    var body: some View {
+        if showContent {
+            VStack {
+                HStack {
+                    Text(t.t("appMenu.training_video"))
+                        .fontHeader2()
+                    Spacer()
+                    Button(t.t("actions.hide")) {
+                        hideGettingStartedVideo()
+                    }
+                }
+                .padding(.bottom, appTheme.listItemVerticalPadding)
+
+                VStack(alignment: .leading) {
+                    Image("getting_starting_video_thumbnail", bundle: .module)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(maxHeight: 128)
+                        .clipped()
+
+                    Text(t.t("appMenu.quick_app_intro"))
+                        .fontHeader3()
+                        .padding(.horizontal)
+                        .padding(.bottom, appTheme.listItemVerticalPadding)
+                }
+                .cardContainer()
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    UIApplication.shared.open(gettingStartedUrl)
+                }
+            }
+            .listItemModifier()
+        } else if isNonProduction {
+            Button("show getting started section") {
+                toggleGettingStartedSection()
+            }
+            .foregroundStyle(appTheme.colors.actionLinkColor)
+            .padding()
         }
     }
 }
