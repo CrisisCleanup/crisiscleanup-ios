@@ -56,6 +56,7 @@ private struct LoginView: View {
                             .foregroundColor(appTheme.colors.primaryRedColor)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding([.vertical])
+                            .accessibilityIdentifier("phoneLoginError")
                     }
 
                     TextField(t.t("loginWithPhone.enter_cell"), text: $phoneNumber)
