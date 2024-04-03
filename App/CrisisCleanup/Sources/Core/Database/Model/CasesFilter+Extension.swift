@@ -21,9 +21,6 @@ extension CasesFilter {
             var matchingStatusCount = 0
             var matchingWorkTypeCount = 0
 
-            let matchingStatuses = matchingStatuses
-            let matchingWorkTypes = matchingWorkTypes
-
             workTypes.forEach { workType in
                 if let orgClaim = workType.orgClaim {
                     // TODO: Review logic below and simplify or document
@@ -77,17 +74,15 @@ extension CasesFilter {
             return false
         }
 
-        let formDataFilters = matchingFormData
-        if !formDataFilters.isEmpty,
+        if !matchingFormData.isEmpty,
            !formData.contains(where: {
-               formDataFilters.contains($0.fieldKey) && $0.isBoolValue
+               matchingFormData.contains($0.fieldKey) && $0.isBoolValue
            }) {
             return false
         }
 
         let worksiteFlags = worksiteFlags
         if !worksiteFlags.isEmpty {
-            let matchingFlags = matchingFlags
             if !flags.contains(where: {
                 matchingFlags.contains($0.reasonT)
             }) {
