@@ -164,10 +164,11 @@ class IncidentWorksitesSecondaryDataSyncer: WorksitesSecondaryDataSyncer {
                     let formData = $0.map {
                         $0.formData.map { data in data.asWorksiteRecord() }
                     }
+                    let reportedBys = $0.map { w in w.reportedBy }
                     _ = try await saveToDb(
                         worksiteIds: worksitesIds,
                         formData: formData,
-                        syncStart: cachedData.requestTime,
+                        reportedBys: reportedBys,
                         statsUpdater: statsUpdater
                     )
                 }
@@ -214,7 +215,7 @@ class IncidentWorksitesSecondaryDataSyncer: WorksitesSecondaryDataSyncer {
     private func saveToDb(
         worksiteIds: [Int64],
         formData: [[WorksiteFormDataRecord]],
-        syncStart: Date,
+        reportedBys: [Int64?],
         statsUpdater: IncidentDataPullStatsUpdater
     ) async throws -> Int {
         var offset = 0
@@ -226,10 +227,12 @@ class IncidentWorksitesSecondaryDataSyncer: WorksitesSecondaryDataSyncer {
             let offsetEnd = min(offset + limit, worksiteIds.count)
             let worksiteIdsSubset = Array(ArraySlice(worksiteIds[offset..<offsetEnd]))
             let formDataSubset = Array(ArraySlice(formData[offset..<offsetEnd]))
+            let reportedBysSubset = Array(ArraySlice(reportedBys[offset..<offsetEnd]))
             // Flags should have been saved by IncidentWorksitesSyncer
-            try await worksiteDao.syncFormData(
+            try await worksiteDao.syncAdditionalData(
                 worksiteIdsSubset,
-                formDataSubset
+                formDataSubset,
+                reportedBysSubset
             )
 
             statsUpdater.addSavedCount(worksiteIdsSubset.count)

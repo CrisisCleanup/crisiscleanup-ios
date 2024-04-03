@@ -350,9 +350,10 @@ public class WorksiteDao {
     }
 
     // TODO: Write tests
-    func syncFormData(
+    func syncAdditionalData(
         _ networkWorksiteIds: [Int64],
-        _ formDatas: [[WorksiteFormDataRecord]]
+        _ formDatas: [[WorksiteFormDataRecord]],
+        _ reportedBys: [Int64?]
     ) async throws {
         try throwSizeMismatch(networkWorksiteIds.count, formDatas.count, "form-data")
 
@@ -373,6 +374,13 @@ public class WorksiteDao {
                         var formData = formData
                         try formData.upsert(db)
                     }
+
+                    let reportedBy = reportedBys[i]
+                    try WorksiteRecord.syncUpdateAdditionalData(
+                        db,
+                        worksiteId,
+                        reportedBy: reportedBy
+                    )
                 }
             }
         }
