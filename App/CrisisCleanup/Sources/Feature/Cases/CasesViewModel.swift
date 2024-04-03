@@ -475,6 +475,13 @@ class CasesViewModel: ObservableObject {
         .receive(on: RunLoop.main)
         .assign(to: \.dataProgress, on: self)
         .store(in: &subscriptions)
+
+        dataPullReporter.onIncidentDataPullComplete.eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .sink { _ in
+                self.filterRepository.reapplyFilters()
+            }
+            .store(in: &subscriptions)
     }
 
     private func subscribeViewState() {
@@ -618,7 +625,7 @@ class CasesViewModel: ObservableObject {
     private func refreshTiles(
         _ idCount: IncidentIdWorksiteCount,
         _ pullStats: IncidentDataPullStats,
-        _ filtersLocation: (CasesFilter, Bool)
+        _ filtersLocation: (CasesFilter, Bool, Double)
     ) {
         let casesCount = idCount.totalCount
         var clearCache = casesCount == 0

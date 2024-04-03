@@ -3,12 +3,14 @@ import Foundation
 
 public protocol CasesFilterRepository {
     var casesFilters: CasesFilter { get }
-    var casesFiltersLocation: any Publisher<(CasesFilter, Bool), Never> { get }
+    var casesFiltersLocation: any Publisher<(CasesFilter, Bool, Double), Never> { get }
     var filtersCount: any Publisher<Int, Never> { get }
 
     func changeFilters(_ filters: CasesFilter)
 
     func updateWorkTypeFilters(_ workTypes: [String])
+
+    func reapplyFilters()
 }
 
 class CrisisCleanupCasesFilterRepository: CasesFilterRepository {
@@ -16,8 +18,10 @@ class CrisisCleanupCasesFilterRepository: CasesFilterRepository {
     private let locationManager: LocationManager
     private let networkDataSource: CrisisCleanupNetworkDataSource
 
+    private let applyFilterTimestampSubject = CurrentValueSubject<Double, Never>(0)
+
     private(set) var casesFilters = CasesFilter()
-    let casesFiltersLocation: any Publisher<(CasesFilter, Bool), Never>
+    let casesFiltersLocation: any Publisher<(CasesFilter, Bool, Double), Never>
 
     let filtersCount: any Publisher<Int, Never>
 
@@ -32,12 +36,13 @@ class CrisisCleanupCasesFilterRepository: CasesFilterRepository {
         self.locationManager = locationManager
         self.networkDataSource = networkDataSource
 
-        casesFiltersLocation = Publishers.CombineLatest(
+        casesFiltersLocation = Publishers.CombineLatest3(
             dataSource.filters.eraseToAnyPublisher(),
-            locationManager.$locationPermission
+            locationManager.$locationPermission,
+            applyFilterTimestampSubject
         )
-        .map { filters, _  in
-            (filters, locationManager.hasLocationAccess)
+        .map { filters, _, timestamp  in
+            (filters, locationManager.hasLocationAccess, timestamp)
         }
 
         filtersCount = casesFiltersLocation
@@ -60,6 +65,10 @@ class CrisisCleanupCasesFilterRepository: CasesFilterRepository {
 
     func updateWorkTypeFilters(_ workTypes: [String]) {
         // TODO: Update work types removing non-matching
+    }
+
+    func reapplyFilters() {
+        applyFilterTimestampSubject.value = Date.now.timeIntervalSince1970
     }
 }
 

@@ -109,7 +109,7 @@ class CasesFilterViewModel: ObservableObject {
         casesFilterRepository.casesFiltersLocation
             .eraseToAnyPublisher()
             .receive(on: RunLoop.main)
-            .sink { (filters, _) in
+            .sink { (filters, _, _) in
                 if !filters.isDefault,
                    self.isInitialFilterValue.exchange(false, ordering: .sequentiallyConsistent) {
                     self.casesFilters = filters
