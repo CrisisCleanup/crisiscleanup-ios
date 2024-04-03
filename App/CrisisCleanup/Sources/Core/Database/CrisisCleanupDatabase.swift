@@ -850,6 +850,29 @@ extension AppDatabase {
             )
         }
 
+        migrator.registerMigration(
+            "worksites-secondary-sync-stats",
+            foreignKeyChecks: .immediate
+        ) { db in
+            try db.create(table: "incidentWorksitesSecondarySyncStat") { t in
+                // Incident ID
+                t.primaryKey("id", .integer)
+                    .references("worksiteSyncStat", onDelete: .cascade)
+                t.column("syncStart", .date)
+                    .notNull()
+                t.column("targetCount", .integer)
+                    .notNull()
+                t.column("pagedCount", .integer)
+                    .notNull()
+                t.column("successfulSync", .date)
+                t.column("attemptedSync", .date)
+                t.column("attemptedCounter", .integer)
+                    .notNull()
+                t.column("appBuildVersionCode", .integer)
+                    .notNull()
+            }
+        }
+
         return migrator
     }
 }

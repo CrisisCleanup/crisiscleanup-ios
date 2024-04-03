@@ -1,8 +1,8 @@
 import Foundation
 import GRDB
 
-struct WorksiteSyncStatRecord : Identifiable, Equatable {
-    static let secondarySyncStats = hasOne(IncidentWorksitesSecondarySyncStatsRecord.self)
+struct IncidentWorksitesSecondarySyncStatsRecord: Identifiable, Equatable {
+    static let baseSyncStats = belongsTo(WorksiteSyncStatRecord.self)
 
     let id: Int64
     let syncStart: Date
@@ -29,8 +29,8 @@ struct WorksiteSyncStatRecord : Identifiable, Equatable {
     }
 }
 
-extension WorksiteSyncStatRecord: Codable, FetchableRecord, PersistableRecord {
-    static var databaseTableName: String = "worksiteSyncStat"
+extension IncidentWorksitesSecondarySyncStatsRecord: Codable, FetchableRecord, PersistableRecord {
+    static var databaseTableName: String = "incidentWorksitesSecondarySyncStat"
 
     fileprivate enum Columns: String, ColumnExpression {
         case id,
@@ -53,7 +53,7 @@ extension WorksiteSyncStatRecord: Codable, FetchableRecord, PersistableRecord {
     ) throws {
         try db.execute(
             sql: """
-                UPDATE OR IGNORE worksiteSyncStat
+                UPDATE OR IGNORE incidentWorksitesSecondarySyncStat
                 SET pagedCount=:pagedCount
                 WHERE id=:id AND syncStart=:syncStart
                 """,
@@ -77,7 +77,7 @@ extension WorksiteSyncStatRecord: Codable, FetchableRecord, PersistableRecord {
     ) throws {
         try db.execute(
             sql: """
-            UPDATE OR IGNORE worksiteSyncStat
+            UPDATE OR IGNORE incidentWorksitesSecondarySyncStat
             SET
             pagedCount         =:pagedCount,
             successfulSync     =:successfulSync,
@@ -99,15 +99,15 @@ extension WorksiteSyncStatRecord: Codable, FetchableRecord, PersistableRecord {
     }
 }
 
-extension DerivableRequest<WorksiteSyncStatRecord> {
+extension DerivableRequest<IncidentWorksitesSecondarySyncStatsRecord> {
     func byId(_ incidentId: Int64) -> Self {
-        filter(WorksiteSyncStatRecord.Columns.id == incidentId)
+        filter(IncidentWorksitesSecondarySyncStatsRecord.Columns.id == incidentId)
     }
 }
 
 extension IncidentDataSyncStats {
-    func asWorksiteSyncStatsRecord() -> WorksiteSyncStatRecord {
-        WorksiteSyncStatRecord(
+    func asSecondarySyncStatsRecord() -> IncidentWorksitesSecondarySyncStatsRecord {
+        IncidentWorksitesSecondarySyncStatsRecord(
             id: incidentId,
             syncStart: syncStart,
             targetCount: dataCount,

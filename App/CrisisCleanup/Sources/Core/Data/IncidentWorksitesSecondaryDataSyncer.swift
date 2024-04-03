@@ -1,29 +1,16 @@
 import Combine
 import Foundation
 
-protocol WorksitesSyncer {
+protocol WorksitesSecondaryDataSyncer {
     var dataPullStats: any Publisher<IncidentDataPullStats, Never> { get }
-
-    func networkWorksitesCount(
-        _ incidentId: Int64,
-        _ updatedAfter: Date?
-    ) async -> Int
-
+    var onFullDataPullComplete: any Publisher<Int64, Never> { get }
     func sync(
         _ incidentId: Int64,
-        _ syncStats: IncidentDataSyncStats
+        _ secondarySyncStats: IncidentDataSyncStats?
     ) async throws
 }
 
-extension WorksitesSyncer {
-    func networkWorksitesCount(_ incidentId: Int64) async -> Int {
-        await networkWorksitesCount(incidentId, nil)
-    }
-}
-
-// TODO Test coverage
-
-class IncidentWorksitesSyncer: WorksitesSyncer {
+class IncidentWorksitesSecondaryDataSyncer: WorksitesSecondaryDataSyncer {
     private let networkDataSource: CrisisCleanupNetworkDataSource
     private let networkDataCache: WorksitesNetworkDataCache
     private let worksiteDao: WorksiteDao
@@ -33,6 +20,8 @@ class IncidentWorksitesSyncer: WorksitesSyncer {
 
     private let dataPullStatsSubject = CurrentValueSubject<IncidentDataPullStats, Never>(IncidentDataPullStats())
     let dataPullStats: any Publisher<IncidentDataPullStats, Never>
+    private let onFullDataPullCompleteSubject = CurrentValueSubject<Int64, Never>(0)
+    let onFullDataPullComplete: any Publisher<Int64, Never>
 
     init(
         networkDataSource: CrisisCleanupNetworkDataSource,
@@ -47,8 +36,9 @@ class IncidentWorksitesSyncer: WorksitesSyncer {
         self.worksiteDao = worksiteDao
         self.worksiteSyncStatDao = worksiteSyncStatDao
         self.appVersionProvider = appVersionProvider
-        logger = loggerFactory.getLogger("wsync")
+        logger = loggerFactory.getLogger("incident-worksites-syncer")
         dataPullStats = dataPullStatsSubject
+        onFullDataPullComplete = onFullDataPullCompleteSubject.share()
     }
 
     func networkWorksitesCount(_ incidentId: Int64, _ updatedAfter: Date?) async -> Int {
@@ -60,21 +50,42 @@ class IncidentWorksitesSyncer: WorksitesSyncer {
         }
     }
 
-    func sync(
-        _ incidentId: Int64,
-        _ syncStats: IncidentDataSyncStats
-    ) async throws {
+    private func getCleanSyncStats(_ incidentId: Int64) async -> IncidentDataSyncStats {
+        let worksitesCount = await networkWorksitesCount(incidentId, nil)
+        return IncidentDataSyncStats(
+            incidentId: incidentId,
+            syncStart: Date.now,
+            dataCount: worksitesCount,
+            pagedCount: 0,
+            syncAttempt: SyncAttempt(successfulSeconds: 0, attemptedSeconds: 0, attemptedCounter: 0),
+            appBuildVersionCode: appVersionProvider.buildNumber
+        )
+    }
+
+    func sync(_ incidentId: Int64, _ secondarySyncStats: IncidentDataSyncStats?) async throws {
         let statsUpdater = IncidentDataPullStatsUpdater(
             { stats in self.dataPullStatsSubject.value = stats }
         )
         statsUpdater.beginPull(incidentId)
         do {
             defer { statsUpdater.endPull() }
-            try await saveWorksitesData(incidentId, syncStats, statsUpdater)
+
+            var syncStats: IncidentDataSyncStats
+            if secondarySyncStats == nil {
+                syncStats = await getCleanSyncStats(incidentId)
+            } else {
+                syncStats = secondarySyncStats!
+            }
+            if syncStats.isDataVersionOutdated {
+                syncStats = await getCleanSyncStats(incidentId)
+            }
+            try await saveSecondaryWorksitesData(incidentId, syncStats, statsUpdater)
+
+            onFullDataPullCompleteSubject.value = incidentId
         }
     }
 
-    private func saveWorksitesData(
+    private func saveSecondaryWorksitesData(
         _ incidentId: Int64,
         _ syncStats: IncidentDataSyncStats,
         _ statsUpdater: IncidentDataPullStatsUpdater
@@ -99,10 +110,11 @@ class IncidentWorksitesSyncer: WorksitesSyncer {
 
         var networkPullPage = 0
         var requestingCount = 0
+        // TODO: Review if these page counts are optimal for secondary data
         let pageCount = 5000
         do {
-            while (requestingCount < syncCount) {
-                try await networkDataCache.saveWorksitesShort(
+            while requestingCount < syncCount {
+                try await networkDataCache.saveWorksitesSecondaryData(
                     incidentId: incidentId,
                     pageCount: pageCount,
                     pageIndex: networkPullPage,
@@ -125,11 +137,13 @@ class IncidentWorksitesSyncer: WorksitesSyncer {
             logger.logError(error)
         }
 
-        var startSyncRequestTime: Date? = nil
+        try await worksiteSyncStatDao.upsertSecondaryStats(syncStats.asSecondarySyncStatsRecord())
+
+        var startSyncRequestTime: Date?
         var dbSaveCount = 0
         var deleteCacheFiles = false
         for dbSavePage in 0..<networkPullPage {
-            guard let cachedData = try networkDataCache.loadWorksitesShort(
+            guard let cachedData = try networkDataCache.loadWorksitesSecondaryData(
                 incidentId: incidentId,
                 pageIndex: dbSavePage,
                 expectedCount: syncCount
@@ -145,23 +159,16 @@ class IncidentWorksitesSyncer: WorksitesSyncer {
 
             let saveData = syncStats.pagedCount < dbSaveCount + pageCount || isDeltaPull
             if saveData {
-                try await with(cachedData.worksites) {
-                    let worksites = $0.map { w in w.asRecord() }
-                    let flags = $0.map {
-                        $0.flags
-                            .filter { flag in flag.invalidatedAt == nil }
-                            .map { f in f.asRecord() }
-                    }
-                    let workTypes = $0.map { wt in
-                        wt.newestWorkTypes
-                            .map { n in n.asRecord() }
+                try await with(cachedData.secondaryData) {
+                    let worksitesIds = $0.map { w in w.id }
+                    let formData = $0.map {
+                        $0.formData.map { data in data.asWorksiteRecord() }
                     }
                     _ = try await saveToDb(
-                        worksites,
-                        flags,
-                        workTypes,
-                        cachedData.requestTime,
-                        statsUpdater
+                        worksiteIds: worksitesIds,
+                        formData: formData,
+                        syncStart: cachedData.requestTime,
+                        statsUpdater: statsUpdater
                     )
                 }
             } else {
@@ -173,7 +180,7 @@ class IncidentWorksitesSyncer: WorksitesSyncer {
 
             if saveData {
                 if isSyncEnd {
-                    try await worksiteSyncStatDao.updateStatsSuccessful(
+                    try await worksiteSyncStatDao.updateSecondaryStatsSuccessful(
                         incidentId,
                         syncStats.syncStart,
                         syncStats.dataCount,
@@ -183,7 +190,7 @@ class IncidentWorksitesSyncer: WorksitesSyncer {
                         appVersionProvider.buildNumber
                     )
                 } else if !isDeltaPull {
-                    try await worksiteSyncStatDao.updateStatsPaged(
+                    try await worksiteSyncStatDao.updateSecondaryStatsPaged(
                         incidentId,
                         syncStats.syncStart,
                         dbSaveCount
@@ -199,42 +206,35 @@ class IncidentWorksitesSyncer: WorksitesSyncer {
 
         if deleteCacheFiles {
             for deleteCachePage in 0..<networkPullPage {
-                networkDataCache.deleteWorksitesShort(incidentId, deleteCachePage)
+                networkDataCache.deleteWorksitesSecondaryData(incidentId, deleteCachePage)
             }
         }
     }
 
     private func saveToDb(
-        _ worksites: [WorksiteRecord],
-        _ flags: [[WorksiteFlagRecord]],
-        _ workTypes: [[WorkTypeRecord]],
-        _ syncStart: Date,
-        _ statsUpdater: IncidentDataPullStatsUpdater
+        worksiteIds: [Int64],
+        formData: [[WorksiteFormDataRecord]],
+        syncStart: Date,
+        statsUpdater: IncidentDataPullStatsUpdater
     ) async throws -> Int {
         var offset = 0
         // TODO: Make configurable. Depends on the capabilities and/or OS version of the device as well.
         let dbOperationLimit = 500
         let limit = max(dbOperationLimit, 100)
         var pagedCount = 0
-        while (offset < worksites.count) {
-            let offsetEnd = min((offset + limit), worksites.count)
-            let worksiteSubset = Array(ArraySlice(worksites[offset..<offsetEnd]))
-            let workTypeSubset = Array(ArraySlice(workTypes[offset..<offsetEnd]))
-            try await worksiteDao.syncWorksites(
-                worksiteSubset,
-                workTypeSubset,
-                syncStart
+        while offset < worksiteIds.count {
+            let offsetEnd = min(offset + limit, worksiteIds.count)
+            let worksiteIdsSubset = Array(ArraySlice(worksiteIds[offset..<offsetEnd]))
+            let formDataSubset = Array(ArraySlice(formData[offset..<offsetEnd]))
+            // Flags should have been saved by IncidentWorksitesSyncer
+            try await worksiteDao.syncFormData(
+                worksiteIdsSubset,
+                formDataSubset
             )
 
-            let flagSubset = ArraySlice(flags[offset..<offsetEnd])
-            try await worksiteDao.syncShortFlags(
-                worksiteSubset,
-                Array(flagSubset)
-            )
+            statsUpdater.addSavedCount(worksiteIdsSubset.count)
 
-            statsUpdater.addSavedCount(worksiteSubset.count)
-
-            pagedCount += worksiteSubset.count
+            pagedCount += worksiteIdsSubset.count
 
             offset += limit
 

@@ -12,10 +12,11 @@ private let WorksitesStableModelBuildVersion = 56
  */
 let IncidentOrganizationsStableModelBuildVersion = 40
 
+// sourcery: copyBuilder, skipCopyInit
 /**
  * Keeps track of incident data (worksites, organizations, ...) syncing
  */
-public struct IncidentDataSyncStats {
+public struct IncidentDataSyncStats: Equatable {
     let incidentId: Int64
     /**
      * Timestamp when the incident first started syncing
@@ -43,7 +44,7 @@ public struct IncidentDataSyncStats {
     /**
      * App build version where the network data model was last changed
      */
-    private let stableModelVersion: Int
+    let stableModelVersion: Int
 
     // sourcery:begin: skipCopy
     /**

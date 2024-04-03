@@ -3,6 +3,8 @@ import Foundation
 
 public protocol IncidentDataPullReporter {
     var incidentDataPullStats: any Publisher<IncidentDataPullStats, Never> { get }
+    var incidentSecondaryDataPullStats: any Publisher<IncidentDataPullStats, Never> { get }
+    var onIncidentDataPullComplete: any Publisher<Int64, Never> { get }
 }
 
 // sourcery: copyBuilder, skipCopyInit

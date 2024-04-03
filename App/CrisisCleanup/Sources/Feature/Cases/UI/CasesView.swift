@@ -84,11 +84,14 @@ struct CasesLayoutView: View {
                 }
             }
 
-            if viewModel.showDataProgress {
+            let dataProgress = viewModel.dataProgress
+            if dataProgress.showProgress {
+                let baseColor = appTheme.colors.primaryOrangeColor
+                let progressColor = dataProgress.isSecondaryData ? baseColor.disabledAlpha() : baseColor
                 VStack {
-                    ProgressView(value: viewModel.dataProgress, total: 1)
+                    ProgressView(value: dataProgress.progress, total: 1)
                         .progressViewStyle(
-                            LinearProgressViewStyle(tint: appTheme.colors.primaryOrangeColor)
+                            LinearProgressViewStyle(tint: progressColor)
                         )
 
                     Spacer()
