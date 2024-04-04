@@ -3,6 +3,7 @@ import Combine
 
 class IncidentSelectViewModel: ObservableObject {
     let incidentSelector: IncidentSelector
+    let syncPuller: SyncPuller
 
     @Published private(set) var incidentsData = LoadingIncidentsData
 
@@ -14,9 +15,11 @@ class IncidentSelectViewModel: ObservableObject {
     private var subscriptions = Set<AnyCancellable>()
 
     init(
-        incidentSelector: IncidentSelector
+        incidentSelector: IncidentSelector,
+        syncPuller: SyncPuller
     ) {
         self.incidentSelector = incidentSelector
+        self.syncPuller = syncPuller
     }
 
     func onViewAppear() {
@@ -56,5 +59,9 @@ class IncidentSelectViewModel: ObservableObject {
             isFocusedOnSelected = true
             selectedIncidentId = incidentsData.selectedId
         }
+    }
+
+    func pullIncidents() async {
+        await syncPuller.pullIncidents()
     }
 }

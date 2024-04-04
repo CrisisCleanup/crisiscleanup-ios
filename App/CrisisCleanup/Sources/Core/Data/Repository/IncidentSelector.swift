@@ -49,29 +49,30 @@ class IncidentSelectRepository: IncidentSelector {
             preferencesPublisher
         )
         .filter { incidents, _ in
-            incidents.isNotEmpty && self.incidentIdCache == EmptyIncident.id
+            incidents.isNotEmpty
         }
         .sink { incidents, preferences in
-            var targetId = self.incidentIdCache
-            if targetId == EmptyIncident.id {
-                targetId = preferences.selectedIncidentId
-            }
+            if self.incidentIdCache == EmptyIncident.id {
+                let targetId = preferences.selectedIncidentId
+                var targetIncident = incidents.first { $0.id == targetId } ?? EmptyIncident
+                if targetIncident.isEmptyIncident {
+                    targetIncident = incidents[0]
+                }
 
-            var targetIncident = incidents.first { $0.id == targetId } ?? EmptyIncident
-            if targetIncident.isEmptyIncident {
-                targetIncident = incidents[0]
-            }
-
-            if targetIncident != EmptyIncident &&
-                targetIncident.id != preferences.selectedIncidentId {
-                self.setIncident(targetIncident)
+                if targetIncident.id != preferences.selectedIncidentId {
+                    self.preferencesStore.setSelectedIncident(targetIncident.id)
+                } else {
+                    self.incidentIdCache = targetIncident.id
+                    self.incidentsDataSubject.value = IncidentsData(
+                        isLoading: false,
+                        selected: targetIncident,
+                        incidents: incidents
+                    )
+                }
             } else {
-                self.incidentIdCache = targetIncident.id
-                self.incidentsDataSubject.value = IncidentsData(
-                    isLoading: false,
-                    selected: targetIncident,
-                    incidents: incidents
-                )
+                self.incidentsDataSubject.value = self.incidentsDataSubject.value.copy {
+                    $0.incidents = incidents
+                }
             }
         }
         .store(in: &disposables)

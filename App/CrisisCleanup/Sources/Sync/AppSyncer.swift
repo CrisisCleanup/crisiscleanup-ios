@@ -8,6 +8,8 @@ public protocol SyncPuller {
 
     func pullUnauthenticatedData()
 
+    func pullIncidents() async
+
     func appPullIncident(_ id: Int64)
 
     func appPullIncidentWorksitesDelta()
@@ -162,6 +164,14 @@ class AppSyncer: SyncPuller, SyncPusher {
                     print(error)
                 }
             }
+        }
+    }
+
+    func pullIncidents() async {
+        do {
+            try await self.incidentsRepository.pullIncidents()
+        } catch {
+            appLogger.logError(error)
         }
     }
 
