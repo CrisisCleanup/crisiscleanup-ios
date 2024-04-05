@@ -12,6 +12,7 @@ extension AppPreferences {
 
 	struct Builder {
 		var hideOnboarding: Bool
+		var hideGettingStartedVideo: Bool
 		var selectedIncidentId: Int64
 		var languageKey: String
 		var syncAttempt: SyncAttempt
@@ -19,6 +20,7 @@ extension AppPreferences {
 
 		fileprivate init(original: AppPreferences) {
 			self.hideOnboarding = original.hideOnboarding
+			self.hideGettingStartedVideo = original.hideGettingStartedVideo
 			self.selectedIncidentId = original.selectedIncidentId
 			self.languageKey = original.languageKey
 			self.syncAttempt = original.syncAttempt
@@ -28,6 +30,7 @@ extension AppPreferences {
 		fileprivate func toAppPreferences() -> AppPreferences {
 			return AppPreferences(
 				hideOnboarding: hideOnboarding,
+				hideGettingStartedVideo: hideGettingStartedVideo,
 				selectedIncidentId: selectedIncidentId,
 				languageKey: languageKey,
 				syncAttempt: syncAttempt,

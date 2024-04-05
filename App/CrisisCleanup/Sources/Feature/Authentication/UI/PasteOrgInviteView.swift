@@ -8,11 +8,13 @@ struct PasteOrgInviteView: View {
     @ObservedObject var viewModel: PasteOrgInviteViewModel
 
     @State private var invitationLink = ""
+    @FocusState private var focusState: TextInputFocused?
 
     var body: some View {
         VStack(spacing: appTheme.listItemVerticalPadding) {
             Text(t.t("pasteInvite.paste_invitation_link_and_accept"))
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("pasteOrgInviteText")
 
             let errorMessage = viewModel.inviteCodeError
             if errorMessage.isNotBlank {
@@ -20,13 +22,20 @@ struct PasteOrgInviteView: View {
                     .foregroundColor(appTheme.colors.primaryRedColor)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, appTheme.listItemVerticalPadding)
+                    .accessibilityIdentifier("pasteOrgInviteError")
             }
 
             TextField(t.t("pasteInvite.invite_link"), text: $invitationLink)
                 .textFieldBorder()
+                .focused($focusState, equals: .anyTextInput)
                 .onSubmit { viewModel.onSubmitLink(invitationLink) }
                 .padding(.bottom)
-
+                .onAppear {
+                    if invitationLink.isBlank {
+                        focusState = .anyTextInput
+                    }
+                }
+                .accessibilityIdentifier("pasteOrgInviteTextField")
 
             Button {
                 viewModel.onSubmitLink(invitationLink)
@@ -38,6 +47,7 @@ struct PasteOrgInviteView: View {
             }
             .stylePrimary()
             .disabled(viewModel.isVerifyingCode)
+            .accessibilityIdentifier("pasteOrgInviteSubmitAction")
 
             Spacer()
         }

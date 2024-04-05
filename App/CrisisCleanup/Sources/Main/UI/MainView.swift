@@ -195,6 +195,12 @@ struct MainView: View {
                 viewModel.onActivePhase()
             }
         }
+        .onChange(of: viewModel.showOnboarding) { newValue in
+            if newValue,
+               selectedTab != .menu {
+                selectedTab = .menu
+            }
+        }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .environment(\.translator, viewModel.translator)

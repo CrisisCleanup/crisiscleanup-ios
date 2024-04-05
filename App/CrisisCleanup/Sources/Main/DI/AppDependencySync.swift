@@ -21,13 +21,17 @@ extension MainComponent {
 
     public var syncPusher: SyncPusher { providesAppSyncer }
 
+    private var worksitesNetworkDataCache: WorksitesNetworkDataCache {
+        WorksitesNetworkDataFileCache(
+            networkDataSource: networkDataSource,
+            loggerFactory: loggerFactory
+        )
+    }
+
     var worksitesSyncer: WorksitesSyncer {
         IncidentWorksitesSyncer(
             networkDataSource: networkDataSource,
-            networkDataCache: WorksitesNetworkDataFileCache(
-                networkDataSource: networkDataSource,
-                loggerFactory: loggerFactory
-            ),
+            networkDataCache: worksitesNetworkDataCache,
             worksiteDao: worksiteDao,
             worksiteSyncStatDao: worksiteSyncStatDao,
             appVersionProvider: appVersionProvider,
@@ -41,6 +45,17 @@ extension MainComponent {
             networkDataCache: IncidentOrganizationsDataFileCache(loggerFactory: loggerFactory),
             incidentOrganizationDao: organizationsDao,
             personContactDao: personContactDao,
+            appVersionProvider: appVersionProvider,
+            loggerFactory: loggerFactory
+        )
+    }
+
+    var worksitesSecondarySyncer: WorksitesSecondaryDataSyncer {
+        IncidentWorksitesSecondaryDataSyncer(
+            networkDataSource: networkDataSource,
+            networkDataCache: worksitesNetworkDataCache,
+            worksiteDao: worksiteDao,
+            worksiteSyncStatDao: worksiteSyncStatDao,
             appVersionProvider: appVersionProvider,
             loggerFactory: loggerFactory
         )

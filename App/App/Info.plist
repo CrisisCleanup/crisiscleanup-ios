@@ -32,6 +32,8 @@
 	<string>$(DEBUG_ACCOUNT_PASSWORD)</string>
 	<key>debugEmailAddress</key>
 	<string>$(DEBUG_EMAIL_ADDRESS)</string>
+	<key>gettingStartedVideoUrl</key>
+	<string>$(GETTING_STARTED_VIDEO_URL)</string>
 	<key>googleMapsApiKey</key>
 	<string>$(MAPS_API_KEY)</string>
 	<key>isDebuggable</key>

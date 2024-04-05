@@ -53,6 +53,13 @@ public protocol CrisisCleanupNetworkDataSource {
         updatedAtAfter: Date?
     ) async throws -> [NetworkWorksitePage]
 
+    func getWorksitesFlagsFormDataPage(
+        incidentId: Int64,
+        pageCount: Int,
+        pageOffset: Int?,
+        updatedAtAfter: Date?
+    ) async throws -> [NetworkFlagsFormData]
+
     func getLocationSearchWorksites(
         _ incidentId: Int64,
         _ q: String,
@@ -119,5 +126,17 @@ extension CrisisCleanupNetworkDataSource {
 
     func getAppSupportInfo() async -> NetworkAppSupportInfo? {
         await getAppSupportInfo(false)
+    }
+
+    func getWorksitesFlagsFormDataPage(
+        incidentId: Int64,
+        pageCount: Int
+    ) async throws -> [NetworkFlagsFormData] {
+        try await getWorksitesFlagsFormDataPage(
+            incidentId: incidentId,
+            pageCount: pageCount,
+            pageOffset: nil,
+            updatedAtAfter: nil
+        )
     }
 }

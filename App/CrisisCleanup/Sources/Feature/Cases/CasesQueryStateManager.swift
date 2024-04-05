@@ -66,7 +66,7 @@ internal class CasesQueryStateManager {
             .store(in: &disposables)
 
         filterRepository.casesFiltersLocation
-            .sink(receiveValue: { (filters, _) in
+            .sink(receiveValue: { (filters, _, _) in
                 self.updateState { $0.filters = filters }
             })
             .store(in: &disposables)

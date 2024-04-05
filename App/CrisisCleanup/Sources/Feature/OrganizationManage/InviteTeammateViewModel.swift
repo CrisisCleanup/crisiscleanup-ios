@@ -113,7 +113,9 @@ class InviteTeammateViewModel: ObservableObject {
     private func subscribeViewState() {
         anotherOrgInviteOptionText = translator.t("inviteTeammates.from_another_org")
 
-        let incidentsPublisher = incidentSelector.incidentsData.eraseToAnyPublisher()
+        let incidentsPublisher = incidentSelector.incidentsData
+            .eraseToAnyPublisher()
+            .removeDuplicates()
 
         Publishers.CombineLatest3(
             isValidatingAccount,

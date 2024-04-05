@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="48px" height="48px" viewBox="0 0 48 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 61.2 (89653) - https://sketch.com -->
-    <title>ic_note</title>
-    <desc>Created with Sketch.</desc>
     <g id="ic_note" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
         <path d="M18.28571,16 C17.025,16 16,17.025 16,18.28571 L16,29.7143 C16,30.975 17.025,32 18.28571,32 L26.2857,32 L26.2857,28 C26.2857,27.0536 27.0536,26.2857 28,26.2857 L32,26.2857 L32,18.28571 C32,17.025 30.975,16 29.7143,16 L18.28571,16 Z M32,27.4286 L30.3821,27.4286 L28,27.4286 C27.6857,27.4286 27.4286,27.6857 27.4286,28 L27.4286,30.3821 L27.4286,32 L28.5714,30.8571 L30.8571,28.5714 L32,27.4286 Z" id="Shape" fill="#000000" fill-rule="nonzero"></path>
     </g>

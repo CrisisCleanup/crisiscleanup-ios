@@ -90,6 +90,7 @@ private struct LoginView: View {
                         Text(errorMessage)
                             .foregroundColor(appTheme.colors.primaryRedColor)
                             .padding([.vertical])
+                            .accessibilityIdentifier("verifyPhoneCodeError")
                     }
 
                     Text(t.t("loginWithPhone.enter_x_digit_code")

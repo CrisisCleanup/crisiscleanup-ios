@@ -1,11 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="33" height="56" viewBox="0 0 33 56">
     <defs>
-        <filter id="prescription__a" width="156%" height="129.2%" x="-28%" y="-10.4%" filterUnits="objectBoundingBox">
-            <feOffset dy="2" in="SourceAlpha" result="shadowOffsetOuter1"/>
-            <feGaussianBlur in="shadowOffsetOuter1" result="shadowBlurOuter1" stdDeviation="2"/>
-            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"/>
-            <feColorMatrix in="shadowBlurOuter1" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.5 0"/>
-        </filter>
         <path id="prescription__b" d="M37.339 14.67V48c0 1.598-1.25 2.904-2.824 2.995l-.176.005H20.817c-1.598 0-2.903-1.249-2.995-2.824L17.817 48v-5.243h12.497v-20.85H17.817V14.67H37.34zm-8.144 8.345v18.509h-11.4l.032-18.509h11.368zM39 6.435c.513 0 .936.386.993.883l.007.117v4.993c0 .513-.386.935-.883.993l-.117.007H16c-.513 0-.936-.386-.993-.884L15 12.428V7.435c0-.513.386-.936.883-.993L16 6.435h23zM36.339 3c.552 0 1 .448 1 1v1.374H17.66V4c0-.552.448-1 1-1H36.34z"/>
     </defs>
     <g fill="none" fill-rule="evenodd" transform="translate(-11 -1)">

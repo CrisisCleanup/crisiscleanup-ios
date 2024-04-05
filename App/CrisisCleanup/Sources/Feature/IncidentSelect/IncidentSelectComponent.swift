@@ -12,7 +12,8 @@ class IncidentSelectComponent: Component<AppDependency>, IncidentSelectViewBuild
     private func getViewModel() -> IncidentSelectViewModel {
         if viewModel == nil {
             viewModel = IncidentSelectViewModel(
-                incidentSelector: dependency.incidentSelector
+                incidentSelector: dependency.incidentSelector,
+                syncPuller: dependency.syncPuller
             )
         }
         return viewModel!

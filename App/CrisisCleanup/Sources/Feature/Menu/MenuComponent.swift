@@ -14,7 +14,9 @@ class MenuComponent: Component<AppDependency>, MenuViewBuilder {
         syncLogRepository: dependency.syncLogRepository,
         incidentSelector: dependency.incidentSelector,
         appVersionProvider: dependency.appVersionProvider,
+        appSettingsProvider: dependency.appSettingsProvider,
         databaseVersionProvider: dependency.databaseVersionProvider,
+        appPreferences: dependency.appPreferences,
         authEventBus: dependency.authEventBus,
         appEnv: dependency.appEnv,
         loggerFactory: dependency.loggerFactory

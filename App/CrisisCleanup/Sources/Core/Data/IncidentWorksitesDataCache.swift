@@ -2,9 +2,9 @@ import Foundation
 
 protocol WorksitesNetworkDataCache {
     func loadWorksitesShort(
-        _ incidentId: Int64,
-        _ pageIndex: Int,
-        _ expectedCount: Int
+        incidentId: Int64,
+        pageIndex: Int,
+        expectedCount: Int
     ) throws -> IncidentWorksitesPageRequest?
 
     func saveWorksitesShort(
@@ -18,7 +18,26 @@ protocol WorksitesNetworkDataCache {
     func deleteWorksitesShort(
         _ incidentId: Int64,
         _ pageIndex: Int
-    ) async
+    )
+
+    func loadWorksitesSecondaryData(
+        incidentId: Int64,
+        pageIndex: Int,
+        expectedCount: Int
+    ) throws -> IncidentWorksitesSecondaryDataPageRequest?
+
+    func saveWorksitesSecondaryData(
+        incidentId: Int64,
+        pageCount: Int,
+        pageIndex: Int,
+        expectedCount: Int,
+        updatedAfter: Date?
+    ) async throws
+
+    func deleteWorksitesSecondaryData(
+        _ incidentId: Int64,
+        _ pageIndex: Int
+    )
 }
 
 class WorksitesNetworkDataFileCache: WorksitesNetworkDataCache {
@@ -41,6 +60,30 @@ class WorksitesNetworkDataFileCache: WorksitesNetworkDataCache {
         jsonEncoder = JsonEncoderFactory().encoder()
     }
 
+    private func loadCacheData<T: IncidentCacheDataPageRequest>(
+        cacheFileName: String,
+        incidentId: Int64,
+        pageIndex: Int,
+        expectedCount: Int
+    ) throws -> T? {
+        let fileUrl = try cacheFileUrl(cacheFileName)
+        let filePath = fileUrl.path
+        if FileManager.default.fileExists(atPath: filePath) {
+            if let contents = try? Data(contentsOf: fileUrl) {
+                let cachedData = try jsonDecoder.decode(T.self, from: contents)
+                if cachedData.incidentId == incidentId &&
+                    cachedData.page == pageIndex &&
+                    cachedData.totalCount == expectedCount &&
+                    // TODO Use configurable duration
+                    cachedData.requestTime.addingTimeInterval(4.days) > Date.now
+                {
+                    return cachedData
+                }
+            }
+        }
+        return nil
+    }
+
     private func shortWorksitesFileName(_ incidentId: Int64, _ page: Int) -> String
     {
         "incident-\(incidentId)-worksites-short-\(page).json"
@@ -59,27 +102,16 @@ class WorksitesNetworkDataFileCache: WorksitesNetworkDataCache {
     }
 
     func loadWorksitesShort(
-        _ incidentId: Int64,
-        _ pageIndex: Int,
-        _ expectedCount: Int
+        incidentId: Int64,
+        pageIndex: Int,
+        expectedCount: Int
     ) throws -> IncidentWorksitesPageRequest? {
-        let cacheFileName = shortWorksitesFileName(incidentId, pageIndex)
-        let fileUrl = try cacheFileUrl(cacheFileName)
-        let filePath = fileUrl.path
-        if FileManager.default.fileExists(atPath: filePath) {
-            if let contents = try? Data(contentsOf: fileUrl) {
-                let cachedData = try jsonDecoder.decode(IncidentWorksitesPageRequest.self, from: contents)
-                if cachedData.incidentId == incidentId &&
-                    cachedData.page == pageIndex &&
-                    cachedData.totalCount == expectedCount &&
-                    // TODO Use configurable duration
-                    cachedData.requestTime.addingTimeInterval(4.days) > Date.now
-                {
-                    return cachedData
-                }
-            }
-        }
-        return nil
+        try loadCacheData(
+            cacheFileName: shortWorksitesFileName(incidentId, pageIndex),
+            incidentId: incidentId,
+            pageIndex: pageIndex,
+            expectedCount: expectedCount
+        )
     }
 
     func saveWorksitesShort(
@@ -89,10 +121,12 @@ class WorksitesNetworkDataFileCache: WorksitesNetworkDataCache {
         expectedCount: Int,
         updatedAfter: Date?
     ) async throws {
-        let cacheFileName = shortWorksitesFileName(incidentId, pageIndex)
-
         do {
-            if let _ = try loadWorksitesShort(incidentId, pageIndex, expectedCount) {
+            if let _ = try loadWorksitesShort(
+                incidentId: incidentId,
+                pageIndex: pageIndex,
+                expectedCount: expectedCount
+            ) {
                 return
             }
         } catch {
@@ -118,6 +152,7 @@ class WorksitesNetworkDataFileCache: WorksitesNetworkDataCache {
             worksites: worksites
         )
 
+        let cacheFileName = shortWorksitesFileName(incidentId, pageIndex)
         let json = try jsonEncoder.encode(dataCache)
         let fileUrl = try cacheFileUrl(cacheFileName)
         try json.write(to: fileUrl, options: .atomic)
@@ -126,13 +161,81 @@ class WorksitesNetworkDataFileCache: WorksitesNetworkDataCache {
     func deleteWorksitesShort(
         _ incidentId: Int64,
         _ pageIndex: Int
-    ) async {
+    ) {
         let cacheFileName = shortWorksitesFileName(incidentId, pageIndex)
+        deleteCacheFile(cacheFileName)
+    }
+
+    private func deleteCacheFile(_ cacheFileName: String) {
         do {
             let fileUrl = try cacheFileUrl(cacheFileName)
             try FileManager.default.removeItem(at: fileUrl)
         } catch {
             logger.logDebug("Error deleting cache file \(cacheFileName). \(error)")
         }
+    }
+
+    private func secondaryDataFileName(_ incidentId: Int64, _ page: Int) -> String {
+        "incident-\(incidentId)-worksites-secondary-data-\(page).json"
+    }
+
+    func loadWorksitesSecondaryData(
+        incidentId: Int64,
+        pageIndex: Int,
+        expectedCount: Int
+    ) throws -> IncidentWorksitesSecondaryDataPageRequest? {
+        try loadCacheData(
+            cacheFileName: secondaryDataFileName(incidentId, pageIndex),
+            incidentId: incidentId,
+            pageIndex: pageIndex,
+            expectedCount: expectedCount
+        )
+    }
+
+    func saveWorksitesSecondaryData(
+        incidentId: Int64,
+        pageCount: Int,
+        pageIndex: Int,
+        expectedCount: Int,
+        updatedAfter: Date?
+    ) async throws {
+        do {
+            if let _ = try loadWorksitesSecondaryData(
+                incidentId: incidentId,
+                pageIndex: pageIndex,
+                expectedCount: expectedCount
+            ) {
+                return
+            }
+        } catch {
+            logger.logDebug("Error reading cache file \(error)")
+        }
+
+        let requestTime = Date.now
+        let secondaryData = try await networkDataSource.getWorksitesFlagsFormDataPage(
+            incidentId: incidentId,
+            pageCount: pageCount,
+            pageOffset: pageIndex + 1,
+            updatedAtAfter: updatedAfter
+        )
+
+        let dataCache = IncidentWorksitesSecondaryDataPageRequest(
+            incidentId: incidentId,
+            requestTime: requestTime,
+            page: pageIndex,
+            startCount: pageIndex * pageCount,
+            totalCount: expectedCount,
+            secondaryData: secondaryData
+        )
+
+        let cacheFileName = secondaryDataFileName(incidentId, pageIndex)
+        let json = try jsonEncoder.encode(dataCache)
+        let fileUrl = try cacheFileUrl(cacheFileName)
+        try json.write(to: fileUrl, options: .atomic)
+    }
+
+    func deleteWorksitesSecondaryData(_ incidentId: Int64, _ pageIndex: Int) {
+        let cacheFileName = secondaryDataFileName(incidentId, pageIndex)
+        deleteCacheFile(cacheFileName)
     }
 }

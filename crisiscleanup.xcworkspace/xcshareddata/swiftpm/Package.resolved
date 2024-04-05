@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Alamofire/Alamofire.git",
       "state" : {
-        "revision" : "bc268c28fb170f494de9e9927c371b8342979ece",
-        "version" : "5.7.1"
+        "revision" : "723fa5a6c65812aec4a0d7cc432ee198883b6e00",
+        "version" : "5.9.0"
       }
     },
     {
@@ -68,8 +68,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/groue/GRDB.swift.git",
       "state" : {
-        "revision" : "57aa4c30bfa0fe6a1913f83042937c4fb943e79c",
-        "version" : "6.15.0"
+        "revision" : "bd9aea303d9dab3a4941ee838a0e4ff51c9448df",
+        "version" : "6.25.0"
       }
     },
     {
@@ -95,8 +95,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/auth0/JWTDecode.swift",
       "state" : {
-        "revision" : "7918a343e674c7707e0be120bb4e21d679be014c",
-        "version" : "3.0.1"
+        "revision" : "58af7278797871e460d79496621b3e5366b865b2",
+        "version" : "3.1.0"
       }
     },
     {
@@ -113,8 +113,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/nicklockwood/LRUCache.git",
       "state" : {
-        "revision" : "6d2b5246c9c98dcd498552bb22f08d55b12a8371",
-        "version" : "1.0.4"
+        "revision" : "542f0449556327415409ededc9c43a4bd0a397dc",
+        "version" : "1.0.7"
       }
     },
     {
@@ -131,8 +131,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/uber/needle.git",
       "state" : {
-        "revision" : "2f2856d4fbe8f8828ebda86e69960007f5577f37",
-        "version" : "0.23.0"
+        "revision" : "6db73ae873952794b94fd6bb5111554e23c160af",
+        "version" : "0.24.0"
       }
     },
     {
@@ -149,8 +149,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/exyte/SVGView.git",
       "state" : {
-        "revision" : "18bf73efc2f2dede5dfa73f517ddf4e054061294",
-        "version" : "1.0.4"
+        "revision" : "6465962facdd25cb96eaebc35603afa2f15d2c0d",
+        "version" : "1.0.6"
       }
     },
     {
@@ -158,8 +158,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-atomics.git",
       "state" : {
-        "revision" : "6c89474e62719ddcc1e9614989fff2f68208fe10",
-        "version" : "1.1.0"
+        "revision" : "cd142fd2f64be2100422d658e7411e39489da985",
+        "version" : "1.2.0"
       }
     },
     {
@@ -185,8 +185,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/albertbori/TestableCombinePublishers.git",
       "state" : {
-        "revision" : "38d345b6097171afa226d96ff3e213bd139c1c8c",
-        "version" : "1.2.0"
+        "revision" : "a053f58f21a0187817afd65b440911496809d21a",
+        "version" : "1.2.1"
       }
     }
   ],

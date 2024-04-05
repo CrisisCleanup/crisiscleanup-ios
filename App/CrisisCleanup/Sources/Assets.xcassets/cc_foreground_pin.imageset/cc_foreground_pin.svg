@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="120px" height="180px" viewBox="0 0 120 180" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 61.2 (89653) - https://sketch.com -->
-    <title>pin-foreground</title>
-    <desc>Created with Sketch.</desc>
     <g id="pin-foreground" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
         <g id="pin-large" transform="translate(0.000000, 3.000000)">
             <path d="M60,0 C93.137085,0 120,26.862915 120,60 C120,73.4729118 115.559341,85.9086521 108.061815,95.923427 L60,173 L11.944166,95.9314151 C4.44302129,85.9152652 0,73.4764942 0,60 C0,26.862915 26.862915,0 60,0 Z" id="body" fill="#FECE09"></path>

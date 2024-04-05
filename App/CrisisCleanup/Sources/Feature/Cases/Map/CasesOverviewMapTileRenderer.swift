@@ -19,7 +19,7 @@ class CasesMapDotsOverlay: MKTileOverlay {
     private var tileCache = TileDataCache(3000)
     private var incidentIdCache: Int64 = -1
     private var worksitesCount = 0
-    private var filtersLocationCache = (CasesFilter(), false)
+    private var filtersLocationCache = (CasesFilter(), false, 0.0)
 
     private var locationCoordinates: CLLocation? = nil
 
@@ -51,7 +51,7 @@ class CasesMapDotsOverlay: MKTileOverlay {
     func onStateChange(
         _ id: Int64,
         _ worksitesCount: Int,
-        _ filtersLocation: (CasesFilter, Bool),
+        _ filtersLocation: (CasesFilter, Bool, Double),
         _ clearCache: Bool
     ) -> Bool {
         var isChange = false

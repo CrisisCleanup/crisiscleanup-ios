@@ -95,19 +95,12 @@ private struct PersistentInviteInfoInputView: View {
                 if let avatarUrl = inviteDisplay.avatarUrl,
                    inviteDisplay.displayName.isNotBlank,
                    inviteDisplay.inviteMessage.isNotBlank {
-                    HStack(spacing: appTheme.gridItemSpacing) {
-                        AvatarView(
-                            url: avatarUrl,
-                            isSvg: inviteDisplay.isSvgAvatar
-                        )
-
-                        VStack(alignment: .leading) {
-                            Text(inviteDisplay.displayName)
-                                .fontHeader4()
-                            Text(inviteDisplay.inviteMessage)
-                                .fontBodySmall()
-                        }
-                    }
+                    InviterAvatarView(
+                        avatarUrl: avatarUrl,
+                        isSvgAvatar: inviteDisplay.isSvgAvatar,
+                        displayName: inviteDisplay.displayName,
+                        inviteMessage: inviteDisplay.inviteMessage
+                    )
                     .padding([.horizontal, .bottom])
                 }
 

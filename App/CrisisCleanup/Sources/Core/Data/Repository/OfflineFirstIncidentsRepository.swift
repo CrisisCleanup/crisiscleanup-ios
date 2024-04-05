@@ -18,7 +18,6 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
     ]
     private let fullIncidentQueryFields: [String]
 
-    private let incidentsSubject = CurrentValueSubject<[Incident], Never>([])
     let incidents: any Publisher<[Incident], Never>
 
     private let dataSource: CrisisCleanupNetworkDataSource
@@ -53,13 +52,7 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         fullIncidentQueryFields = incidentsQueryFields + ["form_fields"]
 
         isLoading = isLoadingSubject
-        incidents = incidentsSubject
-
-        incidentDao.streamIncidents()
-            .sink(receiveValue: {
-                self.incidentsSubject.value = $0
-            })
-            .store(in: &disposables)
+        incidents = incidentDao.streamIncidents()
     }
 
     func getIncident(_ id: Int64, _ loadFormFields: Bool) throws -> Incident? {

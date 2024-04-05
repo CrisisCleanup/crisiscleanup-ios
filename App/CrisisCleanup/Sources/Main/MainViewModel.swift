@@ -1,10 +1,11 @@
-import SwiftUI
 import Combine
+import SwiftUI
 
 class MainViewModel: ObservableObject {
     private let accountDataRepository: AccountDataRepository
     private let appSupportRepository: AppSupportRepository
     private let appVersionProvider: AppVersionProvider
+    private let appPreferences: AppPreferencesDataStore
     private let incidentSelector: IncidentSelector
     private let externalEventBus: ExternalEventBus
     private let authEventBus: AuthEventBus
@@ -35,6 +36,8 @@ class MainViewModel: ObservableObject {
 
     @Published var showAuthScreen = false
 
+    @Published private(set) var showOnboarding = false
+
     let isNotProduction: Bool
 
     private var incidentsData: IncidentsData = LoadingIncidentsData
@@ -46,6 +49,7 @@ class MainViewModel: ObservableObject {
         accountDataRepository: AccountDataRepository,
         appSupportRepository: AppSupportRepository,
         appVersionProvider: AppVersionProvider,
+        appPreferences: AppPreferencesDataStore,
         appSettingsProvider: AppSettingsProvider,
         translationsRepository: LanguageTranslationsRepository,
         incidentSelector: IncidentSelector,
@@ -63,6 +67,7 @@ class MainViewModel: ObservableObject {
         self.accountDataRepository = accountDataRepository
         self.appSupportRepository = appSupportRepository
         self.appVersionProvider = appVersionProvider
+        self.appPreferences = appPreferences
         self.translationsRepository = translationsRepository
         translator = translationsRepository
         self.incidentSelector = incidentSelector
@@ -78,8 +83,8 @@ class MainViewModel: ObservableObject {
 
         isNotProduction = appEnv.isNotProduction
 
-        termsOfServiceUrl = URL(string: "\(appSettingsProvider.baseUrl)/terms?view=plain")!
-        privacyPolicyUrl = URL(string: "\(appSettingsProvider.baseUrl)/privacy?view=plain")!
+        termsOfServiceUrl = appSettingsProvider.termsOfServiceUrl!
+        privacyPolicyUrl = appSettingsProvider.privacyPolicyUrl!
 
         syncPuller.pullUnauthenticatedData()
 
@@ -101,6 +106,7 @@ class MainViewModel: ObservableObject {
         subscribeAccountData()
         subscribeTermsAcceptanceState()
         subscribeAppSupport()
+        subscribeAppPreferences()
     }
 
     func onViewDisappear() {
@@ -132,7 +138,8 @@ class MainViewModel: ObservableObject {
     }
 
     private func subscribeIncidentsData() {
-        incidentSelector.incidentsData
+        incidentSelector.incidentsData.eraseToAnyPublisher()
+            .removeDuplicates()
             .sink { data in
                 self.incidentsData = data
 
@@ -232,6 +239,15 @@ class MainViewModel: ObservableObject {
             .map { $0.minSupportedVersion }
             .receive(on: RunLoop.main)
             .assign(to: \.minSupportedVersion, on: self)
+            .store(in: &subscriptions)
+    }
+
+    private func subscribeAppPreferences() {
+        appPreferences.preferences.eraseToAnyPublisher()
+            .map { !$0.hideOnboarding }
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .assign(to: \.showOnboarding, on: self)
             .store(in: &subscriptions)
     }
 

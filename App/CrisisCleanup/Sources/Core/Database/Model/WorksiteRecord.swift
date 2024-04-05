@@ -484,6 +484,25 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
             ])
     }
 
+    static func syncUpdateAdditionalData(
+        _ db: Database,
+        _ id: Int64,
+        reportedBy: Int64?
+    ) throws {
+        try db.execute(
+            sql:
+                """
+                UPDATE worksite
+                SET
+                reportedBy = COALESCE(:reportedBy, reportedBy)
+                WHERE id=:id
+                """,
+            arguments: [
+                "id": id,
+                "reportedBy": reportedBy
+            ])
+    }
+
     static func getWorksiteId(
         _ db: Database,
         _ networkId: Int64

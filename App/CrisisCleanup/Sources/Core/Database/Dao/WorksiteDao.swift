@@ -349,6 +349,43 @@ public class WorksiteDao {
         }
     }
 
+    // TODO: Write tests
+    func syncAdditionalData(
+        _ networkWorksiteIds: [Int64],
+        _ formDatas: [[WorksiteFormDataRecord]],
+        _ reportedBys: [Int64?]
+    ) async throws {
+        try throwSizeMismatch(networkWorksiteIds.count, formDatas.count, "form-data")
+
+        let networkWorksiteIdsSet = Set(networkWorksiteIds)
+        try await database.dbWriter.write { db in
+            let modifiedAtLookup = try self.fetchWorksiteLocalModifiedAt(db, networkWorksiteIdsSet)
+
+            for (i, formData) in formDatas.enumerated() {
+                let networkWorksiteId = networkWorksiteIds[i]
+                let modifiedAt = modifiedAtLookup[networkWorksiteId]
+                let isLocallyModified = modifiedAt?.isLocalModified ?? false
+                if !isLocallyModified {
+                    let worksiteId = try WorksiteRecord.getWorksiteId(db, networkWorksiteId)!
+                    let fieldKeys = Set(formData.map { $0.fieldKey })
+                    try WorksiteFormDataRecord.deleteUnspecifiedKeys(db, worksiteId, fieldKeys)
+                    let updatedFormData = formData.map { fd in fd.copy { $0.worksiteId = worksiteId } }
+                    for formData in updatedFormData {
+                        var formData = formData
+                        try formData.upsert(db)
+                    }
+
+                    let reportedBy = reportedBys[i]
+                    try WorksiteRecord.syncUpdateAdditionalData(
+                        db,
+                        worksiteId,
+                        reportedBy: reportedBy
+                    )
+                }
+            }
+        }
+    }
+
     private func fetchWorksiteId(
         _ db: Database,
         _ networkId: Int64

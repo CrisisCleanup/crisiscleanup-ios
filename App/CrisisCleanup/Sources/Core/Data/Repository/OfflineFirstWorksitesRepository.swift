@@ -6,6 +6,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     private let dataSource: CrisisCleanupNetworkDataSource
     private let writeApi: CrisisCleanupWriteApi
     private let worksitesSyncer: WorksitesSyncer
+    private let worksitesSecondarySyncer: WorksitesSecondaryDataSyncer
     private let worksiteSyncStatDao: WorksiteSyncStatDao
     private let worksiteDao: WorksiteDao
     private let recentWorksiteDao: RecentWorksiteDao
@@ -27,6 +28,8 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     var isDeterminingWorksitesCount: any Publisher<Bool, Never>
 
     var incidentDataPullStats: any Publisher<IncidentDataPullStats, Never>
+    var incidentSecondaryDataPullStats: any Publisher<IncidentDataPullStats, Never>
+    var onIncidentDataPullComplete: any Publisher<Int64, Never>
 
     private let orgIdPublisher: AnyPublisher<Int64, Never>
     private let organizationAffiliatesPublisher: AnyPublisher<Set<Int64>, Never>
@@ -37,6 +40,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         dataSource: CrisisCleanupNetworkDataSource,
         writeApi: CrisisCleanupWriteApi,
         worksitesSyncer: WorksitesSyncer,
+        worksitesSecondarySyncer: WorksitesSecondaryDataSyncer,
         worksiteSyncStatDao: WorksiteSyncStatDao,
         worksiteDao: WorksiteDao,
         recentWorksiteDao: RecentWorksiteDao,
@@ -52,6 +56,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         self.dataSource = dataSource
         self.writeApi = writeApi
         self.worksitesSyncer = worksitesSyncer
+        self.worksitesSecondarySyncer = worksitesSecondarySyncer
         self.worksiteSyncStatDao = worksiteSyncStatDao
         self.worksiteDao = worksiteDao
         self.recentWorksiteDao = recentWorksiteDao
@@ -66,7 +71,10 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         isLoading = isLoadingSubject
         syncWorksitesFullIncidentId = syncWorksitesFullIncidentIdSubject
         isDeterminingWorksitesCount = isDeterminingWorksitesCountSubject
+
         incidentDataPullStats = worksitesSyncer.dataPullStats
+        incidentSecondaryDataPullStats = worksitesSecondarySyncer.dataPullStats
+        onIncidentDataPullComplete = worksitesSecondarySyncer.onFullDataPullComplete
 
         orgIdPublisher = accountDataRepository.accountData
             .eraseToAnyPublisher()
@@ -261,6 +269,8 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
             {
                 try await worksitesSyncer.sync(incidentId, syncStats)
             }
+
+            try await syncAdditional(incidentId)
         } catch {
             if error is CancellationError {
                 throw error
@@ -269,6 +279,13 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
             // Updating sync stats here (or in finally) could overwrite "concurrent" sync that previously started. Think it through before updating sync attempt.
 
             logger.logError(error)
+        }
+    }
+
+    private func syncAdditional(_ incidentId: Int64) async throws {
+        if let syncStats = try worksiteSyncStatDao.getFullSyncStats(incidentId),
+           syncStats.hasSyncedCore {
+            try await worksitesSecondarySyncer.sync(incidentId, syncStats.secondaryStats)
         }
     }
 

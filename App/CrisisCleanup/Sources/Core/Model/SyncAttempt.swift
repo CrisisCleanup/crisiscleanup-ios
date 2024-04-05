@@ -2,7 +2,7 @@ import Foundation
 
 // TODO: Copy tests
 // sourcery: copyBuilder
-struct SyncAttempt: Codable {
+struct SyncAttempt: Equatable, Codable {
     let successfulSeconds: Double
     let attemptedSeconds: Double
     let attemptedCounter: Int

@@ -2,6 +2,8 @@ import Foundation
 import GRDB
 
 struct WorksiteSyncStatRecord : Identifiable, Equatable {
+    static let secondarySyncStats = hasOne(IncidentWorksitesSecondarySyncStatsRecord.self)
+
     let id: Int64
     let syncStart: Date
     let targetCount: Int

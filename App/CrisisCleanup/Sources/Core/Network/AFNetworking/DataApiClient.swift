@@ -276,6 +276,31 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         throw response.error ?? networkError
     }
 
+    func getWorksitesFlagsFormDataPage(
+        incidentId: Int64,
+        pageCount: Int,
+        pageOffset: Int?,
+        updatedAtAfter: Date?
+    ) async throws -> [NetworkFlagsFormData] {
+        let offset = (pageOffset ?? 0) <= 1 ? nil : String(pageOffset! * pageCount)
+        let request = requestProvider.worksitesFlagsFormData
+            .addQueryItems(
+                "incident", String(incidentId),
+                "limit", String(pageCount),
+                "offset", offset,
+                "updated_at__gt", updatedAtAfter == nil ? nil : dateFormatter.string(from: updatedAtAfter!)
+            )
+        let response = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkFlagsFormDataResult.self
+        )
+        if let result = response.value {
+            try result.errors?.tryThrowException()
+            return result.results ?? [NetworkFlagsFormData]()
+        }
+        throw response.error ?? networkError
+    }
+
     func getLocationSearchWorksites(_ incidentId: Int64, _ q: String, _ limit: Int) async throws -> [NetworkWorksiteLocationSearch] {
         let request = requestProvider.worksitesLocationSearch
             .addQueryItems(

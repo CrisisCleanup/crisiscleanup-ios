@@ -162,6 +162,13 @@ extension NetworkRequestProvider {
         )
     }
 
+    var worksitesFlagsFormData: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites_data_flags"),
+            addTokenHeader: true
+        )
+    }
+
     var workTypeRequests: NetworkRequest {
         NetworkRequest(
             apiUrl("worksite_requests"),

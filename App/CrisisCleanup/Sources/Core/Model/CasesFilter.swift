@@ -46,6 +46,14 @@ public struct CasesFilter: Hashable, Codable {
     private(set) var changeCount: Int = 0
 
     let daysAgoNormalized: Double
+
+    let hasAdditionalFilters: Bool
+    let hasWorkTypeFilters: Bool
+
+    let matchingStatuses: Set<String>
+    let matchingWorkTypes: Set<String>
+    let matchingFormData: Set<String>
+    let matchingFlags: Set<String>
     // sourcery:end
 
     init(
@@ -127,6 +135,49 @@ public struct CasesFilter: Hashable, Codable {
         if updatedAt != nil { count += 1 }
 
         changeCount = count
+
+        var additionalFilterCount = 0
+        if hasSviFilter { additionalFilterCount += 1 }
+        if hasUpdatedFilter { additionalFilterCount += 1 }
+        if hasDistanceFilter { additionalFilterCount += 1 }
+        hasAdditionalFilters = changeCount > additionalFilterCount
+
+        hasWorkTypeFilters = isAssignedToMyTeam ||
+        isUnclaimed ||
+        isClaimedByMyOrg ||
+        isStatusOpen ||
+        isStatusClosed ||
+        !workTypeStatuses.isEmpty ||
+        !workTypes.isEmpty
+
+        var statuses: Set<WorkTypeStatus> = []
+        statuses.formUnion(workTypeStatuses)
+        if isStatusOpen {
+            statuses.formUnion(openWorkTypeStatuses)
+        }
+        if isStatusClosed {
+            statuses.formUnion(closedWorkTypeStatuses)
+        }
+        matchingStatuses = Set(statuses.map { $0.literal })
+
+        matchingWorkTypes = workTypes
+
+        var formData: Set<String> = []
+        if isOlderThan60 {
+            formData.insert("older_than_60")
+        }
+        if hasChildrenInHome {
+            formData.insert("children_in_home")
+        }
+        if isFirstResponder {
+            formData.insert("first_responder")
+        }
+        if isVeteran {
+            formData.insert("veteran")
+        }
+        matchingFormData = formData
+
+        matchingFlags = Set(worksiteFlags.map { $0.literal })
     }
 
     /**
@@ -153,65 +204,6 @@ public struct CasesFilter: Hashable, Codable {
 
         return true
     }
-
-    // sourcery:begin: skipCopy
-
-    var hasAdditionalFilters: Bool {
-        var initialFilterCount = 0
-        if hasSviFilter { initialFilterCount += 1 }
-        if hasUpdatedFilter { initialFilterCount += 1 }
-        if hasDistanceFilter { initialFilterCount += 1 }
-        return changeCount > initialFilterCount
-    }
-
-    var hasWorkTypeFilters: Bool {
-        isAssignedToMyTeam ||
-        isUnclaimed ||
-        isClaimedByMyOrg ||
-        isStatusOpen ||
-        isStatusClosed ||
-        !workTypeStatuses.isEmpty ||
-        !workTypes.isEmpty
-    }
-
-    var matchingStatuses: Set<String> {
-        var statuses: Set<WorkTypeStatus> = []
-        statuses.formUnion(workTypeStatuses)
-        if isStatusOpen {
-            statuses.formUnion(openWorkTypeStatuses)
-        }
-        if isStatusClosed {
-            statuses.formUnion(closedWorkTypeStatuses)
-        }
-        return Set(statuses.map { $0.literal })
-    }
-
-    var matchingWorkTypes: Set<String> {
-        workTypes
-    }
-
-    var matchingFormData: Set<String> {
-        var formData: Set<String> = []
-        if isOlderThan60 {
-            formData.insert("older_than_60")
-        }
-        if hasChildrenInHome {
-            formData.insert("children_in_home")
-        }
-        if isFirstResponder {
-            formData.insert("first_responder")
-        }
-        if isVeteran {
-            formData.insert("veteran")
-        }
-        return formData
-    }
-
-    var matchingFlags: Set<String> {
-        Set(worksiteFlags.map { $0.literal })
-    }
-
-    // sourcery:end
 
     struct DateRange: Hashable, Codable {
         let start: Date

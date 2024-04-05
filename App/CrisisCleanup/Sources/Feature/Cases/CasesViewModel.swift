@@ -26,8 +26,7 @@ class CasesViewModel: ObservableObject {
     var selectedIncident: Incident { incidentsData.selected }
     var incidentId: Int64 { incidentsData.selectedId }
 
-    @Published private(set) var showDataProgress = false
-    @Published private(set) var dataProgress = 0.0
+    @Published private(set) var dataProgress = DataProgressMetrics()
 
     @Published private(set) var isLoadingData = false
 
@@ -64,7 +63,7 @@ class CasesViewModel: ObservableObject {
     private let isGeneratingWorksiteMarkers = CurrentValueSubject<Bool, Never>(false)
     private let isDelayingRegionBug = CurrentValueSubject<Bool, Never>(false)
 
-    // TODO: Derive value from MapMarkersZoomLevel and map camera
+    // TODO: Change to work off of map camera altitude and not derived zoom level
     let mapMarkerZoomLevelHeight = 330_000
 
     private let mapCaseDotProvider = InMemoryDotProvider()
@@ -205,10 +204,10 @@ class CasesViewModel: ObservableObject {
     private func subscribeLoading() {
         Publishers.CombineLatest3(
             incidentsRepository.isLoading.eraseToAnyPublisher(),
-            $showDataProgress,
+            $dataProgress,
             worksitesRepository.isDeterminingWorksitesCount.eraseToAnyPublisher()
         )
-        .map { b0, b1, b2 in b0 || b1 || b2 }
+        .map { b0, progress, b2 in b0 || progress.isLoadingPrimary || b2 }
         .receive(on: RunLoop.main)
         .assign(to: \.isLoadingData, on: self)
         .store(in: &subscriptions)
@@ -256,6 +255,7 @@ class CasesViewModel: ObservableObject {
 
         incidentSelector.incidentsData
             .eraseToAnyPublisher()
+            .removeDuplicates()
             .receive(on: RunLoop.main)
             .assign(to: \.incidentsData, on: self)
             .store(in: &subscriptions)
@@ -459,12 +459,28 @@ class CasesViewModel: ObservableObject {
     }
 
     private func subscribeDataPullStats() {
-        dataPullReporter.incidentDataPullStats
-            .eraseToAnyPublisher()
+        Publishers.CombineLatest(
+            dataPullReporter.incidentDataPullStats.eraseToAnyPublisher(),
+            dataPullReporter.incidentSecondaryDataPullStats.eraseToAnyPublisher()
+        )
+        .map { (primary, secondary) in
+            let showProgress = primary.isOngoing || secondary.isOngoing
+            let isSecondary = secondary.isOngoing
+            let progress = primary.isOngoing ? primary.progress : secondary.progress
+            return DataProgressMetrics(
+                isSecondaryData: isSecondary,
+                showProgress: showProgress,
+                progress: progress
+            )
+        }
+        .receive(on: RunLoop.main)
+        .assign(to: \.dataProgress, on: self)
+        .store(in: &subscriptions)
+
+        dataPullReporter.onIncidentDataPullComplete.eraseToAnyPublisher()
             .receive(on: RunLoop.main)
-            .sink { stats in
-                self.showDataProgress = stats.isOngoing
-                self.dataProgress = stats.progress
+            .sink { _ in
+                self.filterRepository.reapplyFilters()
             }
             .store(in: &subscriptions)
     }
@@ -610,7 +626,7 @@ class CasesViewModel: ObservableObject {
     private func refreshTiles(
         _ idCount: IncidentIdWorksiteCount,
         _ pullStats: IncidentDataPullStats,
-        _ filtersLocation: (CasesFilter, Bool)
+        _ filtersLocation: (CasesFilter, Bool, Double)
     ) {
         let casesCount = idCount.totalCount
         var clearCache = casesCount == 0
@@ -665,6 +681,7 @@ class CasesViewModel: ObservableObject {
             northEast: center.add(span).latLng
         )
 
+        // TODO: Redesign entire map (data) state
         // Seems like there is a map view bug. This accounts for those times.
         if !didAnimate {
             isDelayingRegionBug.value = true
@@ -840,5 +857,24 @@ private class AtomicSortBy: AtomicValue {
 
     init(_ value: WorksiteSortBy = .none) {
         self.value = value
+    }
+}
+
+struct DataProgressMetrics {
+    let isSecondaryData: Bool
+    let showProgress: Bool
+    let progress: Double
+
+    let isLoadingPrimary: Bool
+
+    init(
+        isSecondaryData: Bool = false,
+        showProgress: Bool = false,
+        progress: Double = 0.0
+    ) {
+        self.isSecondaryData = isSecondaryData
+        self.showProgress = showProgress
+        self.progress = progress
+        isLoadingPrimary = showProgress && !isSecondaryData
     }
 }

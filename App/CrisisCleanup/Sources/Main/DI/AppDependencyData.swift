@@ -145,6 +145,7 @@ extension MainComponent {
                 dataSource: networkDataSource,
                 writeApi: writeApi,
                 worksitesSyncer: worksitesSyncer,
+                worksitesSecondarySyncer: worksitesSecondarySyncer,
                 worksiteSyncStatDao: worksiteSyncStatDao,
                 worksiteDao: worksiteDao,
                 recentWorksiteDao: recentWorksiteDao,

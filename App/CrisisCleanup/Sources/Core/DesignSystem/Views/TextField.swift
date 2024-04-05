@@ -13,6 +13,7 @@ struct ToggleSecureTextField: View {
     @Binding private var text: String
     @State private var isSecure: Bool = true
     private var title: String
+    private let accessibilityIdentifier: String
 
     private let focusedKey: TextInputFocused
     private var focusState: FocusState<TextInputFocused?>.Binding
@@ -21,12 +22,14 @@ struct ToggleSecureTextField: View {
     init(
         _ title: String,
         text: Binding<String>,
+        accessibilityIdentifier: String = "",
         focusState: FocusState<TextInputFocused?>.Binding,
         focusedKey: TextInputFocused = .anyTextInput,
         onSubmit: @escaping () -> Void = {}
     ) {
         self.title = title
         self._text = text
+        self.accessibilityIdentifier = accessibilityIdentifier
         self.focusState = focusState
         self.focusedKey = focusedKey
         self.onSubmit = onSubmit
@@ -42,6 +45,7 @@ struct ToggleSecureTextField: View {
                         .disableAutocorrection(true)
                         .focused(focusState, equals: focusedKey)
                         .onSubmit { onSubmit() }
+                        .accessibilityIdentifier(accessibilityIdentifier)
                 } else {
                     TextField(title, text: $text)
                         .textFieldStyle(.plain)
@@ -49,6 +53,7 @@ struct ToggleSecureTextField: View {
                         .disableAutocorrection(true)
                         .focused(focusState, equals: focusedKey)
                         .onSubmit { onSubmit() }
+                        .accessibilityIdentifier(accessibilityIdentifier)
                 }
             }
             .padding(.trailing, 32)

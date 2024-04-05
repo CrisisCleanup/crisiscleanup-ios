@@ -70,11 +70,13 @@ struct UserInfoInputData {
 
 private struct UserInfoErrorText: View {
     let message: String
+    let accessibilityIdentiferSuffix: String
 
     var body: some View {
         if message.isNotBlank {
             Text(message)
                 .foregroundColor(appTheme.colors.primaryRedColor)
+                .accessibilityIdentifier("userInfoError-\(accessibilityIdentiferSuffix)")
         }
     }
 }
@@ -91,7 +93,10 @@ struct UserInfoInputView: View {
     var body: some View {
         VStack(alignment: .leading) {
             Group {
-                UserInfoErrorText(message: info.emailAddressError)
+                UserInfoErrorText(
+                    message: info.emailAddressError,
+                    accessibilityIdentiferSuffix: "email"
+                )
                 TextField(t.t("requestAccess.your_email"), text: $info.emailAddress)
                     .textFieldBorder()
                     .keyboardType(.emailAddress)
@@ -100,26 +105,35 @@ struct UserInfoInputView: View {
                     .focused(focusState, equals: TextInputFocused.userEmailAddress)
                     .onSubmit { focusState.wrappedValue = .userFirstName }
                     .padding(.bottom)
+                    .accessibilityIdentifier("userInfoInputEmail")
             }
 
             Group {
-                UserInfoErrorText(message: info.firstNameError)
+                UserInfoErrorText(
+                    message: info.firstNameError,
+                    accessibilityIdentiferSuffix: "firstName"
+                )
                 TextField(t.t("invitationSignup.first_name_placeholder"), text: $info.firstName)
                     .textFieldBorder()
                     .autocapitalization(.words)
                     .focused(focusState, equals: TextInputFocused.userFirstName)
                     .onSubmit { focusState.wrappedValue = .userLastName }
                     .padding(.bottom)
+                    .accessibilityIdentifier("userInfoFirstNameTextField")
             }
 
             Group {
-                UserInfoErrorText(message: info.lastNameError)
+                UserInfoErrorText(
+                    message: info.lastNameError,
+                    accessibilityIdentiferSuffix: "lastName"
+                )
                 TextField(t.t("invitationSignup.last_name_placeholder"), text: $info.lastName)
                     .textFieldBorder()
                     .autocapitalization(.words)
                     .focused(focusState, equals: TextInputFocused.userLastName)
                     .onSubmit { focusState.wrappedValue = .userTitle }
                     .padding(.bottom)
+                    .accessibilityIdentifier("userInfoLastNameTextField")
             }
 
             TextField(t.t("invitationSignup.title_placeholder"), text: $info.title)
@@ -128,21 +142,30 @@ struct UserInfoInputView: View {
                 .focused(focusState, equals: TextInputFocused.userTitle)
                 .onSubmit { focusState.wrappedValue = .userPhone }
                 .padding(.bottom)
+                .accessibilityIdentifier("userInfoTitleTextField")
 
             Group {
-                UserInfoErrorText(message: info.phoneError)
+                UserInfoErrorText(
+                    message: info.phoneError,
+                    accessibilityIdentiferSuffix: "phone"
+                )
                 TextField(t.t("invitationSignup.mobile_placeholder"), text: $info.phone)
                     .textFieldBorder()
                     .focused(focusState, equals: TextInputFocused.userPhone)
                     .onSubmit { focusState.wrappedValue = .userPassword }
                     .padding(.bottom)
+                    .accessibilityIdentifier("userInfoPhoneTextField")
             }
 
             Group {
-                UserInfoErrorText(message: info.passwordError)
+                UserInfoErrorText(
+                    message: info.passwordError,
+                    accessibilityIdentiferSuffix: "password"
+                )
                 ToggleSecureTextField(
                     t.t("invitationSignup.pw1_placeholder"),
                     text: $info.password,
+                    accessibilityIdentifier: "userInfoPasswordTextField",
                     focusState: focusState,
                     focusedKey: .userPassword
                 ) {
@@ -150,10 +173,14 @@ struct UserInfoInputView: View {
                 }
                 .padding(.bottom)
 
-                UserInfoErrorText(message: info.confirmPasswordError)
+                UserInfoErrorText(
+                    message: info.confirmPasswordError,
+                    accessibilityIdentiferSuffix: "confirmPassword"
+                )
                 ToggleSecureTextField(
                     t.t("invitationSignup.pw2_placeholder"),
                     text: $info.confirmPassword,
+                    accessibilityIdentifier: "userInfoConfirmPasswordTextField",
                     focusState: focusState,
                     focusedKey: .userConfirmPassword
                 )
@@ -176,6 +203,7 @@ struct UserInfoInputView: View {
             }
             .textFieldBorder()
             .padding(.bottom)
+            .accessibilityIdentifier("userInputLanguageOptions")
         }
     }
 }

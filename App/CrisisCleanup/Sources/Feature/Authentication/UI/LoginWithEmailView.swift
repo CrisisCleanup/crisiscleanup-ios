@@ -72,6 +72,7 @@ private struct LoginView: View {
                             .foregroundColor(appTheme.colors.primaryRedColor)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding([.vertical])
+                            .accessibilityIdentifier("emailLoginError")
                     }
 
                     Group {

@@ -754,7 +754,7 @@
 				CODE_SIGN_ENTITLEMENTS = "App/AppRelease-au.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 101;
+				CURRENT_PROJECT_VERSION = 104;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = ZM286L3HTV;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -781,7 +781,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.9.21;
+				MARKETING_VERSION = 0.9.23;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.aus;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -960,7 +960,7 @@
 				CODE_SIGN_ENTITLEMENTS = App/AppDebug.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 101;
+				CURRENT_PROJECT_VERSION = 104;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = ZM286L3HTV;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -987,7 +987,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.9.21;
+				MARKETING_VERSION = 0.9.23;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.dev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1010,7 +1010,7 @@
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 101;
+				CURRENT_PROJECT_VERSION = 104;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = ZM286L3HTV;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1037,7 +1037,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.9.21;
+				MARKETING_VERSION = 0.9.23;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.prod;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1203,7 +1203,7 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 101;
+				CURRENT_PROJECT_VERSION = 104;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = AYLY2UUH8J;
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = ZM286L3HTV;
@@ -1232,7 +1232,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.9.21;
+				MARKETING_VERSION = 0.9.23;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.stg;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

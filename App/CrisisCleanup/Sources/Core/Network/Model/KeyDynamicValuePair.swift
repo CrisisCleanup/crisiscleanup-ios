@@ -50,7 +50,12 @@ public struct DynamicValue: Codable, Equatable {
 
         let container = try decoder.singleValueContainer()
         if let stringValue = try? container.decode(String.self) {
-            s = stringValue
+            if stringValue == "true" || stringValue == "false" {
+                b = stringValue == "true"
+                isB = true
+            } else {
+                s = stringValue
+            }
         } else if let boolValue = try? container.decode(Bool.self) {
             b = boolValue
             isB = true

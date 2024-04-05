@@ -1,5 +1,5 @@
-import SwiftUI
 import Combine
+import SwiftUI
 
 class MenuViewModel: ObservableObject {
     private let incidentsRepository: IncidentsRepository
@@ -9,6 +9,7 @@ class MenuViewModel: ObservableObject {
     private let incidentSelector: IncidentSelector
     private let appVersionProvider: AppVersionProvider
     private let databaseVersionProvider: DatabaseVersionProvider
+    private let appPreferences: AppPreferencesDataStore
     private let authEventBus: AuthEventBus
     private let appEnv: AppEnv
     private let logger: AppLogger
@@ -16,11 +17,17 @@ class MenuViewModel: ObservableObject {
     let isDebuggable: Bool
     let isProduction: Bool
 
+    let termsOfServiceUrl: URL
+    let privacyPolicyUrl: URL
+    let gettingStartedVideoUrl: URL
+
     @Published private(set) var showHeaderLoading = false
 
     @Published private(set) var profilePicture: AccountProfilePicture? = nil
 
     @Published private(set) var incidentsData = LoadingIncidentsData
+
+    @Published private(set) var menuItemVisibility = hideMenuItems
 
     var versionText: String {
         let version = appVersionProvider.version
@@ -41,7 +48,9 @@ class MenuViewModel: ObservableObject {
         syncLogRepository: SyncLogRepository,
         incidentSelector: IncidentSelector,
         appVersionProvider: AppVersionProvider,
+        appSettingsProvider: AppSettingsProvider,
         databaseVersionProvider: DatabaseVersionProvider,
+        appPreferences: AppPreferencesDataStore,
         authEventBus: AuthEventBus,
         appEnv: AppEnv,
         loggerFactory: AppLoggerFactory
@@ -53,12 +62,17 @@ class MenuViewModel: ObservableObject {
         self.incidentSelector = incidentSelector
         self.appVersionProvider = appVersionProvider
         self.databaseVersionProvider = databaseVersionProvider
+        self.appPreferences = appPreferences
         self.authEventBus = authEventBus
         self.appEnv = appEnv
         logger = loggerFactory.getLogger("menu")
 
         isDebuggable = appEnv.isDebuggable
         isProduction = appEnv.isProduction
+
+        termsOfServiceUrl = appSettingsProvider.termsOfServiceUrl!
+        privacyPolicyUrl = appSettingsProvider.privacyPolicyUrl!
+        gettingStartedVideoUrl = appSettingsProvider.gettingStartedVideoUrl!
 
         Task {
             syncLogRepository.trimOldLogs()
@@ -73,6 +87,7 @@ class MenuViewModel: ObservableObject {
         subscribeLoading()
         subscribeIncidentsData()
         subscribeProfilePicture()
+        subscribeAppPreferences()
     }
 
     func onViewDisappear() {
@@ -93,6 +108,7 @@ class MenuViewModel: ObservableObject {
     private func subscribeIncidentsData() {
         incidentSelector.incidentsData
             .eraseToAnyPublisher()
+            .removeDuplicates()
             .receive(on: RunLoop.main)
             .assign(to: \.incidentsData, on: self)
             .store(in: &subscriptions)
@@ -118,6 +134,27 @@ class MenuViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
+    private func subscribeAppPreferences() {
+        appPreferences.preferences.eraseToAnyPublisher()
+            .map {
+                return MenuItemVisibility(
+                    showOnboarding: !$0.hideOnboarding,
+                    showGettingStartedVideo: !$0.hideGettingStartedVideo
+                )
+            }
+            .receive(on: RunLoop.main)
+            .assign(to: \.menuItemVisibility, on: self)
+            .store(in: &subscriptions)
+    }
+
+    func showGettingStartedVideo(_ show: Bool) {
+        let hide = !show
+        appPreferences.setHideGettingStartedVideo(hide)
+
+        // TODO: Move to hide onboarding method when implemented
+        appPreferences.setHideOnboarding(hide)
+    }
+
     func clearRefreshToken() {
         if isDebuggable {
             accountDataRepository.clearAccountTokens()
@@ -137,3 +174,9 @@ struct AccountProfilePicture {
     let url: URL
     let isSvg: Bool
 }
+
+struct MenuItemVisibility {
+    let showOnboarding: Bool
+    let showGettingStartedVideo: Bool
+}
+private let hideMenuItems = MenuItemVisibility(showOnboarding: false, showGettingStartedVideo: false)

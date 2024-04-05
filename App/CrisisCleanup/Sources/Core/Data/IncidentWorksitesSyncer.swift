@@ -130,9 +130,9 @@ class IncidentWorksitesSyncer: WorksitesSyncer {
         var deleteCacheFiles = false
         for dbSavePage in 0..<networkPullPage {
             guard let cachedData = try networkDataCache.loadWorksitesShort(
-                incidentId,
-                dbSavePage,
-                syncCount
+                incidentId: incidentId,
+                pageIndex: dbSavePage,
+                expectedCount: syncCount
             ) else {
                 break
             }
@@ -199,7 +199,7 @@ class IncidentWorksitesSyncer: WorksitesSyncer {
 
         if deleteCacheFiles {
             for deleteCachePage in 0..<networkPullPage {
-                await networkDataCache.deleteWorksitesShort(incidentId, deleteCachePage)
+                networkDataCache.deleteWorksitesShort(incidentId, deleteCachePage)
             }
         }
     }
@@ -212,7 +212,7 @@ class IncidentWorksitesSyncer: WorksitesSyncer {
         _ statsUpdater: IncidentDataPullStatsUpdater
     ) async throws -> Int {
         var offset = 0
-        // TODO Make configurable. Depends on the capabilities and/or OS version of the device as well.
+        // TODO: Make configurable. Depends on the capabilities and/or OS version of the device as well.
         let dbOperationLimit = 500
         let limit = max(dbOperationLimit, 100)
         var pagedCount = 0
