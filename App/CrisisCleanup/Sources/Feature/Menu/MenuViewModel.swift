@@ -108,6 +108,7 @@ class MenuViewModel: ObservableObject {
     private func subscribeIncidentsData() {
         incidentSelector.incidentsData
             .eraseToAnyPublisher()
+            .removeDuplicates()
             .receive(on: RunLoop.main)
             .assign(to: \.incidentsData, on: self)
             .store(in: &subscriptions)

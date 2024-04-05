@@ -138,7 +138,8 @@ class MainViewModel: ObservableObject {
     }
 
     private func subscribeIncidentsData() {
-        incidentSelector.incidentsData
+        incidentSelector.incidentsData.eraseToAnyPublisher()
+            .removeDuplicates()
             .sink { data in
                 self.incidentsData = data
 

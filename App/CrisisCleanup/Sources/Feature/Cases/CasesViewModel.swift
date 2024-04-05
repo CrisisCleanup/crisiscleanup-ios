@@ -255,6 +255,7 @@ class CasesViewModel: ObservableObject {
 
         incidentSelector.incidentsData
             .eraseToAnyPublisher()
+            .removeDuplicates()
             .receive(on: RunLoop.main)
             .assign(to: \.incidentsData, on: self)
             .store(in: &subscriptions)
