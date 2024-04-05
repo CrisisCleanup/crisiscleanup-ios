@@ -28,8 +28,6 @@ class IncidentSelectRepository: IncidentSelector {
 
     private let preferencesStore: AppPreferencesDataStore
 
-    private let incidentLock = NSLock()
-
     private var incidentIdCache: Int64 = EmptyIncident.id
 
     private var disposables = Set<AnyCancellable>()
@@ -79,11 +77,9 @@ class IncidentSelectRepository: IncidentSelector {
     }
 
     func setIncident(_ incident: Incident) {
-        incidentLock.withLock {
-            preferencesStore.setSelectedIncident(incident.id)
-            incidentsDataSubject.value = incidentsDataSubject.value.copy {
-                $0.selected = incident
-            }
+        preferencesStore.setSelectedIncident(incident.id)
+        incidentsDataSubject.value = incidentsDataSubject.value.copy {
+            $0.selected = incident
         }
     }
 }
