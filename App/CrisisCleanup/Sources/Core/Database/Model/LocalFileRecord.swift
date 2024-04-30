@@ -50,7 +50,7 @@ extension WorksiteLocalImageRecord: Codable, FetchableRecord, PersistableRecord 
                     """
                     UPDATE worksiteLocalImage
                     SET tag=:tag
-                    WHERE worksiteId=:worksiteId AND local_document_id=:localDocumentId
+                    WHERE worksiteId=:worksiteId AND localDocumentId=:localDocumentId
                     """,
                 arguments: [
                     "worksiteId": worksiteId,

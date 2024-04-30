@@ -47,8 +47,7 @@ class MemoryLocalFileCache: LocalFileCache {
         _ worksiteId: Int64,
         _ millis: Int64,
         _ index: Int = 0
-    ) -> String
-    {
+    ) -> String {
         "\(incidentId)-\(worksiteId)-\(millis)-\(index).jpg"
     }
 
@@ -102,8 +101,9 @@ class MemoryLocalFileCache: LocalFileCache {
                    let image = UIImage(data: data),
                    try cacheImage(fileUrl, image)
                 {
-                    imageCache.setValue(image, forKey: fileName)
-                    cachedImages[fileName] = fileUrl.path()
+                    let imageId = item.itemIdentifier ?? fileName
+                    imageCache.setValue(image, forKey: imageId)
+                    cachedImages[imageId] = fileUrl.path()
                 }
             }
         }

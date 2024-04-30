@@ -3,8 +3,6 @@
 import FlowStackLayout
 import MapKit
 import SwiftUI
-import PhotosUI
-import CachedAsyncImage
 
 struct ViewCaseView: View {
     @ObservedObject var viewModel: ViewCaseViewModel
@@ -103,6 +101,8 @@ private struct ViewCaseLayoutView: View {
 private struct TabContentView: View {
     @Binding var selectedTab: ViewCaseTabs
 
+    @EnvironmentObject var viewModel: ViewCaseViewModel
+
     var tabTitles: [ViewCaseTabs: String]
 
     var isCompactLayout = false
@@ -136,7 +136,11 @@ private struct TabContentView: View {
         TabView(selection: $selectedTab) {
             ViewCaseInfo()
                 .tag(ViewCaseTabs.info)
-            ViewCasePhotos(isCompactLayout: isCompactLayout)
+            ViewCasePhotosView(
+                caseMediaManager: viewModel.caseMediaManager,
+                headerTitle: viewModel.headerTitle,
+                isCompactLayout: isCompactLayout
+            )
                 .tag(ViewCaseTabs.photos)
             ViewCaseNotes()
                 .tag(ViewCaseTabs.notes)
@@ -241,244 +245,6 @@ private struct ViewCaseInfo: View {
                 }
             }
         }
-    }
-}
-
-private struct ViewCasePhotos: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
-
-    @EnvironmentObject var router: NavigationRouter
-    @EnvironmentObject var viewModel: ViewCaseViewModel
-
-    var isCompactLayout = false
-
-    @State private var photoDetents: Bool = false
-    @State private var presentCamera: Bool = false
-    @State private var takePhotoImage: UIImage = UIImage()
-    @State private var results: [PhotosPickerItem] = []
-
-    private func onTakePhotoSelectImage(_ category: ImageCategory) {
-        viewModel.addImageCategory = category
-        photoDetents.toggle()
-    }
-
-    var body: some View {
-        VStack (alignment: .leading) {
-            ViewCasePhotosSection(
-                category: .before,
-                isCompactLayout: isCompactLayout,
-                onTakePhotoSelectImage: onTakePhotoSelectImage
-            )
-            ViewCasePhotosSection(
-                category: .after,
-                isCompactLayout: isCompactLayout,
-                onTakePhotoSelectImage: onTakePhotoSelectImage
-            )
-
-            Spacer()
-        }
-        .onChange(of: results) { _ in
-            photoDetents = false
-            viewModel.onMediaSelected(results)
-            results = []
-        }
-        .sheet(isPresented: $photoDetents) {
-            ZStack {
-                VStack {
-                    Button {
-                        presentCamera.toggle()
-                    } label : {
-                        Text(t.t("actions.take_photo"))
-                            .padding()
-                    }
-                    .tint(.black)
-                    .sheet(isPresented: $presentCamera) {
-                        ImagePickerCamera(selectedImage: $takePhotoImage)
-                    }
-                    .onChange(of: takePhotoImage) { newValue in
-                        if newValue.size != .zero {
-                            viewModel.onPhotoTaken(newValue)
-                            takePhotoImage = UIImage()
-                            photoDetents = false
-                        }
-                    }
-
-                    PhotosPicker(
-                        selection: $results,
-                        matching: .images,
-                        photoLibrary: .shared()
-                    ) {
-                        Text(t.t("fileUpload.select_file_upload"))
-                            .padding()
-                    }
-                    .tint(.black)
-
-                }
-            }
-            .presentationDetents([.medium, .fraction(0.25)])
-        }
-    }
-}
-
-private struct ViewCasePhotosSection: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
-
-    @EnvironmentObject var viewModel: ViewCaseViewModel
-
-    var category: ImageCategory
-
-    var isCompactLayout = false
-
-    var onTakePhotoSelectImage: (ImageCategory) -> Void = {_ in}
-
-    var body: some View {
-        let sectionTranslateKey = category == .before
-        ? "caseForm.before_photos"
-        : "caseForm.after_photos"
-        let sectionTitle = t.t(sectionTranslateKey)
-        if !isCompactLayout {
-            Text(sectionTitle)
-                .fontHeader4()
-                .padding(.leading, appTheme.gridItemSpacing)
-                .padding(.top)
-        }
-
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(alignment: .top, content: {
-                MediaDisplay(
-                    category: category,
-                    sectionTitle: isCompactLayout ? sectionTitle : "",
-                    onTakePhotoSelectImage: onTakePhotoSelectImage
-                )
-            })
-        }
-        .frame(maxHeight: 180)
-    }
-}
-
-private struct MediaDisplay: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
-
-    @EnvironmentObject var router: NavigationRouter
-    @EnvironmentObject var viewModel: ViewCaseViewModel
-
-    var category: ImageCategory
-    var sectionTitle = ""
-    var onTakePhotoSelectImage: (ImageCategory) -> Void = {_ in}
-
-    @State var mediaImages: [Image] = []
-
-    func openViewImage(_ caseImage: CaseImage) {
-        router.viewImage(
-            caseImage.id,
-            caseImage.isNetworkImage,
-            viewModel.headerTitle
-        )
-    }
-
-    var body: some View {
-        let beforeAfterImages = viewModel.beforeAfterPhotos[category] ?? []
-        let iconFont = Font.system(size: 16.0)
-
-        Rectangle()
-            .fill(.clear)
-            .frame(width: 0.1)
-
-        if sectionTitle.isNotBlank {
-            Text(sectionTitle.replacingOccurrences(of: " ", with: "\n"))
-                .fontHeader4()
-                .listItemPadding()
-        }
-
-        let r = appTheme.cornerRadius
-        ZStack {
-            let strokeColor = appTheme.colors.primaryBlueColor
-            let cornerSize = CGSize(width: r, height: r)
-            RoundedRectangle(cornerSize: cornerSize)
-                .fill(appTheme.colors.addMediaBackgroundColor)
-                .frame(width: 120)
-                .overlay {
-                    RoundedRectangle(cornerSize: cornerSize)
-                        .stroke(strokeColor, style: StrokeStyle(lineWidth: 2, dash: [5]))
-                }
-
-            VStack {
-                Image(systemName: "plus")
-                    .foregroundColor(strokeColor)
-                Text(t.t("actions.add_media"))
-                    .foregroundColor(strokeColor)
-            }
-        }
-        .padding(.vertical, r * 0.55)
-        .onTapGesture {
-            onTakePhotoSelectImage(category)
-        }
-
-        ForEach(0..<viewModel.cachingLocalImageCount[category.literal], id: \.self) { index in
-            Image(systemName: "photo")
-                .foregroundColor(appTheme.colors.addMediaBackgroundColor)
-                .font(iconFont)
-        }
-
-        ForEach(beforeAfterImages, id: \.id) { caseImage in
-            if caseImage.isNetworkImage {
-                CachedAsyncImage(url: URL(string: caseImage.thumbnailUri)) { phase in
-                    if let image = phase.image {
-                        image
-                            .resizable()
-                            .scaledToFit()
-                            .cornerRadius(appTheme.cornerRadius)
-                            .onTapGesture { openViewImage(caseImage) }
-                    } else if phase.error != nil {
-                        Image(systemName: "exclamationmark.circle")
-                            .resizable()
-                            .scaledToFit()
-                            .foregroundColor(appTheme.colors.primaryRedColor)
-                            .padding()
-                    } else {
-                        Image(systemName: "photo.circle")
-                            .resizable()
-                            .scaledToFit()
-                            .foregroundColor(.gray)
-                            .padding()
-                    }
-                }
-            } else {
-                if let image = viewModel.localImageCache[caseImage.imageUri] {
-                    let isSyncing = viewModel.syncingWorksiteImage == caseImage.id
-                    let alignment: Alignment = isSyncing ? .center : .topTrailing
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFit()
-                        .cornerRadius(appTheme.cornerRadius)
-                        .onTapGesture { openViewImage(caseImage) }
-                        .overlay(alignment: alignment) {
-                            if isSyncing {
-                                Image(systemName: "cloud.fill")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 48, height: 48)
-                                    .padding()
-                                    .background(.white.opacity(0.8))
-                                    .clipShape(Circle())
-                            } else {
-                                Image(systemName: "cloud.fill")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 16, height: 16)
-                                    .padding(4)
-                                    .background(.white.opacity(0.5))
-                                    .clipShape(Circle())
-                                    .padding(8)
-                            }
-                        }
-                }
-            }
-        }
-
-        Rectangle()
-            .fill(.clear)
-            .frame(width: 0.1)
     }
 }
 

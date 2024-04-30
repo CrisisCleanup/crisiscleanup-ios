@@ -50,7 +50,7 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
     @Published private(set) var isPendingTransfer = false
     lazy var transferType: WorkTypeTransferType = { transferWorkTypeProvider.transferType }()
 
-    @Published private(set) var syncingWorksiteImage: Int64 = 0
+    let caseMediaManager: CaseMediaManager
 
     private let isOrganizationsRefreshed = ManagedAtomic(false)
     private let organizationLookup: AnyPublisher<[Int64: IncidentOrganization], Never>
@@ -70,13 +70,8 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
         .notes: ""
     ]
     @Published private(set) var statusOptions: [WorkTypeStatus] = []
-    @Published private(set) var beforeAfterPhotos: [ImageCategory: [CaseImage]] = [:]
 
     @Published private(set) var otherNotes: [(String, String)] = []
-
-    var addImageCategory = ImageCategory.before
-    @Published var cachingLocalImageCount = ObservableIntDictionary()
-    private(set) var localImageCache = [String: UIImage]()
 
     private let nextRecurDateFormat: DateFormatter
 
@@ -127,6 +122,14 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
         incidentIdIn = incidentId
         worksiteIdIn = worksiteId
         isValidWorksiteIds = incidentId > 0 && worksiteId > 0
+
+        caseMediaManager = CaseMediaManager(
+            localImageRepository: localImageRepository,
+            syncPusher: syncPusher,
+            logger: logger,
+            incidentId: incidentIdIn,
+            worksiteId: worksiteIdIn
+        )
 
         localTranslate = { phraseKey in
             editableWorksiteProvider.translate(key: phraseKey) ?? translator.t(phraseKey)
@@ -514,45 +517,14 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
         .assign(to: \.tabTitles, on: self)
         .store(in: &subscriptions)
 
-        filesNotes.map { (files, localFiles, _) in
-            let beforeImages = Array([
-                localFiles.filter { !$0.isAfter },
-                files.filter { !$0.isAfter }
-            ].joined())
-            let afterImages = Array([
-                localFiles.filter { $0.isAfter },
-                files.filter { $0.isAfter }
-            ].joined())
-            return [
-                ImageCategory.before: beforeImages,
-                ImageCategory.after: afterImages
-            ]
+        let imageFiles = filesNotes.map { (files, localFiles, _) in
+            (files, localFiles)
         }
-        .receive(on: RunLoop.main)
-        .assign(to: \.beforeAfterPhotos, on: self)
-        .store(in: &subscriptions)
+        caseMediaManager.subscribeImageFiles(imageFiles, &subscriptions)
     }
 
     private func subscribeLocalImages() {
-        localImageRepository.syncingWorksiteImage
-            .eraseToAnyPublisher()
-            .receive(on: RunLoop.main)
-            .assign(to: \.syncingWorksiteImage, on: self)
-            .store(in: &subscriptions)
-
-        $beforeAfterPhotos
-            .sink(receiveValue: {
-                for (_, images) in $0 {
-                    images.filter { !$0.isNetworkImage }
-                        .forEach { localImage in
-                            let imageName = localImage.imageName
-                            if let cachedImage = self.localImageRepository.getLocalImage(imageName) {
-                                self.localImageCache[localImage.imageUri] = cachedImage
-                            }
-                        }
-                }
-            })
-            .store(in: &subscriptions)
+        caseMediaManager.subscribeLocalImages(&subscriptions)
     }
 
     private func subscribeLocationState() {
@@ -867,63 +839,6 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
         notes += startingWorksite.notes
         let changedWorksite = startingWorksite.copy { $0.notes = notes }
         saveWorksiteChange(startingWorksite, changedWorksite)
-    }
-
-    func onPhotoTaken(_ result: UIImage) {
-        let categoryLiteral = addImageCategory.literal
-        let count = cachingLocalImageCount[categoryLiteral]
-        cachingLocalImageCount[categoryLiteral] = count + 1
-
-        Task {
-            do {
-                defer {
-                    Task { @MainActor in
-                        let cachingCount = cachingLocalImageCount[categoryLiteral]
-                        cachingLocalImageCount[categoryLiteral] = cachingCount - 1
-                    }
-                }
-
-                try await self.localImageRepository.cacheImage(
-                    incidentIdIn,
-                    worksiteIdIn,
-                    categoryLiteral,
-                    result
-                )
-
-                syncPusher.scheduleSyncMedia()
-            } catch {
-                logger.logError(error)
-            }
-        }
-    }
-
-    func onMediaSelected(_ results: [PhotosPickerItem]) {
-        let categoryLiteral = addImageCategory.literal
-        let count = cachingLocalImageCount[categoryLiteral]
-        let selectCount = results.count
-        cachingLocalImageCount[categoryLiteral] = count + selectCount
-
-        Task {
-            do {
-                defer {
-                    Task { @MainActor in
-                        let cachingCount = cachingLocalImageCount[categoryLiteral]
-                        cachingLocalImageCount[categoryLiteral] = cachingCount - selectCount
-                    }
-                }
-
-                try await self.localImageRepository.cachePicked(
-                    incidentIdIn,
-                    worksiteIdIn,
-                    categoryLiteral,
-                    results
-                )
-
-                syncPusher.scheduleSyncMedia()
-            } catch {
-                logger.logError(error)
-            }
-        }
     }
 
     func scheduleSync() {
