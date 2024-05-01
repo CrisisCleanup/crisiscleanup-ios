@@ -278,7 +278,7 @@ class CaseFlagsViewModel: ObservableObject {
         _ changedWorksite: Worksite,
         _ schedulePush: Bool = false
     ) async throws {
-        if (startingWorksite == changedWorksite) {
+        if startingWorksite == changedWorksite {
             return
         }
 

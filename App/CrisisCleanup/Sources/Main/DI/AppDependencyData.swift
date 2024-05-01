@@ -246,6 +246,18 @@ extension MainComponent {
         }
     }
 
+    public var worksiteImageRepository: WorksiteImageRepository {
+        shared {
+            OfflineFirstWorksiteImageRepository(
+                worksiteDao: worksiteDao,
+                localImageDao: localImageDao,
+                localImageRepository: localImageRepository,
+                localFileCache: localFileCache,
+                loggerFactory: loggerFactory
+            )
+        }
+    }
+
     public var usersRepository: UsersRepository {
         shared {
             OfflineFirstUsersRepository(

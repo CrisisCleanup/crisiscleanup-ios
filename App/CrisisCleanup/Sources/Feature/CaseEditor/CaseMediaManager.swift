@@ -5,11 +5,13 @@ import SwiftUI
 
 class CaseMediaManager: ObservableObject {
     private let localImageRepository: LocalImageRepository
+    private let worksiteImageRepository: WorksiteImageRepository
+    private let worksiteChangeRepository: WorksiteChangeRepository
     private let syncPusher: SyncPusher
     private let logger: AppLogger
 
     private let incidentId: Int64
-    private let worksiteId: Int64
+    private var worksiteId: Int64
 
     @Published private(set) var beforeAfterPhotos: [ImageCategory: [CaseImage]] = [:]
 
@@ -18,18 +20,25 @@ class CaseMediaManager: ObservableObject {
 
     @Published private(set) var syncingWorksiteImage: Int64 = 0
 
+    private let deletingImageLock = NSLock()
     @Published private(set) var deletingImageIds: Set<Int64> = []
 
     private var addImageCategory = ImageCategory.before
 
+    private var isNewWorksite: Bool { worksiteId == EmptyWorksite.id }
+
     init(
         localImageRepository: LocalImageRepository,
+        worksiteImageRepository: WorksiteImageRepository,
+        worksiteChangeRepository: WorksiteChangeRepository,
         syncPusher: SyncPusher,
         logger: AppLogger,
         incidentId: Int64,
         worksiteId: Int64
     ) {
         self.localImageRepository = localImageRepository
+        self.worksiteImageRepository = worksiteImageRepository
+        self.worksiteChangeRepository = worksiteChangeRepository
         self.syncPusher = syncPusher
         self.logger = logger
         self.incidentId = incidentId
@@ -75,6 +84,10 @@ class CaseMediaManager: ObservableObject {
             .store(in: &subscriptions)
     }
 
+    func updateWorksiteId(_ id: Int64) {
+        worksiteId = id
+    }
+
     func updateImageCache(_ categoryImages: [[CaseImage]]) {
         for images in categoryImages {
             images.filter { !$0.isNetworkImage }
@@ -91,29 +104,35 @@ class CaseMediaManager: ObservableObject {
         addImageCategory = category
     }
 
-    func onMediaSelected(_ results: [PhotosPickerItem]) {
-        let categoryLiteral = addImageCategory.literal
+    private func updateCachingCount(_ category: ImageCategory, _ delta: Int) {
+        let categoryLiteral = category.literal
         let count = cachingLocalImageCount[categoryLiteral] ?? 0
-        let selectCount = results.count
-        cachingLocalImageCount[categoryLiteral] = count + selectCount
+        cachingLocalImageCount[categoryLiteral] = count + delta
+    }
 
+    func onMediaSelected(_ results: [PhotosPickerItem]) {
+        let category = addImageCategory
+        let selectCount = results.count
+        updateCachingCount(category, selectCount)
         Task {
             do {
                 defer {
-                    Task { @MainActor in
-                        let cachingCount = cachingLocalImageCount[categoryLiteral] ?? 0
-                        cachingLocalImageCount[categoryLiteral] = cachingCount - selectCount
-                    }
+                    Task { @MainActor in updateCachingCount(category, -selectCount) }
                 }
 
-                try await self.localImageRepository.cachePicked(
-                    incidentId,
-                    worksiteId,
-                    categoryLiteral,
-                    results
-                )
+                if isNewWorksite {
+                    // TODO: Do
+                } else {
 
-                syncPusher.scheduleSyncMedia()
+                    try await self.localImageRepository.cachePicked(
+                        incidentId,
+                        worksiteId,
+                        category.literal,
+                        results
+                    )
+
+                    syncPusher.scheduleSyncMedia()
+                }
             } catch {
                 logger.logError(error)
             }
@@ -121,35 +140,30 @@ class CaseMediaManager: ObservableObject {
     }
 
     func onPhotoTaken(_ result: UIImage) {
-        let categoryLiteral = addImageCategory.literal
-        let count = cachingLocalImageCount[categoryLiteral] ?? 0
-        cachingLocalImageCount[categoryLiteral] = count + 1
-
+        let category = addImageCategory
+        updateCachingCount(category, 1)
         Task {
             do {
                 defer {
-                    Task { @MainActor in
-                        let cachingCount = cachingLocalImageCount[categoryLiteral] ?? 0
-                        cachingLocalImageCount[categoryLiteral] = cachingCount - 1
-                    }
+                    Task { @MainActor in updateCachingCount(category, -1) }
                 }
 
-                try await self.localImageRepository.cacheImage(
-                    incidentId,
-                    worksiteId,
-                    categoryLiteral,
-                    result
-                )
+                if isNewWorksite {
+                    // TODO: Do
+                } else {
+                    try await self.localImageRepository.cacheImage(
+                        incidentId,
+                        worksiteId,
+                        category.literal,
+                        result
+                    )
 
-                syncPusher.scheduleSyncMedia()
+                    syncPusher.scheduleSyncMedia()
+                }
             } catch {
                 logger.logError(error)
             }
         }
-    }
-
-    func getPhotoImages(_ category: ImageCategory) -> [CaseImage]? {
-        beforeAfterPhotos[category]
     }
 
     func getLocalImage(_ imageUri: String) -> UIImage? {
@@ -157,6 +171,45 @@ class CaseMediaManager: ObservableObject {
     }
 
     func onDeleteImage(_ caseImage: CaseImage) {
-        print("Delete image \(caseImage)")
+        if isNewWorksite {
+            worksiteImageRepository.deleteNewWorksiteImage(caseImage.imageUri)
+        } else {
+            // TODO: IDs alone are not unique. Must account for isNetworkImage.
+            let imageId = caseImage.id
+            let isDeleting = deletingImageLock.withLock {
+                if deletingImageIds.contains(imageId) {
+                    return true
+                }
+                deletingImageIds.insert(imageId)
+                return false
+            }
+            if isDeleting {
+                return
+            }
+
+            Task {
+                do {
+                    defer {
+                        Task { @MainActor in
+                            deletingImageLock.withLock {
+                                deletingImageIds.remove(imageId)
+                            }
+                        }
+                    }
+
+                    if caseImage.isNetworkImage {
+                        let worksiteId = try worksiteChangeRepository.saveDeletePhoto(imageId)
+                        if (worksiteId > 0) {
+                            syncPusher.appPushWorksite(worksiteId)
+                        }
+                    } else {
+                        try localImageRepository.deleteLocalImage(imageId)
+                    }
+                } catch {
+                    // TODO: Show error
+                    logger.logError(error)
+                }
+            }
+        }
     }
 }

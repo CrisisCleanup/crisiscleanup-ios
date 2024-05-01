@@ -7,7 +7,7 @@ protocol MapCaseDotProvider : MapCaseIconProvider {
 
 class InMemoryDotProvider: MapCaseDotProvider {
 
-    private let cacheLock = NSLock()
+    private let cacheLock = NSRecursiveLock()
     private let cache = LRUCache<DotCacheKey, UIImage>(countLimit: 32)
 
     private var cacheDotDrawProperties: DotDrawProperties

@@ -36,6 +36,7 @@ public protocol AppDependency: Dependency {
     var syncLogRepository: SyncLogRepository  { get }
     var addressSearchRepository: AddressSearchRepository { get }
     var localImageRepository: LocalImageRepository { get }
+    var worksiteImageRepository: WorksiteImageRepository { get }
     var usersRepository: UsersRepository { get }
     var casesFilterRepository: CasesFilterRepository { get }
     var caseHistoryRepository: CaseHistoryRepository { get }

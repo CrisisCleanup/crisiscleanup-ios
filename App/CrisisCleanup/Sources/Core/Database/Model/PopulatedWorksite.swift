@@ -18,11 +18,12 @@ struct WorksiteLocalModifiedAt: Equatable, Decodable, FetchableRecord {
     let isLocalModified: Bool
 }
 
+struct NetworkFileInfo: Equatable, Decodable {
+    let networkFile: NetworkFileRecord
+    let networkFileLocalImage: NetworkFileLocalImageRecord?
+}
+
 struct PopulatedLocalWorksite: Equatable, Decodable, FetchableRecord {
-    struct NetworkFileInfo: Equatable, Decodable {
-        let networkFile: NetworkFileRecord
-        let networkFileLocalImage: NetworkFileLocalImageRecord?
-    }
     let worksiteRoot: WorksiteRootRecord
     let worksite: WorksiteRecord
     let worksiteFlags: [WorksiteFlagRecord]
@@ -168,7 +169,7 @@ struct PopulatedWorksiteMapVisual: Decodable, FetchableRecord {
 }
 
 extension NetworkFileRecord {
-    fileprivate func asImageModel(_ rotateDegrees: Int) -> NetworkImage {
+    internal func asImageModel(_ rotateDegrees: Int) -> NetworkImage {
         NetworkImage(
             id: id,
             createdAt: createdAt,
@@ -182,7 +183,7 @@ extension NetworkFileRecord {
 }
 
 extension WorksiteLocalImageRecord {
-    fileprivate func asExternalModel() -> WorksiteLocalImage {
+    internal func asExternalModel() -> WorksiteLocalImage {
         WorksiteLocalImage(
             id: id!,
             worksiteId: worksiteId,

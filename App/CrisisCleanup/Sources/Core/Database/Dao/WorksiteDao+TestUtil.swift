@@ -25,4 +25,8 @@ extension WorksiteDao {
                 .fetchAll(db)
         }
     }
+
+    internal func getWorksiteFiles(_ id: Int64) throws -> PopulatedWorksiteFiles? {
+        try reader.read { db in try self.fetchWorksiteFiles(db, id) }
+    }
 }

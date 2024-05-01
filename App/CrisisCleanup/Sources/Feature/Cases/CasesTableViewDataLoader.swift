@@ -82,6 +82,7 @@ class CasesTableViewDataLoader {
     ) async -> WorksiteClaimActionResult {
         let worksiteId = worksite.id
 
+        // TODO: Too complicated. Might be wrong or result in no-op. Simplify when time permits.
         let isInProgress = changingIdsLock.withLock {
             var changingIds = worksiteChangingClaimIds.load(ordering: .sequentiallyConsistent).value
             if (changingIds.contains(worksiteId)) {

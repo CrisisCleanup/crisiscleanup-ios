@@ -534,6 +534,26 @@ public class WorksiteDao {
             .fetchOne(db)
     }
 
+    func streamWorksiteFiles(_ id: Int64) -> AnyPublisher<PopulatedWorksiteFiles?, Error> {
+        ValueObservation
+            .tracking({ db in try self.fetchWorksiteFiles(db, id) })
+            .shared(in: reader)
+            .publisher()
+            .eraseToAnyPublisher()
+    }
+
+    // internal for testing. Should be private.
+    internal func fetchWorksiteFiles(_ db: Database, _ id: Int64) throws -> PopulatedWorksiteFiles? {
+        try WorksiteRootRecord
+            .filter(id: id)
+            .including(required: WorksiteRootRecord.worksite)
+            .including(all: WorksiteRootRecord.networkFiles
+                .including(optional: NetworkFileRecord.networkFileLocalImage))
+            .including(all: WorksiteRootRecord.worksiteLocalImages)
+            .asRequest(of: PopulatedWorksiteFiles.self)
+            .fetchOne(db)
+    }
+
     func getWorksiteNetworkId(_ worksiteId: Int64) -> Int64 {
         try! reader.read { db in
             try WorksiteRecord

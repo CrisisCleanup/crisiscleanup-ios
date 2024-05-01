@@ -96,6 +96,7 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
         editableWorksiteProvider: EditableWorksiteProvider,
         transferWorkTypeProvider: TransferWorkTypeProvider,
         localImageRepository: LocalImageRepository,
+        worksiteImageRepository: WorksiteImageRepository,
         translator: KeyAssetTranslator,
         worksiteChangeRepository: WorksiteChangeRepository,
         syncPusher: SyncPusher,
@@ -125,6 +126,8 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
 
         caseMediaManager = CaseMediaManager(
             localImageRepository: localImageRepository,
+            worksiteImageRepository: worksiteImageRepository,
+            worksiteChangeRepository: worksiteChangeRepository,
             syncPusher: syncPusher,
             logger: logger,
             incidentId: incidentIdIn,

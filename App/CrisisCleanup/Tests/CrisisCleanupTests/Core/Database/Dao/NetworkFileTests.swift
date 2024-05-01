@@ -206,18 +206,20 @@ class NetworkFileTests: XCTestCase {
 internal func testNetworkFileRecord(
     _ id: Int64,
     _ createdAt: Date,
-    _ fileId: Int64
+    _ fileId: Int64,
+    fullUrl: String? = nil,
+    tag: String? = nil
 ) -> NetworkFileRecord {
     NetworkFileRecord(
         id: id,
         createdAt: createdAt,
         fileId: fileId,
         fileTypeT: "file-type",
-        fullUrl: nil,
+        fullUrl: fullUrl,
         largeThumbnailUrl: nil,
         mimeContentType: "content-type",
         smallThumbnailUrl: nil,
-        tag: nil,
+        tag: tag,
         title: nil,
         url: "url"
     )

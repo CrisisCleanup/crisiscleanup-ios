@@ -14,7 +14,7 @@ enum ImageCategory: String, Identifiable, CaseIterable {
 
 private let imageCategoryLookup = ImageCategory.allCases.associateBy { $0.literal }
 
-struct CaseImage {
+public struct CaseImage: Equatable {
     let id: Int64
     let isNetworkImage: Bool
     let thumbnailUri: String

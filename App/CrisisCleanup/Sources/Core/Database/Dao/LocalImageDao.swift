@@ -55,6 +55,10 @@ public class LocalImageDao {
         try database.upsertLocalImage(localImage)
     }
 
+    func upsertLocalImages(_ images: [WorksiteLocalImageRecord]) throws {
+        try database.upsertLocalImages(images)
+    }
+
     func deleteLocalImage(_ id: Int64) throws {
         try database.deleteLocalImage(id)
     }
@@ -155,6 +159,14 @@ extension AppDatabase {
 
     fileprivate func upsertLocalImage(_ record: WorksiteLocalImageRecord) throws {
         try dbWriter.write { db in try record.insertOrUpdateTag(db) }
+    }
+
+    fileprivate func upsertLocalImages(_ records: [WorksiteLocalImageRecord]) throws {
+        try dbWriter.write { db in
+            for record in records {
+                try record.insertOrUpdateTag(db)
+            }
+        }
     }
 
     private func deleteLocalImage(

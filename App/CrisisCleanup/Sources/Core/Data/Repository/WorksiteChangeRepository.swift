@@ -271,15 +271,6 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         }
 
         do {
-            defer {
-                syncingWorksiteIdsLock.withLock {
-                    _syncingWorksiteIds.remove(worksiteId)
-                    syncingWorksiteIdsSubject.value = Set(_syncingWorksiteIds)
-                }
-
-                syncLogger.flush()
-            }
-
             let performSync = syncingWorksiteIdsLock.withLock {
                 if _syncingWorksiteIds.contains(worksiteId) {
                     syncLogger.log("Not syncing. Currently being synced.")
@@ -291,6 +282,17 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
             }
             if !performSync {
                 return false
+            }
+
+            defer {
+                if performSync {
+                    syncingWorksiteIdsLock.withLock {
+                        _syncingWorksiteIds.remove(worksiteId)
+                        syncingWorksiteIdsSubject.value = Set(_syncingWorksiteIds)
+                    }
+                }
+
+                syncLogger.flush()
             }
 
             try await self.syncWorksite(worksiteId)

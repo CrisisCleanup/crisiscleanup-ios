@@ -2,7 +2,6 @@ import SwiftUI
 import UIKit
 
 struct ImagePickerCamera: UIViewControllerRepresentable {
-
     @Binding var selectedImage: UIImage
     @Environment(\.presentationMode) private var presentationMode
 
@@ -13,11 +12,9 @@ struct ImagePickerCamera: UIViewControllerRepresentable {
         return imagePicker
     }
 
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {
-    }
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
 
     final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-
         var parent: ImagePickerCamera
 
         init(
@@ -27,7 +24,6 @@ struct ImagePickerCamera: UIViewControllerRepresentable {
         }
 
         func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-
             if let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage {
                 parent.selectedImage = image
             }
@@ -39,5 +35,4 @@ struct ImagePickerCamera: UIViewControllerRepresentable {
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
-
 }

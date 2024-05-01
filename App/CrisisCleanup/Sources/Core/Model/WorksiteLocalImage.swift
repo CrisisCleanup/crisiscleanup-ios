@@ -1,3 +1,4 @@
+// sourcery: copyBuilder, skipCopyInit
 public struct WorksiteLocalImage: Equatable {
     let id: Int64
     let worksiteId: Int64
