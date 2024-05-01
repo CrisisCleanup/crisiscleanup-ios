@@ -1,6 +1,9 @@
 import Combine
 
-class ObservableBoolDictionary: ObservableObject, MutableCollection {
+// For binding dictionary key-values with SwiftUI views
+// Allows for toggling data from SwiftUI and observing from view models
+
+class BindingBoolDictionary: ObservableObject, MutableCollection {
     let didChange = PassthroughSubject<Void, Never>()
 
     var data: Dictionary<String, Bool> = [:] {
@@ -32,7 +35,7 @@ class ObservableBoolDictionary: ObservableObject, MutableCollection {
     }
 }
 
-class ObservableStringDictionary: ObservableObject {
+class BindingStringDictionary: ObservableObject {
     let didChange = PassthroughSubject<Void, Never>()
 
     var data: Dictionary<String, String> = [:] {
@@ -53,38 +56,6 @@ class ObservableStringDictionary: ObservableObject {
     subscript(position: String) -> String {
         get {
             data.keys.contains(position) ? data[position]! : ""
-        }
-        set {
-            data[position] = newValue
-        }
-    }
-
-    func index(after i: String) -> String {
-        fatalError("Index after is not supported by \(self)")
-    }
-}
-
-class ObservableIntDictionary: ObservableObject, MutableCollection {
-    let didChange = PassthroughSubject<Void, Never>()
-
-    var data: Dictionary<String, Int> = [:] {
-        didSet {
-            didChange.send(())
-        }
-    }
-
-    public typealias Index = String
-
-    var startIndex: String = ""
-    var endIndex: String = ""
-
-    init(_ data: Dictionary<String, Int> = [:]) {
-        self.data = data
-    }
-
-    subscript(position: String) -> Int {
-        get {
-            data.keys.contains(position) ? data[position]! : 0
         }
         set {
             data[position] = newValue

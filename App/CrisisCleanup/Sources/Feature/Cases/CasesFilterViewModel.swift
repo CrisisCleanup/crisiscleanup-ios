@@ -14,9 +14,9 @@ class CasesFilterViewModel: ObservableObject {
     private let isInitialFilterValue = ManagedAtomic(true)
 
     @Published private(set) var casesFilters: CasesFilter = CasesFilter()
-    @Published var filterStatuses = ObservableBoolDictionary()
-    @Published var filterFlags = ObservableBoolDictionary()
-    @Published var filterWorkTypes = ObservableBoolDictionary()
+    @Published var filterStatuses = BindingBoolDictionary()
+    @Published var filterFlags = BindingBoolDictionary()
+    @Published var filterWorkTypes = BindingBoolDictionary()
     @Published var filterCreatedAtStart: Date? = nil
     @Published var filterCreatedAtEnd: Date? = nil
     @Published var filterUpdatedAtStart: Date? = nil
@@ -303,9 +303,9 @@ class CasesFilterViewModel: ObservableObject {
 
     func clearFilters() {
         let filters = CasesFilter()
-        filterStatuses = ObservableBoolDictionary()
-        filterFlags = ObservableBoolDictionary()
-        filterWorkTypes = ObservableBoolDictionary()
+        filterStatuses = BindingBoolDictionary()
+        filterFlags = BindingBoolDictionary()
+        filterWorkTypes = BindingBoolDictionary()
         changeFilters(filters)
         applyFilters(filters)
     }

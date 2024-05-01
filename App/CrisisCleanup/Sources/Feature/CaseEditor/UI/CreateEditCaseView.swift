@@ -742,10 +742,10 @@ struct DisplayFormField: View {
     @EnvironmentObject var editableView: EditableView
     @EnvironmentObject var focusableViewState: TextInputFocusableView
 
-    @Binding var checkedData: ObservableBoolDictionary
-    @Binding var contentData: ObservableStringDictionary
+    @Binding var checkedData: BindingBoolDictionary
+    @Binding var contentData: BindingStringDictionary
     @Binding var workTypeStatuses: [WorkTypeStatus]
-    @Binding var statusData: ObservableStringDictionary
+    @Binding var statusData: BindingStringDictionary
 
     @State private var multiSelected: Set<String> = []
 

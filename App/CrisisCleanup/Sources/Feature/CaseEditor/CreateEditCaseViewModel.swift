@@ -73,9 +73,9 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     @Published var isAssignedToOrgMember = false
     @Published private(set) var worksiteNotes = [WorksiteNote]()
     private var formFieldsInputData = FormFieldsInputData()
-    @Published var binaryFormData = ObservableBoolDictionary()
-    @Published var contentFormData = ObservableStringDictionary()
-    @Published var workTypeStatusFormData = ObservableStringDictionary()
+    @Published var binaryFormData = BindingBoolDictionary()
+    @Published var contentFormData = BindingStringDictionary()
+    @Published var workTypeStatusFormData = BindingStringDictionary()
 
     @Published var editingNote = ""
     @Published private(set) var otherNotes: [(String, String)] = []

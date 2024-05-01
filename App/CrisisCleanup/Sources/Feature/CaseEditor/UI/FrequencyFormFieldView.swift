@@ -7,7 +7,7 @@ private let fallbackRrule = "RRULE:FREQ=WEEKLY;BYDAY=MO;INTERVAL=1;BYHOUR=11"
 internal struct FrequencySelectView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    @Binding var checkedData: ObservableBoolDictionary
+    @Binding var checkedData: BindingBoolDictionary
     @Binding var rruleString: String
 
     let node: FormFieldNode
