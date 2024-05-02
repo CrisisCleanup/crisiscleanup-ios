@@ -57,7 +57,7 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
 
     private let editableWorksite: AnyPublisher<Worksite, Never>
 
-    private let uiState: AnyPublisher<CaseEditorUiState, Never>
+    private let viewState: AnyPublisher<CaseEditorViewState, Never>
     @Published private(set) var caseData: CaseEditorCaseData? = nil
 
     var referenceWorksite: Worksite { caseData?.worksite ?? EmptyWorksite }
@@ -155,7 +155,7 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
             appEnv: appEnv,
             loggerFactory: loggerFactory
         )
-        uiState = dataLoader.uiState.eraseToAnyPublisher()
+        viewState = dataLoader.viewState.eraseToAnyPublisher()
 
         organizationLookup = organizationsRepository.organizationLookup.eraseToAnyPublisher()
 
@@ -310,7 +310,7 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
             .assign(to: \.updatedAtText, on: self)
             .store(in: &subscriptions)
 
-        uiState
+        viewState
             .throttle(
                 for: .seconds(0.1),
                 scheduler: RunLoop.current,
@@ -488,7 +488,11 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
                 } else {
                     localImages = []
                 }
-                return (fileImages, localImages, worksite.notes)
+                return CaseImagesNotes(
+                    networkImages: fileImages,
+                    localImages: localImages,
+                    notes: worksite.notes
+                )
             }
             .share()
 
@@ -497,15 +501,14 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
             $otherNotes
         )
         .map { (fn, on) in
-            let (fileImages, localImages, notes) = fn
-            let fileCount = fileImages.count + localImages.count
+            let fileCount = fn.networkImages.count + fn.localImages.count
             var photosTitle = self.localTranslate("caseForm.photos")
             if fileCount > 0 {
                 photosTitle = "\(photosTitle) (\(fileCount))"
             }
 
             var notesTitle = self.localTranslate("formLabels.notes")
-            let noteCount = notes.count + on.count
+            let noteCount = fn.notes.count + on.count
             if noteCount > 0 {
                 notesTitle = "\(notesTitle) (\(noteCount))"
             }
@@ -520,10 +523,9 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
         .assign(to: \.tabTitles, on: self)
         .store(in: &subscriptions)
 
-        let imageFiles = filesNotes.map { (files, localFiles, _) in
-            (files, localFiles)
-        }
-        caseMediaManager.subscribeImageFiles(imageFiles, &subscriptions)
+        let categorizedImages = filesNotes
+            .organizeBeforeAfterPhotos()
+        caseMediaManager.subscribeCategorizedImages(categorizedImages, &subscriptions)
     }
 
     private func subscribeLocalImages() {

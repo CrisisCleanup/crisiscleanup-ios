@@ -37,12 +37,18 @@ private struct CreateEditCaseLayoutView: View {
                             CreateEditCaseSaveActions(isVertical: true)
                                 .frame(width: proxy.size.width * listDetailListFractionalWidth)
 
-                            CreateEditCaseContentView(isSaveBarVisible: false)
+                            CreateEditCaseContentView(
+                                isCompactLayout: viewLayout.isShort,
+                                isSaveBarVisible: false
+                            )
                                 .frame(width: proxy.size.width * listDetailDetailFractionalWidth)
                         }
                     }
                 } else {
-                    CreateEditCaseContentView(isSaveBarVisible: true)
+                    CreateEditCaseContentView(
+                        isCompactLayout: viewLayout.isShort,
+                        isSaveBarVisible: true
+                    )
                 }
             }
 
@@ -90,6 +96,7 @@ private struct CreateEditCaseContentView: View {
     @EnvironmentObject var viewModel: CreateEditCaseViewModel
     @EnvironmentObject private var focusableViewState: TextInputFocusableView
 
+    private var isCompactLayout = false
     private var isSaveBarVisible = false
 
     @State private var isInvalidSave = false
@@ -107,8 +114,10 @@ private struct CreateEditCaseContentView: View {
     ]
 
     init(
+        isCompactLayout: Bool,
         isSaveBarVisible: Bool
     ) {
+        self.isCompactLayout = isCompactLayout
         self.isSaveBarVisible = isSaveBarVisible
 
         contentScrollStopDelay = contentScrollChangeSubject
@@ -148,6 +157,7 @@ private struct CreateEditCaseContentView: View {
                     VStack {
                         CreateEditCaseeScrollingSections(
                             sectionCollapse: $sectionCollapse,
+                            isCompactLayout: isCompactLayout,
                             proxy: proxy,
                             editSections: editSections,
                             contentScrollChangeSubject: contentScrollChangeSubject
@@ -232,6 +242,8 @@ private struct CreateEditCaseeScrollingSections: View {
 
     @Binding var sectionCollapse: Array<Bool>
 
+    var isCompactLayout = false
+
     let proxy: ScrollViewProxy
     let editSections: [String]
     let contentScrollChangeSubject: any Subject<(String, CGFloat), Never>
@@ -310,7 +322,7 @@ private struct CreateEditCaseeScrollingSections: View {
             .id("section\(lastIndex)")
 
             if !sectionCollapse[lastIndex] {
-                Text("Photos section")
+                CasePhotosView(isCompactLayout: isCompactLayout)
             }
         }
         .onScrollSectionFocus(
@@ -1001,6 +1013,20 @@ struct DisplayFormField: View {
             }
         }
         .onChange(of: focusState) { focusableViewState.focusState = $0 }
+    }
+}
+
+private struct CasePhotosView: View {
+    @EnvironmentObject var viewModel: CreateEditCaseViewModel
+
+    var isCompactLayout: Bool = false
+
+    var body: some View {
+        ViewCasePhotosView(
+            caseMediaManager: viewModel.caseMediaManager,
+            headerTitle: viewModel.headerTitle,
+            isCompactLayout: isCompactLayout
+        )
     }
 }
 

@@ -14,7 +14,7 @@ struct ViewImageView: View {
         ZStack {
             Color.black.ignoresSafeArea(.all)
 
-            if viewModel.uiState.isLoading {
+            if viewModel.viewState.isLoading {
                 VStack {
                     ProgressView()
                         .frame(alignment: .center)
@@ -22,7 +22,7 @@ struct ViewImageView: View {
             }
 
             if viewModel.isNetworkImage {
-                if let imageUrl = viewModel.uiState.imageUrl {
+                if let imageUrl = viewModel.viewState.imageUrl {
                     ViewNetworkImage(
                         imageUrl: imageUrl,
                         toggleNavBar: {
@@ -36,7 +36,7 @@ struct ViewImageView: View {
 
                 }
             } else {
-                if let image = viewModel.uiState.image {
+                if let image = viewModel.viewState.image {
                     PanZoomImage(
                         image: image,
                         toggleNavBar: {
@@ -59,7 +59,7 @@ struct ViewImageView: View {
             }
         }
         .onTapGesture(count: 1) {
-            if !viewModel.uiState.isLoading {
+            if !viewModel.viewState.isLoading {
                 withAnimation {
                     showNavBar.toggle()
                 }

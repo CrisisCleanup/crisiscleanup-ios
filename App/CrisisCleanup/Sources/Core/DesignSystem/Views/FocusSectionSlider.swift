@@ -30,7 +30,7 @@ struct FocusSectionSlider: View {
             .eraseToAnyPublisher()
     }
 
-    private func animateToSection(_ index: Int) {
+    private func scrollToSection(_ index: Int) {
         onScrollToSection(index)
         withAnimation {
             proxy.scrollTo("section\(index)", anchor: .top)
@@ -47,8 +47,7 @@ struct FocusSectionSlider: View {
                         .fontHeader4()
                         .padding(.leading)
                         .onTapGesture {
-                            // TODO: Expand the section if it is collapsed
-                            animateToSection(index)
+                            scrollToSection(index)
                         }
                         .background(GeometryReader {
                             let frame = $0.frame(in: .named(referenceFrameName))
@@ -93,7 +92,7 @@ struct FocusSectionSlider: View {
                 }
             }
             if abs(offset) > 6 {
-                animateToSection(index)
+                scrollToSection(index)
             }
         }
     }

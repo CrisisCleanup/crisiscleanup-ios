@@ -41,10 +41,10 @@ internal class CaseEditorDataLoader {
     private let workTypeStatusStream: AnyPublisher<[WorkTypeStatus], Never>
     private let keyTranslator: KeyTranslator
 
-    private let uiStateSubject = CurrentValueSubject<CaseEditorUiState, Never>(CaseEditorUiState.loading)
-    let uiState: any Publisher<CaseEditorUiState, Never>
+    private let viewStateSubject = CurrentValueSubject<CaseEditorViewState, Never>(CaseEditorViewState.loading)
+    let viewState: any Publisher<CaseEditorViewState, Never>
 
-    private let latestDataPublisher = LatestAsyncThrowsPublisher<CaseEditorUiState>()
+    private let latestDataPublisher = LatestAsyncThrowsPublisher<CaseEditorViewState>()
 
     private var disposables = Set<AnyCancellable>()
 
@@ -136,7 +136,7 @@ internal class CaseEditorDataLoader {
         workTypeStatusStream = workTypeStatusRepository.workTypeStatusOptions
             .eraseToAnyPublisher()
 
-        uiState = uiStateSubject
+        viewState = viewStateSubject
             .receive(on: RunLoop.main)
 
         self.keyTranslator = keyTranslator
@@ -228,7 +228,7 @@ internal class CaseEditorDataLoader {
 
             if organization.id <= 0 {
                 self.logger.logError(GenericError("Organization \(organization) is not set when editing worksite \(worksiteId)."))
-                return CaseEditorUiState.error(translate("info.organization_issue_log_out"))
+                return CaseEditorViewState.error(translate("info.organization_issue_log_out"))
             }
 
             let incident = incidentData.incident
@@ -239,14 +239,14 @@ internal class CaseEditorDataLoader {
                 self.logger.logError(GenericError("Incident \(incidentIdIn) is missing form fields when editing worksite \(worksiteId)."))
                 let errorMessage = translate("info.incident_loading")
                     .replacingOccurrences(of: "{name}", with: incident.name)
-                return CaseEditorUiState.error(errorMessage)
+                return CaseEditorViewState.error(errorMessage)
             }
 
             if bounds.locations.isEmpty {
                 self.logger.logError(GenericError("Incident \(incident.id) \(incident.name) is lacking locations."))
                 let errorMessage = translate("info.current_incident_problem")
                     .replacingOccurrences(of: "{name}", with: incident.name)
-                return CaseEditorUiState.error(errorMessage)
+                return CaseEditorViewState.error(errorMessage)
             }
 
             let localWorksite = stateData.worksite
@@ -412,7 +412,7 @@ internal class CaseEditorDataLoader {
             let isTranslationUpdated = self.editableWorksiteProvider.formFieldTranslationLookup.isNotEmpty
             let isPendingSync = !isLocalLoadFinished ||
             localWorksite?.localChanges.isLocalModified ?? false
-            return CaseEditorUiState.caseData(
+            return CaseEditorViewState.caseData(
                 CaseEditorCaseData(
                     orgId: organization.id,
                     isEditingAllowed: isEditingAllowed,
@@ -429,7 +429,7 @@ internal class CaseEditorDataLoader {
         }}
         .switchToLatest()
         .sink(receiveValue: { state in
-            self.uiStateSubject.value = state
+            self.viewStateSubject.value = state
         })
         .store(in: &disposables)
 
@@ -470,7 +470,7 @@ struct CaseEditorCaseData {
     let isPendingSync: Bool
 }
 
-enum CaseEditorUiState {
+enum CaseEditorViewState {
     case loading,
          caseData(_ caseData: CaseEditorCaseData),
          error(_ errorMessage: String)

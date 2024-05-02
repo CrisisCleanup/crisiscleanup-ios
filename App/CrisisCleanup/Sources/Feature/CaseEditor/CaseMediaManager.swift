@@ -53,32 +53,18 @@ class CaseMediaManager: ObservableObject {
             .store(in: &subscriptions)
 
         $beforeAfterPhotos
-            .sink(receiveValue: {
+            .sink {
                 self.updateImageCache(Array($0.values))
-            })
+            }
             .store(in: &subscriptions)
     }
 
-    func subscribeImageFiles(
-        _ imageFiles: any Publisher<([CaseImage], [CaseImage]), Never>,
+    func subscribeCategorizedImages(
+        _ imageFiles: any Publisher<[ImageCategory: [CaseImage]], Never>,
         _ subscriptions: inout Set<AnyCancellable>
     ) {
         imageFiles
             .eraseToAnyPublisher()
-            .map { (files, localFiles) in
-                let beforeImages = Array([
-                    localFiles.filter { !$0.isAfter },
-                    files.filter { !$0.isAfter }
-                ].joined())
-                let afterImages = Array([
-                    localFiles.filter { $0.isAfter },
-                    files.filter { $0.isAfter }
-                ].joined())
-                return [
-                    ImageCategory.before: beforeImages,
-                    ImageCategory.after: afterImages
-                ]
-            }
             .receive(on: RunLoop.main)
             .assign(to: \.beforeAfterPhotos, on: self)
             .store(in: &subscriptions)

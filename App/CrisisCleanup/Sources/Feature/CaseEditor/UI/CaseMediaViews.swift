@@ -116,7 +116,7 @@ private struct ViewCasePhotosSection: View {
                 )
             })
         }
-        .frame(maxHeight: 180)
+        .frame(minHeight: 120, maxHeight: 180)
     }
 }
 

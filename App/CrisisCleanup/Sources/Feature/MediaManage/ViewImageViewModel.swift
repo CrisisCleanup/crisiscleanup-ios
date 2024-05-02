@@ -19,7 +19,7 @@ class ViewImageViewModel: ObservableObject {
 
     let imageRotation = CurrentValueSubject<Int, Never>(0)
 
-    @Published private(set) var uiState = ViewImageUiState(isLoading: true)
+    @Published private(set) var viewState = ViewImageViewState(isLoading: true)
 
     @Published private(set) var isSyncing = false
 
@@ -57,7 +57,7 @@ class ViewImageViewModel: ObservableObject {
 
     func onViewAppear() {
         subscribeToSyncing()
-        subscribeToUiState()
+        subscribeToViewState()
         subscribeToImageDelete()
         subscribeToImageRotation()
     }
@@ -75,7 +75,7 @@ class ViewImageViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
-    private func subscribeToUiState() {
+    private func subscribeToViewState() {
         let imageState = isNetworkImage
         ? localImageRepository.streamNetworkImageUrl(imageId)
         : localImageRepository.streamLocalImageUri(imageId)
@@ -92,19 +92,19 @@ class ViewImageViewModel: ObservableObject {
                 let cached = lastPath.isBlank ? nil : self.localImageRepository.getLocalImage(lastPath)
                 let image = cached == nil ? nil : Image(uiImage: cached!)
                 // TODO: Set error messages if image URL is invalid for network image or image is nil for local image
-                return ViewImageUiState(
+                return ViewImageViewState(
                     imageUrl: $0,
                     image: image
                 )
             }
             .receive(on: RunLoop.main)
-            .assign(to: \.uiState, on: self)
+            .assign(to: \.viewState, on: self)
             .store(in: &subscriptions)
     }
 
     private func subscribeToImageDelete() {
         Publishers.CombineLatest3(
-            $uiState.eraseToAnyPublisher(),
+            $viewState.eraseToAnyPublisher(),
             $isSyncing.eraseToAnyPublisher(),
             $isDeleting.eraseToAnyPublisher()
         )
@@ -187,7 +187,7 @@ class ViewImageViewModel: ObservableObject {
     }
 }
 
-struct ViewImageUiState {
+struct ViewImageViewState {
     let isLoading: Bool
     let imageUrl: URL?
     let image: Image?

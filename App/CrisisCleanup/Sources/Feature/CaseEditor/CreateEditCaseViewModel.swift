@@ -23,13 +23,20 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     private let worksiteChangeRepository: WorksiteChangeRepository
     private let inputValidator: InputValidator
     private let syncPusher: SyncPusher
+    private let worksiteImageRepository: WorksiteImageRepository
     private let logger: AppLogger
 
     private let dataLoader: CaseEditorDataLoader
 
     let incidentIdIn: Int64
+    private let worksiteIdIn: Int64?
     var worksiteIdLatest: Int64?
-    let isCreateWorksite: Bool
+    var isCreateWorksite: Bool { worksiteIdLatest == nil }
+
+    private var hasNewWorksitePhotosImages: Bool {
+        worksiteIdIn == nil &&
+        worksiteImageRepository.hasNewWorksiteImages
+    }
 
     private let localTranslate: (String) -> String
 
@@ -52,7 +59,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     private let editingWorksite: AnyPublisher<Worksite, Never>
     private var workTypeLookup = [String: WorkType]()
 
-    private let uiState: AnyPublisher<CaseEditorUiState, Never>
+    private let viewState: AnyPublisher<CaseEditorViewState, Never>
     @Published private(set) var caseData: CaseEditorCaseData? = nil
 
     // For preventing unwanted editor reloads
@@ -154,6 +161,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         self.incidentSelector = incidentSelector
         self.worksiteChangeRepository = worksiteChangeRepository
         self.syncPusher = syncPusher
+        self.worksiteImageRepository = worksiteImageRepository
         self.inputValidator = inputValidator
 
         self.translator = translator
@@ -162,8 +170,8 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         translationCount = translator.translationCount
 
         incidentIdIn = incidentId
+        worksiteIdIn = worksiteId
         worksiteIdLatest = worksiteId
-        isCreateWorksite = worksiteId == nil
 
         caseMediaManager = CaseMediaManager(
             localImageRepository: localImageRepository,
@@ -186,8 +194,9 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
             iconProvider: mapCaseIconProvider
         )
 
+        let isNewWorksite = worksiteId==nil
         dataLoader = CaseEditorDataLoader(
-            isCreateWorksite: isCreateWorksite,
+            isCreateWorksite: isNewWorksite,
             incidentIdIn: incidentId,
             accountDataRepository: accountDataRepository,
             incidentsRepository: incidentsRepository,
@@ -203,7 +212,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
             appEnv: appEnv,
             loggerFactory: loggerFactory
         )
-        uiState = dataLoader.uiState.eraseToAnyPublisher()
+        viewState = dataLoader.viewState.eraseToAnyPublisher()
 
         editingWorksite = worksiteProvider.editableWorksite.eraseToAnyPublisher()
 
@@ -221,7 +230,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
             logger: logger
         )
 
-        editorSetWindow = isCreateWorksite ? 0.05.seconds : 0.6.seconds
+        editorSetWindow = isNewWorksite ? 0.05.seconds : 0.6.seconds
 
         updateHeaderTitle()
     }
@@ -252,6 +261,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         subscribeWorksiteChange()
         subscribeLocationState()
         subscribeNameSearch()
+        subscribePhotosImages()
         subscribeValidation()
         subscribeNavigation()
         subscribeIncidentChange()
@@ -350,7 +360,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     }
 
     private func subscribeCaseData() {
-        uiState
+        viewState
             .compactMap { state in
                 let result: CaseEditorCaseData? = {
                     switch state {
@@ -480,6 +490,23 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
             .receive(on: RunLoop.main)
             .assign(to: \.editIncidentWorksite, on: self)
             .store(in: &subscriptions)
+    }
+
+    private func subscribePhotosImages() {
+        let categorizedImages = if isCreateWorksite {
+            worksiteImageRepository.streamNewWorksiteImages()
+                .eraseToAnyPublisher()
+                .mapToCategoryLookup()
+        } else {
+            processWorksiteFilesNotes(
+                editableWorksite: worksiteProvider.editableWorksite,
+                viewState: viewState
+            )
+            .organizeBeforeAfterPhotos()
+        }
+        caseMediaManager.subscribeCategorizedImages(categorizedImages, &subscriptions)
+
+        caseMediaManager.subscribeLocalImages(&subscriptions)
     }
 
     private func subscribeValidation() {
