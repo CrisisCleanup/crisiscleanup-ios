@@ -1,8 +1,9 @@
 //  Created by Anthony Aguilar on 7/6/23.
 
-import SwiftUI
-import MapKit
+import Combine
 import FlowStackLayout
+import MapKit
+import SwiftUI
 
 struct CreateEditCaseView: View {
     @ObservedObject var viewModel: CreateEditCaseViewModel
@@ -29,18 +30,20 @@ private struct CreateEditCaseLayoutView: View {
 
     var body: some View {
         ZStack {
-            if viewLayout.isListDetailLayout {
-                GeometryReader { proxy in
-                    HStack {
-                        CreateEditCaseSaveActions(isVertical: true)
-                            .frame(width: proxy.size.width * listDetailListFractionalWidth)
+            if viewModel.editSections.isNotEmpty {
+                if viewLayout.isListDetailLayout {
+                    GeometryReader { proxy in
+                        HStack {
+                            CreateEditCaseSaveActions(isVertical: true)
+                                .frame(width: proxy.size.width * listDetailListFractionalWidth)
 
-                        CreateEditCaseContentView(isSaveBarVisible: false)
-                            .frame(width: proxy.size.width * listDetailDetailFractionalWidth)
+                            CreateEditCaseContentView(isSaveBarVisible: false)
+                                .frame(width: proxy.size.width * listDetailDetailFractionalWidth)
+                        }
                     }
+                } else {
+                    CreateEditCaseContentView(isSaveBarVisible: true)
                 }
-            } else {
-                CreateEditCaseContentView(isSaveBarVisible: true)
             }
 
             if showBusyIndicator {
@@ -87,9 +90,15 @@ private struct CreateEditCaseContentView: View {
     @EnvironmentObject var viewModel: CreateEditCaseViewModel
     @EnvironmentObject private var focusableViewState: TextInputFocusableView
 
-    var isSaveBarVisible = false
+    private var isSaveBarVisible = false
 
-    @State var sectionCollapse = [
+    @State private var isInvalidSave = false
+
+    private let contentScrollChangeSubject = CurrentValueSubject<(String, CGFloat), Never>(("", 0.0))
+    private let contentScrollStopDelay: AnyPublisher<String, Never>
+
+    @State private var sectionCollapse = [
+        false,
         false,
         false,
         false,
@@ -97,7 +106,16 @@ private struct CreateEditCaseContentView: View {
         false
     ]
 
-    @State private var isInvalidSave = false
+    init(
+        isSaveBarVisible: Bool
+    ) {
+        self.isSaveBarVisible = isSaveBarVisible
+
+        contentScrollStopDelay = contentScrollChangeSubject
+            .debounce(for: .seconds(0.2), scheduler: RunLoop.current)
+            .map { $0.0 }
+            .eraseToAnyPublisher()
+    }
 
     var body: some View {
         let disableMutation = viewModel.editableViewState.disabled
@@ -106,7 +124,12 @@ private struct CreateEditCaseContentView: View {
         ScrollViewReader { proxy in
             FocusSectionSlider(
                 sectionTitles: editSections,
-                proxy: proxy
+                proxy: proxy,
+                onScrollToSection: { index in
+                    if index >= 0 && index < sectionCollapse.count {
+                        sectionCollapse[index] = false
+                    }
+                }
             )
             .padding(.vertical, appTheme.gridItemSpacing)
 
@@ -122,69 +145,24 @@ private struct CreateEditCaseContentView: View {
                         .padding()
                     }
 
-                    Group {
-                        CreateEditCaseSectionHeaderView (
-                            isCollapsed: $sectionCollapse[0],
-                            titleNumber: 1,
-                            titleTranslateKey: editSections.get(0, "")
+                    VStack {
+                        CreateEditCaseeScrollingSections(
+                            sectionCollapse: $sectionCollapse,
+                            proxy: proxy,
+                            editSections: editSections,
+                            contentScrollChangeSubject: contentScrollChangeSubject
                         )
-                        .id("section0")
-
-                        if !sectionCollapse[0] {
-                            PropertyInformation(
-                                propertyData: viewModel.propertyInputData,
-                                locationData: viewModel.locationInputData
-                            )
-                        }
-                    }
-                    .onScrollSectionFocus(
-                        proxy,
-                        scrollToId: "scrollBar0"
-                    )
-
-                    let nodes = Array(viewModel.groupFormFieldNodes.enumerated())
-                    ForEach(nodes, id: \.offset) { offset, node in
-                        FormListSectionSeparator()
-
-                        let sectionIndex = offset + 1
-                        Group {
-                            CreateEditCaseSectionHeaderView (
-                                isCollapsed: $sectionCollapse[sectionIndex],
-                                titleNumber: sectionIndex + 1,
-                                titleTranslateKey: editSections.get(sectionIndex, ""),
-                                helpText: node.formField.help
-                            )
-                            .id("section\(sectionIndex)")
-
-                            VStack {
-                                if !sectionCollapse[sectionIndex] {
-                                    let children = node.children
-                                        .filter { !ignoreFormFieldKeys.contains($0.fieldKey) }
-                                    ForEach(children, id: \.viewId) { child in
-                                        if child.parentKey == node.fieldKey {
-                                            DisplayFormField(
-                                                checkedData: $viewModel.binaryFormData,
-                                                contentData: $viewModel.contentFormData,
-                                                workTypeStatuses: $viewModel.statusOptions,
-                                                statusData: $viewModel.workTypeStatusFormData,
-                                                isNewCase: viewModel.isCreateWorksite,
-                                                node: child,
-                                                isWorkTypeClaimed: viewModel.isWorkTypeClaimed
-                                            )
-                                            .padding(.horizontal)
-                                        }
-                                    }
+                        .onReceive(contentScrollStopDelay) { scrollToId in
+                            if scrollToId.isNotBlank {
+                                withAnimation {
+                                    proxy.scrollTo(scrollToId, anchor: .leading)
                                 }
                             }
                         }
-                        .onScrollSectionFocus(
-                            proxy,
-                            scrollToId: "scrollBar\(sectionIndex)"
-                        )
                     }
                 }
             }
-            .coordinateSpace(name: "scrollForm")
+            .coordinateSpace(name: "scrollFrom")
             .scrollDismissesKeyboard(.immediately)
             .onChange(of: focusableViewState.focusState) { focusState in
                 let isNameFocus = focusState == .caseInfoName
@@ -249,6 +227,100 @@ private struct CreateEditCaseContentView: View {
     }
 }
 
+private struct CreateEditCaseeScrollingSections: View {
+    @EnvironmentObject var viewModel: CreateEditCaseViewModel
+
+    @Binding var sectionCollapse: Array<Bool>
+
+    let proxy: ScrollViewProxy
+    let editSections: [String]
+    let contentScrollChangeSubject: any Subject<(String, CGFloat), Never>
+
+    var body: some View {
+        VStack {
+            CreateEditCaseSectionHeaderView (
+                isCollapsed: $sectionCollapse[0],
+                titleNumber: 1,
+                titleTranslateKey: editSections.get(0, "")
+            )
+            .id("section0")
+
+            if !sectionCollapse[0] {
+                PropertyInformation(
+                    propertyData: viewModel.propertyInputData,
+                    locationData: viewModel.locationInputData
+                )
+            }
+        }
+        .onScrollSectionFocus(
+            proxy,
+            scrollToId: "scrollBar0",
+            scrollChangeSubject: contentScrollChangeSubject
+        )
+
+        let nodes = Array(viewModel.groupFormFieldNodes.enumerated())
+        ForEach(nodes, id: \.offset) { offset, node in
+            FormListSectionSeparator()
+
+            let sectionIndex = offset + 1
+            VStack {
+                CreateEditCaseSectionHeaderView (
+                    isCollapsed: $sectionCollapse[sectionIndex],
+                    titleNumber: sectionIndex + 1,
+                    titleTranslateKey: editSections.get(sectionIndex, ""),
+                    helpText: node.formField.help
+                )
+                .id("section\(sectionIndex)")
+
+                VStack {
+                    if !sectionCollapse[sectionIndex] {
+                        let children = node.children
+                            .filter { !ignoreFormFieldKeys.contains($0.fieldKey) }
+                        ForEach(children, id: \.viewId) { child in
+                            if child.parentKey == node.fieldKey {
+                                DisplayFormField(
+                                    checkedData: $viewModel.binaryFormData,
+                                    contentData: $viewModel.contentFormData,
+                                    workTypeStatuses: $viewModel.statusOptions,
+                                    statusData: $viewModel.workTypeStatusFormData,
+                                    isNewCase: viewModel.isCreateWorksite,
+                                    node: child,
+                                    isWorkTypeClaimed: viewModel.isWorkTypeClaimed
+                                )
+                                .padding(.horizontal)
+                            }
+                        }
+                    }
+                }
+            }
+            .onScrollSectionFocus(
+                proxy,
+                scrollToId: "scrollBar\(sectionIndex)",
+                scrollChangeSubject: contentScrollChangeSubject
+            )
+        }
+
+        let lastIndex = editSections.count - 1
+        VStack {
+            CreateEditCaseSectionHeaderView (
+                isCollapsed: $sectionCollapse[lastIndex],
+                titleNumber: lastIndex + 1,
+                titleTranslateKey: editSections.get(lastIndex, "")
+            )
+            .id("section\(lastIndex)")
+
+            if !sectionCollapse[lastIndex] {
+                Text("Photos section")
+            }
+        }
+        .onScrollSectionFocus(
+            proxy,
+            scrollToId: "scrollBar\(lastIndex)",
+            scrollChangeSubject: contentScrollChangeSubject
+        )
+    }
+}
+
 private struct CreateEditCaseSectionHeaderView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
@@ -303,7 +375,7 @@ private struct ErrorTextView: View {
     }
 }
 
-struct PropertyInformation: View {
+private struct PropertyInformation: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var router: NavigationRouter

@@ -1,5 +1,6 @@
-import SwiftUI
+import Combine
 import SVGView
+import SwiftUI
 
 struct CasesFilterView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
@@ -31,7 +32,10 @@ private struct FiltersContentView: View {
 
     @EnvironmentObject var viewModel: CasesFilterViewModel
 
-    @State var sectionCollapse = [
+    private let contentScrollChangeSubject = CurrentValueSubject<(String, CGFloat), Never>(("", 0.0))
+    private let contentScrollStopDelay: AnyPublisher<String, Never>
+
+    @State private var sectionCollapse = [
         false,
         false,
         false,
@@ -40,11 +44,23 @@ private struct FiltersContentView: View {
         false
     ]
 
+    init() {
+        contentScrollStopDelay = contentScrollChangeSubject
+            .debounce(for: .seconds(0.2), scheduler: RunLoop.current)
+            .map { $0.0 }
+            .eraseToAnyPublisher()
+    }
+
     var body: some View {
         ScrollViewReader { proxy in
             FocusSectionSlider(
                 sectionTitles: viewModel.filterSectionTitles,
-                proxy: proxy
+                proxy: proxy,
+                onScrollToSection: { index in
+                    if index >= 0 && index < sectionCollapse.count {
+                        sectionCollapse[index] = false
+                    }
+                }
             )
             .padding(.vertical)
 
@@ -105,12 +121,20 @@ private struct FiltersContentView: View {
                         .id("section\(index)")
                         .onScrollSectionFocus(
                             proxy,
-                            scrollToId: "scrollBar\(index)"
+                            scrollToId: "scrollBar\(index)",
+                            scrollChangeSubject: contentScrollChangeSubject
                         )
                     }
                 }
-                .coordinateSpace(name: "scrollForm")
+                .coordinateSpace(name: "scrollFrom")
                 .scrollDismissesKeyboard(.immediately)
+                .onReceive(contentScrollStopDelay) { scrollToId in
+                    if scrollToId.isNotBlank {
+                        withAnimation {
+                            proxy.scrollTo(scrollToId, anchor: .leading)
+                        }
+                    }
+                }
 
                 FilterButtons()
                     .environmentObject(viewModel)

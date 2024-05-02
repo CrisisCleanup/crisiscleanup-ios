@@ -366,6 +366,7 @@ internal class CaseEditorDataLoader {
                     .forEach {
                         editSections.append($0)
                     }
+                    editSections.append(translate("caseForm.photos"))
                     self.editSectionsSubject.value = editSections
                 }
 

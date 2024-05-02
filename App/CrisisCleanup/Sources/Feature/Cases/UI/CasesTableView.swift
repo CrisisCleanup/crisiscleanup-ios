@@ -53,7 +53,7 @@ struct CasesTableView: View {
                 }
                 .disabled(isLoadingData || !isEditable)
                 .tint(.black)
-                .blackBorder()
+                .roundedCorners()
             }
             .listItemPadding()
 
@@ -282,7 +282,7 @@ private struct CaseTableItemCard: View {
                     // TODO: Common dimensions
                         .frame(width: 75, height: 35)
                         .fontHeader3()
-                        .blackBorder()
+                        .roundedCorners()
                 }
                 .tint(.black)
 
@@ -293,7 +293,7 @@ private struct CaseTableItemCard: View {
                     // TODO: Common dimensions
                         .frame(width: 75, height: 35)
                         .fontHeader3()
-                        .blackBorder()
+                        .roundedCorners()
                 }
                 .tint(.black)
 

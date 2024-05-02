@@ -47,6 +47,8 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
 
     let editableViewState = EditableView()
 
+    let caseMediaManager: CaseMediaManager
+
     private let editingWorksite: AnyPublisher<Worksite, Never>
     private var workTypeLookup = [String: WorkType]()
 
@@ -133,6 +135,8 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         incidentSelector: IncidentSelector,
         worksiteChangeRepository: WorksiteChangeRepository,
         syncPusher: SyncPusher,
+        localImageRepository: LocalImageRepository,
+        worksiteImageRepository: WorksiteImageRepository,
         inputValidator: InputValidator,
         translator: KeyAssetTranslator,
         appEnv: AppEnv,
@@ -151,6 +155,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         self.worksiteChangeRepository = worksiteChangeRepository
         self.syncPusher = syncPusher
         self.inputValidator = inputValidator
+
         self.translator = translator
         logger = loggerFactory.getLogger("create-edit-case")
 
@@ -159,6 +164,16 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         incidentIdIn = incidentId
         worksiteIdLatest = worksiteId
         isCreateWorksite = worksiteId == nil
+
+        caseMediaManager = CaseMediaManager(
+            localImageRepository: localImageRepository,
+            worksiteImageRepository: worksiteImageRepository,
+            worksiteChangeRepository: worksiteChangeRepository,
+            syncPusher: syncPusher,
+            logger: logger,
+            incidentId: incidentIdIn,
+            worksiteId: worksiteIdLatest ?? EmptyWorksite.id
+        )
 
         localTranslate = { phraseKey in
             worksiteProvider.translate(key: phraseKey) ?? translator.t(phraseKey)

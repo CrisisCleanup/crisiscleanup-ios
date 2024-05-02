@@ -65,6 +65,8 @@ class CreateEditCaseComponent: Component<AppDependency>, CreateEditCaseViewBuild
             incidentSelector: dependency.incidentSelector,
             worksiteChangeRepository: dependency.worksiteChangeRepository,
             syncPusher: dependency.syncPusher,
+            localImageRepository: dependency.localImageRepository,
+            worksiteImageRepository: dependency.worksiteImageRepository,
             inputValidator: dependency.inputValidator,
             translator: dependency.translator,
             appEnv: dependency.appEnv,

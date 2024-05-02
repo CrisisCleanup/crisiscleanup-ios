@@ -18,7 +18,10 @@ extension View {
     }
 
     // https://www.avanderlee.com/swiftui/conditional-view-modifier/
-    @ViewBuilder func `if`<Content: View>(_ condition: @autoclosure () -> Bool, transform: (Self) -> Content) -> some View {
+    @ViewBuilder func `if`<Content: View>(
+        _ condition: @autoclosure () -> Bool,
+        transform: (Self) -> Content
+    ) -> some View {
         if condition() {
             transform(self)
         } else {
@@ -26,10 +29,9 @@ extension View {
         }
     }
 
-    func blackBorder() -> some View {
-        self
-            .cornerRadius(appTheme.cornerRadius)
-            .roundedBorder(color: .black)
+    func roundedCorners(_ color: Color = .black) -> some View {
+        self.cornerRadius(appTheme.cornerRadius)
+            .roundedBorder(color: color)
     }
 
 #if canImport(UIKit)
@@ -37,6 +39,8 @@ extension View {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 #endif
+
+    func apply<V: View>(@ViewBuilder _ block: (Self) -> V) -> V { block(self) }
 }
 
 class EditableView: ObservableObject {
