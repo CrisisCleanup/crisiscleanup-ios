@@ -36,6 +36,7 @@ class OfflineFirstWorksiteImageRepository: WorksiteImageRepository {
 
     private let newWorksiteImagesSubject = CurrentValueSubject<[WorksiteLocalImage], Never>([])
     private var newWorksiteImagesCache = [String: WorksiteLocalImage]()
+    private var newWorksiteImagesUriIdLookup = [String: String]()
     private let newWorksiteImagesLock = NSLock()
 
     var hasNewWorksiteImages: Bool { newWorksiteImagesCache.isNotEmpty }
@@ -58,6 +59,7 @@ class OfflineFirstWorksiteImageRepository: WorksiteImageRepository {
         newWorksiteImagesLock.withLock {
             newWorksiteImagesCache = [:]
             newWorksiteImagesSubject.value = []
+            newWorksiteImagesUriIdLookup = [:]
         }
     }
 
@@ -89,9 +91,10 @@ class OfflineFirstWorksiteImageRepository: WorksiteImageRepository {
             images.append(localWorksiteImage)
         }
 
-        for image in images {
-            newWorksiteImagesLock.withLock {
+        newWorksiteImagesLock.withLock {
+            for image in images {
                 newWorksiteImagesCache[image.documentId] = image
+                newWorksiteImagesUriIdLookup[image.uri] = image.documentId
                 newWorksiteImagesSubject.value = Array(newWorksiteImagesCache.values)
             }
         }
@@ -119,7 +122,8 @@ class OfflineFirstWorksiteImageRepository: WorksiteImageRepository {
 
     func deleteNewWorksiteImage(_ uri: String) {
         newWorksiteImagesLock.withLock {
-            if let _ = newWorksiteImagesCache.removeValue(forKey: uri) {
+            if let imageId = newWorksiteImagesUriIdLookup[uri],
+               let _ = newWorksiteImagesCache.removeValue(forKey: imageId) {
                 newWorksiteImagesSubject.value = Array(newWorksiteImagesCache.values)
             }
         }

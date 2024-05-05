@@ -113,6 +113,8 @@ private struct TabContentView: View {
         ViewCaseTabs.notes
     ].enumerated())
 
+    @State private var isPhotoImageOptionsOpen = false
+
     var body: some View {
         HStack {
             ForEach(infoTabs, id: \.offset) { (index, tab) in
@@ -139,7 +141,8 @@ private struct TabContentView: View {
             ViewCasePhotosView(
                 caseMediaManager: viewModel.caseMediaManager,
                 headerTitle: viewModel.headerTitle,
-                isCompactLayout: isCompactLayout
+                isCompactLayout: isCompactLayout,
+                areOptionsOpen: $isPhotoImageOptionsOpen
             )
                 .tag(ViewCaseTabs.photos)
             ViewCaseNotes()

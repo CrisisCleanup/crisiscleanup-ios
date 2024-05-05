@@ -22,13 +22,19 @@ extension SyncPuller {
 }
 
 public protocol SyncPusher {
-    func appPushWorksite(_ worksiteId: Int64)
+    func appPushWorksite(_ worksiteId: Int64, _ scheduleMediaSync: Bool)
 
     func syncPushWorksitesAsync() async
 
     func scheduleSyncMedia()
 
     func scheduleSyncWorksites()
+}
+
+extension SyncPusher {
+    func appPushWorksite(_ worksiteId: Int64) {
+        appPushWorksite(worksiteId, false)
+    }
 }
 
 class AppSyncer: SyncPuller, SyncPusher {
@@ -263,7 +269,7 @@ class AppSyncer: SyncPuller, SyncPusher {
 
     // MARK: SyncPusher
 
-    func appPushWorksite(_ worksiteId: Int64) {
+    func appPushWorksite(_ worksiteId: Int64, _ scheduleMediaSync: Bool) {
         // TODO: Run sync in background task (if not running to completion)
         Task {
             do {
@@ -276,6 +282,10 @@ class AppSyncer: SyncPuller, SyncPusher {
                 let isSyncAttempted = await worksiteChangeRepository.trySyncWorksite(worksiteId)
                 if isSyncAttempted {
                     await worksiteChangeRepository.syncUnattemptedWorksite(worksiteId)
+
+                    if scheduleMediaSync {
+                        scheduleSyncMedia()
+                    }
                 }
 
             } catch {

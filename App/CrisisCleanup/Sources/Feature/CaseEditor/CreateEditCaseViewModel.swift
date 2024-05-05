@@ -232,6 +232,10 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
 
         editorSetWindow = isNewWorksite ? 0.05.seconds : 0.6.seconds
 
+        if isNewWorksite {
+            worksiteImageRepository.clearNewWorksiteImages()
+        }
+
         updateHeaderTitle()
     }
 
@@ -603,7 +607,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     func scheduleSync() {
         if !isSyncing,
            let worksiteId = worksiteIdLatest {
-            syncPusher.appPushWorksite(worksiteId)
+            syncPusher.appPushWorksite(worksiteId, true)
         }
     }
 
@@ -775,6 +779,11 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
                 let isIncidentChange = saveIncidentId != EmptyIncident.id &&
                 saveIncidentId != worksite.incidentId
                 if worksite == initialWorksite && !isIncidentChange {
+                    if hasNewWorksitePhotosImages {
+                        invalidWorksiteInfoSubject.value = propertyInputData.getInvalidSection(inputValidator, t)
+                        return
+                    }
+
                     if backOnSuccess {
                         navigateBackSubject.value = true
                     }
@@ -822,6 +831,11 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
                 )
                 let worksiteId = worksiteIdLatest!
 
+                if hasNewWorksitePhotosImages {
+                    caseMediaManager.updateWorksiteId(worksiteId)
+                    await worksiteImageRepository.transferNewWorksiteImages(worksiteId)
+                }
+
                 worksiteProvider.setEditedLocation(worksite.coordinates.coordinates)
                 if isIncidentChange {
                     incidentSelector.setIncident(saveChangeIncident)
@@ -830,7 +844,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
                     dataLoader.reloadData(worksiteId)
                 }
 
-                syncPusher.appPushWorksite(worksiteId)
+                syncPusher.appPushWorksite(worksiteId, true)
 
                 if isIncidentChange {
                     changeExistingWorksiteSubject.value = ExistingWorksiteIdentifier(

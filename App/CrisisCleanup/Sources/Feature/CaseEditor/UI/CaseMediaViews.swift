@@ -13,10 +13,12 @@ struct ViewCasePhotosView: View {
 
     var isCompactLayout = false
 
-    @State private var photoDetents: Bool = false
-    @State private var presentCamera: Bool = false
-    @State private var takePhotoImage: UIImage = UIImage()
-    @State private var results: [PhotosPickerItem] = []
+    @Binding var areOptionsOpen: Bool
+
+    @State private var photoDetents = false
+    @State private var presentCamera = false
+    @State private var takePhotoImage = UIImage()
+    @State private var results = [PhotosPickerItem]()
 
     private func onTakePhotoSelectImage(_ category: ImageCategory) {
         caseMediaManager.setImageCategory(category)
@@ -81,6 +83,9 @@ struct ViewCasePhotosView: View {
             .presentationDetents([.medium, .fraction(0.25)])
         }
         .environmentObject(caseMediaManager)
+        .onChange(of: photoDetents) { newValue in
+            areOptionsOpen = newValue
+        }
     }
 }
 
@@ -213,7 +218,8 @@ private struct MediaDisplay: View {
         }
 
         ForEach(beforeAfterImages, id: \.id) { caseImage in
-            let isDeleting = caseMediaManager.deletingImageIds.contains(caseImage.id)
+            // TODO: Cache deleting identifiers rather than generating every iteration
+            let isDeleting = caseMediaManager.deletingImageIds.contains(caseImage.toDeletingIdentifier())
             let deleteImage = {
                 caseMediaManager.onDeleteImage(caseImage)
             }
@@ -247,7 +253,8 @@ private struct MediaDisplay: View {
                 }
             } else {
                 if let image = caseMediaManager.getLocalImage(caseImage.imageUri) {
-                    let isSyncing = caseMediaManager.syncingWorksiteImage == caseImage.id
+                    let syncingWorksiteImage = caseMediaManager.syncingWorksiteImage
+                    let isSyncing = syncingWorksiteImage != 0 && syncingWorksiteImage == caseImage.id
                     let alignment: Alignment = isSyncing ? .center : .topTrailing
                     Image(uiImage: image)
                         .resizable()

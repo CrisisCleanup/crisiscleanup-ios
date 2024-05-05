@@ -113,6 +113,8 @@ private struct CreateEditCaseContentView: View {
         false
     ]
 
+    @State private var arePhotoOptionsOpen = false
+
     init(
         isCompactLayout: Bool,
         isSaveBarVisible: Bool
@@ -155,8 +157,9 @@ private struct CreateEditCaseContentView: View {
                     }
 
                     VStack {
-                        CreateEditCaseeScrollingSections(
+                        CreateEditCaseScrollingSections(
                             sectionCollapse: $sectionCollapse,
+                            arePhotoOptionsOpen: $arePhotoOptionsOpen,
                             isCompactLayout: isCompactLayout,
                             proxy: proxy,
                             editSections: editSections,
@@ -199,6 +202,12 @@ private struct CreateEditCaseContentView: View {
             .onChange(of: viewModel.invalidWorksiteInfo) { info in
                 isInvalidSave = info.invalidElement != .none || info.message.isNotBlank
             }
+            // TODO: What is causing the scroll view to change when the photo options sheet is closed?
+            .onChange(of: arePhotoOptionsOpen) { newValue in
+                if !newValue {
+                    proxy.scrollTo("section-photos", anchor: .top)
+                }
+            }
             .sheet(isPresented: $isInvalidSave) {
                 let info = viewModel.invalidWorksiteInfo
                 let message = info.message.ifBlank {
@@ -237,10 +246,11 @@ private struct CreateEditCaseContentView: View {
     }
 }
 
-private struct CreateEditCaseeScrollingSections: View {
+private struct CreateEditCaseScrollingSections: View {
     @EnvironmentObject var viewModel: CreateEditCaseViewModel
 
     @Binding var sectionCollapse: Array<Bool>
+    @Binding var arePhotoOptionsOpen: Bool
 
     var isCompactLayout = false
 
@@ -250,7 +260,7 @@ private struct CreateEditCaseeScrollingSections: View {
 
     var body: some View {
         VStack {
-            CreateEditCaseSectionHeaderView (
+            CreateEditCaseSectionHeaderView(
                 isCollapsed: $sectionCollapse[0],
                 titleNumber: 1,
                 titleTranslateKey: editSections.get(0, "")
@@ -320,9 +330,13 @@ private struct CreateEditCaseeScrollingSections: View {
                 titleTranslateKey: editSections.get(lastIndex, "")
             )
             .id("section\(lastIndex)")
+            .id("section-photos")
 
             if !sectionCollapse[lastIndex] {
-                CasePhotosView(isCompactLayout: isCompactLayout)
+                CasePhotosView(
+                    arePhotoOptionsOpen: _arePhotoOptionsOpen,
+                    isCompactLayout: isCompactLayout
+                )
             }
         }
         .onScrollSectionFocus(
@@ -479,7 +493,8 @@ private struct PropertyInformation: View {
             }
             .onChange(of: viewModel.invalidWorksiteInfo) { info in
                 let focusElement = info.invalidElement.focusElement
-                focusState = focusElement == .anyTextInput ? nil : focusElement
+                let clearFocus = info.invalidElement == .work || focusElement == .anyTextInput
+                focusState = clearFocus ? nil : focusElement
             }
 
             VStack(alignment: .leading) {
@@ -686,6 +701,11 @@ private struct CaseAddressFormFields: View {
             }
             .disabled(disabled)
             .padding(.horizontal)
+            .onChange(of: viewModel.invalidWorksiteInfo) { info in
+                let focusElement = info.invalidElement.focusElement
+                let clearFocus = info.invalidElement == .work || focusElement == .anyTextInput
+                focusState = clearFocus ? nil : focusElement
+            }
 
         } else {
             let addressSummary = locationData.addressSummary
@@ -1019,13 +1039,16 @@ struct DisplayFormField: View {
 private struct CasePhotosView: View {
     @EnvironmentObject var viewModel: CreateEditCaseViewModel
 
+    @Binding var arePhotoOptionsOpen: Bool
+
     var isCompactLayout: Bool = false
 
     var body: some View {
         ViewCasePhotosView(
             caseMediaManager: viewModel.caseMediaManager,
             headerTitle: viewModel.headerTitle,
-            isCompactLayout: isCompactLayout
+            isCompactLayout: isCompactLayout,
+            areOptionsOpen: _arePhotoOptionsOpen
         )
     }
 }
