@@ -179,6 +179,14 @@ class NavigationRouter: ObservableObject {
         path.append(.viewImage(imageId, isNetworkImage, screenTitle))
     }
 
+    func openWorksiteImages(
+        _ worksiteId: Int64,
+        _ imageUri: String,
+        _ screenTitle: String
+    ) {
+        path.append(.worksiteImages(worksiteId, imageUri, screenTitle))
+    }
+
     func openUserFeedback() {
         path.append(.userFeedback)
     }

@@ -14,6 +14,7 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
          caseWorkTypeTransfer,
          caseAddNote,
          viewImage(_ imageId: Int64, _ isNetworkImage: Bool, _ screenTitle: String),
+         worksiteImages(_ worksiteId: Int64, _ imageUri: String, _ screenTitle: String),
          syncInsights,
          userFeedback,
          loginWithEmail,
@@ -66,6 +67,7 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
         case .orgPersistentInvite:  return 28
         case .pasteOrgInviteLink:   return 29
         case .requestRedeploy:      return 30
+        case .worksiteImages:       return 31
 
         case .syncInsights: return 77
         }

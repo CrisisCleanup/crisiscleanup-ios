@@ -2,16 +2,16 @@ import Combine
 import NeedleFoundation
 import SwiftUI
 
-public protocol ViewImageViewBuilder {
-    func viewImageView(
-        _ imageId: Int64,
-        _ isNetworkImage: Bool,
+public protocol WorksiteImagesViewBuilder {
+    func worksiteImagesView(
+        _ worksiteId: Int64?,
+        _ imageUri: String,
         _ screenTitle: String
     ) -> AnyView
 }
 
-class ViewImageComponent: Component<AppDependency>, ViewImageViewBuilder {
-    private var viewModel: ViewImageViewModel? = nil
+class WorksiteImagesComponent: Component<AppDependency>, WorksiteImagesViewBuilder {
+    private var viewModel: WorksiteImagesViewModel? = nil
 
     private var disposables = Set<AnyCancellable>()
 
@@ -36,35 +36,40 @@ class ViewImageComponent: Component<AppDependency>, ViewImageViewBuilder {
     }
 
     private func getViewModel(
-        _ imageId: Int64,
-        _ isNetworkImage: Bool,
+        _ worksiteId: Int64?,
+        _ imageUri: String,
         _ screenTitle: String
-    ) -> ViewImageViewModel {
+    ) -> WorksiteImagesViewModel {
         if viewModel == nil {
-            viewModel = ViewImageViewModel(
+            viewModel = WorksiteImagesViewModel(
+                worksiteImageRepository: dependency.worksiteImageRepository,
                 localImageRepository: dependency.localImageRepository,
                 worksiteChangeRepository: dependency.worksiteChangeRepository,
                 accountDataRepository: dependency.accountDataRepository,
                 syncPusher: dependency.syncPusher,
+                networkMonitor: dependency.networkMonitor,
                 translator: dependency.translator,
                 loggerFactory: dependency.loggerFactory,
-                imageId: imageId,
-                isNetworkImage: isNetworkImage,
+                worksiteId: worksiteId,
+                imageUri: imageUri,
                 screenTitle: screenTitle
             )
         }
         return viewModel!
     }
 
-    func viewImageView(
-        _ imageId: Int64,
-        _ isNetworkImage: Bool,
+    func worksiteImagesView(
+        _ worksiteId: Int64?,
+        _ imageUri: String,
         _ screenTitle: String
     ) -> AnyView {
-        AnyView(
-            ViewImageView(
-                viewModel: getViewModel(imageId, isNetworkImage, screenTitle)
+        let idPostfix = worksiteId == nil ? "" : "-\(worksiteId!)"
+        let viewId = "worksite-images-\(idPostfix)"
+        return AnyView(
+            WorksiteImagesView(
+                viewModel: getViewModel(worksiteId, imageUri, screenTitle)
             )
+            .id(viewId)
             .navigationBarHidden(true)
             .statusBarHidden(true)
         )

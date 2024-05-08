@@ -5,9 +5,9 @@ import SwiftUI
 class ViewImageViewModel: ObservableObject {
     private let localImageRepository: LocalImageRepository
     private let worksiteChangeRepository: WorksiteChangeRepository
-    private let translator: KeyTranslator
     private let accountDataRepository: AccountDataRepository
     private let syncPusher: SyncPusher
+    private let translator: KeyTranslator
     private let logger: AppLogger
 
     private let imageId: Int64
@@ -35,9 +35,9 @@ class ViewImageViewModel: ObservableObject {
     init(
         localImageRepository: LocalImageRepository,
         worksiteChangeRepository: WorksiteChangeRepository,
-        translator: KeyTranslator,
         accountDataRepository: AccountDataRepository,
         syncPusher: SyncPusher,
+        translator: KeyTranslator,
         loggerFactory: AppLoggerFactory,
         imageId: Int64,
         isNetworkImage: Bool,
@@ -45,9 +45,9 @@ class ViewImageViewModel: ObservableObject {
     ) {
         self.localImageRepository = localImageRepository
         self.worksiteChangeRepository = worksiteChangeRepository
-        self.translator = translator
         self.accountDataRepository = accountDataRepository
         self.syncPusher = syncPusher
+        self.translator = translator
         logger = loggerFactory.getLogger("view-image")
 
         self.imageId = imageId

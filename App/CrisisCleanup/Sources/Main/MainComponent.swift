@@ -15,6 +15,7 @@ public class MainComponent: BootstrapComponent,
                             CaseHistoryViewBuilder,
                             TransferWorkTypeViewBuilder,
                             ViewImageViewBuilder,
+                            WorksiteImagesViewBuilder,
                             CaseSearchLocationViewBuilder,
                             CaseMoveOnMapViewBuilder,
                             UserFeedbackViewBuilder,
@@ -100,6 +101,7 @@ public class MainComponent: BootstrapComponent,
             caseHistoryViewBuilder: self,
             transferWorkTypeViewBuilder: self,
             viewImageViewBuilder: self,
+            worksiteImagesViewBuilder: self,
             caseSearchLocationViewBuilder: self,
             caseMoveOnMapViewBuilder: self,
             userFeedbackViewBuilder: self,
@@ -262,6 +264,12 @@ public class MainComponent: BootstrapComponent,
         _ screenTitle: String
     ) -> AnyView {
         viewImageComponent.viewImageView(imageId, isNetworkImage, screenTitle)
+    }
+
+    lazy var worksiteImagesComponent = WorksiteImagesComponent(parent: self, routerObserver: routerObserver)
+
+    public func worksiteImagesView(_ worksiteId: Int64?, _ imageUri: String, _ screenTitle: String) -> AnyView {
+        worksiteImagesComponent.worksiteImagesView(worksiteId, imageUri, screenTitle)
     }
 
     // MARK: User feedback

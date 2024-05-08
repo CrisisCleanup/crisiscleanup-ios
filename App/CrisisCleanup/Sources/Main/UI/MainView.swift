@@ -24,6 +24,7 @@ struct MainView: View {
     let caseHistoryViewBuilder: CaseHistoryViewBuilder
     let transferWorkTypeViewBuilder: TransferWorkTypeViewBuilder
     let viewImageViewBuilder: ViewImageViewBuilder
+    let worksiteImagesViewBuilder: WorksiteImagesViewBuilder
     let caseSearchLocationViewBuilder: CaseSearchLocationViewBuilder
     let caseMoveOnMapViewBuilder: CaseMoveOnMapViewBuilder
     let userFeedbackViewBuilder: UserFeedbackViewBuilder
@@ -172,6 +173,8 @@ struct MainView: View {
                                 transferWorkTypeViewBuilder.transferWorkTypeView
                             case .viewImage(let imageId, let isNetworkImage, let screenTitle):
                                 viewImageViewBuilder.viewImageView(imageId, isNetworkImage, screenTitle)
+                            case .worksiteImages(let worksiteId, let imageUri, let screenTitle):
+                                worksiteImagesViewBuilder.worksiteImagesView(worksiteId, imageUri, screenTitle)
                             case .userFeedback:
                                 userFeedbackViewBuilder.userFeedbackView
                             case .inviteTeammate:
