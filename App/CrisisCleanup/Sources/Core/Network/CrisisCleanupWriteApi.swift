@@ -67,4 +67,6 @@ public protocol CrisisCleanupWriteApi {
         _ shareMessage: String,
         _ noClaimReason: String?
     ) async throws
+
+    func requestRedeploy(organizationId: Int64, incidentId: Int64) async throws -> Bool
 }

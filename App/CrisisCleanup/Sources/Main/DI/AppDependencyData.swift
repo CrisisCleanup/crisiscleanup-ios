@@ -317,7 +317,7 @@ extension MainComponent {
             CrisisCleanupRequestRedeployRepository(
                 networkDataSource: networkDataSource,
                 accountDataRepository: accountDataRepository,
-                accountApi: accountApi,
+                writeApi: writeApi,
                 loggerFactory: loggerFactory
             )
         }

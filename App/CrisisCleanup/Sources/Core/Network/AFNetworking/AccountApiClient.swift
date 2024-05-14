@@ -106,17 +106,4 @@ class AccountApiClient : CrisisCleanupAccountApi {
         )
         return result.value?.hasAcceptedTerms == true
     }
-
-    func requestRedeploy(organizationId: Int64, incidentId: Int64) async throws -> Bool {
-        let payload = NetworkRequestRedeploy(organization: organizationId, incident: incidentId)
-        let request = requestProvider.requestRedeploy
-            .setBody(payload)
-        if let result = await networkClient.callbackContinue(
-            requestConvertible: request,
-            type: NetworkIncidentRedeployRequest.self
-        ).value {
-            return result.organization == organizationId && result.incident == incidentId
-        }
-        return false
-    }
 }

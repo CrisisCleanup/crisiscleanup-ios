@@ -6,18 +6,18 @@ public protocol RequestRedeployRepository {
 class CrisisCleanupRequestRedeployRepository: RequestRedeployRepository {
     private let networkDataSource: CrisisCleanupNetworkDataSource
     private let accountDataRepository: AccountDataRepository
-    private let accountApi: CrisisCleanupAccountApi
+    private let writeApi: CrisisCleanupWriteApi
     private let logger: AppLogger
 
     init(
         networkDataSource: CrisisCleanupNetworkDataSource,
         accountDataRepository: AccountDataRepository,
-        accountApi: CrisisCleanupAccountApi,
+        writeApi: CrisisCleanupWriteApi,
         loggerFactory: AppLoggerFactory
     ) {
         self.networkDataSource = networkDataSource
         self.accountDataRepository = accountDataRepository
-        self.accountApi = accountApi
+        self.writeApi = writeApi
         logger = loggerFactory.getLogger("request-redeploy")
     }
 
@@ -34,7 +34,7 @@ class CrisisCleanupRequestRedeployRepository: RequestRedeployRepository {
     func requestRedeploy(_ incidentId: Int64) async -> Bool {
         do {
             let organizationId = try await accountDataRepository.accountData.eraseToAnyPublisher().asyncFirst().org.id
-            return try await accountApi.requestRedeploy(organizationId: organizationId, incidentId: incidentId)
+            return try await writeApi.requestRedeploy(organizationId: organizationId, incidentId: incidentId)
         } catch {
             logger.logError(error)
         }
