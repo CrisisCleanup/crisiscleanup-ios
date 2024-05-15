@@ -56,17 +56,17 @@ class ViewImageViewModel: ObservableObject {
     }
 
     func onViewAppear() {
-        subscribeToSyncing()
-        subscribeToViewState()
-        subscribeToImageDelete()
-        subscribeToImageRotation()
+        subscribeSyncing()
+        subscribeViewState()
+        subscribeImageDelete()
+        subscribeImageRotation()
     }
 
     func onViewDisappear() {
         subscriptions = cancelSubscriptions(subscriptions)
     }
 
-    private func subscribeToSyncing() {
+    private func subscribeSyncing() {
         localImageRepository.syncingWorksiteImage
             .eraseToAnyPublisher()
             .map { $0 == self.imageId }
@@ -75,7 +75,7 @@ class ViewImageViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
-    private func subscribeToViewState() {
+    private func subscribeViewState() {
         let imageState = isNetworkImage
         ? localImageRepository.streamNetworkImageUrl(imageId)
         : localImageRepository.streamLocalImageUri(imageId)
@@ -102,7 +102,7 @@ class ViewImageViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
-    private func subscribeToImageDelete() {
+    private func subscribeImageDelete() {
         Publishers.CombineLatest3(
             $viewState.eraseToAnyPublisher(),
             $isSyncing.eraseToAnyPublisher(),
@@ -130,7 +130,7 @@ class ViewImageViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
-    private func subscribeToImageRotation() {
+    private func subscribeImageRotation() {
         imageRotation
             .debounce(
                 for: .seconds(0.25),

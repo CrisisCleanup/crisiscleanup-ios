@@ -7,25 +7,26 @@ struct ViewImageView: View {
     @EnvironmentObject var router: NavigationRouter
 
     @ObservedObject var viewModel: ViewImageViewModel
+    @ObservedObject private var disablePaging = PageableTabView()
 
-    @State var showNavBar: Bool = true
+    @State private var showNavBar = true
 
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea(.all)
 
             if viewModel.viewState.isLoading {
-                VStack {
-                    ProgressView()
-                        .frame(alignment: .center)
-                }
+                ProgressView()
+                    .frame(alignment: .center)
+                // TODO: Common colors
+                    .tint(.white)
             }
 
             if viewModel.isNetworkImage {
                 if let imageUrl = viewModel.viewState.imageUrl {
-                    ViewNetworkImage(
+                    UrlImageView(
                         imageUrl: imageUrl,
-                        toggleNavBar: {
+                        toggleViewDecoration: {
                             withAnimation {
                                 showNavBar.toggle()
                             }
@@ -33,13 +34,12 @@ struct ViewImageView: View {
                     )
                 } else {
                     // TODO: Message for corrective actions (from view model)
-
                 }
             } else {
                 if let image = viewModel.viewState.image {
                     PanZoomImage(
                         image: image,
-                        toggleNavBar: {
+                        toggleViewDecoration: {
                             withAnimation {
                                 showNavBar.toggle()
                             }
@@ -50,19 +50,12 @@ struct ViewImageView: View {
                 }
             }
 
-            if(showNavBar) {
-                ImageNav(
+            if showNavBar {
+                ViewImageTopBarNav(
                     navTitle: viewModel.screenTitle,
                     isDeletable: viewModel.isImageDeletable,
                     deleteImage: { viewModel.deleteImage() }
                 )
-            }
-        }
-        .onTapGesture(count: 1) {
-            if !viewModel.viewState.isLoading {
-                withAnimation {
-                    showNavBar.toggle()
-                }
             }
         }
         .onAppear { viewModel.onViewAppear() }
@@ -72,51 +65,48 @@ struct ViewImageView: View {
                 dismiss()
             }
         }
+        .environmentObject(disablePaging)
     }
 }
 
-struct ImageNav: View {
+struct ViewImageTopBarNav: View {
     @Environment(\.dismiss) var dismiss
 
     let navTitle: String
     let isDeletable: Bool
     let deleteImage: () -> Void
 
+    let onNavBack: (() -> Void)? = nil
+
     var body: some View {
         VStack {
             HStack {
                 Button {
-                    dismiss()
+                    if let backAction = onNavBack {
+                        backAction()
+                    } else {
+                        dismiss()
+                    }
                 } label: {
                     Image(systemName: "chevron.left")
-                        .foregroundColor(.white)
                 }
 
                 Spacer()
 
                 Text(navTitle)
-                    .foregroundColor(.white)
+                    .fontHeader3()
 
                 Spacer()
 
                 Button {
                     deleteImage()
                 } label: {
-                    let color: Color = isDeletable ? .white : .white.opacity(0.5)
                     Image(systemName: "trash.fill")
-                        .foregroundColor(color)
                 }
                 .disabled(!isDeletable)
             }
             .padding()
-            .background(
-                // TODO: Improve the smoothness of the gradient
-                LinearGradient(
-                    gradient: Gradient(colors: [.black.opacity(0.7), .black.opacity(0.0)]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
+            .background(.white)
             .onTapGesture(count: 1) {
                 // Consume
             }
@@ -126,12 +116,13 @@ struct ImageNav: View {
     }
 }
 
-private struct ViewNetworkImage: View {
+struct UrlImageView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     let imageUrl: URL
+    var rotation = 0
 
-    let toggleNavBar: () -> Void
+    let toggleViewDecoration: () -> Void
 
     let placeholderImageSize = 128.0
 
@@ -140,7 +131,8 @@ private struct ViewNetworkImage: View {
             if let image = phase.image {
                 PanZoomImage(
                     image: image,
-                    toggleNavBar: toggleNavBar
+                    rotation: rotation,
+                    toggleViewDecoration: toggleViewDecoration
                 )
             } else if phase.error != nil {
                 VStack {
@@ -161,103 +153,181 @@ private struct ViewNetworkImage: View {
     }
 }
 
-private struct PanZoomImage: View {
-    let image: Image
+struct PanZoomImage: View {
+    @EnvironmentObject var disablePaging: PageableTabView
 
-    let toggleNavBar: () -> Void
+    private let image: Image
 
+    private let rotation: Double
+    private let isRotated: Bool
+
+    private let toggleViewDecoration: () -> Void
+
+    @State private var imageSize = CGSizeZero
+    @State private var imageRotateSize = CGSizeZero
+    @State private var screenSize = CGSizeZero
+
+    @State private var imageScales = RectangularScale(
+        minScale: 1,
+        maxScale: 1,
+        fitScale: 1,
+        fillScale: 1
+    )
     @State private var scale: CGFloat = 1.0
-    @State var offset = CGPoint(x: 0, y: 0)
-    @State var offsetCache = CGPoint(x: 0, y: 0)
-    @State var imgSize: CGSize = CGSizeZero
-    @State var screenSize: CGSize = CGSizeZero
+    @State private var scaleCache: CGFloat = 1.0
+
+    @State private var offset = CGPointZero
+    @State private var offsetCache = CGPointZero
+
+    init(
+        image: Image,
+        rotation: Int = 0,
+        toggleViewDecoration: @escaping () -> Void
+    ) {
+        self.image = image
+
+        self.rotation = Double(rotation)
+        isRotated = rotation != 0
+
+        self.toggleViewDecoration = toggleViewDecoration
+    }
+
+    private func getFitFillScale(
+        size: CGSize,
+        fullSize: CGSize,
+        isRotated: Bool
+    ) -> RectangularScale {
+        let normalizedWidth = fullSize.width / size.width
+        let normalizedHeight = fullSize.height / size.height
+        let fitScale = min(normalizedWidth, normalizedHeight)
+        let fillScale = max(normalizedWidth, normalizedHeight)
+        return RectangularScale(
+            minScale: fitScale,
+            maxScale: fillScale * 10,
+            fitScale: fitScale,
+            fillScale: fillScale
+        )
+    }
+
+    private func setScales() {
+        if imageSize != CGSizeZero,
+           screenSize != CGSizeZero,
+           imageRotateSize == CGSizeZero {
+            imageRotateSize = CGSize(width: imageSize.height, height: imageSize.width)
+            let fitFillScale = getFitFillScale(size: imageSize, fullSize: screenSize, isRotated: false)
+            let fitFillScaleRotate = getFitFillScale(size: imageRotateSize, fullSize: screenSize, isRotated: true)
+            imageScales = isRotated ? fitFillScaleRotate : fitFillScale
+        }
+    }
+
+    private func capPanOffset(_ delta: CGSize = CGSizeZero) {
+        let size = isRotated ? imageRotateSize : imageSize
+        let scaledWidth = size.width * scale
+        let scaledHeight = size.height * scale
+        var deltaX = max((scaledWidth - screenSize.width) * 0.5, 0)
+        var deltaY = max((scaledHeight - screenSize.height) * 0.5, 0)
+        deltaX = max(-deltaX, min(deltaX, offsetCache.x + delta.width))
+        deltaY = max(-deltaY, min(deltaY, offsetCache.y + delta.height))
+        offset = CGPoint(x: deltaX, y: deltaY)
+    }
+
+    private func updateSwipeState() {
+        disablePaging.disablePaging = scale > imageScales.minScale
+    }
 
     var body: some View {
-        ZStack
-        {
+        ZStack {
             Color.black.ignoresSafeArea(.all)
                 .overlay(
                     GeometryReader { proxy in
                         Color.clear
                             .onAppear {
                                 screenSize = proxy.size
+                                setScales()
                             }
-                    }.ignoresSafeArea(.all)
+                    }
+                        .ignoresSafeArea(.all)
                 )
 
             image
                 .resizable()
                 .scaledToFit()
-                .onTapGesture(count: 2) {
-                    if(scale > 1) {
-                        scale = 1
-                        offset = CGPointZero
-                    } else {
-                        scale = screenSize.height/imgSize.height
-                    }
-                }
-                .onTapGesture(count: 1) {
-                    toggleNavBar()
-                }
                 .overlay(
                     GeometryReader { proxy in
                         Color.clear
                             .onAppear {
-                                imgSize = proxy.size
+                                imageSize = proxy.size
+                                setScales()
                             }
                     }
                 )
+                .onTapGesture(count: 2) {
+                    if offset == CGPointZero {
+                        if scale == imageScales.fitScale {
+                            scale = imageScales.fillScale
+                        } else if scale == imageScales.fillScale {
+                            scale = imageScales.fitScale
+                        } else {
+                            scale = imageScales.snapToNearest(scale)
+                        }
+                    } else {
+                        scale = imageScales.snapToNearest(scale)
+                        offset = CGPointZero
+                    }
+                    scaleCache = scale
+                    updateSwipeState()
+                }
+                .onTapGesture(count: 1) {
+                    toggleViewDecoration()
+                }
                 .scaleEffect(scale)
                 .offset(x: offset.x, y: offset.y)
-                .simultaneousGesture(
+                .gesture(
                     DragGesture(minimumDistance: 0)
-                        .onChanged { value in
-                            if imgSize.height*scale > screenSize.height {
-                                let maxYOffset = (imgSize.height*scale - screenSize.height)/2
-                                let addedYOffset = offsetCache.y + value.translation.height
-                                if(abs(addedYOffset) > maxYOffset) {
-                                    offset.y = addedYOffset > 0 ? maxYOffset : -maxYOffset
-                                } else {
-                                    offset.y = addedYOffset
-                                }
-                            }
-                            let maxXOffset = (imgSize.width*scale - imgSize.width)/2
-                            if(abs(offset.x) <= maxXOffset)
-                            {
-                                let addedXOffset = offsetCache.x + value.translation.width
-                                if(abs(addedXOffset) > maxXOffset) {
-                                    offset.x = addedXOffset > 0 ? maxXOffset : -maxXOffset
-                                } else {
-                                    offset.x = addedXOffset
-                                }
-                            }
+                        .onChanged { gesture in
+                            // TODO: Apply velocity
+
+                            let delta = gesture.translation
+                            capPanOffset(delta)
                         }
-                        .onEnded({ value in
+                        .onEnded { value in
                             offsetCache = offset
-                        })
+                        }
                 )
+                .rotationEffect(.degrees(rotation))
         }
         .simultaneousGesture(
             MagnificationGesture()
-                .onChanged { newScale in
-                    if newScale >= 1 {
-                        scale = newScale > 5 ? 5: newScale.magnitude
-                    } else if (scale > 1 && newScale < 1) {
-                        if (newScale.magnitude < 1) {
-                            scale = 1 // limits scaling to 1
-                        } else {
-                            scale = newScale.magnitude
-                        }
-                    }
+                .onChanged { magnitude in
+                    scale = imageScales.bound(scaleCache * magnitude)
+                    capPanOffset()
+                }
+                .onEnded { _ in
+                    scaleCache = scale
+                    updateSwipeState()
                 }
         )
-        .onTapGesture(count: 2) {
-            if(scale > 1) {
-                scale = 1
-                offset = CGPointZero
-            } else {
-                scale = screenSize.height/imgSize.height
-            }
+        .onTapGesture(count: 1) {
+            toggleViewDecoration()
         }
     }
+}
+
+private struct RectangularScale {
+    let minScale: CGFloat
+    let maxScale: CGFloat
+    let fitScale: CGFloat
+    let fillScale: CGFloat
+
+    func snapToNearest(_ scale: CGFloat) -> CGFloat {
+        scale - fitScale < fillScale - scale ? fitScale : fillScale
+    }
+
+    func bound(_ scale: CGFloat) ->CGFloat {
+        max(minScale, min(maxScale, scale))
+    }
+}
+
+class PageableTabView: ObservableObject {
+    @Published var disablePaging = false
 }

@@ -268,8 +268,18 @@ public class MainComponent: BootstrapComponent,
 
     lazy var worksiteImagesComponent = WorksiteImagesComponent(parent: self, routerObserver: routerObserver)
 
-    public func worksiteImagesView(_ worksiteId: Int64?, _ imageUri: String, _ screenTitle: String) -> AnyView {
-        worksiteImagesComponent.worksiteImagesView(worksiteId, imageUri, screenTitle)
+    public func worksiteImagesView(
+        worksiteId: Int64,
+        imageId: Int64,
+        imageUri: String,
+        screenTitle: String
+    ) -> AnyView {
+        worksiteImagesComponent.worksiteImagesView(
+            worksiteId: worksiteId,
+            imageId: imageId,
+            imageUri: imageUri,
+            screenTitle: screenTitle
+        )
     }
 
     // MARK: User feedback

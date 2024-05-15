@@ -4,9 +4,10 @@ import SwiftUI
 
 public protocol WorksiteImagesViewBuilder {
     func worksiteImagesView(
-        _ worksiteId: Int64?,
-        _ imageUri: String,
-        _ screenTitle: String
+        worksiteId: Int64,
+        imageId: Int64,
+        imageUri: String,
+        screenTitle: String
     ) -> AnyView
 }
 
@@ -36,7 +37,8 @@ class WorksiteImagesComponent: Component<AppDependency>, WorksiteImagesViewBuild
     }
 
     private func getViewModel(
-        _ worksiteId: Int64?,
+        _ worksiteId: Int64,
+        _ imageId: Int64,
         _ imageUri: String,
         _ screenTitle: String
     ) -> WorksiteImagesViewModel {
@@ -51,6 +53,7 @@ class WorksiteImagesComponent: Component<AppDependency>, WorksiteImagesViewBuild
                 translator: dependency.translator,
                 loggerFactory: dependency.loggerFactory,
                 worksiteId: worksiteId,
+                imageId: imageId,
                 imageUri: imageUri,
                 screenTitle: screenTitle
             )
@@ -59,19 +62,18 @@ class WorksiteImagesComponent: Component<AppDependency>, WorksiteImagesViewBuild
     }
 
     func worksiteImagesView(
-        _ worksiteId: Int64?,
-        _ imageUri: String,
-        _ screenTitle: String
+        worksiteId: Int64,
+        imageId: Int64,
+        imageUri: String,
+        screenTitle: String
     ) -> AnyView {
-        let idPostfix = worksiteId == nil ? "" : "-\(worksiteId!)"
-        let viewId = "worksite-images-\(idPostfix)"
+        let viewId = "worksite-images-\(worksiteId)"
         return AnyView(
             WorksiteImagesView(
-                viewModel: getViewModel(worksiteId, imageUri, screenTitle)
+                viewModel: getViewModel(worksiteId, imageId, imageUri, screenTitle)
             )
             .id(viewId)
-            .navigationBarHidden(true)
-            .statusBarHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
         )
     }
 }

@@ -180,11 +180,17 @@ class NavigationRouter: ObservableObject {
     }
 
     func openWorksiteImages(
-        _ worksiteId: Int64,
-        _ imageUri: String,
-        _ screenTitle: String
+        worksiteId: Int64,
+        imageId: Int64,
+        imageUri: String,
+        screenTitle: String
     ) {
-        path.append(.worksiteImages(worksiteId, imageUri, screenTitle))
+        path.append(.worksiteImages(
+            worksiteId: worksiteId,
+            imageId: imageId,
+            imageUri: imageUri,
+            screenTitle: screenTitle
+        ))
     }
 
     func openUserFeedback() {

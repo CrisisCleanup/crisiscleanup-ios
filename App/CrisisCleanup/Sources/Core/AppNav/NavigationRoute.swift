@@ -14,7 +14,12 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
          caseWorkTypeTransfer,
          caseAddNote,
          viewImage(_ imageId: Int64, _ isNetworkImage: Bool, _ screenTitle: String),
-         worksiteImages(_ worksiteId: Int64, _ imageUri: String, _ screenTitle: String),
+         worksiteImages(
+            worksiteId: Int64,
+            imageId: Int64,
+            imageUri: String,
+            screenTitle: String
+         ),
          syncInsights,
          userFeedback,
          loginWithEmail,

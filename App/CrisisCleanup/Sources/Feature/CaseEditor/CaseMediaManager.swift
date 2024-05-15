@@ -11,7 +11,7 @@ class CaseMediaManager: ObservableObject {
     private let logger: AppLogger
 
     private let incidentId: Int64
-    private var worksiteId: Int64
+    private(set) var worksiteId: Int64
 
     @Published private(set) var beforeAfterPhotos: [ImageCategory: [CaseImage]] = [:]
 

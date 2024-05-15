@@ -173,8 +173,13 @@ struct MainView: View {
                                 transferWorkTypeViewBuilder.transferWorkTypeView
                             case .viewImage(let imageId, let isNetworkImage, let screenTitle):
                                 viewImageViewBuilder.viewImageView(imageId, isNetworkImage, screenTitle)
-                            case .worksiteImages(let worksiteId, let imageUri, let screenTitle):
-                                worksiteImagesViewBuilder.worksiteImagesView(worksiteId, imageUri, screenTitle)
+                            case .worksiteImages(let worksiteId, let imageId, let imageUri, let screenTitle):
+                                worksiteImagesViewBuilder.worksiteImagesView(
+                                    worksiteId: worksiteId,
+                                    imageId: imageId,
+                                    imageUri: imageUri,
+                                    screenTitle: screenTitle
+                                )
                             case .userFeedback:
                                 userFeedbackViewBuilder.userFeedbackView
                             case .inviteTeammate:

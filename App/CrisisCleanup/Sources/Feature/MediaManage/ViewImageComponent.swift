@@ -66,6 +66,7 @@ class ViewImageComponent: Component<AppDependency>, ViewImageViewBuilder {
                 viewModel: getViewModel(imageId, isNetworkImage, screenTitle)
             )
             .navigationBarHidden(true)
+            // TODO: Not working. Likely due to root view structure. Simplify and debug.
             .statusBarHidden(true)
         )
     }

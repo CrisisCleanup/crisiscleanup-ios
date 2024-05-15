@@ -163,10 +163,11 @@ private struct MediaDisplay: View {
     @State var mediaImages: [Image] = []
 
     func openViewImage(_ caseImage: CaseImage) {
-        router.viewImage(
-            caseImage.id,
-            caseImage.isNetworkImage,
-            headerTitle
+        router.openWorksiteImages(
+            worksiteId: caseMediaManager.worksiteId,
+            imageId: caseImage.id,
+            imageUri: caseImage.imageUri,
+            screenTitle: headerTitle
         )
     }
 
