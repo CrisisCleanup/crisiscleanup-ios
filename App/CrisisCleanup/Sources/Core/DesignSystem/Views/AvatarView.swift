@@ -15,7 +15,7 @@ struct AvatarView: View {
             Image(systemName: "person")
                 .frame(width: imageSize, height: imageSize)
         } else {
-            CachedAsyncImage(url: url) { image in
+            CachedAsyncImage(url: url, urlCache: .imageCache) { image in
                 image.resizable()
                     .scaledToFill()
             } placeholder: {

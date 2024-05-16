@@ -226,7 +226,8 @@ private struct MediaDisplay: View {
             }
 
             if caseImage.isNetworkImage {
-                CachedAsyncImage(url: URL(string: caseImage.thumbnailUri)) { phase in
+                let imageUrl = URL(string: caseImage.thumbnailUri)
+                CachedAsyncImage(url: imageUrl, urlCache: .imageCache) { phase in
                     if let image = phase.image {
                         image
                             .resizable()

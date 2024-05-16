@@ -127,7 +127,7 @@ struct UrlImageView: View {
     let placeholderImageSize = 128.0
 
     var body: some View {
-        CachedAsyncImage(url: imageUrl) { phase in
+        CachedAsyncImage(url: imageUrl, urlCache: .imageCache) { phase in
             if let image = phase.image {
                 PanZoomImage(
                     image: image,
@@ -159,7 +159,7 @@ struct PanZoomImage: View {
     private let image: Image
 
     private let rotation: Double
-    private let isRotated: Bool
+    private let isRotatedSideways: Bool
 
     private let toggleViewDecoration: () -> Void
 
@@ -186,8 +186,9 @@ struct PanZoomImage: View {
     ) {
         self.image = image
 
-        self.rotation = Double(rotation)
-        isRotated = rotation != 0
+        let rotationMod = (rotation + 360) % 360
+        self.rotation = Double(rotationMod)
+        isRotatedSideways = rotationMod == 90 || rotationMod == 270
 
         self.toggleViewDecoration = toggleViewDecoration
     }
@@ -216,19 +217,29 @@ struct PanZoomImage: View {
             imageRotateSize = CGSize(width: imageSize.height, height: imageSize.width)
             let fitFillScale = getFitFillScale(size: imageSize, fullSize: screenSize, isRotated: false)
             let fitFillScaleRotate = getFitFillScale(size: imageRotateSize, fullSize: screenSize, isRotated: true)
-            imageScales = isRotated ? fitFillScaleRotate : fitFillScale
+            imageScales = isRotatedSideways ? fitFillScaleRotate : fitFillScale
         }
     }
 
     private func capPanOffset(_ delta: CGSize = CGSizeZero) {
-        let size = isRotated ? imageRotateSize : imageSize
+        let size = isRotatedSideways ? imageRotateSize : imageSize
         let scaledWidth = size.width * scale
         let scaledHeight = size.height * scale
-        var deltaX = max((scaledWidth - screenSize.width) * 0.5, 0)
-        var deltaY = max((scaledHeight - screenSize.height) * 0.5, 0)
-        deltaX = max(-deltaX, min(deltaX, offsetCache.x + delta.width))
-        deltaY = max(-deltaY, min(deltaY, offsetCache.y + delta.height))
-        offset = CGPoint(x: deltaX, y: deltaY)
+        var offsetBoundX = max((scaledWidth - screenSize.width) * 0.5, 0)
+        var offsetBoundY = max((scaledHeight - screenSize.height) * 0.5, 0)
+
+        if isRotatedSideways {
+            let temp = offsetBoundY
+            offsetBoundY = offsetBoundX
+            offsetBoundX = temp
+        }
+
+        let deltaX = delta.width
+        let deltaY = delta.height
+        let offsetX = max(-offsetBoundX, min(offsetBoundX, offsetCache.x + deltaX))
+        let offsetY = max(-offsetBoundY, min(offsetBoundY, offsetCache.y + deltaY))
+
+        offset = CGPoint(x: offsetX, y: offsetY)
     }
 
     private func updateSwipeState() {
@@ -244,6 +255,7 @@ struct PanZoomImage: View {
                             .onAppear {
                                 screenSize = proxy.size
                                 setScales()
+                                scale = imageScales.fitScale
                             }
                     }
                         .ignoresSafeArea(.all)
@@ -323,7 +335,7 @@ private struct RectangularScale {
         scale - fitScale < fillScale - scale ? fitScale : fillScale
     }
 
-    func bound(_ scale: CGFloat) ->CGFloat {
+    func bound(_ scale: CGFloat) -> CGFloat {
         max(minScale, min(maxScale, scale))
     }
 }

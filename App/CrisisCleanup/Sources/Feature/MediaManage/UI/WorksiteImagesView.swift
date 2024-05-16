@@ -28,7 +28,7 @@ struct WorksiteImagesView: View {
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)
         .environmentObject(disablePaging)
-   }
+    }
 }
 
 private struct WorksitePhotosCarousel: View {
@@ -60,27 +60,30 @@ private struct WorksitePhotosCarousel: View {
 
                     ZStack {
                         if caseImage.imageUri == selectedImage.imageUri {
-                            if let image = viewState.image {
-                                PanZoomImage(
-                                    image: image,
-                                    rotation: selectedImage.rotateDegrees
-                                ) {
-                                    withAnimation {
-                                        isFullscreenMode.toggle()
+                            Group {
+                                if let image = viewState.image {
+                                    PanZoomImage(
+                                        image: image,
+                                        rotation: selectedImage.rotateDegrees
+                                    ) {
+                                        withAnimation {
+                                            isFullscreenMode.toggle()
+                                        }
                                     }
-                                }
-                            } else if let imageUrl = viewState.imageUrl {
-                                UrlImageView(
-                                    imageUrl: imageUrl,
-                                    rotation: selectedImage.rotateDegrees
-                                ) {
-                                    withAnimation {
-                                        isFullscreenMode.toggle()
+                                } else if let imageUrl = viewState.imageUrl {
+                                    UrlImageView(
+                                        imageUrl: imageUrl,
+                                        rotation: selectedImage.rotateDegrees
+                                    ) {
+                                        withAnimation {
+                                            isFullscreenMode.toggle()
+                                        }
                                     }
+                                } else {
+                                    // TODO: Message for corrective actions (from view model)
                                 }
-                            } else {
-                                // TODO: Message for corrective actions (from view model)
                             }
+                            .id("worksite-photo-\(selectedImage.imageUri)-\(selectedImage.rotateDegrees)")
                         }
                     }
                     .tag(index)
@@ -96,13 +99,13 @@ private struct WorksitePhotosCarousel: View {
             if !isFullscreenMode {
                 SingleImageViewDecoration(
                     imageId: viewState.imageUrl?.absoluteString ?? "",
+                    showRotateActions: selectedImage.id > 0,
                     onShowGrid: onShowGrid
                 )
             }
         }
         .onChange(of: viewModel.selectedImageIndex) { index in
             if index>=0 && index<viewModel.caseImages.count {
-                print("Setting tab index to \(index)")
                 imageTabIndex = index
             }
         }
@@ -116,6 +119,8 @@ private struct SingleImageViewDecoration: View {
 
     let imageId: String
 
+    let showRotateActions: Bool
+
     var onShowGrid: () -> Void = {}
 
     var body: some View {
@@ -128,9 +133,7 @@ private struct SingleImageViewDecoration: View {
 
             Spacer()
 
-            // TODO: Determine through view model
-            let showRotateActions = true
-            let disableRotateActions = false
+            let disableRotateActions = !viewModel.enableRotate
             let showGridAction = viewModel.caseImages.count > 1
             HStack {
                 if showGridAction {

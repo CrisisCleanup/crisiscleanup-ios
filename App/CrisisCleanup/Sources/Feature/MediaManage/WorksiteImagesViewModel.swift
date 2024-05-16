@@ -37,6 +37,11 @@ class WorksiteImagesViewModel: ObservableObject {
     private let imagesDataSubject = CurrentValueSubject<CaseImagePagerData, Never>(CaseImagePagerData())
     @Published private(set) var imagesData = CaseImagePagerData()
 
+    private let rotatingImagesLock = NSLock()
+    private let rotatingImagesSubject = CurrentValueSubject<Set<String>, Never>([])
+    @Published private(set) var rotatingImages = Set<String>()
+    @Published private(set) var enableRotate = false
+
     @Published private(set) var isImageDeletable = false
 
     private var subscriptions = Set<AnyCancellable>()
@@ -75,6 +80,7 @@ class WorksiteImagesViewModel: ObservableObject {
         subscribeImageIndex()
         subscribeImagesState()
         subscribeViewState()
+        subscribeRotateState()
     }
 
     func onViewDisappear() {
@@ -192,6 +198,24 @@ class WorksiteImagesViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
+    private func subscribeRotateState() {
+        rotatingImagesSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.rotatingImages, on: self)
+            .store(in: &subscriptions)
+
+        Publishers.CombineLatest(
+            $selectedImageData,
+            $rotatingImages
+        )
+        .map { (selected, rotating) in
+            !rotating.contains(selected.imageUri)
+        }
+        .receive(on: RunLoop.main)
+        .assign(to: \.enableRotate, on: self)
+        .store(in: &subscriptions)
+    }
+
     func onChangeImageIndex(_ index: Int) {
         if index == imageIndexSubject.value {
             return
@@ -214,7 +238,32 @@ class WorksiteImagesViewModel: ObservableObject {
 
     func rotateImage(_ imageId: String, rotateClockwise: Bool) {
         if let matchingImage = getMatchingImage(imageId) {
-            // TODO: Finish
+            rotatingImagesLock.withLock {
+                if rotatingImages.contains(imageId) {
+                    return
+                }
+                var imageIds = self.rotatingImagesSubject.value
+                imageIds.insert(imageId)
+                rotatingImagesSubject.value = imageIds
+            }
+
+            Task {
+                do {
+                    defer {
+                        var imageIds = self.rotatingImagesSubject.value
+                        imageIds.remove(imageId)
+                        rotatingImagesSubject.value = imageIds
+                    }
+
+                    let deltaRotation = rotateClockwise ? 90 : -90
+                    let rotation = (matchingImage.rotateDegrees + deltaRotation) % 360
+                    self.localImageRepository.setImageRotation(
+                        matchingImage.id,
+                        matchingImage.isNetworkImage,
+                        rotation
+                    )
+                }
+            }
         }
     }
 
