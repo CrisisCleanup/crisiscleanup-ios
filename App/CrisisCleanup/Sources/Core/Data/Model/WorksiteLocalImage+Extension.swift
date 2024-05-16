@@ -1,7 +1,7 @@
 extension WorksiteLocalImage {
     func asRecord() -> WorksiteLocalImageRecord {
         WorksiteLocalImageRecord(
-            id: id,
+            id: id > 0 ? id : nil,
             worksiteId: worksiteId,
             localDocumentId: documentId,
             uri: uri,

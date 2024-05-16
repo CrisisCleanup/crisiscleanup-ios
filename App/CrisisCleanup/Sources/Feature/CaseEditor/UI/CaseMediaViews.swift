@@ -218,7 +218,7 @@ private struct MediaDisplay: View {
                 .font(iconFont)
         }
 
-        ForEach(beforeAfterImages, id: \.id) { caseImage in
+        ForEach(beforeAfterImages, id: \.imageUri) { caseImage in
             // TODO: Cache deleting identifiers rather than generating every iteration
             let isDeleting = caseMediaManager.deletingImageIds.contains(caseImage.toDeletingIdentifier())
             let deleteImage = {

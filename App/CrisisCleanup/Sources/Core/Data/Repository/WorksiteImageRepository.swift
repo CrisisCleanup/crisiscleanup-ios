@@ -95,8 +95,8 @@ class OfflineFirstWorksiteImageRepository: WorksiteImageRepository {
             for image in images {
                 newWorksiteImagesCache[image.documentId] = image
                 newWorksiteImagesUriIdLookup[image.uri] = image.documentId
-                newWorksiteImagesSubject.value = Array(newWorksiteImagesCache.values)
             }
+            newWorksiteImagesSubject.value = Array(newWorksiteImagesCache.values)
         }
     }
 
@@ -137,10 +137,10 @@ class OfflineFirstWorksiteImageRepository: WorksiteImageRepository {
 
         do {
             let copyImages = images.map { image in
-                return image.copy { $0.worksiteId = worksiteId }
+                image.copy { $0.worksiteId = worksiteId }
             }
             let recordImages = copyImages.map { $0.asRecord() }
-            // TODO: Write test
+            // TODO: Write test including 0 ID sets to nil
             try localImageDao.upsertLocalImages(recordImages)
 
             clearNewWorksiteImages()

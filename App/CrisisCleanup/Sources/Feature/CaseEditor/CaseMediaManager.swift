@@ -109,7 +109,6 @@ class CaseMediaManager: ObservableObject {
                 if isNewWorksite {
                     try await worksiteImageRepository.queueNewWorksiteImages(incidentId, category.literal, results)
                 } else {
-
                     try await self.localImageRepository.cachePicked(
                         incidentId,
                         worksiteId,

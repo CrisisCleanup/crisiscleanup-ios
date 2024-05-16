@@ -42,7 +42,11 @@ class WorksiteImagesViewModel: ObservableObject {
     @Published private(set) var rotatingImages = Set<String>()
     @Published private(set) var enableRotate = false
 
+    private let deletingImagesLock = NSLock()
+    private let deletingImagesSubject = CurrentValueSubject<Set<String>, Never>([])
+    @Published private(set) var deletingImages = Set<String>()
     @Published private(set) var isImageDeletable = false
+    @Published private(set) var isDeletedImages = false
 
     private var subscriptions = Set<AnyCancellable>()
 
@@ -81,6 +85,7 @@ class WorksiteImagesViewModel: ObservableObject {
         subscribeImagesState()
         subscribeViewState()
         subscribeRotateState()
+        subscribeDeleteState()
     }
 
     func onViewDisappear() {
@@ -208,11 +213,29 @@ class WorksiteImagesViewModel: ObservableObject {
             $selectedImageData,
             $rotatingImages
         )
-        .map { (selected, rotating) in
-            !rotating.contains(selected.imageUri)
+        .map { (selected, active) in
+            !active.contains(selected.imageUri)
         }
         .receive(on: RunLoop.main)
         .assign(to: \.enableRotate, on: self)
+        .store(in: &subscriptions)
+    }
+
+    private func subscribeDeleteState() {
+        deletingImagesSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.deletingImages, on: self)
+            .store(in: &subscriptions)
+
+        Publishers.CombineLatest(
+            $selectedImageData,
+            $deletingImages
+        )
+        .map { (selected, active) in
+            !active.contains(selected.imageUri)
+        }
+        .receive(on: RunLoop.main)
+        .assign(to: \.isImageDeletable, on: self)
         .store(in: &subscriptions)
     }
 
@@ -250,9 +273,11 @@ class WorksiteImagesViewModel: ObservableObject {
             Task {
                 do {
                     defer {
-                        var imageIds = self.rotatingImagesSubject.value
-                        imageIds.remove(imageId)
-                        rotatingImagesSubject.value = imageIds
+                        rotatingImagesLock.withLock {
+                            var imageIds = self.rotatingImagesSubject.value
+                            imageIds.remove(imageId)
+                            rotatingImagesSubject.value = imageIds
+                        }
                     }
 
                     let deltaRotation = rotateClockwise ? 90 : -90
@@ -269,7 +294,48 @@ class WorksiteImagesViewModel: ObservableObject {
 
     func deleteImage(_ imageId: String) {
         if let matchingImage = getMatchingImage(imageId) {
-            // TODO: Finish
+            deletingImagesLock.withLock {
+                if deletingImages.contains(imageId) {
+                    return
+                }
+                var imageIds = self.deletingImagesSubject.value
+                imageIds.insert(imageId)
+                deletingImagesSubject.value = imageIds
+            }
+
+            Task {
+                do {
+                    defer {
+                        deletingImagesLock.withLock {
+                            var imageIds = self.deletingImagesSubject.value
+                            imageIds.remove(imageId)
+                            deletingImagesSubject.value = imageIds
+                        }
+                    }
+
+                    let imageCount = caseImages.count
+                    if  matchingImage.isNetworkImage {
+                        let worksiteId = try worksiteChangeRepository.saveDeletePhoto(matchingImage.id)
+                        if worksiteId > 0 {
+                            syncPusher.appPushWorksite(worksiteId)
+                        }
+                    } else {
+                        try localImageRepository.deleteLocalImage(matchingImage.id)
+                    }
+
+                    Task { @MainActor in
+                        if imageCount == 1 {
+                            isDeletedImages = true
+                        } else {
+                            imageIndexSubject.value = max(0, min(imageIndexSubject.value, imageCount - 2))
+                            selectedImageIndex = imageIndexSubject.value
+                        }
+                    }
+                } catch {
+                    // TODO: Show visual error
+                    logger.logError(error)
+                }
+            }
         }
     }
 }

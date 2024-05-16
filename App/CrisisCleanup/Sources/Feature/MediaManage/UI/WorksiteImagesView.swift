@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct WorksiteImagesView: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
+    @Environment(\.dismiss) var dismiss
 
     @ObservedObject var viewModel: WorksiteImagesViewModel
     @ObservedObject private var disablePaging = PageableTabView()
@@ -28,6 +28,11 @@ struct WorksiteImagesView: View {
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)
         .environmentObject(disablePaging)
+        .onChange(of: viewModel.isDeletedImages) { newValue in
+            if newValue {
+                dismiss()
+            }
+        }
     }
 }
 
@@ -141,9 +146,9 @@ private struct SingleImageViewDecoration: View {
                         .hidden()
                 }
 
-                if showRotateActions {
-                    Spacer()
+                Spacer()
 
+                if showRotateActions {
                     Button {
                         viewModel.rotateImage(imageId, rotateClockwise: false)
                     } label: {
