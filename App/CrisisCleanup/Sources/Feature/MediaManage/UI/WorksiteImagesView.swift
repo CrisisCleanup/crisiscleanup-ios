@@ -1,3 +1,4 @@
+import CachedAsyncImage
 import SwiftUI
 
 struct WorksiteImagesView: View {
@@ -114,6 +115,13 @@ private struct WorksitePhotosCarousel: View {
                 imageTabIndex = index
             }
         }
+        .onAppear {
+            let selectedIndex = viewModel.selectedImageIndex
+            if selectedIndex >= 0,
+               imageTabIndex != selectedIndex {
+                imageTabIndex = viewModel.selectedImageIndex
+            }
+        }
         // TODO: Not working. Likely due to root view structure. Simplify and debug.
         .statusBar(hidden: isFullscreenMode)
     }
@@ -190,6 +198,16 @@ private struct SingleImageViewDecoration: View {
 private struct WorksitePhotosGrid: View {
     @EnvironmentObject private var viewModel: WorksiteImagesViewModel
 
+    @State private var viewWidth: CGFloat = 0
+    @State private var gridColumns = [
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible())
+    ]
+    @State private var gridItemSize = 128.0
+
+    private let gridSpacing = 1.0
+
     var onBack: () -> Void = {}
 
     var body: some View {
@@ -214,9 +232,62 @@ private struct WorksitePhotosGrid: View {
             }
             .padding()
 
-            Spacer()
-            Text("Show photos grid")
-            Spacer()
+            ScrollLazyVGrid(
+                columns: gridColumns,
+                gridItemSpacing: gridSpacing
+            ) {
+                ForEach(viewModel.caseImages, id: \.index) { caseImageIndex in
+                    // TODO: Use converted URLS rather than parsing every time
+                    let caseImage = caseImageIndex.image
+                    if let imageUrl = URL(string: caseImage.thumbnailUri) {
+                        CachedAsyncImage(url: imageUrl, urlCache: .imageCache) { phase in
+                            if let image = phase.image {
+                                image
+                                    .resizable()
+                                    .frame(width: gridItemSize, height: gridItemSize)
+                                    .scaledToFill()
+                                    .cornerRadius(appTheme.cornerRadius)
+                                    .onTapGesture {
+                                        viewModel.onOpenImage(caseImageIndex.index)
+                                        onBack()
+                                    }
+                            } else if phase.error != nil {
+                                Image(systemName: "exclamationmark.circle")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .foregroundColor(appTheme.colors.primaryRedColor)
+                                    .padding()
+                            } else {
+                                Image(systemName: "photo.circle")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .foregroundColor(.gray)
+                                    .padding()
+                            }
+                        }
+                    }
+                }
+            }
+            // TODO: Recalculate on orientation change
+            .background {
+                GeometryReader { proxy in
+                    Color.clear
+                        .onAppear {
+                            viewWidth = proxy.size.width
+                        }
+                }
+            }
+            .onChange(of: viewWidth) { newValue in
+                let columnCount = max(2, Int(ceil(newValue / gridItemSize)))
+                if columnCount != gridColumns.count {
+                    var columns = [GridItem]()
+                    for _ in 0..<columnCount {
+                        columns.append(GridItem(.flexible()))
+                    }
+                    gridColumns = columns
+                    gridItemSize = newValue / Double(columnCount)// - (Double(columnCount) + 1) * gridSpacing
+                }
+            }
         }
     }
 }
