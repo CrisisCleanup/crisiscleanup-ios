@@ -678,6 +678,16 @@ extension DerivableRequest<WorksiteRecord> {
             )
         )
     }
+
+    func byTrailingNumber(
+        _ incidentId: Int64,
+        _ number: String
+    ) -> Self {
+        filter(
+            WorksiteColumns.incidentId == incidentId &&
+            WorksiteColumns.caseNumberOrder == number
+        )
+    }
 }
 
 // MARK: - Work type

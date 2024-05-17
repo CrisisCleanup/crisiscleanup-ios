@@ -622,6 +622,19 @@ public class WorksiteDao {
         return matchingRecord?.asSummary()
     }
 
+    func getWorksiteByTrailingCaseNumber(
+        _ incidentId: Int64,
+        _ number: String
+    ) -> WorksiteSummary? {
+        let matchingRecord = try! reader.read { db in
+            try WorksiteRecord
+                .all()
+                .byTrailingNumber(incidentId, number)
+                .fetchOne(db)
+        }
+        return matchingRecord?.asSummary()
+    }
+
     // TODO: Test speed on large data set and update as necessary
     func getMatchingWorksites(
         _ incidentId: Int64,

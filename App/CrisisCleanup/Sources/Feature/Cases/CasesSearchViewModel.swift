@@ -138,12 +138,14 @@ class CasesSearchViewModel: ObservableObject {
             .removeDuplicates()
             .share()
 
+        let throttleDelayPeriod = RunLoop.SchedulerTimeType.Stride.seconds(0.15)
+        let numericRegex = #/^\d+$/#
         let networkSearchResults = Publishers.CombineLatest(
             incidentIdPublisher,
             searchQueryIntermediate
         )
             .throttle(
-                for: .seconds(0.15),
+                for: throttleDelayPeriod,
                 scheduler: RunLoop.current,
                 latest: true
             )
@@ -184,7 +186,7 @@ class CasesSearchViewModel: ObservableObject {
             searchQueryIntermediate
         )
             .throttle(
-                for: .seconds(0.15),
+                for: throttleDelayPeriod,
                 scheduler: RunLoop.current,
                 latest: true
             )
@@ -213,6 +215,14 @@ class CasesSearchViewModel: ObservableObject {
                                 }
                             }
                         }
+
+                        if leadingCaseSummary == nil {
+                            if let _ = try numericRegex.wholeMatch(in: q),
+                               let trailingMatch = self.searchWorksitesRepository.getWorksiteByTrailingCaseNumber(incidentId, q) {
+                                leadingCaseSummary = trailingMatch.asCaseSummary(self.getIcon)
+                            }
+                        }
+
                         if let option = leadingCaseSummary {
                             options = options.filter { $0.summary.id != option.summary.id }
                             options.insert(option, at: 0)
@@ -256,7 +266,8 @@ class CasesSearchViewModel: ObservableObject {
                         let localOptions = localResults.options
                         let qLower = q.trim().lowercased()
                         let firstCaseNumberLower = localOptions.firstOrNil?.summary.caseNumber.lowercased()
-                        let hasCaseNumberMatch = qLower == firstCaseNumberLower
+                        let hasCaseNumberMatch = qLower == firstCaseNumberLower ||
+                        firstCaseNumberLower?.hasSuffix(qLower) == true
 
                         var combined = [CaseSummaryResult]()
                         var localCombined = Set<Int64>([])
