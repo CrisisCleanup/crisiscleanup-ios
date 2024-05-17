@@ -191,6 +191,15 @@ private struct GettingStartedView: View {
                         .scaledToFill()
                         .frame(maxHeight: 128)
                         .clipped()
+                        .overlay {
+                            Image(systemName: "play.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 32, height: 32)
+                                .padding(24)
+                                .background(.white.opacity(0.5))
+                                .clipShape(Circle())
+                        }
 
                     Text(t.t("appMenu.quick_app_intro"))
                         .fontHeader3()
