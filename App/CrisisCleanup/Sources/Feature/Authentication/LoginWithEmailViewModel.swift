@@ -192,7 +192,8 @@ class LoginWithEmailViewModel: ObservableObject {
                         expirySeconds: r.expirySeconds,
                         profilePictureUri: r.profilePictureUri,
                         org: r.orgData,
-                        hasAcceptedTerms: r.claims.hasAcceptedTerms == true
+                        hasAcceptedTerms: r.claims.hasAcceptedTerms == true,
+                        activeRoles: r.claims.activeRoles
                     )
                 }
 

@@ -3,6 +3,7 @@ extension MainComponent {
         shared {
             AppSyncer (
                 accountDataRepository: accountDataRepository,
+                accountDataRefresher: accountDataRefresher,
                 incidentsRepository: incidentsRepository,
                 languageRepository: languageTranslationsRepository,
                 statusRepository: workTypeStatusRepository,

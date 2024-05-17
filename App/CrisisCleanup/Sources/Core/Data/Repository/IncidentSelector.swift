@@ -33,6 +33,7 @@ class IncidentSelectRepository: IncidentSelector {
     private var disposables = Set<AnyCancellable>()
 
     init(
+        accountDataRepository: AccountDataRepository,
         preferencesStore: AppPreferencesDataStore,
         incidentsRepository: IncidentsRepository
     ) {
@@ -40,16 +41,33 @@ class IncidentSelectRepository: IncidentSelector {
 
         incidentsData = incidentsDataSubject
 
+        let accountDataPublisher = accountDataRepository.accountData.eraseToAnyPublisher()
         let incidentsPublisher = incidentsRepository.incidents.eraseToAnyPublisher()
         let preferencesPublisher = preferencesStore.preferences.eraseToAnyPublisher()
-        Publishers.CombineLatest(
+        Publishers.CombineLatest3(
+            accountDataPublisher,
             incidentsPublisher,
             preferencesPublisher
         )
-        .filter { incidents, _ in
+        .filter { _, incidents, _ in
             incidents.isNotEmpty
         }
+        .map({ accountData, incidents, preferences in
+            if accountData.id > 0,
+               !accountData.isCrisisCleanupAdmin {
+                let filteredIncidents = incidents.filter {
+                    accountData.approvedIncidents.contains($0.id)
+                }
+                return (filteredIncidents, preferences)
+            }
+
+            return (incidents, preferences)
+        })
         .sink { incidents, preferences in
+            guard incidents.isNotEmpty else {
+                return
+            }
+
             if self.incidentIdCache == EmptyIncident.id {
                 let targetId = preferences.selectedIncidentId
                 var targetIncident = incidents.first { $0.id == targetId } ?? EmptyIncident

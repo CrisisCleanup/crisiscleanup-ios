@@ -20,7 +20,8 @@ public protocol AccountDataRepository {
         expirySeconds: Int64,
         profilePictureUri: String,
         org: OrgData,
-        hasAcceptedTerms: Bool
+        hasAcceptedTerms: Bool,
+        activeRoles: Set<Int>
     )
 
     func updateAccountTokens(
@@ -112,7 +113,8 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
         expirySeconds: Int64,
         profilePictureUri: String,
         org: OrgData,
-        hasAcceptedTerms: Bool
+        hasAcceptedTerms: Bool,
+        activeRoles: Set<Int>
     ) {
         do {
             try secureDataSource.saveAuthTokens(id, refreshToken, accessToken)
@@ -126,7 +128,8 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
                 accessToken: "",
                 orgId: org.id,
                 orgName: org.name,
-                hasAcceptedTerms: hasAcceptedTerms
+                hasAcceptedTerms: hasAcceptedTerms,
+                activeRoles: activeRoles
             ))
         } catch {
             logger.logError(error)

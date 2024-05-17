@@ -44,6 +44,7 @@ class AppSyncer: SyncPuller, SyncPusher {
     private let appPreferences: AnyPublisher<AppPreferences, Never>
 
     private let accountDataRepository: AccountDataRepository
+    private let accountDataRefresher: AccountDataRefresher
     private let incidentsRepository: IncidentsRepository
     private let languageRepository: LanguageTranslationsRepository
     private let statusRepository: WorkTypeStatusRepository
@@ -64,6 +65,7 @@ class AppSyncer: SyncPuller, SyncPusher {
 
     init(
         accountDataRepository: AccountDataRepository,
+        accountDataRefresher: AccountDataRefresher,
         incidentsRepository: IncidentsRepository,
         languageRepository: LanguageTranslationsRepository,
         statusRepository: WorkTypeStatusRepository,
@@ -76,6 +78,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         authEventBus: AuthEventBus
     ) {
         self.accountDataRepository = accountDataRepository
+        self.accountDataRefresher = accountDataRefresher
         self.incidentsRepository = incidentsRepository
         self.languageRepository = languageRepository
         self.statusRepository = statusRepository
@@ -152,6 +155,7 @@ class AppSyncer: SyncPuller, SyncPusher {
 
                     if pullIncidents {
                         self.syncLogger.log("Pulling incidents")
+                        await accountDataRefresher.updateApprovedIncidents(true)
                         try await self.incidentsRepository.pullIncidents()
                         self.syncLogger.log("Incidents pulled")
                     }

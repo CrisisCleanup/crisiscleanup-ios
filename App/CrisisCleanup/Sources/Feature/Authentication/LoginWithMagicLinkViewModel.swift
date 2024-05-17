@@ -84,7 +84,8 @@ class LoginWithMagicLinkViewModel: ObservableObject {
                                 id: accountProfile.organization.id,
                                 name: accountProfile.organization.name
                             ),
-                            hasAcceptedTerms: accountProfile.hasAcceptedTerms == true
+                            hasAcceptedTerms: accountProfile.hasAcceptedTerms == true,
+                            activeRoles: accountProfile.activeRoles
                         )
                         isSuccessful = true
                     }

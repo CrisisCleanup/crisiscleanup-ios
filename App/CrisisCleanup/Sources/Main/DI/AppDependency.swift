@@ -204,6 +204,7 @@ extension MainComponent {
     public var incidentSelector: IncidentSelector {
         shared {
             IncidentSelectRepository(
+                accountDataRepository: accountDataRepository,
                 preferencesStore: appPreferences,
                 incidentsRepository: incidentsRepository
             )

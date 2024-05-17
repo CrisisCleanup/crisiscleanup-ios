@@ -13,6 +13,7 @@ struct AccountInfo: Codable {
     let orgName: String
     let hasAcceptedTerms: Bool
     let incidentIds: Set<Int64>
+    let activeRoles: Set<Int>
 
     init(
         id: Int64 = 0,
@@ -25,7 +26,8 @@ struct AccountInfo: Codable {
         orgId: Int64 = 0,
         orgName: String = "",
         hasAcceptedTerms: Bool = false,
-        incidentIds: Set<Int64> = Set()
+        incidentIds: Set<Int64> = Set(),
+        activeRoles: Set<Int> = Set()
     ) {
         self.id = id
         self.email = email
@@ -38,6 +40,7 @@ struct AccountInfo: Codable {
         self.orgName = orgName
         self.hasAcceptedTerms = hasAcceptedTerms
         self.incidentIds = incidentIds
+        self.activeRoles = activeRoles
     }
 }
 
@@ -60,6 +63,7 @@ extension AccountInfo {
             org: orgData,
             hasAcceptedTerms: hasAcceptedTerms,
             approvedIncidents: incidentIds,
+            isCrisisCleanupAdmin: activeRoles.contains(1),
             // Overwrite downstream
             areTokensValid: tokenExpiry > Date()
         )

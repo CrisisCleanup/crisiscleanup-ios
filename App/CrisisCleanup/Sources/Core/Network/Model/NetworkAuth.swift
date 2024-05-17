@@ -10,6 +10,7 @@ public struct NetworkAuthUserClaims: Codable, Equatable {
     let lastName: String
     let hasAcceptedTerms: Bool?
     let files: [NetworkFile]?
+    let activeRoles: Set<Int>
 
     enum CodingKeys: String, CodingKey {
         case id,
@@ -17,7 +18,8 @@ public struct NetworkAuthUserClaims: Codable, Equatable {
              firstName = "first_name",
              lastName = "last_name",
              hasAcceptedTerms = "accepted_terms",
-             files
+             files,
+             activeRoles = "active_roles"
     }
 }
 

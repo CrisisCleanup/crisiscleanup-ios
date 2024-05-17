@@ -15,6 +15,7 @@ extension AccountInfo {
 		orgName: String,
 		hasAcceptedTerms: Bool,
 		incidentIds: Set<Int64>,
+		activeRoles: Set<Int>,
 		// This is to prevent overriding the default init if it exists already
 		forCopyInit: Void? = nil
 	) {
@@ -29,6 +30,7 @@ extension AccountInfo {
 		self.orgName = orgName
 		self.hasAcceptedTerms = hasAcceptedTerms
 		self.incidentIds = incidentIds
+		self.activeRoles = activeRoles
 	}
 
 	// struct copy, lets you overwrite specific variables retaining the value of the rest
@@ -51,6 +53,7 @@ extension AccountInfo {
 		var orgName: String
 		var hasAcceptedTerms: Bool
 		var incidentIds: Set<Int64>
+		var activeRoles: Set<Int>
 
 		fileprivate init(original: AccountInfo) {
 			self.id = original.id
@@ -64,6 +67,7 @@ extension AccountInfo {
 			self.orgName = original.orgName
 			self.hasAcceptedTerms = original.hasAcceptedTerms
 			self.incidentIds = original.incidentIds
+			self.activeRoles = original.activeRoles
 		}
 
 		fileprivate func toAccountInfo() -> AccountInfo {
@@ -78,7 +82,8 @@ extension AccountInfo {
 				orgId: orgId,
 				orgName: orgName,
 				hasAcceptedTerms: hasAcceptedTerms,
-				incidentIds: incidentIds
+				incidentIds: incidentIds,
+				activeRoles: activeRoles
 			)
 		}
 	}

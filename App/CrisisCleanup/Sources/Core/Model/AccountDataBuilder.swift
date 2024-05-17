@@ -14,6 +14,7 @@ extension AccountData {
 		org: OrgData,
 		hasAcceptedTerms: Bool,
 		approvedIncidents: Set<Int64>,
+		isCrisisCleanupAdmin: Bool,
 		areTokensValid: Bool,
 		// This is to prevent overriding the default init if it exists already
 		forCopyInit: Void? = nil
@@ -26,6 +27,7 @@ extension AccountData {
 		self.org = org
 		self.hasAcceptedTerms = hasAcceptedTerms
 		self.approvedIncidents = approvedIncidents
+		self.isCrisisCleanupAdmin = isCrisisCleanupAdmin
 		self.areTokensValid = areTokensValid
 	}
 
@@ -46,6 +48,7 @@ extension AccountData {
 		var org: OrgData
 		var hasAcceptedTerms: Bool
 		var approvedIncidents: Set<Int64>
+		var isCrisisCleanupAdmin: Bool
 		var areTokensValid: Bool
 
 		fileprivate init(original: AccountData) {
@@ -57,6 +60,7 @@ extension AccountData {
 			self.org = original.org
 			self.hasAcceptedTerms = original.hasAcceptedTerms
 			self.approvedIncidents = original.approvedIncidents
+			self.isCrisisCleanupAdmin = original.isCrisisCleanupAdmin
 			self.areTokensValid = original.areTokensValid
 		}
 
@@ -70,6 +74,7 @@ extension AccountData {
 				org: org,
 				hasAcceptedTerms: hasAcceptedTerms,
 				approvedIncidents: approvedIncidents,
+				isCrisisCleanupAdmin: isCrisisCleanupAdmin,
 				areTokensValid: areTokensValid
 			)
 		}

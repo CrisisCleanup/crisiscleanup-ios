@@ -26,6 +26,7 @@ public struct NetworkUserProfile: Codable {
     let hasAcceptedTerms: Bool?
     let files: [NetworkFile]?
     let organization: NetworkOrganizationShort
+    let activeRoles: Set<Int>
 
     enum CodingKeys: String, CodingKey {
         case id,
@@ -34,7 +35,8 @@ public struct NetworkUserProfile: Codable {
              lastName = "last_name",
              hasAcceptedTerms = "accepted_terms",
              files,
-             organization
+             organization,
+             activeRoles = "active_roles"
     }
 
     var profilePicUrl: String? { files?.profilePictureUrl }
