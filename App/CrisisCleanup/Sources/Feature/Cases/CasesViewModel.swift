@@ -603,8 +603,8 @@ class CasesViewModel: ObservableObject {
         .store(in: &subscriptions)
     }
 
-    func syncWorksitesData() {
-        syncPuller.appPullIncidentWorksitesDelta()
+    func syncWorksitesData(_ forceRefreshAll: Bool = false) {
+        syncPuller.appPullIncidentWorksitesDelta(forceRefreshAll)
     }
 
     private func setTileRendererLocation() {

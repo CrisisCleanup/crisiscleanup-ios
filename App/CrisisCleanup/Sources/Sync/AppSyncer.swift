@@ -12,7 +12,7 @@ public protocol SyncPuller {
 
     func appPullIncident(_ id: Int64)
 
-    func appPullIncidentWorksitesDelta()
+    func appPullIncidentWorksitesDelta(_ forceRefreshAll: Bool)
 }
 
 extension SyncPuller {
@@ -199,7 +199,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         }
     }
 
-    func appPullIncidentWorksitesDelta() {
+    func appPullIncidentWorksitesDelta(_ forceRefreshAll: Bool) {
         pullDeltaLock.withLock {
             pullDeltaTask?.cancel()
             pullDeltaTask = Task {
@@ -216,8 +216,8 @@ class AppSyncer: SyncPuller, SyncPusher {
 
                             try await worksitesRepository.refreshWorksites(
                                 incidentId,
-                                forceQueryDeltas: true,
-                                forceRefreshAll: false
+                                forceQueryDeltas: !forceRefreshAll,
+                                forceRefreshAll: forceRefreshAll
                             )
                         } catch {
                             if !(error is CancellationError) {

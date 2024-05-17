@@ -39,6 +39,9 @@ struct CasesTableView: View {
                         .onTapGesture {
                             viewModel.syncWorksitesData()
                         }
+                        .onLongPressGesture {
+                            viewModel.syncWorksitesData(true)
+                        }
                 }
 
                 Spacer()

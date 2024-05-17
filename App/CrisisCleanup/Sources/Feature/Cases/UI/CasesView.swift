@@ -187,6 +187,9 @@ private struct MapViewTopActions: View {
                 .onTapGesture {
                     viewModel.syncWorksitesData()
                 }
+                .onLongPressGesture {
+                    viewModel.syncWorksitesData(true)
+                }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
                 .cardContainer(background: appTheme.colors.navigationContainerColor)
