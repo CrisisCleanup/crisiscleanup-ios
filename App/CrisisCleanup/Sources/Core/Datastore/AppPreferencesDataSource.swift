@@ -52,6 +52,7 @@ class AppPreferencesUserDefaults: AppPreferencesDataStore {
         update(
             UserDefaults.standard.appPreferences.copy {
                 $0.hideOnboarding = false
+                $0.hideGettingStartedVideo = false
                 $0.selectedIncidentId = 0
                 $0.languageKey = "en-US"
                 $0.syncAttempt = SyncAttempt()
