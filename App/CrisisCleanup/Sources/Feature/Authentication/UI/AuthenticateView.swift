@@ -114,7 +114,9 @@ private struct LoginOptionsView: View {
 
 struct LogoutView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
+
     @ObservedObject var viewModel: AuthenticateViewModel
+
     var logout: () -> ()
     var dismissScreen: () -> ()
 
