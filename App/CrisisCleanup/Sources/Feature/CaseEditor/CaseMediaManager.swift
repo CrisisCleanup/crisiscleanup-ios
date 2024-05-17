@@ -21,7 +21,7 @@ class CaseMediaManager: ObservableObject {
     @Published private(set) var syncingWorksiteImage: Int64 = 0
 
     private let deletingImageLock = NSLock()
-    @Published private(set) var deletingImageIds: Set<DeletingImageIdentifier> = []
+    @Published private(set) var deletingImageIds: Set<String> = []
 
     private var addImageCategory = ImageCategory.before
 
@@ -160,12 +160,12 @@ class CaseMediaManager: ObservableObject {
             worksiteImageRepository.deleteNewWorksiteImage(caseImage.imageUri)
         } else {
             let imageId = caseImage.id
-            let imageIdentifier = caseImage.toDeletingIdentifier()
+            let imageUri = caseImage.imageUri
             let isDeleting = deletingImageLock.withLock {
-                if deletingImageIds.contains(imageIdentifier) {
+                if deletingImageIds.contains(imageUri) {
                     return true
                 }
-                deletingImageIds.insert(imageIdentifier)
+                deletingImageIds.insert(imageUri)
                 return false
             }
             if isDeleting {
@@ -177,7 +177,7 @@ class CaseMediaManager: ObservableObject {
                     defer {
                         Task { @MainActor in
                             deletingImageLock.withLock {
-                                deletingImageIds.remove(imageIdentifier)
+                                deletingImageIds.remove(imageUri)
                             }
                         }
                     }
@@ -196,16 +196,5 @@ class CaseMediaManager: ObservableObject {
                 }
             }
         }
-    }
-}
-
-struct DeletingImageIdentifier: Hashable {
-    let id: Int64
-    let isNetworkImage: Bool
-}
-
-extension CaseImage {
-    func toDeletingIdentifier() -> DeletingImageIdentifier {
-        DeletingImageIdentifier(id: id, isNetworkImage: isNetworkImage)
     }
 }

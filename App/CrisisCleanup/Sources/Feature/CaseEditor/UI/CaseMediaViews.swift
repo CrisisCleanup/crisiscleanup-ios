@@ -218,9 +218,9 @@ private struct MediaDisplay: View {
                 .font(iconFont)
         }
 
+        let deletingImageIds = caseMediaManager.deletingImageIds
         ForEach(beforeAfterImages, id: \.imageUri) { caseImage in
-            // TODO: Cache deleting identifiers rather than generating every iteration
-            let isDeleting = caseMediaManager.deletingImageIds.contains(caseImage.toDeletingIdentifier())
+            let isDeleting = deletingImageIds.contains(caseImage.imageUri)
             let deleteImage = {
                 caseMediaManager.onDeleteImage(caseImage)
             }
@@ -233,7 +233,11 @@ private struct MediaDisplay: View {
                             .resizable()
                             .scaledToFit()
                             .cornerRadius(appTheme.cornerRadius)
-                            .onTapGesture { openViewImage(caseImage) }
+                            .onTapGesture {
+                                if !isDeleting {
+                                    openViewImage(caseImage)
+                                }
+                            }
                             .overlay(alignment: .topTrailing) {
                                 if !isDeleting {
                                     DeleteContextMenu(onDelete: deleteImage)
@@ -257,14 +261,15 @@ private struct MediaDisplay: View {
                 if let image = caseMediaManager.getLocalImage(caseImage.imageUri) {
                     let syncingWorksiteImage = caseMediaManager.syncingWorksiteImage
                     let isSyncing = syncingWorksiteImage != 0 && syncingWorksiteImage == caseImage.id
-                    let alignment: Alignment = isSyncing ? .center : .topTrailing
+                    let isTransient = isSyncing || isDeleting
+                    let alignment: Alignment = isTransient ? .center : .topTrailing
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFit()
                         .cornerRadius(appTheme.cornerRadius)
                         .onTapGesture { openViewImage(caseImage) }
                         .overlay(alignment: alignment) {
-                            if isSyncing {
+                            if isTransient {
                                 Image(systemName: "cloud.fill")
                                     .resizable()
                                     .scaledToFit()
