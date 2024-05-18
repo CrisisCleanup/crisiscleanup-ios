@@ -42,11 +42,6 @@ struct LoginPhoneCodeView: View {
     }
 }
 
-enum SingleCodeFocused: Hashable {
-  case none
-  case code(index: Int)
-}
-
 private struct LoginView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
@@ -55,26 +50,17 @@ private struct LoginView: View {
 
     let dismissScreen: () -> Void
 
-    @State var singleCodes: [String] = ["", "", "", "", "", ""]
+    @State var phoneCode = ""
+    private let codeLength = 6
 
-    @FocusState private var focusState: SingleCodeFocused?
-
-    func authenticate(_ singleCodes: [String]) {
-        let fullCode = singleCodes
-            .map { $0.trim() }
-            .filter { $0.isNotBlank }
-            .map { $0.substring($0.count-1, $0.count) }
-            .joined(separator: "")
-
-        if fullCode.count < singleCodes.count {
-            singleCodes.enumerated().forEach { (i, s) in
-                if s.isBlank {
-                    focusState = .code(index: i)
-                    return
-                }
-            }
+    func authenticate(_ code: String) {
+        let code = code.trim()
+        if code.count >= codeLength - 1 {
+            viewModel.authenticate(code)
+            UIApplication.shared.closeKeyboard()
         } else {
-            viewModel.authenticate(singleCodes.joined(separator: ""))
+            viewModel.onIncompleteCode()
+            // TODO: Focus on input
         }
     }
 
@@ -94,40 +80,26 @@ private struct LoginView: View {
                     }
 
                     Text(t.t("loginWithPhone.enter_x_digit_code")
-                        .replacingOccurrences(of: "{codeCount}", with: "\(singleCodes.count)"))
+                         // TODO: Use configurable value
+                        .replacingOccurrences(of: "{codeCount}", with: "\(codeLength)"))
                     Text(viewModel.obfuscatedPhoneNumber)
 
                     // TODO: Autofill from text messages
-                    HStack {
-                        ForEach(0..<singleCodes.count, id: \.self) { i in
-                            TextField("", text: $singleCodes[i])
-                                .textFieldBorder()
-                                .keyboardType(.numberPad)
-                                .multilineTextAlignment(.center)
-                                .focused($focusState, equals: .code(index: i))
-                                .disabled(disabled || viewModel.isSelectAccount)
-                                .onChange(of: singleCodes[i], perform: { newValue in
-                                    // TODO: Set entire code if length matches and code is blank
-
-                                    if newValue.count > 1 {
-                                        singleCodes[i] = String(newValue[newValue.index(newValue.endIndex, offsetBy: -1)])
-                                    }
-                                    if newValue.isNotBlank {
-                                        focusState = i >= singleCodes.count - 1 ? nil : .code(index: i+1)
-                                    }
-                                })
-                                .onSubmit {
-                                    authenticate(singleCodes)
-                                }
-                                .onAppear {
-                                    focusState = .code(index: 0)
-                                }
+                    TextField("", text: $phoneCode)
+                        .textFieldBorder()
+                        .keyboardType(.numberPad)
+                        .disabled(disabled || viewModel.isSelectAccount)
+                        .onSubmit {
+                            authenticate(phoneCode)
                         }
-                    }
+                        .onAppear {
+                            // TODO: Focus on input
+                        }
 
                     Group {
                         Button(t.t("actions.resend_code")) {
                             viewModel.requestPhoneCode(viewModel.phoneNumber)
+                            phoneCode = ""
                         }
                         .disabled(disabled)
                     }
@@ -143,12 +115,18 @@ private struct LoginView: View {
                         Menu {
                             ForEach(viewModel.accountOptions, id: \.userId) { accountInfo in
                                 Button(accountInfo.accountDisplay) {
-                                    viewModel.selectedAccount = accountInfo
+                                    viewModel.onAccountSelected(accountInfo)
                                 }
                             }
                         } label: {
                             Group {
-                                Text(viewModel.selectedAccount.accountDisplay)
+                                let accountDisplay = viewModel.selectedAccount.accountDisplay
+                                if accountDisplay.isBlank {
+                                    Text(t.t("actions.select_account"))
+                                        .foregroundColor(appTheme.colors.primaryRedColor)
+                                } else {
+                                    Text(accountDisplay)
+                                }
                                 Spacer()
                                 Image(systemName: "chevron.up.chevron.down")
                             }
@@ -158,7 +136,6 @@ private struct LoginView: View {
                         .disabled(disabled)
                     }
                 }
-                .onChange(of: viewModel.codeFocusState) { focusState = $0 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
             }
@@ -167,7 +144,7 @@ private struct LoginView: View {
             Spacer()
 
             Button {
-                authenticate(singleCodes)
+                authenticate(phoneCode)
             } label: {
                 BusyButtonContent(
                     isBusy: viewModel.isExchangingCode,
@@ -177,10 +154,6 @@ private struct LoginView: View {
             .stylePrimary()
             .padding()
             .disabled(disabled)
-
-            if focusState != nil {
-                OpenKeyboardActionsView()
-            }
         }
     }
 }

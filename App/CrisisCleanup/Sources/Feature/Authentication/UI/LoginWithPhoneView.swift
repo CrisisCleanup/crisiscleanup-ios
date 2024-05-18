@@ -27,7 +27,7 @@ private struct LoginView: View {
     @ObservedObject var viewModel: LoginWithPhoneViewModel
     @ObservedObject var focusableViewState = TextInputFocusableView()
 
-    @State var phoneNumber: String = ""
+    @State var phoneNumber = ""
 
     @FocusState private var focusState: TextInputFocused?
 

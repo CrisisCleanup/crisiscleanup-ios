@@ -12,11 +12,11 @@ class LoginWithPhoneViewModel: ObservableObject {
     let phoneNumber: String
     let obfuscatedPhoneNumber: String
 
-    @Published private(set) var viewData: AuthenticateViewData = AuthenticateViewData()
+    @Published private(set) var viewData = AuthenticateViewData()
 
     @Published var errorMessage: String = ""
+    // TODO: Configure
     @Published private(set) var focusState: TextInputFocused?
-    @Published private(set) var codeFocusState: SingleCodeFocused?
 
     private let isRequestingCodeSubject = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isRequestingCode = false
@@ -31,11 +31,11 @@ class LoginWithPhoneViewModel: ObservableObject {
     private let isSelectAccountSubject = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isSelectAccount = false
     private let selectedAccountSubject = CurrentValueSubject<PhoneNumberAccount, Never>(PhoneNumberAccountNone)
-    @Published var selectedAccount = PhoneNumberAccountNone
+    @Published private(set) var selectedAccount = PhoneNumberAccountNone
 
     @Published private(set) var isExchangingCode = false
 
-    @Published private(set) var isAuthenticateSuccessful: Bool = false
+    @Published private(set) var isAuthenticateSuccessful = false
 
     private let numberRegex = #/^[\d -]+$/#
 
@@ -147,7 +147,6 @@ class LoginWithPhoneViewModel: ObservableObject {
     private func resetVisualState() {
         errorMessage = ""
         focusState = nil
-        codeFocusState = nil
     }
 
     private func clearAccountSelect() {
@@ -156,9 +155,14 @@ class LoginWithPhoneViewModel: ObservableObject {
         accountOptionsSubject.value = []
     }
 
+    func onIncompleteCode() {
+        errorMessage = translator.t("loginWithPhone.please_enter_full_code")
+    }
+
     func requestPhoneCode(_ phoneNumber: String) {
         resetVisualState()
         clearAccountSelect()
+        oneTimePasswordId = 0
 
         let trimPhoneNumber = phoneNumber.trim()
         guard ((try? numberRegex.wholeMatch(in: trimPhoneNumber) != nil) == true) else {
@@ -219,6 +223,10 @@ class LoginWithPhoneViewModel: ObservableObject {
         )
     }
 
+    func onAccountSelected(_ accountInfo: PhoneNumberAccount) {
+        selectedAccountSubject.value = accountInfo
+    }
+
     func authenticate(_ code: String) {
         if isSelectAccount,
            selectedAccount.userId == 0 {
@@ -254,6 +262,8 @@ class LoginWithPhoneViewModel: ObservableObject {
                 if result.associatedAccounts.isEmpty {
                     message = translator.t("loginWithPhone.no_account_error")
                 } else {
+                    errorMessage = ""
+
                     oneTimePasswordId = result.otpId
 
                     // TODO: Test associated accounts
@@ -308,6 +318,7 @@ class LoginWithPhoneViewModel: ObservableObject {
             }
 
             if !isSuccessful,
+               !isSelectAccountSubject.value,
                errorMessage.isBlank {
                 message = translator.t("loginWithPhone.login_failed_try_again")
             }

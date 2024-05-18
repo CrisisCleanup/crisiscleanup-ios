@@ -14,7 +14,7 @@ class LoginWithEmailViewModel: ObservableObject {
 
     let isDebuggable: Bool
 
-    @Published private(set) var viewData: AuthenticateViewData = AuthenticateViewData()
+    @Published private(set) var viewData = AuthenticateViewData()
 
     @Published var errorMessage: String = ""
     @Published private(set) var focusState: TextInputFocused?
