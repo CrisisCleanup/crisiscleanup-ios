@@ -13,7 +13,7 @@ class CasesMapDotsOverlay: MKTileOverlay {
     private let renderingCount = CurrentValueSubject<Int, Never>(0)
     var isBusy: any Publisher<Bool, Never>
 
-    var zoomThreshold = CasesConstant.MapDotsZoomLevel
+    private let zoomThreshold = CasesConstant.MapDotsZoomLevel
 
     private let cacheLock = NSLock()
     private var tileCache = TileDataCache(3000)

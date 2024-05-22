@@ -63,9 +63,6 @@ class CasesViewModel: ObservableObject {
     private let isGeneratingWorksiteMarkers = CurrentValueSubject<Bool, Never>(false)
     private let isDelayingRegionBug = CurrentValueSubject<Bool, Never>(false)
 
-    // TODO: Change to work off of map camera altitude and not derived zoom level
-    let mapMarkerZoomLevelHeight = 330_000
-
     private let mapCaseDotProvider = InMemoryDotProvider()
     @Published private(set) var mapDotsOverlay: CasesMapDotsOverlay
     @Published private(set) var debugOverlay: MKTileOverlay?
