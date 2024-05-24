@@ -176,17 +176,22 @@ class MainViewModel: ObservableObject {
 
         accountDataPublisher
             .removeDuplicates()
-            .filter { $0.areTokensValid }
             .sink { accountData in
-                self.sync(false)
+                if accountData.areTokensValid {
+                    self.sync(false)
 
-                let data = self.incidentsData
-                if !data.isEmpty {
-                    self.syncPuller.appPullIncident(data.selectedId)
-                }
+                    let data = self.incidentsData
+                    if !data.isEmpty {
+                        self.syncPuller.appPullIncident(data.selectedId)
+                    }
 
-                Task {
-                    await self.accountDataRefresher.updateMyOrganization(true)
+                    Task {
+                        await self.accountDataRefresher.updateMyOrganization(true)
+                    }
+                } else {
+                    if !accountData.hasAcceptedTerms {
+                        self.authEventBus.onLogout()
+                    }
                 }
             }
             .store(in: &subscriptions)
