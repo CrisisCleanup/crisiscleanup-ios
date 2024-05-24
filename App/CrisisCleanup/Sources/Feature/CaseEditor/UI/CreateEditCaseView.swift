@@ -9,10 +9,8 @@ struct CreateEditCaseView: View {
     @ObservedObject var viewModel: CreateEditCaseViewModel
 
     var body: some View {
-        GeometryReader { geometry in
-            CreateEditCaseLayoutView(viewLayout: ViewLayoutDescription(geometry.size))
-                .environmentObject(viewModel)
-        }
+        CreateEditCaseLayoutView()
+            .environmentObject(viewModel)
     }
 }
 
@@ -20,9 +18,8 @@ private struct CreateEditCaseLayoutView: View {
     @Environment(\.dismiss) var dismiss
 
     @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewLayout: ViewLayoutDescription
     @EnvironmentObject var viewModel: CreateEditCaseViewModel
-
-    var viewLayout = ViewLayoutDescription()
 
     @ObservedObject private var focusableViewState = TextInputFocusableView()
 

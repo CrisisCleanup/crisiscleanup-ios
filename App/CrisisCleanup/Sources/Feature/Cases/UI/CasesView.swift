@@ -10,14 +10,11 @@ struct CasesView: View {
     let openAuthScreen: () -> Void
 
     var body: some View {
-        GeometryReader { geometry in
-            CasesLayoutView(
-                viewLayout: ViewLayoutDescription(geometry.size),
-                incidentSelectViewBuilder: incidentSelectViewBuilder,
-                openAuthScreen: openAuthScreen
-            )
-            .environmentObject(viewModel)
-        }
+        CasesLayoutView(
+            incidentSelectViewBuilder: incidentSelectViewBuilder,
+            openAuthScreen: openAuthScreen
+        )
+        .environmentObject(viewModel)
     }
 }
 
@@ -25,9 +22,8 @@ struct CasesLayoutView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewLayout: ViewLayoutDescription
     @EnvironmentObject var viewModel: CasesViewModel
-
-    var viewLayout = ViewLayoutDescription()
 
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
     let openAuthScreen: () -> Void

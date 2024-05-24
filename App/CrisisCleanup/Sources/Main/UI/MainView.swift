@@ -34,6 +34,8 @@ struct MainView: View {
 
     @State private var selectedTab = TopLevelDestination.cases
 
+    @State private var deviceSize = ViewLayoutDescription()
+
     var body: some View {
         Group {
             switch viewModel.viewData.state {
@@ -216,6 +218,7 @@ struct MainView: View {
         .environmentObject(router)
         .environmentObject(appAlerts)
         .environmentObject(locationManager)
+        .environmentObject(deviceSize)
     }
 }
 

@@ -8,10 +8,8 @@ struct ViewCaseView: View {
     @ObservedObject var viewModel: ViewCaseViewModel
 
     var body: some View {
-        GeometryReader { geometry in
-            ViewCaseLayoutView(viewLayout: ViewLayoutDescription(geometry.size))
-                .environmentObject(viewModel)
-        }
+        ViewCaseLayoutView()
+            .environmentObject(viewModel)
     }
 }
 
@@ -19,9 +17,8 @@ private struct ViewCaseLayoutView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewLayout: ViewLayoutDescription
     @EnvironmentObject var viewModel: ViewCaseViewModel
-
-    var viewLayout = ViewLayoutDescription()
 
     @State private var selectedTab: ViewCaseTabs = .info
     @State private var titlePressed: Bool = false
@@ -144,7 +141,7 @@ private struct TabContentView: View {
                 isCompactLayout: isCompactLayout,
                 areOptionsOpen: $isPhotoImageOptionsOpen
             )
-                .tag(ViewCaseTabs.photos)
+            .tag(ViewCaseTabs.photos)
             ViewCaseNotes()
                 .tag(ViewCaseTabs.notes)
         }
@@ -299,9 +296,9 @@ private struct ViewCaseNotes: View {
                         text: $editingNote,
                         placeholder: t.t("caseView.note")
                     )
-                        .id("note-input")
-                        .listItemModifier()
-                        .disabled(disabled)
+                    .id("note-input")
+                    .listItemModifier()
+                    .disabled(disabled)
 
                     Button(t.t("actions.add")) {
                         let note = WorksiteNote.create().copy {
