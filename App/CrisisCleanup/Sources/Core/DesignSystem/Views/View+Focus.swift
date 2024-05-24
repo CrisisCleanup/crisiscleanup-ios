@@ -17,12 +17,14 @@ enum TextInputFocused: Hashable {
          userConfirmPassword,
          caseInfoName,
          caseInfoPhone,
+         caseInfoPhone2,
          caseInfoEmail,
          caseInfoStreetAddress,
          caseInfoZipCode,
          caseInfoCity,
          caseInfoCounty,
-         caseInfoState
+         caseInfoState,
+         caseInfoCrossStreet
 }
 
 class TextInputFocusableView: ObservableObject {
