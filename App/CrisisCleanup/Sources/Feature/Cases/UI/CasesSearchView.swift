@@ -10,6 +10,8 @@ struct CasesSearchView: View {
 
     @State private var isLoadingVisible = false
 
+    @FocusState private var focusState: TextInputFocused?
+
     var body: some View {
         let isLoading = viewModel.isLoading
         let isSearching = viewModel.isSearching
@@ -34,9 +36,15 @@ struct CasesSearchView: View {
                         text: $viewModel.searchQuery
                     )
                     .autocapitalization(.none)
+                    .focused($focusState, equals: .anyTextInput)
                     .padding([.vertical])
                     .disableAutocorrection(true)
                     .disabled(disable)
+                    .onChange(of: viewModel.focusOnSearchInput) { newValue in
+                        if newValue {
+                            focusState = .anyTextInput
+                        }
+                    }
 
                     if viewModel.searchQuery.isNotBlank {
                         Button {

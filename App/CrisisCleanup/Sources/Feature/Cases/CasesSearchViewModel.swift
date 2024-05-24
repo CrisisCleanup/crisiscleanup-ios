@@ -28,6 +28,8 @@ class CasesSearchViewModel: ObservableObject {
 
     @Published private(set) var searchResults = CasesSearchResults()
 
+    @Published private(set) var focusOnSearchInput = false
+
     private let emptyResults = [CaseSummaryResult]()
 
     private let latestSearchResultsPublisher = LatestAsyncThrowsPublisher<CasesSearchResults>()
@@ -115,6 +117,7 @@ class CasesSearchViewModel: ObservableObject {
             .sink(receiveValue: { recents in
                 self.isInitialLoading.value = false
                 self.recentWorksites = recents
+                self.focusOnSearchInput = recents.isEmpty
             })
             .store(in: &subscriptions)
     }
