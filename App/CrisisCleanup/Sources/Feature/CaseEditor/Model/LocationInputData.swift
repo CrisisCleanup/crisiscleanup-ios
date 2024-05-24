@@ -98,11 +98,17 @@ class LocationInputData: ObservableObject {
         resetValidity()
 
         coordinates = worksite.coordinates
-        streetAddress = worksite.address
-        city = worksite.city
-        county = worksite.county
-        state = worksite.state
-        zipCode = worksite.postalCode
+        if worksite.address.isNotBlank ||
+            worksite.city.isNotBlank ||
+            worksite.county.isNotBlank ||
+            worksite.state.isNotBlank ||
+            worksite.postalCode.isNotBlank {
+            streetAddress = worksite.address
+            city = worksite.city
+            county = worksite.county
+            state = worksite.state
+            zipCode = worksite.postalCode
+        }
 
         wasGeocodeAddressSelected = wasAddressSelected
         if wasAddressSelected {
