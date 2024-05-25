@@ -24,7 +24,11 @@ extension MainComponent {
     }
 
     var worksiteDao: WorksiteDao {
-        WorksiteDao(appDatabase, syncLoggerFactory.getLogger("worksite-dao"))
+        WorksiteDao(
+            appDatabase,
+            syncLoggerFactory.getLogger("worksite-data"),
+            loggerFactory.getLogger("worksites-data")
+        )
     }
 
     var worksiteSyncStatDao: WorksiteSyncStatDao {

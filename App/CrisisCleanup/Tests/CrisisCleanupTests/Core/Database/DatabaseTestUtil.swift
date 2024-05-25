@@ -68,6 +68,7 @@ class WorksiteTestUtil {
     internal static let testTranslator = TestTranslator()
     internal static let silentSyncLogger = SilentSyncLogger()
     internal static let testAppVersionProvider = TestAppVersionProvider()
+    internal static let silentAppLogger = SilentAppLogger()
 }
 
 internal class TestTranslator : KeyTranslator {
@@ -93,6 +94,12 @@ internal class SilentSyncLogger : SyncLogger {
     func log(_ message: String, _ details: String, _ type: String) {}
     func clear() {}
     func flush() {}
+}
+
+internal class SilentAppLogger : AppLogger {
+    func logDebug(_ items: Any...) {}
+    func logError(_ e: Error) {}
+    func logCapture(_ message: String) {}
 }
 
 internal class TestUuidGenerator: UuidGenerator {

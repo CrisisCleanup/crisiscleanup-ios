@@ -23,7 +23,11 @@ class WorksiteMapVisualTests: XCTestCase {
         let initialized = try initializeTestDb()
         dbQueue = initialized.0
         appDb = initialized.1
-        worksiteDao = WorksiteDao(appDb, WorksiteTestUtil.silentSyncLogger)
+        worksiteDao = WorksiteDao(
+            appDb,
+            WorksiteTestUtil.silentSyncLogger,
+            WorksiteTestUtil.silentAppLogger
+        )
 
         try await dbQueue.write { db in
             for incident in WorksiteTestUtil.testIncidents {
