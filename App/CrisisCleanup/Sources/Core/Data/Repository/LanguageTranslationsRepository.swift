@@ -15,6 +15,8 @@ public protocol LanguageTranslationsRepository: KeyAssetTranslator {
     func setLanguageFromSystem()
 
     func getLanguageOptions() async -> [LanguageIdName]
+
+    func getRecommendedLanguage(_ languageOptions: [LanguageIdName]) -> LanguageIdName?
 }
 
 extension LanguageTranslationsRepository {
@@ -199,6 +201,27 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
         }
 
         return [LanguageIdName]()
+    }
+
+    func getRecommendedLanguage(_ languageOptions: [LanguageIdName]) -> LanguageIdName? {
+        if let systemLocale = NSLocale.preferredLanguages.first {
+            let languageLookup = languageOptions
+                .associateBy {
+                    String($0.name.split(separator: ".").last!)
+                }
+            let localeLower = systemLocale.lowercased()
+            if let exactMatch = languageLookup[localeLower] {
+                return exactMatch
+            }
+
+            if let englishMatch = languageOptions.filter({
+                $0.name.contains("en-us")
+            }).firstOrNil {
+                return englishMatch
+            }
+        }
+
+        return languageOptions.firstOrNil
     }
 
     // MARK: - KeyAssetTranslator

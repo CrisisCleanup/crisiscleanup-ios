@@ -11,16 +11,18 @@ struct WorksiteImagesView: View {
 
     var body: some View {
         ZStack {
+            WorksitePhotosCarousel() {
+                withAnimation {
+                    showPhotosGrid = true
+                }
+            }
             if showPhotosGrid {
+                // TODO: Common colors
+                Color.white.ignoresSafeArea(.all)
+
                 WorksitePhotosGrid() {
                     withAnimation {
                         showPhotosGrid = false
-                    }
-                }
-            } else {
-                WorksitePhotosCarousel() {
-                    withAnimation {
-                        showPhotosGrid = true
                     }
                 }
             }

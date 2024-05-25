@@ -103,7 +103,8 @@ class PersistentInviteViewModel: ObservableObject {
                 self.languageOptions = options
                 if options.isNotEmpty,
                    self.userInfo.language.name.isBlank {
-                    self.userInfo.language = options.first!
+                    let recommended = self.languageRepository.getRecommendedLanguage(options)
+                    self.userInfo.language = recommended!
                 }
             })
             .store(in: &subscriptions)

@@ -5,10 +5,8 @@ struct CaseMoveOnMapView: View {
     @ObservedObject var viewModel: CaseChangeLocationAddressViewModel
 
     var body: some View {
-        GeometryReader { geometry in
-            CaseMoveOnMapLayoutView(viewLayout: ViewLayoutDescription(geometry.size))
-                .environmentObject(viewModel)
-        }
+        CaseMoveOnMapLayoutView()
+            .environmentObject(viewModel)
     }
 }
 
@@ -17,9 +15,8 @@ private struct CaseMoveOnMapLayoutView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewLayout: ViewLayoutDescription
     @EnvironmentObject var viewModel: CaseChangeLocationAddressViewModel
-
-    var viewLayout = ViewLayoutDescription()
 
     @ObservedObject private var focusableViewState = TextInputFocusableView()
     @State private var animateTopSearchBar = false

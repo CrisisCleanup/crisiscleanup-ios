@@ -9,10 +9,8 @@ struct CreateEditCaseView: View {
     @ObservedObject var viewModel: CreateEditCaseViewModel
 
     var body: some View {
-        GeometryReader { geometry in
-            CreateEditCaseLayoutView(viewLayout: ViewLayoutDescription(geometry.size))
-                .environmentObject(viewModel)
-        }
+        CreateEditCaseLayoutView()
+            .environmentObject(viewModel)
     }
 }
 
@@ -20,9 +18,8 @@ private struct CreateEditCaseLayoutView: View {
     @Environment(\.dismiss) var dismiss
 
     @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewLayout: ViewLayoutDescription
     @EnvironmentObject var viewModel: CreateEditCaseViewModel
-
-    var viewLayout = ViewLayoutDescription()
 
     @ObservedObject private var focusableViewState = TextInputFocusableView()
 
@@ -430,6 +427,9 @@ private struct PropertyInformation: View {
                 TextField(t.t("formLabels.name"), text: $propertyData.residentName)
                     .textInputAutocapitalization(.words)
                     .focused($focusState, equals: .caseInfoName)
+                    .onSubmit {
+                        focusState = .caseInfoPhone
+                    }
                     .textFieldBorder()
                     .disabled(disabled)
                     .padding(.bottom)
@@ -456,12 +456,18 @@ private struct PropertyInformation: View {
                     .id("property-phone-error")
                 TextField(t.t("formLabels.phone1"), text: $propertyData.phoneNumber)
                     .focused($focusState, equals: .caseInfoPhone)
+                    .onSubmit {
+                        focusState = .caseInfoPhone2
+                    }
                     .textFieldBorder()
                     .disabled(disabled)
                     .padding(.bottom)
 
                 TextField(t.t("formLabels.phone2"), text: $propertyData.phoneNumberSecondary)
-                    .focused($focusState, equals: .anyTextInput)
+                    .focused($focusState, equals: .caseInfoPhone2)
+                    .onSubmit {
+                        focusState = .caseInfoEmail
+                    }
                     .textFieldBorder()
                     .disabled(disabled)
                     .padding(.bottom)
@@ -582,10 +588,13 @@ private struct PropertyInformation: View {
             }
             .padding()
 
-            CaseAddressFormFields(locationData: locationData)
+            CaseAddressFormFields(
+                locationData: locationData,
+                focusState: $focusState
+            )
 
             TextField(t.t("formLabels.cross_street"), text: $locationData.crossStreetNearbyLandmark)
-                .focused($focusState, equals: .anyTextInput)
+                .focused($focusState, equals: .caseInfoCrossStreet)
                 .textFieldBorder()
                 .disabled(disabled)
                 .padding([.horizontal, .bottom])
@@ -646,7 +655,7 @@ private struct CaseAddressFormFields: View {
 
     @ObservedObject var locationData: LocationInputData
 
-    @FocusState private var focusState: TextInputFocused?
+    @FocusState.Binding var focusState: TextInputFocused?
 
     var body: some View {
         let disabled = editableView.disabled
@@ -665,12 +674,18 @@ private struct CaseAddressFormFields: View {
                         .id("location-address-error")
                     TextField(t.t("formLabels.address"), text: $locationData.streetAddress)
                         .focused($focusState, equals: .caseInfoStreetAddress)
+                        .onSubmit {
+                            focusState = .caseInfoCity
+                        }
                         .textFieldBorder()
                         .padding(.bottom)
 
                     ErrorTextView(text: locationData.cityError)
                         .id("location-city-error")
                     TextField(t.t("formLabels.city"), text: $locationData.city)
+                        .onSubmit {
+                            focusState = .caseInfoCounty
+                        }
                         .focused($focusState, equals: .caseInfoCity)
                         .textFieldBorder()
                         .padding(.bottom)
@@ -681,6 +696,9 @@ private struct CaseAddressFormFields: View {
                         .id("location-county-error")
                     TextField(t.t("formLabels.county"), text: $locationData.county)
                         .focused($focusState, equals: .caseInfoCounty)
+                        .onSubmit {
+                            focusState = .caseInfoState
+                        }
                         .textFieldBorder()
                         .padding(.bottom)
 
@@ -688,6 +706,9 @@ private struct CaseAddressFormFields: View {
                         .id("location-state-error")
                     TextField(t.t("formLabels.state"), text: $locationData.state)
                         .focused($focusState, equals: .caseInfoState)
+                        .onSubmit {
+                            focusState = .caseInfoZipCode
+                        }
                         .textFieldBorder()
                         .padding(.bottom)
 
@@ -695,6 +716,10 @@ private struct CaseAddressFormFields: View {
                         .id("location-zip-code-error")
                     TextField(t.t("formLabels.postal_code"), text: $locationData.zipCode)
                         .focused($focusState, equals: .caseInfoZipCode)
+                        .onSubmit {
+                            // TODO: Parent should receive this signal
+                            focusState = .caseInfoCrossStreet
+                        }
                         .textFieldBorder()
                         .padding(.bottom)
                 }

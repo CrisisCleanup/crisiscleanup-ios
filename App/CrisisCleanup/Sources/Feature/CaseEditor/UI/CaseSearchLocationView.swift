@@ -11,14 +11,20 @@ struct CaseSearchLocationView: View {
     @State private var showSearchingIndicator = false
     @State private var showOutOfBoundsAlert = false
 
+    @FocusState private var focusState: TextInputFocused?
+
     var body: some View {
         VStack {
             if viewModel.hasInternetConnection {
                 let hint = t.t("caseView.full_address")
                 TextField("\(hint) *", text: $viewModel.locationQuery)
                     .textInputAutocapitalization(.words)
+                    .focused($focusState, equals: .anyTextInput)
                     .textFieldBorder()
                     .padding([.horizontal, .top])
+                    .onAppear {
+                        focusState = .anyTextInput
+                    }
             }
 
             ZStack {
