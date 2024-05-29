@@ -100,6 +100,7 @@ internal class SilentAppLogger : AppLogger {
     func logDebug(_ items: Any...) {}
     func logError(_ e: Error) {}
     func logCapture(_ message: String) {}
+    func setAccontId(_ id: String) {}
 }
 
 internal class TestUuidGenerator: UuidGenerator {
