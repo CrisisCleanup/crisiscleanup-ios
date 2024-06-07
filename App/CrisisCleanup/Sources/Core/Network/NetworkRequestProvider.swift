@@ -197,6 +197,20 @@ extension NetworkRequestProvider {
         )
     }
 
+    var lists: NetworkRequest {
+        NetworkRequest(
+            apiUrl("lists"),
+            addTokenHeader: true
+        )
+    }
+
+    var list: NetworkRequest {
+        NetworkRequest(
+            apiUrl("list"),
+            addTokenHeader: true
+        )
+    }
+
     // MARK: Write requests
 
     var newWorksite: NetworkRequest {

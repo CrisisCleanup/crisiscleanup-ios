@@ -503,6 +503,51 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
 
         throw response.error ?? networkError
     }
+
+    func getLists(limit: Int, offset: Int?) async throws -> NetworkListsResult {
+        let qOffset = offset == nil ? nil : String(offset!)
+        let request = requestProvider.lists
+            .addQueryItems(
+                "limit", String(limit),
+                "offset", qOffset
+            )
+        let response = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkListsResult.self
+        )
+        if let result = response.value {
+            try result.errors?.tryThrowException()
+            return result
+        }
+        throw response.error ?? networkError
+    }
+
+    func getList(_ id: Int64) async throws -> NetworkList? {
+        let request = requestProvider.list
+            .addPaths(String(id))
+        let response = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkListResult.self
+        )
+        if let result = response.value {
+            try result.errors?.tryThrowException()
+            return result.list
+        }
+        throw response.error ?? networkError
+    }
+
+    func getLists(_ ids: [Int64]) async -> [NetworkList?] {
+        var networkLists = [NetworkList?]()
+        for id in ids {
+            var list: NetworkList? = nil
+            do {
+                list = try await getList(id)
+            } catch {
+            }
+            networkLists.append(list)
+        }
+        return networkLists
+    }
 }
 
 extension Array where Element == Int64 {
