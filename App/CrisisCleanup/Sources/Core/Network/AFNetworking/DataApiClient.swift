@@ -516,7 +516,6 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
             type: NetworkListsResult.self
         )
         if let result = response.value {
-            try result.errors?.tryThrowException()
             return result
         }
         throw response.error ?? networkError

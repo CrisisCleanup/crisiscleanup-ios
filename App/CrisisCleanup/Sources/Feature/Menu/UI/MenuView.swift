@@ -33,6 +33,15 @@ struct MenuView: View {
                     )
 
                     Button {
+                        // TODO: Open to lists screen
+                    } label: {
+                        Text(t.t("~~Lists"))
+                            .padding(.horizontal)
+                    }
+                    .styleOutline()
+                    .padding([.horizontal, .bottom])
+
+                    Button {
                         router.openInviteTeammate()
                     } label: {
                         Text(t.t("usersVue.invite_new_user"))
@@ -154,9 +163,9 @@ private struct TopBar: View {
                 } else {
                     let imageSize = appTheme.avatarSize
                     Image(systemName: "person.circle")
-                    .resizable()
-                         .scaledToFill()
-                         .frame(width: imageSize, height: imageSize)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: imageSize, height: imageSize)
                 }
             }
         }

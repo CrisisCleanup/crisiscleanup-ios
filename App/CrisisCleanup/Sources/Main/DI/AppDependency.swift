@@ -51,6 +51,7 @@ public protocol AppDependency: Dependency {
     var accountDataRepository: AccountDataRepository { get }
     var accountDataRefresher: AccountDataRefresher { get }
     var organizationRefresher: OrganizationRefresher { get }
+    var listDataRefresher: ListDataRefresher { get }
 
     var syncLoggerFactory: SyncLoggerFactory { get }
     var syncPuller: SyncPuller { get }
@@ -183,6 +184,15 @@ extension MainComponent {
     public var organizationRefresher: OrganizationRefresher {
         shared {
             OrganizationRefresher(accountDataRefresher)
+        }
+    }
+
+    public var listDataRefresher: ListDataRefresher {
+        shared {
+            ListDataRefresher(
+                listsSyncer: listsSyncer,
+                loggerFactory: loggerFactory
+            )
         }
     }
 

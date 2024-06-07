@@ -1,5 +1,5 @@
 extension MainComponent {
-    var providesAppSyncer: AppSyncer {
+    private var appSyncer: AppSyncer {
         shared {
             AppSyncer (
                 accountDataRepository: accountDataRepository,
@@ -18,9 +18,9 @@ extension MainComponent {
         }
     }
 
-    public var syncPuller: SyncPuller { providesAppSyncer }
+    public var syncPuller: SyncPuller { appSyncer }
 
-    public var syncPusher: SyncPusher { providesAppSyncer }
+    public var syncPusher: SyncPusher { appSyncer }
 
     private var worksitesNetworkDataCache: WorksitesNetworkDataCache {
         WorksitesNetworkDataFileCache(
@@ -63,6 +63,13 @@ extension MainComponent {
     }
 
     public var incidentDataPullReporter: IncidentDataPullReporter { worksitesRepository as! IncidentDataPullReporter }
+
+    var listsSyncer: ListsSyncer {
+        AccountListsSyncer(
+            networkDataSource: networkDataSource,
+            loggerFactory: loggerFactory
+        )
+    }
 
     public var syncLoggerFactory: SyncLoggerFactory {
         shared {
