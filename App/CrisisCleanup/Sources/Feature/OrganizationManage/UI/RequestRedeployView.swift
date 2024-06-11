@@ -36,16 +36,18 @@ struct RequestRedeployView: View {
                     let selectedIncidentText = selectedIncident.name.ifBlank { selectIncidentHint }
 
                     VStack {
-                        if !showIncidentOptions {
-                            Text(t.t("requestRedeploy.choose_an_incident"))
-                                .listItemModifier()
+                        Text(t.t("requestRedeploy.choose_an_incident"))
+                            .listItemModifier()
 
-                            if errorMessage.isNotBlank {
-                                Text(errorMessage)
-                                    .listItemPadding()
-                                    .foregroundColor(appTheme.colors.primaryRedColor)
-                            }
+                        if errorMessage.isNotBlank {
+                            Text(errorMessage)
+                                .listItemPadding()
+                                .foregroundColor(appTheme.colors.primaryRedColor)
+                        }
 
+                        if showIncidentOptions {
+                            Spacer()
+                        } else {
                             HStack {
                                 Text(selectedIncidentText)
                                 Spacer()
