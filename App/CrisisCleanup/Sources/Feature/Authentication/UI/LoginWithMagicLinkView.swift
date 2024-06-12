@@ -7,8 +7,6 @@ struct LoginMagicLinkCodeView: View {
 
     @ObservedObject var viewModel: LoginWithMagicLinkViewModel
 
-    let dismiss: () -> Void
-
     var body: some View {
         ZStack {
             if viewModel.errorMessage.isNotBlank {
@@ -28,11 +26,5 @@ struct LoginMagicLinkCodeView: View {
         .screenTitle(t.t("actions.login"))
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
-        .onChange(of: viewModel.isAuthenticateSuccessful) { b in
-            if b {
-                router.returnToAuth()
-                dismiss()
-            }
-        }
     }
 }

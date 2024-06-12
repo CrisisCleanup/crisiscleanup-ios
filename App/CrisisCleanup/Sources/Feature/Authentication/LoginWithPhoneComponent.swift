@@ -29,15 +29,10 @@ extension AuthenticateComponent {
         )
     }
 
-    func phoneLoginCodeView(_ phoneNumber: String, closeAuthFlow: @escaping () -> Void) -> AnyView {
-        let clearViewModelOnHide = {
-            self._loginWithPhoneViewModel = nil
-            closeAuthFlow()
-        }
-        return AnyView(
+    func phoneLoginCodeView(_ phoneNumber: String) -> AnyView {
+        AnyView(
             LoginPhoneCodeView(
-                viewModel: loginWithPhoneViewModel(phoneNumber),
-                dismiss: clearViewModelOnHide
+                viewModel: loginWithPhoneViewModel(phoneNumber)
             )
         )
     }

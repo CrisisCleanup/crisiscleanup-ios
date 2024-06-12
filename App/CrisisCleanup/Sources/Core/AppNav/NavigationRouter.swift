@@ -27,7 +27,7 @@ class NavigationRouter: ObservableObject {
         }
     }
 
-    func returnToAuth() {
+    func clearAuthRoutes() {
         clearNavigationStack()
     }
 
