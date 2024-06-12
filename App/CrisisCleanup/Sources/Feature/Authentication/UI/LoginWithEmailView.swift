@@ -5,8 +5,6 @@ struct LoginWithEmailView: View {
 
     @ObservedObject var viewModel: LoginWithEmailViewModel
 
-    let dismiss: () -> Void
-
     var body: some View {
         ZStack {
             let viewData = viewModel.viewData
@@ -16,19 +14,12 @@ struct LoginWithEmailView: View {
             } else {
                 LoginView(
                     viewModel: viewModel,
-                    dismissScreen: dismiss,
                     emailAddress: viewData.accountData.emailAddress
                 )
             }
         }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
-        .onChange(of: viewModel.isAuthenticateSuccessful) { b in
-            if b {
-                router.returnToAuth()
-                dismiss()
-            }
-        }
     }
 }
 
@@ -39,8 +30,6 @@ private struct LoginView: View {
 
     @ObservedObject var viewModel: LoginWithEmailViewModel
     @ObservedObject var focusableViewState = TextInputFocusableView()
-
-    let dismissScreen: () -> Void
 
     @State var emailAddress: String = ""
     @State var password: String = ""

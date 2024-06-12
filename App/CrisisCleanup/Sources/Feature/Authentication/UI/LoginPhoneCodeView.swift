@@ -7,8 +7,6 @@ struct LoginPhoneCodeView: View {
 
     @ObservedObject var viewModel: LoginWithPhoneViewModel
 
-    let dismiss: () -> Void
-
     var body: some View {
         ZStack {
             if viewModel.viewData.state == .loading {
@@ -24,21 +22,13 @@ struct LoginPhoneCodeView: View {
                 .padding()
 
             } else {
-                LoginView(
-                    dismissScreen: dismiss
-                )
+                LoginView()
             }
         }
         .navigationTitle(t.t("actions.login"))
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)
-        .onChange(of: viewModel.isAuthenticateSuccessful) { b in
-            if b {
-                router.returnToAuth()
-                dismiss()
-            }
-        }
     }
 }
 
@@ -47,8 +37,6 @@ private struct LoginView: View {
 
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var viewModel: LoginWithPhoneViewModel
-
-    let dismissScreen: () -> Void
 
     @State var phoneCode = ""
     private let codeLength = 6

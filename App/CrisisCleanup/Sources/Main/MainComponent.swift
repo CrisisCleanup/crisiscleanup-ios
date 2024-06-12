@@ -119,18 +119,18 @@ public class MainComponent: BootstrapComponent,
         authenticateComponent.authenticateView(dismissScreen: dismissScreen)
     }
 
-    public func loginWithEmailView(closeAuthFlow: @escaping () -> Void) -> AnyView {
-        authenticateComponent.loginWithEmailView(closeAuthFlow: closeAuthFlow)
+    public func loginWithEmailView() -> AnyView {
+        authenticateComponent.loginWithEmailView()
     }
 
     public var loginWithPhoneView: AnyView { authenticateComponent.loginWithPhoneView }
 
-    public func phoneLoginCodeView(_ phoneNumber: String, closeAuthFlow: @escaping () -> Void) -> AnyView {
-        authenticateComponent.phoneLoginCodeView(phoneNumber, closeAuthFlow: closeAuthFlow)
+    public func phoneLoginCodeView(_ phoneNumber: String) -> AnyView {
+        authenticateComponent.phoneLoginCodeView(phoneNumber)
     }
 
-    public func magicLinkLoginCodeView(_ code: String, closeAuthFlow: @escaping () -> Void) -> AnyView {
-        authenticateComponent.magicLinkLoginCodeView(code, closeAuthFlow: closeAuthFlow)
+    public func magicLinkLoginCodeView(_ code: String) -> AnyView {
+        authenticateComponent.magicLinkLoginCodeView(code)
     }
 
     public func passwordRecoverView(showForgotPassword: Bool, showMagicLink: Bool) -> AnyView {
