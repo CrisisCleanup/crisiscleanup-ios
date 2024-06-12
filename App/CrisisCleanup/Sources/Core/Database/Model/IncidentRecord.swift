@@ -10,6 +10,8 @@ struct IncidentRecord: Identifiable, Equatable {
     )
     static let incidentFormFields = hasMany(IncidentFormFieldRecord.self)
 
+    static let lists = hasMany(ListRecord.self)
+
     let id: Int64
     let startAt: Date
     let name: String

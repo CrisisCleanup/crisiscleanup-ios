@@ -873,6 +873,65 @@ extension AppDatabase {
             }
         }
 
+        migrator.registerMigration(
+            "list-table",
+            foreignKeyChecks: .immediate
+        ) { db in
+            try db.create(table: "list") { t in
+                t.autoIncrementedPrimaryKey("id")
+                t.column("networkId", .integer)
+                    .notNull()
+                    .defaults(to: -1)
+                t.column("localGlobalUuid", .text)
+                    .notNull()
+                    .defaults(to: "")
+                t.column("createdBy", .integer)
+                t.column("updatedBy", .integer)
+                t.column("createdAt", .date)
+                    .notNull()
+                t.column("updatedAt", .date)
+                    .notNull()
+                t.column("parent", .integer)
+                t.column("name", .text)
+                    .notNull()
+                t.column("description", .text)
+                t.column("listOrder", .integer)
+                t.column("tags", .text)
+                t.column("model", .text)
+                    .notNull()
+                t.column("objectIds", .text)
+                    .notNull()
+                    .defaults(to: "")
+                t.column("shared", .text)
+                    .notNull()
+                t.column("permissions", .text)
+                    .notNull()
+                t.column("incidentId", .integer)
+                    .references("incident", onDelete: .setNull)
+            }
+            try db.create(
+                indexOn: "list",
+                columns: ["networkId", "localGlobalUuid"],
+                options: .unique
+            )
+            try db.create(
+                indexOn: "list",
+                columns: ["incidentId", "updatedAt"]
+            )
+            try db.create(
+                indexOn: "list",
+                columns: ["updatedAt"]
+            )
+            try db.create(
+                indexOn: "list",
+                columns: ["model", "updatedAt"]
+            )
+            try db.create(
+                indexOn: "list",
+                columns: ["parent", "listOrder"]
+            )
+        }
+
         return migrator
     }
 }

@@ -595,7 +595,7 @@ public class WorksiteDao {
             try WorksiteRootRecord
                 .all()
                 .selectIdColumn()
-                .filterLocalModified()
+                .filterByLocalModified()
                 .orderedByLocalModifiedAtDesc()
                 .limit(limit)
                 .asRequest(of: Int64.self)

@@ -172,7 +172,7 @@ public struct IncidentFormField: Equatable {
     }
 }
 
-public struct IncidentIdNameType {
+public struct IncidentIdNameType: Equatable {
     let id: Int64
     let name: String
     let shortName: String

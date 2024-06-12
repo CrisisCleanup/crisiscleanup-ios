@@ -232,7 +232,7 @@ extension DerivableRequest<WorksiteRootRecord> {
         select(RootColumns.id, RootColumns.isLocalModified)
     }
 
-    func filterLocalModified() -> Self {
+    func filterByLocalModified() -> Self {
         filter(RootColumns.isLocalModified == true)
     }
 }
