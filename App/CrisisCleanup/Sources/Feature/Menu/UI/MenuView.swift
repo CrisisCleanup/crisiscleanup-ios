@@ -33,7 +33,7 @@ struct MenuView: View {
                     )
 
                     Button {
-                        // TODO: Open to lists screen
+                        router.openLists()
                     } label: {
                         Text(t.t("~~Lists"))
                             .padding(.horizontal)
@@ -129,9 +129,9 @@ private struct TopBar: View {
                 let title = selectedIncident.isEmptyIncident
                 ? t.t(TopLevelDestination.menu.titleTranslateKey)
                 : selectedIncident.shortName
-                IncidentHeader(
+                IncidentHeaderView(
                     incident: selectedIncident,
-                    drop: !selectedIncident.isEmptyIncident,
+                    showDropdown: !selectedIncident.isEmptyIncident,
                     text: title,
                     disabled: hasNoIncidents,
                     isLoading: viewModel.showHeaderLoading,

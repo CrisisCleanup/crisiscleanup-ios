@@ -21,6 +21,7 @@ public class MainComponent: BootstrapComponent,
                             UserFeedbackViewBuilder,
                             InviteTeammateViewBuilder,
                             RequestRedeployViewBuilder,
+                            ListsViewBuilder,
                             SyncInsightsViewBuilder
 {
     public let appEnv: AppEnv
@@ -107,6 +108,7 @@ public class MainComponent: BootstrapComponent,
             userFeedbackViewBuilder: self,
             inviteTeammateViewBuilder: self,
             requestRedeployViewBuilder: self,
+            listsViewBuilder: self,
             syncInsightsViewBuilder: self
         )
     }
@@ -297,6 +299,14 @@ public class MainComponent: BootstrapComponent,
     lazy var requestRedeployComponent = RequestRedeployComponent(parent: self, routerObserver: routerObserver)
 
     public var requestRedeployView: AnyView { requestRedeployComponent.requestRedeployView }
+
+    // MARK: Lists
+
+    lazy var listsComponent = ListsComponent(parent: self, routerObserver: routerObserver)
+
+    public var listsView: AnyView {
+        listsComponent.listsView
+    }
 
     // MARK: Sync insights
 

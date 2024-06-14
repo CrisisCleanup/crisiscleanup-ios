@@ -6,7 +6,7 @@ public protocol ListsSyncer {
 
 class AccountListsSyncer: ListsSyncer {
     private let networkDataSource: CrisisCleanupNetworkDataSource
-//    private let listsRepository: ListsRepository
+    private let listsRepository: ListsRepository
     private let logger: AppLogger
 
     private let syncGuard = NSLock()
@@ -14,11 +14,11 @@ class AccountListsSyncer: ListsSyncer {
 
     init(
         networkDataSource: CrisisCleanupNetworkDataSource,
-//        listsRepository: ListsRepository,
+        listsRepository: ListsRepository,
         loggerFactory: AppLoggerFactory
     ) {
         self.networkDataSource = networkDataSource
-//        self.listsRepository = listsRepository
+        self.listsRepository = listsRepository
         logger = loggerFactory.getLogger("lists")
     }
 
@@ -64,7 +64,7 @@ class AccountListsSyncer: ListsSyncer {
                 try Task.checkCancellation()
             }
 
-            print("Lists from backend \(cachedLists.count)")
+            await listsRepository.syncLists(cachedLists)
         } catch {
             if error is CancellationError {
                 throw error

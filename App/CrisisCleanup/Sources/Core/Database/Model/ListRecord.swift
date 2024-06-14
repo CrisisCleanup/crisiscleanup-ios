@@ -63,41 +63,45 @@ extension ListRecord: Codable, FetchableRecord, MutablePersistableRecord {
     func syncUpsert(_ db: Database) throws {
         let inserted = try insertAndFetch(db, onConflict: .ignore)
         if inserted == nil {
-            try db.execute(
-                sql:
-                    """
-                    UPDATE list SET
-                    updatedBy   =:updatedBy,
-                    updatedAt   =:updatedAt,
-                    parent      =:parent,
-                    name        =:name,
-                    description =:description,
-                    listOrder   =:listOrder,
-                    tags        =:tags,
-                    model       =:model,
-                    objectIds   =:objectIds,
-                    shared      =:shared,
-                    permissions =:permissions,
-                    incidentId  =:incidentId
-                    WHERE networkId=:networkId AND localGlobalUuid=''
-                    """,
-                arguments: [
-                    "updatedBy" : updatedBy,
-                    "updatedAt" : updatedAt,
-                    "parent"    : parent,
-                    "name"      : name,
-                    "description"   : description ?? "",
-                    "listOrder"     : listOrder,
-                    "tags"          : tags ?? "",
-                    "model"         : model,
-                    "objectIds"     : objectIds,
-                    "shared"        : shared,
-                    "permissions"   : permissions,
-                    "incidentId"    : incidentId,
-                    "networkId"     : networkId
-                ]
-            )
+            try syncUpdate(db)
         }
+    }
+
+    func syncUpdate(_ db: Database) throws {
+        try db.execute(
+            sql:
+                """
+                UPDATE list SET
+                updatedBy   =:updatedBy,
+                updatedAt   =:updatedAt,
+                parent      =:parent,
+                name        =:name,
+                description =:description,
+                listOrder   =:listOrder,
+                tags        =:tags,
+                model       =:model,
+                objectIds   =:objectIds,
+                shared      =:shared,
+                permissions =:permissions,
+                incidentId  =:incidentId
+                WHERE networkId=:networkId AND localGlobalUuid=''
+                """,
+            arguments: [
+                "updatedBy" : updatedBy,
+                "updatedAt" : updatedAt,
+                "parent"    : parent,
+                "name"      : name,
+                "description"   : description ?? "",
+                "listOrder"     : listOrder,
+                "tags"          : tags ?? "",
+                "model"         : model,
+                "objectIds"     : objectIds,
+                "shared"        : shared,
+                "permissions"   : permissions,
+                "incidentId"    : incidentId,
+                "networkId"     : networkId
+            ]
+        )
     }
 }
 

@@ -132,9 +132,9 @@ private struct TableViewIncidentSelector: View {
         Button {
             openIncidentSelect.toggle()
         } label: {
-            IncidentHeader(
+            IncidentHeaderView(
                 incident: selectedIncident,
-                drop: true,
+                showDropdown: true,
                 disabled: hasNoIncidents,
                 isLoading: isLoadingData,
                 isSpaceConstrained: true

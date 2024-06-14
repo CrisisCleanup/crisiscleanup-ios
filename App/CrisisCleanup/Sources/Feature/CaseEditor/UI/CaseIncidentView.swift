@@ -8,7 +8,7 @@ struct CaseIncidentView: View {
 
     var body: some View {
         HStack{
-            IncidentHeader(incident: incident)
+            IncidentHeaderView(incident: incident)
             Spacer()
             Group {
                 if isSyncing {

@@ -88,7 +88,7 @@ extension IncidentToIncidentLocationRecord: Codable, FetchableRecord, Persistabl
         case id, incidentLocationId
     }
 
-    static func inIds(ids: [Int64]) -> SQLSpecificExpressible {
+    static func filterByIds(ids: [Int64]) -> SQLSpecificExpressible {
         ids.contains(Columns.id)
     }
 }

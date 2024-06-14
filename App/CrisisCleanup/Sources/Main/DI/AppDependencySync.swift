@@ -67,6 +67,7 @@ extension MainComponent {
     var listsSyncer: ListsSyncer {
         AccountListsSyncer(
             networkDataSource: networkDataSource,
+            listsRepository: listsRepository,
             loggerFactory: loggerFactory
         )
     }

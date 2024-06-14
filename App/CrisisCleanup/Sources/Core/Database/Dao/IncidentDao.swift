@@ -32,8 +32,21 @@ public class IncidentDao {
     }
 
     func getIncidents(_ startAt: Date) throws -> [Incident] {
-        try reader.read { db in try fetchIncidentsStartingAt(db, startAt) }
-            .map { $0.asExternalModel() }
+        try reader.read { db in
+            try fetchIncidentsStartingAt(db, startAt)
+        }
+        .map { $0.asExternalModel() }
+    }
+
+    func getIncidents(_ ids: [Int64]) -> [Incident] {
+        try! reader.read { db in
+            try IncidentRecord
+                .all()
+                .filter(ids: ids)
+                .asRequest(of: PopulatedIncident.self)
+                .fetchAll(db)
+        }
+        .map { $0.asExternalModel() }
     }
 
     private func fetchIncidentsStartingAt(_ db: Database, _ startAt: Date) throws -> [PopulatedIncident] {
@@ -145,7 +158,7 @@ extension AppDatabase {
             }
 
             try IncidentToIncidentLocationRecord
-                .filter(IncidentToIncidentLocationRecord.inIds(ids: incidentIds))
+                .filter(IncidentToIncidentLocationRecord.filterByIds(ids: incidentIds))
                 .deleteAll(db)
             try locationXrs.forEach { xr in
                 _ = try xr.insertAndFetch(db, onConflict: .ignore)

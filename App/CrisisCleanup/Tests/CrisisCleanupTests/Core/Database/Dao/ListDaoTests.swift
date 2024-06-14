@@ -14,10 +14,7 @@ class ListDaoTests: XCTestCase {
         let initialized = try initializeTestDb()
         dbQueue = initialized.0
         appDb = initialized.1
-        listDao = ListDao(
-            appDb,
-            WorksiteTestUtil.silentAppLogger
-        )
+        listDao = ListDao(appDb)
 
         try await dbQueue.write { db in
             for incident in WorksiteTestUtil.testIncidents {
@@ -86,7 +83,9 @@ class ListDaoTests: XCTestCase {
         )
         XCTAssertEqual(populatedLists[1].asExternalModel().incident, expectedIncidentNameType)
 
-        try await listDao.deleteListsByNetworkIds(Set([978]))
+        try await dbQueue.write { db in
+            try ListRecord.deleteByNetworkIds(db, Set([978]))
+        }
         let notDeleted = listDao.getListsByNetworkIds([81, 532, 978])
             .map { $0.list }
             .sorted { a, b in a.networkId < b.networkId }

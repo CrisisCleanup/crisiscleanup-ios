@@ -1,6 +1,6 @@
 import Foundation
 
-struct CrisisCleanupList {
+public struct CrisisCleanupList {
     let id: Int64
     let updatedAt: Date
     let networkId: Int64

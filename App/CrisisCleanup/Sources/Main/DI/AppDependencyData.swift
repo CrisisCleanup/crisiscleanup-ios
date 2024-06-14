@@ -89,6 +89,10 @@ extension MainComponent {
         CaseHistoryDao(appDatabase)
     }
 
+    var listDao: ListDao {
+        ListDao(appDatabase)
+    }
+
     var syncLogDao: SyncLogDao {
         SyncLogDao(appDatabase)
     }
@@ -266,6 +270,8 @@ extension MainComponent {
         shared {
             OfflineFirstUsersRepository(
                 networkDataSource: networkDataSource,
+                personContactDao: personContactDao,
+                incidentOrganizationDao: organizationsDao,
                 loggerFactory: loggerFactory
             )
         }
@@ -288,7 +294,7 @@ extension MainComponent {
                 personContactDao: personContactDao,
                 worksiteDao: worksiteDao,
                 networkDataSource: networkDataSource,
-                incidentOrganizationDao: organizationsDao,
+                usersRepository: usersRepository,
                 translator: languageTranslationsRepository,
                 loggerFactory: loggerFactory
             )
@@ -322,6 +328,21 @@ extension MainComponent {
                 networkDataSource: networkDataSource,
                 accountDataRepository: accountDataRepository,
                 writeApi: writeApi,
+                loggerFactory: loggerFactory
+            )
+        }
+    }
+
+    public var listsRepository: ListsRepository {
+        shared {
+            CrisisCleanupListsRepository(
+                listDao: listDao,
+                incidentDao: incidentDao,
+                organizationDao: organizationsDao,
+                networkDataSource: networkDataSource,
+                personContactDao: personContactDao,
+                usersRepository: usersRepository,
+                worksiteDao: worksiteDao,
                 loggerFactory: loggerFactory
             )
         }

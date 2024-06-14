@@ -43,6 +43,7 @@ public protocol AppDependency: Dependency {
     var appSupportRepository: AppSupportRepository { get }
     var orgVolunteerRepository: OrgVolunteerRepository { get }
     var requestRedeployRepository: RequestRedeployRepository { get }
+    var listsRepository: ListsRepository { get }
 
     var authenticateViewBuilder: AuthenticateViewBuilder { get }
     var incidentSelectViewBuilder: IncidentSelectViewBuilder { get }

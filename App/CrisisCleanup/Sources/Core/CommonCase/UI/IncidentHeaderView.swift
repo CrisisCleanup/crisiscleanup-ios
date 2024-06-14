@@ -1,10 +1,8 @@
-//  Created by Anthony Aguilar on 7/5/23.
-
 import SwiftUI
 
-struct IncidentHeader: View {
+struct IncidentHeaderView: View {
     var incident: Incident
-    var drop: Bool?
+    var showDropdown: Bool = false
     var text = ""
     var disabled: Bool = false
     var isLoading: Bool = false
@@ -17,10 +15,10 @@ struct IncidentHeader: View {
                 disabled: disabled
             )
 
-            Text(text.isBlank ? incident.shortName : text)
+            Text(text.ifBlank { incident.shortName })
                 .fontHeader(size: isSpaceConstrained ? 2 : 1)
 
-            if drop != nil {
+            if showDropdown {
                 DropDownIcon()
             }
 

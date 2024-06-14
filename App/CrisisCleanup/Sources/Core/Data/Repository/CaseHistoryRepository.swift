@@ -14,7 +14,7 @@ class OfflineFirstCaseHistoryRepository: CaseHistoryRepository {
     private let personContactDao: PersonContactDao
     private let worksiteDao: WorksiteDao
     private let networkDataSource: CrisisCleanupNetworkDataSource
-    private let incidentOrganizationDao: IncidentOrganizationDao
+    private let usersRepository: UsersRepository
     private let translator: LanguageTranslationsRepository
     private let logger: AppLogger
 
@@ -29,7 +29,7 @@ class OfflineFirstCaseHistoryRepository: CaseHistoryRepository {
         personContactDao: PersonContactDao,
         worksiteDao: WorksiteDao,
         networkDataSource: CrisisCleanupNetworkDataSource,
-        incidentOrganizationDao: IncidentOrganizationDao,
+        usersRepository: UsersRepository,
         translator: LanguageTranslationsRepository,
         loggerFactory: AppLoggerFactory
     ) {
@@ -37,7 +37,7 @@ class OfflineFirstCaseHistoryRepository: CaseHistoryRepository {
         self.personContactDao = personContactDao
         self.worksiteDao = worksiteDao
         self.networkDataSource = networkDataSource
-        self.incidentOrganizationDao = incidentOrganizationDao
+        self.usersRepository = usersRepository
         self.translator = translator
         logger = loggerFactory.getLogger("case-history-repository")
         self.loadingWorksiteId = Publishers.CombineLatest(
@@ -88,7 +88,7 @@ class OfflineFirstCaseHistoryRepository: CaseHistoryRepository {
         try Task.checkCancellation()
 
         let userIds = userEventMap.keys
-        await queryUpdateUsers(Array(userIds))
+        await usersRepository.queryUpdateUsers(Array(userIds))
 
         try Task.checkCancellation()
 
@@ -115,23 +115,6 @@ class OfflineFirstCaseHistoryRepository: CaseHistoryRepository {
         return sortingData
             .sorted(by: { a, b in a.1 > b.1 })
             .map { $0.0 }
-    }
-
-    private func queryUpdateUsers(_ userIds: [Int64]) async {
-        do {
-            let networkUsers = try await networkDataSource.getUsers(userIds)
-            let records = networkUsers.compactMap { $0.asRecords() }
-
-            let organizations = records.map { $0.organization }
-            let affiliates = records.map { $0.organizationAffiliates }
-            try incidentOrganizationDao.saveMissing(organizations, affiliates)
-
-            let persons = records.map { $0.personContact }
-            let personOrganizations = records.map { $0.personToOrganization }
-            try personContactDao.savePersons(persons, personOrganizations)
-        } catch {
-            logger.logError(error)
-        }
     }
 
     func refreshEvents(_ worksiteId: Int64) async -> Int {

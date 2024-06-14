@@ -88,7 +88,6 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
             .filter { $0 > 0 }
             .map { organizationsRepository.streamPrimarySecondaryAreas($0).eraseToAnyPublisher() }
             .switchToLatest()
-            .assertNoFailure()
             .eraseToAnyPublisher()
     }
 

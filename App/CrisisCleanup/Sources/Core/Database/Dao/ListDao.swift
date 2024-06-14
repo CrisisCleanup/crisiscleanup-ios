@@ -5,16 +5,23 @@ import GRDB
 public class ListDao {
     private let database: AppDatabase
     internal let reader: DatabaseReader
-    private let appLogger: AppLogger
 
     init(
-        _ database: AppDatabase,
-        _ appLogger: AppLogger
+        _ database: AppDatabase
     ) {
         self.database = database
         reader = database.reader
+    }
 
-        self.appLogger = appLogger
+    func syncUpdateLists(
+        _ upsertLists: [ListRecord],
+        _ deleteNetworkIds: Set<Int64>
+    ) async throws {
+        try await database.syncUpdateLists(upsertLists, deleteNetworkIds)
+    }
+
+    func syncUpdateList(_ list: ListRecord) async throws {
+        try await database.syncUpdateList(list)
     }
 
     func streamIncidentLists(_ incidentId: Int64) -> AnyPublisher<[PopulatedList], Never> {
@@ -74,6 +81,20 @@ public class ListDao {
         }
     }
 
+    func streamListCount() -> any Publisher<Int, Never> {
+        ValueObservation
+            .tracking(fetchListCount(_:))
+            .removeDuplicates()
+            .shared(in: reader)
+            .publisher()
+            .assertNoFailure()
+    }
+
+    private func fetchListCount(_ db: Database) throws -> Int {
+        try ListRecord
+            .fetchCount(db)
+    }
+
     // TODO: Consider when changes have been made to the table in any way and refresh data
     func pageLists(
         pageSize: Int = 30,
@@ -95,10 +116,26 @@ public class ListDao {
             try ListRecord.deleteOne(db, id: id)
         }
     }
+}
 
-    func deleteListsByNetworkIds(_ networkIds: Set<Int64>) async throws {
-        try await database.dbWriter.write { db in
-            try ListRecord.deleteByNetworkIds(db, networkIds)
+extension AppDatabase {
+    fileprivate func syncUpdateLists(
+        _ records: [ListRecord],
+        _ deleteNetworkIds: Set<Int64>
+    ) async throws {
+        return try await dbWriter.write { db in
+            for record in records {
+                try record.syncUpsert(db)
+            }
+            try ListRecord.deleteByNetworkIds(db, deleteNetworkIds)
+        }
+    }
+
+    fileprivate func syncUpdateList(
+        _ record: ListRecord
+    ) async throws {
+        return try await dbWriter.write { db in
+            try record.syncUpsert(db)
         }
     }
 }
