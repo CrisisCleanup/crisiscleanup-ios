@@ -3,16 +3,31 @@ import SwiftUI
 struct ListsView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
+    @EnvironmentObject var router: NavigationRouter
+
     @ObservedObject var viewModel: ListsViewModel
 
     @State private var showReadOnlyDescription = false
     @State private var selectedTab = ListsTab.incidents
     @State private var animateIsRefreshing = false
 
+    @State private var explainSupportList = EmptyList
+
     private let listTabs = Array([
         ListsTab.incidents,
         ListsTab.all,
     ].enumerated())
+
+    private func onOpenList(_ list: CrisisCleanupList) {
+        switch list.model {
+        case .none,
+                .file,
+                .organizationIncidentTeam:
+            explainSupportList = EmptyList
+        default:
+            router.viewList(list)
+        }
+    }
 
     var body: some View {
         let tabTitles = viewModel.tabTitles
@@ -40,10 +55,12 @@ struct ListsView: View {
 
                 TabView(selection: $selectedTab) {
                     IncidentListsView(
+                        onOpenList: onOpenList,
                         animateIsRefreshing: $animateIsRefreshing
                     )
                     .tag(ListsTab.incidents)
                     AllListsView(
+                        onOpenList: onOpenList,
                         animateIsRefreshing: $animateIsRefreshing
                     )
                     .tag(ListsTab.all)
@@ -69,6 +86,10 @@ struct ListsView: View {
                     Text(t.t("~~Lists (in this app) are currently read-only. Manage lists using Crisis Cleanup on the browser."))
                 }
             }
+
+            if explainSupportList.id != EmptyList.id {
+                // TODO: Show dialog where list is not supported
+            }
         }
         .hideNavBarUnderSpace()
         .toolbar {
@@ -92,8 +113,9 @@ struct ListsView: View {
 private struct IncidentListsView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var viewModel: ListsViewModel
+
+    var onOpenList: (CrisisCleanupList) -> Void
 
     @Binding var animateIsRefreshing: Bool
 
@@ -116,7 +138,7 @@ private struct IncidentListsView: View {
                         ListItemSummaryView(list: list)
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                router.viewList(list)
+                                onOpenList(list)
                             }
                     }
                 }
@@ -137,8 +159,9 @@ private struct IncidentListsView: View {
 private struct AllListsView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var viewModel: ListsViewModel
+
+    var onOpenList: (CrisisCleanupList) -> Void
 
     @Binding var animateIsRefreshing: Bool
 
@@ -158,7 +181,7 @@ private struct AllListsView: View {
                         )
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            router.viewList(listData)
+                            onOpenList(listData)
                         }
                     }
                 }
