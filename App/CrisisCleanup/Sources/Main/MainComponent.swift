@@ -304,9 +304,9 @@ public class MainComponent: BootstrapComponent,
 
     lazy var listsComponent = ListsComponent(parent: self, routerObserver: routerObserver)
 
-    public var listsView: AnyView {
-        listsComponent.listsView
-    }
+    public var listsView: AnyView { listsComponent.listsView }
+
+    public func viewListView(_ listId: Int64) -> AnyView { listsComponent.viewListView(listId) }
 
     // MARK: Sync insights
 

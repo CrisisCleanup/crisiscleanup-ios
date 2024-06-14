@@ -185,6 +185,8 @@ struct MainView: View {
                                 requestRedeployViewBuilder.requestRedeployView
                             case .lists:
                                 listsViewBuilder.listsView
+                            case .viewList(let listId):
+                                listsViewBuilder.viewListView(listId)
                             case .syncInsights:
                                 if viewModel.isNotProduction {
                                     syncInsightsViewBuilder.syncInsightsView
