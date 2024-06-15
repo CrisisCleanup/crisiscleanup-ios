@@ -516,10 +516,11 @@ public class WorksiteDao {
         try reader.read { db in try fetchLocalWorksite(db, id) }
     }
 
-    func getWorksitesByNetworkId(_ ids: [Int64]) -> [PopulatedWorksite] {
+    func getWorksitesByNetworkId(_ ids: Set<Int64>) -> [PopulatedWorksite] {
         try! reader.read { db in
             try WorksiteRootRecord
-                .filter(ids: ids)
+                .all()
+                .networkIdsIn(ids)
                 .including(required: WorksiteRootRecord.worksite)
                 .including(all: WorksiteRootRecord.workTypes)
                 .asRequest(of: PopulatedWorksite.self)

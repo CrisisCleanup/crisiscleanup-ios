@@ -3,6 +3,7 @@ import Foundation
 
 class ViewListViewModel: ObservableObject {
     private let listsRepository: ListsRepository
+    let phoneNumberParser: PhoneNumberParser
     private let translator: KeyTranslator
     private let logger: AppLogger
 
@@ -19,11 +20,13 @@ class ViewListViewModel: ObservableObject {
 
     init(
         listsRepository: ListsRepository,
+        phoneNumberParser: PhoneNumberParser,
         translator: KeyTranslator,
         loggerFactory: AppLoggerFactory,
         listId: Int64
     ) {
         self.listsRepository = listsRepository
+        self.phoneNumberParser = phoneNumberParser
         self.translator = translator
         logger = loggerFactory.getLogger("list")
         self.listId = listId

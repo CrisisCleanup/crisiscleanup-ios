@@ -7,6 +7,8 @@ struct ViewListView: View {
 
     @State private var animateIsLoading = true
 
+    @State private var phoneCallNumbers = [ParsedPhoneNumber]()
+
     var body: some View {
         let viewState = viewModel.viewState
         ZStack {
@@ -19,6 +21,8 @@ struct ViewListView: View {
                 }
             } else if !viewState.isLoading {
                 ListDetailView(
+                    phoneCallNumbers: $phoneCallNumbers,
+                    phoneNumberParser: viewModel.phoneNumberParser,
                     list: viewState.list,
                     objectData: viewState.objectData
                 )
@@ -26,6 +30,12 @@ struct ViewListView: View {
 
             if animateIsLoading {
                 ProgressView()
+            }
+
+            if phoneCallNumbers.isNotEmpty {
+                PhoneCallDialog(phoneNumbers: phoneCallNumbers) {
+                    phoneCallNumbers = []
+                }
             }
         }
         .onChange(of: viewState.isLoading) { newValue in
@@ -45,6 +55,9 @@ private struct ListDetailView: View {
 
     @EnvironmentObject var router: NavigationRouter
 
+    @Binding var phoneCallNumbers: [ParsedPhoneNumber]
+
+    var phoneNumberParser: PhoneNumberParser
     var list: CrisisCleanupList
     var objectData: [Any?] = []
 
@@ -83,13 +96,23 @@ private struct ListDetailView: View {
                         case .incident:
                             IncidentItemsView(listData: objectData)
                         case .list:
-                            ListItemsView(listData: objectData)
+                            ListItemsView(listData: objectData) { list in
+                                // TODO: Route to list
+                                print("Open list \(list)")
+                            }
                         case .organization:
                             OrganizationItemsView(listData: objectData)
                         case .user:
                             UserItemsView(listData: objectData)
                         case .worksite:
-                            WorksiteItemsView(listData: objectData)
+                            WorksiteItemsView(
+                                listData: objectData,
+                                phoneNumberParser: phoneNumberParser,
+                                phoneCallNumbers: $phoneCallNumbers
+                            ) { worksite in
+                                // TODO: Route to case
+                                print("Open Case \(worksite)")
+                            }
                         default:
                             Text(t.t("~~This list is not supported by the app."))
                                 .listItemModifier()
@@ -128,23 +151,25 @@ private struct IncidentItemsView: View {
                     .listItemModifier()
             } else {
                 MissingItemView()
-                    .id("missing-item")
             }
         }
     }
 }
 
 private struct ListItemsView: View {
-    var lists: [(Int64, CrisisCleanupList?)] = []
+    private let lists: [(Int64, CrisisCleanupList?)]
+    private let onOpenList: (CrisisCleanupList) -> Void
 
-    // TODO: Open list
-
-    init(listData: [Any?]) {
+    init(
+        listData: [Any?],
+        onOpenList: @escaping (CrisisCleanupList) -> Void
+    ) {
         lists = listData.enumerated()
             .map { i, v in
                 let value = v as? CrisisCleanupList
                 return (value?.id ?? Int64(-i), value)
             }
+        self.onOpenList = onOpenList
     }
 
     var body: some View {
@@ -155,12 +180,10 @@ private struct ListItemsView: View {
                     showIncident: true
                 )
                 .onTapGesture {
-                    // TODO: Open to list
-                    print("Open list \(list)")
+                    onOpenList(list)
                 }
             } else {
                 MissingItemView()
-                    .id("missing-item")
             }
         }
     }
@@ -184,7 +207,6 @@ private struct OrganizationItemsView: View {
                     .listItemModifier()
             } else {
                 MissingItemView()
-                    .id("missing-item")
             }
         }
     }
@@ -219,31 +241,83 @@ private struct UserItemsView: View {
                 .listItemModifier()
             } else {
                 MissingItemView()
-                    .id("missing-item")
             }
         }
     }
 }
 
 private struct WorksiteItemsView: View {
-    var worksites: [(Int64, Worksite?)] = []
+    private let worksites: [(Int64, Worksite?)]
+    private let phoneNumberParser: PhoneNumberParser
+    private let onOpenCase: (Worksite) -> Void
 
-    init(listData: [Any?]) {
+    @Binding var phoneCallNumbers: [ParsedPhoneNumber]
+
+    @State private var showWrongLocationDialog = false
+
+    init(
+        listData: [Any?],
+        phoneNumberParser: PhoneNumberParser,
+        phoneCallNumbers: Binding<[ParsedPhoneNumber]>,
+        onOpenCase: @escaping (Worksite) -> Void
+    ) {
         worksites = listData.enumerated()
             .map { i, v in
                 let value = v as? Worksite
-                return (value?.id ?? Int64(-i), value)
+                let id = if let worksite = value,
+                    worksite != EmptyWorksite {
+                        worksite.id
+                    } else {
+                        Int64(-i)
+                    }
+                return (id, value)
             }
+        self.phoneNumberParser = phoneNumberParser
+        self._phoneCallNumbers = phoneCallNumbers
+        self.onOpenCase = onOpenCase
     }
 
     var body: some View {
         ForEach(worksites, id: \.0) { (_, worksite) in
-            if let worksite = worksite {
-                Text(worksite.name)
-                    .listItemModifier()
+            if let worksite = worksite,
+               worksite != EmptyWorksite {
+                let (fullAddress, addressMapItem) = worksite.addressQuery
+
+                VStack(alignment: .leading, spacing: appTheme.gridItemSpacing) {
+                    Text(worksite.caseNumber)
+                        .fontHeader3()
+
+                    WorksiteNameView(name: worksite.name)
+
+                    WorksiteAddressView(fullAddress: fullAddress) {
+                        if worksite.hasWrongLocationFlag {
+                            ExplainWrongLocationDialog(showDialog: $showWrongLocationDialog)
+                        }
+                    }
+
+                    HStack {
+                        WorksiteCallButton(
+                            phone1: worksite.phone1,
+                            phone2: worksite.phone2,
+                            enable: true,
+                            phoneNumberParser: phoneNumberParser
+                        ) { parsedNumbers in
+                            phoneCallNumbers = parsedNumbers
+                        }
+
+                        WorksiteAddressButton(
+                            addressMapItem: addressMapItem,
+                            enable: true
+                        )
+                    }
+                }
+                // TODO: Blank space opens on tap
+                .onTapGesture {
+                    onOpenCase(worksite)
+                }
+                .listItemModifier()
             } else {
                 MissingItemView()
-                    .id("missing-item")
             }
         }
     }

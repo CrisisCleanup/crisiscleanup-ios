@@ -187,8 +187,9 @@ class CrisisCleanupListsRepository: ListsRepository {
             return contactLookup
 
         case .worksite:
+            let uniqueIds = Set(objectIds)
             func getNetworkWorksiteLookup() -> [Int64: Worksite] {
-                worksiteDao.getWorksitesByNetworkId(objectIds)
+                worksiteDao.getWorksitesByNetworkId(uniqueIds)
                     .map { $0.asExternalModel() }
                     .filter { $0.networkId > 0 }
                     .associateBy { $0.networkId }
