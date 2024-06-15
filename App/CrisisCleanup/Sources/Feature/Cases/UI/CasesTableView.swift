@@ -6,6 +6,8 @@ struct CasesTableView: View {
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var viewModel: CasesViewModel
 
+    @Binding var phoneCallNumbers: [ParsedPhoneNumber]
+
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
     let hasNoIncidents: Bool
 
@@ -90,7 +92,8 @@ struct CasesTableView: View {
                                 onWorksiteClaimAction: { claimAction in
                                     viewModel.onWorksiteClaimAction(worksite, claimAction)
                                 },
-                                showWrongLocationDialog: $showWrongLocationDialog
+                                showWrongLocationDialog: $showWrongLocationDialog,
+                                phoneCallNumbers: $phoneCallNumbers
                             )
                             .if (index == 0) {
                                 $0.id("case-table-first")
@@ -211,6 +214,7 @@ private struct CaseTableItemCard: View {
     let onWorksiteClaimAction: (TableWorksiteClaimAction) -> Void
 
     @Binding var showWrongLocationDialog: Bool
+    @Binding var phoneCallNumbers: [ParsedPhoneNumber]
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -250,23 +254,12 @@ private struct CaseTableItemCard: View {
             }
             .padding(.bottom, 4)
 
-            HStack {
-                Image(systemName: "person.fill")
-                    .foregroundColor(Color.gray)
-
-                Text(worksite.name)
-            }
-            .padding(.bottom, 4)
+            WorksiteNameView(name: worksite.name)
+                .padding(.bottom, 4)
 
             let (fullAddress, addressMapItem) = worksite.addressQuery
 
-            HStack {
-                Image(systemName: "mappin")
-                    .foregroundColor(Color.gray)
-
-                Text(fullAddress)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
+            WorksiteAddressView(fullAddress: fullAddress) {
                 if worksite.hasWrongLocationFlag {
                     ExplainWrongLocationDialog(showDialog: _showWrongLocationDialog)
                 }
@@ -274,31 +267,19 @@ private struct CaseTableItemCard: View {
             .padding(.bottom, 4)
 
             HStack {
-                Button {
-                    // TODO: Present multiple phone numbers if defined
-                    let urlString =  "tel:\(worksite.phone1)"
-                    if let url = URL(string: urlString) {
-                        UIApplication.shared.open(url, options: [:], completionHandler: nil)
-                    }
-                } label : {
-                    Image(systemName: "phone.fill")
-                    // TODO: Common dimensions
-                        .frame(width: 75, height: 35)
-                        .fontHeader3()
-                        .roundedCorners()
+                WorksiteCallButton(
+                    phone1: worksite.phone1,
+                    phone2: worksite.phone2,
+                    enable: isEditable,
+                    phoneNumberParser: viewModel.phoneNumberParser
+                ) { parsedNumbers in
+                    phoneCallNumbers = parsedNumbers
                 }
-                .tint(.black)
 
-                Button {
-                    addressMapItem.openInMaps()
-                } label : {
-                    Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
-                    // TODO: Common dimensions
-                        .frame(width: 75, height: 35)
-                        .fontHeader3()
-                        .roundedCorners()
-                }
-                .tint(.black)
+                WorksiteAddressButton(
+                    addressMapItem: addressMapItem,
+                    enable: isEditable
+                )
 
                 Spacer()
 

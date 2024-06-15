@@ -88,7 +88,22 @@ struct ListsView: View {
             }
 
             if explainSupportList.id != EmptyList.id {
-                // TODO: Show dialog where list is not supported
+                AlertDialog(
+                    title: t.t("~~Unsupported list"),
+                    positiveActionText: t.t("actions.ok"),
+                    negativeActionText: "",
+                    dismissDialog: {
+                        explainSupportList = EmptyList
+                    },
+                    positiveAction: {
+                        explainSupportList = EmptyList
+                    }
+                ) {
+                    Text(
+                        t.t("~~{list_name} list is not yet supported on this app.")
+                            .replacingOccurrences(of: "{list_name}", with: explainSupportList.name)
+                    )
+                }
             }
         }
         .hideNavBarUnderSpace()

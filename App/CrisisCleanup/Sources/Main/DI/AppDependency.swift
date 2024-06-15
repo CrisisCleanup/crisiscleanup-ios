@@ -9,6 +9,7 @@ public protocol AppDependency: Dependency {
     var networkMonitor: NetworkMonitor { get }
 
     var inputValidator: InputValidator { get }
+    var phoneNumberParser: PhoneNumberParser { get }
 
     var qrCodeGenerator: QrCodeGenerator { get }
 
@@ -79,7 +80,8 @@ public protocol AppDependency: Dependency {
 extension MainComponent {
     public var appVersionProvider: AppVersionProvider { providesAppVersionProvider }
 
-    public var inputValidator: InputValidator { shared { CommonInputValidator() } }
+    public var inputValidator: InputValidator { CommonInputValidator() }
+    public var phoneNumberParser: PhoneNumberParser { PhoneNumberRegexParser() }
 
     var providesAppVersionProvider: AppVersionProvider { shared { AppleAppVersionProvider() } }
 
