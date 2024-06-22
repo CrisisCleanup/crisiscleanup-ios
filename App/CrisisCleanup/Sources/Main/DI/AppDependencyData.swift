@@ -338,6 +338,7 @@ extension MainComponent {
             CrisisCleanupListsRepository(
                 listDao: listDao,
                 incidentDao: incidentDao,
+                incidentsRepository: incidentsRepository,
                 organizationDao: organizationsDao,
                 networkDataSource: networkDataSource,
                 personContactDao: personContactDao,

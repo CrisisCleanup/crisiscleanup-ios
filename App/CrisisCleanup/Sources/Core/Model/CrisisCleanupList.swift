@@ -13,6 +13,7 @@ public struct CrisisCleanupList {
     let objectIds: [Int64]
     let shared: ListShare
     let permission: ListPermission
+    let incidentId: Int64
     let incident: IncidentIdNameType?
 }
 
@@ -29,6 +30,7 @@ let EmptyList = CrisisCleanupList(
     objectIds: [],
     shared: .private,
     permission: .read,
+    incidentId: EmptyIncident.id,
     incident: IncidentIdNameType(id: EmptyIncident.id, name: "", shortName: "", disasterLiteral: "")
 )
 

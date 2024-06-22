@@ -19,6 +19,7 @@ public protocol ListsRepository {
 class CrisisCleanupListsRepository: ListsRepository {
     private let listDao: ListDao
     private let incidentDao: IncidentDao
+    private let incidentsRepository: IncidentsRepository
     private let organizationDao: IncidentOrganizationDao
     private let networkDataSource: CrisisCleanupNetworkDataSource
     private let personContactDao: PersonContactDao
@@ -29,6 +30,7 @@ class CrisisCleanupListsRepository: ListsRepository {
     init(
         listDao: ListDao,
         incidentDao: IncidentDao,
+        incidentsRepository: IncidentsRepository,
         organizationDao: IncidentOrganizationDao,
         networkDataSource: CrisisCleanupNetworkDataSource,
         personContactDao: PersonContactDao,
@@ -38,6 +40,7 @@ class CrisisCleanupListsRepository: ListsRepository {
     ) {
         self.listDao = listDao
         self.incidentDao = incidentDao
+        self.incidentsRepository = incidentsRepository
         self.organizationDao = organizationDao
         self.networkDataSource = networkDataSource
         self.personContactDao = personContactDao
@@ -106,6 +109,16 @@ class CrisisCleanupListsRepository: ListsRepository {
     }
 
     func getListObjectData(_ list: CrisisCleanupList) async -> [Int64: Any] {
+        if list.incidentId > 0,
+           list.incident == nil {
+            do {
+                try await incidentsRepository.pullIncident(list.incidentId)
+            } catch {
+                logger.logError(error)
+                return [:]
+            }
+        }
+
         let objectIds = list.objectIds
 
         switch list.model {
@@ -197,7 +210,6 @@ class CrisisCleanupListsRepository: ListsRepository {
 
             var networkWorksiteLookup = getNetworkWorksiteLookup()
             if (networkWorksiteLookup.count != objectIds.count) {
-                // TODO: Validate incident exists locally as well
                 let worksiteIds = objectIds.filter { !networkWorksiteLookup.keys.contains($0) }
                 do {
                     let syncedAt = Date.now

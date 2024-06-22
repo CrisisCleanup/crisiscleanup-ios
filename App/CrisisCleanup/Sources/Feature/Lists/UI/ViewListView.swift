@@ -107,6 +107,7 @@ private struct ListDetailView: View {
                             UserItemsView(listData: objectData)
                         case .worksite:
                             WorksiteItemsView(
+                                incidentId: list.incidentId,
                                 listData: objectData,
                                 phoneNumberParser: phoneNumberParser,
                                 phoneCallNumbers: $phoneCallNumbers
@@ -248,6 +249,9 @@ private struct UserItemsView: View {
 }
 
 private struct WorksiteItemsView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    private let incidentId: Int64
     private let worksites: [(Int64, Worksite?)]
     private let phoneNumberParser: PhoneNumberParser
     private let onOpenCase: (Worksite) -> Void
@@ -257,11 +261,13 @@ private struct WorksiteItemsView: View {
     @State private var showWrongLocationDialog = false
 
     init(
+        incidentId: Int64,
         listData: [Any?],
         phoneNumberParser: PhoneNumberParser,
         phoneCallNumbers: Binding<[ParsedPhoneNumber]>,
         onOpenCase: @escaping (Worksite) -> Void
     ) {
+        self.incidentId = incidentId
         worksites = listData.enumerated()
             .map { i, v in
                 let value = v as? Worksite
@@ -280,43 +286,55 @@ private struct WorksiteItemsView: View {
 
     var body: some View {
         ForEach(worksites, id: \.0) { (_, worksite) in
-            if let worksite = worksite,
-               worksite != EmptyWorksite {
-                let (fullAddress, addressMapItem) = worksite.addressQuery
+            if let worksite = worksite {
+                if worksite == EmptyWorksite {
+                    MissingItemView()
 
-                VStack(alignment: .leading, spacing: appTheme.gridItemSpacing) {
-                    Text(worksite.caseNumber)
-                        .fontHeader3()
+                } else if worksite.incidentId == incidentId {
+                    let (fullAddress, addressMapItem) = worksite.addressQuery
 
-                    WorksiteNameView(name: worksite.name)
+                    VStack(alignment: .leading, spacing: appTheme.gridItemSpacing) {
+                        Text(worksite.caseNumber)
+                            .fontHeader3()
 
-                    WorksiteAddressView(fullAddress: fullAddress) {
-                        if worksite.hasWrongLocationFlag {
-                            ExplainWrongLocationDialog(showDialog: $showWrongLocationDialog)
-                        }
-                    }
+                        WorksiteNameView(name: worksite.name)
 
-                    HStack {
-                        WorksiteCallButton(
-                            phone1: worksite.phone1,
-                            phone2: worksite.phone2,
-                            enable: true,
-                            phoneNumberParser: phoneNumberParser
-                        ) { parsedNumbers in
-                            phoneCallNumbers = parsedNumbers
+                        WorksiteAddressView(fullAddress: fullAddress) {
+                            if worksite.hasWrongLocationFlag {
+                                ExplainWrongLocationDialog(showDialog: $showWrongLocationDialog)
+                            }
                         }
 
-                        WorksiteAddressButton(
-                            addressMapItem: addressMapItem,
-                            enable: true
-                        )
+                        HStack {
+                            WorksiteCallButton(
+                                phone1: worksite.phone1,
+                                phone2: worksite.phone2,
+                                enable: true,
+                                phoneNumberParser: phoneNumberParser
+                            ) { parsedNumbers in
+                                phoneCallNumbers = parsedNumbers
+                            }
+
+                            WorksiteAddressButton(
+                                addressMapItem: addressMapItem,
+                                enable: true
+                            )
+                        }
                     }
+                    // TODO: Open Case when tapping blank space
+                    .onTapGesture {
+                        onOpenCase(worksite)
+                    }
+                    .listItemModifier()
+
+                } else {
+                    Text(
+                        t.t("~~Case {case_number} is not under this Incident.")
+                            .replacingOccurrences(of: "{case_number}", with: worksite.caseNumber)
+                    )
+                    .listItemModifier()
                 }
-                // TODO: Blank space opens on tap
-                .onTapGesture {
-                    onOpenCase(worksite)
-                }
-                .listItemModifier()
+
             } else {
                 MissingItemView()
             }

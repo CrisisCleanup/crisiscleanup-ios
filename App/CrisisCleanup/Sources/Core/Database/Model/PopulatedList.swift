@@ -32,6 +32,7 @@ struct PopulatedList: Equatable, Decodable, FetchableRecord {
             objectIds: numericObjectIds,
             shared: listShareFromLiteral(list.shared),
             permission: listPermissionFromLiteral(list.permissions),
+            incidentId: list.incidentId ?? EmptyIncident.id,
             incident: incidentNameType
         )
     }
