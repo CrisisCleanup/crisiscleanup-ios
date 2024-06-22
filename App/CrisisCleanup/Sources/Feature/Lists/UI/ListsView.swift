@@ -232,8 +232,6 @@ internal struct ListItemSummaryView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: appTheme.gridItemSpacing) {
-            Color.clear
-
             HStack(spacing: appTheme.gridItemSpacing) {
                 list.ListIcon
                 Text("\(list.name) (\(list.objectIds.count))")

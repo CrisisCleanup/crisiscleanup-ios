@@ -18,7 +18,7 @@ public struct NetworkList: Codable, Equatable {
     let listOrder: Int64?
     let tags: String?
     let model: String
-    let objectIds: [Int64]
+    let objectIds: [Int64]?
     let shared: String
     let permissions: String
     let incident: Int64?

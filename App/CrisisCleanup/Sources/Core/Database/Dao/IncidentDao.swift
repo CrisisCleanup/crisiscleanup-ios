@@ -43,6 +43,7 @@ public class IncidentDao {
             try IncidentRecord
                 .all()
                 .filter(ids: ids)
+                .including(all: IncidentRecord.locations)
                 .asRequest(of: PopulatedIncident.self)
                 .fetchAll(db)
         }

@@ -13,7 +13,7 @@ extension NetworkList {
             listOrder: listOrder,
             tags: tags,
             model: model,
-            objectIds: objectIds.map { String($0) }.joined(separator: ","),
+            objectIds: (objectIds ?? []).map { String($0) }.joined(separator: ","),
             shared: shared,
             permissions: permissions,
             incidentId: incident

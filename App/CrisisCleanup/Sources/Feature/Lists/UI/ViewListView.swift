@@ -66,6 +66,8 @@ private struct ListDetailView: View {
             if objectData.isEmpty {
                 Text(t.t("~~This list is not supported by the app or has no items."))
                     .listItemModifier()
+
+                Spacer()
             } else {
                 ScrollView {
                     LazyVStack(alignment: .leading) {
@@ -97,8 +99,7 @@ private struct ListDetailView: View {
                             IncidentItemsView(listData: objectData)
                         case .list:
                             ListItemsView(listData: objectData) { list in
-                                // TODO: Route to list
-                                print("Open list \(list)")
+                                router.viewList(list)
                             }
                         case .organization:
                             OrganizationItemsView(listData: objectData)

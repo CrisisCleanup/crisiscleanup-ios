@@ -58,7 +58,11 @@ class ViewListViewModel: ObservableObject {
                 }
 
                 let lookup = await self.listsRepository.getListObjectData(list)
-                let objectData = list.objectIds.map {
+                var objectIds = list.objectIds
+                if list.model == .list {
+                    objectIds = objectIds.filter { $0 != list.networkId }
+                }
+                let objectData = objectIds.map {
                     lookup[$0]
                 }
                 return ViewListViewState(list: list, objectData: objectData)
