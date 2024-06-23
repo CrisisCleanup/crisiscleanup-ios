@@ -43,6 +43,15 @@ public class ListDao {
             .fetchAll(db)
     }
 
+    func getIncidentListCount(_ incidentId: Int64) -> Int {
+        try! reader.read { db in
+            try ListRecord
+                .all()
+                .filterByIncident(incidentId)
+                .fetchCount(db)
+        }
+    }
+
     func streamList(_ id: Int64) -> AnyPublisher<PopulatedList?, Never> {
         ValueObservation
             .tracking({ db in try self.fetchList(db, id) })

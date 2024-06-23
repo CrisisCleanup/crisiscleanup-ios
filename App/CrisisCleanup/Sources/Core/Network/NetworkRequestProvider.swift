@@ -206,7 +206,7 @@ extension NetworkRequestProvider {
 
     var list: NetworkRequest {
         NetworkRequest(
-            apiUrl("list"),
+            apiUrl("lists"),
             addTokenHeader: true
         )
     }

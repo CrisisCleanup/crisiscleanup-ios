@@ -25,6 +25,8 @@ class ListsViewModel: ObservableObject {
     private let allListIdsSubject = CurrentValueSubject<[Int64], Never>([])
     @Published private(set) var allListIds = [Int64]()
 
+    @Published private(set) var initialListsTab = ListsTab.incidents
+
     private let listDataLock = NSLock()
     private var listLookup = [Int64: CrisisCleanupList]()
 
@@ -152,6 +154,15 @@ class ListsViewModel: ObservableObject {
 
                 await pageNextListData(true)
             }
+
+            do {
+                let incidentId = try await incidentSelector.incident.eraseToAnyPublisher().asyncFirst().id
+                if listsRepository.getIncidentListCount(incidentId) == 0 {
+                    Task { @MainActor in
+                        initialListsTab = ListsTab.all
+                    }
+                }
+            } catch {}
         }
     }
 

@@ -3,6 +3,7 @@ import Foundation
 
 public protocol ListsRepository {
     func streamIncidentLists(_ incidentId: Int64) -> any Publisher<[CrisisCleanupList], Never>
+    func getIncidentListCount(_ incidentId: Int64) -> Int
 
     func streamList(_ listId: Int64) -> any Publisher<CrisisCleanupList, Never>
 
@@ -53,6 +54,10 @@ class CrisisCleanupListsRepository: ListsRepository {
         listDao.streamIncidentLists(incidentId).map { records in
             records.map { $0.asExternalModel() }
         }
+    }
+
+    func getIncidentListCount(_ incidentId: Int64) -> Int {
+        listDao.getIncidentListCount(incidentId)
     }
 
     func streamList(_ listId: Int64) -> any Publisher<CrisisCleanupList, Never> {

@@ -58,6 +58,8 @@ class ListsComponent: Component<AppDependency>, ListsViewBuilder {
         if isDifferentList {
             _viewListViewModel = ViewListViewModel(
                 listsRepository: dependency.listsRepository,
+                incidentsRepository: dependency.incidentsRepository,
+                incidentSelector: dependency.incidentSelector,
                 phoneNumberParser: dependency.phoneNumberParser,
                 translator: dependency.translator,
                 loggerFactory: dependency.loggerFactory,

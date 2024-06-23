@@ -117,4 +117,8 @@ extension DerivableRequest<ListRecord> {
     func filterByNetworkIds(_ networkIds: Set<Int64>) -> Self {
         filter(networkIds.contains(ListRecord.Columns.networkId))
     }
+
+    func filterByIncident(_ incidentId: Int64) -> Self {
+        filter(ListRecord.Columns.incidentId == incidentId)
+    }
 }

@@ -119,6 +119,9 @@ struct ListsView: View {
                     }
             }
         }
+        .onChange(of: viewModel.initialListsTab) { newValue in
+            selectedTab = newValue
+        }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)

@@ -3,6 +3,8 @@ import SwiftUI
 struct ViewListView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
+    @EnvironmentObject var router: NavigationRouter
+
     @ObservedObject var viewModel: ViewListViewModel
 
     @State private var animateIsLoading = true
@@ -11,6 +13,7 @@ struct ViewListView: View {
 
     var body: some View {
         let viewState = viewModel.viewState
+
         ZStack {
             if viewState.errorMessage.isNotBlank {
                 VStack(alignment: .leading) {
@@ -25,7 +28,9 @@ struct ViewListView: View {
                     phoneNumberParser: viewModel.phoneNumberParser,
                     list: viewState.list,
                     objectData: viewState.objectData
-                )
+                ) {
+                    viewModel.onOpenWorksite($0)
+                }
             }
 
             if animateIsLoading {
@@ -37,10 +42,52 @@ struct ViewListView: View {
                     phoneCallNumbers = []
                 }
             }
+
+            let openWorksiteError = viewModel.openWorksiteError
+            if openWorksiteError.isNotBlank {
+                let closeDialog = { viewModel.clearOpenWorksiteError() }
+                AlertDialog(
+                    title: t.t("info.error"),
+                    positiveActionText: t.t("actions.close"),
+                    negativeActionText: "",
+                    dismissDialog: closeDialog,
+                    positiveAction: closeDialog
+                ) {
+                    Text(openWorksiteError)
+                        .listItemModifier()
+                }
+            }
+
+            let changeIncidentConfirmMessage = viewModel.changeIncidentConfirmMessage
+            if changeIncidentConfirmMessage.isNotBlank {
+                let closeDialog = { viewModel.clearChangeIncident() }
+                AlertDialog(
+                    title: t.t("~~Confirm change Incident"),
+                    positiveActionText: t.t("actions.continue"),
+                    negativeActionText: t.t("actions.cancel"),
+                    dismissDialog: closeDialog,
+                    negativeAction: closeDialog,
+                    positiveAction: {
+                        viewModel.onConfirmChangeIncident()
+                    }
+                ) {
+                    Text(changeIncidentConfirmMessage)
+                        .listItemModifier()
+                }
+            }
         }
-        .onChange(of: viewState.isLoading) { newValue in
+        .onChange(of: viewModel.showLoading) { newValue in
             withAnimation {
                 animateIsLoading = newValue
+            }
+        }
+        .onChange(of: viewModel.openWorksiteId) { newValue in
+            if newValue != ExistingWorksiteIdentifierNone {
+                router.viewCase(
+                    incidentId: newValue.incidentId,
+                    worksiteId: newValue.worksiteId
+                )
+                viewModel.clearPendingWorksiteChange()
             }
         }
         .screenTitle(viewModel.screenTitle)
@@ -60,6 +107,7 @@ private struct ListDetailView: View {
     var phoneNumberParser: PhoneNumberParser
     var list: CrisisCleanupList
     var objectData: [Any?] = []
+    var onOpenWorksite: (Worksite) -> Void
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -111,9 +159,8 @@ private struct ListDetailView: View {
                                 listData: objectData,
                                 phoneNumberParser: phoneNumberParser,
                                 phoneCallNumbers: $phoneCallNumbers
-                            ) { worksite in
-                                // TODO: Route to case
-                                print("Open Case \(worksite)")
+                            ) {
+                                onOpenWorksite($0)
                             }
                         default:
                             Text(t.t("~~This list is not supported by the app."))
