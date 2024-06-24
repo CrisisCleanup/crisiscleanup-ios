@@ -23,7 +23,7 @@ struct ListsView: View {
         case .none,
                 .file,
                 .organizationIncidentTeam:
-            explainSupportList = EmptyList
+            explainSupportList = list
         default:
             router.viewList(list)
         }
@@ -83,7 +83,7 @@ struct ListsView: View {
                         showReadOnlyDescription = false
                     }
                 ) {
-                    Text(t.t("~~Lists (in this app) are currently read-only. Manage lists using Crisis Cleanup on the browser."))
+                    Text(t.t("~~Lists (in this app) are currently read-only. Manage lists using Crisis Cleanup in a web browser."))
                 }
             }
 
