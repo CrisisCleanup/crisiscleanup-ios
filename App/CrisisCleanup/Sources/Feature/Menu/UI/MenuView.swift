@@ -22,76 +22,75 @@ struct MenuView: View {
             .tint(.black)
             .padding()
 
-            ScrollView {
-                VStack {
-                    GettingStartedView(
-                        showContent: viewModel.menuItemVisibility.showGettingStartedVideo,
-                        hideGettingStartedVideo: { viewModel.showGettingStartedVideo(false) },
-                        gettingStartedUrl: viewModel.gettingStartedVideoUrl,
-                        isNonProduction: !viewModel.isProduction,
-                        toggleGettingStartedSection: { viewModel.showGettingStartedVideo(true) }
+            let showGettingStartedVideo = viewModel.menuItemVisibility.showGettingStartedVideo
+            ScrollCenterContent {
+                GettingStartedView(
+                    showContent: showGettingStartedVideo,
+                    hideGettingStartedVideo: { viewModel.showGettingStartedVideo(false) },
+                    gettingStartedUrl: viewModel.gettingStartedVideoUrl,
+                    isNonProduction: !viewModel.isProduction,
+                    toggleGettingStartedSection: { viewModel.showGettingStartedVideo(true) }
+                )
+
+                Button {
+                    router.openLists()
+                } label: {
+                    Text(t.t("~~Lists"))
+                        .padding(.horizontal)
+                }
+                .styleOutline()
+                .padding()
+
+                Button {
+                    router.openInviteTeammate()
+                } label: {
+                    Text(t.t("usersVue.invite_new_user"))
+                        .padding(.horizontal)
+                }
+                .stylePrimary()
+                .padding([.horizontal, .bottom])
+
+                Button {
+                    router.openRequesetRedeploy()
+                } label: {
+                    Text(t.t("requestRedeploy.request_redeploy"))
+                        .padding(.horizontal)
+                }
+                .styleOutline()
+                .padding([.horizontal, .bottom])
+
+                Button {
+                    router.openUserFeedback()
+                } label: {
+                    Text(t.t("info.give_app_feedback"))
+                        .padding(.horizontal)
+                }
+                .styleOutline()
+                .padding(.horizontal)
+
+                Text(viewModel.versionText)
+                    .foregroundStyle(appTheme.colors.neutralFontColor)
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                Spacer()
+
+                // TODO: Common dimensions
+                HStack(alignment: .center, spacing: 16) {
+                    Link(
+                        t.t("publicNav.terms"),
+                        destination: viewModel.termsOfServiceUrl
                     )
+                    Link(
+                        t.t("nav.privacy"),
+                        destination: viewModel.privacyPolicyUrl
+                    )
+                }
+                .padding(.vertical, appTheme.listItemVerticalPadding)
+                .frame(maxWidth: .infinity, alignment: .center)
 
-                    Button {
-                        router.openLists()
-                    } label: {
-                        Text(t.t("~~Lists"))
-                            .padding(.horizontal)
-                    }
-                    .styleOutline()
-                    .padding([.horizontal, .bottom])
-
-                    Button {
-                        router.openInviteTeammate()
-                    } label: {
-                        Text(t.t("usersVue.invite_new_user"))
-                            .padding(.horizontal)
-                    }
-                    .stylePrimary()
-                    .padding([.horizontal, .bottom])
-
-                    Button {
-                        router.openRequesetRedeploy()
-                    } label: {
-                        Text(t.t("requestRedeploy.request_redeploy"))
-                            .padding(.horizontal)
-                    }
-                    .styleOutline()
-                    .padding([.horizontal, .bottom])
-
-                    Button {
-                        router.openUserFeedback()
-                    } label: {
-                        Text(t.t("info.give_app_feedback"))
-                            .padding(.horizontal)
-                    }
-                    .styleOutline()
-                    .padding(.horizontal)
-
-                    Text(viewModel.versionText)
-                        .foregroundStyle(appTheme.colors.neutralFontColor)
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    Spacer()
-
-                    // TODO: Common dimensions
-                    HStack(alignment: .center, spacing: 16) {
-                        Link(
-                            t.t("publicNav.terms"),
-                            destination: viewModel.termsOfServiceUrl
-                        )
-                        Link(
-                            t.t("nav.privacy"),
-                            destination: viewModel.privacyPolicyUrl
-                        )
-                    }
-                    .padding(.vertical, appTheme.listItemVerticalPadding)
-                    .frame(maxWidth: .infinity, alignment: .center)
-
-                    if !viewModel.isProduction {
-                        MenuScreenNonProductionView(viewModel: viewModel)
-                    }
+                if !viewModel.isProduction {
+                    MenuScreenNonProductionView(viewModel: viewModel)
                 }
             }
 
@@ -221,7 +220,7 @@ private struct GettingStartedView: View {
                     UIApplication.shared.open(gettingStartedUrl)
                 }
             }
-            .listItemModifier()
+            .padding([.horizontal, .top])
         } else if isNonProduction {
             Button("show getting started section") {
                 toggleGettingStartedSection()

@@ -44,7 +44,7 @@ private struct LoginView: View {
         let disabled = viewModel.isAuthenticating
 
         VStack {
-            ScrollView {
+            ScrollCenterContent {
                 CrisisCleanupLogoView()
 
                 VStack {

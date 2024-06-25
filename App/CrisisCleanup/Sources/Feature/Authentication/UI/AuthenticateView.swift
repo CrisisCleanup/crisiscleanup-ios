@@ -47,67 +47,65 @@ private struct LoginOptionsView: View {
     let dismissScreen: () -> Void
 
     var body: some View {
-        VStack {
-            ScrollView {
-                CrisisCleanupLogoView()
+        ScrollCenterContent {
+            CrisisCleanupLogoView()
 
-                // TODO: Common dimensions
-                VStack(alignment: .leading, spacing: 16) {
-                    Text(t.translate("actions.login", "Login action"))
-                        .fontHeader1()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical)
-                        .accessibilityIdentifier("rootAuthLoginText")
+            // TODO: Common dimensions
+            VStack(alignment: .leading, spacing: 16) {
+                Text(t.translate("actions.login", "Login action"))
+                    .fontHeader1()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical)
+                    .accessibilityIdentifier("rootAuthLoginText")
 
-                    Button(t.translate("loginForm.login_with_email", "Login with email")) {
-                        router.openEmailLogin()
-                    }
-                    .stylePrimary()
-                    .accessibilityIdentifier("loginWithEmailAction")
-
-                    Button(t.translate("loginForm.login_with_cell", "Login with phone")) {
-                        router.openPhoneLogin()
-                    }
-                    .stylePrimary()
-                    .accessibilityIdentifier("loginWithPhoneAction")
-
-                    Button(t.translate("actions.request_access", "Volunteer with org")) {
-                        router.openVolunteerOrg()
-                    }
-                    .styleOutline()
-                    .disabled(viewModel.viewData.hasAuthenticated)
-                    .accessibilityIdentifier("rootAuthVolunteerWithOrgAction")
-
-                    Button(t.translate("loginForm.need_help_cleaning_up", "I need cleanup")) {
-                        openURL(URL(string: "https://crisiscleanup.org/survivor")!)
-                    }
-                    .styleOutline()
-                    .accessibilityIdentifier("rootAuthNeedHelpAction")
-
-                    if viewModel.showRegister {
-                        VStack(alignment: .leading) {
-                            Text(t.translate("publicNav.relief_orgs_only", "Relief orgs and goverment only"))
-                                .accessibilityIdentifier("rootAuthReliefOrgAndGovText")
-
-                            Link(
-                                t.translate("actions.register", "Register action"),
-                                destination: URL(string: "https://crisiscleanup.org/register")!
-                            )
-                            .accessibilityIdentifier("rootAuthRegisterAction")
-                        }
-                        .padding(.top)
-                    }
-
-                    if viewModel.viewData.hasAuthenticated {
-                        Button(t.translate("actions.back", "Back action")) {
-                            dismissScreen()
-                        }
-                        .padding(.vertical, appTheme.listItemVerticalPadding)
-                        .accessibilityIdentifier("rootAuthBackAction")
-}
+                Button(t.translate("loginForm.login_with_email", "Login with email")) {
+                    router.openEmailLogin()
                 }
-                .padding()
+                .stylePrimary()
+                .accessibilityIdentifier("loginWithEmailAction")
+
+                Button(t.translate("loginForm.login_with_cell", "Login with phone")) {
+                    router.openPhoneLogin()
+                }
+                .stylePrimary()
+                .accessibilityIdentifier("loginWithPhoneAction")
+
+                Button(t.translate("actions.request_access", "Volunteer with org")) {
+                    router.openVolunteerOrg()
+                }
+                .styleOutline()
+                .disabled(viewModel.viewData.hasAuthenticated)
+                .accessibilityIdentifier("rootAuthVolunteerWithOrgAction")
+
+                Button(t.translate("loginForm.need_help_cleaning_up", "I need cleanup")) {
+                    openURL(URL(string: "https://crisiscleanup.org/survivor")!)
+                }
+                .styleOutline()
+                .accessibilityIdentifier("rootAuthNeedHelpAction")
+
+                if viewModel.showRegister {
+                    VStack(alignment: .leading) {
+                        Text(t.translate("publicNav.relief_orgs_only", "Relief orgs and goverment only"))
+                            .accessibilityIdentifier("rootAuthReliefOrgAndGovText")
+
+                        Link(
+                            t.translate("actions.register", "Register action"),
+                            destination: URL(string: "https://crisiscleanup.org/register")!
+                        )
+                        .accessibilityIdentifier("rootAuthRegisterAction")
+                    }
+                    .padding(.top)
+                }
+
+                if viewModel.viewData.hasAuthenticated {
+                    Button(t.translate("actions.back", "Back action")) {
+                        dismissScreen()
+                    }
+                    .padding(.vertical, appTheme.listItemVerticalPadding)
+                    .accessibilityIdentifier("rootAuthBackAction")
+                }
             }
+            .padding()
         }
     }
 }
@@ -121,7 +119,7 @@ struct LogoutView: View {
     var dismissScreen: () -> ()
 
     var body: some View {
-        ScrollView {
+        ScrollCenterContent {
             CrisisCleanupLogoView()
                 .padding(.bottom)
 
