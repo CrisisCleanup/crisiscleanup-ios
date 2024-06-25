@@ -38,7 +38,8 @@ struct CasesLayoutView: View {
         let span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: longDelta)
 
         let center = bounds.center
-        let regionCenter = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: center.latitude, longitude: center.longitude), span: span)
+        let center2d = CLLocationCoordinate2D(latitude: center.latitude, longitude: center.longitude)
+        let regionCenter = MKCoordinateRegion(center: center2d, span: span)
         let region = map.regionThatFits(regionCenter)
         map.setRegion(region, animated: true)
     }
@@ -345,7 +346,7 @@ private struct MapResponsiveControls: View {
             //       Print mapView.region.span to see inconsistency even when fromDistance is constant
             //       Panning the map shows a changing centerCoordinateDistance
             let mapMarkerZoomLevelHeight = 300_000
-
+            viewModel.onZoomIncident()
             map.setCamera(
                 MKMapCamera(
                     lookingAtCenter: map.centerCoordinate,
