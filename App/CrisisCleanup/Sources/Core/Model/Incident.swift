@@ -3,6 +3,7 @@ public struct Incident: Equatable {
     let id: Int64
     let name: String
     let shortName: String
+    let caseLabel: String
     let locationIds: [Int64]
     let activePhoneNumbers: [String]
     let formFields: [IncidentFormField]
@@ -10,6 +11,7 @@ public struct Incident: Equatable {
     let disasterLiteral: String
 
     // sourcery:begin: skipCopy
+    let displayLabel: String
     let disaster: Disaster
 
     let formFieldLookup: [String: IncidentFormField]
@@ -24,6 +26,7 @@ public struct Incident: Equatable {
         id: Int64,
         name: String,
         shortName: String,
+        caseLabel: String,
         locationIds: [Int64],
         activePhoneNumbers: [String],
         formFields: [IncidentFormField],
@@ -33,12 +36,14 @@ public struct Incident: Equatable {
         self.id = id
         self.name = name
         self.shortName = shortName
+        self.caseLabel = caseLabel
         self.locationIds = locationIds
         self.activePhoneNumbers = activePhoneNumbers
         self.formFields = formFields
         self.turnOnRelease = turnOnRelease
         self.disasterLiteral = disasterLiteral
 
+        displayLabel = caseLabel.isBlank ? name : "\(caseLabel): \(name)"
         disaster = disasterFromLiteral(disasterLiteral)
         formFieldLookup = formFields.associateBy { $0.fieldKey }
         workTypeLookup = formFields
@@ -72,6 +77,7 @@ let EmptyIncident = Incident(
     id: -1,
     name: "",
     shortName: "",
+    caseLabel: "",
     locationIds: [],
     activePhoneNumbers: [],
     formFields: [],

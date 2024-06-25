@@ -127,6 +127,7 @@ internal func testIncidentRecord(
         startAt: Date(timeIntervalSince1970: startAtSeconds),
         name: "",
         shortName: "",
+        caseLabel: "",
         type: "",
         activePhoneNumber: nil,
         turnOnRelease: false,

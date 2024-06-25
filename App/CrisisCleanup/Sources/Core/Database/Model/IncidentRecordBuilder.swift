@@ -10,6 +10,7 @@ extension IncidentRecord {
 		startAt: Date,
 		name: String,
 		shortName: String,
+		caseLabel: String,
 		type: String,
 		activePhoneNumber: String?,
 		turnOnRelease: Bool,
@@ -21,6 +22,7 @@ extension IncidentRecord {
 		self.startAt = startAt
 		self.name = name
 		self.shortName = shortName
+		self.caseLabel = caseLabel
 		self.type = type
 		self.activePhoneNumber = activePhoneNumber
 		self.turnOnRelease = turnOnRelease
@@ -40,6 +42,7 @@ extension IncidentRecord {
 		var startAt: Date
 		var name: String
 		var shortName: String
+		var caseLabel: String
 		var type: String
 		var activePhoneNumber: String?
 		var turnOnRelease: Bool
@@ -50,6 +53,7 @@ extension IncidentRecord {
 			self.startAt = original.startAt
 			self.name = original.name
 			self.shortName = original.shortName
+			self.caseLabel = original.caseLabel
 			self.type = original.type
 			self.activePhoneNumber = original.activePhoneNumber
 			self.turnOnRelease = original.turnOnRelease
@@ -62,6 +66,7 @@ extension IncidentRecord {
 				startAt: startAt,
 				name: name,
 				shortName: shortName,
+				caseLabel: caseLabel,
 				type: type,
 				activePhoneNumber: activePhoneNumber,
 				turnOnRelease: turnOnRelease,

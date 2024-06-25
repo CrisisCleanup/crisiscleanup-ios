@@ -16,6 +16,7 @@ struct IncidentRecord: Identifiable, Equatable {
     let startAt: Date
     let name: String
     let shortName: String
+    let caseLabel: String
     let type: String
     let activePhoneNumber: String?
     let turnOnRelease: Bool
@@ -30,6 +31,7 @@ struct IncidentRecord: Identifiable, Equatable {
             id: id,
             name: name,
             shortName: shortName,
+            caseLabel: caseLabel,
             locationIds: locationIds,
             activePhoneNumbers: phoneNumbers,
             formFields: formFields,

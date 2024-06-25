@@ -932,6 +932,16 @@ extension AppDatabase {
             )
         }
 
+        migrator.registerMigration(
+            "incident-case-label",
+            foreignKeyChecks: .immediate
+        ) { db in
+            try db.alter(table: "incident") { t in
+                t.add(column: "caseLabel", .text)
+                    .defaults(to: "")
+            }
+        }
+
         return migrator
     }
 }
