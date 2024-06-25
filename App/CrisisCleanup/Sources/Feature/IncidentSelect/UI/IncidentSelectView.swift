@@ -20,7 +20,7 @@ struct IncidentSelectView: View {
                 ScrollViewReader { scrollView in
                     List(viewModel.incidentsData.incidents, id: \.id) { incident in
                         let isSelected = selectedId == incident.id
-                        Text(incident.name)
+                        Text(incident.displayLabel)
                             .bold(isSelected)
                             .fullWidthSelector()
                             .onTapGesture {

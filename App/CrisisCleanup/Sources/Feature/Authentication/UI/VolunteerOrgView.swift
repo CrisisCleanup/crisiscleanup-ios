@@ -8,69 +8,66 @@ struct VolunteerOrgView: View {
     @ObservedObject var viewModel: VolunteerOrgViewModel
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading) {
-                let getStartedInstruction = t.t("volunteerOrg.get_started_join_org")
-                Text(getStartedInstruction)
-                    .fontHeader2()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding()
-                    .background(appTheme.colors.separatorColor)
-                    .accessibilityIdentifier("volunteerGetStartedText")
-
-                InstructionTextAction(
-                    instruction: t.t("volunteerOrg.click_inviation_link"),
-                    actionText: t.t("volunteerOrg.paste_invitation_link"),
-                    accessibilityIdentifier: "volunteerPasteLinkAction"
-                ) {
-                    router.openPasteOrgInviteLink()
-                }
-                .padding()
-
-                StaticOrTextView()
-
-                InstructionTextAction(
-                    instruction: t.t("volunteerOrg.if_you_know_email"),
-                    actionText: t.t("volunteerOrg.request_access"),
-                    accessibilityIdentifier: "volunteerRequestAccessAction"
-                ) {
-                    router.openRequestOrgAccess()
-                }
-                .padding()
-
-                StaticOrTextView()
-
-                InstructionAction(
-                    instruction: t.t("volunteerOrg.find_qr_code")
-                ) {
-                    Button {
-                        router.openScanOrgQrCode()
-                    } label: {
-                        HStack {
-                            Image(systemName: "qrcode.viewfinder")
-                            Text(t.t("volunteerOrg.scan_qr_code"))
-                        }
-                    }
-                    .stylePrimary()
-                    .accessibilityIdentifier("volunteerScanQrCodeAction")
-                }
-                .padding()
-
-                VStack(alignment: .leading) {
-                    Text(t.t("volunteerOrg.if_no_account"))
-
-                    Link(
-                        t.t("registerOrg.register_org"),
-                        destination: URL(string: "https://crisiscleanup.org/register")!
-                    )
-                    .accessibilityIdentifier("volunteerRegisterOrgAction")
-                }
+        ScrollCenterContent {
+            let getStartedInstruction = t.t("volunteerOrg.get_started_join_org")
+            Text(getStartedInstruction)
+                .fontHeader2()
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
                 .padding()
                 .background(appTheme.colors.separatorColor)
+                .accessibilityIdentifier("volunteerGetStartedText")
+
+            InstructionTextAction(
+                instruction: t.t("volunteerOrg.click_inviation_link"),
+                actionText: t.t("volunteerOrg.paste_invitation_link"),
+                accessibilityIdentifier: "volunteerPasteLinkAction"
+            ) {
+                router.openPasteOrgInviteLink()
             }
-            .frame(maxWidth: .infinity)
+            .padding()
+
+            StaticOrTextView()
+
+            InstructionTextAction(
+                instruction: t.t("volunteerOrg.if_you_know_email"),
+                actionText: t.t("volunteerOrg.request_access"),
+                accessibilityIdentifier: "volunteerRequestAccessAction"
+            ) {
+                router.openRequestOrgAccess()
+            }
+            .padding()
+
+            StaticOrTextView()
+
+            InstructionAction(
+                instruction: t.t("volunteerOrg.find_qr_code")
+            ) {
+                Button {
+                    router.openScanOrgQrCode()
+                } label: {
+                    HStack {
+                        Image(systemName: "qrcode.viewfinder")
+                        Text(t.t("volunteerOrg.scan_qr_code"))
+                    }
+                }
+                .stylePrimary()
+                .accessibilityIdentifier("volunteerScanQrCodeAction")
+            }
+            .padding()
+
+            VStack(alignment: .leading) {
+                Text(t.t("volunteerOrg.if_no_account"))
+
+                Link(
+                    t.t("registerOrg.register_org"),
+                    destination: URL(string: "https://crisiscleanup.org/register")!
+                )
+                .accessibilityIdentifier("volunteerRegisterOrgAction")
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+            .background(appTheme.colors.separatorColor)
         }
         .navigationTitle(t.t("actions.sign_up"))
         .onAppear { viewModel.onViewAppear() }

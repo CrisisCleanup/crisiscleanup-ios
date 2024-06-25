@@ -20,7 +20,11 @@ class WorkTypeTransferRequestDaoTests: XCTestCase {
         let initialized = try initializeTestDb()
         dbQueue = initialized.0
         appDb = initialized.1
-        worksiteDao = WorksiteDao(appDb, WorksiteTestUtil.silentSyncLogger)
+        worksiteDao = WorksiteDao(
+            appDb,
+            WorksiteTestUtil.silentSyncLogger,
+            WorksiteTestUtil.silentAppLogger
+        )
         requestDao = WorkTypeTransferRequestDao(appDb)
 
         try await dbQueue.write { db in

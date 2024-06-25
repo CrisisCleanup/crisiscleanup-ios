@@ -13,7 +13,6 @@ class LoginWithMagicLinkViewModel: ObservableObject {
     @Published var errorMessage: String = ""
 
     @Published private(set) var isAuthenticating: Bool = false
-    @Published private(set) var isAuthenticateSuccessful: Bool = false
 
     private var subscriptions = Set<AnyCancellable>()
 
@@ -100,10 +99,8 @@ class LoginWithMagicLinkViewModel: ObservableObject {
             }
 
             let errorMessage = message
-            let isAuthenticationSuccessful = isSuccessful
             Task { @MainActor in
                 self.errorMessage = errorMessage
-                self.isAuthenticateSuccessful = isAuthenticationSuccessful
             }
         }
     }

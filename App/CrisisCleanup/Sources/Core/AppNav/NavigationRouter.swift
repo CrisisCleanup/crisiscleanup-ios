@@ -27,7 +27,7 @@ class NavigationRouter: ObservableObject {
         }
     }
 
-    func returnToAuth() {
+    func clearAuthRoutes() {
         clearNavigationStack()
     }
 
@@ -212,5 +212,13 @@ class NavigationRouter: ObservableObject {
 
     func changeCaseIncident(_ ids: ExistingWorksiteIdentifier) {
         viewCase(incidentId: ids.incidentId, worksiteId: ids.worksiteId, popToRoot: true)
+    }
+
+    func openLists() {
+        path.append(.lists)
+    }
+
+    func viewList(_ list: CrisisCleanupList) {
+        path.append(.viewList(list.id))
     }
 }

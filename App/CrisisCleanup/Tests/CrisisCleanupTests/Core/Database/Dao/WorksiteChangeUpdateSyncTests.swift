@@ -25,7 +25,11 @@ class WorksiteChangeUpdateSyncTests: XCTestCase {
         dbQueue = initialized.0
         appDb = initialized.1
         let syncLogger = WorksiteTestUtil.silentSyncLogger
-        worksiteDao = WorksiteDao(appDb, syncLogger)
+        worksiteDao = WorksiteDao(
+            appDb,
+            WorksiteTestUtil.silentSyncLogger,
+            WorksiteTestUtil.silentAppLogger
+        )
         uuidGenerator = TestUuidGenerator()
         changeSerializer = .init()
         worksiteChangeDao = WorksiteChangeDao(

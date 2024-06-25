@@ -20,6 +20,7 @@ struct CasesFilterView: View {
                 }
             }
         }
+        .screenTitle(t.t("worksiteFilters.filters"))
         .hideNavBarUnderSpace()
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }

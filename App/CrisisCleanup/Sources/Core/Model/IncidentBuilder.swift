@@ -14,6 +14,7 @@ extension Incident {
 		var id: Int64
 		var name: String
 		var shortName: String
+		var caseLabel: String
 		var locationIds: [Int64]
 		var activePhoneNumbers: [String]
 		var formFields: [IncidentFormField]
@@ -24,6 +25,7 @@ extension Incident {
 			self.id = original.id
 			self.name = original.name
 			self.shortName = original.shortName
+			self.caseLabel = original.caseLabel
 			self.locationIds = original.locationIds
 			self.activePhoneNumbers = original.activePhoneNumbers
 			self.formFields = original.formFields
@@ -36,6 +38,7 @@ extension Incident {
 				id: id,
 				name: name,
 				shortName: shortName,
+				caseLabel: caseLabel,
 				locationIds: locationIds,
 				activePhoneNumbers: activePhoneNumbers,
 				formFields: formFields,

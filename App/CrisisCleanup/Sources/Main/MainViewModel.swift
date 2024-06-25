@@ -188,6 +188,8 @@ class MainViewModel: ObservableObject {
                     Task {
                         await self.accountDataRefresher.updateMyOrganization(true)
                     }
+
+                    self.logger.setAccontId(String(accountData.id))
                 } else {
                     if !accountData.hasAcceptedTerms {
                         self.authEventBus.onLogout()

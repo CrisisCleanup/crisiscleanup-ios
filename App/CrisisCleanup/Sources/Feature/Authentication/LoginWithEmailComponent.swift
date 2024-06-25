@@ -18,15 +18,10 @@ extension AuthenticateComponent {
         return _loginWithEmailViewModel!
     }
 
-    func loginWithEmailView(closeAuthFlow: @escaping () -> Void) -> AnyView {
-        let clearViewModelOnHide = {
-            self._loginWithEmailViewModel = nil
-            closeAuthFlow()
-        }
-        return AnyView(
+    func loginWithEmailView() -> AnyView {
+        AnyView(
             LoginWithEmailView(
-                viewModel: loginWithEmailViewModel,
-                dismiss: clearViewModelOnHide
+                viewModel: loginWithEmailViewModel
             )
         )
     }
@@ -50,15 +45,10 @@ extension AuthenticateComponent {
         return _loginWithMagicLinkViewModel!
     }
 
-    func magicLinkLoginCodeView(_ code: String, closeAuthFlow: @escaping () -> Void) -> AnyView {
-        let clearViewModelOnHide = {
-            self._loginWithMagicLinkViewModel = nil
-            closeAuthFlow()
-        }
-        return AnyView(
+    func magicLinkLoginCodeView(_ code: String) -> AnyView {
+        AnyView(
             LoginMagicLinkCodeView(
-                viewModel: loginWithMagicLinkViewModel(code),
-                dismiss: clearViewModelOnHide
+                viewModel: loginWithMagicLinkViewModel(code)
             )
         )
     }

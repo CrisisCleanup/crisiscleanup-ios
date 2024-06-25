@@ -51,12 +51,9 @@ class ResidentNameSearchManager {
             .filter { $0.count >= querySearchThresholdLength }
             .map { q in
                 worksitesSearchLatestPublisher.publisher {
-                    do {
-                        let worksitesSearch =
-                        await searchWorksitesRepository.locationSearchWorksites(incidentId, q)
-                        let worksites = worksitesSearch.map { $0.asCaseLocation(iconProvider) }
-                        return (q, worksites)
-                    }
+                    let worksitesSearch = await searchWorksitesRepository.locationSearchWorksites(incidentId, q)
+                    let worksites = worksitesSearch.map { $0.asCaseLocation(iconProvider) }
+                    return (q, worksites)
                 }
             }
             .switchToLatest()

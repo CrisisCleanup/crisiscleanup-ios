@@ -6,15 +6,18 @@ public class WorksiteDao {
     private let database: AppDatabase
     internal let reader: DatabaseReader
     private let syncLogger: SyncLogger
+    private let appLogger: AppLogger
 
     init(
         _ database: AppDatabase,
-        _ syncLogger: SyncLogger
+        _ syncLogger: SyncLogger,
+        _ appLogger: AppLogger
     ) {
         self.database = database
         reader = database.reader
 
         self.syncLogger = syncLogger
+        self.appLogger = appLogger
     }
 
     private func throwSizeMismatch(
@@ -366,21 +369,26 @@ public class WorksiteDao {
                 let modifiedAt = modifiedAtLookup[networkWorksiteId]
                 let isLocallyModified = modifiedAt?.isLocalModified ?? false
                 if !isLocallyModified {
-                    let worksiteId = try WorksiteRecord.getWorksiteId(db, networkWorksiteId)!
-                    let fieldKeys = Set(formData.map { $0.fieldKey })
-                    try WorksiteFormDataRecord.deleteUnspecifiedKeys(db, worksiteId, fieldKeys)
-                    let updatedFormData = formData.map { fd in fd.copy { $0.worksiteId = worksiteId } }
-                    for formData in updatedFormData {
-                        var formData = formData
-                        try formData.upsert(db)
-                    }
+                    if let worksiteId = try WorksiteRecord.getWorksiteId(db, networkWorksiteId) {
+                        let fieldKeys = Set(formData.map { $0.fieldKey })
+                        try WorksiteFormDataRecord.deleteUnspecifiedKeys(db, worksiteId, fieldKeys)
+                        let updatedFormData = formData.map { fd in fd.copy { $0.worksiteId = worksiteId } }
+                        for formData in updatedFormData {
+                            var formData = formData
+                            try formData.upsert(db)
+                        }
 
-                    let reportedBy = reportedBys[i]
-                    try WorksiteRecord.syncUpdateAdditionalData(
-                        db,
-                        worksiteId,
-                        reportedBy: reportedBy
-                    )
+                        let reportedBy = reportedBys[i]
+                        try WorksiteRecord.syncUpdateAdditionalData(
+                            db,
+                            worksiteId,
+                            reportedBy: reportedBy
+                        )
+                    } else {
+                        let unexpectedMessage = "Case \(networkWorksiteId) not locally found when syncing additional data."
+                        self.syncLogger.log(unexpectedMessage)
+                        self.appLogger.logError(GenericError(unexpectedMessage))
+                    }
                 }
             }
         }
@@ -508,6 +516,18 @@ public class WorksiteDao {
         try reader.read { db in try fetchLocalWorksite(db, id) }
     }
 
+    func getWorksitesByNetworkId(_ ids: Set<Int64>) -> [PopulatedWorksite] {
+        try! reader.read { db in
+            try WorksiteRootRecord
+                .all()
+                .networkIdsIn(ids)
+                .including(required: WorksiteRootRecord.worksite)
+                .including(all: WorksiteRootRecord.workTypes)
+                .asRequest(of: PopulatedWorksite.self)
+                .fetchAll(db)
+        }
+    }
+
     func streamLocalWorksite(_ id: Int64) -> AnyPublisher<PopulatedLocalWorksite?, Error> {
         ValueObservation
             .tracking({ db in try self.fetchLocalWorksite(db, id) })
@@ -587,7 +607,7 @@ public class WorksiteDao {
             try WorksiteRootRecord
                 .all()
                 .selectIdColumn()
-                .filterLocalModified()
+                .filterByLocalModified()
                 .orderedByLocalModifiedAtDesc()
                 .limit(limit)
                 .asRequest(of: Int64.self)

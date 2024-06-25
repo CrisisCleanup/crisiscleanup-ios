@@ -31,7 +31,8 @@ public class AccountDataRefresher {
            if accountDataRepository.refreshToken.isBlank {
                return
            }
-           if !force && accountDataUpdateTime.addingTimeInterval(cacheTimeSpan) > Date.now {
+           if !force,
+              accountDataUpdateTime.addingTimeInterval(cacheTimeSpan) > Date.now {
                return
            }
 

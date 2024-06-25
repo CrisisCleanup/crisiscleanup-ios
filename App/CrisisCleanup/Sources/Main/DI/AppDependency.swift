@@ -9,6 +9,7 @@ public protocol AppDependency: Dependency {
     var networkMonitor: NetworkMonitor { get }
 
     var inputValidator: InputValidator { get }
+    var phoneNumberParser: PhoneNumberParser { get }
 
     var qrCodeGenerator: QrCodeGenerator { get }
 
@@ -43,6 +44,7 @@ public protocol AppDependency: Dependency {
     var appSupportRepository: AppSupportRepository { get }
     var orgVolunteerRepository: OrgVolunteerRepository { get }
     var requestRedeployRepository: RequestRedeployRepository { get }
+    var listsRepository: ListsRepository { get }
 
     var authenticateViewBuilder: AuthenticateViewBuilder { get }
     var incidentSelectViewBuilder: IncidentSelectViewBuilder { get }
@@ -51,6 +53,7 @@ public protocol AppDependency: Dependency {
     var accountDataRepository: AccountDataRepository { get }
     var accountDataRefresher: AccountDataRefresher { get }
     var organizationRefresher: OrganizationRefresher { get }
+    var listDataRefresher: ListDataRefresher { get }
 
     var syncLoggerFactory: SyncLoggerFactory { get }
     var syncPuller: SyncPuller { get }
@@ -77,7 +80,8 @@ public protocol AppDependency: Dependency {
 extension MainComponent {
     public var appVersionProvider: AppVersionProvider { providesAppVersionProvider }
 
-    public var inputValidator: InputValidator { shared { CommonInputValidator() } }
+    public var inputValidator: InputValidator { CommonInputValidator() }
+    public var phoneNumberParser: PhoneNumberParser { PhoneNumberRegexParser() }
 
     var providesAppVersionProvider: AppVersionProvider { shared { AppleAppVersionProvider() } }
 
@@ -183,6 +187,15 @@ extension MainComponent {
     public var organizationRefresher: OrganizationRefresher {
         shared {
             OrganizationRefresher(accountDataRefresher)
+        }
+    }
+
+    public var listDataRefresher: ListDataRefresher {
+        shared {
+            ListDataRefresher(
+                listsSyncer: listsSyncer,
+                loggerFactory: loggerFactory
+            )
         }
     }
 

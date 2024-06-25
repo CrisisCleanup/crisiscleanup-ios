@@ -17,6 +17,7 @@ class CasesViewModel: ObservableObject {
     private let worksiteProvider: WorksiteProvider
     private let transferWorkTypeProvider: TransferWorkTypeProvider
     private let filterRepository: CasesFilterRepository
+    let phoneNumberParser: PhoneNumberParser
     private let translator: KeyTranslator
     private let syncPuller: SyncPuller
     private let logger: AppLogger
@@ -109,6 +110,7 @@ class CasesViewModel: ObservableObject {
         worksiteProvider: WorksiteProvider,
         transferWorkTypeProvider: TransferWorkTypeProvider,
         filterRepository: CasesFilterRepository,
+        phoneNumberParser: PhoneNumberParser,
         translator: KeyTranslator,
         syncPuller: SyncPuller,
         loggerFactory: AppLoggerFactory,
@@ -126,6 +128,7 @@ class CasesViewModel: ObservableObject {
         self.worksiteProvider = worksiteProvider
         self.transferWorkTypeProvider = transferWorkTypeProvider
         self.filterRepository = filterRepository
+        self.phoneNumberParser = phoneNumberParser
         self.translator = translator
         self.syncPuller = syncPuller
         logger = loggerFactory.getLogger("cases")

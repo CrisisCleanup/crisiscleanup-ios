@@ -232,7 +232,7 @@ extension DerivableRequest<WorksiteRootRecord> {
         select(RootColumns.id, RootColumns.isLocalModified)
     }
 
-    func filterLocalModified() -> Self {
+    func filterByLocalModified() -> Self {
         filter(RootColumns.isLocalModified == true)
     }
 }
@@ -507,11 +507,11 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
         _ db: Database,
         _ networkId: Int64
     ) throws -> Int64? {
-        try WorksiteRecord
+        let record = try WorksiteRecord
             .filter(Columns.networkId == networkId)
             .fetchAll(db)
-            .first!
-            .id
+            .firstOrNil
+        return record?.id
     }
 
     static func getCount(

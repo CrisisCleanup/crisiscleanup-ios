@@ -7,8 +7,6 @@ struct LoginPhoneCodeView: View {
 
     @ObservedObject var viewModel: LoginWithPhoneViewModel
 
-    let dismiss: () -> Void
-
     var body: some View {
         ZStack {
             if viewModel.viewData.state == .loading {
@@ -24,21 +22,13 @@ struct LoginPhoneCodeView: View {
                 .padding()
 
             } else {
-                LoginView(
-                    dismissScreen: dismiss
-                )
+                LoginView()
             }
         }
         .navigationTitle(t.t("actions.login"))
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)
-        .onChange(of: viewModel.isAuthenticateSuccessful) { b in
-            if b {
-                router.returnToAuth()
-                dismiss()
-            }
-        }
     }
 }
 
@@ -47,8 +37,6 @@ private struct LoginView: View {
 
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var viewModel: LoginWithPhoneViewModel
-
-    let dismissScreen: () -> Void
 
     @State var phoneCode = ""
     private let codeLength = 6
@@ -68,76 +56,72 @@ private struct LoginView: View {
         let disabled = viewModel.isExchangingCode
 
         VStack {
-            ScrollView {
-                VStack(alignment: .leading) {
-                    let errorMessage = viewModel.errorMessage
-                    if errorMessage.isNotBlank {
-                        // TODO: Common styles
-                        Text(errorMessage)
-                            .foregroundColor(appTheme.colors.primaryRedColor)
-                            .padding([.vertical])
-                            .accessibilityIdentifier("verifyPhoneCodeError")
-                    }
-
-                    Text(t.t("loginWithPhone.enter_x_digit_code")
-                         // TODO: Use configurable value
-                        .replacingOccurrences(of: "{codeCount}", with: "\(codeLength)"))
-                    Text(viewModel.obfuscatedPhoneNumber)
-
-                    // TODO: Autofill from text messages
-                    TextField("", text: $phoneCode)
-                        .textFieldBorder()
-                        .keyboardType(.numberPad)
-                        .disabled(disabled || viewModel.isSelectAccount)
-                        .onSubmit {
-                            authenticate(phoneCode)
-                        }
-                        .onAppear {
-                            // TODO: Focus on input
-                        }
-
-                    Group {
-                        Button(t.t("actions.resend_code")) {
-                            viewModel.requestPhoneCode(viewModel.phoneNumber)
-                            phoneCode = ""
-                        }
-                        .disabled(disabled)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-
-                    if viewModel.accountOptions.count > 1 {
-                        Text(t.t("loginWithPhone.phone_associated_multiple_users"))
-                            .padding(.top)
-
-                        Text(t.t("actions.select_account"))
-                            .fontHeader4()
-
-                        Menu {
-                            ForEach(viewModel.accountOptions, id: \.userId) { accountInfo in
-                                Button(accountInfo.accountDisplay) {
-                                    viewModel.onAccountSelected(accountInfo)
-                                }
-                            }
-                        } label: {
-                            Group {
-                                let accountDisplay = viewModel.selectedAccount.accountDisplay
-                                if accountDisplay.isBlank {
-                                    Text(t.t("actions.select_account"))
-                                        .foregroundColor(appTheme.colors.primaryRedColor)
-                                } else {
-                                    Text(accountDisplay)
-                                }
-                                Spacer()
-                                Image(systemName: "chevron.up.chevron.down")
-                            }
-                            .foregroundColor(.black)
-                        }
-                        .textFieldBorder()
-                        .disabled(disabled)
-                    }
+            ScrollCenterContent(contentPadding: .all) {
+                let errorMessage = viewModel.errorMessage
+                if errorMessage.isNotBlank {
+                    // TODO: Common styles
+                    Text(errorMessage)
+                        .foregroundColor(appTheme.colors.primaryRedColor)
+                        .padding([.vertical])
+                        .accessibilityIdentifier("verifyPhoneCodeError")
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
+
+                Text(t.t("loginWithPhone.enter_x_digit_code")
+                     // TODO: Use configurable value
+                    .replacingOccurrences(of: "{codeCount}", with: "\(codeLength)"))
+                Text(viewModel.obfuscatedPhoneNumber)
+
+                // TODO: Autofill from text messages
+                TextField("", text: $phoneCode)
+                    .textFieldBorder()
+                    .keyboardType(.numberPad)
+                    .disabled(disabled || viewModel.isSelectAccount)
+                    .onSubmit {
+                        authenticate(phoneCode)
+                    }
+                    .onAppear {
+                        // TODO: Focus on input
+                    }
+
+                Group {
+                    Button(t.t("actions.resend_code")) {
+                        viewModel.requestPhoneCode(viewModel.phoneNumber)
+                        phoneCode = ""
+                    }
+                    .disabled(disabled)
+                }
+                .frame(maxWidth: .infinity, alignment: .trailing)
+
+                if viewModel.accountOptions.count > 1 {
+                    Text(t.t("loginWithPhone.phone_associated_multiple_users"))
+                        .padding(.top)
+
+                    Text(t.t("actions.select_account"))
+                        .fontHeader4()
+
+                    Menu {
+                        ForEach(viewModel.accountOptions, id: \.userId) { accountInfo in
+                            Button(accountInfo.accountDisplay) {
+                                viewModel.onAccountSelected(accountInfo)
+                            }
+                        }
+                    } label: {
+                        Group {
+                            let accountDisplay = viewModel.selectedAccount.accountDisplay
+                            if accountDisplay.isBlank {
+                                Text(t.t("actions.select_account"))
+                                    .foregroundColor(appTheme.colors.primaryRedColor)
+                            } else {
+                                Text(accountDisplay)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.up.chevron.down")
+                        }
+                        .foregroundColor(.black)
+                    }
+                    .textFieldBorder()
+                    .disabled(disabled)
+                }
             }
             .scrollDismissesKeyboard(.immediately)
 
@@ -152,8 +136,10 @@ private struct LoginView: View {
                 )
             }
             .stylePrimary()
-            .padding()
+            .listItemModifier()
             .disabled(disabled)
+            // TODO: Common dimensions
+            .frame(maxWidth: 600.0)
         }
     }
 }

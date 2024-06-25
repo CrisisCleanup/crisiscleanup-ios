@@ -30,6 +30,7 @@ struct CasesLayoutView: View {
 
     @State var map = MKMapView()
     @State private var showMapBusyIndicator = false
+    @State private var phoneCallNumbers = [ParsedPhoneNumber]()
 
     func animateToSelectedIncidentBounds(_ bounds: LatLngBounds) {
         let latDelta = bounds.northEast.latitude - bounds.southWest.latitude
@@ -48,6 +49,7 @@ struct CasesLayoutView: View {
         ZStack {
             if viewModel.isTableView {
                 CasesTableView(
+                    phoneCallNumbers: $phoneCallNumbers,
                     incidentSelectViewBuilder: incidentSelectViewBuilder,
                     hasNoIncidents: hasNoIncidents
                 )
@@ -112,6 +114,12 @@ struct CasesLayoutView: View {
             if viewModel.showExplainLocationPermission {
                 LocationAppSettingsDialog {
                     viewModel.showExplainLocationPermission = false
+                }
+            }
+
+            if phoneCallNumbers.isNotEmpty {
+                PhoneCallDialog(phoneNumbers: phoneCallNumbers) {
+                    phoneCallNumbers = []
                 }
             }
         }

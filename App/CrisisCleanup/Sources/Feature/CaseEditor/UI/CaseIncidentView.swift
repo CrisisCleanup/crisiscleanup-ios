@@ -8,7 +8,7 @@ struct CaseIncidentView: View {
 
     var body: some View {
         HStack{
-            IncidentHeader(incident: incident)
+            IncidentHeaderView(incident: incident)
             Spacer()
             Group {
                 if isSyncing {
@@ -35,6 +35,7 @@ struct CaseIncidentView_Previews: PreviewProvider {
                     id: 0,
                     name: "Heavy showers over the hill",
                     shortName: "Showers",
+                    caseLabel: "E",
                     locationIds: [],
                     activePhoneNumbers: [],
                     formFields: [],
@@ -55,6 +56,7 @@ struct CaseIncidentView_Previews: PreviewProvider {
                     id: 0,
                     name: "Heavy showers over the hill",
                     shortName: "Showers",
+                    caseLabel: "E",
                     locationIds: [],
                     activePhoneNumbers: [],
                     formFields: [],

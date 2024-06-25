@@ -68,6 +68,7 @@ class WorksiteTestUtil {
     internal static let testTranslator = TestTranslator()
     internal static let silentSyncLogger = SilentSyncLogger()
     internal static let testAppVersionProvider = TestAppVersionProvider()
+    internal static let silentAppLogger = SilentAppLogger()
 }
 
 internal class TestTranslator : KeyTranslator {
@@ -95,6 +96,13 @@ internal class SilentSyncLogger : SyncLogger {
     func flush() {}
 }
 
+internal class SilentAppLogger : AppLogger {
+    func logDebug(_ items: Any...) {}
+    func logError(_ e: Error) {}
+    func logCapture(_ message: String) {}
+    func setAccontId(_ id: String) {}
+}
+
 internal class TestUuidGenerator: UuidGenerator {
     private var counter = 0
 
@@ -119,6 +127,7 @@ internal func testIncidentRecord(
         startAt: Date(timeIntervalSince1970: startAtSeconds),
         name: "",
         shortName: "",
+        caseLabel: "",
         type: "",
         activePhoneNumber: nil,
         turnOnRelease: false,

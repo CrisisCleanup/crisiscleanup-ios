@@ -29,6 +29,7 @@ public struct NetworkIncident: Codable, Equatable {
     let startAt: Date
     let name: String
     let shortName: String
+    let caseLabel: String
     let locations: [NetworkIncidentLocation]
     let type: String
     let activePhoneNumber: [String]?
@@ -42,6 +43,7 @@ public struct NetworkIncident: Codable, Equatable {
         case startAt = "start_at"
         case name
         case shortName = "short_name"
+        case caseLabel = "case_label"
         case locations
         case type = "incident_type"
         case activePhoneNumber = "active_phone_number"
@@ -55,6 +57,7 @@ public struct NetworkIncident: Codable, Equatable {
         startAt: Date,
         name: String,
         shortName: String,
+        caseLabel: String,
         locations: [NetworkIncidentLocation],
         type: String,
         activePhoneNumber: [String]?,
@@ -66,6 +69,7 @@ public struct NetworkIncident: Codable, Equatable {
         self.startAt = startAt
         self.name = name
         self.shortName = shortName
+        self.caseLabel = caseLabel
         self.locations = locations
         self.type = type
         self.activePhoneNumber = activePhoneNumber
@@ -80,6 +84,7 @@ public struct NetworkIncident: Codable, Equatable {
         self.startAt = try container.decode(Date.self, forKey: .startAt)
         self.name = try container.decode(String.self, forKey: .name)
         self.shortName = try container.decode(String.self, forKey: .shortName)
+        self.caseLabel = try container.decode(String.self, forKey: .caseLabel)
         self.locations = try container.decode([NetworkIncidentLocation].self, forKey: .locations)
         self.type = try container.decode(String.self, forKey: .type)
         self.activePhoneNumber = container.decodeIterableString(.activePhoneNumber)
