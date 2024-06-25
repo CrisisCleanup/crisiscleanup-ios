@@ -297,6 +297,17 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         return try await worksiteDao.syncNetworkWorksite(records, syncedAt)
     }
 
+    func syncNetworkWorksite(_ networkWorksiteId: Int64) async {
+        let syncedAt = Date.now
+        do {
+            if let networkWorksite = try await dataSource.getWorksite(networkWorksiteId) {
+                _ = try await syncNetworkWorksite(networkWorksite, syncedAt)
+            }
+        } catch {
+            logger.logError(error)
+        }
+    }
+
     func getLocalId(_ networkWorksiteId: Int64) throws -> Int64 {
         try worksiteDao.getWorksiteId(networkWorksiteId)
     }

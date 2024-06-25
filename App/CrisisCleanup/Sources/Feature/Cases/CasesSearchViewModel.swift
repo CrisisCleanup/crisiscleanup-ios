@@ -340,14 +340,25 @@ class CasesSearchViewModel: ObservableObject {
 
                 let incidentId = try await incidentIdPublisher.asyncFirst()
                 var worksiteId = result.summary.id
+                let networkWorksiteId = result.networkWorksiteId
                 if worksiteId <= 0 {
-                    worksiteId = try worksitesRepository.getLocalId(result.networkWorksiteId)
+                    worksiteId = try worksitesRepository.getLocalId(networkWorksiteId)
                 }
 
-                let mainWorksiteId = worksiteId
-                Task { @MainActor in
-                    self.selectedWorksite = (incidentId, mainWorksiteId)
+                if worksiteId <= 0 {
+                    await worksitesRepository.syncNetworkWorksite(networkWorksiteId)
+                    worksiteId = try worksitesRepository.getLocalId(networkWorksiteId)
                 }
+
+                if worksiteId > 0 {
+                    let mainWorksiteId = worksiteId
+                    Task { @MainActor in
+                        self.selectedWorksite = (incidentId, mainWorksiteId)
+                    }
+                } else {
+                    // TODO: Inform wait for data to cache
+                }
+
             } catch {
                 logger.logError(error)
             }

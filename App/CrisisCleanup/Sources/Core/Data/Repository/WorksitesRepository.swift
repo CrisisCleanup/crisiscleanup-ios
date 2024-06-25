@@ -54,6 +54,8 @@ public protocol WorksitesRepository {
         _ syncedAt: Date
     ) async throws -> Bool
 
+    func syncNetworkWorksite(_ networkWorksiteId: Int64) async
+
     func pullWorkTypeRequests(_ networkWorksiteId: Int64) async throws
 
     func setRecentWorksite(
