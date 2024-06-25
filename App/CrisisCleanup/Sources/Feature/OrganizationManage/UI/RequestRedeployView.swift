@@ -83,6 +83,8 @@ struct RequestRedeployView: View {
                             .listItemPadding()
                         }
                     }
+                    // TODO: Common dimensions
+                    .frame(maxWidth: 600.0)
                     .sheet(isPresented: $showIncidentOptions) {
                         Text(selectIncidentHint)
                             .fontHeader3()
@@ -91,7 +93,7 @@ struct RequestRedeployView: View {
                         List(incidents, id: \.id) { incident in
                             let isSelected = incident.id == selectedIncident.id
                             let isRequested = requestedIncidentIds.contains(incident.id)
-                            Text(incident.name)
+                            Text(incident.displayLabel)
                                 .bold(isSelected)
                                 .fullWidthSelector()
                                 // TODO: Use newer APIs where possible
