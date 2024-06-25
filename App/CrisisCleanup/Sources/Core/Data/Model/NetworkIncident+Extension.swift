@@ -7,6 +7,7 @@ extension NetworkIncident {
             startAt: startAt,
             name: name,
             shortName: shortName,
+            caseLabel: caseLabel,
             type: type,
             activePhoneNumber: activePhoneNumber?.commaJoined,
             turnOnRelease: turnOnRelease,

@@ -30,6 +30,7 @@ struct MainView: View {
     let userFeedbackViewBuilder: UserFeedbackViewBuilder
     let inviteTeammateViewBuilder: InviteTeammateViewBuilder
     let requestRedeployViewBuilder: RequestRedeployViewBuilder
+    let listsViewBuilder: ListsViewBuilder
     let syncInsightsViewBuilder: SyncInsightsViewBuilder
 
     @State private var selectedTab = TopLevelDestination.cases
@@ -59,19 +60,13 @@ struct MainView: View {
                             .navigationDestination(for: NavigationRoute.self) { route in
                                 switch route {
                                 case .loginWithEmail:
-                                    authenticateViewBuilder.loginWithEmailView(closeAuthFlow: hideAuthScreen)
+                                    authenticateViewBuilder.loginWithEmailView()
                                 case .loginWithPhone:
                                     authenticateViewBuilder.loginWithPhoneView
                                 case .phoneLoginCode(let phoneNumber):
-                                    authenticateViewBuilder.phoneLoginCodeView(
-                                        phoneNumber,
-                                        closeAuthFlow: hideAuthScreen
-                                    )
+                                    authenticateViewBuilder.phoneLoginCodeView(phoneNumber)
                                 case .magicLinkLoginCode(let code):
-                                    authenticateViewBuilder.magicLinkLoginCodeView(
-                                        code,
-                                        closeAuthFlow: hideAuthScreen
-                                    )
+                                    authenticateViewBuilder.magicLinkLoginCodeView(code)
                                 case .recoverPassword(let showForgotPassword, let showMagicLink):
                                     authenticateViewBuilder.passwordRecoverView(
                                         showForgotPassword: showForgotPassword,
@@ -188,6 +183,10 @@ struct MainView: View {
                                 inviteTeammateViewBuilder.inviteTeammateView
                             case .requestRedeploy:
                                 requestRedeployViewBuilder.requestRedeployView
+                            case .lists:
+                                listsViewBuilder.listsView
+                            case .viewList(let listId):
+                                listsViewBuilder.viewListView(listId)
                             case .syncInsights:
                                 if viewModel.isNotProduction {
                                     syncInsightsViewBuilder.syncInsightsView
@@ -209,6 +208,24 @@ struct MainView: View {
             if newValue,
                selectedTab != .menu {
                 selectedTab = .menu
+            }
+        }
+        .onChange(of: viewModel.viewData.showMainContent) { newValue in
+            if newValue {
+                if let lastPath = router.path.last {
+                    var popToRoot = false
+                    if lastPath == NavigationRoute.loginWithEmail {
+                        popToRoot = true
+                    } else if case NavigationRoute.phoneLoginCode = lastPath {
+                        popToRoot = true
+                    } else if case NavigationRoute.magicLinkLoginCode = lastPath {
+                        popToRoot = true
+                    }
+                    if popToRoot {
+                        router.clearAuthRoutes()
+                        viewModel.showAuthScreen = false
+                    }
+                }
             }
         }
         .onAppear { viewModel.onViewAppear() }

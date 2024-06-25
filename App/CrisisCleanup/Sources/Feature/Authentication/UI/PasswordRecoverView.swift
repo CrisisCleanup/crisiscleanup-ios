@@ -10,28 +10,26 @@ struct PasswordRecoverView: View {
 
     var body: some View {
         ZStack {
-            ScrollView {
-                VStack(alignment: .leading) {
-                    if viewModel.isPasswordResetInitiated {
-                        Text(t.t("resetPassword.email_arrive_soon_check_junk"))
-                            .fontHeader3()
-                            .listItemModifier()
+            ScrollCenterContent {
+                if viewModel.isPasswordResetInitiated {
+                    Text(t.t("resetPassword.email_arrive_soon_check_junk"))
+                        .fontHeader3()
+                        .listItemModifier()
 
-                    } else if viewModel.isMagicLinkInitiated {
-                        Text(t.t("magicLink.magic_link_sent"))
-                            .fontHeader3()
-                            .listItemModifier()
+                } else if viewModel.isMagicLinkInitiated {
+                    Text(t.t("magicLink.magic_link_sent"))
+                        .fontHeader3()
+                        .listItemModifier()
 
-                    } else {
-                        if viewModel.showForgotPassword {
-                            ForgotPasswordView()
-                                .padding(.bottom)
-                        }
+                } else {
+                    if viewModel.showForgotPassword {
+                        ForgotPasswordView()
+                            .padding(.bottom)
+                    }
 
-                        if viewModel.showMagicLink {
-                            MagicLinkView()
-                                .padding(.bottom)
-                        }
+                    if viewModel.showMagicLink {
+                        MagicLinkView()
+                            .padding(.bottom)
                     }
                 }
             }

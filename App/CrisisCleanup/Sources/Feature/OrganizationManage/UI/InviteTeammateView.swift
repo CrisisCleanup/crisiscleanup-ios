@@ -61,173 +61,176 @@ private struct InviteTeammateContentView: View {
     var body: some View {
         VStack {
             WrappingHeightScrollView {
-                VStack(alignment: .leading) {
-                    let inviteToAnotherOrg = viewModel.inviteToAnotherOrg
-                    if !animateTopSearchBar {
-                        Text(t.t("inviteTeammates.invite_new_user_via_email"))
-                            .fontHeader4()
-                            .padding(.vertical, appTheme.listItemVerticalPadding)
+                VStack(alignment: .center) {
+                    VStack(alignment: .leading) {
+                        let inviteToAnotherOrg = viewModel.inviteToAnotherOrg
+                        if !animateTopSearchBar {
+                            Text(t.t("inviteTeammates.invite_new_user_via_email"))
+                                .fontHeader4()
+                                .padding(.vertical, appTheme.listItemVerticalPadding)
 
-                        RadioButton(
-                            text: viewModel.myOrgInviteOptionText,
-                            isSelected: !inviteToAnotherOrg
-                        ) {
-                            viewModel.inviteToAnotherOrg = false
-                        }
-                        .padding(.bottom, appTheme.listItemVerticalPadding)
-
-                        RadioButton(
-                            text: viewModel.anotherOrgInviteOptionText,
-                            isSelected: inviteToAnotherOrg
-                        ) {
-                            viewModel.inviteToAnotherOrg = true
-                        }
-                        .onChange(of: viewModel.inviteToAnotherOrg) { newValue in
-                            if newValue,
-                               viewModel.organizationNameQuery.isBlank {
-                                focusState = .querySuggestions
+                            RadioButton(
+                                text: viewModel.myOrgInviteOptionText,
+                                isSelected: !inviteToAnotherOrg
+                            ) {
+                                viewModel.inviteToAnotherOrg = false
                             }
-                        }
-                    }
+                            .padding(.bottom, appTheme.listItemVerticalPadding)
 
-                    let isNewOrganization = viewModel.inviteOrgState.new
-
-                    VStack {
-                        SuggestionsSearchField(
-                            q: $viewModel.organizationNameQuery,
-                            animateSearchFieldFocus: $animateTopSearchBar,
-                            focusState: _focusState,
-                            hint: t.t("profileOrg.organization_name"),
-                            disableAutocorrect: true,
-                            autocapitalization: .words
-                        ) {
-                            viewModel.onOrgQueryClose()
-                        }
-                        .disabled(!inviteToAnotherOrg)
-                        .onChange(of: animateTopSearchBar) { newValue in
-                            withAnimation {
-                                animateSearchOrgLeadSpace = newValue ? 0 : 24
+                            RadioButton(
+                                text: viewModel.anotherOrgInviteOptionText,
+                                isSelected: inviteToAnotherOrg
+                            ) {
+                                viewModel.inviteToAnotherOrg = true
                             }
-                        }
-
-                        if !animateTopSearchBar,
-                           inviteToAnotherOrg {
-                            let messageKey: String = {
-                                if isNewOrganization {
-                                    return "inviteTeammates.org_does_not_have_account"
-                                } else if viewModel.inviteOrgState.nonAffiliate {
-                                    // TODO: Update once logic is decided
-                                    // return "inviteTeammates.user_needs_approval_from_org"
+                            .onChange(of: viewModel.inviteToAnotherOrg) { newValue in
+                                if newValue,
+                                   viewModel.organizationNameQuery.isBlank {
+                                    focusState = .querySuggestions
                                 }
-                                return ""
-                            }()
-                            if messageKey.isNotBlank {
-                                Text(t.t(messageKey))
-                                    .foregroundColor(appTheme.colors.primaryBlueColor)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
                             }
                         }
-                    }
-                    .padding(.leading, animateSearchOrgLeadSpace)
-                    .padding(.bottom)
 
-                    if !animateTopSearchBar {
-                        if viewModel.emailAddressError.isNotBlank {
-                            Text(viewModel.emailAddressError)
-                                .foregroundColor(appTheme.colors.primaryRedColor)
-                        }
+                        let isNewOrganization = viewModel.inviteOrgState.new
 
-                        if viewModel.inviteOrgState.nonAffiliate {
-                            Text(t.t("inviteTeammates.no_unaffiliated_invitations_allowed"))
-                                .foregroundColor(appTheme.colors.primaryBlueColor)
+                        VStack {
+                            SuggestionsSearchField(
+                                q: $viewModel.organizationNameQuery,
+                                animateSearchFieldFocus: $animateTopSearchBar,
+                                focusState: _focusState,
+                                hint: t.t("profileOrg.organization_name"),
+                                disableAutocorrect: true,
+                                autocapitalization: .words
+                            ) {
+                                viewModel.onOrgQueryClose()
+                            }
+                            .disabled(!inviteToAnotherOrg)
+                            .onChange(of: animateTopSearchBar) { newValue in
+                                withAnimation {
+                                    animateSearchOrgLeadSpace = newValue ? 0 : 24
+                                }
+                            }
 
-                        } else {
-                            HStack(spacing: appTheme.gridItemSpacing) {
-                                Image(systemName: "envelope")
-
-                                TextField(t.t("invitationsVue.email"), text: $viewModel.inviteEmailAddresses)
-                                    .keyboardType(.emailAddress)
-                                    .autocapitalization(.none)
-                                    .disableAutocorrection(true)
-                                    .focused($focusState, equals: TextInputFocused.userEmailAddress)
-                                    .onSubmit {
-                                        if isNewOrganization {
-                                            focusState = .userPhone
-                                        }
+                            if !animateTopSearchBar,
+                               inviteToAnotherOrg {
+                                let messageKey: String = {
+                                    if isNewOrganization {
+                                        return "inviteTeammates.org_does_not_have_account"
+                                    } else if viewModel.inviteOrgState.nonAffiliate {
+                                        // TODO: Update once logic is decided
+                                        // return "inviteTeammates.user_needs_approval_from_org"
                                     }
-                            }
-                            .textFieldBorder()
-
-                            Group {
-                                if isNewOrganization {
-                                    NewOrganizationInputView(
-                                        focusState: $focusState
-                                    )
-                                    .padding(.top, appTheme.listItemVerticalPadding)
-                                } else {
-                                    Text(t.t("inviteTeammates.use_commas_multiple_emails"))
-                                        .fontBodySmall()
+                                    return ""
+                                }()
+                                if messageKey.isNotBlank {
+                                    Text(t.t(messageKey))
+                                        .foregroundColor(appTheme.colors.primaryBlueColor)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                 }
                             }
-                            .padding(.bottom)
                         }
-
-                        if viewModel.sendInviteErrorMessage.isNotBlank {
-                            Text(viewModel.sendInviteErrorMessage)
-                                .foregroundColor(appTheme.colors.primaryRedColor)
-                        }
-
-                        Button {
-                            viewModel.sendInvites()
-                        } label: {
-                            BusyButtonContent(
-                                isBusy: viewModel.isSendingInvite,
-                                text: t.t("inviteTeammates.send_invites")
-                            )
-                        }
-                        .stylePrimary()
-                        .disabled(viewModel.inviteOrgState.nonAffiliate)
+                        .padding(.leading, animateSearchOrgLeadSpace)
                         .padding(.bottom)
 
-                        if viewModel.inviteOrgState.ownOrAffiliate,
-                           viewModel.scanQrCodeText.isNotBlank {
-                            let orText = t.t("inviteTeammates.or")
-                            Text(orText)
-                                .frame(maxWidth: .infinity, alignment: .center)
-                                .fontHeader4()
-                                .foregroundColor(appTheme.colors.neutralFontColor)
-                                .padding(.bottom)
+                        if !animateTopSearchBar {
+                            if viewModel.emailAddressError.isNotBlank {
+                                Text(viewModel.emailAddressError)
+                                    .foregroundColor(appTheme.colors.primaryRedColor)
+                            }
 
-                            Text(viewModel.scanQrCodeText)
-                                .fontHeader4()
+                            if viewModel.inviteOrgState.nonAffiliate {
+                                Text(t.t("inviteTeammates.no_unaffiliated_invitations_allowed"))
+                                    .foregroundColor(appTheme.colors.primaryBlueColor)
 
-                            if viewModel.isGeneratingQrCode {
-                                HStack {
-                                    ProgressView()
-                                }
-                                .frame(maxWidth: .infinity)
                             } else {
-                                if viewModel.inviteToAnotherOrg {
-                                    if let qrCode = viewModel.affiliateOrgQrCode {
-                                        CenteredRowImage(image: qrCode)
-                                    }
-                                } else {
-                                    if let qrCode = viewModel.myOrgInviteQrCode {
-                                        CenteredRowImage(image: qrCode)
+                                HStack(spacing: appTheme.gridItemSpacing) {
+                                    Image(systemName: "envelope")
+
+                                    TextField(t.t("invitationsVue.email"), text: $viewModel.inviteEmailAddresses)
+                                        .keyboardType(.emailAddress)
+                                        .autocapitalization(.none)
+                                        .disableAutocorrection(true)
+                                        .focused($focusState, equals: TextInputFocused.userEmailAddress)
+                                        .onSubmit {
+                                            if isNewOrganization {
+                                                focusState = .userPhone
+                                            }
+                                        }
+                                }
+                                .textFieldBorder()
+
+                                Group {
+                                    if isNewOrganization {
+                                        NewOrganizationInputView(
+                                            focusState: $focusState
+                                        )
+                                        .padding(.top, appTheme.listItemVerticalPadding)
                                     } else {
-                                        Text(t.t("inviteTeammates.invite_error"))
-                                            .padding(.vertical)
+                                        Text(t.t("inviteTeammates.use_commas_multiple_emails"))
+                                            .fontBodySmall()
+                                    }
+                                }
+                                .padding(.bottom)
+                            }
+
+                            if viewModel.sendInviteErrorMessage.isNotBlank {
+                                Text(viewModel.sendInviteErrorMessage)
+                                    .foregroundColor(appTheme.colors.primaryRedColor)
+                            }
+
+                            Button {
+                                viewModel.sendInvites()
+                            } label: {
+                                BusyButtonContent(
+                                    isBusy: viewModel.isSendingInvite,
+                                    text: t.t("inviteTeammates.send_invites")
+                                )
+                            }
+                            .stylePrimary()
+                            .disabled(viewModel.inviteOrgState.nonAffiliate)
+                            .padding(.bottom)
+
+                            if viewModel.inviteOrgState.ownOrAffiliate,
+                               viewModel.scanQrCodeText.isNotBlank {
+                                let orText = t.t("inviteTeammates.or")
+                                Text(orText)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .fontHeader4()
+                                    .foregroundColor(appTheme.colors.neutralFontColor)
+                                    .padding(.bottom)
+
+                                Text(viewModel.scanQrCodeText)
+                                    .fontHeader4()
+
+                                if viewModel.isGeneratingQrCode {
+                                    HStack {
+                                        ProgressView()
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                } else {
+                                    if viewModel.inviteToAnotherOrg {
+                                        if let qrCode = viewModel.affiliateOrgQrCode {
+                                            CenteredRowImage(image: qrCode)
+                                        }
+                                    } else {
+                                        if let qrCode = viewModel.myOrgInviteQrCode {
+                                            CenteredRowImage(image: qrCode)
+                                        } else {
+                                            Text(t.t("inviteTeammates.invite_error"))
+                                                .padding(.vertical)
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        Spacer()
+                            Spacer()
+                        }
                     }
+                    // TODO: Common dimensions
+                    .frame(maxWidth: 600.0, alignment: .leading)
+                    .padding(.horizontal)
+                    .disabled(viewModel.editableView.disabled)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal)
-                .disabled(viewModel.editableView.disabled)
             }
             .scrollDismissesKeyboard(.immediately)
             .scrollDisabled(animateTopSearchBar)
@@ -345,7 +348,7 @@ private struct SuggestedOrganizationsView: View {
     var focusState: FocusState<TextInputFocused?>.Binding
 
     var body: some View {
-        ScrollView {
+        ScrollCenterContent {
             ForEach(viewModel.organizationsSearchResult) { organization in
                 Text(organization.name)
                     .onTapGesture {

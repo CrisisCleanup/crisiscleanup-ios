@@ -36,16 +36,18 @@ struct RequestRedeployView: View {
                     let selectedIncidentText = selectedIncident.name.ifBlank { selectIncidentHint }
 
                     VStack {
-                        if !showIncidentOptions {
-                            Text(t.t("requestRedeploy.choose_an_incident"))
-                                .listItemModifier()
+                        Text(t.t("requestRedeploy.choose_an_incident"))
+                            .listItemModifier()
 
-                            if errorMessage.isNotBlank {
-                                Text(errorMessage)
-                                    .listItemPadding()
-                                    .foregroundColor(appTheme.colors.primaryRedColor)
-                            }
+                        if errorMessage.isNotBlank {
+                            Text(errorMessage)
+                                .listItemPadding()
+                                .foregroundColor(appTheme.colors.primaryRedColor)
+                        }
 
+                        if showIncidentOptions {
+                            Spacer()
+                        } else {
                             HStack {
                                 Text(selectedIncidentText)
                                 Spacer()
@@ -81,6 +83,8 @@ struct RequestRedeployView: View {
                             .listItemPadding()
                         }
                     }
+                    // TODO: Common dimensions
+                    .frame(maxWidth: 600.0)
                     .sheet(isPresented: $showIncidentOptions) {
                         Text(selectIncidentHint)
                             .fontHeader3()
@@ -89,7 +93,7 @@ struct RequestRedeployView: View {
                         List(incidents, id: \.id) { incident in
                             let isSelected = incident.id == selectedIncident.id
                             let isRequested = requestedIncidentIds.contains(incident.id)
-                            Text(incident.name)
+                            Text(incident.displayLabel)
                                 .bold(isSelected)
                                 .fullWidthSelector()
                                 // TODO: Use newer APIs where possible

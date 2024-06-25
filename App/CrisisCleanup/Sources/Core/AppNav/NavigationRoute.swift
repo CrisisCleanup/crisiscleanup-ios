@@ -38,7 +38,9 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
          inviteTeammate,
          orgPersistentInvite(_ invite: UserPersistentInvite),
          pasteOrgInviteLink,
-         requestRedeploy
+         requestRedeploy,
+         lists,
+         viewList(_ listId: Int64)
 
     public var id: Int {
         switch self {
@@ -48,16 +50,16 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
         case .filterCases:  return 4
         case .viewCase:     return 5
         case .createEditCase:       return 6
-        case .caseShare:    return 7
-        case .caseFlags:    return 8
-        case .caseHistory:  return 9
+        case .caseShare:            return 7
+        case .caseFlags:            return 8
+        case .caseHistory:          return 9
         case .caseWorkTypeTransfer: return 10
-        case .caseAddNote:  return 11
-        case .viewImage:    return 12
+        case .caseAddNote:          return 11
+        case .viewImage:            return 12
         case .caseSearchLocation:   return 13
-        case .caseMoveOnMap:return 14
+        case .caseMoveOnMap:        return 14
         case .caseShareStep2:       return 15
-        case .userFeedback: return 16
+        case .userFeedback:         return 16
         case .loginWithEmail:       return 17
         case .loginWithPhone:       return 18
         case .phoneLoginCode:       return 19
@@ -71,8 +73,10 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
         case .inviteTeammate:       return 27
         case .orgPersistentInvite:  return 28
         case .pasteOrgInviteLink:   return 29
-        case .requestRedeploy:      return 30
-        case .worksiteImages:       return 31
+        case .requestRedeploy:  return 30
+        case .worksiteImages:   return 31
+        case .lists:            return 32
+        case .viewList:         return 33
 
         case .syncInsights: return 77
         }

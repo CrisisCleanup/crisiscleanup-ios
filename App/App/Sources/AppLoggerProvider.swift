@@ -5,6 +5,8 @@ class TagLogger: AppLogger {
     let appEnv: AppEnv
     let tag: String
 
+    private var crashlytics: Crashlytics { Crashlytics.crashlytics() }
+
     init(appEnv: AppEnv, tag: String) {
         self.appEnv = appEnv
         self.tag = tag
@@ -28,14 +30,18 @@ class TagLogger: AppLogger {
                 print(self.tag, e)
             }
         } else {
-            Crashlytics.crashlytics().record(error: e)
+            crashlytics.record(error: e)
         }
     }
 
     func logCapture(_ message: String) {
         if !appEnv.isDebuggable {
-            Crashlytics.crashlytics().log(message)
+            crashlytics.log(message)
         }
+    }
+
+    func setAccontId(_ id: String) {
+        crashlytics.setUserID(id)
     }
 }
 

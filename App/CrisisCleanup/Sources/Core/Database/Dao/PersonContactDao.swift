@@ -17,10 +17,21 @@ public class PersonContactDao {
         try! reader.read { db in
             try PersonContactRecord
                 .all()
+                .filter(id: id)
                 .including(optional: PersonContactRecord.organization)
-                .byId(id)
                 .asRequest(of: PopulatedPersonContactOrganization.self)
                 .fetchOne(db)
+        }
+    }
+
+    func getContacts(_ ids: [Int64]) -> [PopulatedPersonContactOrganization] {
+        try! reader.read { db in
+            try PersonContactRecord
+                .all()
+                .filter(ids: ids)
+                .including(optional: PersonContactRecord.organization)
+                .asRequest(of: PopulatedPersonContactOrganization.self)
+                .fetchAll(db)
         }
     }
 

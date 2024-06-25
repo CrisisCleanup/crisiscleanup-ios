@@ -28,7 +28,7 @@ struct PrimaryButtonStyleModifier: ViewModifier {
     var isWrapWidth: Bool
 
     func body(content: Content) -> some View {
-        return content.buttonStyle(PrimaryButtonStyle(!isEnabled, isWrapWidth ? nil : .infinity))
+        content.buttonStyle(PrimaryButtonStyle(!isEnabled, isWrapWidth ? nil : .infinity))
     }
 }
 
@@ -52,7 +52,7 @@ struct CancelButtonStyle: ButtonStyle {
 struct CancelButtonSytleModifier: ViewModifier {
     @Environment(\.isEnabled) var isEnabled
     func body(content: Content) -> some View {
-        return content.buttonStyle(CancelButtonStyle(!isEnabled))
+        content.buttonStyle(CancelButtonStyle(!isEnabled))
     }
 }
 
@@ -76,7 +76,7 @@ struct BlackButtonStyle: ButtonStyle {
 struct BlackButtonSytleModifier: ViewModifier {
     @Environment(\.isEnabled) var isEnabled
     func body(content: Content) -> some View {
-        return content.buttonStyle(BlackButtonStyle(!isEnabled))
+        content.buttonStyle(BlackButtonStyle(!isEnabled))
     }
 }
 
@@ -103,7 +103,7 @@ struct RoundedRectangleButtonStyle: ButtonStyle {
 struct RoundedRectangleStyleModifier: ViewModifier {
     @Environment(\.isEnabled) var isEnabled
     func body(content: Content) -> some View {
-        return content.buttonStyle(RoundedRectangleButtonStyle(!isEnabled))
+        content.buttonStyle(RoundedRectangleButtonStyle(!isEnabled))
     }
 }
 
@@ -135,7 +135,7 @@ struct OutlineButtonStyle: ButtonStyle {
 struct OutlineStyleModifier: ViewModifier {
     @Environment(\.isEnabled) var isEnabled
     func body(content: Content) -> some View {
-        return content.buttonStyle(OutlineButtonStyle(!isEnabled))
+        content.buttonStyle(OutlineButtonStyle(!isEnabled))
     }
 }
 

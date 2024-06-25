@@ -137,7 +137,7 @@ class RequestRedeployViewModel: ObservableObject {
                 } else {
                     // TODO: More informative error state where possible
                     redeployErrorMessageSubject.value =
-                    translator.t("~~Request redeploy of {incident_name} failed.")
+                    translator.t("info.request_redeploy_failed")
                         .replacingOccurrences(of: "{incident_name}", with: incident.shortName)
                 }
             }

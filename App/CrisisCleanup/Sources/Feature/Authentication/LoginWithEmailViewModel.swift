@@ -20,7 +20,6 @@ class LoginWithEmailViewModel: ObservableObject {
     @Published private(set) var focusState: TextInputFocused?
 
     @Published private(set) var isAuthenticating: Bool = false
-    @Published private(set) var isAuthenticateSuccessful: Bool = false
 
     private var subscriptions = Set<AnyCancellable>()
 
@@ -196,8 +195,6 @@ class LoginWithEmailViewModel: ObservableObject {
                         activeRoles: r.claims.activeRoles
                     )
                 }
-
-                Task { @MainActor in self.isAuthenticateSuccessful = true }
             } else {
                 Task { @MainActor in
                     errorMessage = loginResult.errorMessage

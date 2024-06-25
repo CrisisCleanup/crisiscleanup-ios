@@ -112,10 +112,16 @@ class RequestOrgAccessViewModel: ObservableObject {
                 if let result = result {
                     let t = self.translator
                     if result.isNewAccountRequest {
-                        self.requestSentTitle = t.t("requestAccess.request_sent")
-                        self.requestSentText = t.t("requestAccess.request_sent_to_org")
-                            .replacingOccurrences(of: "{organization}", with: result.organizationName)
-                            .replacingOccurrences(of: "{requested_to}", with: result.organizationRecipient)
+                        var title = t.t("info.success")
+                        var message = t.t("invitationSignup.success_accept_invitation")
+                        if self.showEmailInput {
+                            title = t.t("requestAccess.request_sent")
+                            message = t.t("requestAccess.request_sent_to_org")
+                                .replacingOccurrences(of: "{organization}", with: result.organizationName)
+                                .replacingOccurrences(of: "{requested_to}", with: result.organizationRecipient)
+                        }
+                        self.requestSentTitle = title
+                        self.requestSentText = message
                     } else {
                         self.inviteInfoErrorMessageSubject.value = t.t("requestAccess.already_in_org_error")
                     }

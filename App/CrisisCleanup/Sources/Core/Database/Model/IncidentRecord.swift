@@ -10,10 +10,13 @@ struct IncidentRecord: Identifiable, Equatable {
     )
     static let incidentFormFields = hasMany(IncidentFormFieldRecord.self)
 
+    static let lists = hasMany(ListRecord.self)
+
     let id: Int64
     let startAt: Date
     let name: String
     let shortName: String
+    let caseLabel: String
     let type: String
     let activePhoneNumber: String?
     let turnOnRelease: Bool
@@ -28,6 +31,7 @@ struct IncidentRecord: Identifiable, Equatable {
             id: id,
             name: name,
             shortName: shortName,
+            caseLabel: caseLabel,
             locationIds: locationIds,
             activePhoneNumbers: phoneNumbers,
             formFields: formFields,
@@ -86,7 +90,7 @@ extension IncidentToIncidentLocationRecord: Codable, FetchableRecord, Persistabl
         case id, incidentLocationId
     }
 
-    static func inIds(ids: [Int64]) -> SQLSpecificExpressible {
+    static func filterByIds(ids: [Int64]) -> SQLSpecificExpressible {
         ids.contains(Columns.id)
     }
 }

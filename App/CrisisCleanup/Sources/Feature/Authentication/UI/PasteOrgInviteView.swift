@@ -11,7 +11,7 @@ struct PasteOrgInviteView: View {
     @FocusState private var focusState: TextInputFocused?
 
     var body: some View {
-        VStack(spacing: appTheme.listItemVerticalPadding) {
+        ScrollCenterContent(contentPadding: .horizontal) {
             Text(t.t("pasteInvite.paste_invitation_link_and_accept"))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityIdentifier("pasteOrgInviteText")
@@ -51,7 +51,7 @@ struct PasteOrgInviteView: View {
 
             Spacer()
         }
-        .padding(.horizontal)
+        .scrollDismissesKeyboard(.immediately)
         .navigationTitle(t.t("nav.invitation_link"))
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }

@@ -9,14 +9,27 @@ struct IncidentDisasterImage: View {
     private let isEditable: Bool
     private let backgroundColor: Color?
 
-    init(
+    init (
         _ incident: Incident,
         disabled: Bool = false,
         background: Color? = nil
     ) {
-        isValidIncident = incident != EmptyIncident
-        let disaster = incident.disaster.literal
-        iconPath = "\(incidentsAssetIconPath)/\(disaster)"
+        self.init(
+            incident != EmptyIncident,
+            incident.disaster.literal,
+            disabled: disabled,
+            background: background
+        )
+    }
+
+    init (
+        _ isValidIncident: Bool,
+        _ disasterLiteral: String,
+        disabled: Bool = false,
+        background: Color? = nil
+    ) {
+        self.isValidIncident = isValidIncident
+        iconPath = "\(incidentsAssetIconPath)/\(disasterLiteral)"
         isEditable = !disabled
         backgroundColor = background
     }

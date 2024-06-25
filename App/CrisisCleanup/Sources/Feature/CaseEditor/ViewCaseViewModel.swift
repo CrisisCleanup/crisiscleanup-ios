@@ -64,7 +64,7 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
 
     @Published private(set) var workTypeProfile: WorkTypeProfile? = nil
 
-    @Published private(set) var tabTitles: [ViewCaseTabs: String] = [
+    @Published private(set) var tabTitles: [ViewCaseTab: String] = [
         .info: "",
         .photos: "",
         .notes: ""
@@ -946,7 +946,7 @@ fileprivate extension Worksite {
     }
 }
 
-enum ViewCaseTabs {
+enum ViewCaseTab {
     case info
     case photos
     case notes

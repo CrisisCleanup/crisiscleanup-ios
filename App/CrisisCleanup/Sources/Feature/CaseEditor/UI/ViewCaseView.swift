@@ -20,7 +20,7 @@ private struct ViewCaseLayoutView: View {
     @EnvironmentObject var viewLayout: ViewLayoutDescription
     @EnvironmentObject var viewModel: ViewCaseViewModel
 
-    @State private var selectedTab: ViewCaseTabs = .info
+    @State private var selectedTab = ViewCaseTab.info
     @State private var titlePressed: Bool = false
 
     @ObservedObject var focusableViewState = TextInputFocusableView()
@@ -67,7 +67,7 @@ private struct ViewCaseLayoutView: View {
                     }
                 }
 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .topBarTrailing) {
                     HStack {
                         ViewCaseHeaderActions()
                     }
@@ -95,64 +95,10 @@ private struct ViewCaseLayoutView: View {
     }
 }
 
-private struct TabContentView: View {
-    @Binding var selectedTab: ViewCaseTabs
-
-    @EnvironmentObject var viewModel: ViewCaseViewModel
-
-    var tabTitles: [ViewCaseTabs: String]
-
-    var isCompactLayout = false
-
-    private let infoTabs = Array([
-        ViewCaseTabs.info,
-        ViewCaseTabs.photos,
-        ViewCaseTabs.notes
-    ].enumerated())
-
-    @State private var isPhotoImageOptionsOpen = false
-
-    var body: some View {
-        HStack {
-            ForEach(infoTabs, id: \.offset) { (index, tab) in
-                VStack {
-                    HStack{
-                        Spacer()
-                        Text(tabTitles[tab] ?? "")
-                            .fontHeader4()
-                            .onTapGesture {
-                                selectedTab = tab
-                            }
-                        Spacer()
-                    }
-                    Divider()
-                        .frame(height: 2)
-                        .background(selectedTab == tab ? Color.orange : Color.gray)
-                }
-            }
-        }
-
-        TabView(selection: $selectedTab) {
-            ViewCaseInfo()
-                .tag(ViewCaseTabs.info)
-            ViewCasePhotosView(
-                caseMediaManager: viewModel.caseMediaManager,
-                headerTitle: viewModel.headerTitle,
-                isCompactLayout: isCompactLayout,
-                areOptionsOpen: $isPhotoImageOptionsOpen
-            )
-            .tag(ViewCaseTabs.photos)
-            ViewCaseNotes()
-                .tag(ViewCaseTabs.notes)
-        }
-        .tabViewStyle(.page(indexDisplayMode: .never))
-    }
-}
-
 private struct MainContent: View {
     @EnvironmentObject var viewModel: ViewCaseViewModel
 
-    @Binding var selectedTab: ViewCaseTabs
+    @Binding var selectedTab: ViewCaseTab
 
     var isOneColumnLayout = true
     var isCompactLayout = false
@@ -193,6 +139,60 @@ private struct MainContent: View {
             Spacer()
         }
         .padding(.top)
+    }
+}
+
+private struct TabContentView: View {
+    @Binding var selectedTab: ViewCaseTab
+
+    @EnvironmentObject var viewModel: ViewCaseViewModel
+
+    var tabTitles: [ViewCaseTab: String]
+
+    var isCompactLayout = false
+
+    private let infoTabs = Array([
+        ViewCaseTab.info,
+        ViewCaseTab.photos,
+        ViewCaseTab.notes
+    ].enumerated())
+
+    @State private var isPhotoImageOptionsOpen = false
+
+    var body: some View {
+        HStack {
+            ForEach(infoTabs, id: \.offset) { (index, tab) in
+                VStack {
+                    HStack{
+                        Spacer()
+                        Text(tabTitles[tab] ?? "")
+                            .fontHeader4()
+                            .onTapGesture {
+                                selectedTab = tab
+                            }
+                        Spacer()
+                    }
+                    Divider()
+                        .frame(height: 2)
+                        .background(selectedTab == tab ? Color.orange : Color.gray)
+                }
+            }
+        }
+
+        TabView(selection: $selectedTab) {
+            ViewCaseInfo()
+                .tag(ViewCaseTab.info)
+            ViewCasePhotosView(
+                caseMediaManager: viewModel.caseMediaManager,
+                headerTitle: viewModel.headerTitle,
+                isCompactLayout: isCompactLayout,
+                areOptionsOpen: $isPhotoImageOptionsOpen
+            )
+            .tag(ViewCaseTab.photos)
+            ViewCaseNotes()
+                .tag(ViewCaseTab.notes)
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
     }
 }
 

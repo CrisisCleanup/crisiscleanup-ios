@@ -39,7 +39,7 @@ private struct LoginView: View {
         let disabled = viewModel.isRequestingCode
 
         VStack {
-            ScrollView {
+            ScrollCenterContent {
                 CrisisCleanupLogoView()
 
                 VStack {

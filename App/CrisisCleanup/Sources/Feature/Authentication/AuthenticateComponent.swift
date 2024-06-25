@@ -4,10 +4,10 @@ import SwiftUI
 
 public protocol AuthenticateViewBuilder {
     func authenticateView(dismissScreen: @escaping () -> Void) -> AnyView
-    func loginWithEmailView(closeAuthFlow: @escaping () -> Void) -> AnyView
+    func loginWithEmailView() -> AnyView
     var loginWithPhoneView: AnyView { get }
-    func phoneLoginCodeView(_ phoneNumber: String, closeAuthFlow: @escaping () -> Void) -> AnyView
-    func magicLinkLoginCodeView(_ code: String, closeAuthFlow: @escaping () -> Void) -> AnyView
+    func phoneLoginCodeView(_ phoneNumber: String) -> AnyView
+    func magicLinkLoginCodeView(_ code: String) -> AnyView
     func passwordRecoverView(showForgotPassword: Bool, showMagicLink: Bool) -> AnyView
     func resetPasswordView(closeAuthFlow: @escaping () -> Void, resetCode: String) -> AnyView
 }
@@ -28,6 +28,7 @@ class AuthenticateComponent: Component<AppDependency> {
     ) {
         super.init(parent: parent)
 
+        let magicLinkLoginCodeId = NavigationRoute.magicLinkLoginCode("").id
         let phoneLoginCodeId = NavigationRoute.phoneLoginCode("").id
         let passwordRecoverId = NavigationRoute.recoverPassword().id
         let resetPasswordId = NavigationRoute.resetPassword("").id
@@ -35,6 +36,9 @@ class AuthenticateComponent: Component<AppDependency> {
             .sink { pathIds in
                 if !pathIds.contains(NavigationRoute.loginWithEmail.id) {
                     self._loginWithEmailViewModel = nil
+                }
+                if !pathIds.contains(magicLinkLoginCodeId) {
+                    self._loginWithMagicLinkViewModel = nil
                 }
                 if !(pathIds.contains(NavigationRoute.loginWithPhone.id) ||
                      pathIds.contains(phoneLoginCodeId)) {

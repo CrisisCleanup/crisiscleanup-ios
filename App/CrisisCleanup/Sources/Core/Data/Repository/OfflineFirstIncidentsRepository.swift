@@ -10,6 +10,7 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         "start_at",
         "name",
         "short_name",
+        "case_label",
         "incident_type",
         "locations",
         "turn_on_release",
@@ -115,7 +116,7 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
 
             let queryFields: [String]
             let pullAfter: Date?
-            let recentTime = Date().addingTimeInterval(-120.days)
+            let recentTime = Date().addingTimeInterval(-180.days)
             if pullAll {
                 queryFields = incidentsQueryFields
                 pullAfter = nil
