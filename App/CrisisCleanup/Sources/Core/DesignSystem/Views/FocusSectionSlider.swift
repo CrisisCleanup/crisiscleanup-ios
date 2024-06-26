@@ -48,6 +48,8 @@ struct FocusSectionSlider: View {
                         .fontHeader4()
                         .padding(.leading)
                         .onTapGesture {
+                            // TODO: Animation sends inexact signals
+                            //       When tapped initially will bounce back to previous section
                             scrollToSection(index)
                         }
                         .background(GeometryReader {
@@ -92,7 +94,8 @@ struct FocusSectionSlider: View {
                     }
                 }
             }
-            if abs(offset) > 6 {
+            // TODO: Settle on section if content index differs regardless of offset
+            if abs(offset) > 4 {
                 scrollToSection(index)
             }
         }
