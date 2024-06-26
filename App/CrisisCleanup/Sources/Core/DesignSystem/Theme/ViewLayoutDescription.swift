@@ -32,25 +32,26 @@ class ViewLayoutDescription: ObservableObject {
 
             let isLandscape = landscapeOrientations.contains(device.orientation)
             if isLandscape != self.isLandscape {
-                var width = Device.screen.width
-                var height = Device.screen.height
+                // TODO: Test on Mac
+                var width = min(Device.screen.width, Device.screen.height)
+                var height = max(Device.screen.width, Device.screen.height)
                 if isLandscape {
-                    width = Device.screen.height
-                    height = Device.screen.width
+                    let temp = width
+                    width = height
+                    height = temp
                 }
-                update(width: width, height: height)
+                update(isLandscape, width: width, height: height)
             }
         }
     }
 
-    func update(width: CGFloat, height: CGFloat) {
-        let isPortrait = width <= height
+    private func update(_ isLandscape: Bool, width: CGFloat, height: CGFloat) {
         let isListDetailLayout = width > height && width > 600
         isWide = width > 600
         isShort = height < 400
 
-        self.isPortrait = isPortrait
-        isLandscape = !isPortrait
+        isPortrait = !isLandscape
+        self.isLandscape = isLandscape
         self.isListDetailLayout = isListDetailLayout
         isOneColumnLayout = !isListDetailLayout
     }

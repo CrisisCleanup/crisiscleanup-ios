@@ -7,9 +7,12 @@ struct CasesFilterView: View {
 
     @ObservedObject var viewModel: CasesFilterViewModel
 
+    private let referenceScrollSpace = "scrollFrom"
+
     var body: some View {
         ZStack {
             FiltersContentView()
+                .coordinateSpace(name: referenceScrollSpace)
 
             if viewModel.showExplainLocationPermission {
                 LocationAppSettingsDialog(
@@ -127,7 +130,6 @@ private struct FiltersContentView: View {
                         )
                     }
                 }
-                .coordinateSpace(name: "scrollFrom")
                 .scrollDismissesKeyboard(.immediately)
                 .onReceive(contentScrollStopDelay) { scrollToId in
                     if scrollToId.isNotBlank {

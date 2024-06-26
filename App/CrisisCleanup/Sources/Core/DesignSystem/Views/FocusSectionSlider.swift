@@ -27,6 +27,7 @@ struct FocusSectionSlider: View {
 
         scrollStopDelay = scrollChangeSubject
             .debounce(for: .seconds(0.3), scheduler: RunLoop.current)
+            .removeDuplicates()
             .eraseToAnyPublisher()
     }
 
