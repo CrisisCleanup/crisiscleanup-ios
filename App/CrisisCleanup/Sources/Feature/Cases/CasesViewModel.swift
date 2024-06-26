@@ -91,6 +91,8 @@ class CasesViewModel: ObservableObject {
     private let latestMapMarkersPublisher = LatestAsyncThrowsPublisher<AnnotationsChangeSet>()
     private let latestTableDataPublisher = LatestAsyncPublisher<[WorksiteDistance]>()
 
+    private var onZoomIncidentTimestamp = Date.distantPast
+
     private var subscriptions = Set<AnyCancellable>()
 
     init(
@@ -667,11 +669,26 @@ class CasesViewModel: ObservableObject {
         }
     }
 
+    // Compensates for inexact altitude-zoom level derivations
+    func onZoomIncident() {
+        onZoomIncidentTimestamp = Date.now
+    }
+
     func onMapCameraChange(
         _ zoom: Double,
         _ region: MKCoordinateRegion,
         _ didAnimate: Bool
     ) {
+        // Workaround for zoom level derivation from altitude
+        var zoom = zoom
+        if CasesConstant.MapMarkersZoomLevel > zoom {
+            let onZoomDelta = Date.now.timeIntervalSince(onZoomIncidentTimestamp)
+            if onZoomDelta.seconds < 1,
+               CasesConstant.MapMarkersZoomLevel - zoom < 0.3 {
+                zoom = CasesConstant.MapMarkersZoomLevel
+            }
+        }
+
         qsm.mapZoomSubject.value = zoom
 
         let center = region.center

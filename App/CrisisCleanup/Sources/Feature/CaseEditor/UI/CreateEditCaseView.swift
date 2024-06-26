@@ -25,6 +25,8 @@ private struct CreateEditCaseLayoutView: View {
 
     @State private var showBusyIndicator = true
 
+    private let referenceScrollSpace = "scrollFrom"
+
     var body: some View {
         ZStack {
             if viewModel.editSections.isNotEmpty {
@@ -38,7 +40,8 @@ private struct CreateEditCaseLayoutView: View {
                                 isCompactLayout: viewLayout.isShort,
                                 isSaveBarVisible: false
                             )
-                                .frame(width: proxy.size.width * listDetailDetailFractionalWidth)
+                            .frame(width: proxy.size.width * listDetailDetailFractionalWidth)
+                            .coordinateSpace(name: referenceScrollSpace)
                         }
                     }
                 } else {
@@ -46,6 +49,7 @@ private struct CreateEditCaseLayoutView: View {
                         isCompactLayout: viewLayout.isShort,
                         isSaveBarVisible: true
                     )
+                    .coordinateSpace(name: referenceScrollSpace)
                 }
             }
 
@@ -122,6 +126,7 @@ private struct CreateEditCaseContentView: View {
         contentScrollStopDelay = contentScrollChangeSubject
             .debounce(for: .seconds(0.2), scheduler: RunLoop.current)
             .map { $0.0 }
+            .removeDuplicates()
             .eraseToAnyPublisher()
     }
 
@@ -172,7 +177,6 @@ private struct CreateEditCaseContentView: View {
                     }
                 }
             }
-            .coordinateSpace(name: "scrollFrom")
             .scrollDismissesKeyboard(.immediately)
             .onChange(of: focusableViewState.focusState) { focusState in
                 let isNameFocus = focusState == .caseInfoName
@@ -810,9 +814,9 @@ private struct CreateEditCaseNotesView: View {
                 text: $viewModel.editingNote,
                 placeholder: t.t("caseView.note")
             )
-                .id("note-input")
-                .listItemModifier()
-                .disabled(disabled)
+            .id("note-input")
+            .listItemModifier()
+            .disabled(disabled)
 
             Button(t.t("actions.add")) {
                 let note = WorksiteNote.create().copy {
