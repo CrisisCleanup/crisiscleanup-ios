@@ -76,7 +76,7 @@ private struct LoginView: View {
                             }
                         }
                         .onChange(of: focusState) { focusableViewState.focusState = $0 }
-                        .accessibilityIdentifier("loginPhoneTextField")
+                        .accessibilityIdentifier("phoneLoginTextField")
 
                     Button {
                         requestPhoneCode()

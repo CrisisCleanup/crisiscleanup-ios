@@ -69,6 +69,7 @@ private struct LoginView: View {
                 Text(t.t("loginWithPhone.enter_x_digit_code")
                      // TODO: Use configurable value
                     .replacingOccurrences(of: "{codeCount}", with: "\(codeLength)"))
+                .accessibilityIdentifier("verifyPhoneCodeInstruction")
                 Text(viewModel.obfuscatedPhoneNumber)
 
                 // TODO: Autofill from text messages
@@ -82,6 +83,7 @@ private struct LoginView: View {
                     .onAppear {
                         // TODO: Focus on input
                     }
+                    .accessibilityIdentifier("phoneLoginCodeTextField")
 
                 Group {
                     Button(t.t("actions.resend_code")) {
@@ -91,6 +93,18 @@ private struct LoginView: View {
                     .disabled(disabled)
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
+
+                if viewModel.showMultiPhoneToggle {
+                    Group {
+                        Button("Toggle account select") {
+                            viewModel.toggleMultiPhone()
+                        }
+                        .tint(appTheme.colors.devActionColor)
+                        .accessibilityIdentifier("phoneLoginToggleAccountSelect")
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                }
 
                 if viewModel.accountOptions.count > 1 {
                     Text(t.t("loginWithPhone.phone_associated_multiple_users"))
@@ -121,6 +135,7 @@ private struct LoginView: View {
                     }
                     .textFieldBorder()
                     .disabled(disabled)
+                    .accessibilityIdentifier("phoneLoginAccountSelect")
                 }
             }
             .scrollDismissesKeyboard(.immediately)
@@ -140,6 +155,7 @@ private struct LoginView: View {
             .disabled(disabled)
             // TODO: Common dimensions
             .frame(maxWidth: 600.0)
+            .accessibilityIdentifier("verifyPhoneCodeAction")
         }
     }
 }
