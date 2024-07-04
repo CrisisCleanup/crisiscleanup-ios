@@ -35,7 +35,7 @@ struct MenuView: View {
                 Button {
                     router.openLists()
                 } label: {
-                    Text(t.t("~~Lists"))
+                    Text(t.t("list.lists"))
                         .padding(.horizontal)
                 }
                 .styleOutline()

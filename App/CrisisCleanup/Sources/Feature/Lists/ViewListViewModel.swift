@@ -73,7 +73,7 @@ class ViewListViewModel: ObservableObject {
             .eraseToAnyPublisher()
             .asyncMap { list in
                 if (list.id == EmptyList.id) {
-                    let listNotFound = self.translator.t("~~List was not found. It is likely deleted.")
+                    let listNotFound = self.translator.t("list.not_found_deleted")
                     return ViewListViewState(errorMessage: listNotFound)
                 }
 
@@ -98,7 +98,7 @@ class ViewListViewModel: ObservableObject {
                     return $0.list.name
                 }
 
-                return self.translator.t("~~List")
+                return self.translator.t("list.list")
             }
             .receive(on: RunLoop.main)
             .assign(to: \.screenTitle, on: self)
@@ -212,15 +212,15 @@ class ViewListViewModel: ObservableObject {
                                 openWorksiteChangeIncident = cachedIncident
                                 pendingOpenWorksite = worksite
                                 changeIncidentConfirmMessageSubject.value =
-                                translator.t("~~Would you like to change to {incident_name} and open Case {case_number}?")
+                                translator.t("list.change_incident_confirm")
                                     .replacingOccurrences(of: "{incident_name}", with: cachedIncident.shortName)
                                     .replacingOccurrences(of: "{case_number}", with: worksite.caseNumber)
                             } else {
-                                openWorksiteErrorSubject.value = translator.t("~~This incident needs downloading.")
+                                openWorksiteErrorSubject.value = translator.t("list.incident_not_downloaded_error")
                             }
                         }
                     } else {
-                        openWorksiteErrorSubject.value = translator.t("~~Case {case_number} does not belong in Incident {incident_name}")
+                        openWorksiteErrorSubject.value = translator.t("list.cannot_access_case_wrong_incident")
                             .replacingOccurrences(of: "{case_number}", with: worksite.caseNumber)
                             .replacingOccurrences(of: "{incident_name}", with: list.incident?.shortName ?? "")
                             .trim()
