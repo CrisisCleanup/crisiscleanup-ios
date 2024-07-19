@@ -73,7 +73,7 @@ struct ListsView: View {
 
             if showReadOnlyDescription {
                 AlertDialog(
-                    title: t.t("~~Lists are read-only"),
+                    title: t.t("list.list_read_only"),
                     positiveActionText: t.t("actions.ok"),
                     negativeActionText: "",
                     dismissDialog: {
@@ -83,13 +83,13 @@ struct ListsView: View {
                         showReadOnlyDescription = false
                     }
                 ) {
-                    Text(t.t("~~Lists (in this app) are currently read-only. Manage lists using Crisis Cleanup in a web browser."))
+                    Text(t.t("list.read_only_in_app_manage_on_web"))
                 }
             }
 
             if explainSupportList.id != EmptyList.id {
                 AlertDialog(
-                    title: t.t("~~Unsupported list"),
+                    title: t.t("list.unsupported_list_title"),
                     positiveActionText: t.t("actions.ok"),
                     negativeActionText: "",
                     dismissDialog: {
@@ -100,7 +100,7 @@ struct ListsView: View {
                     }
                 ) {
                     Text(
-                        t.t("~~{list_name} list is not yet supported on this app.")
+                        t.t("list.unsupported_list_explanation")
                             .replacingOccurrences(of: "{list_name}", with: explainSupportList.name)
                     )
                 }
@@ -109,7 +109,7 @@ struct ListsView: View {
         .hideNavBarUnderSpace()
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Text(t.t("~~Lists"))
+                Text(t.t("list.lists"))
                     .fontHeader3()
             }
             ToolbarItem(placement: .topBarTrailing) {
@@ -148,7 +148,7 @@ private struct IncidentListsView: View {
                 .listItemPadding()
 
                 if lists.isEmpty {
-                    Text(t.t("~~No lists have been created for this Incident."))
+                    Text(t.t("list.no_lists_for_this_incident"))
                         .listItemModifier()
 
                 } else {

@@ -62,7 +62,7 @@ struct ViewListView: View {
             if changeIncidentConfirmMessage.isNotBlank {
                 let closeDialog = { viewModel.clearChangeIncident() }
                 AlertDialog(
-                    title: t.t("~~Confirm change Incident"),
+                    title: t.t("list.confirm_change_incident"),
                     positiveActionText: t.t("actions.continue"),
                     negativeActionText: t.t("actions.cancel"),
                     dismissDialog: closeDialog,
@@ -112,7 +112,10 @@ private struct ListDetailView: View {
     var body: some View {
         VStack(alignment: .leading) {
             if objectData.isEmpty {
-                Text(t.t("~~This list is not supported by the app or has no items."))
+                Text(
+                    t.t("list.unsupported_list_explanation")
+                        .replacingOccurrences(of: "{list_name}", with: list.name)
+                )
                     .listItemModifier()
 
                 Spacer()
@@ -156,6 +159,7 @@ private struct ListDetailView: View {
                         case .worksite:
                             WorksiteItemsView(
                                 incidentId: list.incidentId,
+                                incidentName: list.incident?.shortName ?? "",
                                 listData: objectData,
                                 phoneNumberParser: phoneNumberParser,
                                 phoneCallNumbers: $phoneCallNumbers
@@ -163,7 +167,7 @@ private struct ListDetailView: View {
                                 onOpenWorksite($0)
                             }
                         default:
-                            Text(t.t("~~This list is not supported by the app."))
+                            Text(t.t("list.not_supported_by_app"))
                                 .listItemModifier()
                         }
                     }
@@ -177,7 +181,7 @@ private struct MissingItemView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     var body: some View {
-        Text(t.t("~~Missing list data."))
+        Text(t.t("list.missing_list_data"))
             .listItemModifier()
     }
 }
@@ -299,6 +303,7 @@ private struct WorksiteItemsView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     private let incidentId: Int64
+    private let incidentName: String
     private let worksites: [(Int64, Worksite?)]
     private let phoneNumberParser: PhoneNumberParser
     private let onOpenCase: (Worksite) -> Void
@@ -309,12 +314,14 @@ private struct WorksiteItemsView: View {
 
     init(
         incidentId: Int64,
+        incidentName: String,
         listData: [Any?],
         phoneNumberParser: PhoneNumberParser,
         phoneCallNumbers: Binding<[ParsedPhoneNumber]>,
         onOpenCase: @escaping (Worksite) -> Void
     ) {
         self.incidentId = incidentId
+        self.incidentName = incidentName
         worksites = listData.enumerated()
             .map { i, v in
                 let value = v as? Worksite
@@ -376,8 +383,9 @@ private struct WorksiteItemsView: View {
 
                 } else {
                     Text(
-                        t.t("~~Case {case_number} is not under this Incident.")
+                        t.t("list.cannot_access_case_wrong_incident")
                             .replacingOccurrences(of: "{case_number}", with: worksite.caseNumber)
+                            .replacingOccurrences(of: "{incident_name}", with: incidentName)
                     )
                     .listItemModifier()
                 }
