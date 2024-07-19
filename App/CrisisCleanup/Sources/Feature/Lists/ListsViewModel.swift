@@ -173,7 +173,9 @@ class ListsViewModel: ObservableObject {
     }
 
     func getListData(_ listId: Int64) -> CrisisCleanupList {
-        listLookup[listId] ?? EmptyList
+        listDataLock.withLock {
+            listLookup[listId] ?? EmptyList
+        }
     }
 
     // TODO: Test paging on many lists

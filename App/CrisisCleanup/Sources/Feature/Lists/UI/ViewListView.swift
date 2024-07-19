@@ -114,7 +114,7 @@ private struct ListDetailView: View {
             if objectData.isEmpty {
                 Text(
                     t.t("list.unsupported_list_explanation")
-                        .replacingOccurrences(of: "{list_name}", with: explainSupportList.name)
+                        .replacingOccurrences(of: "{list_name}", with: list.name)
                 )
                     .listItemModifier()
 
@@ -159,6 +159,7 @@ private struct ListDetailView: View {
                         case .worksite:
                             WorksiteItemsView(
                                 incidentId: list.incidentId,
+                                incidentName: list.incident?.shortName ?? "",
                                 listData: objectData,
                                 phoneNumberParser: phoneNumberParser,
                                 phoneCallNumbers: $phoneCallNumbers
@@ -302,6 +303,7 @@ private struct WorksiteItemsView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     private let incidentId: Int64
+    private let incidentName: String
     private let worksites: [(Int64, Worksite?)]
     private let phoneNumberParser: PhoneNumberParser
     private let onOpenCase: (Worksite) -> Void
@@ -312,12 +314,14 @@ private struct WorksiteItemsView: View {
 
     init(
         incidentId: Int64,
+        incidentName: String,
         listData: [Any?],
         phoneNumberParser: PhoneNumberParser,
         phoneCallNumbers: Binding<[ParsedPhoneNumber]>,
         onOpenCase: @escaping (Worksite) -> Void
     ) {
         self.incidentId = incidentId
+        self.incidentName = incidentName
         worksites = listData.enumerated()
             .map { i, v in
                 let value = v as? Worksite
@@ -379,8 +383,9 @@ private struct WorksiteItemsView: View {
 
                 } else {
                     Text(
-                        t.t("list.case_number_not_in_this_incident")
+                        t.t("list.cannot_access_case_wrong_incident")
                             .replacingOccurrences(of: "{case_number}", with: worksite.caseNumber)
+                            .replacingOccurrences(of: "{incident_name}", with: incidentName)
                     )
                     .listItemModifier()
                 }
