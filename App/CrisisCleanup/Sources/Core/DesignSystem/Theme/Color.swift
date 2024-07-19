@@ -42,6 +42,7 @@ struct ThemeColor {
     let primaryBlueOneTenthColor: Color
     let primaryRedColor: Color
     let primaryOrangeColor: Color
+    let devActionColor: Color = Color(hex: 0xFFF50057)
     let survivorNoteColor: Color
     let survivorNoteColorNoTransparency: Color
     let incidentDisasterContainerColor: Color

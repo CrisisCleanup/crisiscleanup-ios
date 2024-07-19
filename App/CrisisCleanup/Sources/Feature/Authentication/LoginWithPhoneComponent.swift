@@ -15,6 +15,7 @@ extension AuthenticateComponent {
                 accountDataRepository: dependency.accountDataRepository,
                 translator: dependency.translator,
                 loggerFactory: dependency.loggerFactory,
+                appEnv: dependency.appEnv,
                 phoneNumber: phoneNumber
             )
         }

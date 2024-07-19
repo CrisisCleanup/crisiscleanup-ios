@@ -39,6 +39,9 @@ class LoginWithPhoneViewModel: ObservableObject {
 
     private let numberRegex = #/^[\d -]+$/#
 
+    // For UI testing
+    let showMultiPhoneToggle: Bool
+
     private var subscriptions = Set<AnyCancellable>()
 
     init(
@@ -48,6 +51,7 @@ class LoginWithPhoneViewModel: ObservableObject {
         accountDataRepository: AccountDataRepository,
         translator: KeyAssetTranslator,
         loggerFactory: AppLoggerFactory,
+        appEnv: AppEnv,
         phoneNumber: String
     ) {
         self.authApi = authApi
@@ -56,6 +60,8 @@ class LoginWithPhoneViewModel: ObservableObject {
         self.accountDataRepository = accountDataRepository
         self.translator = translator
         logger = loggerFactory.getLogger("auth")
+
+        showMultiPhoneToggle = appEnv.isDebuggable
 
         let nonNumberRegex = #/[^\d]/#
         let phoneNumberNumbers = phoneNumber.replacing(nonNumberRegex, with: "")
@@ -329,6 +335,25 @@ class LoginWithPhoneViewModel: ObservableObject {
                 self.errorMessage = errorMessage
                 self.isAuthenticateSuccessful = isAuthenticationSuccessful
             }
+        }
+    }
+
+    func toggleMultiPhone() {
+        if showMultiPhoneToggle {
+            accountOptionsSubject.value = [
+                PhoneNumberAccount(
+                    userId: 7357_132621,
+                    userDisplayName: "Dev Stew",
+                    organizationName: "Hurris"
+                ),
+                PhoneNumberAccount(
+                    userId: 7357_532958,
+                    userDisplayName: "Dev Hou",
+                    organizationName: "Tornas"
+                ),
+            ]
+            selectedAccountSubject.value = PhoneNumberAccountNone
+            isSelectAccountSubject.value = true
         }
     }
 }
