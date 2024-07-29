@@ -20,9 +20,7 @@ struct ListsView: View {
 
     private func onOpenList(_ list: CrisisCleanupList) {
         switch list.model {
-        case .none,
-                .file,
-                .organizationIncidentTeam:
+        case .none:
             explainSupportList = list
         default:
             router.viewList(list)
@@ -184,10 +182,16 @@ private struct AllListsView: View {
     @Binding var animateIsRefreshing: Bool
 
     var body: some View {
+        let allLists = viewModel.allListIds
         ScrollView {
             LazyVStack {
+                if allLists.isEmpty {
+                    Text(t.t("~~Create new lists using Crisis Cleanup in the browser."))
+                        .listItemModifier()
+                }
+
                 // TODO: Find/develop reactive item paging pattern
-                ForEach(viewModel.allListIds, id: \.self) { listId in
+                ForEach(allLists, id: \.self) { listId in
                     let listData = viewModel.getListData(listId)
                     if listData.id == EmptyList.id {
                         ProgressView()
