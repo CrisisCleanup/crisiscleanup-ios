@@ -69,8 +69,8 @@ class ListsViewModel: ObservableObject {
             (incidents.count, listCount)
         }
         .map { (incidentListCount, listCount) in
-            let incidentText = self.translator.t("~~Incident")
-            let allText = self.translator.t("~~All")
+            let incidentText = self.translator.t("list.incident")
+            let allText = self.translator.t("actions.all")
             let incidentsTitle = incidentListCount == 0 ? incidentText : "\(incidentText) (\(incidentListCount))"
             let allTitle = listCount == 0 ? allText : "\(allText) (\(listCount))"
             return [
