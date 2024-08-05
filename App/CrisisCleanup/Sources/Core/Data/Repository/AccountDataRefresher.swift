@@ -9,8 +9,6 @@ public class AccountDataRefresher {
 
     private var accountDataUpdateTime = Date(timeIntervalSince1970: 0)
 
-    private let updateLock = NSLock()
-
     init(
         dataSource: AccountInfoDataSource,
         networkDataSource: CrisisCleanupNetworkDataSource,
@@ -42,13 +40,11 @@ public class AccountDataRefresher {
         do {
             let profile = try await networkDataSource.getProfileData()
             if profile.hasAcceptedTerms != nil {
-                updateLock.withLock {
-                    dataSource.update(
-                        profile.files?.profilePictureUrl,
-                        profile.hasAcceptedTerms!,
-                        profile.approvedIncidents!
-                    )
-                }
+                dataSource.update(
+                    profile.files?.profilePictureUrl,
+                    profile.hasAcceptedTerms!,
+                    profile.approvedIncidents!
+                )
 
                 accountDataUpdateTime = Date.now
             }

@@ -17,6 +17,8 @@ fileprivate let jsonEncoder = JsonEncoderFactory().encoder()
 class AccountInfoUserDefaults: AccountInfoDataSource {
     let accountData: any Publisher<AccountData, Never>
 
+    private let updateLock = NSLock()
+
     init() {
         accountData = UserDefaults.standard.publisher(for: \.accountInfoData)
             .map { infoData in
@@ -32,7 +34,9 @@ class AccountInfoUserDefaults: AccountInfoDataSource {
     }
 
     func setAccount(_ info: AccountInfo) {
-        UserDefaults.standard.accountInfo = info
+        updateLock.withLock {
+            UserDefaults.standard.accountInfo = info
+        }
     }
 
     func clearAccount() {
