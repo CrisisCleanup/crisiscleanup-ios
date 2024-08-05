@@ -3,6 +3,8 @@ import SwiftUI
 struct PersistentInviteView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
+    @EnvironmentObject var router: NavigationRouter
+
     @ObservedObject var viewModel: PersistentInviteViewModel
 
     @ObservedObject var focusableViewState = TextInputFocusableView()
@@ -22,7 +24,9 @@ struct PersistentInviteView: View {
                 } else if viewModel.isInviteAccepted {
                     RegisterSuccessView(
                         title: viewModel.acceptedTitle,
-                        message: ""
+                        message: "",
+                        actionText: t.t("actions.login"),
+                        onAction: { router.openEmailLogin(true) }
                     )
                 } else if let inviteDisplay = viewModel.inviteDisplay {
                     let inviteInfo = inviteDisplay.inviteInfo

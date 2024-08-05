@@ -3,6 +3,8 @@ import SwiftUI
 internal struct RegisterSuccessView: View {
     let title: String
     let message: String
+    var actionText = ""
+    var onAction = {}
 
     var body: some View {
         Spacer()
@@ -20,6 +22,14 @@ internal struct RegisterSuccessView: View {
         Text(message)
             .padding(.horizontal)
             .accessibilityIdentifier("registerSuccessText")
+
+        if actionText.isNotBlank {
+            Button(actionText) {
+                onAction()
+            }
+            .stylePrimary()
+            .listItemModifier()
+        }
 
         Spacer()
 
