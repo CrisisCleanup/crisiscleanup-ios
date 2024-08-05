@@ -2,7 +2,7 @@ public protocol AppLogger {
     func logDebug(_ items: Any...)
     func logError(_ e: Error)
     func logCapture(_ message: String)
-    func setAccontId(_ id: String)
+    func setAccountId(_ id: String)
 }
 
 public protocol AppLoggerFactory {

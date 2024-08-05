@@ -40,7 +40,7 @@ class TagLogger: AppLogger {
         }
     }
 
-    func setAccontId(_ id: String) {
+    func setAccountId(_ id: String) {
         crashlytics.setUserID(id)
     }
 }

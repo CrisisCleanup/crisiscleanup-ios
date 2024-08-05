@@ -30,8 +30,6 @@ fileprivate let jsonEncoder = JsonEncoderFactory().encoder()
 class AppPreferencesUserDefaults: AppPreferencesDataStore {
     let preferences: any Publisher<AppPreferences, Never>
 
-    private let updateLock = NSLock()
-
     init() {
         preferences = UserDefaults.standard.publisher(for: \.appPreferencesData)
             .map { preferencesData in
@@ -47,9 +45,7 @@ class AppPreferencesUserDefaults: AppPreferencesDataStore {
     }
 
     private func update(_ preferences: AppPreferences) {
-        updateLock.withLock {
-            UserDefaults.standard.appPreferences = preferences
-        }
+        UserDefaults.standard.appPreferences = preferences
     }
 
     func reset() {

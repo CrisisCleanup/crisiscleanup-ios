@@ -13,12 +13,8 @@ fileprivate let jsonEncoder = JsonEncoderFactory().encoder()
 class CasesFiltersUserDefaults: CasesFiltersDataSource {
     let filters: any Publisher<CasesFilter, Never>
 
-    private let updateLock = NSLock()
-
     private func update(_ preferences: CasesFilter) {
-        updateLock.withLock {
-            UserDefaults.standard.casesFilters = preferences
-        }
+        UserDefaults.standard.casesFilters = preferences
     }
 
     init() {
@@ -36,9 +32,7 @@ class CasesFiltersUserDefaults: CasesFiltersDataSource {
     }
 
     func updateFilters(_ filters: CasesFilter) {
-        updateLock.withLock {
-            UserDefaults.standard.casesFilters = filters
-        }
+        UserDefaults.standard.casesFilters = filters
     }
 }
 

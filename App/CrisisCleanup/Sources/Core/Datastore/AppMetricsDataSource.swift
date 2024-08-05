@@ -21,8 +21,6 @@ fileprivate let jsonEncoder = JsonEncoderFactory().encoder()
 class LocalAppMetricsDataSource: AppMetricsDataSource {
     let metrics: any Publisher<AppMetrics, Never>
 
-    private let updateLock = NSLock()
-
     init() {
         metrics = UserDefaults.standard.publisher(for: \.appMetricsData)
             .map { metricsData in
@@ -38,9 +36,7 @@ class LocalAppMetricsDataSource: AppMetricsDataSource {
     }
 
     private func update(_ metrics: AppMetrics) {
-        updateLock.withLock {
-            UserDefaults.standard.appMetrics = metrics
-        }
+        UserDefaults.standard.appMetrics = metrics
     }
 
     func setAppOpen(_ appBuild: Int64, _ timestamp: Date) {

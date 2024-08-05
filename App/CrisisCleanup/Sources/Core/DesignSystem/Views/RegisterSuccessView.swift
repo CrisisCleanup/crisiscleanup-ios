@@ -28,7 +28,7 @@ internal struct RegisterSuccessView: View {
                 onAction()
             }
             .stylePrimary()
-            .listItemModifier()
+            .padding()
         }
 
         Spacer()
