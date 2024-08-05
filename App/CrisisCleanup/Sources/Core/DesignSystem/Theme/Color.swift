@@ -54,6 +54,7 @@ struct ThemeColor {
     let separatorColor: Color
     let selectedOptionContainerColor: Color
     let navigationContainerColor: Color
+    let navigationContentColor: Color
     let neutralIconColor: Color
     let neutralBackgroundColor: Color
     let neutralFontColor: Color
@@ -76,6 +77,7 @@ struct ThemeColor {
         neutralBackgroundColor: Color = Color(hex: 0xFFF6F8F9),
         neutralFontColor: Color = Color(hex: 0xFF818181),
         navigationContainerColor: Color = Color(hex: 0xFF2D2D2D),
+        navigationContentColor: Color = Color(hex: 0xFFFFFFFF),
         unfocusedBorderColor: Color = Color(hex: 0xFFDADADA),
 
         crisisCleanupYellow100: Color = Color(hex: 0xFFFFDC68)
@@ -104,6 +106,7 @@ struct ThemeColor {
         self.neutralBackgroundColor = neutralBackgroundColor
         self.neutralFontColor = neutralFontColor
         self.navigationContainerColor = navigationContainerColor
+        self.navigationContentColor = navigationContentColor
         self.unfocusedBorderColor = unfocusedBorderColor
 
         let primaryBlueOneTenthColor = primaryBlueColor.opacity(0.1)
