@@ -9,7 +9,7 @@ extension CrisisCleanupList {
             case .file:
                 return Image(systemName: "doc.fill")
             case .incident:
-                return Image(systemName: "tree.fill")
+                return Image("incident_type_icons/tornado_line", bundle: .module)
             case .list:
                 return Image(systemName: "list.bullet")
             case .organization:

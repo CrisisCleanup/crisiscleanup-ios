@@ -32,38 +32,26 @@ struct MenuView: View {
                     toggleGettingStartedSection: { viewModel.showGettingStartedVideo(true) }
                 )
 
-                Button {
+                Button(t.t("list.lists")) {
                     router.openLists()
-                } label: {
-                    Text(t.t("list.lists"))
-                        .padding(.horizontal)
                 }
                 .styleOutline()
                 .padding()
 
-                Button {
+                Button(t.t("usersVue.invite_new_user")) {
                     router.openInviteTeammate()
-                } label: {
-                    Text(t.t("usersVue.invite_new_user"))
-                        .padding(.horizontal)
                 }
                 .stylePrimary()
                 .padding([.horizontal, .bottom])
 
-                Button {
+                Button(t.t("requestRedeploy.request_redeploy")) {
                     router.openRequesetRedeploy()
-                } label: {
-                    Text(t.t("requestRedeploy.request_redeploy"))
-                        .padding(.horizontal)
                 }
                 .styleOutline()
                 .padding([.horizontal, .bottom])
 
-                Button {
+                Button(t.t("info.give_app_feedback")) {
                     router.openUserFeedback()
-                } label: {
-                    Text(t.t("info.give_app_feedback"))
-                        .padding(.horizontal)
                 }
                 .styleOutline()
                 .padding(.horizontal)

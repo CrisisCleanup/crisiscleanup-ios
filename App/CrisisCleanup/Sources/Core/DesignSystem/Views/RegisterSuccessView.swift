@@ -3,6 +3,8 @@ import SwiftUI
 internal struct RegisterSuccessView: View {
     let title: String
     let message: String
+    var actionText = ""
+    var onAction = {}
 
     var body: some View {
         Spacer()
@@ -20,6 +22,16 @@ internal struct RegisterSuccessView: View {
         Text(message)
             .padding(.horizontal)
             .accessibilityIdentifier("registerSuccessText")
+
+        if actionText.isNotBlank {
+            // TODO: Scan join QR code and join.
+            //       No padding on smallest screen.
+            Button(actionText) {
+                onAction()
+            }
+            .stylePrimary()
+            .padding()
+        }
 
         Spacer()
 

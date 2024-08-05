@@ -9,6 +9,8 @@ public class AccountDataRefresher {
 
     private var accountDataUpdateTime = Date(timeIntervalSince1970: 0)
 
+    private let updateLock = NSLock()
+
     init(
         dataSource: AccountInfoDataSource,
         networkDataSource: CrisisCleanupNetworkDataSource,
@@ -24,34 +26,36 @@ public class AccountDataRefresher {
     }
 
     private func refreshAccountData(
-           _ syncTag: String,
-           _ force: Bool,
-           cacheTimeSpan: Double = 1.days
-       ) async {
-           if accountDataRepository.refreshToken.isBlank {
-               return
-           }
-           if !force,
-              accountDataUpdateTime.addingTimeInterval(cacheTimeSpan) > Date.now {
-               return
-           }
+        _ syncTag: String,
+        _ force: Bool,
+        cacheTimeSpan: Double = 1.days
+    ) async {
+        if accountDataRepository.refreshToken.isBlank {
+            return
+        }
+        if !force,
+           accountDataUpdateTime.addingTimeInterval(cacheTimeSpan) > Date.now {
+            return
+        }
 
-           logger.logCapture("Syncing \(syncTag)")
-           do {
-               let profile = try await networkDataSource.getProfileData()
-               if profile.hasAcceptedTerms != nil {
-                   dataSource.update(
-                       profile.files?.profilePictureUrl,
-                       profile.hasAcceptedTerms!,
-                       profile.approvedIncidents!
-                   )
+        logger.logCapture("Syncing \(syncTag)")
+        do {
+            let profile = try await networkDataSource.getProfileData()
+            if profile.hasAcceptedTerms != nil {
+                updateLock.withLock {
+                    dataSource.update(
+                        profile.files?.profilePictureUrl,
+                        profile.hasAcceptedTerms!,
+                        profile.approvedIncidents!
+                    )
+                }
 
-                   accountDataUpdateTime = Date.now
-               }
-           } catch {
-               logger.logError(error)
-           }
-       }
+                accountDataUpdateTime = Date.now
+            }
+        } catch {
+            logger.logError(error)
+        }
+    }
 
     func updateProfilePicture() async {
         await refreshAccountData("profile pic", false)

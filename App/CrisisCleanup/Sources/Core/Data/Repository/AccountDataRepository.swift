@@ -197,7 +197,7 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
     private func onLogout() {
         clearAccount()
         preferencesDataSource.reset()
-        logger.setAccontId("")
+        logger.setAccountId("")
     }
 
     private let skipChangeGuard = ManagedAtomic(false)

@@ -37,6 +37,9 @@ struct MainView: View {
 
     @State private var deviceSize = ViewLayoutDescription()
 
+    @State private var dividerHeight = 32.0
+    @State private var dividerOffset = -6.0
+
     var body: some View {
         Group {
             switch viewModel.viewData.state {
@@ -115,6 +118,8 @@ struct MainView: View {
                         }
                     }
                 } else {
+                    let iconColor = appTheme.colors.navigationContentColor
+                    let iconColorFaded = iconColor.opacity(0.65)
                     NavigationStack(path: $router.path) {
                         ZStack {
                             TabView(selection: $selectedTab) {
@@ -130,8 +135,15 @@ struct MainView: View {
                             }
                             .tabViewStyle(
                                 backgroundColor: appTheme.colors.navigationContainerColor,
-                                selectedItemColor: .white
+                                itemColor: iconColorFaded,
+                                selectedItemColor: iconColor
                             )
+                            .overlay(alignment: .bottom) {
+                                Rectangle()
+                                    .frame(width: 1, height: dividerHeight)
+                                    .overlay(iconColorFaded)
+                                    .offset(y: dividerOffset)
+                            }
                         }
                         .toolbarBackground(.visible, for: .navigationBar)
                         .toolbarColorScheme(.light, for: .navigationBar)
@@ -203,6 +215,11 @@ struct MainView: View {
             if newPhase == .active {
                 viewModel.onActivePhase()
             }
+        }
+        .onReceive(deviceSize.$isShort) { newValue in
+            // TODO: Update values relative to tab bar height
+            dividerHeight = newValue ? 16.0 : 32.0
+            dividerOffset = newValue ? -6.0 : -6.0
         }
         .onChange(of: viewModel.showOnboarding) { newValue in
             if newValue,

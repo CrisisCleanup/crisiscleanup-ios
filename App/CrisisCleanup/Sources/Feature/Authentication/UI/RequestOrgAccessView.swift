@@ -1,6 +1,10 @@
 import SwiftUI
 
 struct RequestOrgAccessView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @EnvironmentObject var router: NavigationRouter
+
     @ObservedObject var viewModel: RequestOrgAccessViewModel
 
     @ObservedObject var focusableViewState = TextInputFocusableView()
@@ -18,9 +22,12 @@ struct RequestOrgAccessView: View {
                 Spacer()
 
             } else if viewModel.isInviteRequested {
+                let actionText = viewModel.showEmailInput ? "" : t.t("actions.login")
                 RegisterSuccessView(
                     title: viewModel.requestSentTitle,
-                    message: viewModel.requestSentText
+                    message: viewModel.requestSentText,
+                    actionText: actionText,
+                    onAction: { router.openEmailLogin(true) }
                 )
             } else {
                 RequestOrgUserInfoInputView(

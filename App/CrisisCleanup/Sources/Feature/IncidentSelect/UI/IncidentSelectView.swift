@@ -17,8 +17,10 @@ struct IncidentSelectView: View {
 
             ZStack {
                 let selectedId = viewModel.incidentsData.selectedId
+                let incidents = viewModel.incidentsData.incidents
+                let incidentId0 = incidents.isNotEmpty ? incidents[0].id : -1
                 ScrollViewReader { scrollView in
-                    List(viewModel.incidentsData.incidents, id: \.id) { incident in
+                    List(incidents, id: \.id) { incident in
                         let isSelected = selectedId == incident.id
                         Text(incident.displayLabel)
                             .bold(isSelected)
@@ -26,6 +28,9 @@ struct IncidentSelectView: View {
                             .onTapGesture {
                                 viewModel.incidentSelector.setIncident(incident)
                                 onDismiss()
+                            }
+                            .if (incident.id == incidentId0) {
+                                $0.id("first-incident-item")
                             }
                     }
                     .task {
@@ -43,6 +48,9 @@ struct IncidentSelectView: View {
                                 defer  { isRefreshing = false}
 
                                 await viewModel.pullIncidents()
+                                withAnimation {
+                                    scrollView.scrollTo("first-incident-item", anchor: .top)
+                                }
                             }
                         }
                     }

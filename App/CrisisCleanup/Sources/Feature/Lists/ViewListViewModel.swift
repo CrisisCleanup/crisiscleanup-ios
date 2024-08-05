@@ -85,7 +85,13 @@ class ViewListViewModel: ObservableObject {
                 let objectData = objectIds.map {
                     lookup[$0]
                 }
-                return ViewListViewState(list: list, objectData: objectData)
+                let validObjectData = objectData.compactMap { $0 }
+                let invalidDataCount = objectData.count - validObjectData.count
+                return ViewListViewState(
+                    list: list,
+                    objectData: validObjectData,
+                    invalidDataCount: invalidDataCount
+                )
             }
             .receive(on: RunLoop.main)
             .assign(to: \.viewState, on: self)
@@ -237,17 +243,20 @@ internal struct ViewListViewState {
     let isLoading: Bool
     let list: CrisisCleanupList
     let objectData: [Any?]
+    let invalidDataCount: Int
     let errorMessage: String
 
     init(
         isLoading: Bool = false,
         list: CrisisCleanupList = EmptyList,
         objectData: [Any?] = [],
+        invalidDataCount: Int = 0,
         errorMessage: String = ""
     ) {
         self.isLoading = isLoading
         self.list = list
         self.objectData = objectData
+        self.invalidDataCount = invalidDataCount
         self.errorMessage = errorMessage
     }
 }

@@ -27,7 +27,8 @@ struct ViewListView: View {
                     phoneCallNumbers: $phoneCallNumbers,
                     phoneNumberParser: viewModel.phoneNumberParser,
                     list: viewState.list,
-                    objectData: viewState.objectData
+                    objectData: viewState.objectData,
+                    invalidDataCount: viewState.invalidDataCount
                 ) {
                     viewModel.onOpenWorksite($0)
                 }
@@ -97,6 +98,26 @@ struct ViewListView: View {
     }
 }
 
+private struct InvalidItemsDescription: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    let count: Int
+
+    var body: some View {
+        if count > 0 {
+            HStack(spacing: appTheme.gridItemSpacing) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundColor(appTheme.colors.primaryOrangeColor)
+                Text(
+                    t.t("list.missing_list_data")
+                        .replacingOccurrences(of: "{item_count}", with: "\(count)")
+                )
+            }
+            .listItemModifier()
+        }
+    }
+}
+
 private struct ListDetailView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
@@ -107,11 +128,14 @@ private struct ListDetailView: View {
     var phoneNumberParser: PhoneNumberParser
     var list: CrisisCleanupList
     var objectData: [Any?] = []
+    var invalidDataCount: Int = 0
     var onOpenWorksite: (Worksite) -> Void
 
     var body: some View {
         VStack(alignment: .leading) {
             if objectData.isEmpty {
+                InvalidItemsDescription(count: invalidDataCount)
+
                 Text(
                     t.t("list.unsupported_list_explanation")
                         .replacingOccurrences(of: "{list_name}", with: list.name)
@@ -137,6 +161,8 @@ private struct ListDetailView: View {
                                 Text(list.updatedAt.relativeTime)
                             }
                             .listItemPadding()
+
+                            InvalidItemsDescription(count: invalidDataCount)
 
                             let description = list.description.trim()
                             if description.isNotBlank {

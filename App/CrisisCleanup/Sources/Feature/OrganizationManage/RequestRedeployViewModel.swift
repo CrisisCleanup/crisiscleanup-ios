@@ -70,6 +70,11 @@ class RequestRedeployViewModel: ObservableObject {
             let incidentOptions = incidents
                 .filter { !approvedIncidents.contains($0.id) }
                 .sorted { a, b in a.id > b.id }
+            if incidentOptions.isEmpty {
+                let orgId = accountData.org.id
+                let message = "Request redeploy has no incidents. Org \(orgId)"
+                self.logger.logError(GenericError(message))
+            }
             return RequestRedeployViewState(isLoading: false, incidents: incidentOptions)
         }
         .receive(on: RunLoop.main)
