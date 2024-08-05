@@ -24,6 +24,8 @@ internal struct RegisterSuccessView: View {
             .accessibilityIdentifier("registerSuccessText")
 
         if actionText.isNotBlank {
+            // TODO: Scan join QR code and join.
+            //       No padding on smallest screen.
             Button(actionText) {
                 onAction()
             }
