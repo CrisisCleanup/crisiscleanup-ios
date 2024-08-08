@@ -18,10 +18,12 @@ class ViewLayoutDescription: ObservableObject {
     @Published var isWide = false
     @Published var isShort = false
 
-    private var _observer: NSObjectProtocol?
+    private var orientationObserver: NSObjectProtocol?
 
     init() {
-        _observer = NotificationCenter.default.addObserver(
+        setInitialProperties()
+
+        orientationObserver = NotificationCenter.default.addObserver(
             forName: UIDevice.orientationDidChangeNotification,
             object: nil,
             queue: nil
@@ -32,7 +34,6 @@ class ViewLayoutDescription: ObservableObject {
 
             let isLandscape = landscapeOrientations.contains(device.orientation)
             if isLandscape != self.isLandscape {
-                // TODO: Test on Mac
                 var width = min(Device.screen.width, Device.screen.height)
                 var height = max(Device.screen.width, Device.screen.height)
                 if isLandscape {
@@ -43,6 +44,12 @@ class ViewLayoutDescription: ObservableObject {
                 update(isLandscape, width: width, height: height)
             }
         }
+    }
+
+    private func setInitialProperties() {
+        let width = Device.screen.width
+        let height = Device.screen.height
+        update(width > height, width: width, height: height)
     }
 
     private func update(_ isLandscape: Bool, width: CGFloat, height: CGFloat) {
