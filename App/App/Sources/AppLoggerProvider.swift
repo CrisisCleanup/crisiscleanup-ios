@@ -30,6 +30,9 @@ class TagLogger: AppLogger {
                 print(self.tag, e)
             }
         } else {
+            if let ge = e as? GenericError {
+                crashlytics.log(ge.message)
+            }
             crashlytics.record(error: e)
         }
     }
