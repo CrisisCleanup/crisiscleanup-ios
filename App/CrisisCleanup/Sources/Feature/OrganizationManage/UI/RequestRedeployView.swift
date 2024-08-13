@@ -25,7 +25,13 @@ struct RequestRedeployView: View {
             } else {
                 let incidents = viewModel.viewState.incidents
 
-                if incidents.isNotEmpty {
+                if incidents.isEmpty {
+                    VStack {
+                        Text(t.t("~~There are no Incidents left for deploying."))
+                            .listItemModifier()
+                        Spacer()
+                    }
+                } else {
                     let isTransient = viewModel.isTransient
                     let isEditable = !isTransient
                     let errorMessage = viewModel.redeployErrorMessage
