@@ -136,6 +136,27 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         throw response.error ?? networkError
     }
 
+    func getIncidentsList(
+        fields: [String],
+        limit: Int,
+        ordering: String
+    ) async throws -> [NetworkIncidentShort] {
+        let request = requestProvider.incidentsList.addQueryItems(
+            "fields", fields.commaJoined,
+            "limit", String(limit),
+            "sort", ordering
+        )
+        let response = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkIncidentsListResult.self
+        )
+        if let result = response.value {
+            try result.errors?.tryThrowException()
+            return result.results ?? [NetworkIncidentShort]()
+        }
+        throw response.error ?? networkError
+    }
+
     func getIncidentLocations(_ locationIds: [Int64]) async throws -> [NetworkLocation] {
         let request = requestProvider.incidentLocations.addQueryItems(
             "id__in", locationIds.commaJoined,

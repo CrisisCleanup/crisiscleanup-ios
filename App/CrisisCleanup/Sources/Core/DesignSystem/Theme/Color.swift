@@ -42,6 +42,7 @@ struct ThemeColor {
     let primaryBlueOneTenthColor: Color
     let primaryRedColor: Color
     let primaryOrangeColor: Color
+    let green600: Color
     let devActionColor: Color = Color(hex: 0xFFF50057)
     let survivorNoteColor: Color
     let survivorNoteColorNoTransparency: Color
@@ -69,6 +70,7 @@ struct ThemeColor {
         primaryBlueColor: Color = Color(hex: 0xFF009BFF),
         primaryRedColor: Color = Color(hex: 0xFFED4747),
         primaryOrangeColor: Color = Color(hex: 0xFFF79820),
+        green600: Color = Color(hex: 0xFF43A047),
         incidentDisasterContentColor: Color = Color(hex: 0xFFFFFFFF),
         cancelButtonContainerColor: Color = Color(hex: 0xFFEAEAEA),
         separatorColor: Color = Color(hex: 0xFFF6F8F9),
@@ -89,6 +91,7 @@ struct ThemeColor {
         primaryBlueOneTenthColor = primaryBlueColor.opacity(0.1)
         self.primaryRedColor = primaryRedColor
         self.primaryOrangeColor = primaryOrangeColor
+        self.green600 = green600
 
         let crisisCleanupYellow100HalfTransparent = crisisCleanupYellow100.opacity(0.5)
         self.survivorNoteColor = crisisCleanupYellow100HalfTransparent

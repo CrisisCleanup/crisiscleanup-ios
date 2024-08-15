@@ -53,7 +53,7 @@ public struct Incident: Equatable {
     }
 
     public static func == (lhs: Incident, rhs: Incident) -> Bool {
-        return lhs.id == rhs.id &&
+        lhs.id == rhs.id &&
         lhs.name == rhs.name &&
         lhs.shortName == rhs.shortName &&
         lhs.locationIds == rhs.locationIds &&
@@ -184,3 +184,5 @@ public struct IncidentIdNameType: Equatable {
     let shortName: String
     let disasterLiteral: String
 }
+
+let EmptyIncidentIdNameType = EmptyIncident.asIdNameType()

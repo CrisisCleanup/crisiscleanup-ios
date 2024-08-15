@@ -8,7 +8,7 @@ struct RequestRedeployView: View {
 
     @State private var animateLoading = true
 
-    @State private var selectedIncident = EmptyIncident
+    @State private var selectedIncident = EmptyIncidentIdNameType
 
     @State private var showIncidentOptions = false
 
@@ -35,7 +35,6 @@ struct RequestRedeployView: View {
                     let isTransient = viewModel.isTransient
                     let isEditable = !isTransient
                     let errorMessage = viewModel.redeployErrorMessage
-                    let requestedIncidentIds = viewModel.requestedIncidentIds
                     let isRequestingRedeploy = viewModel.isRequestingRedeploy
 
                     let selectIncidentHint = t.t("actions.select_incident")
@@ -84,7 +83,7 @@ struct RequestRedeployView: View {
                                     )
                                 }
                                 .stylePrimary()
-                                .disabled(!isEditable || selectedIncident == EmptyIncident)
+                                .disabled(!isEditable || selectedIncident == EmptyIncidentIdNameType)
                             }
                             .listItemPadding()
                         }
@@ -96,25 +95,41 @@ struct RequestRedeployView: View {
                             .fontHeader3()
                             .padding(.top)
 
+                        let approvedIds = viewModel.viewState.approvedIncidentIds
+                        let requestedIds = viewModel.viewState.requestedIncidentIds
+
                         List(incidents, id: \.id) { incident in
                             let isSelected = incident.id == selectedIncident.id
-                            let isRequested = requestedIncidentIds.contains(incident.id)
-                            Text(incident.displayLabel)
-                                .bold(isSelected)
-                                .fullWidthSelector()
+                            let isApproved = approvedIds.contains(incident.id)
+                            let isRequested = requestedIds.contains(incident.id)
+                            let disabled = isApproved || isRequested
+                            HStack(spacing: appTheme.gridItemSpacing) {
+                                Text(incident.name)
+                                    .bold(isSelected)
+                                    .fullWidthSelector()
                                 // TODO: Use newer APIs where possible
                                 // if #available(iOS 17, *) {
                                 //    .selectionDisabled(isRequested)
-                                .if (isRequested) {
-                                    $0.tag("disabled")
-                                        .foregroundColor(.black.disabledAlpha())
-                                }
-                                .onTapGesture {
-                                    if !isRequested {
-                                        selectedIncident = incident
-                                        showIncidentOptions = false
+                                    .if (disabled) {
+                                        $0.tag("disabled")
+                                            .foregroundColor(.black.disabledAlpha())
                                     }
+                                    .onTapGesture {
+                                        if !disabled {
+                                            selectedIncident = incident
+                                            showIncidentOptions = false
+                                        }
+                                    }
+
+                                Spacer()
+
+                                if isApproved {
+                                    Image(systemName: "checkmark")
+                                    .foregroundColor(appTheme.colors.green600)
+                                } else if isRequested {
+                                    Image(systemName: "clock")
                                 }
+                            }
                         }
 
                         Button(t.t("actions.close")) {

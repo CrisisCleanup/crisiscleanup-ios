@@ -8,6 +8,7 @@ public protocol IncidentsRepository {
 
     func getIncident(_ id: Int64, _ loadFormFields: Bool) throws -> Incident?
     func getIncidents(_ startAt: Date) throws -> [Incident]
+    func getIncidentsList() async -> [IncidentIdNameType]
 
     func streamIncident(_ id: Int64) -> any Publisher<Incident?, Never>
 

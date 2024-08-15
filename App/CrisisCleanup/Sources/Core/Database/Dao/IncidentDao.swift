@@ -138,7 +138,8 @@ public class IncidentDao {
                 id: $0.id,
                 name: $0.name,
                 shortName: $0.shortName,
-                disasterLiteral: $0.type)
+                disasterLiteral: $0.type
+            )
         }
     }
 }
