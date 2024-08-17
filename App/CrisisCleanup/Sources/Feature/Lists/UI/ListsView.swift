@@ -186,7 +186,7 @@ private struct AllListsView: View {
         ScrollView {
             LazyVStack {
                 if allLists.isEmpty {
-                    Text(t.t("~~Create new lists using Crisis Cleanup in the browser."))
+                    Text(t.t("list.create_new_list_online"))
                         .listItemModifier()
                 }
 
