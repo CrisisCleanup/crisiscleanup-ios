@@ -132,6 +132,11 @@ class AppSyncer: SyncPuller, SyncPusher {
         return (pullIncidents, pullWorksitesIncidentId)
     }
 
+    private func internalPullIncidents() async throws {
+        await accountDataRefresher.updateApprovedIncidents(true)
+        try await self.incidentsRepository.pullIncidents()
+    }
+
     func appPull(_ cancelOngoing: Bool) {
         pullLock.withLock {
             if cancelOngoing {
@@ -155,8 +160,7 @@ class AppSyncer: SyncPuller, SyncPusher {
 
                     if pullIncidents {
                         self.syncLogger.log("Pulling incidents")
-                        await accountDataRefresher.updateApprovedIncidents(true)
-                        try await self.incidentsRepository.pullIncidents()
+                        try await internalPullIncidents()
                         self.syncLogger.log("Incidents pulled")
                     }
 
@@ -179,7 +183,7 @@ class AppSyncer: SyncPuller, SyncPusher {
 
     func pullIncidents() async {
         do {
-            try await self.incidentsRepository.pullIncidents()
+            try await internalPullIncidents()
         } catch {
             appLogger.logError(error)
         }
