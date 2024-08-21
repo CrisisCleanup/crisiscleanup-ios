@@ -1005,7 +1005,7 @@ struct DisplayFormField: View {
             case "h4", "h5":
                 let isChecked = checkedData[node.fieldKey]
                 HStack {
-                    if node.children.isEmpty || node.formField.isReadOnly {
+                    if node.children.isEmpty && node.formField.isReadOnly {
                         Text(node.formField.translatedLabel(t))
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.vertical, appTheme.listItemVerticalPadding)
