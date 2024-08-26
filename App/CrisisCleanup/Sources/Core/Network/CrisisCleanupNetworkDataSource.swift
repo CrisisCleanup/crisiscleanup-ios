@@ -14,6 +14,12 @@ public protocol CrisisCleanupNetworkDataSource {
         after: Date?
     ) async throws -> [NetworkIncident]
 
+    func getIncidentsList(
+        fields: [String],
+        limit: Int,
+        ordering: String
+    ) async throws -> [NetworkIncidentShort]
+
     func getIncidentLocations(
         _ locationIds: [Int64]
     ) async throws -> [NetworkLocation]
@@ -120,7 +126,15 @@ extension CrisisCleanupNetworkDataSource {
         _ fields: [String],
         _ after: Date?
     ) async throws -> [NetworkIncident] {
-        return try await getIncidents(fields: fields, limit: 250, ordering: "-start_at", after: after)
+        try await getIncidents(fields: fields, limit: 250, ordering: "-start_at", after: after)
+    }
+
+    func getIncidentsList() async throws -> [NetworkIncidentShort] {
+        try await getIncidentsList(
+            fields: ["id", "name", "short_name", "incident_type"],
+            limit: 250,
+            ordering: "-start_at"
+        )
     }
 
     func searchUsers(

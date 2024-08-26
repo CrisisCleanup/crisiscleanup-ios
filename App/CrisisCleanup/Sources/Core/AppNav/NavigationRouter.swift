@@ -38,7 +38,10 @@ class NavigationRouter: ObservableObject {
         path.append(.loginWithEmail)
     }
 
-    func openPhoneLogin() {
+    func openPhoneLogin(_ clearRoutes: Bool = false) {
+        if clearRoutes {
+            clearAuthRoutes()
+        }
         path.append(.loginWithPhone)
     }
 

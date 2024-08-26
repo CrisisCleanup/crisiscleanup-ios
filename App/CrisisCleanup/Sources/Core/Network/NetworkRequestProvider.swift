@@ -99,6 +99,12 @@ extension NetworkRequestProvider {
         )
     }
 
+    var incidentsList: NetworkRequest {
+        NetworkRequest(
+            apiUrl("incidents_list")
+        )
+    }
+
     var incidentLocations: NetworkRequest {
         NetworkRequest(
             apiUrl("locations"),

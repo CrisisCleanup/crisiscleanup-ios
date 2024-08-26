@@ -11,6 +11,8 @@ struct CreateEditCaseView: View {
     var body: some View {
         CreateEditCaseLayoutView()
             .environmentObject(viewModel)
+        // TODO: Common dimensions
+            .frame(maxWidth: 1200)
     }
 }
 

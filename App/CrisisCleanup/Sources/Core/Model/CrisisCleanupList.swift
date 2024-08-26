@@ -31,7 +31,7 @@ let EmptyList = CrisisCleanupList(
     shared: .private,
     permission: .read,
     incidentId: EmptyIncident.id,
-    incident: IncidentIdNameType(id: EmptyIncident.id, name: "", shortName: "", disasterLiteral: "")
+    incident: EmptyIncidentIdNameType
 )
 
 enum ListModel: String, Identifiable, CaseIterable {

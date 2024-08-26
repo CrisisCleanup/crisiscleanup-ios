@@ -32,84 +32,88 @@ struct CasesTableView: View {
             }
             .padding()
 
-            HStack {
-                // TODO: Animate
-                if viewModel.casesCountTableText.isNotBlank {
-                    Text(viewModel.casesCountTableText)
-                        .fontHeader4()
-                        .disabled(isLoadingData)
-                        .onTapGesture {
-                            viewModel.syncWorksitesData()
-                        }
-                        .onLongPressGesture {
-                            viewModel.syncWorksitesData(true)
-                        }
-                }
-
-                Spacer()
-
-                let sortByOptions = viewModel.tableViewSort == .none
-                ? WorksiteSortBy.allCases
-                : WorksiteSortBy.allCasesNotNone
-                Picker("", selection: $viewModel.tableViewSort ) {
-                    ForEach(sortByOptions, id: \.self) { sortBy in
-                        Text(t.t(sortBy.translateKey))
-                    }
-                }
-                .disabled(isLoadingData || !isEditable)
-                .tint(.black)
-                .roundedCorners()
-            }
-            .listItemPadding()
-
-            // TODO: Show phone numbers in bottom sheet if there are more than 1 phone numbers
-            // TODO: Show claim action error dialog if error has occurred
-
-            if viewModel.tableSortResultsMessage.isNotBlank {
-                Text(viewModel.tableSortResultsMessage)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .listItemPadding()
-            }
-
-            let casesData = viewModel.tableData
-            let isTurnOnRelease = viewModel.selectedIncident.turnOnRelease
-            let changingClaimIds = viewModel.worksitesChangingClaimAction
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack {
-                        ForEach(0..<casesData.count, id: \.self) { index in
-                            if index > 0 {
-                                FormListSectionSeparator()
+            Group {
+                HStack {
+                    // TODO: Animate
+                    if viewModel.casesCountTableText.isNotBlank {
+                        Text(viewModel.casesCountTableText)
+                            .fontHeader4()
+                            .disabled(isLoadingData)
+                            .onTapGesture {
+                                viewModel.syncWorksitesData()
                             }
+                            .onLongPressGesture {
+                                viewModel.syncWorksitesData(true)
+                            }
+                    }
 
-                            let worksite = casesData[index].worksite
-                            let isChangingClaim = changingClaimIds.contains(worksite.id)
-                            CaseTableItemCard(
-                                worksiteDistance: casesData[index],
-                                isEditable: isEditable,
-                                isTurnOnRelease: isTurnOnRelease,
-                                isChangingClaim: isChangingClaim,
-                                onWorksiteClaimAction: { claimAction in
-                                    viewModel.onWorksiteClaimAction(worksite, claimAction)
-                                },
-                                showWrongLocationDialog: $showWrongLocationDialog,
-                                phoneCallNumbers: $phoneCallNumbers
-                            )
-                            .if (index == 0) {
-                                $0.id("case-table-first")
+                    Spacer()
+
+                    let sortByOptions = viewModel.tableViewSort == .none
+                    ? WorksiteSortBy.allCases
+                    : WorksiteSortBy.allCasesNotNone
+                    Picker("", selection: $viewModel.tableViewSort ) {
+                        ForEach(sortByOptions, id: \.self) { sortBy in
+                            Text(t.t(sortBy.translateKey))
+                        }
+                    }
+                    .disabled(isLoadingData || !isEditable)
+                    .tint(.black)
+                    .roundedCorners()
+                }
+                .listItemPadding()
+
+                // TODO: Show phone numbers in bottom sheet if there are more than 1 phone numbers (may be complete)
+                // TODO: Show claim action error dialog if error has occurred
+
+                if viewModel.tableSortResultsMessage.isNotBlank {
+                    Text(viewModel.tableSortResultsMessage)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .listItemPadding()
+                }
+
+                let casesData = viewModel.tableData
+                let isTurnOnRelease = viewModel.selectedIncident.turnOnRelease
+                let changingClaimIds = viewModel.worksitesChangingClaimAction
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        LazyVStack {
+                            ForEach(0..<casesData.count, id: \.self) { index in
+                                if index > 0 {
+                                    FormListSectionSeparator()
+                                }
+
+                                let worksite = casesData[index].worksite
+                                let isChangingClaim = changingClaimIds.contains(worksite.id)
+                                CaseTableItemCard(
+                                    worksiteDistance: casesData[index],
+                                    isEditable: isEditable,
+                                    isTurnOnRelease: isTurnOnRelease,
+                                    isChangingClaim: isChangingClaim,
+                                    onWorksiteClaimAction: { claimAction in
+                                        viewModel.onWorksiteClaimAction(worksite, claimAction)
+                                    },
+                                    showWrongLocationDialog: $showWrongLocationDialog,
+                                    phoneCallNumbers: $phoneCallNumbers
+                                )
+                                .if (index == 0) {
+                                    $0.id("case-table-first")
+                                }
                             }
                         }
                     }
-                }
-                .onReceive(viewModel.openWorksiteAddFlagCounter) { _ in
-                    if viewModel.takeOpenWorksiteAddFlag() {
-                        router.openCaseFlags(isFromCaseEdit: false)
+                    .onReceive(viewModel.openWorksiteAddFlagCounter) { _ in
+                        if viewModel.takeOpenWorksiteAddFlag() {
+                            router.openCaseFlags(isFromCaseEdit: false)
+                        }
+                    }
+                    .onChange(of: viewModel.tableViewSort) { newValue in
+                        proxy.scrollTo("case-table-first", anchor: .top)
                     }
                 }
-                .onChange(of: viewModel.tableViewSort) { newValue in
-                    proxy.scrollTo("case-table-first", anchor: .top)
-                }
             }
+            // TODO: Common dimensions
+            .frame(maxWidth: 800)
         }
         .background(.white)
 

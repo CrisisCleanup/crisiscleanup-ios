@@ -149,3 +149,23 @@ public struct FormFieldValue: Codable, Equatable {
         case name = "name_t"
     }
 }
+
+public struct NetworkIncidentsListResult: Codable, Equatable {
+    let errors: [NetworkCrisisCleanupApiError]?
+    let count: Int?
+    let results: [NetworkIncidentShort]?
+}
+
+public struct NetworkIncidentShort: Codable, Equatable {
+    let id: Int64
+    let name: String
+    let shortName: String
+    let type: String
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case shortName = "short_name"
+        case type = "incident_type"
+    }
+}

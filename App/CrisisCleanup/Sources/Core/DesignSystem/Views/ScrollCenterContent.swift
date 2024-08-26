@@ -7,6 +7,7 @@ struct ScrollCenterContent<Content>: View where Content: View {
     private let content: Content
 
     init(
+        // TODO: Common dimensions
         maxWidth: CGFloat? = 600.0,
         contentAlignment: HorizontalAlignment = .leading,
         contentPadding: Edge.Set? = nil,

@@ -66,6 +66,23 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         try incidentDao.getIncidents(startAt)
     }
 
+    func getIncidentsList() async -> [IncidentIdNameType] {
+        do {
+            return try await dataSource.getIncidentsList()
+                .map {
+                    IncidentIdNameType(
+                        id: $0.id,
+                        name: $0.name,
+                        shortName: $0.shortName,
+                        disasterLiteral: $0.type
+                    )
+                }
+        } catch {
+            logger.logError(error)
+        }
+        return []
+    }
+
     func streamIncident(_ id: Int64) -> any Publisher<Incident?, Never> {
         incidentDao.streamFormFieldsIncident(id)
             .assertNoFailure()

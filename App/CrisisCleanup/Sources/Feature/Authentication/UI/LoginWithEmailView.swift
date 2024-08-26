@@ -113,6 +113,14 @@ private struct LoginView: View {
                     .disabled(disabled)
                     .accessibilityIdentifier("loginRequestMagicLinkAction")
 
+                    Button(t.t("loginForm.login_with_cell")) {
+                        router.openPhoneLogin(true)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.bottom)
+                    .disabled(disabled)
+                    .accessibilityIdentifier("loginWithPhoneAction")
+
                     Button(t.t("invitationSignup.forgot_password")) {
                         router.openForgotPassword()
                     }

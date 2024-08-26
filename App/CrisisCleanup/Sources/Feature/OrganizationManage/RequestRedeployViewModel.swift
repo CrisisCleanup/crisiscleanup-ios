@@ -11,7 +11,12 @@ class RequestRedeployViewModel: ObservableObject {
 
     @Published private(set) var isLoading = true
 
-    @Published private(set) var viewState = RequestRedeployViewState(isLoading: true, incidents: [])
+    @Published private(set) var viewState = RequestRedeployViewState(
+        isLoading: true,
+        incidents: [],
+        approvedIncidentIds: [],
+        requestedIncidentIds: []
+    )
 
     private let isRequestingRedeploySubject = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isRequestingRedeploy = false
@@ -22,8 +27,8 @@ class RequestRedeployViewModel: ObservableObject {
     private let redeployErrorMessageSubject = CurrentValueSubject<String, Never>("")
     @Published private(set) var redeployErrorMessage = ""
 
+    private let incidentsSubject = CurrentValueSubject<[IncidentIdNameType]?, Never>(nil)
     private let requestedIncidentIdsSubject = CurrentValueSubject<Set<Int64>, Never>(Set())
-    @Published private(set) var requestedIncidentIds = Set<Int64>()
 
     private var isFirstAppear = true
 
@@ -47,7 +52,6 @@ class RequestRedeployViewModel: ObservableObject {
 
     func onViewAppear() {
         subscribeViewState()
-        subscribeIncidentData()
 
         if isFirstAppear {
             isFirstAppear = false
@@ -56,26 +60,29 @@ class RequestRedeployViewModel: ObservableObject {
                 await accountDataRefresher.updateApprovedIncidents(true)
 
                 requestedIncidentIdsSubject.value = await requestRedeployRepository.getRequestedIncidents()
+
+                incidentsSubject.value = await incidentsRepository.getIncidentsList()
             }
         }
     }
 
     private func subscribeViewState() {
-        Publishers.CombineLatest(
-            incidentsRepository.incidents.eraseToAnyPublisher(),
-            accountDataRepository.accountData.eraseToAnyPublisher()
+        Publishers.CombineLatest3(
+            incidentsSubject,
+            accountDataRepository.accountData.eraseToAnyPublisher(),
+            requestedIncidentIdsSubject
         )
-        .map { (incidents, accountData) in
-            let approvedIncidents = accountData.approvedIncidents
-            let incidentOptions = incidents
-                .filter { !approvedIncidents.contains($0.id) }
-                .sorted { a, b in a.id > b.id }
-            if incidentOptions.isEmpty {
-                let orgId = accountData.org.id
-                let message = "Request redeploy has no incidents. Org \(orgId)"
-                self.logger.logError(GenericError(message))
-            }
-            return RequestRedeployViewState(isLoading: false, incidents: incidentOptions)
+        .filter { (incidents, _, _) in
+            incidents != nil
+        }
+        .map { (incidents, accountData, requestedIds) in
+            let approvedIds = accountData.approvedIncidents
+            return RequestRedeployViewState(
+                isLoading: false,
+                incidents: incidents!,
+                approvedIncidentIds: approvedIds,
+                requestedIncidentIds: requestedIds
+            )
         }
         .receive(on: RunLoop.main)
         .assign(to: \.viewState, on: self)
@@ -107,19 +114,12 @@ class RequestRedeployViewModel: ObservableObject {
         .store(in: &subscriptions)
     }
 
-    private func subscribeIncidentData() {
-        requestedIncidentIdsSubject
-            .receive(on: RunLoop.main)
-            .assign(to: \.requestedIncidentIds, on: self)
-            .store(in: &subscriptions)
-    }
-
     func onViewDisappear() {
         subscriptions = cancelSubscriptions(subscriptions)
     }
 
-    func requestRedeploy(incident: Incident) {
-        if incident == EmptyIncident {
+    func requestRedeploy(incident: IncidentIdNameType) {
+        if incident == EmptyIncidentIdNameType {
             return
         }
 
@@ -152,5 +152,7 @@ class RequestRedeployViewModel: ObservableObject {
 
 struct RequestRedeployViewState {
     let isLoading : Bool
-    let incidents: [Incident]
+    let incidents: [IncidentIdNameType]
+    let approvedIncidentIds: Set<Int64>
+    let requestedIncidentIds: Set<Int64>
 }
