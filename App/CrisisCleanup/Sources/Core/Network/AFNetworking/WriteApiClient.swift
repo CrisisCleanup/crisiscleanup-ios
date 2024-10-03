@@ -342,6 +342,7 @@ class WriteApiClient: CrisisCleanupWriteApi {
                 noClaimReason: noClaimReason?.isNotBlank == true ? noClaimReason : nil
             ))
 
+        // TODO: 500 error does not throw an error
         let response = await networkClient.callbackContinue(request)
         if let error = response.error {
             throw error
