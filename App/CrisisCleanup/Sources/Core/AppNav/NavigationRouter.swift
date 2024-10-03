@@ -167,6 +167,23 @@ class NavigationRouter: ObservableObject {
     func openCaseShareStep2() {
         path.append(.caseShareStep2)
     }
+
+    private let shareRoutes = Set<NavigationRoute>([
+        .caseShare,
+        .caseShareStep2
+    ])
+    func clearShareRoutes() {
+        while path.isNotEmpty {
+            if let lastPath = path.last,
+               shareRoutes.contains(lastPath)
+            {
+                _ = path.popLast()
+            } else {
+                break
+            }
+        }
+    }
+
     func openCaseFlags(isFromCaseEdit: Bool) {
         path.append(.caseFlags(isFromCaseEdit))
     }

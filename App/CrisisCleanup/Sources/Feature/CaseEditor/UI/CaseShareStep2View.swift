@@ -4,6 +4,8 @@ import FlowStackLayout
 struct CaseShareStep2View: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
+    @EnvironmentObject var router: NavigationRouter
+
     @ObservedObject var viewModel: CaseShareViewModel
 
     @State var shareMessage = ""
@@ -125,6 +127,11 @@ struct CaseShareStep2View: View {
         .environmentObject(viewModel)
         .environmentObject(focusableViewState)
         .onChange(of: focusState) { focusableViewState.focusState = $0 }
+        .onChange(of: viewModel.isShared) { newValue in
+            if newValue {
+                router.clearShareRoutes()
+            }
+        }
 
         if animateTopSearchBar {
             ScrollLazyVGrid {
