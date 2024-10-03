@@ -355,8 +355,9 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         noClaimReason: String?
     ) async -> Bool {
         do {
+            let networkWorksiteId = worksiteDao.getWorksiteNetworkId(worksiteId)
             try await writeApi.shareWorksite(
-                worksiteId,
+                networkWorksiteId,
                 emails,
                 phoneNumbers,
                 shareMessage,
