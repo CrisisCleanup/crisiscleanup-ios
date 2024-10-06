@@ -133,6 +133,9 @@ extension MainComponent {
         shared {
             AccountApiClient(
                 networkRequestProvider: networkRequestProvider,
+                accountDataRepository: accountDataRepository,
+                authApiClient: authApi,
+                authEventBus: authEventBus,
                 appEnv: appEnv
             )
         }
@@ -166,7 +169,6 @@ extension MainComponent {
                 appPreferences,
                 authEventBus,
                 authApi,
-                accountApi,
                 loggerFactory,
                 appEnv
             )

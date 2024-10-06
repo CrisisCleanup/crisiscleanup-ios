@@ -8,6 +8,9 @@ class AccountApiClient : CrisisCleanupAccountApi {
 
     init(
         networkRequestProvider: NetworkRequestProvider,
+        accountDataRepository: AccountDataRepository,
+        authApiClient: CrisisCleanupAuthApi,
+        authEventBus: AuthEventBus,
         appEnv: AppEnv
     ) {
         dateFormatter = ISO8601DateFormatter()
@@ -26,7 +29,15 @@ class AccountApiClient : CrisisCleanupAccountApi {
             dateDecodingStrategy: .anyFormatter(in: [isoFormat, millisecondsFormat, secondsFormat])
         )
 
-        networkClient = AFNetworkingClient(appEnv, jsonDecoder: jsonDecoder)
+        networkClient = AFNetworkingClient(
+            appEnv,
+            interceptor: AccessTokenInterceptor(
+                accountDataRepository: accountDataRepository,
+                authApiClient: authApiClient,
+                authEventBus: authEventBus
+            ),
+            jsonDecoder: jsonDecoder
+        )
         requestProvider = networkRequestProvider
     }
 

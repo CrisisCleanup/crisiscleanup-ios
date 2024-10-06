@@ -52,7 +52,6 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
     private let secureDataSource: SecureDataSource
     private let preferencesDataSource: AppPreferencesDataStore
     private let authApi: CrisisCleanupAuthApi
-    private let accountApi: CrisisCleanupAccountApi
     private let logger: AppLogger
     private let appEnv: AppEnv
 
@@ -64,7 +63,6 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
         _ preferencesDataSource: AppPreferencesDataStore,
         _ authEventBus: AuthEventBus,
         _ authApi: CrisisCleanupAuthApi,
-        _ accountApi: CrisisCleanupAccountApi,
         _ loggerFactory: AppLoggerFactory,
         _ appEnv: AppEnv
     ) {
@@ -72,7 +70,6 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
         self.secureDataSource = secureDataSource
         self.preferencesDataSource = preferencesDataSource
         self.authApi = authApi
-        self.accountApi = accountApi
         logger = loggerFactory.getLogger("account")
         self.appEnv = appEnv
 
