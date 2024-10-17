@@ -4,7 +4,7 @@ import Combine
 import UIKit
 
 public protocol SyncPuller {
-    func appPull(_ cancelOngoing: Bool)
+    func appPull(_ force: Bool, cancelOngoing: Bool)
 
     func pullUnauthenticatedData()
 
@@ -17,7 +17,7 @@ public protocol SyncPuller {
 
 extension SyncPuller {
     func appPull() {
-        appPull(false)
+        appPull(false, cancelOngoing: false)
     }
 }
 
@@ -137,7 +137,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         try await self.incidentsRepository.pullIncidents()
     }
 
-    func appPull(_ cancelOngoing: Bool) {
+    func appPull(_ force: Bool, cancelOngoing: Bool) {
         pullLock.withLock {
             if cancelOngoing {
                 pullTask?.cancel()
@@ -151,7 +151,10 @@ class AppSyncer: SyncPuller, SyncPusher {
 
                     try Task.checkCancellation()
 
-                    let (pullIncidents, pullWorksitesIncidentId) = try await getSyncPlan()
+                    var (pullIncidents, pullWorksitesIncidentId) = try await getSyncPlan()
+                    if force {
+                        pullIncidents = true
+                    }
                     if !pullIncidents && pullWorksitesIncidentId <= 0 {
                         return
                     }

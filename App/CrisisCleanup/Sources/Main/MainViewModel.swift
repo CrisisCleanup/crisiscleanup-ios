@@ -326,6 +326,6 @@ class MainViewModel: ObservableObject {
     }
 
     private func sync(_ cancelOngoing: Bool) {
-        syncPuller.appPull(cancelOngoing)
+        syncPuller.appPull(false, cancelOngoing: cancelOngoing)
     }
 }

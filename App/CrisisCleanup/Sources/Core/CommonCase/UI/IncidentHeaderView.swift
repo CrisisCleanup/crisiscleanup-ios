@@ -6,22 +6,17 @@ struct IncidentHeaderView: View {
     var disasterLiteral: String = ""
     var showDropdown: Bool = false
     var text = ""
-    var disabled: Bool = false
     var isLoading: Bool = false
     var isSpaceConstrained: Bool = false
 
     var body: some View {
         HStack(spacing: appTheme.gridItemSpacing) {
             if let incident = incident {
-                IncidentDisasterImage(
-                    incident,
-                    disabled: disabled
-                )
+                IncidentDisasterImage(incident)
             } else {
                 IncidentDisasterImage(
                     isValidIncident,
-                    disasterLiteral,
-                    disabled: disabled
+                    disasterLiteral
                 )
             }
 
