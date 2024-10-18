@@ -8,7 +8,7 @@ class MainViewModel: ObservableObject {
     private let appPreferences: AppPreferencesDataStore
     private let incidentSelector: IncidentSelector
     private let externalEventBus: ExternalEventBus
-    private let authEventBus: AuthEventBus
+    private let accountEventBus: AccountEventBus
     private let router: NavigationRouter
     private let translationsRepository: LanguageTranslationsRepository
     let translator: KeyAssetTranslator
@@ -54,7 +54,7 @@ class MainViewModel: ObservableObject {
         translationsRepository: LanguageTranslationsRepository,
         incidentSelector: IncidentSelector,
         externalEventBus: ExternalEventBus,
-        authEventBus: AuthEventBus,
+        accountEventBus: AccountEventBus,
         navigationRouter: NavigationRouter,
         syncPuller: SyncPuller,
         syncPusher: SyncPusher,
@@ -72,7 +72,7 @@ class MainViewModel: ObservableObject {
         translator = translationsRepository
         self.incidentSelector = incidentSelector
         self.externalEventBus = externalEventBus
-        self.authEventBus = authEventBus
+        self.accountEventBus = accountEventBus
         router = navigationRouter
         self.syncPuller = syncPuller
         self.syncPusher = syncPusher
@@ -192,7 +192,7 @@ class MainViewModel: ObservableObject {
                     self.logger.setAccountId(String(accountData.id))
                 } else {
                     if !accountData.hasAcceptedTerms {
-                        self.authEventBus.onLogout()
+                        self.accountEventBus.onLogout()
                     }
                 }
             }
@@ -264,7 +264,7 @@ class MainViewModel: ObservableObject {
 
     func onRejectTerms() {
         acceptTermsErrorMessage = ""
-        authEventBus.onLogout()
+        accountEventBus.onLogout()
     }
 
     func onAcceptTerms() {

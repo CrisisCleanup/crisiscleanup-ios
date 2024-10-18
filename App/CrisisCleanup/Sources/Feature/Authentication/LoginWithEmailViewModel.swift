@@ -8,7 +8,7 @@ class LoginWithEmailViewModel: ObservableObject {
     private let inputValidator: InputValidator
     private let accessTokenDecoder: AccessTokenDecoder
     private let accountDataRepository: AccountDataRepository
-    private let authEventBus: AuthEventBus
+    private let accountEventBus: AccountEventBus
     private let translator: KeyAssetTranslator
     private let logger: AppLogger
 
@@ -30,7 +30,7 @@ class LoginWithEmailViewModel: ObservableObject {
         inputValidator: InputValidator,
         accessTokenDecoder: AccessTokenDecoder,
         accountDataRepository: AccountDataRepository,
-        authEventBus: AuthEventBus,
+        accountEventBus: AccountEventBus,
         translator: KeyAssetTranslator,
         loggerFactory: AppLoggerFactory
     ) {
@@ -40,7 +40,7 @@ class LoginWithEmailViewModel: ObservableObject {
         self.inputValidator = inputValidator
         self.accessTokenDecoder = accessTokenDecoder
         self.accountDataRepository = accountDataRepository
-        self.authEventBus = authEventBus
+        self.accountEventBus = accountEventBus
         self.translator = translator
         logger = loggerFactory.getLogger("auth")
 
@@ -204,7 +204,7 @@ class LoginWithEmailViewModel: ObservableObject {
     }
 
     func logout() {
-        authEventBus.onLogout()
+        accountEventBus.onLogout()
     }
 }
 

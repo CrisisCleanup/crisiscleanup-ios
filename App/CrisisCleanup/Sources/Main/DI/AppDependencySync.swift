@@ -13,7 +13,7 @@ extension MainComponent {
                 localImageRepository: localImageRepository,
                 appLoggerFactory: loggerFactory,
                 syncLoggerFactory: syncLoggerFactory,
-                authEventBus: authEventBus
+                accountEventBus: accountEventBus
             )
         }
     }

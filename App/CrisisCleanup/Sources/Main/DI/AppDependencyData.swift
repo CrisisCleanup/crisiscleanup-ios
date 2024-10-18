@@ -230,7 +230,7 @@ extension MainComponent {
                 worksitesRepository: worksitesRepository,
                 organizationsRepository: organizationsRepository,
                 localImageRepository: localImageRepository,
-                authEventBus: authEventBus,
+                accountEventBus: accountEventBus,
                 worksiteInteractor: worksiteInteractor,
                 appEnv: appEnv,
                 syncLoggerFactory: syncLoggerFactory,

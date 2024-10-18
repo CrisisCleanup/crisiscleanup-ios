@@ -13,7 +13,7 @@ class WriteApiClient: CrisisCleanupWriteApi {
         networkRequestProvider: NetworkRequestProvider,
         accountDataRepository: AccountDataRepository,
         authApiClient: CrisisCleanupAuthApi,
-        authEventBus: AuthEventBus,
+        accountEventBus: AccountEventBus,
         appEnv: AppEnv
     ) {
         self.networkClient = AFNetworkingClient(
@@ -21,7 +21,7 @@ class WriteApiClient: CrisisCleanupWriteApi {
             interceptor: AccessTokenInterceptor(
                 accountDataRepository: accountDataRepository,
                 authApiClient: authApiClient,
-                authEventBus: authEventBus
+                accountEventBus: accountEventBus
             )
         )
         requestProvider = networkRequestProvider

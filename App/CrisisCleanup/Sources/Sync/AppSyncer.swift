@@ -53,7 +53,7 @@ class AppSyncer: SyncPuller, SyncPusher {
     private let localImageRepository: LocalImageRepository
     private let appLogger: AppLogger
     private let syncLogger: SyncLogger
-    private let authEventBus: AuthEventBus
+    private let accountEventBus: AccountEventBus
 
     private let pullLock = NSLock()
     private var pullTask: Task<Void, Error>? = nil
@@ -75,7 +75,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         localImageRepository: LocalImageRepository,
         appLoggerFactory: AppLoggerFactory,
         syncLoggerFactory: SyncLoggerFactory,
-        authEventBus: AuthEventBus
+        accountEventBus: AccountEventBus
     ) {
         self.accountDataRepository = accountDataRepository
         self.accountDataRefresher = accountDataRefresher
@@ -87,7 +87,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         self.localImageRepository = localImageRepository
         appLogger = appLoggerFactory.getLogger("sync")
         syncLogger = syncLoggerFactory.getLogger("app-syncer")
-        self.authEventBus = authEventBus
+        self.accountEventBus = accountEventBus
 
         accountData = accountDataRepository.accountData.eraseToAnyPublisher()
         appPreferences = appPreferencesDataStore.preferences.eraseToAnyPublisher()

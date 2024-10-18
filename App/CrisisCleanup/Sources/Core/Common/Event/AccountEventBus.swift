@@ -1,6 +1,6 @@
 import Combine
 
-public protocol AuthEventBus {
+public protocol AccountEventBus {
     var logouts: any Publisher<Bool, Never> { get }
     var refreshedTokens: any Publisher<Bool, Never> { get }
 
@@ -8,7 +8,7 @@ public protocol AuthEventBus {
     func onTokensRefreshed()
 }
 
-class CrisisCleanupAuthEventBus: AuthEventBus {
+class CrisisCleanupAccountEventBus: AccountEventBus {
     private let logoutSubject = PassthroughSubject<Bool, Never>()
     let logouts: any Publisher<Bool, Never>
 

@@ -10,7 +10,7 @@ class AccountApiClient : CrisisCleanupAccountApi {
         networkRequestProvider: NetworkRequestProvider,
         accountDataRepository: AccountDataRepository,
         authApiClient: CrisisCleanupAuthApi,
-        authEventBus: AuthEventBus,
+        accountEventBus: AccountEventBus,
         appEnv: AppEnv
     ) {
         dateFormatter = ISO8601DateFormatter()
@@ -34,7 +34,7 @@ class AccountApiClient : CrisisCleanupAccountApi {
             interceptor: AccessTokenInterceptor(
                 accountDataRepository: accountDataRepository,
                 authApiClient: authApiClient,
-                authEventBus: authEventBus
+                accountEventBus: accountEventBus
             ),
             jsonDecoder: jsonDecoder
         )

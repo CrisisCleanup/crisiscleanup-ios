@@ -10,7 +10,7 @@ class MenuViewModel: ObservableObject {
     private let appVersionProvider: AppVersionProvider
     private let databaseVersionProvider: DatabaseVersionProvider
     private let appPreferences: AppPreferencesDataStore
-    private let authEventBus: AuthEventBus
+    private let accountEventBus: AccountEventBus
     private let appEnv: AppEnv
     private let logger: AppLogger
 
@@ -52,7 +52,7 @@ class MenuViewModel: ObservableObject {
         appSettingsProvider: AppSettingsProvider,
         databaseVersionProvider: DatabaseVersionProvider,
         appPreferences: AppPreferencesDataStore,
-        authEventBus: AuthEventBus,
+        accountEventBus: AccountEventBus,
         appEnv: AppEnv,
         loggerFactory: AppLoggerFactory
     ) {
@@ -64,7 +64,7 @@ class MenuViewModel: ObservableObject {
         self.appVersionProvider = appVersionProvider
         self.databaseVersionProvider = databaseVersionProvider
         self.appPreferences = appPreferences
-        self.authEventBus = authEventBus
+        self.accountEventBus = accountEventBus
         self.appEnv = appEnv
         logger = loggerFactory.getLogger("menu")
 

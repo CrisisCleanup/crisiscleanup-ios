@@ -61,7 +61,7 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
         _ accountDataSource: AccountInfoDataSource,
         _ secureDataSource: SecureDataSource,
         _ preferencesDataSource: AppPreferencesDataStore,
-        _ authEventBus: AuthEventBus,
+        _ accountEventBus: AccountEventBus,
         _ authApi: CrisisCleanupAuthApi,
         _ loggerFactory: AppLoggerFactory,
         _ appEnv: AppEnv
@@ -92,7 +92,7 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
             })
             .store(in: &disposables)
 
-        authEventBus.logouts
+        accountEventBus.logouts
             .eraseToAnyPublisher()
             .sink(receiveValue: { _ in
                 self.onLogout()

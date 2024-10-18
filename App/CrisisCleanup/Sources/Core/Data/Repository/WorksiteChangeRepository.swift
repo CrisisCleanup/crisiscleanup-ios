@@ -81,7 +81,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
     private let worksitesRepository: WorksitesRepository
     private let organizationsRepository: OrganizationsRepository
     private let localImageRepository: LocalImageRepository
-    private let authEventBus: AuthEventBus
+    private let accountEventBus: AccountEventBus
     private let worksiteInteractor: WorksiteInteractor
     private let appEnv: AppEnv
     private let syncLoggerFactory: SyncLoggerFactory
@@ -116,7 +116,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         worksitesRepository: WorksitesRepository,
         organizationsRepository: OrganizationsRepository,
         localImageRepository: LocalImageRepository,
-        authEventBus: AuthEventBus,
+        accountEventBus: AccountEventBus,
         worksiteInteractor: WorksiteInteractor,
         appEnv: AppEnv,
         syncLoggerFactory: SyncLoggerFactory,
@@ -136,7 +136,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         self.worksitesRepository = worksitesRepository
         self.organizationsRepository = organizationsRepository
         self.localImageRepository = localImageRepository
-        self.authEventBus = authEventBus
+        self.accountEventBus = accountEventBus
         self.worksiteInteractor = worksiteInteractor
         self.appEnv = appEnv
         self.syncLoggerFactory = syncLoggerFactory
