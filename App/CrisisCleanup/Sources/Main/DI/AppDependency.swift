@@ -5,6 +5,7 @@ public protocol AppDependency: Dependency {
     var appSettingsProvider: AppSettingsProvider { get }
     var appVersionProvider: AppVersionProvider { get }
     var databaseVersionProvider: DatabaseVersionProvider { get }
+    var databaseOperator: DatabaseOperator { get }
     var loggerFactory: AppLoggerFactory { get }
     var networkMonitor: NetworkMonitor { get }
 
@@ -45,6 +46,7 @@ public protocol AppDependency: Dependency {
     var orgVolunteerRepository: OrgVolunteerRepository { get }
     var requestRedeployRepository: RequestRedeployRepository { get }
     var listsRepository: ListsRepository { get }
+    var appDataManagementRepository: AppDataManagementRepository { get }
 
     var authenticateViewBuilder: AuthenticateViewBuilder { get }
     var incidentSelectViewBuilder: IncidentSelectViewBuilder { get }
@@ -182,6 +184,7 @@ extension MainComponent {
                 networkDataSource: networkDataSource,
                 accountDataRepository: accountDataRepository,
                 organizationsRepository: organizationsRepository,
+                accountEventBus: accountEventBus,
                 loggerFactory: loggerFactory
             )
         }

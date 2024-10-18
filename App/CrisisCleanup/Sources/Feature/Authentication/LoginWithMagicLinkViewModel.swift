@@ -5,6 +5,7 @@ class LoginWithMagicLinkViewModel: ObservableObject {
     private let authApi: CrisisCleanupAuthApi
     private let dataApi: CrisisCleanupNetworkDataSource
     private let accountDataRepository: AccountDataRepository
+    private let accountEventBus: AccountEventBus
     private let translator: KeyAssetTranslator
     private let logger: AppLogger
 
@@ -20,6 +21,7 @@ class LoginWithMagicLinkViewModel: ObservableObject {
         authApi: CrisisCleanupAuthApi,
         dataApi: CrisisCleanupNetworkDataSource,
         accountDataRepository: AccountDataRepository,
+        accountEventBus: AccountEventBus,
         translator: KeyAssetTranslator,
         loggerFactory: AppLoggerFactory,
         authCode: String
@@ -27,6 +29,7 @@ class LoginWithMagicLinkViewModel: ObservableObject {
         self.authApi = authApi
         self.dataApi = dataApi
         self.accountDataRepository = accountDataRepository
+        self.accountEventBus = accountEventBus
         self.translator = translator
         logger = loggerFactory.getLogger("auth")
         self.authCode = authCode
@@ -64,27 +67,18 @@ class LoginWithMagicLinkViewModel: ObservableObject {
                    let accountProfile = await dataApi.getProfile(tokens.accessToken) {
                     let accountData = try await accountDataRepository.accountData.eraseToAnyPublisher().asyncFirst()
                     let emailAddress = accountData.emailAddress
-                    if emailAddress.isNotBlank && emailAddress != accountProfile.email {
+                    if emailAddress.isBlank || emailAddress.lowercased() != accountProfile.email.lowercased() {
                         message = translator.t("magicLink.log_out_before_different_account")
 
                         // TODO: Clear account data and support logging in with different email address?
+                    } else if(accountProfile.organization.isActive == false) {
+                        accountEventBus.onAccountInactiveOrganizations(accountProfile.id)
                     } else {
-                        let expirySeconds = Int64(Date().timeIntervalSince1970) + Int64(tokens.expiresIn)
                         accountDataRepository.setAccount(
+                            accountProfile,
                             refreshToken: tokens.refreshToken,
                             accessToken: tokens.accessToken,
-                            id: accountProfile.id,
-                            email: accountProfile.email,
-                            firstName: accountProfile.firstName,
-                            lastName: accountProfile.lastName,
-                            expirySeconds: expirySeconds,
-                            profilePictureUri: accountProfile.profilePicUrl ?? "",
-                            org: OrgData(
-                                id: accountProfile.organization.id,
-                                name: accountProfile.organization.name
-                            ),
-                            hasAcceptedTerms: accountProfile.hasAcceptedTerms == true,
-                            activeRoles: accountProfile.activeRoles
+                            expiresIn: tokens.expiresIn
                         )
                         isSuccessful = true
                     }

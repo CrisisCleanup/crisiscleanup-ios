@@ -13,6 +13,7 @@ extension AuthenticateComponent {
                 dataApi: dependency.networkDataSource,
                 accountUpdateRepository: dependency.accountUpdateRepository,
                 accountDataRepository: dependency.accountDataRepository,
+                accountEventBus: dependency.accountEventBus,
                 translator: dependency.translator,
                 loggerFactory: dependency.loggerFactory,
                 appEnv: dependency.appEnv,

@@ -95,6 +95,10 @@ public class WorksiteSyncStatDao {
             appBuildVersionCode
         )
     }
+
+    func getWorksiteSyncStatCount() -> Int {
+        try! reader.read(WorksiteSyncStatRecord.fetchCount(_:))
+    }
 }
 
 extension AppDatabase {

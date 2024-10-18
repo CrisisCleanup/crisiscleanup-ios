@@ -3,6 +3,8 @@ import Combine
 import Foundation
 
 public protocol WorksiteChangeRepository {
+    var worksiteChangeCount: Int { get }
+
     var syncingWorksiteIds: any Publisher<Set<Int64>, Never> { get }
 
     var streamWorksitesPendingSync: any Publisher<[WorksitePendingSync], Never> { get }
@@ -87,6 +89,10 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
     private let syncLoggerFactory: SyncLoggerFactory
     private var syncLogger: SyncLogger
     private let appLogger: AppLogger
+
+    var worksiteChangeCount: Int {
+        worksiteChangeDao.getWorksiteChangeCount()
+    }
 
     private let syncingWorksiteIdsLock = NSLock()
     private var _syncingWorksiteIds = Set<Int64>()

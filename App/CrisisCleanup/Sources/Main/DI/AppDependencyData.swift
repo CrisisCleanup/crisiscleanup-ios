@@ -11,6 +11,12 @@ extension MainComponent {
 
     public var databaseVersionProvider: DatabaseVersionProvider { appDatabase }
 
+    public var databaseOperator: DatabaseOperator {
+        shared {
+            AppDatabaseOperator(appDatabase)
+        }
+    }
+
     var languageDao: LanguageDao {
         LanguageDao(appDatabase)
     }
@@ -344,6 +350,20 @@ extension MainComponent {
                 personContactDao: personContactDao,
                 usersRepository: usersRepository,
                 worksiteDao: worksiteDao,
+                loggerFactory: loggerFactory
+            )
+        }
+    }
+
+    public var appDataManagementRepository: AppDataManagementRepository {
+        shared {
+            CrisisCleanupDataManagementRepository(
+                incidentsRepository: incidentsRepository,
+                worksiteChangeRepository: worksiteChangeRepository,
+                worksiteSyncStatDao: worksiteSyncStatDao,
+                syncPuller: syncPuller,
+                databaseOperator: databaseOperator,
+                accountEventBus: accountEventBus,
                 loggerFactory: loggerFactory
             )
         }

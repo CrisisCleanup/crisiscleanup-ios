@@ -6,6 +6,7 @@ class LoginWithPhoneViewModel: ObservableObject {
     private let dataApi: CrisisCleanupNetworkDataSource
     private let accountUpdateRepository: AccountUpdateRepository
     private let accountDataRepository: AccountDataRepository
+    private let accountEventBus: AccountEventBus
     private let translator: KeyAssetTranslator
     private let logger: AppLogger
 
@@ -49,6 +50,7 @@ class LoginWithPhoneViewModel: ObservableObject {
         dataApi: CrisisCleanupNetworkDataSource,
         accountUpdateRepository: AccountUpdateRepository,
         accountDataRepository: AccountDataRepository,
+        accountEventBus: AccountEventBus,
         translator: KeyAssetTranslator,
         loggerFactory: AppLoggerFactory,
         appEnv: AppEnv,
@@ -58,6 +60,7 @@ class LoginWithPhoneViewModel: ObservableObject {
         self.dataApi = dataApi
         self.accountUpdateRepository = accountUpdateRepository
         self.accountDataRepository = accountDataRepository
+        self.accountEventBus = accountEventBus
         self.translator = translator
         logger = loggerFactory.getLogger("auth")
 
@@ -293,30 +296,23 @@ class LoginWithPhoneViewModel: ObservableObject {
                     accountId: accountId,
                     oneTimePasswordId: oneTimePasswordId
                 ),
+                   tokens.refreshToken.isNotBlank,
+                   tokens.accessToken.isNotBlank,
                    let accountProfile = await dataApi.getProfile(tokens.accessToken) {
                     let emailAddress = accountData.emailAddress
-                    if emailAddress.isNotBlank,
-                       emailAddress != accountProfile.email {
+                    if emailAddress.isBlank ||
+                        emailAddress.lowercased() != accountProfile.email.lowercased() {
                         message = translator.t("loginWithPhone.log_out_before_different_account")
 
                         // TODO: Clear account data and support logging in with different email address?
+                    } else if accountProfile.organization.isActive == false {
+                        accountEventBus.onAccountInactiveOrganizations(accountId)
                     } else {
-                        let expirySeconds = Int64(Date().timeIntervalSince1970) + Int64(tokens.expiresIn)
                         accountDataRepository.setAccount(
+                            accountProfile,
                             refreshToken: tokens.refreshToken,
                             accessToken: tokens.accessToken,
-                            id: accountProfile.id,
-                            email: accountProfile.email,
-                            firstName: accountProfile.firstName,
-                            lastName: accountProfile.lastName,
-                            expirySeconds: expirySeconds,
-                            profilePictureUri: accountProfile.profilePicUrl ?? "",
-                            org: OrgData(
-                                id: accountProfile.organization.id,
-                                name: accountProfile.organization.name
-                            ),
-                            hasAcceptedTerms: accountProfile.hasAcceptedTerms == true,
-                            activeRoles: accountProfile.activeRoles
+                            expiresIn: tokens.expiresIn
                         )
                         isSuccessful = true
                     }

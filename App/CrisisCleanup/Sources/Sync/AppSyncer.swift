@@ -5,12 +5,14 @@ import UIKit
 
 public protocol SyncPuller {
     func appPull(_ force: Bool, cancelOngoing: Bool)
+    func stopPull()
 
     func pullUnauthenticatedData()
 
     func pullIncidents() async
 
     func appPullIncident(_ id: Int64)
+    func stopPullIncident()
 
     func appPullIncidentWorksitesDelta(_ forceRefreshAll: Bool)
 }
@@ -55,10 +57,13 @@ class AppSyncer: SyncPuller, SyncPusher {
     private let syncLogger: SyncLogger
     private let accountEventBus: AccountEventBus
 
-    private let pullLock = NSLock()
+    private let pullLock = NSRecursiveLock()
     private var pullTask: Task<Void, Error>? = nil
 
-    private let pullDeltaLock = NSLock()
+    private let pullIncidentLock = NSRecursiveLock()
+    private var pullIncidentTask: Task<Void, Error>? = nil
+
+    private let pullDeltaLock = NSRecursiveLock()
     private var pullDeltaTask: Task<Void, Error>? = nil
 
     private var disposables = Set<AnyCancellable>()
@@ -184,6 +189,12 @@ class AppSyncer: SyncPuller, SyncPusher {
         }
     }
 
+    func stopPull() {
+        pullLock.withLock {
+            pullTask?.cancel()
+        }
+    }
+
     func pullIncidents() async {
         do {
             try await internalPullIncidents()
@@ -193,20 +204,34 @@ class AppSyncer: SyncPuller, SyncPusher {
     }
 
     func appPullIncident(_ id: Int64) {
-        Task {
-            do {
-                // TODO: Wait for account token and skip if token is invalid
-                try await withThrowingTaskGroup(of: Void.self) { group -> Void in
-                    group.addTask {
-                        try await self.incidentsRepository.pullIncident(id)
-                        await self.incidentsRepository.pullIncidentOrganizations(id)
+        if id == EmptyIncident.id {
+            return
+        }
+
+        pullIncidentLock.withLock {
+            pullIncidentTask?.cancel()
+
+            pullIncidentTask = Task {
+                do {
+                    // TODO: Wait for account token and skip if token is invalid
+                    try await withThrowingTaskGroup(of: Void.self) { group -> Void in
+                        group.addTask {
+                            try await self.incidentsRepository.pullIncident(id)
+                            await self.incidentsRepository.pullIncidentOrganizations(id)
+                        }
+                        try await group.waitForAll()
                     }
-                    try await group.waitForAll()
+                } catch {
+                    // TODO: Handle proper
+                    print(error)
                 }
-            } catch {
-                // TODO: Handle proper
-                print(error)
             }
+        }
+    }
+
+    func stopPullIncident() {
+        pullIncidentLock.withLock {
+            pullIncidentTask?.cancel()
         }
     }
 

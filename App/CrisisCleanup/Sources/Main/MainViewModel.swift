@@ -7,6 +7,7 @@ class MainViewModel: ObservableObject {
     private let appVersionProvider: AppVersionProvider
     private let appPreferences: AppPreferencesDataStore
     private let incidentSelector: IncidentSelector
+    private let appDataRepository: AppDataManagementRepository
     private let externalEventBus: ExternalEventBus
     private let accountEventBus: AccountEventBus
     private let router: NavigationRouter
@@ -38,6 +39,8 @@ class MainViewModel: ObservableObject {
 
     @Published private(set) var showOnboarding = false
 
+    @Published private(set) var showInactiveOrganization = false
+
     let isNotProduction: Bool
 
     private var incidentsData: IncidentsData = LoadingIncidentsData
@@ -53,6 +56,7 @@ class MainViewModel: ObservableObject {
         appSettingsProvider: AppSettingsProvider,
         translationsRepository: LanguageTranslationsRepository,
         incidentSelector: IncidentSelector,
+        appDataRepository: AppDataManagementRepository,
         externalEventBus: ExternalEventBus,
         accountEventBus: AccountEventBus,
         navigationRouter: NavigationRouter,
@@ -70,6 +74,7 @@ class MainViewModel: ObservableObject {
         self.appPreferences = appPreferences
         self.translationsRepository = translationsRepository
         translator = translationsRepository
+        self.appDataRepository = appDataRepository
         self.incidentSelector = incidentSelector
         self.externalEventBus = externalEventBus
         self.accountEventBus = accountEventBus
@@ -107,6 +112,7 @@ class MainViewModel: ObservableObject {
         subscribeTermsAcceptanceState()
         subscribeAppSupport()
         subscribeAppPreferences()
+        subscribeInactiveOrganization()
     }
 
     func onViewDisappear() {
@@ -258,6 +264,23 @@ class MainViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
+    private func subscribeInactiveOrganization() {
+        accountEventBus.inactiveOrganizations
+            .eraseToAnyPublisher()
+            .throttle(
+                for: .seconds(5),
+                scheduler: RunLoop.current,
+                latest: true
+            )
+            .filter { $0 > 0 }
+            .receive(on: RunLoop.main)
+            .sink { _ in
+                self.showInactiveOrganization = true
+                self.appDataRepository.clearAppData()
+            }
+            .store(in: &subscriptions)
+    }
+
     func onRequireCheckAcceptTerms() {
         acceptTermsErrorMessage = translator.t("termsConditionsModal.must_check_box")
     }
@@ -293,6 +316,12 @@ class MainViewModel: ObservableObject {
                 }
             }
         }
+    }
+
+    func acknowledgeInactiveOrganization() {
+        showInactiveOrganization = false
+        accountEventBus.onLogout()
+        accountEventBus.clearAccountInactiveOrganization()
     }
 
     private func onEmailLoginLink(_ code: String) {
