@@ -67,7 +67,8 @@ class LoginWithMagicLinkViewModel: ObservableObject {
                    let accountProfile = await dataApi.getProfile(tokens.accessToken) {
                     let accountData = try await accountDataRepository.accountData.eraseToAnyPublisher().asyncFirst()
                     let emailAddress = accountData.emailAddress
-                    if emailAddress.isBlank || emailAddress.lowercased() != accountProfile.email.lowercased() {
+                    if emailAddress.isNotBlank &&
+                        emailAddress.lowercased() != accountProfile.email.lowercased() {
                         message = translator.t("magicLink.log_out_before_different_account")
 
                         // TODO: Clear account data and support logging in with different email address?

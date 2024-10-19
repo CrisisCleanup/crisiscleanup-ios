@@ -300,7 +300,7 @@ class LoginWithPhoneViewModel: ObservableObject {
                    tokens.accessToken.isNotBlank,
                    let accountProfile = await dataApi.getProfile(tokens.accessToken) {
                     let emailAddress = accountData.emailAddress
-                    if emailAddress.isBlank ||
+                    if emailAddress.isNotBlank &&
                         emailAddress.lowercased() != accountProfile.email.lowercased() {
                         message = translator.t("loginWithPhone.log_out_before_different_account")
 
