@@ -15,7 +15,9 @@ class CaseShareViewModel: ObservableObject {
 
     private let worksiteIn: Worksite
 
+    private let isSharingSubject = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isSharing = false
+    private let isSharedSubject = CurrentValueSubject<Bool, Never>(false)
     @Published private(set) var isShared = false
 
     @Published var unclaimedShareReason = ""
@@ -161,6 +163,18 @@ class CaseShareViewModel: ObservableObject {
     }
 
     private func subscribeShareState() {
+        isSharingSubject
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.isSharing, on: self)
+            .store(in: &subscriptions)
+
+        isSharedSubject
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.isShared, on: self)
+            .store(in: &subscriptions)
+
         let isOnlinePublisher = networkMonitor.isOnline.eraseToAnyPublisher()
         let accountDataPublisher = accountDataRepository.accountData.eraseToAnyPublisher()
 
@@ -265,16 +279,16 @@ class CaseShareViewModel: ObservableObject {
             return
         }
 
-        if (isSharing) {
+        if isSharingSubject.value {
             return
         }
-        isSharing = true
+        isSharingSubject.value = true
 
         Task {
             do {
-                defer { isSharing = false }
+                defer { isSharingSubject.value = false }
 
-                isShared = await worksitesRepository.shareWorksite(
+                isSharedSubject.value = await worksitesRepository.shareWorksite(
                     worksiteId: worksiteIn.id,
                     emails: emails.map { $0.contactValue },
                     phoneNumbers: phoneNumbers.map { $0.contactValue },

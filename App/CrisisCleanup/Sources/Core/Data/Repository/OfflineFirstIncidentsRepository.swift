@@ -19,6 +19,10 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
     ]
     private let fullIncidentQueryFields: [String]
 
+    var incidentCount: Int {
+        incidentDao.getIncidentCount()
+    }
+
     let incidents: any Publisher<[Incident], Never>
 
     private let dataSource: CrisisCleanupNetworkDataSource

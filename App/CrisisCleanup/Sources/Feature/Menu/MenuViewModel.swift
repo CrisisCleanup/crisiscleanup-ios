@@ -10,7 +10,7 @@ class MenuViewModel: ObservableObject {
     private let appVersionProvider: AppVersionProvider
     private let databaseVersionProvider: DatabaseVersionProvider
     private let appPreferences: AppPreferencesDataStore
-    private let authEventBus: AuthEventBus
+    private let accountEventBus: AccountEventBus
     private let appEnv: AppEnv
     private let logger: AppLogger
 
@@ -21,6 +21,7 @@ class MenuViewModel: ObservableObject {
     let privacyPolicyUrl: URL
     let gettingStartedVideoUrl: URL
 
+    @Published private(set) var isLoadingIncidents = true
     @Published private(set) var showHeaderLoading = false
 
     @Published private(set) var profilePicture: AccountProfilePicture? = nil
@@ -51,7 +52,7 @@ class MenuViewModel: ObservableObject {
         appSettingsProvider: AppSettingsProvider,
         databaseVersionProvider: DatabaseVersionProvider,
         appPreferences: AppPreferencesDataStore,
-        authEventBus: AuthEventBus,
+        accountEventBus: AccountEventBus,
         appEnv: AppEnv,
         loggerFactory: AppLoggerFactory
     ) {
@@ -63,7 +64,7 @@ class MenuViewModel: ObservableObject {
         self.appVersionProvider = appVersionProvider
         self.databaseVersionProvider = databaseVersionProvider
         self.appPreferences = appPreferences
-        self.authEventBus = authEventBus
+        self.accountEventBus = accountEventBus
         self.appEnv = appEnv
         logger = loggerFactory.getLogger("menu")
 
@@ -95,8 +96,15 @@ class MenuViewModel: ObservableObject {
     }
 
     private func subscribeLoading() {
+        let incidentsLoading = incidentsRepository.isLoading.eraseToAnyPublisher().share()
+
+        incidentsLoading
+            .receive(on: RunLoop.main)
+            .assign(to: \.isLoadingIncidents, on: self)
+            .store(in: &subscriptions)
+
         Publishers.CombineLatest(
-            incidentsRepository.isLoading.eraseToAnyPublisher(),
+            incidentsLoading,
             worksitesRepository.isLoading.eraseToAnyPublisher()
         )
         .map { b0, b1 in b0 || b1 }

@@ -45,6 +45,7 @@ struct CasesLayoutView: View {
     }
 
     var body: some View {
+        let isLoadingIncidents = viewModel.isLoadingIncidents
         let hasNoIncidents = viewModel.incidentsData.incidents.isEmpty
 
         ZStack {
@@ -52,6 +53,7 @@ struct CasesLayoutView: View {
                 CasesTableView(
                     phoneCallNumbers: $phoneCallNumbers,
                     incidentSelectViewBuilder: incidentSelectViewBuilder,
+                    isLoadingIncidents: isLoadingIncidents,
                     hasNoIncidents: hasNoIncidents
                 )
             } else {
@@ -107,6 +109,7 @@ struct CasesLayoutView: View {
                 openAuthScreen: openAuthScreen,
                 map: $map,
                 incidentSelectViewBuilder: incidentSelectViewBuilder,
+                isLoadingIncidents: isLoadingIncidents,
                 hasNoIncidents: hasNoIncidents,
                 animateToSelectedIncidentBounds: animateToSelectedIncidentBounds,
                 isShortScreen: viewLayout.isShort
@@ -144,8 +147,7 @@ private struct MapViewTopActions: View {
 
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
 
-    let hasNoIncidents: Bool
-
+    let isLoadingIncidents: Bool
     @State private var openIncidentSelect = false
 
     @State private var showCountProgress = false
@@ -157,7 +159,6 @@ private struct MapViewTopActions: View {
             } label: {
                 IncidentDisasterImage(
                     viewModel.incidentsData.selected,
-                    disabled: hasNoIncidents,
                     background: .white
                 )
                 .shadow(radius: appTheme.shadowRadius)
@@ -172,7 +173,7 @@ private struct MapViewTopActions: View {
                     onDismiss: { openIncidentSelect = false }
                 )
             }
-            .disabled(hasNoIncidents)
+            .disabled(isLoadingIncidents)
 
             Spacer()
 
@@ -247,6 +248,7 @@ private struct CasesOverlayElements: View {
 
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
 
+    let isLoadingIncidents: Bool
     let hasNoIncidents: Bool
 
     let animateToSelectedIncidentBounds: (_ bounds: LatLngBounds) -> Void
@@ -261,7 +263,7 @@ private struct CasesOverlayElements: View {
             if isMapView {
                 MapViewTopActions(
                     incidentSelectViewBuilder: incidentSelectViewBuilder,
-                    hasNoIncidents: hasNoIncidents
+                    isLoadingIncidents: isLoadingIncidents
                 )
                 .padding(.bottom)
             }
@@ -310,6 +312,7 @@ private struct CasesOverlayElements: View {
                             .padding()
                     }
                     .styleRoundedRectanglePrimary()
+                    .disabled(hasNoIncidents)
 
                     Button {
                         viewModel.toggleTableView()
@@ -327,7 +330,7 @@ private struct CasesOverlayElements: View {
                     openAuthScreen
                 )
                 .padding(.top)
-}
+            }
         }
         .padding()
     }

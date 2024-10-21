@@ -37,178 +37,72 @@ struct MainView: View {
 
     @State private var deviceSize = ViewLayoutDescription()
 
-    @State private var dividerHeight = 32.0
-    @State private var dividerOffset = -6.0
+    @State private var dividerHeight: CGFloat = 32.0
+    @State private var dividerOffset: CGFloat = -6.0
 
     var body: some View {
-        Group {
-            switch viewModel.viewData.state {
-            case .loading:
-                Image("crisis_cleanup_logo", bundle: .module)
-                    .renderingMode(.original)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(maxWidth: 240)
+        let isNavigatingAuth = viewModel.showAuthScreen ||
+        !viewModel.viewData.showMainContent
+        ZStack {
+            Group {
+                switch viewModel.viewData.state {
+                case .loading:
+                    Image("crisis_cleanup_logo", bundle: .module)
+                        .renderingMode(.original)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: 240)
 
-            case .unsupportedBuild:
-                UnsupportedBuildView(supportedInfo: viewModel.minSupportedVersion)
-            case .ready:
-                let hideAuthScreen = {
-                    viewModel.showAuthScreen = false
-                }
-                if viewModel.showAuthScreen ||
-                    !viewModel.viewData.showMainContent {
-                    NavigationStack(path: $router.path) {
-                        authenticateViewBuilder.authenticateView(dismissScreen: hideAuthScreen)
-                            .navigationDestination(for: NavigationRoute.self) { route in
-                                switch route {
-                                case .loginWithEmail:
-                                    authenticateViewBuilder.loginWithEmailView()
-                                case .loginWithPhone:
-                                    authenticateViewBuilder.loginWithPhoneView
-                                case .phoneLoginCode(let phoneNumber):
-                                    authenticateViewBuilder.phoneLoginCodeView(phoneNumber)
-                                case .magicLinkLoginCode(let code):
-                                    authenticateViewBuilder.magicLinkLoginCodeView(code)
-                                case .recoverPassword(let showForgotPassword, let showMagicLink):
-                                    authenticateViewBuilder.passwordRecoverView(
-                                        showForgotPassword: showForgotPassword,
-                                        showMagicLink: showMagicLink
-                                    )
-                                case .resetPassword(let recoverCode):
-                                    authenticateViewBuilder.resetPasswordView(
-                                        closeAuthFlow: hideAuthScreen,
-                                        resetCode: recoverCode
-                                    )
-                                case .volunteerOrg:
-                                    volunteerOrgViewBuilder.volunteerOrgView
-                                case .requestOrgAccess:
-                                    volunteerOrgViewBuilder.requestOrgAccessView
-                                case .orgUserInvite(let inviteCode):
-                                    volunteerOrgViewBuilder.orgUserInviteView(inviteCode)
-                                case .orgPersistentInvite(let invite):
-                                    volunteerOrgViewBuilder.orgPersistentInviteView(invite)
-                                case .scanOrgQrCode:
-                                    volunteerOrgViewBuilder.scanQrCodeJoinOrgView
-                                case .pasteOrgInviteLink:
-                                    volunteerOrgViewBuilder.pasteOrgInviteView
-                                default:
-                                    Text("Pending auth/account route \(route.id)")
-                                }
-                            }
+                case .unsupportedBuild:
+                    UnsupportedBuildView(supportedInfo: viewModel.minSupportedVersion)
+                case .ready:
+                    let hideAuthScreen = {
+                        viewModel.showAuthScreen = false
                     }
-                } else if !viewModel.viewData.hasAcceptedTerms {
-                    ZStack {
-                        let isFetchingTerms = viewModel.isFetchingTermsAcceptance
-                        if !isFetchingTerms {
-                            AcceptTermsView(
-                                termsUrl: viewModel.termsOfServiceUrl,
-                                privacyUrl: viewModel.privacyPolicyUrl,
-                                isLoading: viewModel.isLoadingTermsAcceptance,
-                                onRequireCheckAcceptTerms: viewModel.onRequireCheckAcceptTerms,
-                                onRejectTerms: viewModel.onRejectTerms,
-                                onAcceptTerms: viewModel.onAcceptTerms,
-                                errorMessage: viewModel.acceptTermsErrorMessage
-                            )
-                        }
-
-                        if isFetchingTerms {
-                            ProgressView()
-                                .circularProgress()
-                        }
-                    }
-                } else {
-                    let iconColor = appTheme.colors.navigationContentColor
-                    let iconColorFaded = iconColor.opacity(0.65)
-                    NavigationStack(path: $router.path) {
-                        ZStack {
-                            TabView(selection: $selectedTab) {
-                                let openAuthScreen = {
-                                    viewModel.showAuthScreen = true
-                                }
-                                MainTabs(
-                                    viewModel: viewModel,
-                                    openAuthScreen: openAuthScreen,
-                                    casesViewBuilder: casesViewBuilder,
-                                    menuViewBuilder: menuViewBuilder
-                                )
-                            }
-                            .tabViewStyle(
-                                backgroundColor: appTheme.colors.navigationContainerColor,
-                                itemColor: iconColorFaded,
-                                selectedItemColor: iconColor
-                            )
-                            .overlay(alignment: .bottom) {
-                                Rectangle()
-                                    .frame(width: 1, height: dividerHeight)
-                                    .overlay(iconColorFaded)
-                                    .offset(y: dividerOffset)
-                            }
-                        }
-                        .toolbarBackground(.visible, for: .navigationBar)
-                        .toolbarColorScheme(.light, for: .navigationBar)
-                        .navigationDestination(for: NavigationRoute.self) { route in
-                            switch route {
-                            case .filterCases:
-                                casesFilterViewBuilder.casesFilterView
-                            case .searchCases:
-                                casesSearchViewBuilder.casesSearchView
-                                    .navigationBarHidden(true)
-                            case .viewCase(let incidentId, let worksiteId):
-                                viewCaseViewBuilder.viewCaseView(
-                                    incidentId: incidentId,
-                                    worksiteId: worksiteId
-                                )
-                            case .caseAddNote:
-                                caseAddNoteViewBuilder.caseAddNoteView
-                            case .createEditCase(let incidentId, let worksiteId):
-                                createEditCaseViewBuilder.createEditCaseView(
-                                    incidentId: incidentId,
-                                    worksiteId: worksiteId
-                                )
-                            case .caseSearchLocation:
-                                caseSearchLocationViewBuilder.caseSearchLocationView
-                            case .caseMoveOnMap:
-                                caseMoveOnMapViewBuilder.caseMoveOnMapView
-                            case .caseShare:
-                                caseShareViewBuilder.caseShareView
-                            case .caseShareStep2:
-                                caseShareViewBuilder.caseShareStep2View
-                            case .caseFlags(let isFromCaseEdit):
-                                caseFlagsViewBuilder.caseFlagsView(isFromCaseEdit: isFromCaseEdit)
-                            case .caseHistory:
-                                caseHistoryViewBuilder.caseHistoryView
-                            case .caseWorkTypeTransfer:
-                                transferWorkTypeViewBuilder.transferWorkTypeView
-                            case .viewImage(let imageId, let isNetworkImage, let screenTitle):
-                                viewImageViewBuilder.viewImageView(imageId, isNetworkImage, screenTitle)
-                            case .worksiteImages(let worksiteId, let imageId, let imageUri, let screenTitle):
-                                worksiteImagesViewBuilder.worksiteImagesView(
-                                    worksiteId: worksiteId,
-                                    imageId: imageId,
-                                    imageUri: imageUri,
-                                    screenTitle: screenTitle
-                                )
-                            case .userFeedback:
-                                userFeedbackViewBuilder.userFeedbackView
-                            case .inviteTeammate:
-                                inviteTeammateViewBuilder.inviteTeammateView
-                            case .requestRedeploy:
-                                requestRedeployViewBuilder.requestRedeployView
-                            case .lists:
-                                listsViewBuilder.listsView
-                            case .viewList(let listId):
-                                listsViewBuilder.viewListView(listId)
-                            case .syncInsights:
-                                if viewModel.isNotProduction {
-                                    syncInsightsViewBuilder.syncInsightsView
-                                }
-                            default:
-                                Text("Route \(route.id) needs implementing")
-                            }
-                        }
+                    if isNavigatingAuth {
+                        AuthenticationNavigationStack(
+                            authenticateViewBuilder: authenticateViewBuilder,
+                            volunteerOrgViewBuilder: volunteerOrgViewBuilder,
+                            exitAuthNavigation: hideAuthScreen
+                        )
+                    } else if !viewModel.viewData.hasAcceptedTerms {
+                        TermsView(viewModel: viewModel)
+                    } else {
+                        MainNavigationStack(
+                            viewModel: viewModel,
+                            casesViewBuilder: casesViewBuilder,
+                            menuViewBuilder: menuViewBuilder,
+                            casesFilterViewBuilder: casesFilterViewBuilder,
+                            casesSearchViewBuilder: casesSearchViewBuilder,
+                            viewCaseViewBuilder: viewCaseViewBuilder,
+                            caseAddNoteViewBuilder: caseAddNoteViewBuilder,
+                            createEditCaseViewBuilder: createEditCaseViewBuilder,
+                            caseShareViewBuilder: caseShareViewBuilder,
+                            caseFlagsViewBuilder: caseFlagsViewBuilder,
+                            caseHistoryViewBuilder: caseHistoryViewBuilder,
+                            transferWorkTypeViewBuilder: transferWorkTypeViewBuilder,
+                            viewImageViewBuilder: viewImageViewBuilder,
+                            worksiteImagesViewBuilder: worksiteImagesViewBuilder,
+                            caseSearchLocationViewBuilder: caseSearchLocationViewBuilder,
+                            caseMoveOnMapViewBuilder: caseMoveOnMapViewBuilder,
+                            userFeedbackViewBuilder: userFeedbackViewBuilder,
+                            inviteTeammateViewBuilder: inviteTeammateViewBuilder,
+                            requestRedeployViewBuilder: requestRedeployViewBuilder,
+                            listsViewBuilder: listsViewBuilder,
+                            syncInsightsViewBuilder: syncInsightsViewBuilder,
+                            selectedTab: $selectedTab,
+                            dividerHeight: $dividerHeight,
+                            dividerOffset: $dividerOffset
+                        )
                     }
                 }
+            }
+
+            if viewModel.showInactiveOrganization {
+                InactiveOrganizationView(
+                    viewModel: viewModel,
+                    isNavigatingAuth: isNavigatingAuth
+                )
             }
         }
         .onChange(of: scenePhase) { newPhase in
@@ -300,5 +194,228 @@ private struct MainTabs: View {
         }
         .navTabItem(.menu, viewModel.translator)
         .tag(TopLevelDestination.menu)
+    }
+}
+
+private struct AuthenticationNavigationStack: View {
+    @EnvironmentObject var router: NavigationRouter
+
+    var authenticateViewBuilder: AuthenticateViewBuilder
+    var volunteerOrgViewBuilder: VolunteerOrgViewBuilder
+    var exitAuthNavigation: () -> Void
+
+    var body: some View {
+        NavigationStack(path: $router.path) {
+            authenticateViewBuilder.authenticateView(dismissScreen: exitAuthNavigation)
+                .navigationDestination(for: NavigationRoute.self) { route in
+                    switch route {
+                    case .loginWithEmail:
+                        authenticateViewBuilder.loginWithEmailView()
+                    case .loginWithPhone:
+                        authenticateViewBuilder.loginWithPhoneView
+                    case .phoneLoginCode(let phoneNumber):
+                        authenticateViewBuilder.phoneLoginCodeView(phoneNumber)
+                    case .magicLinkLoginCode(let code):
+                        authenticateViewBuilder.magicLinkLoginCodeView(code)
+                    case .recoverPassword(let showForgotPassword, let showMagicLink):
+                        authenticateViewBuilder.passwordRecoverView(
+                            showForgotPassword: showForgotPassword,
+                            showMagicLink: showMagicLink
+                        )
+                    case .resetPassword(let recoverCode):
+                        authenticateViewBuilder.resetPasswordView(
+                            closeAuthFlow: exitAuthNavigation,
+                            resetCode: recoverCode
+                        )
+                    case .volunteerOrg:
+                        volunteerOrgViewBuilder.volunteerOrgView
+                    case .requestOrgAccess:
+                        volunteerOrgViewBuilder.requestOrgAccessView
+                    case .orgUserInvite(let inviteCode):
+                        volunteerOrgViewBuilder.orgUserInviteView(inviteCode)
+                    case .orgPersistentInvite(let invite):
+                        volunteerOrgViewBuilder.orgPersistentInviteView(invite)
+                    case .scanOrgQrCode:
+                        volunteerOrgViewBuilder.scanQrCodeJoinOrgView
+                    case .pasteOrgInviteLink:
+                        volunteerOrgViewBuilder.pasteOrgInviteView
+                    default:
+                        Text("Pending auth/account route \(route.id)")
+                    }
+                }
+        }
+    }
+}
+
+private struct TermsView: View {
+    var viewModel: MainViewModel
+
+    var body: some View {
+        let isFetchingTerms = viewModel.isFetchingTermsAcceptance
+        if isFetchingTerms {
+            ProgressView()
+                .circularProgress()
+        } else {
+            AcceptTermsView(
+                termsUrl: viewModel.termsOfServiceUrl,
+                privacyUrl: viewModel.privacyPolicyUrl,
+                isLoading: viewModel.isLoadingTermsAcceptance,
+                onRequireCheckAcceptTerms: viewModel.onRequireCheckAcceptTerms,
+                onRejectTerms: viewModel.onRejectTerms,
+                onAcceptTerms: viewModel.onAcceptTerms,
+                errorMessage: viewModel.acceptTermsErrorMessage
+            )
+        }
+    }
+}
+
+private struct MainNavigationStack: View {
+    @EnvironmentObject var router: NavigationRouter
+
+    var viewModel: MainViewModel
+
+    let casesViewBuilder: CasesViewBuilder
+    let menuViewBuilder: MenuViewBuilder
+    let casesFilterViewBuilder: CasesFilterViewBuilder
+    let casesSearchViewBuilder: CasesSearchViewBuilder
+    let viewCaseViewBuilder: ViewCaseViewBuilder
+    let caseAddNoteViewBuilder: CaseAddNoteViewBuilder
+    let createEditCaseViewBuilder: CreateEditCaseViewBuilder
+    let caseShareViewBuilder: CaseShareViewBuilder
+    let caseFlagsViewBuilder: CaseFlagsViewBuilder
+    let caseHistoryViewBuilder: CaseHistoryViewBuilder
+    let transferWorkTypeViewBuilder: TransferWorkTypeViewBuilder
+    let viewImageViewBuilder: ViewImageViewBuilder
+    let worksiteImagesViewBuilder: WorksiteImagesViewBuilder
+    let caseSearchLocationViewBuilder: CaseSearchLocationViewBuilder
+    let caseMoveOnMapViewBuilder: CaseMoveOnMapViewBuilder
+    let userFeedbackViewBuilder: UserFeedbackViewBuilder
+    let inviteTeammateViewBuilder: InviteTeammateViewBuilder
+    let requestRedeployViewBuilder: RequestRedeployViewBuilder
+    let listsViewBuilder: ListsViewBuilder
+    let syncInsightsViewBuilder: SyncInsightsViewBuilder
+
+    @Binding var selectedTab: TopLevelDestination
+
+    @Binding var dividerHeight: CGFloat
+    @Binding var dividerOffset: CGFloat
+
+    var body: some View {
+        let iconColor = appTheme.colors.navigationContentColor
+        let iconColorFaded = iconColor.opacity(0.65)
+        NavigationStack(path: $router.path) {
+            ZStack {
+                TabView(selection: $selectedTab) {
+                    let openAuthScreen = {
+                        viewModel.showAuthScreen = true
+                    }
+                    MainTabs(
+                        viewModel: viewModel,
+                        openAuthScreen: openAuthScreen,
+                        casesViewBuilder: casesViewBuilder,
+                        menuViewBuilder: menuViewBuilder
+                    )
+                }
+                .tabViewStyle(
+                    backgroundColor: appTheme.colors.navigationContainerColor,
+                    itemColor: iconColorFaded,
+                    selectedItemColor: iconColor
+                )
+                .overlay(alignment: .bottom) {
+                    Rectangle()
+                        .frame(width: 1, height: dividerHeight)
+                        .overlay(iconColorFaded)
+                        .offset(y: dividerOffset)
+                }
+            }
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
+            .navigationDestination(for: NavigationRoute.self) { route in
+                switch route {
+                case .filterCases:
+                    casesFilterViewBuilder.casesFilterView
+                case .searchCases:
+                    casesSearchViewBuilder.casesSearchView
+                        .navigationBarHidden(true)
+                case .viewCase(let incidentId, let worksiteId):
+                    viewCaseViewBuilder.viewCaseView(
+                        incidentId: incidentId,
+                        worksiteId: worksiteId
+                    )
+                case .caseAddNote:
+                    caseAddNoteViewBuilder.caseAddNoteView
+                case .createEditCase(let incidentId, let worksiteId):
+                    createEditCaseViewBuilder.createEditCaseView(
+                        incidentId: incidentId,
+                        worksiteId: worksiteId
+                    )
+                case .caseSearchLocation:
+                    caseSearchLocationViewBuilder.caseSearchLocationView
+                case .caseMoveOnMap:
+                    caseMoveOnMapViewBuilder.caseMoveOnMapView
+                case .caseShare:
+                    caseShareViewBuilder.caseShareView
+                case .caseShareStep2:
+                    caseShareViewBuilder.caseShareStep2View
+                case .caseFlags(let isFromCaseEdit):
+                    caseFlagsViewBuilder.caseFlagsView(isFromCaseEdit: isFromCaseEdit)
+                case .caseHistory:
+                    caseHistoryViewBuilder.caseHistoryView
+                case .caseWorkTypeTransfer:
+                    transferWorkTypeViewBuilder.transferWorkTypeView
+                case .viewImage(let imageId, let isNetworkImage, let screenTitle):
+                    viewImageViewBuilder.viewImageView(imageId, isNetworkImage, screenTitle)
+                case .worksiteImages(let worksiteId, let imageId, let imageUri, let screenTitle):
+                    worksiteImagesViewBuilder.worksiteImagesView(
+                        worksiteId: worksiteId,
+                        imageId: imageId,
+                        imageUri: imageUri,
+                        screenTitle: screenTitle
+                    )
+                case .userFeedback:
+                    userFeedbackViewBuilder.userFeedbackView
+                case .inviteTeammate:
+                    inviteTeammateViewBuilder.inviteTeammateView
+                case .requestRedeploy:
+                    requestRedeployViewBuilder.requestRedeployView
+                case .lists:
+                    listsViewBuilder.listsView
+                case .viewList(let listId):
+                    listsViewBuilder.viewListView(listId)
+                case .syncInsights:
+                    if viewModel.isNotProduction {
+                        syncInsightsViewBuilder.syncInsightsView
+                    }
+                default:
+                    Text("Route \(route.id) needs implementing")
+                }
+            }
+        }
+    }
+}
+
+private struct InactiveOrganizationView: View {
+    @Environment(\.translator) var t
+
+    @EnvironmentObject var router: NavigationRouter
+
+    var viewModel: MainViewModel
+    var isNavigatingAuth: Bool
+
+    var body: some View {
+        AlertDialog(
+            title: t.t("~~Account alert"),
+            positiveActionText: t.t("actions.ok"),
+            negativeActionText: "",
+            dismissDialog: {},
+            positiveAction: {
+                if !isNavigatingAuth {
+                    router.clearRoutes()
+                }
+                viewModel.acknowledgeInactiveOrganization()
+            }
+        ) {
+            Text(t.t("~~This account is no longer part of an active organization. Join an active organization to continue using Crisis Cleanup. You will be logged out."))
+        }
     }
 }

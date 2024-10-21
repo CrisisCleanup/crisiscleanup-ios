@@ -3,7 +3,7 @@ import SwiftUI
 
 class AuthenticateViewModel: ObservableObject {
     private let accountDataRepository: AccountDataRepository
-    private let authEventBus: AuthEventBus
+    private let accountEventBus: AccountEventBus
     private let translator: KeyAssetTranslator
 
     let showRegister: Bool
@@ -15,12 +15,12 @@ class AuthenticateViewModel: ObservableObject {
 
     init(
         accountDataRepository: AccountDataRepository,
-        authEventBus: AuthEventBus,
+        accountEventBus: AccountEventBus,
         translator: KeyAssetTranslator,
         appEnv: AppEnv
     ) {
         self.accountDataRepository = accountDataRepository
-        self.authEventBus = authEventBus
+        self.accountEventBus = accountEventBus
         self.translator = translator
 
         showRegister = !appEnv.isAustraliaBuild
@@ -61,6 +61,6 @@ class AuthenticateViewModel: ObservableObject {
     }
 
     func logout() {
-        authEventBus.onLogout()
+        accountEventBus.onLogout()
     }
 }

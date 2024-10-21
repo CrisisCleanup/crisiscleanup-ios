@@ -55,7 +55,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         networkRequestProvider: NetworkRequestProvider,
         accountDataRepository: AccountDataRepository,
         authApiClient: CrisisCleanupAuthApi,
-        authEventBus: AuthEventBus,
+        accountEventBus: AccountEventBus,
         appEnv: AppEnv
     ) {
         self.networkClient = AFNetworkingClient(
@@ -63,7 +63,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
             interceptor: AccessTokenInterceptor(
                 accountDataRepository: accountDataRepository,
                 authApiClient: authApiClient,
-                authEventBus: authEventBus
+                accountEventBus: accountEventBus
             )
         )
         requestProvider = networkRequestProvider

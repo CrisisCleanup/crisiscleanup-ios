@@ -8,7 +8,7 @@ class LoginWithEmailViewModel: ObservableObject {
     private let inputValidator: InputValidator
     private let accessTokenDecoder: AccessTokenDecoder
     private let accountDataRepository: AccountDataRepository
-    private let authEventBus: AuthEventBus
+    private let accountEventBus: AccountEventBus
     private let translator: KeyAssetTranslator
     private let logger: AppLogger
 
@@ -30,7 +30,7 @@ class LoginWithEmailViewModel: ObservableObject {
         inputValidator: InputValidator,
         accessTokenDecoder: AccessTokenDecoder,
         accountDataRepository: AccountDataRepository,
-        authEventBus: AuthEventBus,
+        accountEventBus: AccountEventBus,
         translator: KeyAssetTranslator,
         loggerFactory: AppLoggerFactory
     ) {
@@ -40,7 +40,7 @@ class LoginWithEmailViewModel: ObservableObject {
         self.inputValidator = inputValidator
         self.accessTokenDecoder = accessTokenDecoder
         self.accountDataRepository = accountDataRepository
-        self.authEventBus = authEventBus
+        self.accountEventBus = accountEventBus
         self.translator = translator
         logger = loggerFactory.getLogger("auth")
 
@@ -131,25 +131,29 @@ class LoginWithEmailViewModel: ObservableObject {
                 let profilePicUri = claims.files?.profilePictureUrl ?? ""
 
                 let organization = result.organizations
-                var orgData = emptyOrgData
-                if organization?.isActive == true &&
-                    organization!.id >= 0 &&
-                    organization!.name.isNotBlank {
-                    orgData = OrgData(
-                        id: organization!.id,
-                        name: organization!.name
-                    )
-                }
+                if organization?.isActive == false {
+                    accountEventBus.onAccountInactiveOrganizations(claims.id)
+                } else {
+                    let orgData = if organization?.isActive == true,
+                        organization!.id >= 0 {
+                            OrgData(
+                                id: organization!.id,
+                                name: organization!.name
+                            )
+                        } else {
+                            emptyOrgData
+                        }
 
-                let success = LoginSuccess(
-                    claims: claims,
-                    orgData: orgData,
-                    profilePictureUri: profilePicUri,
-                    refreshToken: refreshToken,
-                    accessToken: accessToken,
-                    expirySeconds: expirySeconds
-                )
-                return LoginResult(errorMessage: "", success: success)
+                    let success = LoginSuccess(
+                        claims: claims,
+                        orgData: orgData,
+                        profilePictureUri: profilePicUri,
+                        refreshToken: refreshToken,
+                        accessToken: accessToken,
+                        expirySeconds: expirySeconds
+                    )
+                    return LoginResult(errorMessage: "", success: success)
+                }
             }
         } catch {
             errorMessage = "Unknown auth error".localizedString
@@ -204,7 +208,7 @@ class LoginWithEmailViewModel: ObservableObject {
     }
 
     func logout() {
-        authEventBus.onLogout()
+        accountEventBus.onLogout()
     }
 }
 

@@ -19,24 +19,45 @@ class AuthApiClient : CrisisCleanupAuthApi {
         jsonDecoder = JsonDecoderFactory().decoder()
     }
 
+    private func trySleepRandom() async throws {
+        let sleepNanos = 1_000_000_000 + UInt64.random(in: 100_000_000...500_000_000)
+        try await Task.sleep(nanoseconds: sleepNanos)
+    }
+
     func login(_ email: String, _ password: String) async throws -> NetworkAuthResult? {
         let payload = NetworkAuthPayload(email: email, password: password)
         let authRequest = requestProvider.login
             .setBody(payload)
-        return await networkClient.callbackContinue(
-            requestConvertible: authRequest,
-            type: NetworkAuthResult.self
-        ).value
+
+        for _ in 0..<3 {
+            let loginResult = await networkClient.callbackContinue(
+                requestConvertible: authRequest,
+                type: NetworkAuthResult.self
+            ).value
+            if loginResult?.claims != nil {
+                return loginResult
+            }
+            try await trySleepRandom()
+        }
+        return nil
     }
 
     func oauthLogin(_ email: String, _ password: String) async throws -> NetworkOAuthResult? {
         let payload = NetworkOAuthPayload(username: email, password: password)
         let authRequest = requestProvider.oauthLogin
             .setBody(payload)
-        return await networkClient.callbackContinue(
-            requestConvertible: authRequest,
-            type: NetworkOAuthResult.self
-        ).value
+
+        for _ in 0..<3 {
+            let oauthResult = await networkClient.callbackContinue(
+                requestConvertible: authRequest,
+                type: NetworkOAuthResult.self
+            ).value
+            if oauthResult?.accessToken != nil {
+                return oauthResult
+            }
+            try await trySleepRandom()
+        }
+        return nil
     }
 
     func magicLinkLogin(_ token: String) async throws -> NetworkOAuthTokens? {

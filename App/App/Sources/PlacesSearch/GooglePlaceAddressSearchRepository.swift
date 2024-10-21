@@ -130,27 +130,23 @@ class GooglePlaceAddressSearchRepository: AddressSearchRepository {
     }
 
     func getPlaceAddress(_ placeId: String) async throws -> LocationAddress? {
-        let fields: GMSPlaceField = GMSPlaceField(
-            rawValue: UInt64(
-                UInt(GMSPlaceField.name.rawValue) |
-                UInt(GMSPlaceField.coordinate.rawValue) |
-                UInt(GMSPlaceField.addressComponents.rawValue) |
-                UInt(GMSPlaceField.placeID.rawValue)
-            )
-        )
-
         if let place = await withCheckedContinuation({ continuation in
-            placeClient.fetchPlace(
-                fromPlaceID: placeId,
-                placeFields: fields,
+            let placeRequest = GMSFetchPlaceRequest(
+                placeID: placeId,
+                placeProperties: [
+                    GMSPlaceProperty.name,
+                    GMSPlaceProperty.coordinate,
+                    GMSPlaceProperty.addressComponents,
+                    GMSPlaceProperty.placeID
+                ].map { $0.rawValue },
                 sessionToken: sessionToken
-            ) { place, error in
+            )
+            placeClient.fetchPlace(with: placeRequest) { place, error in
                 if let error = error {
                     // TODO: Report
                     print(error)
                 }
                 continuation.resume(returning: place)
-
             }
         }) {
             let coordinates = place.coordinate

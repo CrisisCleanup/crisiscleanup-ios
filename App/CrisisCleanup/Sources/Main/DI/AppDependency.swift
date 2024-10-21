@@ -5,6 +5,7 @@ public protocol AppDependency: Dependency {
     var appSettingsProvider: AppSettingsProvider { get }
     var appVersionProvider: AppVersionProvider { get }
     var databaseVersionProvider: DatabaseVersionProvider { get }
+    var databaseOperator: DatabaseOperator { get }
     var loggerFactory: AppLoggerFactory { get }
     var networkMonitor: NetworkMonitor { get }
 
@@ -45,11 +46,12 @@ public protocol AppDependency: Dependency {
     var orgVolunteerRepository: OrgVolunteerRepository { get }
     var requestRedeployRepository: RequestRedeployRepository { get }
     var listsRepository: ListsRepository { get }
+    var appDataManagementRepository: AppDataManagementRepository { get }
 
     var authenticateViewBuilder: AuthenticateViewBuilder { get }
     var incidentSelectViewBuilder: IncidentSelectViewBuilder { get }
 
-    var authEventBus: AuthEventBus { get }
+    var accountEventBus: AccountEventBus { get }
     var accountDataRepository: AccountDataRepository { get }
     var accountDataRefresher: AccountDataRefresher { get }
     var organizationRefresher: OrganizationRefresher { get }
@@ -113,7 +115,7 @@ extension MainComponent {
                 networkRequestProvider: networkRequestProvider,
                 accountDataRepository: accountDataRepository,
                 authApiClient: authApi,
-                authEventBus: authEventBus,
+                accountEventBus: accountEventBus,
                 appEnv: appEnv
             )
         }
@@ -124,7 +126,7 @@ extension MainComponent {
                 networkRequestProvider: networkRequestProvider,
                 accountDataRepository: accountDataRepository,
                 authApiClient: authApi,
-                authEventBus: authEventBus,
+                accountEventBus: accountEventBus,
                 appEnv: appEnv
             )
         }
@@ -133,6 +135,9 @@ extension MainComponent {
         shared {
             AccountApiClient(
                 networkRequestProvider: networkRequestProvider,
+                accountDataRepository: accountDataRepository,
+                authApiClient: authApi,
+                accountEventBus: accountEventBus,
                 appEnv: appEnv
             )
         }
@@ -143,7 +148,7 @@ extension MainComponent {
                 networkRequestProvider: networkRequestProvider,
                 accountDataRepository: accountDataRepository,
                 authApiClient: authApi,
-                authEventBus: authEventBus,
+                accountEventBus: accountEventBus,
                 appEnv: appEnv
             )
         }
@@ -164,9 +169,8 @@ extension MainComponent {
                 accountDataSource,
                 secureDataSource,
                 appPreferences,
-                authEventBus,
+                accountEventBus,
                 authApi,
-                accountApi,
                 loggerFactory,
                 appEnv
             )
@@ -180,6 +184,7 @@ extension MainComponent {
                 networkDataSource: networkDataSource,
                 accountDataRepository: accountDataRepository,
                 organizationsRepository: organizationsRepository,
+                accountEventBus: accountEventBus,
                 loggerFactory: loggerFactory
             )
         }
@@ -210,8 +215,8 @@ extension MainComponent {
     public var authenticateViewBuilder: AuthenticateViewBuilder { self }
     public var incidentSelectViewBuilder: IncidentSelectViewBuilder { self }
 
-    public var authEventBus: AuthEventBus {
-        return shared { CrisisCleanupAuthEventBus() }
+    public var accountEventBus: AccountEventBus {
+        return shared { CrisisCleanupAccountEventBus() }
     }
 
     public var incidentSelector: IncidentSelector {

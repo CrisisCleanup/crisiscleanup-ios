@@ -13,6 +13,7 @@ class IncidentSelectComponent: Component<AppDependency>, IncidentSelectViewBuild
         if viewModel == nil {
             viewModel = IncidentSelectViewModel(
                 incidentSelector: dependency.incidentSelector,
+                incidentsRepository: dependency.incidentsRepository,
                 syncPuller: dependency.syncPuller
             )
         }
