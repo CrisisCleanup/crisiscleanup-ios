@@ -9,6 +9,7 @@ struct CasesTableView: View {
     @Binding var phoneCallNumbers: [ParsedPhoneNumber]
 
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
+    let isLoadingIncidents: Bool
     let hasNoIncidents: Bool
 
     @State private var showWrongLocationDialog = false
@@ -20,6 +21,7 @@ struct CasesTableView: View {
         VStack {
             HStack {
                 TableViewIncidentSelector(
+                    isLoadingIncidents: isLoadingIncidents,
                     hasNoIncidents: hasNoIncidents,
                     selectedIncident: viewModel.incidentsData.selected,
                     incidentSelectViewBuilder: incidentSelectViewBuilder,
@@ -128,6 +130,7 @@ struct CasesTableView: View {
 }
 
 private struct TableViewIncidentSelector: View {
+    let isLoadingIncidents: Bool
     let hasNoIncidents: Bool
     let selectedIncident: Incident
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
@@ -141,8 +144,7 @@ private struct TableViewIncidentSelector: View {
         } label: {
             IncidentHeaderView(
                 incident: selectedIncident,
-                showDropdown: true,
-                disabled: hasNoIncidents,
+                showDropdown: !hasNoIncidents,
                 isLoading: isLoadingData,
                 isSpaceConstrained: true
             )
@@ -158,7 +160,7 @@ private struct TableViewIncidentSelector: View {
                 onDismiss: { openIncidentSelect = false }
             )
         }
-        .disabled(hasNoIncidents)
+        .disabled(isLoadingIncidents)
     }
 }
 

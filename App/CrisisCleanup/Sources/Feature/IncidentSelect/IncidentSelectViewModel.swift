@@ -3,7 +3,10 @@ import Combine
 
 class IncidentSelectViewModel: ObservableObject {
     let incidentSelector: IncidentSelector
+    private let incidentsRepository: IncidentsRepository
     let syncPuller: SyncPuller
+
+    @Published private(set) var isLoadingIncidents = true
 
     @Published private(set) var incidentsData = LoadingIncidentsData
 
@@ -16,26 +19,31 @@ class IncidentSelectViewModel: ObservableObject {
 
     init(
         incidentSelector: IncidentSelector,
+        incidentsRepository: IncidentsRepository,
         syncPuller: SyncPuller
     ) {
         self.incidentSelector = incidentSelector
+        self.incidentsRepository = incidentsRepository
         self.syncPuller = syncPuller
     }
 
     func onViewAppear() {
-        subscribeToIncidents()
+        subscribeLoading()
+        subscribeIncidents()
     }
 
     func onViewDisappear() {
         subscriptions = cancelSubscriptions(subscriptions)
     }
 
-    func onOptionsRendered() {
-        isOptionsRendered = true
-        setSelectedIncident()
+    private func subscribeLoading() {
+        incidentsRepository.isLoading.eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.isLoadingIncidents, on: self)
+            .store(in: &subscriptions)
     }
 
-    private func subscribeToIncidents() {
+    private func subscribeIncidents() {
         incidentSelector.incidentsData
             .eraseToAnyPublisher()
             .removeDuplicates()
@@ -62,7 +70,16 @@ class IncidentSelectViewModel: ObservableObject {
         }
     }
 
+    func onOptionsRendered() {
+        isOptionsRendered = true
+        setSelectedIncident()
+    }
+
     func pullIncidents() async {
         await syncPuller.pullIncidents()
+    }
+
+    func refreshIncidents() {
+        syncPuller.appPull(true, cancelOngoing: true)
     }
 }

@@ -291,6 +291,10 @@ class WorksiteChangeDao {
     func saveDeletePhoto(_ fileId: Int64) throws -> Int64 {
         try database.saveDeleteNetworkFile(fileId)
     }
+
+    func getWorksiteChangeCount() -> Int {
+        try! reader.read(WorksiteChangeRecord.fetchCount(_:))
+    }
 }
 
 extension Database {

@@ -8,7 +8,7 @@ class AccessTokenInterceptor: RequestInterceptor {
     private let accountDataRepository: AccountDataRepository
     private let accountDataPublisher: AnyPublisher<AccountData, Never>
     private let authApiClient: CrisisCleanupAuthApi
-    private let authEventBus: AuthEventBus
+    private let accountEventBus: AccountEventBus
 
     private let invalidRefreshTokenErrorMessages: Set<String> = [
         "refresh_token_already_revoked",
@@ -18,13 +18,13 @@ class AccessTokenInterceptor: RequestInterceptor {
     init(
         accountDataRepository: AccountDataRepository,
         authApiClient: CrisisCleanupAuthApi,
-        authEventBus: AuthEventBus
+        accountEventBus: AccountEventBus
     ) {
         self.accountDataRepository = accountDataRepository
         accountDataPublisher = accountDataRepository.accountData.eraseToAnyPublisher()
 
         self.authApiClient = authApiClient
-        self.authEventBus = authEventBus
+        self.accountEventBus = accountEventBus
     }
 
     func adapt(
@@ -77,7 +77,7 @@ class AccessTokenInterceptor: RequestInterceptor {
                         accessToken: refreshResult.accessToken!,
                         expirySeconds: Int64(expiryDate.timeIntervalSince1970)
                     )
-                    authEventBus.onTokensRefreshed()
+                    accountEventBus.onTokensRefreshed()
                     return true
                 } else {
                     if invalidRefreshTokenErrorMessages.contains(refreshResult.error!) {

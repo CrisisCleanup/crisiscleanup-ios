@@ -5,6 +5,7 @@ public class AccountDataRefresher {
     private let networkDataSource: CrisisCleanupNetworkDataSource
     private let accountDataRepository: AccountDataRepository
     private let organizationsRepository: OrganizationsRepository
+    private let accountEventBus: AccountEventBus
     private let logger: AppLogger
 
     private var accountDataUpdateTime = Date(timeIntervalSince1970: 0)
@@ -16,12 +17,14 @@ public class AccountDataRefresher {
         networkDataSource: CrisisCleanupNetworkDataSource,
         accountDataRepository: AccountDataRepository,
         organizationsRepository: OrganizationsRepository,
+        accountEventBus: AccountEventBus,
         loggerFactory: AppLoggerFactory
     ) {
         self.dataSource = dataSource
         self.networkDataSource = networkDataSource
         self.accountDataRepository = accountDataRepository
         self.organizationsRepository = organizationsRepository
+        self.accountEventBus = accountEventBus
         self.logger = loggerFactory.getLogger("account-data-refresher")
     }
 
@@ -41,12 +44,17 @@ public class AccountDataRefresher {
         logger.logCapture("Syncing \(syncTag)")
         do {
             let profile = try await networkDataSource.getProfileData()
-            if profile.hasAcceptedTerms != nil {
+            if profile.organization.isActive == false {
+                let accountData = try await dataSource.accountData.eraseToAnyPublisher().asyncFirst()
+                let accountId = accountData.id
+                accountEventBus.onAccountInactiveOrganizations(accountId)
+            } else if profile.hasAcceptedTerms != nil {
                 updateLock.withLock {
                     dataSource.update(
                         profile.files?.profilePictureUrl,
                         profile.hasAcceptedTerms!,
-                        profile.approvedIncidents!
+                        profile.approvedIncidents!,
+                        profile.activeRoles
                     )
                 }
 

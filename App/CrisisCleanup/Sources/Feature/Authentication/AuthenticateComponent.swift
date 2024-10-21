@@ -58,7 +58,7 @@ class AuthenticateComponent: Component<AppDependency> {
         if viewModel == nil {
             viewModel = AuthenticateViewModel(
                 accountDataRepository: dependency.accountDataRepository,
-                authEventBus: dependency.authEventBus,
+                accountEventBus: dependency.accountEventBus,
                 translator: dependency.translator,
                 appEnv: dependency.appEnv
             )

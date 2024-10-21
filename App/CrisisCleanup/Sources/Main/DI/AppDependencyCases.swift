@@ -39,8 +39,7 @@ extension MainComponent {
     public var languageRefresher: LanguageRefresher {
         shared {
             LanguageRefresher(
-                languageTranslationsRepository,
-                loggerFactory
+                languageTranslationsRepository
             )
         }
     }

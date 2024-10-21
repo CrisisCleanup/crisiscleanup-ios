@@ -27,13 +27,22 @@ public struct NetworkIncidentOrganization: Codable, Equatable {
 public struct NetworkOrganizationShort: Codable, Equatable {
     let id: Int64
     let name: String
+    let isActive: Bool?
 
     init(
         _ id: Int64,
-        _ name: String
+        _ name: String,
+        _ isActive: Bool? = nil
     ) {
         self.id = id
         self.name = name
+        self.isActive = isActive
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id,
+             name,
+             isActive = "is_active"
     }
 }
 

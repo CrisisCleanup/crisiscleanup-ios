@@ -10,14 +10,12 @@ struct MenuView: View {
     let openAuthScreen: () -> Void
 
     var body: some View {
-        let hasNoIncidents = viewModel.incidentsData.incidents.isEmpty
-
         VStack(alignment: .leading, spacing: 0) {
             TopBar(
                 viewModel: viewModel,
                 incidentSelectViewBuilder: incidentSelectViewBuilder,
                 openAuthScreen: openAuthScreen,
-                hasNoIncidents: hasNoIncidents
+                isLoadingIncidents: viewModel.isLoadingIncidents
             )
             .tint(.black)
             .padding()
@@ -103,7 +101,7 @@ private struct TopBar: View {
     @ObservedObject var viewModel: MenuViewModel
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
     let openAuthScreen: () -> Void
-    let hasNoIncidents: Bool
+    let isLoadingIncidents: Bool
 
     @State var showIncidentSelect = false
 
@@ -120,7 +118,6 @@ private struct TopBar: View {
                     incident: selectedIncident,
                     showDropdown: !selectedIncident.isEmptyIncident,
                     text: title,
-                    disabled: hasNoIncidents,
                     isLoading: viewModel.showHeaderLoading,
                     isSpaceConstrained: true
                 )
@@ -135,7 +132,7 @@ private struct TopBar: View {
                     onDismiss: { showIncidentSelect = false }
                 )
             }
-            .disabled(hasNoIncidents)
+            .disabled(isLoadingIncidents)
 
             Spacer()
 

@@ -7,8 +7,9 @@ class MainViewModel: ObservableObject {
     private let appVersionProvider: AppVersionProvider
     private let appPreferences: AppPreferencesDataStore
     private let incidentSelector: IncidentSelector
+    private let appDataRepository: AppDataManagementRepository
     private let externalEventBus: ExternalEventBus
-    private let authEventBus: AuthEventBus
+    private let accountEventBus: AccountEventBus
     private let router: NavigationRouter
     private let translationsRepository: LanguageTranslationsRepository
     let translator: KeyAssetTranslator
@@ -38,6 +39,8 @@ class MainViewModel: ObservableObject {
 
     @Published private(set) var showOnboarding = false
 
+    @Published private(set) var showInactiveOrganization = false
+
     let isNotProduction: Bool
 
     private var incidentsData: IncidentsData = LoadingIncidentsData
@@ -53,8 +56,9 @@ class MainViewModel: ObservableObject {
         appSettingsProvider: AppSettingsProvider,
         translationsRepository: LanguageTranslationsRepository,
         incidentSelector: IncidentSelector,
+        appDataRepository: AppDataManagementRepository,
         externalEventBus: ExternalEventBus,
-        authEventBus: AuthEventBus,
+        accountEventBus: AccountEventBus,
         navigationRouter: NavigationRouter,
         syncPuller: SyncPuller,
         syncPusher: SyncPusher,
@@ -70,9 +74,10 @@ class MainViewModel: ObservableObject {
         self.appPreferences = appPreferences
         self.translationsRepository = translationsRepository
         translator = translationsRepository
+        self.appDataRepository = appDataRepository
         self.incidentSelector = incidentSelector
         self.externalEventBus = externalEventBus
-        self.authEventBus = authEventBus
+        self.accountEventBus = accountEventBus
         router = navigationRouter
         self.syncPuller = syncPuller
         self.syncPusher = syncPusher
@@ -107,6 +112,7 @@ class MainViewModel: ObservableObject {
         subscribeTermsAcceptanceState()
         subscribeAppSupport()
         subscribeAppPreferences()
+        subscribeInactiveOrganization()
     }
 
     func onViewDisappear() {
@@ -192,7 +198,7 @@ class MainViewModel: ObservableObject {
                     self.logger.setAccountId(String(accountData.id))
                 } else {
                     if !accountData.hasAcceptedTerms {
-                        self.authEventBus.onLogout()
+                        self.accountEventBus.onLogout()
                     }
                 }
             }
@@ -258,13 +264,30 @@ class MainViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
+    private func subscribeInactiveOrganization() {
+        accountEventBus.inactiveOrganizations
+            .eraseToAnyPublisher()
+            .throttle(
+                for: .seconds(5),
+                scheduler: RunLoop.current,
+                latest: true
+            )
+            .filter { $0 > 0 }
+            .receive(on: RunLoop.main)
+            .sink { _ in
+                self.showInactiveOrganization = true
+                self.appDataRepository.clearAppData()
+            }
+            .store(in: &subscriptions)
+    }
+
     func onRequireCheckAcceptTerms() {
         acceptTermsErrorMessage = translator.t("termsConditionsModal.must_check_box")
     }
 
     func onRejectTerms() {
         acceptTermsErrorMessage = ""
-        authEventBus.onLogout()
+        accountEventBus.onLogout()
     }
 
     func onAcceptTerms() {
@@ -293,6 +316,12 @@ class MainViewModel: ObservableObject {
                 }
             }
         }
+    }
+
+    func acknowledgeInactiveOrganization() {
+        showInactiveOrganization = false
+        accountEventBus.onLogout()
+        accountEventBus.clearAccountInactiveOrganization()
     }
 
     private func onEmailLoginLink(_ code: String) {
@@ -326,6 +355,6 @@ class MainViewModel: ObservableObject {
     }
 
     private func sync(_ cancelOngoing: Bool) {
-        syncPuller.appPull(cancelOngoing)
+        syncPuller.appPull(false, cancelOngoing: cancelOngoing)
     }
 }

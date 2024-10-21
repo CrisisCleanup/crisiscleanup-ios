@@ -5,7 +5,7 @@ public struct NetworkShareDetails: Codable {
     let noClaimReason: String?
 
     enum CodingKeys: String, CodingKey {
-        case emails = "filename",
+        case emails,
              phoneNumbers = "phone_numbers",
              shareMessage = "share_message",
              noClaimReason = "no_claim_reason_text"
