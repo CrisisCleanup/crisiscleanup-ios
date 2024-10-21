@@ -27,7 +27,7 @@ struct RequestRedeployView: View {
 
                 if incidents.isEmpty {
                     VStack {
-                        Text(t.t("~~There are no Incidents left for deploying."))
+                        Text(t.t("info.deployed_to_all_incidents"))
                             .listItemModifier()
                         Spacer()
                     }
