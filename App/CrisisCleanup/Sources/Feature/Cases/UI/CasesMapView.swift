@@ -17,8 +17,10 @@ class Coordinator: NSObject, MKMapViewDelegate {
     }
 
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        let selected = mapView.selectedAnnotations[0] as! WorksiteAnnotationMapMark
-        onSelectWorksite(selected.source.id)
+        if let firstAnnotation = mapView.selectedAnnotations.firstOrNil,
+           let selected = firstAnnotation as? WorksiteAnnotationMapMark {
+            onSelectWorksite(selected.source.id)
+        }
     }
 
     func mapView(_ mapView: MKMapView, didDeselect view: MKAnnotationView) {

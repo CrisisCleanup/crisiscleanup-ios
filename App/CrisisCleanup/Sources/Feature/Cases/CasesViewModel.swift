@@ -29,6 +29,7 @@ class CasesViewModel: ObservableObject {
 
     @Published private(set) var dataProgress = DataProgressMetrics()
 
+    @Published private(set) var isLoadingIncidents = true
     @Published private(set) var isLoadingData = false
 
     private let qsm: CasesQueryStateManager
@@ -204,8 +205,17 @@ class CasesViewModel: ObservableObject {
     }
 
     private func subscribeLoading() {
+        let incidentsLoading = incidentsRepository.isLoading
+            .eraseToAnyPublisher()
+            .share()
+
+        incidentsLoading
+            .receive(on: RunLoop.main)
+            .assign(to: \.isLoadingIncidents, on: self)
+            .store(in: &subscriptions)
+
         Publishers.CombineLatest3(
-            incidentsRepository.isLoading.eraseToAnyPublisher(),
+            incidentsLoading,
             $dataProgress,
             worksitesRepository.isDeterminingWorksitesCount.eraseToAnyPublisher()
         )
@@ -223,7 +233,7 @@ class CasesViewModel: ObservableObject {
             .map { b0, b1 in b0 || b1 }
             .eraseToAnyPublisher()
         Publishers.CombineLatest4(
-            incidentsRepository.isLoading.eraseToAnyPublisher(),
+            incidentsLoading,
             mapBoundsManager.isDeterminingBoundsPublisher.eraseToAnyPublisher(),
             isRenderingMapOverlay,
             isDelayingRegionBug

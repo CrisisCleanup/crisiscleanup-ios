@@ -12,7 +12,7 @@ public class IncidentDao {
     }
 
     func getIncidentCount() -> Int {
-        try! reader.read { try IncidentRecord.fetchCount($0) }
+        try! reader.read(IncidentRecord.fetchCount(_:))
     }
 
     func getIncident(_ id: Int64) throws -> Incident? {

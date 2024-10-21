@@ -31,22 +31,21 @@ public class IncidentRefresher {
 
 public class LanguageRefresher {
     private let languageRepository: LanguageTranslationsRepository
-    private let logger: AppLogger
+
+    private var lastRefresh = Date(timeIntervalSince1970: 0).timeIntervalSince1970
 
     init(
-        _ languageRepository: LanguageTranslationsRepository,
-        _ loggerFactory: AppLoggerFactory
+        _ languageRepository: LanguageTranslationsRepository
     ) {
         self.languageRepository = languageRepository
-        logger = loggerFactory.getLogger("language-refresh")
     }
-    private let lastLoadTime = ManagedAtomic(AtomicDouble(Date(timeIntervalSince1970: 0).timeIntervalSince1970))
 
     func pullLanguages() async {
         let now = Date.now.timeIntervalSince1970
-        if now - lastLoadTime.load(ordering: .acquiring).value > 6.hours {
+        if now - lastRefresh > 6.hours {
+            lastRefresh = now
+
             await languageRepository.loadLanguages()
-            lastLoadTime.store(AtomicDouble(now), ordering: .relaxed)
         }
     }
 }
@@ -55,7 +54,7 @@ public class OrganizationRefresher {
     private let accountDataRefresher: AccountDataRefresher
 
     private var incidentIdPull = EmptyIncident.id
-    private var pullTime = Date(timeIntervalSince1970: 0)
+    private var lastRefresh = Date(timeIntervalSince1970: 0).timeIntervalSince1970
 
     init(
         _ accountDataRefresher: AccountDataRefresher
@@ -64,15 +63,15 @@ public class OrganizationRefresher {
     }
 
     func pullOrganization(_ incidentId: Int64) {
-        if incidentIdPull == incidentId &&
-            pullTime.distance(to: Date.now) < 1.hours {
-            return
-        }
-        incidentIdPull = incidentId
-        pullTime = Date.now
+        let now = Date.now.timeIntervalSince1970
+        if incidentIdPull != incidentId ||
+            now - lastRefresh > 1.hours {
+            incidentIdPull = incidentId
+            lastRefresh = now
 
-        Task {
-            await self.accountDataRefresher.updateMyOrganization(true)
+            Task {
+                await self.accountDataRefresher.updateMyOrganization(true)
+            }
         }
     }
 }

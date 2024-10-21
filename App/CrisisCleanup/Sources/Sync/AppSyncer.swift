@@ -4,20 +4,22 @@ import Combine
 import UIKit
 
 public protocol SyncPuller {
-    func appPull(_ cancelOngoing: Bool)
+    func appPull(_ force: Bool, cancelOngoing: Bool)
+    func stopPull()
 
     func pullUnauthenticatedData()
 
     func pullIncidents() async
 
     func appPullIncident(_ id: Int64)
+    func stopPullIncident()
 
     func appPullIncidentWorksitesDelta(_ forceRefreshAll: Bool)
 }
 
 extension SyncPuller {
     func appPull() {
-        appPull(false)
+        appPull(false, cancelOngoing: false)
     }
 }
 
@@ -53,12 +55,15 @@ class AppSyncer: SyncPuller, SyncPusher {
     private let localImageRepository: LocalImageRepository
     private let appLogger: AppLogger
     private let syncLogger: SyncLogger
-    private let authEventBus: AuthEventBus
+    private let accountEventBus: AccountEventBus
 
-    private let pullLock = NSLock()
+    private let pullLock = NSRecursiveLock()
     private var pullTask: Task<Void, Error>? = nil
 
-    private let pullDeltaLock = NSLock()
+    private let pullIncidentLock = NSRecursiveLock()
+    private var pullIncidentTask: Task<Void, Error>? = nil
+
+    private let pullDeltaLock = NSRecursiveLock()
     private var pullDeltaTask: Task<Void, Error>? = nil
 
     private var disposables = Set<AnyCancellable>()
@@ -75,7 +80,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         localImageRepository: LocalImageRepository,
         appLoggerFactory: AppLoggerFactory,
         syncLoggerFactory: SyncLoggerFactory,
-        authEventBus: AuthEventBus
+        accountEventBus: AccountEventBus
     ) {
         self.accountDataRepository = accountDataRepository
         self.accountDataRefresher = accountDataRefresher
@@ -87,7 +92,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         self.localImageRepository = localImageRepository
         appLogger = appLoggerFactory.getLogger("sync")
         syncLogger = syncLoggerFactory.getLogger("app-syncer")
-        self.authEventBus = authEventBus
+        self.accountEventBus = accountEventBus
 
         accountData = accountDataRepository.accountData.eraseToAnyPublisher()
         appPreferences = appPreferencesDataStore.preferences.eraseToAnyPublisher()
@@ -137,7 +142,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         try await self.incidentsRepository.pullIncidents()
     }
 
-    func appPull(_ cancelOngoing: Bool) {
+    func appPull(_ force: Bool, cancelOngoing: Bool) {
         pullLock.withLock {
             if cancelOngoing {
                 pullTask?.cancel()
@@ -151,7 +156,10 @@ class AppSyncer: SyncPuller, SyncPusher {
 
                     try Task.checkCancellation()
 
-                    let (pullIncidents, pullWorksitesIncidentId) = try await getSyncPlan()
+                    var (pullIncidents, pullWorksitesIncidentId) = try await getSyncPlan()
+                    if force {
+                        pullIncidents = true
+                    }
                     if !pullIncidents && pullWorksitesIncidentId <= 0 {
                         return
                     }
@@ -181,6 +189,12 @@ class AppSyncer: SyncPuller, SyncPusher {
         }
     }
 
+    func stopPull() {
+        pullLock.withLock {
+            pullTask?.cancel()
+        }
+    }
+
     func pullIncidents() async {
         do {
             try await internalPullIncidents()
@@ -190,20 +204,34 @@ class AppSyncer: SyncPuller, SyncPusher {
     }
 
     func appPullIncident(_ id: Int64) {
-        Task {
-            do {
-                // TODO: Wait for account token and skip if token is invalid
-                try await withThrowingTaskGroup(of: Void.self) { group -> Void in
-                    group.addTask {
-                        try await self.incidentsRepository.pullIncident(id)
-                        await self.incidentsRepository.pullIncidentOrganizations(id)
+        if id == EmptyIncident.id {
+            return
+        }
+
+        pullIncidentLock.withLock {
+            pullIncidentTask?.cancel()
+
+            pullIncidentTask = Task {
+                do {
+                    // TODO: Wait for account token and skip if token is invalid
+                    try await withThrowingTaskGroup(of: Void.self) { group -> Void in
+                        group.addTask {
+                            try await self.incidentsRepository.pullIncident(id)
+                            await self.incidentsRepository.pullIncidentOrganizations(id)
+                        }
+                        try await group.waitForAll()
                     }
-                    try await group.waitForAll()
+                } catch {
+                    // TODO: Handle proper
+                    print(error)
                 }
-            } catch {
-                // TODO: Handle proper
-                print(error)
             }
+        }
+    }
+
+    func stopPullIncident() {
+        pullIncidentLock.withLock {
+            pullIncidentTask?.cancel()
         }
     }
 

@@ -8,7 +8,12 @@ protocol AccountInfoDataSource {
     func clearAccount()
     func updateExpiry(_ expirySeconds: Int64)
     func expireAccessToken()
-    func update(_ pictureUrl: String?, _ isAcceptedTerms: Bool, _ incidentIds: Set<Int64>)
+    func update(
+        _ pictureUrl: String?,
+        _ isAcceptedTerms: Bool,
+        _ incidentIds: Set<Int64>,
+        _ activeRoles: Set<Int>
+    )
 }
 
 fileprivate let jsonDecoder = JsonDecoderFactory().decoder()
@@ -54,7 +59,12 @@ class AccountInfoUserDefaults: AccountInfoDataSource {
         updateExpiry(1)
     }
 
-    func update(_ pictureUrl: String?, _ isAcceptedTerms: Bool, _ incidentIds: Set<Int64>) {
+    func update(
+        _ pictureUrl: String?,
+        _ isAcceptedTerms: Bool,
+        _ incidentIds: Set<Int64>,
+        _ activeRoles: Set<Int>
+    ) {
         let info = UserDefaults.standard.accountInfo
         if info.id > 0 {
             setAccount(
@@ -64,6 +74,7 @@ class AccountInfoUserDefaults: AccountInfoDataSource {
                     }
                     $0.hasAcceptedTerms = isAcceptedTerms
                     $0.incidentIds = incidentIds
+                    $0.activeRoles = activeRoles
                 }
             )
         }

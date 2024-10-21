@@ -4,6 +4,7 @@ import Foundation
 public protocol IncidentsRepository {
     var isLoading: any Publisher<Bool, Never> { get }
 
+    var incidentCount: Int { get }
     var incidents: any Publisher<[Incident], Never> { get }
 
     func getIncident(_ id: Int64, _ loadFormFields: Bool) throws -> Incident?

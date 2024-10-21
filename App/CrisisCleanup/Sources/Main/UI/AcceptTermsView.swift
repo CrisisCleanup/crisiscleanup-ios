@@ -27,10 +27,17 @@ struct AcceptTermsView: View {
                 .accessibilityIdentifier("acceptTermsAgreement")
 
             if errorMessage.isNotBlank {
-                Text(errorMessage)
-                    .foregroundStyle(appTheme.colors.primaryRedColor)
-                    .listItemModifier()
-                    .accessibilityIdentifier("acceptTermsErrorMessage")
+                Group {
+                    if errorMessage.contains("/>") {
+                        // TODO: Apply color to text view
+                        HtmlTextView(htmlContent: errorMessage)
+                    } else {
+                        Text(errorMessage)
+                            .foregroundStyle(appTheme.colors.primaryRedColor)
+                    }
+                }
+                .listItemModifier()
+                .accessibilityIdentifier("acceptTermsErrorMessage")
             }
 
             let termsAbsoluteUrl = termsUrl.absoluteString
