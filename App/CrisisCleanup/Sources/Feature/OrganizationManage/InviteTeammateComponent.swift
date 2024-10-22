@@ -34,12 +34,14 @@ class InviteTeammateComponent: Component<AppDependency>, InviteTeammateViewBuild
         if viewModel == nil {
             viewModel = InviteTeammateViewModel(
                 accountDataRepository: dependency.accountDataRepository,
+                incidentsRepository: dependency.incidentsRepository,
                 organizationsRepository: dependency.organizationsRepository,
                 orgVolunteerRepository: dependency.orgVolunteerRepository,
                 settingsProvider: dependency.appSettingsProvider,
                 inputValidator: dependency.inputValidator,
                 qrCodeGenerator: dependency.qrCodeGenerator,
                 incidentSelector: dependency.incidentSelector,
+                syncPuller: dependency.syncPuller,
                 translator: dependency.translator,
                 loggerFactory: dependency.loggerFactory
             )
