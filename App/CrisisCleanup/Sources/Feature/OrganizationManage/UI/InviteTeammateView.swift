@@ -320,22 +320,31 @@ private struct NewOrganizationInputView: View {
             }
 
             UserInfoErrorText(message: viewModel.selectedIncidentError)
-            let selectedIncident = viewModel.incidentLookup[viewModel.selectedIncidentId] ?? EmptyIncident
-            Menu {
-                Picker(selection: $viewModel.selectedIncidentId, label: Text("")) {
-                    ForEach(viewModel.incidents, id: \.id) { incident in
-                        Text(incident.name)
+            if viewModel.incidents.isNotEmpty {
+                let selectedIncident = viewModel.incidentLookup[viewModel.selectedIncidentId] ?? EmptyIncident
+                Menu {
+                    Picker(selection: $viewModel.selectedIncidentId, label: Text("")) {
+                        ForEach(viewModel.incidents, id: \.id) { incident in
+                            Text(incident.name)
+                        }
                     }
+                } label: {
+                    HStack {
+                        Text(selectedIncident.name)
+                        Spacer()
+                        Image(systemName: "chevron.up.chevron.down")
+                    }
+                    .textFieldBorder()
                 }
-            } label: {
-                HStack {
-                    Text(selectedIncident.name)
-                    Spacer()
-                    Image(systemName: "chevron.up.chevron.down")
+                .buttonStyle(.plain)
+            } else {
+                ReloadIncidentsView(
+                    isRefreshingIncidents: viewModel.isLoadingIncidents,
+                    maxWidth: .infinity
+                ) {
+                    viewModel.refreshIncidents()
                 }
-                .textFieldBorder()
             }
-            .buttonStyle(.plain)
         }
     }
 }

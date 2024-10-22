@@ -3,16 +3,19 @@ import SwiftUI
 
 class InviteTeammateViewModel: ObservableObject {
     private let accountDataRepository: AccountDataRepository
+    private let incidentsRepository: IncidentsRepository
     private let organizationsRepository: OrganizationsRepository
     private let orgVolunteerRepository: OrgVolunteerRepository
     private let inputValidator: InputValidator
     private let qrCodeGenerator: QrCodeGenerator
     private let incidentSelector: IncidentSelector
+    private let syncPuller: SyncPuller
     private let translator: KeyAssetTranslator
     private let logger: AppLogger
 
     private let isValidatingAccount = CurrentValueSubject<Bool, Never>(true)
 
+    @Published private(set) var isLoadingIncidents = false
     @Published private(set) var isLoading = false
 
     @Published var errorFocus: TextInputFocused?
@@ -78,21 +81,25 @@ class InviteTeammateViewModel: ObservableObject {
 
     init(
         accountDataRepository: AccountDataRepository,
+        incidentsRepository: IncidentsRepository,
         organizationsRepository: OrganizationsRepository,
         orgVolunteerRepository: OrgVolunteerRepository,
         settingsProvider: AppSettingsProvider,
         inputValidator: InputValidator,
         qrCodeGenerator: QrCodeGenerator,
         incidentSelector: IncidentSelector,
+        syncPuller: SyncPuller,
         translator: KeyAssetTranslator,
         loggerFactory: AppLoggerFactory
     ) {
         self.accountDataRepository = accountDataRepository
+        self.incidentsRepository = incidentsRepository
         self.organizationsRepository = organizationsRepository
         self.orgVolunteerRepository = orgVolunteerRepository
         self.inputValidator = inputValidator
         self.qrCodeGenerator = qrCodeGenerator
         self.incidentSelector = incidentSelector
+        self.syncPuller = syncPuller
         self.translator = translator
         logger = loggerFactory.getLogger("invite-teammate")
         inviteUrl = "\(settingsProvider.baseUrl)/mobile_app_user_invite"
@@ -113,16 +120,21 @@ class InviteTeammateViewModel: ObservableObject {
     private func subscribeViewState() {
         anotherOrgInviteOptionText = translator.t("inviteTeammates.from_another_org")
 
+        incidentsRepository.isLoading
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.isLoadingIncidents, on: self)
+            .store(in: &subscriptions)
+
         let incidentsPublisher = incidentSelector.incidentsData
             .eraseToAnyPublisher()
             .removeDuplicates()
 
-        Publishers.CombineLatest3(
+        Publishers.CombineLatest(
             isValidatingAccount,
-            $affiliateOrganizationIds,
-            incidentsPublisher
+            $affiliateOrganizationIds
         )
-        .map { (b0, affiliateIds, incidentsData) in b0 || affiliateIds == nil || incidentsData.isLoading }
+        .map { (b0, affiliateIds) in b0 || affiliateIds == nil }
         .receive(on: RunLoop.main)
         .assign(to: \.isLoading, on: self)
         .store(in: &subscriptions)
@@ -452,6 +464,10 @@ class InviteTeammateViewModel: ObservableObject {
         .receive(on: RunLoop.main)
         .assign(to: \.affiliateOrgQrCode, on: self)
         .store(in: &subscriptions)
+    }
+
+    func refreshIncidents() {
+        syncPuller.appPull(true, cancelOngoing: false)
     }
 
     func onSelectOrganization(_ organization: OrganizationIdName) {

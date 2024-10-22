@@ -1,5 +1,11 @@
 // sourcery: copyBuilder, skipCopyInit
 public struct IncidentsData: Equatable {
+    /**
+     Incidents have been cached locally for access
+
+     This may be perpetually false until incidents are cached.
+     - SeeAlso `IncidentsRepository.isLoading` for network loading state.
+     */
     let isLoading: Bool
     let selected: Incident
     let incidents: [Incident]

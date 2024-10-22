@@ -4,6 +4,8 @@ struct ReloadIncidentsView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     var isRefreshingIncidents: Bool
+    // TODO: Common dimensions
+    var maxWidth: CGFloat = 300
     var onRetryLoad: () -> Void
 
     var body: some View {
@@ -27,7 +29,6 @@ struct ReloadIncidentsView: View {
             }
             Spacer()
         }
-        // TODO: Common dimensions
-        .frame(maxWidth: 300)
+        .frame(maxWidth: maxWidth)
     }
 }

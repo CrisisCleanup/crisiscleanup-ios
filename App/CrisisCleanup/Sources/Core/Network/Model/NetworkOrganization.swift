@@ -8,6 +8,7 @@ public struct NetworkIncidentOrganization: Codable, Equatable {
     let id: Int64
     let name: String
     let affiliates: [Int64]
+    let isActive: Bool? = nil
     let primaryLocation: Int64?
     let secondaryLocation: Int64?
     let typeT: String?
@@ -17,6 +18,7 @@ public struct NetworkIncidentOrganization: Codable, Equatable {
         case id,
              name,
              affiliates,
+             isActive = "is_active",
              primaryLocation = "primary_location",
              secondaryLocation = "secondary_location",
              typeT = "type_t",
