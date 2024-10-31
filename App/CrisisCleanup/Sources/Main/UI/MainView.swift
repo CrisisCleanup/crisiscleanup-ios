@@ -404,7 +404,7 @@ private struct InactiveOrganizationView: View {
 
     var body: some View {
         AlertDialog(
-            title: t.t("~~Account alert"),
+            title: t.t("info.account_inactive"),
             positiveActionText: t.t("actions.ok"),
             negativeActionText: "",
             dismissDialog: {},
@@ -415,7 +415,7 @@ private struct InactiveOrganizationView: View {
                 viewModel.acknowledgeInactiveOrganization()
             }
         ) {
-            Text(t.t("~~This account is no longer part of an active organization. Join an active organization to continue using Crisis Cleanup. You will be logged out."))
+            Text(t.t("info.account_inactive_no_organization"))
         }
     }
 }
