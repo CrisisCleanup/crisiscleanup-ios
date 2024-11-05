@@ -22,6 +22,10 @@ struct MenuView: View {
 
             let showGettingStartedVideo = viewModel.menuItemVisibility.showGettingStartedVideo
             ScrollCenterContent {
+                HotlineIncidentsView(
+                    incidents: viewModel.hotlineIncidents
+                )
+
                 GettingStartedView(
                     showContent: showGettingStartedVideo,
                     hideGettingStartedVideo: { viewModel.showGettingStartedVideo(false) },

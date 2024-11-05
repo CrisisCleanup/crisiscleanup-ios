@@ -27,6 +27,7 @@ class MenuViewModel: ObservableObject {
     @Published private(set) var profilePicture: AccountProfilePicture? = nil
 
     @Published private(set) var incidentsData = LoadingIncidentsData
+    @Published private(set) var hotlineIncidents = [Incident]()
 
     @Published private(set) var menuItemVisibility = hideMenuItems
 
@@ -119,6 +120,12 @@ class MenuViewModel: ObservableObject {
             .removeDuplicates()
             .receive(on: RunLoop.main)
             .assign(to: \.incidentsData, on: self)
+            .store(in: &subscriptions)
+
+        incidentsRepository.hotlineIncidents
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.hotlineIncidents, on: self)
             .store(in: &subscriptions)
     }
 

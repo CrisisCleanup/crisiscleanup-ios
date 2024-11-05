@@ -14,6 +14,13 @@ public protocol CrisisCleanupNetworkDataSource {
         after: Date?
     ) async throws -> [NetworkIncident]
 
+    func getIncidentsNoAuth(
+        fields: [String],
+        limit: Int,
+        ordering: String,
+        after: Date?
+    ) async throws -> [NetworkIncident]
+
     func getIncidentsList(
         fields: [String],
         limit: Int,
@@ -127,6 +134,13 @@ extension CrisisCleanupNetworkDataSource {
         _ after: Date?
     ) async throws -> [NetworkIncident] {
         try await getIncidents(fields: fields, limit: 250, ordering: "-start_at", after: after)
+    }
+
+    func getIncidentsNoAuth(
+        _ fields: [String],
+        _ after: Date?
+    ) async throws -> [NetworkIncident] {
+        try await getIncidentsNoAuth(fields: fields, limit: 30, ordering: "-start_at", after: after)
     }
 
     func getIncidentsList() async throws -> [NetworkIncidentShort] {

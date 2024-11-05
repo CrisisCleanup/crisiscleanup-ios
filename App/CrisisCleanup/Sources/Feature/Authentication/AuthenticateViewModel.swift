@@ -4,6 +4,7 @@ import SwiftUI
 class AuthenticateViewModel: ObservableObject {
     private let accountDataRepository: AccountDataRepository
     private let accountEventBus: AccountEventBus
+    private let incidentsRepository: IncidentsRepository
     private let translator: KeyAssetTranslator
 
     let showRegister: Bool
@@ -11,16 +12,20 @@ class AuthenticateViewModel: ObservableObject {
     @Published private(set) var viewData = AuthenticateViewData()
     @Published private(set) var accountInfo = ""
 
+    @Published private(set) var hotlineIncidents = [Incident]()
+
     private var subscriptions = Set<AnyCancellable>()
 
     init(
         accountDataRepository: AccountDataRepository,
         accountEventBus: AccountEventBus,
+        incidentsRepository: IncidentsRepository,
         translator: KeyAssetTranslator,
         appEnv: AppEnv
     ) {
         self.accountDataRepository = accountDataRepository
         self.accountEventBus = accountEventBus
+        self.incidentsRepository = incidentsRepository
         self.translator = translator
 
         showRegister = !appEnv.isAustraliaBuild
@@ -28,6 +33,7 @@ class AuthenticateViewModel: ObservableObject {
 
     func onViewAppear() {
         subscribeAccountData()
+        subscribeIncidents()
     }
 
     func onViewDisappear() {
@@ -57,6 +63,27 @@ class AuthenticateViewModel: ObservableObject {
             }
             .receive(on: RunLoop.main)
             .assign(to: \.accountInfo, on: self)
+            .store(in: &subscriptions)
+    }
+
+    private func subscribeIncidents() {
+        $viewData
+            .throttle(
+                for: .seconds(60),
+                scheduler: RunLoop.current,
+                latest: true
+            )
+            .sink {
+                if !$0.isAccountValid {
+                    await self.incidentsRepository.pullHotlineIncidents()
+                }
+            }
+            .store(in: &subscriptions)
+
+        incidentsRepository.hotlineIncidents
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.hotlineIncidents, on: self)
             .store(in: &subscriptions)
     }
 
