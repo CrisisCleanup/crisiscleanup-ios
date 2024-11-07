@@ -355,6 +355,18 @@ extension MainComponent {
         }
     }
 
+    public var shareLocationRepository: ShareLocationRepository {
+        shared {
+            CrisisCleanupShareLocationRepository(
+                accountDataRepository: accountDataRepository,
+                appPreferences: appPreferences,
+                locationManager: locationManager,
+                writeApiClient: writeApi,
+                loggerFactory: loggerFactory
+            )
+        }
+    }
+
     public var appDataManagementRepository: AppDataManagementRepository {
         shared {
             CrisisCleanupDataManagementRepository(

@@ -17,6 +17,7 @@ class MainViewModel: ObservableObject {
     private let syncPusher: SyncPusher
     private let accountDataRefresher: AccountDataRefresher
     private let accountUpdateRepository: AccountUpdateRepository
+    private let shareLocationRepository: ShareLocationRepository
     private let networkMonitor: NetworkMonitor
     private let logger: AppLogger
 
@@ -64,6 +65,7 @@ class MainViewModel: ObservableObject {
         syncPusher: SyncPusher,
         accountDataRefresher: AccountDataRefresher,
         accountUpdateRepository: AccountUpdateRepository,
+        shareLocationRepository: ShareLocationRepository,
         networkMonitor: NetworkMonitor,
         logger: AppLogger,
         appEnv: AppEnv
@@ -83,6 +85,7 @@ class MainViewModel: ObservableObject {
         self.syncPusher = syncPusher
         self.accountDataRefresher = accountDataRefresher
         self.accountUpdateRepository = accountUpdateRepository
+        self.shareLocationRepository = shareLocationRepository
         self.networkMonitor = networkMonitor
         self.logger = logger
 
@@ -369,7 +372,9 @@ class MainViewModel: ObservableObject {
     }
 
     private func shareLocationWithOrganization() {
-
+        Task {
+            await shareLocationRepository.shareLocation()
+        }
     }
 
     private func sync(_ cancelOngoing: Bool) {

@@ -423,6 +423,14 @@ extension NetworkRequestProvider {
         )
     }
 
+    var shareLocation: NetworkRequest {
+        NetworkRequest(
+            apiUrl("user_geo_locations"),
+            method: .post,
+            addTokenHeader: true
+        )
+    }
+
     // MARK: Register
 
     var requestInvitation: NetworkRequest {

@@ -9,7 +9,8 @@ struct MenuView: View {
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
     let openAuthScreen: () -> Void
 
-    @State private var shareLocationWithOrg: Bool = false
+    @State private var shareLocationWithOrg = false
+    @State private var showExplainLocationPermission = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -58,20 +59,27 @@ struct MenuView: View {
                     router.openUserFeedback()
                 }
                 .styleOutline()
-                .padding(.horizontal)
+                .padding([.horizontal, .bottom])
 
                 Toggle(
                     t.t("~~Share location with organization"),
                     isOn: $shareLocationWithOrg
                 )
-                .listItemPadding()
+                .padding(.horizontal)
                 .onChange(of: viewModel.shareLocationWithOrg) { share in
                     if shareLocationWithOrg != share {
                         shareLocationWithOrg = share
                     }
                 }
                 .onChange(of: shareLocationWithOrg) { share in
-                    viewModel.shareLocationWithOrg(share)
+                    if !share || viewModel.useMyLocation() {
+                        viewModel.shareLocationWithOrg(share)
+                    }
+                }
+                .onChange(of: viewModel.hasLocationAccess) { hasAccess in
+                    if hasAccess && shareLocationWithOrg {
+                        viewModel.shareLocationWithOrg(true)
+                    }
                 }
 
                 Text(viewModel.versionText)
@@ -112,6 +120,20 @@ struct MenuView: View {
         .background(.white)
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
+        .onChange(of: viewModel.showExplainLocationPermission) { show in
+            showExplainLocationPermission = show
+        }
+        .sheet(
+            isPresented: $showExplainLocationPermission,
+            onDismiss: {
+                viewModel.showExplainLocationPermission = false
+            }
+        ) {
+            RequestLocationView {
+                viewModel.showExplainLocationPermission = false
+            }
+            .presentationDetents([.fraction(0.33), .medium])
+        }
     }
 }
 
@@ -271,5 +293,26 @@ private struct MenuScreenNonProductionView: View {
                 }
             }
         }
+    }
+}
+
+private struct RequestLocationView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    var onDismiss: () -> Void = {}
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text(t.t("~~Location access is needed for sharing your location with your organization. Grant access to location in Settings."))
+            HStack {
+                Spacer()
+                Button(t.t("info.app_settings")) {
+                    openSystemAppSettings()
+                    onDismiss()
+                }
+                .padding()
+            }
+        }
+        .padding()
     }
 }

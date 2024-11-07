@@ -1,4 +1,5 @@
 import Combine
+import CoreLocation
 import SwiftUI
 
 class MenuViewModel: ObservableObject {
@@ -11,6 +12,7 @@ class MenuViewModel: ObservableObject {
     private let databaseVersionProvider: DatabaseVersionProvider
     private let appPreferences: AppPreferencesDataStore
     private let accountEventBus: AccountEventBus
+    private let locationManager: LocationManager
     private let appEnv: AppEnv
     private let logger: AppLogger
 
@@ -32,6 +34,8 @@ class MenuViewModel: ObservableObject {
     @Published private(set) var menuItemVisibility = hideMenuItems
 
     @Published private(set) var shareLocationWithOrg = false
+    @Published var showExplainLocationPermission = false
+    @Published private(set) var hasLocationAccess: Bool = false
 
     var versionText: String {
         let version = appVersionProvider.version
@@ -56,6 +60,7 @@ class MenuViewModel: ObservableObject {
         databaseVersionProvider: DatabaseVersionProvider,
         appPreferences: AppPreferencesDataStore,
         accountEventBus: AccountEventBus,
+        locationManager: LocationManager,
         appEnv: AppEnv,
         loggerFactory: AppLoggerFactory
     ) {
@@ -68,6 +73,7 @@ class MenuViewModel: ObservableObject {
         self.databaseVersionProvider = databaseVersionProvider
         self.appPreferences = appPreferences
         self.accountEventBus = accountEventBus
+        self.locationManager = locationManager
         self.appEnv = appEnv
         logger = loggerFactory.getLogger("menu")
 
@@ -77,6 +83,8 @@ class MenuViewModel: ObservableObject {
         termsOfServiceUrl = appSettingsProvider.termsOfServiceUrl!
         privacyPolicyUrl = appSettingsProvider.privacyPolicyUrl!
         gettingStartedVideoUrl = appSettingsProvider.gettingStartedVideoUrl!
+
+        hasLocationAccess = locationManager.hasLocationAccess
 
         Task {
             syncLogRepository.trimOldLogs()
@@ -92,6 +100,7 @@ class MenuViewModel: ObservableObject {
         subscribeIncidentsData()
         subscribeProfilePicture()
         subscribeAppPreferences()
+        subscribeLocationStatus()
     }
 
     func onViewDisappear() {
@@ -173,6 +182,15 @@ class MenuViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
+    private func subscribeLocationStatus() {
+        locationManager.$locationPermission
+            .receive(on: RunLoop.main)
+            .sink { _ in
+                self.hasLocationAccess = self.locationManager.hasLocationAccess
+            }
+            .store(in: &subscriptions)
+    }
+
     func showGettingStartedVideo(_ show: Bool) {
         let hide = !show
         appPreferences.setHideGettingStartedVideo(hide)
@@ -180,6 +198,19 @@ class MenuViewModel: ObservableObject {
         // TODO: Move to hide onboarding method when implemented
         appPreferences.setHideOnboarding(hide)
     }
+
+    func useMyLocation() -> Bool {
+        if locationManager.requestLocationAccess() {
+            return true
+        }
+
+        if locationManager.isDeniedLocationAccess {
+            showExplainLocationPermission = true
+        }
+
+        return false
+    }
+
 
     func shareLocationWithOrg(_ share: Bool) {
         appPreferences.setShareLocationWithOrg(share)
