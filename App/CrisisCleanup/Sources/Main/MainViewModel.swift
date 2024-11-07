@@ -113,6 +113,8 @@ class MainViewModel: ObservableObject {
         subscribeAppSupport()
         subscribeAppPreferences()
         subscribeInactiveOrganization()
+
+        shareLocationWithOrganization()
     }
 
     func onViewDisappear() {
@@ -256,11 +258,23 @@ class MainViewModel: ObservableObject {
     }
 
     private func subscribeAppPreferences() {
-        appPreferences.preferences.eraseToAnyPublisher()
+        let preferencesPublisher = appPreferences.preferences.eraseToAnyPublisher()
+
+        preferencesPublisher
             .map { !$0.hideOnboarding }
             .removeDuplicates()
             .receive(on: RunLoop.main)
             .assign(to: \.showOnboarding, on: self)
+            .store(in: &subscriptions)
+
+        preferencesPublisher
+            .map { $0.shareLocationWithOrg }
+            .removeDuplicates()
+            .sink {
+                if $0 {
+                    self.shareLocationWithOrganization()
+                }
+            }
             .store(in: &subscriptions)
     }
 
@@ -352,6 +366,10 @@ class MainViewModel: ObservableObject {
             router.openOrgPersistentInvite(inviteInfo)
             showAuthScreen = true
         }
+    }
+
+    private func shareLocationWithOrganization() {
+
     }
 
     private func sync(_ cancelOngoing: Bool) {

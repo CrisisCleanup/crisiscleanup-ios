@@ -9,6 +9,8 @@ struct MenuView: View {
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
     let openAuthScreen: () -> Void
 
+    @State private var shareLocationWithOrg: Bool = false
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             TopBar(
@@ -57,6 +59,20 @@ struct MenuView: View {
                 }
                 .styleOutline()
                 .padding(.horizontal)
+
+                Toggle(
+                    t.t("~~Share location with organization"),
+                    isOn: $shareLocationWithOrg
+                )
+                .listItemPadding()
+                .onChange(of: viewModel.shareLocationWithOrg) { share in
+                    if shareLocationWithOrg != share {
+                        shareLocationWithOrg = share
+                    }
+                }
+                .onChange(of: shareLocationWithOrg) { share in
+                    viewModel.shareLocationWithOrg(share)
+                }
 
                 Text(viewModel.versionText)
                     .foregroundStyle(appTheme.colors.neutralFontColor)

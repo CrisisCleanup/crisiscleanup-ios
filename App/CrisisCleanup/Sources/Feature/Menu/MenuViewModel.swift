@@ -31,6 +31,8 @@ class MenuViewModel: ObservableObject {
 
     @Published private(set) var menuItemVisibility = hideMenuItems
 
+    @Published private(set) var shareLocationWithOrg = false
+
     var versionText: String {
         let version = appVersionProvider.version
         return "\(version.1) (\(version.0)) \(appEnv.apiEnvironment) iOS"
@@ -150,7 +152,9 @@ class MenuViewModel: ObservableObject {
     }
 
     private func subscribeAppPreferences() {
-        appPreferences.preferences.eraseToAnyPublisher()
+        let appPreferencesPublisher = appPreferences.preferences.eraseToAnyPublisher()
+
+        appPreferencesPublisher
             .map {
                 return MenuItemVisibility(
                     showOnboarding: !$0.hideOnboarding,
@@ -160,6 +164,13 @@ class MenuViewModel: ObservableObject {
             .receive(on: RunLoop.main)
             .assign(to: \.menuItemVisibility, on: self)
             .store(in: &subscriptions)
+
+        appPreferencesPublisher
+            .map { $0.shareLocationWithOrg }
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .assign(to: \.shareLocationWithOrg, on: self)
+            .store(in: &subscriptions)
     }
 
     func showGettingStartedVideo(_ show: Bool) {
@@ -168,6 +179,10 @@ class MenuViewModel: ObservableObject {
 
         // TODO: Move to hide onboarding method when implemented
         appPreferences.setHideOnboarding(hide)
+    }
+
+    func shareLocationWithOrg(_ share: Bool) {
+        appPreferences.setShareLocationWithOrg(share)
     }
 
     func clearRefreshToken() {

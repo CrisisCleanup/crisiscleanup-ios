@@ -17,6 +17,7 @@ extension AppPreferences {
 		var languageKey: String
 		var syncAttempt: SyncAttempt
 		var tableViewSortBy: WorksiteSortBy
+		var shareLocationWithOrg: Bool
 
 		fileprivate init(original: AppPreferences) {
 			self.hideOnboarding = original.hideOnboarding
@@ -25,6 +26,7 @@ extension AppPreferences {
 			self.languageKey = original.languageKey
 			self.syncAttempt = original.syncAttempt
 			self.tableViewSortBy = original.tableViewSortBy
+			self.shareLocationWithOrg = original.shareLocationWithOrg
 		}
 
 		fileprivate func toAppPreferences() -> AppPreferences {
@@ -34,7 +36,8 @@ extension AppPreferences {
 				selectedIncidentId: selectedIncidentId,
 				languageKey: languageKey,
 				syncAttempt: syncAttempt,
-				tableViewSortBy: tableViewSortBy
+				tableViewSortBy: tableViewSortBy,
+				shareLocationWithOrg: shareLocationWithOrg
 			)
 		}
 	}
