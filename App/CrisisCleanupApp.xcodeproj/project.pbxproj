@@ -102,7 +102,7 @@
 		4E342A552A7A1AA600B55713 /* NunitoSans_10pt-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NunitoSans_10pt-Regular.ttf"; sourceTree = "<group>"; };
 		4E342A572A7A1AA600B55713 /* NunitoSans_10pt-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NunitoSans_10pt-Bold.ttf"; sourceTree = "<group>"; };
 		4E342A582A7A1B4800B55713 /* NunitoSans_10pt-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NunitoSans_10pt-Italic.ttf"; sourceTree = "<group>"; };
-		4E46478629EEE23B0062147F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4E46478629EEE23B0062147F /* CrisisCleanupApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CrisisCleanupApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrisisCleanupApp.swift; sourceTree = "<group>"; };
 		4E46478D29EEE23D0062147F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4E46478F29EEE23D0062147F /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
@@ -208,7 +208,7 @@
 		4E46478729EEE23B0062147F /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4E46478629EEE23B0062147F /* App.app */,
+				4E46478629EEE23B0062147F /* CrisisCleanupApp.app */,
 				4E46479729EEE23E0062147F /* Tests.xctest */,
 				4E4647A129EEE23E0062147F /* UITests.xctest */,
 			);
@@ -312,9 +312,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		4E46478529EEE23B0062147F /* App */ = {
+		4E46478529EEE23B0062147F /* CrisisCleanupApp */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4E4647AB29EEE23E0062147F /* Build configuration list for PBXNativeTarget "App" */;
+			buildConfigurationList = 4E4647AB29EEE23E0062147F /* Build configuration list for PBXNativeTarget "CrisisCleanupApp" */;
 			buildPhases = (
 				4E0CCEF32A196BBD00EC6906 /* Overwrite App Config */,
 				4E0CCF0F2A19A77F00EC6906 /* Overwrite GoogleService-Info */,
@@ -331,7 +331,7 @@
 			dependencies = (
 				4EBFB44C2A1910B100DA7C84 /* PBXTargetDependency */,
 			);
-			name = App;
+			name = CrisisCleanupApp;
 			packageProductDependencies = (
 				4E75623D2A117E140029D5D7 /* CrisisCleanup */,
 				4EBFB4492A1910A800DA7C84 /* NeedleFoundation */,
@@ -340,7 +340,7 @@
 				4E3C89512CD057F0009A1EA4 /* GooglePlacesSwift */,
 			);
 			productName = App;
-			productReference = 4E46478629EEE23B0062147F /* App.app */;
+			productReference = 4E46478629EEE23B0062147F /* CrisisCleanupApp.app */;
 			productType = "com.apple.product-type.application";
 		};
 		4E46479629EEE23E0062147F /* Tests */ = {
@@ -402,7 +402,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 4E46478129EEE23B0062147F /* Build configuration list for PBXProject "App" */;
+			buildConfigurationList = 4E46478129EEE23B0062147F /* Build configuration list for PBXProject "CrisisCleanupApp" */;
 			compatibilityVersion = "Xcode 12.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -422,7 +422,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				4E46478529EEE23B0062147F /* App */,
+				4E46478529EEE23B0062147F /* CrisisCleanupApp */,
 				4E46479629EEE23E0062147F /* Tests */,
 				4E4647A029EEE23E0062147F /* UITests */,
 			);
@@ -598,12 +598,12 @@
 /* Begin PBXTargetDependency section */
 		4E46479929EEE23E0062147F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 4E46478529EEE23B0062147F /* App */;
+			target = 4E46478529EEE23B0062147F /* CrisisCleanupApp */;
 			targetProxy = 4E46479829EEE23E0062147F /* PBXContainerItemProxy */;
 		};
 		4E4647A329EEE23E0062147F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 4E46478529EEE23B0062147F /* App */;
+			target = 4E46478529EEE23B0062147F /* CrisisCleanupApp */;
 			targetProxy = 4E4647A229EEE23E0062147F /* PBXContainerItemProxy */;
 		};
 		4EBFB44C2A1910B100DA7C84 /* PBXTargetDependency */ = {
@@ -755,7 +755,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/App";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CrisisCleanupApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CrisisCleanupApp";
 			};
 			name = "Release-au";
 		};
@@ -1017,7 +1017,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/App";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CrisisCleanupApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CrisisCleanupApp";
 			};
 			name = Debug;
 		};
@@ -1041,7 +1041,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/App";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CrisisCleanupApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CrisisCleanupApp";
 			};
 			name = Release;
 		};
@@ -1219,7 +1219,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/App";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CrisisCleanupApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CrisisCleanupApp";
 			};
 			name = Staging;
 		};
@@ -1249,7 +1249,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4E46478129EEE23B0062147F /* Build configuration list for PBXProject "App" */ = {
+		4E46478129EEE23B0062147F /* Build configuration list for PBXProject "CrisisCleanupApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4E4647A929EEE23E0062147F /* Debug */,
@@ -1260,7 +1260,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4E4647AB29EEE23E0062147F /* Build configuration list for PBXNativeTarget "App" */ = {
+		4E4647AB29EEE23E0062147F /* Build configuration list for PBXNativeTarget "CrisisCleanupApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4E4647AC29EEE23E0062147F /* Debug */,
