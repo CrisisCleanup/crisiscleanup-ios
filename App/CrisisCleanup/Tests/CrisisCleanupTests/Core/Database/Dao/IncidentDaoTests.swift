@@ -272,6 +272,22 @@ class IncidentDaoTests: XCTestCase {
             ])
             .waitForExpectations(timeout: 0.1)
     }
+
+    func testGetActiveIncidentIds() async throws {
+        let (_, appDb) = try initializeTestDb()
+        let incidentDao = IncidentDao(appDb)
+
+        try await incidentDao.saveIncidents(
+            [incidentA, incidentB.copy {
+                $0.activePhoneNumber = "4523562358"
+            }],
+            [incidentLocationA, incidentLocationB],
+            [incidentLocationXrA, incidentLocationXrB]
+        )
+
+        let activeIds = incidentDao.getActiveIncidentIds()
+        XCTAssertEqual([incidentB.id], activeIds)
+    }
 }
 
 internal func testIncident(

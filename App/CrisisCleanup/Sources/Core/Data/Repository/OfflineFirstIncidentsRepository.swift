@@ -203,6 +203,13 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
             if hotlineIncidents.isNotEmpty {
                 try await saveIncidentsPrimaryData(hotlineIncidents)
             }
+
+            let recentActiveIncidents = Set(hotlineIncidents.map { $0.id })
+            let localActiveIncidents = incidentDao.getActiveIncidentIds()
+                .filter { !recentActiveIncidents.contains($0) }
+            for incidentId in localActiveIncidents {
+                try await pullIncident(incidentId)
+            }
         } catch {
             logger.logError(error)
         }

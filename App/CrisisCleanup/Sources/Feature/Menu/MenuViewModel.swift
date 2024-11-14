@@ -30,6 +30,7 @@ class MenuViewModel: ObservableObject {
 
     @Published private(set) var incidentsData = LoadingIncidentsData
     @Published private(set) var hotlineIncidents = [Incident]()
+    private var isHotlineIncidentsRefreshed = false
 
     @Published private(set) var menuItemVisibility = hideMenuItems
 
@@ -94,6 +95,13 @@ class MenuViewModel: ObservableObject {
     func onViewAppear() {
         Task {
             await accountDataRefresher.updateProfilePicture()
+        }
+
+        if !isHotlineIncidentsRefreshed {
+            isHotlineIncidentsRefreshed = true
+            Task {
+                await self.incidentsRepository.pullHotlineIncidents()
+            }
         }
 
         subscribeLoading()
