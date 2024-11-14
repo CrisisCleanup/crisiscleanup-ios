@@ -7,6 +7,7 @@ public protocol ShareLocationRepository {
 class CrisisCleanupShareLocationRepository: ShareLocationRepository {
     private let accountDataRepository: AccountDataRepository
     private let appPreferences: AppPreferencesDataStore
+    private let appSupportRepository: AppSupportRepository
     private let locationManager: LocationManager
     private let writeApiClient: CrisisCleanupWriteApi
     private let logger: AppLogger
@@ -15,15 +16,20 @@ class CrisisCleanupShareLocationRepository: ShareLocationRepository {
     private var shareTimestamp = Date(timeIntervalSince1970: 0)
     private let shareInterval = 1.minutes
 
+    // TODO: Remote config
+    private let activeInterval = 4.hours
+
     init(
         accountDataRepository: AccountDataRepository,
         appPreferences: AppPreferencesDataStore,
+        appSupportRepository: AppSupportRepository,
         locationManager: LocationManager,
         writeApiClient: CrisisCleanupWriteApi,
         loggerFactory: AppLoggerFactory
     ) {
         self.accountDataRepository = accountDataRepository
         self.appPreferences = appPreferences
+        self.appSupportRepository = appSupportRepository
         self.locationManager = locationManager
         self.writeApiClient = writeApiClient
         logger = loggerFactory.getLogger("share-location")
@@ -35,12 +41,15 @@ class CrisisCleanupShareLocationRepository: ShareLocationRepository {
             let shareLocationWithOrg = preferences.shareLocationWithOrg
             let accountData = try await accountDataRepository.accountData.eraseToAnyPublisher().asyncFirst()
             let areTokensValid = accountData.areTokensValid
+            let metrics = try await appSupportRepository.appMetrics.eraseToAnyPublisher().asyncFirst()
+            let lastAppOpen = metrics.openTimestamp
+            let now = Date.now
             if shareLocationWithOrg,
-               areTokensValid
+               areTokensValid,
+               lastAppOpen + activeInterval > now
             {
                 if let location = locationManager.getLocation() {
                     let share = shareLock.withLock {
-                        let now = Date.now
                         if shareTimestamp + shareInterval > now {
                             return false
                         }

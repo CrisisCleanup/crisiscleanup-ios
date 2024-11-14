@@ -360,6 +360,7 @@ extension MainComponent {
             CrisisCleanupShareLocationRepository(
                 accountDataRepository: accountDataRepository,
                 appPreferences: appPreferences,
+                appSupportRepository: appSupportRepository,
                 locationManager: locationManager,
                 writeApiClient: writeApi,
                 loggerFactory: loggerFactory
