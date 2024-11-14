@@ -23,6 +23,11 @@ class TagLogger: AppLogger {
             return
         }
 
+        if let genericError = e as? GenericError,
+           genericError == ExpiredTokenError {
+            return
+        }
+
         if appEnv.isDebuggable {
             if let ge = e as? GenericError {
                 print(self.tag, ge.message)
