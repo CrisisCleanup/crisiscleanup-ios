@@ -30,6 +30,7 @@ class MenuComponent: Component<AppDependency>, MenuViewBuilder {
                 incidentSelectViewBuilder: dependency.incidentSelectViewBuilder,
                 openAuthScreen: openAuthScreen
             )
+            .toolbar(.hidden, for: .navigationBar)
         )
     }
 }
