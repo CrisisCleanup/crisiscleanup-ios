@@ -24,6 +24,7 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
     }
 
     let incidents: any Publisher<[Incident], Never>
+    let hotlineIncidents: any Publisher<[Incident], Never>
 
     private let dataSource: CrisisCleanupNetworkDataSource
     private let appPreferencesDataStore: AppPreferencesDataStore
@@ -57,7 +58,11 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         fullIncidentQueryFields = incidentsQueryFields + ["form_fields"]
 
         isLoading = isLoadingSubject
-        incidents = incidentDao.streamIncidents()
+        let incidentsStream = incidentDao.streamIncidents().share()
+        incidents = incidentsStream
+        hotlineIncidents = incidentsStream.map {
+            $0.filter { incident in incident.activePhoneNumbers.isNotEmpty }
+        }
     }
 
     func getIncident(_ id: Int64, _ loadFormFields: Bool) throws -> Incident? {
@@ -185,6 +190,28 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
 
             try await syncInternal()
             isSuccessful = true
+        }
+    }
+
+    func pullHotlineIncidents() async {
+        do {
+            let hotlineIncidents = try await dataSource.getIncidentsNoAuth(
+                incidentsQueryFields,
+                Date.now - 120.days
+            )
+                .filter { $0.activePhoneNumber?.isNotEmpty == true }
+            if hotlineIncidents.isNotEmpty {
+                try await saveIncidentsPrimaryData(hotlineIncidents)
+            }
+
+            let recentActiveIncidents = Set(hotlineIncidents.map { $0.id })
+            let localActiveIncidents = incidentDao.getActiveIncidentIds()
+                .filter { !recentActiveIncidents.contains($0) }
+            for incidentId in localActiveIncidents {
+                try await pullIncident(incidentId)
+            }
+        } catch {
+            logger.logError(error)
         }
     }
 

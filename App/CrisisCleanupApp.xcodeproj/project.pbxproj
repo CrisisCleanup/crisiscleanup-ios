@@ -20,6 +20,7 @@
 		4E342A5A2A7A1B4C00B55713 /* NunitoSans_10pt-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4E342A582A7A1B4800B55713 /* NunitoSans_10pt-Italic.ttf */; };
 		4E342A5B2A7A1B4C00B55713 /* NunitoSans_10pt-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4E342A552A7A1AA600B55713 /* NunitoSans_10pt-Regular.ttf */; };
 		4E342A5C2A7A1B4C00B55713 /* NunitoSans_10pt-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4E342A542A7A1AA600B55713 /* NunitoSans_10pt-Light.ttf */; };
+		4E3C89522CD057F0009A1EA4 /* GooglePlacesSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4E3C89512CD057F0009A1EA4 /* GooglePlacesSwift */; };
 		4E46478A29EEE23B0062147F /* CrisisCleanupApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */; };
 		4E46478E29EEE23D0062147F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E46478D29EEE23D0062147F /* Assets.xcassets */; };
 		4E46479229EEE23D0062147F /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E46479129EEE23D0062147F /* Preview Assets.xcassets */; };
@@ -37,7 +38,6 @@
 		4ECCE0C62AC37A2400D91463 /* ExternalActivityProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ECCE0C52AC37A2400D91463 /* ExternalActivityProcessor.swift */; };
 		4ECCE0C82AC37D7000D91463 /* CrisisCleanupExternalEventBus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ECCE0C72AC37D7000D91463 /* CrisisCleanupExternalEventBus.swift */; };
 		4ED625932A25160800C33EAB /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4ED6258B2A25160800C33EAB /* GoogleService-Info.plist */; };
-		76987D8F5B746271B9E27921 /* libPods-App.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2CA36A2AD3270023312528C3 /* libPods-App.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -89,9 +89,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		0760C4A36014EDF906435725 /* Pods-App.staging.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.staging.xcconfig"; path = "../../Pods/Target Support Files/Pods-App/Pods-App.staging.xcconfig"; sourceTree = "<group>"; };
-		07C7FE66F28D0CCBD1B23467 /* Pods-App.nonp.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.nonp.xcconfig"; path = "../../Pods/Target Support Files/Pods-App/Pods-App.nonp.xcconfig"; sourceTree = "<group>"; };
-		2CA36A2AD3270023312528C3 /* libPods-App.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-App.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E0CCEEB2A1966EE00EC6906 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		4E0CCEF42A196D4F00EC6906 /* AppBuildEnv.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBuildEnv.swift; sourceTree = "<group>"; };
 		4E0CCEF82A1970E200EC6906 /* ConfigProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigProperties.swift; sourceTree = "<group>"; };
@@ -105,7 +102,7 @@
 		4E342A552A7A1AA600B55713 /* NunitoSans_10pt-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NunitoSans_10pt-Regular.ttf"; sourceTree = "<group>"; };
 		4E342A572A7A1AA600B55713 /* NunitoSans_10pt-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NunitoSans_10pt-Bold.ttf"; sourceTree = "<group>"; };
 		4E342A582A7A1B4800B55713 /* NunitoSans_10pt-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NunitoSans_10pt-Italic.ttf"; sourceTree = "<group>"; };
-		4E46478629EEE23B0062147F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4E46478629EEE23B0062147F /* CrisisCleanupApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CrisisCleanupApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrisisCleanupApp.swift; sourceTree = "<group>"; };
 		4E46478D29EEE23D0062147F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4E46478F29EEE23D0062147F /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
@@ -135,9 +132,6 @@
 		4ED625902A25160800C33EAB /* AppConfig.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = AppConfig.xcconfig; sourceTree = "<group>"; };
 		4EEC23D92B45F66C004C2DA1 /* AppDebug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AppDebug.entitlements; sourceTree = "<group>"; };
 		4EEC23DA2B45F691004C2DA1 /* AppStaging.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AppStaging.entitlements; sourceTree = "<group>"; };
-		66A43D788AD300B2668BE9DD /* Pods-App.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.debug.xcconfig"; path = "../../Pods/Target Support Files/Pods-App/Pods-App.debug.xcconfig"; sourceTree = "<group>"; };
-		BD001814E75AB030A11B38B1 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "../../Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
-		BFF302A7DE276EB4D0EEE995 /* Pods-App.release-au.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release-au.xcconfig"; path = "../../Pods/Target Support Files/Pods-App/Pods-App.release-au.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -146,10 +140,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				4E0CCF032A19889B00EC6906 /* FirebaseCrashlytics in Frameworks */,
+				4E3C89522CD057F0009A1EA4 /* GooglePlacesSwift in Frameworks */,
 				4EBFB44A2A1910A800DA7C84 /* NeedleFoundation in Frameworks */,
 				4E0CCF052A19889B00EC6906 /* FirebasePerformance in Frameworks */,
 				4E75623E2A117E140029D5D7 /* CrisisCleanup in Frameworks */,
-				76987D8F5B746271B9E27921 /* libPods-App.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -208,14 +202,13 @@
 				4E4647A429EEE23E0062147F /* AppUITests */,
 				4E46478729EEE23B0062147F /* Products */,
 				E232BBD330A96B345051B591 /* Pods */,
-				F12F4FA31F133DE377D139D9 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
 		4E46478729EEE23B0062147F /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4E46478629EEE23B0062147F /* App.app */,
+				4E46478629EEE23B0062147F /* CrisisCleanupApp.app */,
 				4E46479729EEE23E0062147F /* Tests.xctest */,
 				4E4647A129EEE23E0062147F /* UITests.xctest */,
 			);
@@ -312,31 +305,17 @@
 		E232BBD330A96B345051B591 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				66A43D788AD300B2668BE9DD /* Pods-App.debug.xcconfig */,
-				BD001814E75AB030A11B38B1 /* Pods-App.release.xcconfig */,
-				07C7FE66F28D0CCBD1B23467 /* Pods-App.nonp.xcconfig */,
-				0760C4A36014EDF906435725 /* Pods-App.staging.xcconfig */,
-				BFF302A7DE276EB4D0EEE995 /* Pods-App.release-au.xcconfig */,
 			);
 			path = Pods;
-			sourceTree = "<group>";
-		};
-		F12F4FA31F133DE377D139D9 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				2CA36A2AD3270023312528C3 /* libPods-App.a */,
-			);
-			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		4E46478529EEE23B0062147F /* App */ = {
+		4E46478529EEE23B0062147F /* CrisisCleanupApp */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4E4647AB29EEE23E0062147F /* Build configuration list for PBXNativeTarget "App" */;
+			buildConfigurationList = 4E4647AB29EEE23E0062147F /* Build configuration list for PBXNativeTarget "CrisisCleanupApp" */;
 			buildPhases = (
-				2BAFC9D2ECA459B9A261A635 /* [CP] Check Pods Manifest.lock */,
 				4E0CCEF32A196BBD00EC6906 /* Overwrite App Config */,
 				4E0CCF0F2A19A77F00EC6906 /* Overwrite GoogleService-Info */,
 				4EBFB44D2A1910D800DA7C84 /* Generate Needle Dependency Graph */,
@@ -344,7 +323,6 @@
 				4E46478429EEE23B0062147F /* Resources */,
 				4E46478329EEE23B0062147F /* Frameworks */,
 				4E0CCF062A1988F300EC6906 /* Process and Upload dSYMs */,
-				9824052A939388FC40D7C4AA /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 				4E4975BF2A4E22C000EEC7A2 /* PBXBuildRule */,
@@ -353,15 +331,16 @@
 			dependencies = (
 				4EBFB44C2A1910B100DA7C84 /* PBXTargetDependency */,
 			);
-			name = App;
+			name = CrisisCleanupApp;
 			packageProductDependencies = (
 				4E75623D2A117E140029D5D7 /* CrisisCleanup */,
 				4EBFB4492A1910A800DA7C84 /* NeedleFoundation */,
 				4E0CCF022A19889B00EC6906 /* FirebaseCrashlytics */,
 				4E0CCF042A19889B00EC6906 /* FirebasePerformance */,
+				4E3C89512CD057F0009A1EA4 /* GooglePlacesSwift */,
 			);
 			productName = App;
-			productReference = 4E46478629EEE23B0062147F /* App.app */;
+			productReference = 4E46478629EEE23B0062147F /* CrisisCleanupApp.app */;
 			productType = "com.apple.product-type.application";
 		};
 		4E46479629EEE23E0062147F /* Tests */ = {
@@ -423,7 +402,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 4E46478129EEE23B0062147F /* Build configuration list for PBXProject "App" */;
+			buildConfigurationList = 4E46478129EEE23B0062147F /* Build configuration list for PBXProject "CrisisCleanupApp" */;
 			compatibilityVersion = "Xcode 12.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -436,12 +415,14 @@
 			packageReferences = (
 				4EBFB4482A1910A800DA7C84 /* XCRemoteSwiftPackageReference "needle" */,
 				4E0CCF012A19889B00EC6906 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				4E3C894F2CD05559009A1EA4 /* XCRemoteSwiftPackageReference "ios-places-sdk" */,
+				4E3C89502CD057F0009A1EA4 /* XCRemoteSwiftPackageReference "ios-places-swift-sdk" */,
 			);
 			productRefGroup = 4E46478729EEE23B0062147F /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				4E46478529EEE23B0062147F /* App */,
+				4E46478529EEE23B0062147F /* CrisisCleanupApp */,
 				4E46479629EEE23E0062147F /* Tests */,
 				4E4647A029EEE23E0062147F /* UITests */,
 			);
@@ -483,28 +464,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		2BAFC9D2ECA459B9A261A635 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-App-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
 		4E0CCEF32A196BBD00EC6906 /* Overwrite App Config */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -594,23 +553,6 @@
 			shellScript = "export PATH=\"$PATH:/opt/homebrew/bin\"\n\nneedle generate App/Sources/NeedleGenerated.swift App/Sources/ CrisisCleanup/Sources\n";
 			showEnvVarsInLog = 0;
 		};
-		9824052A939388FC40D7C4AA /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-App/Pods-App-resources-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-App/Pods-App-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-App/Pods-App-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -656,12 +598,12 @@
 /* Begin PBXTargetDependency section */
 		4E46479929EEE23E0062147F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 4E46478529EEE23B0062147F /* App */;
+			target = 4E46478529EEE23B0062147F /* CrisisCleanupApp */;
 			targetProxy = 4E46479829EEE23E0062147F /* PBXContainerItemProxy */;
 		};
 		4E4647A329EEE23E0062147F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 4E46478529EEE23B0062147F /* App */;
+			target = 4E46478529EEE23B0062147F /* CrisisCleanupApp */;
 			targetProxy = 4E4647A229EEE23E0062147F /* PBXContainerItemProxy */;
 		};
 		4EBFB44C2A1910B100DA7C84 /* PBXTargetDependency */ = {
@@ -745,14 +687,13 @@
 		};
 		4E2637D22B1E41370064424E /* Release-au */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BFF302A7DE276EB4D0EEE995 /* Pods-App.release-au.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconAu;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "App/AppRelease-au.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 138;
+				CURRENT_PROJECT_VERSION = 141;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = ZM286L3HTV;
@@ -780,7 +721,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.9.58;
+				MARKETING_VERSION = 0.9.61;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.aus;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -814,7 +755,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/App";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CrisisCleanupApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CrisisCleanupApp";
 			};
 			name = "Release-au";
 		};
@@ -958,14 +899,13 @@
 		};
 		4E4647AC29EEE23E0062147F /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 66A43D788AD300B2668BE9DD /* Pods-App.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconDev;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = App/AppDebug.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 138;
+				CURRENT_PROJECT_VERSION = 141;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = ZM286L3HTV;
@@ -993,7 +933,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.9.58;
+				MARKETING_VERSION = 0.9.61;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.dev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1009,14 +949,13 @@
 		};
 		4E4647AD29EEE23E0062147F /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BD001814E75AB030A11B38B1 /* Pods-App.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 138;
+				CURRENT_PROJECT_VERSION = 141;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = ZM286L3HTV;
@@ -1044,7 +983,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.9.58;
+				MARKETING_VERSION = 0.9.61;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.prod;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1078,7 +1017,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/App";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CrisisCleanupApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CrisisCleanupApp";
 			};
 			name = Debug;
 		};
@@ -1102,7 +1041,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/App";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CrisisCleanupApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CrisisCleanupApp";
 			};
 			name = Release;
 		};
@@ -1208,7 +1147,6 @@
 		};
 		4E4647B529EEE4D10062147F /* Staging */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0760C4A36014EDF906435725 /* Pods-App.staging.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconNonp;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -1216,7 +1154,7 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 138;
+				CURRENT_PROJECT_VERSION = 141;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = AYLY2UUH8J;
@@ -1246,7 +1184,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.9.58;
+				MARKETING_VERSION = 0.9.61;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.stg;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1281,7 +1219,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/App";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CrisisCleanupApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CrisisCleanupApp";
 			};
 			name = Staging;
 		};
@@ -1311,7 +1249,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4E46478129EEE23B0062147F /* Build configuration list for PBXProject "App" */ = {
+		4E46478129EEE23B0062147F /* Build configuration list for PBXProject "CrisisCleanupApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4E4647A929EEE23E0062147F /* Debug */,
@@ -1322,7 +1260,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4E4647AB29EEE23E0062147F /* Build configuration list for PBXNativeTarget "App" */ = {
+		4E4647AB29EEE23E0062147F /* Build configuration list for PBXNativeTarget "CrisisCleanupApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4E4647AC29EEE23E0062147F /* Debug */,
@@ -1366,6 +1304,22 @@
 				minimumVersion = 10.0.0;
 			};
 		};
+		4E3C894F2CD05559009A1EA4 /* XCRemoteSwiftPackageReference "ios-places-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googlemaps/ios-places-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.1.0;
+			};
+		};
+		4E3C89502CD057F0009A1EA4 /* XCRemoteSwiftPackageReference "ios-places-swift-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googlemaps/ios-places-swift-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.2.0;
+			};
+		};
 		4EBFB4482A1910A800DA7C84 /* XCRemoteSwiftPackageReference "needle" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/uber/needle.git";
@@ -1386,6 +1340,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4E0CCF012A19889B00EC6906 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebasePerformance;
+		};
+		4E3C89512CD057F0009A1EA4 /* GooglePlacesSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4E3C89502CD057F0009A1EA4 /* XCRemoteSwiftPackageReference "ios-places-swift-sdk" */;
+			productName = GooglePlacesSwift;
 		};
 		4E75623D2A117E140029D5D7 /* CrisisCleanup */ = {
 			isa = XCSwiftPackageProductDependency;

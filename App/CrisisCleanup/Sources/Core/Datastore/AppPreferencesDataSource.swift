@@ -16,6 +16,7 @@ public protocol AppPreferencesDataStore {
     func setSelectedIncident(_ id: Int64)
     func setLanguageKey(_ key: String)
     func setTableViewSortBy(_ sortBy: WorksiteSortBy)
+    func setShareLocationWithOrg(_ share: Bool)
 }
 
 extension AppPreferencesDataStore {
@@ -121,6 +122,14 @@ class AppPreferencesUserDefaults: AppPreferencesDataStore {
         update(
             UserDefaults.standard.appPreferences.copy {
                 $0.tableViewSortBy = sortBy
+            }
+        )
+    }
+
+    func setShareLocationWithOrg(_ share: Bool) {
+        update(
+            UserDefaults.standard.appPreferences.copy {
+                $0.shareLocationWithOrg = share
             }
         )
     }

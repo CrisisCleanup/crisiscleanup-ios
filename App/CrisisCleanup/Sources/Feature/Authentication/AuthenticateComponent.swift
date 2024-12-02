@@ -59,6 +59,7 @@ class AuthenticateComponent: Component<AppDependency> {
             viewModel = AuthenticateViewModel(
                 accountDataRepository: dependency.accountDataRepository,
                 accountEventBus: dependency.accountEventBus,
+                incidentsRepository: dependency.incidentsRepository,
                 translator: dependency.translator,
                 appEnv: dependency.appEnv
             )

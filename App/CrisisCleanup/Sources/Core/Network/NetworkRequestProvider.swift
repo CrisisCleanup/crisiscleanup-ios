@@ -99,6 +99,12 @@ extension NetworkRequestProvider {
         )
     }
 
+    var incidentsNoAuth: NetworkRequest {
+        NetworkRequest(
+            apiUrl("incidents")
+        )
+    }
+
     var incidentsList: NetworkRequest {
         NetworkRequest(
             apiUrl("incidents_list")
@@ -412,6 +418,14 @@ extension NetworkRequestProvider {
     var requestRedeploy: NetworkRequest {
         NetworkRequest(
             apiUrl("incident_requests"),
+            method: .post,
+            addTokenHeader: true
+        )
+    }
+
+    var shareLocation: NetworkRequest {
+        NetworkRequest(
+            apiUrl("user_geo_locations"),
             method: .post,
             addTokenHeader: true
         )

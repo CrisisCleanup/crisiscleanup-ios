@@ -17,6 +17,7 @@ class MainViewModel: ObservableObject {
     private let syncPusher: SyncPusher
     private let accountDataRefresher: AccountDataRefresher
     private let accountUpdateRepository: AccountUpdateRepository
+    private let shareLocationRepository: ShareLocationRepository
     private let networkMonitor: NetworkMonitor
     private let logger: AppLogger
 
@@ -64,6 +65,7 @@ class MainViewModel: ObservableObject {
         syncPusher: SyncPusher,
         accountDataRefresher: AccountDataRefresher,
         accountUpdateRepository: AccountUpdateRepository,
+        shareLocationRepository: ShareLocationRepository,
         networkMonitor: NetworkMonitor,
         logger: AppLogger,
         appEnv: AppEnv
@@ -83,6 +85,7 @@ class MainViewModel: ObservableObject {
         self.syncPusher = syncPusher
         self.accountDataRefresher = accountDataRefresher
         self.accountUpdateRepository = accountUpdateRepository
+        self.shareLocationRepository = shareLocationRepository
         self.networkMonitor = networkMonitor
         self.logger = logger
 
@@ -113,6 +116,8 @@ class MainViewModel: ObservableObject {
         subscribeAppSupport()
         subscribeAppPreferences()
         subscribeInactiveOrganization()
+
+        shareLocationWithOrganization()
     }
 
     func onViewDisappear() {
@@ -256,11 +261,23 @@ class MainViewModel: ObservableObject {
     }
 
     private func subscribeAppPreferences() {
-        appPreferences.preferences.eraseToAnyPublisher()
+        let preferencesPublisher = appPreferences.preferences.eraseToAnyPublisher()
+
+        preferencesPublisher
             .map { !$0.hideOnboarding }
             .removeDuplicates()
             .receive(on: RunLoop.main)
             .assign(to: \.showOnboarding, on: self)
+            .store(in: &subscriptions)
+
+        preferencesPublisher
+            .map { $0.shareLocationWithOrg }
+            .removeDuplicates()
+            .sink {
+                if $0 {
+                    self.shareLocationWithOrganization()
+                }
+            }
             .store(in: &subscriptions)
     }
 
@@ -351,6 +368,12 @@ class MainViewModel: ObservableObject {
            inviteInfo.inviteToken.isNotBlank {
             router.openOrgPersistentInvite(inviteInfo)
             showAuthScreen = true
+        }
+    }
+
+    private func shareLocationWithOrganization() {
+        Task {
+            await shareLocationRepository.shareLocation()
         }
     }
 

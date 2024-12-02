@@ -46,6 +46,7 @@ public class MainComponent: BootstrapComponent,
         syncPusher: syncPusher,
         accountDataRefresher: accountDataRefresher,
         accountUpdateRepository: accountUpdateRepository,
+        shareLocationRepository: shareLocationRepository,
         networkMonitor: networkMonitor,
         logger: loggerFactory.getLogger("main"),
         appEnv: appEnv

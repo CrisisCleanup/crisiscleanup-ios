@@ -50,6 +50,16 @@ public class IncidentDao {
         .map { $0.asExternalModel() }
     }
 
+    func getActiveIncidentIds() -> [Int64] {
+        try! reader.read { db in
+            try IncidentRecord
+                .all()
+                .hasActivePhoneNumber()
+                .fetchAll(db)
+        }
+        .map { $0.id }
+    }
+
     private func fetchIncidentsStartingAt(_ db: Database, _ startAt: Date) throws -> [PopulatedIncident] {
         try IncidentRecord
             .all()

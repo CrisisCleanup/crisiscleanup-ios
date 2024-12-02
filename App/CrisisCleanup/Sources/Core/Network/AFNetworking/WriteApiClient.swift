@@ -361,4 +361,15 @@ class WriteApiClient: CrisisCleanupWriteApi {
         }
         return false
     }
+
+    func shareLocation(latitude: Double, longitude: Double) async throws {
+        let coordinates = NetworkLocationCoordinates(coordinates: [longitude, latitude], type: "Point")
+        let payload = NetworkPointLocation(point: coordinates)
+        let request = requestProvider.shareLocation
+            .setBody(payload)
+        let response = await networkClient.callbackContinue(request)
+        if let error = response.error {
+            throw error
+        }
+    }
 }

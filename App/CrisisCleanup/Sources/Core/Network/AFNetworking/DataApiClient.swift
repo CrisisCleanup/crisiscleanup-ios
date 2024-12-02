@@ -113,13 +113,14 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         ).value
     }
 
-    func getIncidents(
+    private func getIncidents(
+        networkRequest: NetworkRequest,
         fields: [String],
         limit: Int,
         ordering: String,
         after: Date?
     ) async throws -> [NetworkIncident] {
-        let request = requestProvider.incidents.addQueryItems(
+        let request = networkRequest.addQueryItems(
             "fields", fields.commaJoined,
             "limit", String(limit),
             "sort", ordering,
@@ -134,6 +135,36 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
             return result.results ?? [NetworkIncident]()
         }
         throw response.error ?? networkError
+    }
+
+    func getIncidents(
+        fields: [String],
+        limit: Int,
+        ordering: String,
+        after: Date?
+    ) async throws -> [NetworkIncident] {
+        try await getIncidents(
+            networkRequest: requestProvider.incidents,
+            fields: fields,
+            limit: limit,
+            ordering: ordering,
+            after: after
+        )
+    }
+
+    func getIncidentsNoAuth(
+        fields: [String],
+        limit: Int,
+        ordering: String,
+        after: Date?
+    ) async throws -> [NetworkIncident] {
+        try await getIncidents(
+            networkRequest: requestProvider.incidentsNoAuth,
+            fields: fields,
+            limit: limit,
+            ordering: ordering,
+            after: after
+        )
     }
 
     func getIncidentsList(

@@ -153,6 +153,7 @@ class GooglePlaceAddressSearchRepository: AddressSearchRepository {
             let addressTypeKeys = Set([
                 "street_number",
                 "route",
+                "subpremise",
                 "locality",
                 "administrative_area_level_2",
                 "administrative_area_level_1",
@@ -174,8 +175,9 @@ class GooglePlaceAddressSearchRepository: AddressSearchRepository {
                 latitude: coordinates.latitude,
                 longitude: coordinates.longitude,
                 address: [
-                    addressComponentLookup["street_number"] ?? "",
-                    addressComponentLookup["route"] ?? "",
+                    addressComponentLookup["street_number"],
+                    addressComponentLookup["route"],
+                    addressComponentLookup["subpremise"],
                 ].combineTrimText(),
                 city: addressComponentLookup["locality"] ?? "",
                 county: addressComponentLookup["administrative_area_level_2"] ?? "",

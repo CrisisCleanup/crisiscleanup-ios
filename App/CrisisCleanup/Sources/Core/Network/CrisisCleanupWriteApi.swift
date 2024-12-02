@@ -69,4 +69,6 @@ public protocol CrisisCleanupWriteApi {
     ) async throws
 
     func requestRedeploy(organizationId: Int64, incidentId: Int64) async throws -> Bool
+
+    func shareLocation(latitude: Double, longitude: Double) async throws
 }

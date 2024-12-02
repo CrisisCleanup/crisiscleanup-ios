@@ -70,6 +70,10 @@ extension DerivableRequest<IncidentRecord> {
     func orderedByStartAtDesc() -> Self {
         order(IncidentRecord.Columns.startAt.desc)
     }
+
+    func hasActivePhoneNumber() -> Self {
+        filter(IncidentRecord.Columns.activePhoneNumber != nil && IncidentRecord.Columns.activePhoneNumber != "")
+    }
 }
 
 // MARK: - Incident to incident location

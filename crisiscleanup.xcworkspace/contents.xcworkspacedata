@@ -5,7 +5,7 @@
       location = "group:App/CrisisCleanup">
    </FileRef>
    <FileRef
-      location = "group:App/App.xcodeproj">
+      location = "group:App/CrisisCleanupApp.xcodeproj">
    </FileRef>
    <FileRef
       location = "group:Pods/Pods.xcodeproj">

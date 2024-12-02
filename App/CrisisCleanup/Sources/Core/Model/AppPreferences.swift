@@ -6,6 +6,7 @@ public struct AppPreferences: Codable {
     let languageKey: String
     let syncAttempt: SyncAttempt
     let tableViewSortBy: WorksiteSortBy
+    let shareLocationWithOrg: Bool
 
     init(
         hideOnboarding: Bool = false,
@@ -13,7 +14,8 @@ public struct AppPreferences: Codable {
         selectedIncidentId: Int64 = 0,
         languageKey: String = "en-US",
         syncAttempt: SyncAttempt = SyncAttempt(),
-        tableViewSortBy: WorksiteSortBy = .none
+        tableViewSortBy: WorksiteSortBy = .none,
+        shareLocationWithOrg: Bool = false
     ) {
         self.hideOnboarding = hideOnboarding
         self.hideGettingStartedVideo = hideGettingStartedVideo
@@ -21,5 +23,6 @@ public struct AppPreferences: Codable {
         self.languageKey = languageKey
         self.syncAttempt = syncAttempt
         self.tableViewSortBy = tableViewSortBy
+        self.shareLocationWithOrg = shareLocationWithOrg
     }
 }

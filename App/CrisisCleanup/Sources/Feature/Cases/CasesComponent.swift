@@ -37,6 +37,7 @@ class CasesComponent: Component<AppDependency>, CasesViewBuilder {
                 incidentSelectViewBuilder: dependency.incidentSelectViewBuilder,
                 openAuthScreen: openAuthScreen
             )
+            .toolbar(.hidden, for: .navigationBar)
         )
     }
 }

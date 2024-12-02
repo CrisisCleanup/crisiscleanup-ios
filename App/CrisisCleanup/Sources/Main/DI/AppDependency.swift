@@ -46,6 +46,7 @@ public protocol AppDependency: Dependency {
     var orgVolunteerRepository: OrgVolunteerRepository { get }
     var requestRedeployRepository: RequestRedeployRepository { get }
     var listsRepository: ListsRepository { get }
+    var shareLocationRepository: ShareLocationRepository { get }
     var appDataManagementRepository: AppDataManagementRepository { get }
 
     var authenticateViewBuilder: AuthenticateViewBuilder { get }

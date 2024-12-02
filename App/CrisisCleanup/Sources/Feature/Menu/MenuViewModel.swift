@@ -1,4 +1,5 @@
 import Combine
+import CoreLocation
 import SwiftUI
 
 class MenuViewModel: ObservableObject {
@@ -11,6 +12,7 @@ class MenuViewModel: ObservableObject {
     private let databaseVersionProvider: DatabaseVersionProvider
     private let appPreferences: AppPreferencesDataStore
     private let accountEventBus: AccountEventBus
+    private let locationManager: LocationManager
     private let appEnv: AppEnv
     private let logger: AppLogger
 
@@ -27,8 +29,14 @@ class MenuViewModel: ObservableObject {
     @Published private(set) var profilePicture: AccountProfilePicture? = nil
 
     @Published private(set) var incidentsData = LoadingIncidentsData
+    @Published private(set) var hotlineIncidents = [Incident]()
+    private var isHotlineIncidentsRefreshed = false
 
     @Published private(set) var menuItemVisibility = hideMenuItems
+
+    @Published private(set) var shareLocationWithOrg = false
+    @Published var showExplainLocationPermission = false
+    @Published private(set) var hasLocationAccess: Bool = false
 
     var versionText: String {
         let version = appVersionProvider.version
@@ -53,6 +61,7 @@ class MenuViewModel: ObservableObject {
         databaseVersionProvider: DatabaseVersionProvider,
         appPreferences: AppPreferencesDataStore,
         accountEventBus: AccountEventBus,
+        locationManager: LocationManager,
         appEnv: AppEnv,
         loggerFactory: AppLoggerFactory
     ) {
@@ -65,6 +74,7 @@ class MenuViewModel: ObservableObject {
         self.databaseVersionProvider = databaseVersionProvider
         self.appPreferences = appPreferences
         self.accountEventBus = accountEventBus
+        self.locationManager = locationManager
         self.appEnv = appEnv
         logger = loggerFactory.getLogger("menu")
 
@@ -74,6 +84,8 @@ class MenuViewModel: ObservableObject {
         termsOfServiceUrl = appSettingsProvider.termsOfServiceUrl!
         privacyPolicyUrl = appSettingsProvider.privacyPolicyUrl!
         gettingStartedVideoUrl = appSettingsProvider.gettingStartedVideoUrl!
+
+        hasLocationAccess = locationManager.hasLocationAccess
 
         Task {
             syncLogRepository.trimOldLogs()
@@ -85,10 +97,18 @@ class MenuViewModel: ObservableObject {
             await accountDataRefresher.updateProfilePicture()
         }
 
+        if !isHotlineIncidentsRefreshed {
+            isHotlineIncidentsRefreshed = true
+            Task {
+                await self.incidentsRepository.pullHotlineIncidents()
+            }
+        }
+
         subscribeLoading()
         subscribeIncidentsData()
         subscribeProfilePicture()
         subscribeAppPreferences()
+        subscribeLocationStatus()
     }
 
     func onViewDisappear() {
@@ -120,6 +140,12 @@ class MenuViewModel: ObservableObject {
             .receive(on: RunLoop.main)
             .assign(to: \.incidentsData, on: self)
             .store(in: &subscriptions)
+
+        incidentsRepository.hotlineIncidents
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.hotlineIncidents, on: self)
+            .store(in: &subscriptions)
     }
 
     private func subscribeProfilePicture() {
@@ -143,7 +169,9 @@ class MenuViewModel: ObservableObject {
     }
 
     private func subscribeAppPreferences() {
-        appPreferences.preferences.eraseToAnyPublisher()
+        let appPreferencesPublisher = appPreferences.preferences.eraseToAnyPublisher()
+
+        appPreferencesPublisher
             .map {
                 return MenuItemVisibility(
                     showOnboarding: !$0.hideOnboarding,
@@ -153,6 +181,22 @@ class MenuViewModel: ObservableObject {
             .receive(on: RunLoop.main)
             .assign(to: \.menuItemVisibility, on: self)
             .store(in: &subscriptions)
+
+        appPreferencesPublisher
+            .map { $0.shareLocationWithOrg }
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .assign(to: \.shareLocationWithOrg, on: self)
+            .store(in: &subscriptions)
+    }
+
+    private func subscribeLocationStatus() {
+        locationManager.$locationPermission
+            .receive(on: RunLoop.main)
+            .sink { _ in
+                self.hasLocationAccess = self.locationManager.hasLocationAccess
+            }
+            .store(in: &subscriptions)
     }
 
     func showGettingStartedVideo(_ show: Bool) {
@@ -161,6 +205,23 @@ class MenuViewModel: ObservableObject {
 
         // TODO: Move to hide onboarding method when implemented
         appPreferences.setHideOnboarding(hide)
+    }
+
+    func useMyLocation() -> Bool {
+        if locationManager.requestLocationAccess() {
+            return true
+        }
+
+        if locationManager.isDeniedLocationAccess {
+            showExplainLocationPermission = true
+        }
+
+        return false
+    }
+
+
+    func shareLocationWithOrg(_ share: Bool) {
+        appPreferences.setShareLocationWithOrg(share)
     }
 
     func clearRefreshToken() {

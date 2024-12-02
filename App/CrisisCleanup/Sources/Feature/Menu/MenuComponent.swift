@@ -18,6 +18,7 @@ class MenuComponent: Component<AppDependency>, MenuViewBuilder {
         databaseVersionProvider: dependency.databaseVersionProvider,
         appPreferences: dependency.appPreferences,
         accountEventBus: dependency.accountEventBus,
+        locationManager: dependency.locationManager,
         appEnv: dependency.appEnv,
         loggerFactory: dependency.loggerFactory
     )
@@ -29,6 +30,7 @@ class MenuComponent: Component<AppDependency>, MenuViewBuilder {
                 incidentSelectViewBuilder: dependency.incidentSelectViewBuilder,
                 openAuthScreen: openAuthScreen
             )
+            .toolbar(.hidden, for: .navigationBar)
         )
     }
 }

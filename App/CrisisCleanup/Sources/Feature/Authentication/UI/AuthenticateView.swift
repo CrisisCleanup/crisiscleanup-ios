@@ -50,6 +50,20 @@ private struct LoginOptionsView: View {
         ScrollCenterContent {
             CrisisCleanupLogoView()
 
+            let hotlineIncidents = viewModel.hotlineIncidents
+            if hotlineIncidents.isNotEmpty {
+                Rectangle()
+                    .fill(.clear)
+                    .background(.clear)
+                    // TODO: Common dimensions
+                    .frame(height: 32)
+            }
+            HotlineIncidentsView(
+                incidents: hotlineIncidents,
+                linkifyPhoneNumbers: true,
+                expandHotline: true
+            )
+
             // TODO: Common dimensions
             VStack(alignment: .leading, spacing: 16) {
                 Text(t.translate("actions.login", "Login action"))

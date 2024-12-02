@@ -558,7 +558,7 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
             if name == workTypeLiteral {
                 name = localTranslate(workTypeLiteral)
             }
-            let summaryJobTypes = worksite.summarizeWorkTypeJobs(
+            let (summaryJobTypes, summaryJobDetails) = worksite.summarizeWorkTypeJobs(
                 stateData.incident.workTypeLookup,
                 workTypeLiteral,
                 localTranslate,
@@ -581,6 +581,7 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
             }()
             let summary = [
                 summaryJobTypes.combineTrimText(),
+                summaryJobDetails.combineTrimText("\n"),
                 rRuleSummary,
                 nextRecurSummary,
             ]
@@ -933,16 +934,26 @@ fileprivate extension Worksite {
         _ workTypeLiteral: String,
         _ translate: (String) -> String,
         _ name: String
-    ) -> [String?] {
+    ) -> ([String?], [String?])  {
         if let formData = formData {
-            return formData
+            let (jobTypes, jobDetails) = formData
                 .filter { formValue in workTypeLookup[formValue.key] == workTypeLiteral }
-                .filter { formValue in formValue.value.isBooleanTrue }
-                .map { formValue in translate("formLabels.\(formValue.key)") }
-                .filter { jobName in jobName != name }
-                .filter { $0.isNotBlank == true }
+                .split { formValue in formValue.value.isBooleanTrue }
+            return (
+                jobTypes
+                    .map { formValue in translate("formLabels.\(formValue.key)") }
+                    .filter { jobName in jobName != name }
+                    .filter { $0.isNotBlank == true },
+                jobDetails
+                    .map { formValue in
+                        let title = translate("formLabels.\(formValue.key)")
+                        let description = translate(formValue.value.valueString)
+                        return [title, description].combineTrimText(": ")
+                    }
+                    .filter { $0.isNotBlank == true }
+            )
         }
-        return []
+        return ([], [])
     }
 }
 

@@ -46,6 +46,18 @@ extension Array where Element == Optional<String> {
     }
 }
 
+extension Array where Element == String {
+    func filterNotBlankTrim() -> [String] {
+        filter { $0.isNotBlank == true }
+            .map { $0.trim() }
+    }
+
+    public func combineTrimText(_ separator: String = ", ") -> String {
+        filterNotBlankTrim()
+            .joined(separator: separator)
+    }
+}
+
 class AtomicString: AtomicValue {
     typealias AtomicRepresentation = AtomicReferenceStorage<AtomicString>
 

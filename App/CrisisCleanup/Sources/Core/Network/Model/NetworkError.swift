@@ -1,4 +1,4 @@
-let ExpiredTokenError = GenericError("Auth token is expired")
+public let ExpiredTokenError = GenericError("Auth token is expired")
 
 // TODO: Integrate into network layer for use by syncing pipeline
 class CrisisCleanupNetworkError: GenericError {
