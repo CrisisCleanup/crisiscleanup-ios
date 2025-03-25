@@ -45,7 +45,7 @@ struct AcceptTermsView: View {
             let acceptText = t.t("termsConditionsModal.accept_toc_privacy")
                 .replacingOccurrences(of: "{terms_url}", with: termsAbsoluteUrl)
                 .replacingOccurrences(of: "{privacy_url}", with: privacyAbsoluteUrl)
-            HStack(alignment: .top) {
+            HStack(alignment: .center) {
                 CheckboxImageView(isChecked: isAcceptingTerms)
                     .onTapGesture {
                         isAcceptingTerms.toggle()

@@ -248,7 +248,7 @@ private struct AuthenticationNavigationStack: View {
 }
 
 private struct TermsView: View {
-    var viewModel: MainViewModel
+    @ObservedObject var viewModel: MainViewModel
 
     var body: some View {
         let isFetchingTerms = viewModel.isFetchingTermsAcceptance
@@ -272,7 +272,7 @@ private struct TermsView: View {
 private struct MainNavigationStack: View {
     @EnvironmentObject var router: NavigationRouter
 
-    var viewModel: MainViewModel
+    @ObservedObject var viewModel: MainViewModel
 
     let casesViewBuilder: CasesViewBuilder
     let menuViewBuilder: MenuViewBuilder
@@ -399,7 +399,7 @@ private struct InactiveOrganizationView: View {
 
     @EnvironmentObject var router: NavigationRouter
 
-    var viewModel: MainViewModel
+    @ObservedObject var viewModel: MainViewModel
     var isNavigatingAuth: Bool
 
     var body: some View {
