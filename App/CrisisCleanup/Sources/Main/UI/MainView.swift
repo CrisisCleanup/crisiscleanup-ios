@@ -40,6 +40,23 @@ struct MainView: View {
     @State private var dividerHeight: CGFloat = 32.0
     @State private var dividerOffset: CGFloat = -6.0
 
+    private func clearAuthNavigation() {
+        if let lastPath = router.path.last {
+            var popToRoot = false
+            if lastPath == NavigationRoute.loginWithEmail {
+                popToRoot = true
+            } else if case NavigationRoute.phoneLoginCode = lastPath {
+                popToRoot = true
+            } else if case NavigationRoute.magicLinkLoginCode = lastPath {
+                popToRoot = true
+            }
+            if popToRoot {
+                router.clearAuthRoutes()
+                viewModel.showAuthScreen = false
+            }
+        }
+    }
+
     var body: some View {
         let isNavigatingAuth = viewModel.showAuthScreen ||
         !viewModel.viewData.showMainContent
@@ -123,20 +140,12 @@ struct MainView: View {
         }
         .onChange(of: viewModel.viewData.showMainContent) { newValue in
             if newValue {
-                if let lastPath = router.path.last {
-                    var popToRoot = false
-                    if lastPath == NavigationRoute.loginWithEmail {
-                        popToRoot = true
-                    } else if case NavigationRoute.phoneLoginCode = lastPath {
-                        popToRoot = true
-                    } else if case NavigationRoute.magicLinkLoginCode = lastPath {
-                        popToRoot = true
-                    }
-                    if popToRoot {
-                        router.clearAuthRoutes()
-                        viewModel.showAuthScreen = false
-                    }
-                }
+                clearAuthNavigation()
+            }
+        }
+        .onChange(of: viewModel.viewData.areTokensValid) { newValue in
+            if newValue && viewModel.showAuthScreen {
+                clearAuthNavigation()
             }
         }
         .onAppear { viewModel.onViewAppear() }
