@@ -11,12 +11,13 @@ private let landscapeOrientations: Set<UIDeviceOrientation> = Set([
 ])
 
 class ViewLayoutDescription: ObservableObject {
-    @Published var isPortrait = true
-    @Published var isLandscape = false
-    @Published var isListDetailLayout = false
-    @Published var isOneColumnLayout = true
-    @Published var isWide = false
-    @Published var isShort = false
+    @Published private(set) var isPortrait = true
+    @Published private(set) var isLandscape = false
+    @Published private(set) var isListDetailLayout = false
+    @Published private(set) var isOneColumnLayout = true
+    @Published private(set) var isWide = false
+    @Published private(set) var isShort = false
+    @Published private(set) var isLargeScreen = false
 
     private var orientationObserver: NSObjectProtocol?
 
@@ -50,6 +51,15 @@ class ViewLayoutDescription: ObservableObject {
         let width = Device.screen.width
         let height = Device.screen.height
         update(width > height, width: width, height: height)
+
+        var isMac = false
+        var isIpad = false
+#if targetEnvironment(macCatalyst)
+        isMac = true
+#else
+        isIpad = UIDevice.current.model == "iPad"
+#endif
+        isLargeScreen = isMac || isIpad
     }
 
     private func update(_ isLandscape: Bool, width: CGFloat, height: CGFloat) {

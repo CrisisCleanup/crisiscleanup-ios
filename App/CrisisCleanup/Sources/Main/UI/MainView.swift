@@ -108,6 +108,7 @@ struct MainView: View {
                             listsViewBuilder: listsViewBuilder,
                             syncInsightsViewBuilder: syncInsightsViewBuilder,
                             selectedTab: $selectedTab,
+                            showTabDivider: !deviceSize.isLargeScreen,
                             dividerHeight: $dividerHeight,
                             dividerOffset: $dividerOffset
                         )
@@ -308,6 +309,7 @@ private struct MainNavigationStack: View {
 
     @Binding var selectedTab: TopLevelDestination
 
+    let showTabDivider: Bool
     @Binding var dividerHeight: CGFloat
     @Binding var dividerOffset: CGFloat
 
@@ -332,11 +334,13 @@ private struct MainNavigationStack: View {
                     itemColor: iconColorFaded,
                     selectedItemColor: iconColor
                 )
-                .overlay(alignment: .bottom) {
-                    Rectangle()
-                        .frame(width: 1, height: dividerHeight)
-                        .overlay(iconColorFaded)
-                        .offset(y: dividerOffset)
+                .if (showTabDivider) {
+                    $0.overlay(alignment: .bottom) {
+                        Rectangle()
+                            .frame(width: 1, height: dividerHeight)
+                            .overlay(iconColorFaded)
+                            .offset(y: dividerOffset)
+                    }
                 }
             }
             .toolbarBackground(.visible, for: .navigationBar)
