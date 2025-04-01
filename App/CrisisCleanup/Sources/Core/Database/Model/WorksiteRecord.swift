@@ -80,7 +80,7 @@ extension WorksiteRootRecord: Codable, FetchableRecord, MutablePersistableRecord
             networkId: networkId,
             incidentId: incidentId
         )
-        return try rootRecord.insertAndFetch(db, onConflict: .rollback)!.id!
+        return try rootRecord.insertAndFetch(db, onConflict: .rollback).id!
     }
 
     static func syncUpdate(
