@@ -62,7 +62,7 @@ struct MenuView: View {
                 .padding([.horizontal, .bottom])
 
                 Toggle(
-                    t.t("~~Share location with organization"),
+                    t.t("appMenu.share_location_organization"),
                     isOn: $shareLocationWithOrg
                 )
                 .padding(.horizontal)
@@ -303,7 +303,7 @@ private struct RequestLocationView: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text(t.t("~~Location access is needed for sharing your location with your organization. Grant access to location in Settings."))
+            Text(t.t("appMenu.share_location_organization_description"))
             HStack {
                 Spacer()
                 Button(t.t("info.app_settings")) {
