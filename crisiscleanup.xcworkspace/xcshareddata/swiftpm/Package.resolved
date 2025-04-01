@@ -118,15 +118,6 @@
       }
     },
     {
-      "identity" : "ios-places-swift-sdk",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/googlemaps/ios-places-swift-sdk",
-      "state" : {
-        "revision" : "335244a0c8324c35555916596d7e6891a321710f",
-        "version" : "0.2.0"
-      }
-    },
-    {
       "identity" : "jwtdecode.swift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/auth0/JWTDecode.swift",
