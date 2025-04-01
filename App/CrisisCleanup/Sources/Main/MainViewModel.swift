@@ -109,6 +109,10 @@ class MainViewModel: ObservableObject {
         }
     }
 
+    func onBackgroundPhase() {
+        // TODO: Schedule syncing and background data
+    }
+
     func onViewAppear() {
         subscribeIncidentsData()
         subscribeAccountData()

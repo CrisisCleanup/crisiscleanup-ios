@@ -15,7 +15,7 @@ class AFNetworkingClient {
         self.appEnv = appEnv
 
         let configuration = with(URLSessionConfiguration.af.default) { s in
-            s.timeoutIntervalForRequest = 30
+            s.timeoutIntervalForRequest = 45
             s.timeoutIntervalForResource = 60
         }
 

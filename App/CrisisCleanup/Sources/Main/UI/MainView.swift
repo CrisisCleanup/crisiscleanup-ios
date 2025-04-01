@@ -125,6 +125,8 @@ struct MainView: View {
         .onChange(of: scenePhase) { newPhase in
             if newPhase == .active {
                 viewModel.onActivePhase()
+            } else if newPhase == .background {
+                viewModel.onBackgroundPhase()
             }
         }
         .onReceive(deviceSize.$isShort) { newValue in
