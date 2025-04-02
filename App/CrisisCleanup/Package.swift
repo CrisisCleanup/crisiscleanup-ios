@@ -22,7 +22,7 @@ let package = Package(
         .package(url: "https://github.com/auth0/JWTDecode.swift", .upToNextMajor(from: "3.0.1")),
         .package(url: "https://github.com/exyte/SVGView.git", .upToNextMinor(from: "1.0.4")),
         .package(url: "https://github.com/apple/swift-atomics.git", .upToNextMajor(from: "1.1.0")),
-        .package(url: "https://github.com/groue/GRDB.swift.git", .upToNextMajor(from: "7.4.1")),
+        .package(url: "https://github.com/groue/GRDB.swift.git", .upToNextMajor(from: "6.15.0")),
         .package(url: "https://github.com/albertbori/TestableCombinePublishers.git", .upToNextMinor(from: "1.2.0")),
         .package(url: "https://github.com/nicklockwood/LRUCache.git", .upToNextMinor(from: "1.0.0")),
         .package(url: "https://github.com/smyshlaevalex/FlowStackLayout.git", .upToNextMinor(from: "1.0.1")),

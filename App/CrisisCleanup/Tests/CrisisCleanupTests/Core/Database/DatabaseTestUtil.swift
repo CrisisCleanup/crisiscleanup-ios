@@ -34,7 +34,7 @@ class WorksiteTestUtil {
                         incidentId: worksite.incidentId,
                         id: worksite.id!
                     )
-                    .insertAndFetch(db, onConflict: .rollback).id!
+                    .insertAndFetch(db, onConflict: .rollback)!.id!
                 }
                 var updated = worksite.copy { $0.id = id }
                 try updated.insert(db)
