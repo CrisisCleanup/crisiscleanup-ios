@@ -157,6 +157,7 @@ private func typeFromLiteral(_ type: String) -> WorkTypeType {
     case "fence": return WorkTypeType.fence
     case "fire": return WorkTypeType.fire
     case "food": return WorkTypeType.food
+    case "heating": return WorkTypeType.heating
     case "landslide": return WorkTypeType.landslide
     case "leak": return WorkTypeType.leak
     case "meals": return WorkTypeType.meals
@@ -204,6 +205,7 @@ public enum WorkTypeType: String, Identifiable, CaseIterable {
          fence,
          fire,
          food,
+         heating,
          important,
          landslide,
          leak,
