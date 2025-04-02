@@ -702,6 +702,7 @@
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ccu;
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = "Crisis Cleanup";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access reason";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location access reason";
@@ -914,6 +915,7 @@
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ccu;
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = ccu;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access reason";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location access reason";
@@ -964,6 +966,7 @@
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ccu;
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = "Crisis Cleanup";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access reason";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location access reason";
@@ -1165,6 +1168,7 @@
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ccu;
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = "Crisis Cleanup";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access reason";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location access reason";

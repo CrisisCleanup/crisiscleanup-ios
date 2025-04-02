@@ -62,6 +62,7 @@ public protocol AppDependency: Dependency {
     var syncPuller: SyncPuller { get }
     var syncPusher: SyncPusher { get }
     var incidentDataPullReporter: IncidentDataPullReporter { get }
+    var backgroundTaskCoordinator: BackgroundTaskCoordinator { get }
 
     var incidentSelector: IncidentSelector { get }
 

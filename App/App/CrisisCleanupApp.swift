@@ -43,6 +43,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
         GMSPlacesClient.provideAPIKey(appSettings.googleMapsApiKey)
 
+        mainComponent.backgroundTaskCoordinator.registerTasks()
+
         return true
     }
 

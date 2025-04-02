@@ -15,6 +15,7 @@ class MainViewModel: ObservableObject {
     let translator: KeyAssetTranslator
     private let syncPuller: SyncPuller
     private let syncPusher: SyncPusher
+    private let backgroundTaskCoordinator: BackgroundTaskCoordinator
     private let accountDataRefresher: AccountDataRefresher
     private let accountUpdateRepository: AccountUpdateRepository
     private let shareLocationRepository: ShareLocationRepository
@@ -63,6 +64,7 @@ class MainViewModel: ObservableObject {
         navigationRouter: NavigationRouter,
         syncPuller: SyncPuller,
         syncPusher: SyncPusher,
+        backgroundTaskCoordinator: BackgroundTaskCoordinator,
         accountDataRefresher: AccountDataRefresher,
         accountUpdateRepository: AccountUpdateRepository,
         shareLocationRepository: ShareLocationRepository,
@@ -83,6 +85,7 @@ class MainViewModel: ObservableObject {
         router = navigationRouter
         self.syncPuller = syncPuller
         self.syncPusher = syncPusher
+        self.backgroundTaskCoordinator = backgroundTaskCoordinator
         self.accountDataRefresher = accountDataRefresher
         self.accountUpdateRepository = accountUpdateRepository
         self.shareLocationRepository = shareLocationRepository
@@ -110,7 +113,8 @@ class MainViewModel: ObservableObject {
     }
 
     func onBackgroundPhase() {
-        // TODO: Schedule syncing and background data
+        backgroundTaskCoordinator.scheduleRefresh(secondsFromNow: 30 * 60)
+        backgroundTaskCoordinator.schedulePushWorksites(secondsFromNow: 10 * 60)
     }
 
     func onViewAppear() {
