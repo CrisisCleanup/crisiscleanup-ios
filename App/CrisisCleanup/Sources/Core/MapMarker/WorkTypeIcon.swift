@@ -15,6 +15,7 @@ internal let workTypeIconLookup = [
     WorkTypeType.fence: "ic_work_type_fence",
     WorkTypeType.fire: "ic_work_type_fire",
     WorkTypeType.food: "ic_work_type_food",
+    WorkTypeType.heating: "ic_work_type_heat",
     WorkTypeType.important: "ic_work_type_important",
     WorkTypeType.landslide: "ic_work_type_landslide",
     WorkTypeType.leak: "ic_work_type_leak",

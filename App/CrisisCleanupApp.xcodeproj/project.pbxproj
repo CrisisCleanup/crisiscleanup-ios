@@ -20,7 +20,6 @@
 		4E342A5A2A7A1B4C00B55713 /* NunitoSans_10pt-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4E342A582A7A1B4800B55713 /* NunitoSans_10pt-Italic.ttf */; };
 		4E342A5B2A7A1B4C00B55713 /* NunitoSans_10pt-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4E342A552A7A1AA600B55713 /* NunitoSans_10pt-Regular.ttf */; };
 		4E342A5C2A7A1B4C00B55713 /* NunitoSans_10pt-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4E342A542A7A1AA600B55713 /* NunitoSans_10pt-Light.ttf */; };
-		4E3C89522CD057F0009A1EA4 /* GooglePlacesSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4E3C89512CD057F0009A1EA4 /* GooglePlacesSwift */; };
 		4E46478A29EEE23B0062147F /* CrisisCleanupApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E46478929EEE23B0062147F /* CrisisCleanupApp.swift */; };
 		4E46478E29EEE23D0062147F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E46478D29EEE23D0062147F /* Assets.xcassets */; };
 		4E46479229EEE23D0062147F /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E46479129EEE23D0062147F /* Preview Assets.xcassets */; };
@@ -33,6 +32,7 @@
 		4E646A002A1916BB009148E0 /* NeedleGenerated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E6469FF2A1916BB009148E0 /* NeedleGenerated.swift */; };
 		4E70C5392A69F89500A6C59B /* GooglePlaceAddressSearchRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E70C5382A69F89500A6C59B /* GooglePlaceAddressSearchRepository.swift */; };
 		4E70C53B2A6A1BE300A6C59B /* Address+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E70C53A2A6A1BE300A6C59B /* Address+Extension.swift */; };
+		4E7240682D9CAF9100676823 /* GooglePlacesSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4E7240672D9CAF9100676823 /* GooglePlacesSwift */; };
 		4E75623E2A117E140029D5D7 /* CrisisCleanup in Frameworks */ = {isa = PBXBuildFile; productRef = 4E75623D2A117E140029D5D7 /* CrisisCleanup */; };
 		4EBFB44A2A1910A800DA7C84 /* NeedleFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 4EBFB4492A1910A800DA7C84 /* NeedleFoundation */; };
 		4ECCE0C62AC37A2400D91463 /* ExternalActivityProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ECCE0C52AC37A2400D91463 /* ExternalActivityProcessor.swift */; };
@@ -140,7 +140,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4E0CCF032A19889B00EC6906 /* FirebaseCrashlytics in Frameworks */,
-				4E3C89522CD057F0009A1EA4 /* GooglePlacesSwift in Frameworks */,
+				4E7240682D9CAF9100676823 /* GooglePlacesSwift in Frameworks */,
 				4EBFB44A2A1910A800DA7C84 /* NeedleFoundation in Frameworks */,
 				4E0CCF052A19889B00EC6906 /* FirebasePerformance in Frameworks */,
 				4E75623E2A117E140029D5D7 /* CrisisCleanup in Frameworks */,
@@ -337,7 +337,7 @@
 				4EBFB4492A1910A800DA7C84 /* NeedleFoundation */,
 				4E0CCF022A19889B00EC6906 /* FirebaseCrashlytics */,
 				4E0CCF042A19889B00EC6906 /* FirebasePerformance */,
-				4E3C89512CD057F0009A1EA4 /* GooglePlacesSwift */,
+				4E7240672D9CAF9100676823 /* GooglePlacesSwift */,
 			);
 			productName = App;
 			productReference = 4E46478629EEE23B0062147F /* CrisisCleanupApp.app */;
@@ -415,8 +415,7 @@
 			packageReferences = (
 				4EBFB4482A1910A800DA7C84 /* XCRemoteSwiftPackageReference "needle" */,
 				4E0CCF012A19889B00EC6906 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
-				4E3C894F2CD05559009A1EA4 /* XCRemoteSwiftPackageReference "ios-places-sdk" */,
-				4E3C89502CD057F0009A1EA4 /* XCRemoteSwiftPackageReference "ios-places-swift-sdk" */,
+				4E7240662D9CAF9100676823 /* XCRemoteSwiftPackageReference "ios-places-sdk" */,
 			);
 			productRefGroup = 4E46478729EEE23B0062147F /* Products */;
 			projectDirPath = "";
@@ -693,7 +692,7 @@
 				CODE_SIGN_ENTITLEMENTS = "App/AppRelease-au.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 141;
+				CURRENT_PROJECT_VERSION = 142;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = ZM286L3HTV;
@@ -703,6 +702,7 @@
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ccu;
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = "Crisis Cleanup";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access reason";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location access reason";
@@ -721,7 +721,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.9.61;
+				MARKETING_VERSION = 0.9.62;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.aus;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -905,7 +905,7 @@
 				CODE_SIGN_ENTITLEMENTS = App/AppDebug.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 141;
+				CURRENT_PROJECT_VERSION = 142;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = ZM286L3HTV;
@@ -915,6 +915,7 @@
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ccu;
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = ccu;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access reason";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location access reason";
@@ -933,7 +934,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.9.61;
+				MARKETING_VERSION = 0.9.62;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.dev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -955,7 +956,7 @@
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 141;
+				CURRENT_PROJECT_VERSION = 142;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = ZM286L3HTV;
@@ -965,6 +966,7 @@
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ccu;
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = "Crisis Cleanup";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access reason";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location access reason";
@@ -983,7 +985,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.9.61;
+				MARKETING_VERSION = 0.9.62;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.prod;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1154,7 +1156,7 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 141;
+				CURRENT_PROJECT_VERSION = 142;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = AYLY2UUH8J;
@@ -1166,6 +1168,7 @@
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ccu;
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=*]" = "Crisis Cleanup";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access reason";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location access reason";
@@ -1184,7 +1187,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.9.61;
+				MARKETING_VERSION = 0.9.62;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.stg;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1304,20 +1307,12 @@
 				minimumVersion = 10.0.0;
 			};
 		};
-		4E3C894F2CD05559009A1EA4 /* XCRemoteSwiftPackageReference "ios-places-sdk" */ = {
+		4E7240662D9CAF9100676823 /* XCRemoteSwiftPackageReference "ios-places-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/googlemaps/ios-places-sdk";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 9.1.0;
-			};
-		};
-		4E3C89502CD057F0009A1EA4 /* XCRemoteSwiftPackageReference "ios-places-swift-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/googlemaps/ios-places-swift-sdk";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.2.0;
+				minimumVersion = 9.4.1;
 			};
 		};
 		4EBFB4482A1910A800DA7C84 /* XCRemoteSwiftPackageReference "needle" */ = {
@@ -1341,9 +1336,9 @@
 			package = 4E0CCF012A19889B00EC6906 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebasePerformance;
 		};
-		4E3C89512CD057F0009A1EA4 /* GooglePlacesSwift */ = {
+		4E7240672D9CAF9100676823 /* GooglePlacesSwift */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 4E3C89502CD057F0009A1EA4 /* XCRemoteSwiftPackageReference "ios-places-swift-sdk" */;
+			package = 4E7240662D9CAF9100676823 /* XCRemoteSwiftPackageReference "ios-places-sdk" */;
 			productName = GooglePlacesSwift;
 		};
 		4E75623D2A117E140029D5D7 /* CrisisCleanup */ = {

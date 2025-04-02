@@ -159,8 +159,6 @@ private struct LoginView: View {
             }
             .scrollDismissesKeyboard(.immediately)
 
-            Spacer()
-
             if focusableViewState.isFocused {
                 OpenKeyboardActionsView()
             }

@@ -40,6 +40,23 @@ struct MainView: View {
     @State private var dividerHeight: CGFloat = 32.0
     @State private var dividerOffset: CGFloat = -6.0
 
+    private func clearAuthNavigation() {
+        if let lastPath = router.path.last {
+            var popToRoot = false
+            if lastPath == NavigationRoute.loginWithEmail {
+                popToRoot = true
+            } else if case NavigationRoute.phoneLoginCode = lastPath {
+                popToRoot = true
+            } else if case NavigationRoute.magicLinkLoginCode = lastPath {
+                popToRoot = true
+            }
+            if popToRoot {
+                router.clearAuthRoutes()
+                viewModel.showAuthScreen = false
+            }
+        }
+    }
+
     var body: some View {
         let isNavigatingAuth = viewModel.showAuthScreen ||
         !viewModel.viewData.showMainContent
@@ -91,6 +108,7 @@ struct MainView: View {
                             listsViewBuilder: listsViewBuilder,
                             syncInsightsViewBuilder: syncInsightsViewBuilder,
                             selectedTab: $selectedTab,
+                            showTabDivider: !deviceSize.isLargeScreen,
                             dividerHeight: $dividerHeight,
                             dividerOffset: $dividerOffset
                         )
@@ -108,6 +126,8 @@ struct MainView: View {
         .onChange(of: scenePhase) { newPhase in
             if newPhase == .active {
                 viewModel.onActivePhase()
+            } else if newPhase == .background {
+                viewModel.onBackgroundPhase()
             }
         }
         .onReceive(deviceSize.$isShort) { newValue in
@@ -123,20 +143,12 @@ struct MainView: View {
         }
         .onChange(of: viewModel.viewData.showMainContent) { newValue in
             if newValue {
-                if let lastPath = router.path.last {
-                    var popToRoot = false
-                    if lastPath == NavigationRoute.loginWithEmail {
-                        popToRoot = true
-                    } else if case NavigationRoute.phoneLoginCode = lastPath {
-                        popToRoot = true
-                    } else if case NavigationRoute.magicLinkLoginCode = lastPath {
-                        popToRoot = true
-                    }
-                    if popToRoot {
-                        router.clearAuthRoutes()
-                        viewModel.showAuthScreen = false
-                    }
-                }
+                clearAuthNavigation()
+            }
+        }
+        .onChange(of: viewModel.viewData.areTokensValid) { newValue in
+            if newValue && viewModel.showAuthScreen {
+                clearAuthNavigation()
             }
         }
         .onAppear { viewModel.onViewAppear() }
@@ -248,7 +260,7 @@ private struct AuthenticationNavigationStack: View {
 }
 
 private struct TermsView: View {
-    var viewModel: MainViewModel
+    @ObservedObject var viewModel: MainViewModel
 
     var body: some View {
         let isFetchingTerms = viewModel.isFetchingTermsAcceptance
@@ -272,7 +284,7 @@ private struct TermsView: View {
 private struct MainNavigationStack: View {
     @EnvironmentObject var router: NavigationRouter
 
-    var viewModel: MainViewModel
+    @ObservedObject var viewModel: MainViewModel
 
     let casesViewBuilder: CasesViewBuilder
     let menuViewBuilder: MenuViewBuilder
@@ -297,6 +309,7 @@ private struct MainNavigationStack: View {
 
     @Binding var selectedTab: TopLevelDestination
 
+    let showTabDivider: Bool
     @Binding var dividerHeight: CGFloat
     @Binding var dividerOffset: CGFloat
 
@@ -321,11 +334,13 @@ private struct MainNavigationStack: View {
                     itemColor: iconColorFaded,
                     selectedItemColor: iconColor
                 )
-                .overlay(alignment: .bottom) {
-                    Rectangle()
-                        .frame(width: 1, height: dividerHeight)
-                        .overlay(iconColorFaded)
-                        .offset(y: dividerOffset)
+                .if (showTabDivider) {
+                    $0.overlay(alignment: .bottom) {
+                        Rectangle()
+                            .frame(width: 1, height: dividerHeight)
+                            .overlay(iconColorFaded)
+                            .offset(y: dividerOffset)
+                    }
                 }
             }
             .toolbarBackground(.visible, for: .navigationBar)
@@ -399,7 +414,7 @@ private struct InactiveOrganizationView: View {
 
     @EnvironmentObject var router: NavigationRouter
 
-    var viewModel: MainViewModel
+    @ObservedObject var viewModel: MainViewModel
     var isNavigatingAuth: Bool
 
     var body: some View {

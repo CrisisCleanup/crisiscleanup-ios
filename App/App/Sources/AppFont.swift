@@ -3,7 +3,7 @@ import UIKit
 
 // Modified from https://medium.com/fabcoding/set-default-custom-font-for-entire-app-swift-5-55709e36e6f3
 
-private let fontBaseName = "NunitoSans10pt"
+private let fontBaseName = "NunitoSans_10pt"
 struct AppFontName {
     static let light = "\(fontBaseName)-Light"
     static let regular = "\(fontBaseName)-Regular"

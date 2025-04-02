@@ -237,14 +237,15 @@ class LoginWithPhoneViewModel: ObservableObject {
     }
 
     func authenticate(_ code: String) {
+        let selectedUserId = selectedAccount.userId
         if isSelectAccount,
-           selectedAccount.userId == 0 {
+           selectedUserId == 0 {
             errorMessage = translator.t("loginWithPhone.select_account")
             return
         }
 
         if accountOptions.isNotEmpty,
-           accountOptions.first(where: { $0.userId == selectedAccount.userId }) == nil {
+           accountOptions.first(where: { $0.userId == selectedUserId }) == nil {
             selectedAccountSubject.value = PhoneNumberAccountNone
             isSelectAccountSubject.value = true
             errorMessage = translator.t("loginWithPhone.select_account")
@@ -271,7 +272,7 @@ class LoginWithPhoneViewModel: ObservableObject {
                 if result.associatedAccounts.isEmpty {
                     message = translator.t("loginWithPhone.no_account_error")
                 } else {
-                    errorMessage = ""
+                    message = ""
 
                     oneTimePasswordId = result.otpId
 
@@ -288,12 +289,11 @@ class LoginWithPhoneViewModel: ObservableObject {
                 }
             }
 
-            let accountId = selectedAccountSubject.value.userId
-            if accountId != 0,
+            if selectedUserId != 0,
                oneTimePasswordId != 0 {
                 let accountData = try await accountDataRepository.accountData.eraseToAnyPublisher().asyncFirst()
                 if let tokens = try await self.authApi.oneTimePasswordLogin(
-                    accountId: accountId,
+                    accountId: selectedUserId,
                     oneTimePasswordId: oneTimePasswordId
                 ),
                    tokens.refreshToken.isNotBlank,
@@ -306,7 +306,7 @@ class LoginWithPhoneViewModel: ObservableObject {
 
                         // TODO: Clear account data and support logging in with different email address?
                     } else if accountProfile.organization.isActive == false {
-                        accountEventBus.onAccountInactiveOrganizations(accountId)
+                        accountEventBus.onAccountInactiveOrganizations(selectedUserId)
                     } else {
                         accountDataRepository.setAccount(
                             accountProfile,

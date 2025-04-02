@@ -81,6 +81,16 @@ extension MainComponent {
             )
         }
     }
+
+    public var backgroundTaskCoordinator: BackgroundTaskCoordinator {
+        shared {
+            AppBackgroundTaskCoordinator(
+                syncPuller: syncPuller,
+                syncPusher: syncPusher,
+                loggerFactory: loggerFactory
+            )
+        }
+    }
 }
 
 private class AppSyncLoggerFactory: SyncLoggerFactory {

@@ -98,21 +98,9 @@ class AppSyncer: SyncPuller, SyncPusher {
         appPreferences = appPreferencesDataStore.preferences.eraseToAnyPublisher()
     }
 
-    // Call from application did finish launching
-//    public static func registerBackgroundTasks() {
-//        let scheduler = BGTaskScheduler.shared
-//        scheduler.register(forTaskWithIdentifier: BackgroundTaskType.pull.rawValue, using: nil) { task in
-//            self.pull(task as! BgPullTask)
-//        }
-//    }
-
     private func validateAccountTokens() async throws -> Bool {
         await accountDataRepository.updateAccountTokens()
         return try await accountData.asyncFirst().areTokensValid
-    }
-
-    private func pull(_ task: BgPullTask) {
-        // TODO: Do
     }
 
     private func getSyncPlan() async throws -> (Bool, Int64) {
@@ -415,8 +403,4 @@ class AppSyncer: SyncPuller, SyncPusher {
             }
         }
     }
-}
-
-class BgPullTask: BGTask {
-
 }

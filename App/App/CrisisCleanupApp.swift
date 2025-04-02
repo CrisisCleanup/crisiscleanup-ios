@@ -5,14 +5,29 @@ import NeedleFoundation
 import SwiftUI
 
 class AppDelegate: NSObject, UIApplicationDelegate {
-    private(set) var appSettings: AppSettings = AppSettings()
-    private(set) var appEnv: AppEnv = AppBuildEnv()
+    lazy var mainComponent: MainComponent = {
+        let config = loadConfigProperties()
 
-    lazy var loggerFactory: AppLoggerFactory = AppLoggerProvider(appEnv)
-    let externalEventBus = CrisisCleanupExternalEventBus()
-    private lazy var activityProcessor: ExternalActivityProcessor = ExternalActivityProcessor(externalEventBus: externalEventBus)
+        let appSettings = AppSettings(config)
+        let appEnv = AppBuildEnv(config)
 
-    private lazy var externalEventLogger: AppLogger = loggerFactory.getLogger("external-event")
+        let loggerFactory: AppLoggerFactory = AppLoggerProvider(appEnv)
+        let externalEventBus = CrisisCleanupExternalEventBus()
+
+        let placesSearch = GooglePlaceAddressSearchRepository()
+
+        return MainComponent(
+            appEnv: appEnv,
+            appSettingsProvider: appSettings,
+            loggerFactory: loggerFactory,
+            addressSearchRepository: placesSearch,
+            externalEventBus: externalEventBus
+        )
+    }()
+
+    private lazy var activityProcessor = ExternalActivityProcessor(externalEventBus: mainComponent.externalEventBus)
+
+    private lazy var externalEventLogger = mainComponent.loggerFactory.getLogger("external-event")
 
     func application(
         _ application: UIApplication,
@@ -24,11 +39,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
         registerProviderFactories()
 
-        let config = loadConfigProperties()
-        appSettings = AppSettings(config)
-        appEnv = AppBuildEnv(config)
+        let appSettings = mainComponent.appSettingsProvider
 
         GMSPlacesClient.provideAPIKey(appSettings.googleMapsApiKey)
+
+        mainComponent.backgroundTaskCoordinator.registerTasks()
 
         return true
     }
@@ -52,14 +67,7 @@ struct CrisisCleanupApp: App {
 
     var body: some Scene {
         WindowGroup {
-            let placesSearch = GooglePlaceAddressSearchRepository()
-            MainComponent(
-                appEnv: appDelegate.appEnv,
-                appSettingsProvider: appDelegate.appSettings,
-                loggerFactory: appDelegate.loggerFactory,
-                addressSearchRepository: placesSearch,
-                externalEventBus: appDelegate.externalEventBus
-            )
+            appDelegate.mainComponent
             .mainView
             .onOpenURL { appDelegate.onExternalLink($0) }
             .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { userActivity in

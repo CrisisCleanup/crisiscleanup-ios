@@ -86,6 +86,12 @@ private struct CaseMoveOnMapLayoutView: View {
                     }
                 }
             }
+
+            if viewModel.showExplainLocationPermission {
+                LocationAppSettingsDialog {
+                    viewModel.showExplainLocationPermission = false
+                }
+            }
         }
         .onReceive(viewModel.$locationOutOfBounds) { data in
             showOutOfBoundsAlert = data != nil

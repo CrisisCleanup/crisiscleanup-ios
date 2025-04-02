@@ -1,16 +1,20 @@
 import SwiftUI
 
 struct OpenKeyboardActionsView: View {
+    @EnvironmentObject var viewLayout: ViewLayoutDescription
+
     var body: some View {
-        HStack {
-            Spacer()
-            Button {
-                hideKeyboard()
-            } label: {
-                Image(systemName: "keyboard.chevron.compact.down.fill")
+        if viewLayout.isShort || !viewLayout.isWide {
+            HStack {
+                Spacer()
+                Button {
+                    hideKeyboard()
+                } label: {
+                    Image(systemName: "keyboard.chevron.compact.down.fill")
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 4)
             }
-            .padding(.horizontal)
-            .padding(.bottom, 4)
         }
     }
 }

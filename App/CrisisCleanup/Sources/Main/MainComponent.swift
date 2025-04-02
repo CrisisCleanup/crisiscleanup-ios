@@ -44,6 +44,7 @@ public class MainComponent: BootstrapComponent,
         navigationRouter: navigationRouter,
         syncPuller: syncPuller,
         syncPusher: syncPusher,
+        backgroundTaskCoordinator: backgroundTaskCoordinator,
         accountDataRefresher: accountDataRefresher,
         accountUpdateRepository: accountUpdateRepository,
         shareLocationRepository: shareLocationRepository,
@@ -137,8 +138,14 @@ public class MainComponent: BootstrapComponent,
         authenticateComponent.magicLinkLoginCodeView(code)
     }
 
-    public func passwordRecoverView(showForgotPassword: Bool, showMagicLink: Bool) -> AnyView {
-        authenticateComponent.passwordRecoverView(showForgotPassword: showForgotPassword, showMagicLink: showMagicLink)
+    public func passwordRecoverView(
+        showForgotPassword: Bool,
+        showMagicLink: Bool
+    ) -> AnyView {
+        authenticateComponent.passwordRecoverView(
+            showForgotPassword: showForgotPassword,
+            showMagicLink: showMagicLink
+        )
     }
 
     public func resetPasswordView(closeAuthFlow: @escaping () -> Void, resetCode: String) -> AnyView {
@@ -240,7 +247,9 @@ public class MainComponent: BootstrapComponent,
 
     lazy var caseFlagsComponent = CaseFlagsComponent(parent: self, routerObserver: routerObserver)
 
-    public func caseFlagsView(isFromCaseEdit: Bool) -> AnyView { caseFlagsComponent.caseFlagsView(isFromCaseEdit: isFromCaseEdit) }
+    public func caseFlagsView(isFromCaseEdit: Bool) -> AnyView {
+        caseFlagsComponent.caseFlagsView(isFromCaseEdit: isFromCaseEdit)
+    }
 
     // MARK: Case history
 

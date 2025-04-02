@@ -4,10 +4,10 @@
 <dict>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
-		<string>com.crisiscleanup.pull</string>
+		<string>com.crisiscleanup.refresh</string>
+		<string>com.crisiscleanup.upload_worksite_changes</string>
+		<string>com.crisiscleanup.upload_worksite_media</string>
 	</array>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Fonts/NunitoSans_10pt-Regular</string>
