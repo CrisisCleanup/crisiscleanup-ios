@@ -49,6 +49,8 @@ class MainViewModel: ObservableObject {
     private var subscriptions = Set<AnyCancellable>()
     private var disposables = Set<AnyCancellable>()
 
+    @Published var iconImages: [UIImage] = [UIImage]()
+
     init(
         accountDataRepository: AccountDataRepository,
         appSupportRepository: AppSupportRepository,
@@ -67,6 +69,7 @@ class MainViewModel: ObservableObject {
         accountUpdateRepository: AccountUpdateRepository,
         shareLocationRepository: ShareLocationRepository,
         networkMonitor: NetworkMonitor,
+        workTypeIconProvider: MapCaseIconProvider,
         logger: AppLogger,
         appEnv: AppEnv
     ) {
@@ -97,6 +100,13 @@ class MainViewModel: ObservableObject {
         syncPuller.pullUnauthenticatedData()
 
         subscribeExternalEvent()
+
+        Task {
+            let images = WorkTypeIconImageGenerator.generate(workTypeIconProvider)
+            Task { @MainActor in
+                self.iconImages = images
+            }
+        }
     }
 
     func onActivePhase() {

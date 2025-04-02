@@ -196,7 +196,7 @@ private struct MainTabs: View {
 
     var body: some View {
         TabViewContainer {
-            casesViewBuilder.casesView(openAuthScreen)
+            WorkTypeIconsView(viewModel.iconImages)
         }
         .navTabItem(.cases, viewModel.translator)
         .tag(TopLevelDestination.cases)

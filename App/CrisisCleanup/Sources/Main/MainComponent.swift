@@ -48,6 +48,7 @@ public class MainComponent: BootstrapComponent,
         accountUpdateRepository: accountUpdateRepository,
         shareLocationRepository: shareLocationRepository,
         networkMonitor: networkMonitor,
+        workTypeIconProvider: mapCaseIconProvider,
         logger: loggerFactory.getLogger("main"),
         appEnv: appEnv
     )
