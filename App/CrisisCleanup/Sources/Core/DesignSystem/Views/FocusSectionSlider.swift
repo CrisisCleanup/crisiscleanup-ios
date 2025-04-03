@@ -1,6 +1,14 @@
 import Combine
 import SwiftUI
 
+struct FocusSectionSliderTopHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value += nextValue()
+    }
+}
+
 struct FocusSectionSlider: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
@@ -123,6 +131,7 @@ extension View {
         _ proxy: ScrollViewProxy,
         scrollToId: String,
         scrollChangeSubject: any Subject<(String, CGFloat), Never>,
+        yOffset: CGFloat = 0,
         frameName: String = "scrollFrom"
     ) -> some View {
         self.background(GeometryReader {
@@ -132,7 +141,8 @@ extension View {
                 value: -frame.origin.y
             )
             .onPreferenceChange(ContentOffsetKey.self) {
-                if ($0 > -1 && $0 < frame.height) {
+                let y = $0 + yOffset
+                if (y >= 0 && y < frame.height) {
                     scrollChangeSubject.send((scrollToId, $0))
                 }
             }

@@ -96,6 +96,7 @@ private struct CreateEditCaseLayoutView: View {
 private struct CreateEditCaseContentView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
+    @EnvironmentObject var viewLayout: ViewLayoutDescription
     @EnvironmentObject var viewModel: CreateEditCaseViewModel
     @EnvironmentObject private var focusableViewState: TextInputFocusableView
 
@@ -106,6 +107,8 @@ private struct CreateEditCaseContentView: View {
 
     private let contentScrollChangeSubject = CurrentValueSubject<(String, CGFloat), Never>(("", 0.0))
     private let contentScrollStopDelay: AnyPublisher<String, Never>
+
+    @State private var tabSliderHeight: CGFloat = 0
 
     @State private var sectionCollapse = [
         false,
@@ -137,112 +140,125 @@ private struct CreateEditCaseContentView: View {
         let editSections = viewModel.editSections
 
         ScrollViewReader { proxy in
-            FocusSectionSlider(
-                sectionTitles: editSections,
-                proxy: proxy,
-                onScrollToSection: { index in
-                    if index >= 0 && index < sectionCollapse.count {
-                        sectionCollapse[index] = false
+            VStack(spacing: 0) {
+                FocusSectionSlider(
+                    sectionTitles: editSections,
+                    proxy: proxy,
+                    onScrollToSection: { index in
+                        if index >= 0 && index < sectionCollapse.count {
+                            sectionCollapse[index] = false
+                        }
                     }
+                )
+                .padding(.vertical, appTheme.gridItemSpacing)
+                .overlay(
+                    GeometryReader { reader in
+                        Color.clear.preference(key: FocusSectionSliderTopHeightKey.self, value: reader.size.height)
+                    }
+                )
+                .onPreferenceChange(FocusSectionSliderTopHeightKey.self) {
+                    tabSliderHeight = $0
                 }
-            )
-            .padding(.vertical, appTheme.gridItemSpacing)
 
-            ScrollView {
-                VStack {
-                    if let caseState = viewModel.caseData {
-                        CaseIncidentView(
-                            incident: caseState.incident,
-                            isPendingSync: caseState.isPendingSync,
-                            isSyncing: viewModel.isSyncing,
-                            scheduleSync: { viewModel.scheduleSync() }
-                        )
-                        .padding()
-                    }
+                ScrollView {
+                    VStack(spacing: 0) {
+                        if let caseState = viewModel.caseData {
+                            CaseIncidentView(
+                                incident: caseState.incident,
+                                isPendingSync: caseState.isPendingSync,
+                                isSyncing: viewModel.isSyncing,
+                                scheduleSync: { viewModel.scheduleSync() }
+                            )
+                            .listItemPadding()
+                        }
 
-                    VStack {
                         CreateEditCaseScrollingSections(
                             sectionCollapse: $sectionCollapse,
                             arePhotoOptionsOpen: $arePhotoOptionsOpen,
                             isCompactLayout: isCompactLayout,
                             proxy: proxy,
                             editSections: editSections,
-                            contentScrollChangeSubject: contentScrollChangeSubject
+                            contentScrollChangeSubject: contentScrollChangeSubject,
+                            yScrollOffset: tabSliderHeight
                         )
-                        .onReceive(contentScrollStopDelay) { scrollToId in
-                            if scrollToId.isNotBlank {
-                                withAnimation {
-                                    proxy.scrollTo(scrollToId, anchor: .leading)
+                    }
+                }
+                .scrollDismissesKeyboard(.immediately)
+                .onReceive(contentScrollStopDelay) { scrollToId in
+                    if scrollToId.isNotBlank {
+                        withAnimation {
+                            proxy.scrollTo(scrollToId, anchor: .leading)
+                        }
+                    }
+                }
+                .onChange(of: focusableViewState.focusState) { focusState in
+                    let isNameFocus = focusState == .caseInfoName
+                    if isNameFocus {
+                        withAnimation {
+                            proxy.scrollTo("property-name-input", anchor: .top)
+                        }
+                    }
+                }
+                .onChange(of: viewModel.locationInputData.wasGeocodeAddressSelected) { isSelected in
+                    if isSelected {
+                        withAnimation {
+                            proxy.scrollTo("location-map", anchor: .top)
+                        }
+                    }
+                }
+                .onChange(of: viewModel.locationInputData.isLocationAddressFound) { isFound in
+                    if isFound {
+                        withAnimation {
+                            proxy.scrollTo("location-map", anchor: .top)
+                        }
+                    }
+                }
+                .onChange(of: viewModel.invalidWorksiteInfo) { info in
+                    isInvalidSave = info.invalidElement != .none || info.message.isNotBlank
+                }
+                // TODO: What is causing the scroll view to change when the photo options sheet is closed?
+                .onChange(of: arePhotoOptionsOpen) { newValue in
+                    if !newValue {
+                        proxy.scrollTo("section-photos", anchor: .top)
+                    }
+                }
+                .sheet(isPresented: $isInvalidSave) {
+                    let info = viewModel.invalidWorksiteInfo
+                    let message = info.message.ifBlank {
+                        t.t("caseForm.missing_required_fields")
+                    }
+                    VStack {
+                        Text(message)
+                            .padding()
+
+                        Spacer()
+
+                        if info.invalidElement != .none {
+                            Button(t.t("actions.fix")) {
+                                let scrollId = info.invalidElement.scrollId
+                                if scrollId.isNotBlank {
+                                    proxy.scrollTo(scrollId, anchor: .top)
                                 }
+
+                                isInvalidSave = false
                             }
                         }
                     }
+                    // TODO: Adjust to content height (remove Spacer)
+                    .presentationDetents([.fraction(0.35)])
                 }
-            }
-            .scrollDismissesKeyboard(.immediately)
-            .onChange(of: focusableViewState.focusState) { focusState in
-                let isNameFocus = focusState == .caseInfoName
-                if isNameFocus {
-                    withAnimation {
-                        proxy.scrollTo("property-name-input", anchor: .top)
-                    }
-                }
-            }
-            .onChange(of: viewModel.locationInputData.wasGeocodeAddressSelected) { isSelected in
-                if isSelected {
-                    withAnimation {
-                        proxy.scrollTo("location-map", anchor: .top)
-                    }
-                }
-            }
-            .onChange(of: viewModel.locationInputData.isLocationAddressFound) { isFound in
-                if isFound {
-                    withAnimation {
-                        proxy.scrollTo("location-map", anchor: .top)
-                    }
-                }
-            }
-            .onChange(of: viewModel.invalidWorksiteInfo) { info in
-                isInvalidSave = info.invalidElement != .none || info.message.isNotBlank
-            }
-            // TODO: What is causing the scroll view to change when the photo options sheet is closed?
-            .onChange(of: arePhotoOptionsOpen) { newValue in
-                if !newValue {
-                    proxy.scrollTo("section-photos", anchor: .top)
-                }
-            }
-            .sheet(isPresented: $isInvalidSave) {
-                let info = viewModel.invalidWorksiteInfo
-                let message = info.message.ifBlank {
-                    t.t("caseForm.missing_required_fields")
-                }
-                VStack {
-                    Text(message)
-                        .padding()
 
-                    Spacer()
-
-                    if info.invalidElement != .none {
-                        Button(t.t("actions.fix")) {
-                            let scrollId = info.invalidElement.scrollId
-                            if scrollId.isNotBlank {
-                                proxy.scrollTo(scrollId, anchor: .top)
+                if isSaveBarVisible {
+                    if focusableViewState.isFocused {
+                        OpenKeyboardActionsView()
+                    } else {
+                        CreateEditCaseSaveActions(isVertical: false)
+                            .padding(.vertical, appTheme.edgeSpacing)
+                            .if (viewLayout.isWide) {
+                                $0.padding(.horizontal, appTheme.edgeSpacing)
                             }
-
-                            isInvalidSave = false
-                        }
+                            .disabled(disableMutation)
                     }
-                }
-                // TODO: Adjust to content height (remove Spacer)
-                .presentationDetents([.fraction(0.35)])
-            }
-
-            if isSaveBarVisible {
-                if focusableViewState.isFocused {
-                    OpenKeyboardActionsView()
-                } else {
-                    CreateEditCaseSaveActions(isVertical: false)
-                        .disabled(disableMutation)
                 }
             }
         }
@@ -260,79 +276,94 @@ private struct CreateEditCaseScrollingSections: View {
     let proxy: ScrollViewProxy
     let editSections: [String]
     let contentScrollChangeSubject: any Subject<(String, CGFloat), Never>
+    let yScrollOffset: CGFloat
 
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
+            let isFirstSectionExpanded = !sectionCollapse[0]
+
             CreateEditCaseSectionHeaderView(
                 isCollapsed: $sectionCollapse[0],
                 titleNumber: 1,
                 titleTranslateKey: editSections.get(0, "")
             )
-            .id("section0")
 
-            if !sectionCollapse[0] {
+            if isFirstSectionExpanded {
                 PropertyInformation(
                     propertyData: viewModel.propertyInputData,
                     locationData: viewModel.locationInputData
                 )
             }
+
+            FormListSectionSeparator()
+                .if (isFirstSectionExpanded) {
+                    $0.padding(.top, appTheme.gridItemSpacing)
+                }
         }
+        .id("section0")
         .onScrollSectionFocus(
             proxy,
             scrollToId: "scrollBar0",
-            scrollChangeSubject: contentScrollChangeSubject
+            scrollChangeSubject: contentScrollChangeSubject,
+            yOffset: yScrollOffset
         )
+
 
         let nodes = Array(viewModel.groupFormFieldNodes.enumerated())
         ForEach(nodes, id: \.offset) { offset, node in
-            FormListSectionSeparator()
-
             let sectionIndex = offset + 1
-            VStack {
+
+            let isCollapsed = sectionIndex >= 0 && sectionIndex < sectionCollapse.count && sectionCollapse[sectionIndex]
+            let isExpanded = !isCollapsed
+
+            VStack(alignment: .leading, spacing: 0) {
                 CreateEditCaseSectionHeaderView (
                     isCollapsed: $sectionCollapse[sectionIndex],
                     titleNumber: sectionIndex + 1,
                     titleTranslateKey: editSections.get(sectionIndex, ""),
                     helpText: node.formField.help
                 )
-                .id("section\(sectionIndex)")
 
-                VStack {
-                    if !sectionCollapse[sectionIndex] {
-                        let children = node.children
-                            .filter { !ignoreFormFieldKeys.contains($0.fieldKey) }
-                        ForEach(children, id: \.viewId) { child in
-                            if child.parentKey == node.fieldKey {
-                                DisplayFormField(
-                                    checkedData: $viewModel.binaryFormData,
-                                    contentData: $viewModel.contentFormData,
-                                    workTypeStatuses: $viewModel.statusOptions,
-                                    statusData: $viewModel.workTypeStatusFormData,
-                                    isNewCase: viewModel.isCreateWorksite,
-                                    node: child,
-                                    isWorkTypeClaimed: viewModel.isWorkTypeClaimed
-                                )
-                                .padding(.horizontal)
-                            }
+                if isExpanded {
+                    let children = node.children
+                        .filter { !ignoreFormFieldKeys.contains($0.fieldKey) }
+                    ForEach(children, id: \.viewId) { child in
+                        if child.parentKey == node.fieldKey {
+                            DisplayFormField(
+                                checkedData: $viewModel.binaryFormData,
+                                contentData: $viewModel.contentFormData,
+                                workTypeStatuses: $viewModel.statusOptions,
+                                statusData: $viewModel.workTypeStatusFormData,
+                                isNewCase: viewModel.isCreateWorksite,
+                                node: child,
+                                isWorkTypeClaimed: viewModel.isWorkTypeClaimed
+                            )
+                            .padding(.horizontal)
                         }
                     }
                 }
+
+                FormListSectionSeparator()
+                    .if (isExpanded) {
+                        $0.padding(.top, appTheme.gridItemSpacing)
+                    }
             }
+            .id("section\(sectionIndex)")
             .onScrollSectionFocus(
                 proxy,
                 scrollToId: "scrollBar\(sectionIndex)",
-                scrollChangeSubject: contentScrollChangeSubject
+                scrollChangeSubject: contentScrollChangeSubject,
+                yOffset: yScrollOffset
             )
         }
 
         let lastIndex = editSections.count - 1
-        VStack {
+        VStack(spacing: 0) {
             CreateEditCaseSectionHeaderView (
                 isCollapsed: $sectionCollapse[lastIndex],
                 titleNumber: lastIndex + 1,
                 titleTranslateKey: editSections.get(lastIndex, "")
             )
-            .id("section\(lastIndex)")
             .id("section-photos")
 
             if !sectionCollapse[lastIndex] {
@@ -342,10 +373,12 @@ private struct CreateEditCaseScrollingSections: View {
                 )
             }
         }
+        .id("section\(lastIndex)")
         .onScrollSectionFocus(
             proxy,
             scrollToId: "scrollBar\(lastIndex)",
-            scrollChangeSubject: contentScrollChangeSubject
+            scrollChangeSubject: contentScrollChangeSubject,
+            yOffset: yScrollOffset
         )
     }
 }
