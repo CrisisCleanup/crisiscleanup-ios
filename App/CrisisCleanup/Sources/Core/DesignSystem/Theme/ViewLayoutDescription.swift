@@ -62,9 +62,14 @@ class ViewLayoutDescription: ObservableObject {
         isLargeScreen = isMac || isIpad
     }
 
-    private func update(_ isLandscape: Bool, width: CGFloat, height: CGFloat) {
-        let isListDetailLayout = width > height && width > 600
-        isWide = width > 600
+    private func update(
+        _ isLandscape: Bool,
+        width: CGFloat,
+        height: CGFloat,
+        wideWidth: Double = appTheme.contentMaxWidth
+    ) {
+        isWide = width > wideWidth
+        let isListDetailLayout = width > height && isWide
         isShort = height < 400
 
         isPortrait = !isLandscape

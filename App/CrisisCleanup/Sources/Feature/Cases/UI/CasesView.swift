@@ -270,8 +270,7 @@ private struct CasesOverlayElements: View {
 
             HStack(spacing: 0) {
                 if isMapView {
-                    // TODO: Common dimensions
-                    VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: appTheme.gridActionSpacing) {
                         MapControls(
                             map: map,
                             animateToSelectedIncidentBounds: animateToSelectedIncidentBounds,
@@ -286,21 +285,22 @@ private struct CasesOverlayElements: View {
 
                 Spacer()
 
-                // TODO: Common dimensions
-                VStack(spacing: 16) {
+                VStack(spacing: appTheme.gridActionSpacing) {
                     if !isCompactLayout {
                         Spacer()
                     }
 
-                    Button {
-                        if viewModel.useMyLocation() {
-                            map.userTrackingMode = .follow
+                    if isMapView {
+                        Button {
+                            if viewModel.useMyLocation() {
+                                map.userTrackingMode = .follow
+                            }
+                        } label: {
+                            Image(systemName: "location")
+                                .padding()
                         }
-                    } label: {
-                        Image(systemName: "location")
-                            .padding()
+                        .styleRoundedRectanglePrimary()
                     }
-                    .styleRoundedRectanglePrimary()
 
                     Button {
                         router.createEditCase(
@@ -426,8 +426,7 @@ private struct MapControls: View {
         .shadow(radius: appTheme.shadowRadius)
 
         if isCompactLayout {
-            // TODO: Common dimensions
-            HStack(spacing: 16) {
+            HStack(spacing: appTheme.gridActionSpacing) {
                 MapResponsiveControls(
                     map: map,
                     animateToSelectedIncidentBounds: animateToSelectedIncidentBounds

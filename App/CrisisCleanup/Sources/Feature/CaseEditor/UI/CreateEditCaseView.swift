@@ -11,8 +11,6 @@ struct CreateEditCaseView: View {
     var body: some View {
         CreateEditCaseLayoutView()
             .environmentObject(viewModel)
-        // TODO: Common dimensions
-            .frame(maxWidth: 1200)
     }
 }
 
@@ -46,12 +44,14 @@ private struct CreateEditCaseLayoutView: View {
                             .coordinateSpace(name: referenceScrollSpace)
                         }
                     }
+                    .frame(maxWidth: appTheme.wideContentMaxWidth, alignment: .center)
                 } else {
                     CreateEditCaseContentView(
                         isCompactLayout: viewLayout.isShort,
                         isSaveBarVisible: true
                     )
                     .coordinateSpace(name: referenceScrollSpace)
+                    .frame(maxWidth: appTheme.contentMaxWidth, alignment: .center)
                 }
             }
 
@@ -958,9 +958,8 @@ struct DisplayFormField: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 FlowStack(
                     alignment: .leading,
-                    // TODO: Common dimensions
-                    horizontalSpacing: 16,
-                    verticalSpacing: 16
+                    horizontalSpacing: appTheme.gridActionSpacing,
+                    verticalSpacing: appTheme.gridActionSpacing
                 ) {
                     let selectionString = contentData[node.fieldKey]
                     var selected = { () -> Set<String> in
@@ -1111,21 +1110,19 @@ private struct SaveActions: View {
 private struct CreateEditCaseSaveActions: View {
     var isVertical = false
 
-    // TODO: Common dimensions for all spacing below
     var body: some View {
         if isVertical {
-            VStack(spacing: 24) {
+            VStack(spacing: appTheme.gridActionSpacing) {
                 Spacer()
 
                 SaveActions()
             }
-            .padding([.horizontal, .bottom], 8)
+            .padding([.horizontal, .bottom], appTheme.edgeSpacing)
         } else {
-            // TODO: Better fit on thinner screen. Use app theme.
             HStack {
                 SaveActions()
             }
-            .padding([.horizontal, .bottom], 8)
+            .padding([.horizontal, .bottom], appTheme.gridItemSpacing)
         }
     }
 }

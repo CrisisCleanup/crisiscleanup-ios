@@ -88,8 +88,7 @@ struct RequestRedeployView: View {
                             .listItemPadding()
                         }
                     }
-                    // TODO: Common dimensions
-                    .frame(maxWidth: 600.0)
+                    .frame(maxWidth: appTheme.contentMaxWidth)
                     .sheet(isPresented: $showIncidentOptions) {
                         Text(selectIncidentHint)
                             .fontHeader3()

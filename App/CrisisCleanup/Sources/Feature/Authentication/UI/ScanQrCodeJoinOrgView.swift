@@ -48,8 +48,7 @@ struct ScanQrCodeJoinOrgView: View {
                     }
                 }
             }
-            // TODO: Common dimensions
-            .frame(maxWidth: 600.0, alignment: .leading)
+            .frame(maxWidth: appTheme.contentMaxWidth, alignment: .leading)
 
             if viewModel.isSeekingAccess {
                 ProgressView()

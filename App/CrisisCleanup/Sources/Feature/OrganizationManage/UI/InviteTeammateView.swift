@@ -226,8 +226,7 @@ private struct InviteTeammateContentView: View {
                             Spacer()
                         }
                     }
-                    // TODO: Common dimensions
-                    .frame(maxWidth: 600.0, alignment: .leading)
+                    .frame(maxWidth: appTheme.contentMaxWidth, alignment: .leading)
                     .padding(.horizontal)
                     .disabled(viewModel.editableView.disabled)
                 }

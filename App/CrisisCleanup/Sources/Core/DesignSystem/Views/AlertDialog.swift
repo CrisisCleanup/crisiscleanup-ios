@@ -10,7 +10,6 @@ struct AlertDialog<Content>: View where Content : View {
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        // TODO: Common dimensions throughout
         ZStack {
             Color(.black).disabledAlpha()
                 .edgesIgnoringSafeArea(.all)
@@ -21,12 +20,12 @@ struct AlertDialog<Content>: View where Content : View {
             VStack {
                 Text(title)
                     .fontHeader3()
-                    .padding(16)
+                    .padding()
 
                 content()
 
                 if positiveActionText.isNotBlank || negativeActionText.isNotBlank {
-                    HStack(spacing: 16) {
+                    HStack(spacing: appTheme.gridActionSpacing) {
                         Spacer()
 
                         if negativeActionText.isNotBlank {
@@ -48,11 +47,11 @@ struct AlertDialog<Content>: View where Content : View {
                         }
                     }
                     .buttonStyle(.plain)
-                    .padding(.all, 16)
+                    .padding()
                 }
             }
             .cardContainerPadded()
-            .frame(maxWidth: 400)
+            .frame(maxWidth: appTheme.dialogMaxWidth)
         }
     }
 }

@@ -1,19 +1,15 @@
 import SwiftUI
 
 struct ScrollCenterContent<Content>: View where Content: View {
-    private let maxWidth: CGFloat?
     private let contentAlignment: HorizontalAlignment
     private let contentPadding: Edge.Set?
     private let content: Content
 
     init(
-        // TODO: Common dimensions
-        maxWidth: CGFloat? = 600.0,
         contentAlignment: HorizontalAlignment = .leading,
         contentPadding: Edge.Set? = nil,
         @ViewBuilder content: () -> Content
     ) {
-        self.maxWidth = maxWidth
         self.contentAlignment = contentAlignment
         self.contentPadding = contentPadding
         self.content = content()
@@ -28,7 +24,7 @@ struct ScrollCenterContent<Content>: View where Content: View {
                 .if (contentPadding != nil) {
                     $0.padding(contentPadding!)
                 }
-                .frame(maxWidth: maxWidth)
+                .frame(maxWidth: appTheme.contentMaxWidth)
             }
             .frame(maxWidth: .infinity)
         }

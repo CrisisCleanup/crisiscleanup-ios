@@ -90,8 +90,7 @@ struct HotlineIncidentsView: View {
                     Rectangle()
                         .fill(.clear)
                         .background(.clear)
-                    // TODO: Common dimensions
-                        .frame(height: 8.0)
+                        .frame(height: appTheme.gridItemSpacing)
                 }
             }
             .background(appTheme.colors.themePrimaryContainer)

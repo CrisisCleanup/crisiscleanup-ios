@@ -153,8 +153,7 @@ private struct LoginView: View {
             .stylePrimary()
             .listItemModifier()
             .disabled(disabled)
-            // TODO: Common dimensions
-            .frame(maxWidth: 600.0)
+            .frame(maxWidth: appTheme.contentMaxWidth)
             .accessibilityIdentifier("verifyPhoneCodeAction")
         }
     }

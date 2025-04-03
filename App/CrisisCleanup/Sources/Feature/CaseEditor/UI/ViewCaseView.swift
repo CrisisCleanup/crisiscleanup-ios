@@ -46,6 +46,7 @@ private struct ViewCaseLayoutView: View {
                         .frame(width: proxy.size.width * listDetailDetailFractionalWidth)
                     }
                 }
+                .frame(maxWidth: appTheme.wideContentMaxWidth, alignment: .center)
             } else {
                 MainContent(
                     selectedTab: $selectedTab,
@@ -53,6 +54,7 @@ private struct ViewCaseLayoutView: View {
                     isCompactLayout: viewLayout.isShort,
                     isBusy: isBusy
                 )
+                .frame(maxWidth: appTheme.contentMaxWidth, alignment: .center)
             }
         }
         .if (viewLayout.isOneColumnLayout) {
