@@ -3,6 +3,7 @@ import SVGView
 import SwiftUI
 
 struct CasesFilterView: View {
+    @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewLayout: ViewLayoutDescription
@@ -10,6 +11,8 @@ struct CasesFilterView: View {
     @ObservedObject var viewModel: CasesFilterViewModel
 
     private let referenceScrollSpace = "scrollFrom"
+
+    @State private var confirmAbadonChanges = false
 
     var body: some View {
         ZStack {
@@ -43,9 +46,47 @@ struct CasesFilterView: View {
                     viewModel.showExplainLocationPermission = false
                 }
             }
+
+            if confirmAbadonChanges {
+                AlertDialog(
+                    title: t.t("~~Filter changes"),
+                    positiveActionText: t.t("actions.apply_filters"),
+                    negativeActionText: t.t("~~Abandon"),
+                    dismissDialog: {
+                        confirmAbadonChanges = false
+                    },
+                    negativeAction: {
+                        dismiss()
+                    },
+                    positiveAction: {
+                        viewModel.applyFilters(viewModel.casesFilters)
+                        dismiss()
+                    },
+                    content: {
+                        Text(t.t("~~Filters have changed. Would you like to apply or abandon the changes?"))
+                    }
+                )
+            }
         }
         .screenTitle(t.t("worksiteFilters.filters"))
+        // TODO: Make modifier
+        .navigationBarBackButtonHidden()
+        .navigationBarItems(leading: Button(action: {
+            if viewModel.isFiltersChanged {
+                confirmAbadonChanges = true
+            } else {
+                dismiss()
+            }
+        }) {
+            HStack(spacing: 6) {
+                Image(systemName: "chevron.backward")
+                    .font(Font.system(size: 16, weight: .semibold))
+                // TODO: Translations
+                Text("Back")
+            }
+        })
         .hideNavBarUnderSpace()
+        .background(SwipeBackGestureController())
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)
