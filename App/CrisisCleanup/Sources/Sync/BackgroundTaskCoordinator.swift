@@ -1,4 +1,5 @@
 import BackgroundTasks
+import SwiftUI
 
 public protocol BackgroundTaskCoordinator {
     /**
@@ -42,7 +43,7 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
         let scheduler = BGTaskScheduler.shared
 
         scheduler.register(forTaskWithIdentifier: BackgroundTaskType.refresh.rawValue, using: nil) { task in
-            self.handleRefresh(task as! BGAppRefreshTask)
+            self.handleRefresh(task as! BGProcessingTask)
         }
 
         scheduler.register(forTaskWithIdentifier: BackgroundTaskType.pushWorksites.rawValue, using: nil) { task in
@@ -56,9 +57,12 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
 
     private func scheduleBackgroundTask(
         _ taskType: BackgroundTaskType,
-        _ secondsFromNow: Double
+        _ secondsFromNow: Double,
+        isProcessingTask: Bool = false
     ) {
-        let request = BGAppRefreshTaskRequest(identifier: taskType.rawValue)
+        let request = isProcessingTask
+        ? BGProcessingTaskRequest(identifier: taskType.rawValue)
+        : BGAppRefreshTaskRequest(identifier: taskType.rawValue)
         request.earliestBeginDate = Date(timeIntervalSinceNow: max(0.0, secondsFromNow))
 
         do {
@@ -69,7 +73,11 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
     }
 
     func scheduleRefresh(secondsFromNow: Double) {
-        scheduleBackgroundTask(BackgroundTaskType.refresh, secondsFromNow)
+        scheduleBackgroundTask(
+            BackgroundTaskType.refresh,
+            secondsFromNow,
+            isProcessingTask: true
+        )
     }
 
     func schedulePushWorksites(secondsFromNow: Double) {
@@ -80,13 +88,22 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
         scheduleBackgroundTask(BackgroundTaskType.pushWorksiteMedia, secondsFromNow)
     }
 
-    private func handleRefresh(_ task: BGAppRefreshTask) {
+    private func handleRefresh(_ task: BGProcessingTask) {
         scheduleRefresh(secondsFromNow: 4 * 60 * 60)
+
+        let refreshStartTime = Date()
 
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = 1
 
         let operation = RefreshIncidentsDataOperation(syncPuller: syncPuller, appLogger: logger)
+
+        let backgroundTaskId = UIApplication.shared.beginBackgroundTask {
+            let extensionTimeEnd = Date()
+            self.logger.logDebug("Refresh background time over. Started \(refreshStartTime). Ended \(extensionTimeEnd).")
+
+            queue.cancelAllOperations()
+        }
 
         task.expirationHandler = {
             // After all operations are cancelled, the completion block below is called to set the task to complete.
@@ -94,6 +111,13 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
         }
 
         operation.completionBlock = {
+            let refreshCompleteTime = Date()
+            self.logger.logDebug("Refresh task is completing. Started \(refreshStartTime). Completed \(refreshCompleteTime).")
+
+            if backgroundTaskId != .invalid {
+                UIApplication.shared.endBackgroundTask(backgroundTaskId)
+            }
+
             task.setTaskCompleted(success: operation.isSuccessful)
         }
 
