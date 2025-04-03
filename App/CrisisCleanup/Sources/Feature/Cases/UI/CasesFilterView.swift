@@ -5,14 +5,35 @@ import SwiftUI
 struct CasesFilterView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
+    @EnvironmentObject var viewLayout: ViewLayoutDescription
+
     @ObservedObject var viewModel: CasesFilterViewModel
 
     private let referenceScrollSpace = "scrollFrom"
 
     var body: some View {
         ZStack {
-            FiltersContentView()
+            if viewLayout.isListDetailLayout {
+                GeometryReader { proxy in
+                    HStack {
+                        CasesFilterActions(isVertical: true)
+                            .frame(width: proxy.size.width * listDetailListFractionalWidth)
+
+                        FiltersContentView(
+                            isSaveBarVisible: false
+                        )
+                        .frame(width: proxy.size.width * listDetailDetailFractionalWidth)
+                        .coordinateSpace(name: referenceScrollSpace)
+                    }
+                }
+                .frame(maxWidth: appTheme.wideContentMaxWidth, alignment: .center)
+            } else {
+                FiltersContentView(
+                    isSaveBarVisible: true
+                )
                 .coordinateSpace(name: referenceScrollSpace)
+                .frame(maxWidth: appTheme.contentMaxWidth, alignment: .center)
+            }
 
             if viewModel.showExplainLocationPermission {
                 LocationAppSettingsDialog(
@@ -36,6 +57,8 @@ private struct FiltersContentView: View {
 
     @EnvironmentObject var viewModel: CasesFilterViewModel
 
+    private var isSaveBarVisible = false
+
     private let contentScrollChangeSubject = CurrentValueSubject<(String, CGFloat), Never>(("", 0.0))
     private let contentScrollStopDelay: AnyPublisher<String, Never>
 
@@ -48,7 +71,11 @@ private struct FiltersContentView: View {
         false
     ]
 
-    init() {
+    init(
+        isSaveBarVisible: Bool
+    ) {
+        self.isSaveBarVisible = isSaveBarVisible
+
         contentScrollStopDelay = contentScrollChangeSubject
             .debounce(for: .seconds(0.2), scheduler: RunLoop.current)
             .map { $0.0 }
@@ -139,9 +166,11 @@ private struct FiltersContentView: View {
                     }
                 }
 
-                FilterButtons()
-                    .environmentObject(viewModel)
-                    .listItemPadding()
+                if isSaveBarVisible {
+                    CasesFilterActions()
+                        .environmentObject(viewModel)
+                        .listItemPadding()
+                }
             }
         }
     }
@@ -703,7 +732,7 @@ struct CalendarSelectView: View {
     }
 }
 
-struct FilterButtons: View {
+private struct FilterActions: View {
     @Environment(\.translator) var t: KeyAssetTranslator
     @Environment(\.dismiss) var dismiss
 
@@ -711,26 +740,35 @@ struct FilterButtons: View {
 
     var body: some View {
         let filters = viewModel.casesFilters
-        HStack {
-            let filterCount = filters.changeCount
-            let noFilters = filterCount == 0
-            Button {
-                viewModel.clearFilters()
-            } label: {
-                Text(t.t("actions.clear_filters"))
-            }
-            .styleCancel()
-            .disabled(noFilters)
 
-            let applyFilters = t.t("actions.apply_filters")
-            let applyText = noFilters ? applyFilters : "\(applyFilters) (\(filterCount))"
-            Button {
-                viewModel.applyFilters(filters)
-                dismiss()
-            } label: {
-                Text(applyText)
-            }
-            .stylePrimary()
+        let filterCount = filters.changeCount
+        let noFilters = filterCount == 0
+        Button {
+            viewModel.clearFilters()
+        } label: {
+            Text(t.t("actions.clear_filters"))
+        }
+        .styleCancel()
+        .disabled(noFilters)
+
+        let applyFilters = t.t("actions.apply_filters")
+        let applyText = noFilters ? applyFilters : "\(applyFilters) (\(filterCount))"
+        Button {
+            viewModel.applyFilters(filters)
+            dismiss()
+        } label: {
+            Text(applyText)
+        }
+        .stylePrimary()
+    }
+}
+
+private struct CasesFilterActions: View {
+    var isVertical = false
+
+    var body: some View {
+        StackActionsView(isVertical: isVertical) {
+            FilterActions()
         }
     }
 }

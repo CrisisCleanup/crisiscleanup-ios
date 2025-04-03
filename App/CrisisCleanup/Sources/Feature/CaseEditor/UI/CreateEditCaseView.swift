@@ -1111,18 +1111,8 @@ private struct CreateEditCaseSaveActions: View {
     var isVertical = false
 
     var body: some View {
-        if isVertical {
-            VStack(spacing: appTheme.gridActionSpacing) {
-                Spacer()
-
-                SaveActions()
-            }
-            .padding([.horizontal, .bottom], appTheme.edgeSpacing)
-        } else {
-            HStack {
-                SaveActions()
-            }
-            .padding([.horizontal, .bottom], appTheme.gridItemSpacing)
+        StackActionsView(isVertical: isVertical) {
+            SaveActions()
         }
     }
 }
