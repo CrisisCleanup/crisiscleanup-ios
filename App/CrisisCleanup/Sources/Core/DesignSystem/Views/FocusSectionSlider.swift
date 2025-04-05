@@ -2,8 +2,7 @@ import Combine
 import SwiftUI
 
 struct FocusSectionSliderTopHeightKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-
+    static var defaultValue = CGFloat.zero
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value += nextValue()
     }
@@ -50,14 +49,16 @@ struct FocusSectionSlider: View {
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack {
+                Divider()
+                    .id("scrollBarFrontBumper")
+                    .frame(width: 1, height: 1)
+
                 ForEach(Array(sectionTitles.enumerated()), id: \.offset) { (index, sectionTranslateKey) in
                     Text("\(index + 1). \(t.t(sectionTranslateKey))")
                         .id("scrollBar\(index)")
                         .fontHeader4()
                         .padding(.leading)
                         .onTapGesture {
-                            // TODO: Animation sends inexact signals
-                            //       When tapped initially will bounce back to previous section
                             scrollToSection(index)
                         }
                         .background(GeometryReader {
@@ -102,8 +103,7 @@ struct FocusSectionSlider: View {
                     }
                 }
             }
-            // TODO: Settle on section if content index differs regardless of offset
-            if abs(offset) > 4 {
+            if abs(offset) > 0 {
                 scrollToSection(index)
             }
         }
@@ -111,7 +111,6 @@ struct FocusSectionSlider: View {
 }
 
 private struct SliderOffsetKey: PreferenceKey {
-    typealias Value = CGFloat
     static var defaultValue = CGFloat.zero
     static func reduce(value: inout Value, nextValue: () -> Value) {
         value += nextValue()
@@ -119,7 +118,6 @@ private struct SliderOffsetKey: PreferenceKey {
 }
 
 private struct SliderItemOffsetKey: PreferenceKey {
-    typealias Value = CGFloat
     static var defaultValue = CGFloat.zero
     static func reduce(value: inout Value, nextValue: () -> Value) {
         value += nextValue()
@@ -151,9 +149,8 @@ extension View {
 }
 
 private struct ContentOffsetKey: PreferenceKey {
-    typealias Value = CGFloat
     static var defaultValue = CGFloat.zero
-    static func reduce(value: inout Value, nextValue: () -> Value) {
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value += nextValue()
     }
 }

@@ -179,7 +179,9 @@ private struct CreateEditCaseContentView: View {
                             proxy: proxy,
                             editSections: editSections,
                             contentScrollChangeSubject: contentScrollChangeSubject,
-                            yScrollOffset: tabSliderHeight
+                            // Math is off or rounding error(s) require
+                            // tiny additional offset for correct section tracking
+                            yScrollOffset: tabSliderHeight + 0.1
                         )
                     }
                 }
@@ -307,7 +309,6 @@ private struct CreateEditCaseScrollingSections: View {
             scrollChangeSubject: contentScrollChangeSubject,
             yOffset: yScrollOffset
         )
-
 
         let nodes = Array(viewModel.groupFormFieldNodes.enumerated())
         ForEach(nodes, id: \.offset) { offset, node in
