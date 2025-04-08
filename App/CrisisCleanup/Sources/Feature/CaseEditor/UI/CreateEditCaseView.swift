@@ -161,6 +161,9 @@ private struct CreateEditCaseContentView: View {
 
                 ScrollView {
                     VStack(spacing: 0) {
+                        Divider()
+                            .frame(height: appTheme.edgeSpacing * 2)
+
                         if let caseState = viewModel.caseData {
                             CaseIncidentView(
                                 incident: caseState.incident,

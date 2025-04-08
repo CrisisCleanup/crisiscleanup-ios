@@ -148,6 +148,9 @@ private struct FiltersContentView: View {
 
                 ScrollView {
                     VStack(spacing: 0) {
+                        Divider()
+                            .frame(height: appTheme.edgeSpacing * 2)
+
                         FilterSlidersSection()
 
                         FormListSectionSeparator()
