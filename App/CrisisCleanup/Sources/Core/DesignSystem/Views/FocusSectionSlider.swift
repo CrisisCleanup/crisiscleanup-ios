@@ -18,6 +18,8 @@ struct FocusSectionSlider: View {
 
     @State private var visibleItems = [Int: CGFloat]()
 
+    @State private var hasScrolled = false
+
     private let scrollChangeSubject = CurrentValueSubject<(CGFloat), Never>((0.0))
     private let scrollStopDelay: AnyPublisher<CGFloat, Never>
 
@@ -58,6 +60,7 @@ struct FocusSectionSlider: View {
                         .id("scrollBar\(index)")
                         .fontHeader4()
                         .padding(.leading)
+                        .padding(.horizontal, appTheme.gridItemSpacing)
                         .onTapGesture {
                             scrollToSection(index)
                         }
@@ -88,6 +91,9 @@ struct FocusSectionSlider: View {
                     value: -frame.origin.x
                 )
                 .onPreferenceChange(SliderOffsetKey.self) {
+                    if !hasScrolled {
+                        hasScrolled = $0 > 0
+                    }
                     scrollChangeSubject.send($0)
                 }
             })
@@ -103,7 +109,8 @@ struct FocusSectionSlider: View {
                     }
                 }
             }
-            if abs(offset) > 0 {
+            if abs(offset) > 0,
+               (index > 0 || hasScrolled) {
                 scrollToSection(index)
             }
         }

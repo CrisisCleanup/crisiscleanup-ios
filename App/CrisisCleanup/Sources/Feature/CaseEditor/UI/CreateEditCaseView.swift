@@ -150,7 +150,6 @@ private struct CreateEditCaseContentView: View {
                         }
                     }
                 )
-                .padding(.vertical, appTheme.gridItemSpacing)
                 .overlay(
                     GeometryReader { reader in
                         Color.clear.preference(key: FocusSectionSliderTopHeightKey.self, value: reader.size.height)
@@ -181,7 +180,7 @@ private struct CreateEditCaseContentView: View {
                             contentScrollChangeSubject: contentScrollChangeSubject,
                             // Math is off or rounding error(s) require
                             // tiny additional offset for correct section tracking
-                            yScrollOffset: tabSliderHeight + 0.1
+                            yScrollOffset: tabSliderHeight + 0.11
                         )
                     }
                 }

@@ -137,7 +137,6 @@ private struct FiltersContentView: View {
                         }
                     }
                 )
-                .padding(.vertical, appTheme.gridItemSpacing)
                 .overlay(
                     GeometryReader { reader in
                         Color.clear.preference(key: FocusSectionSliderTopHeightKey.self, value: reader.size.height)
@@ -217,7 +216,9 @@ private struct FiltersContentView: View {
                                 proxy,
                                 scrollToId: "scrollBar\(index)",
                                 scrollChangeSubject: contentScrollChangeSubject,
-                                yOffset: tabSliderHeight
+                                // Math is off or rounding error(s) require
+                                // tiny additional offset for correct section tracking
+                                yOffset: tabSliderHeight + 0.11
                             )
                         }
                     }
