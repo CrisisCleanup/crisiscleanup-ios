@@ -29,6 +29,7 @@ struct CasesLayoutView: View {
     let openAuthScreen: () -> Void
 
     @State var map = MKMapView()
+    @State private var isSatelliteMapType = false
     @State private var showMapBusyIndicator = false
     @State private var phoneCallNumbers = [ParsedPhoneNumber]()
 
@@ -60,7 +61,9 @@ struct CasesLayoutView: View {
                 CasesMapView(
                     map: $map,
                     focusWorksiteCenter: $viewModel.editedWorksiteLocation,
+                    isSatelliteMapType: $isSatelliteMapType,
                     viewModel: viewModel,
+                    mapOverlays: map.makeOverlayPolygons(),
                     onSelectWorksite: { worksiteId in
                         let incidentId = viewModel.incidentsData.selectedId
                         router.viewCase(incidentId: incidentId, worksiteId: worksiteId)
@@ -108,6 +111,7 @@ struct CasesLayoutView: View {
             CasesOverlayElements(
                 openAuthScreen: openAuthScreen,
                 map: $map,
+                isSatelliteMapType: $isSatelliteMapType,
                 incidentSelectViewBuilder: incidentSelectViewBuilder,
                 isLoadingIncidents: isLoadingIncidents,
                 hasNoIncidents: hasNoIncidents,
@@ -245,6 +249,7 @@ private struct CasesOverlayElements: View {
     let openAuthScreen: () -> Void
 
     @Binding var map: MKMapView
+    @Binding var isSatelliteMapType: Bool
 
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
 
@@ -274,6 +279,7 @@ private struct CasesOverlayElements: View {
                         MapControls(
                             map: map,
                             animateToSelectedIncidentBounds: animateToSelectedIncidentBounds,
+                            isSatelliteMapType: $isSatelliteMapType,
                             isCompactLayout: isCompactLayout
                         )
 
@@ -340,8 +346,10 @@ private struct MapResponsiveControls: View {
     @EnvironmentObject var viewModel: CasesViewModel
 
     let map: MKMapView
-
     let animateToSelectedIncidentBounds: (LatLngBounds) -> Void
+    @Binding var isSatelliteMapType: Bool
+
+    @State private var showLayersView = false
 
     var body: some View {
         Button {
@@ -376,13 +384,28 @@ private struct MapResponsiveControls: View {
                 .shadow(radius: appTheme.shadowRadius)
         }
 
-//        Button {
-//        } label: {
-//            Image("ic_layers", bundle: .module)
-//                .mapOverlayButton()
-//                .cornerRadius(appTheme.cornerRadius)
-//                .shadow(radius: appTheme.shadowRadius)
-//        }
+        Button {
+            showLayersView = true
+        } label: {
+            Image("ic_layers", bundle: .module)
+                .mapOverlayButton()
+                .cornerRadius(appTheme.cornerRadius)
+                .shadow(radius: appTheme.shadowRadius)
+        }
+        .sheet(
+            isPresented: $showLayersView,
+            onDismiss: {
+                showLayersView = false
+            }
+        ) {
+            MapLayersView(isSatelliteMapType: $isSatelliteMapType)
+                .listItemModifier()
+                .onChange(of: isSatelliteMapType) { newValue in
+                    map.mapType = newValue ? .satellite : .standard
+                    // TODO: Toggle overlay
+                }
+                .presentationDetents([.medium, .fraction(0.3)])
+        }
     }
 }
 
@@ -393,6 +416,8 @@ private struct MapControls: View {
 
     let map: MKMapView
     let animateToSelectedIncidentBounds: (LatLngBounds) -> Void
+    @Binding var isSatelliteMapType: Bool
+
     var isCompactLayout = false
 
     func zoomDelta(scale: Double) {
@@ -429,16 +454,62 @@ private struct MapControls: View {
             HStack(spacing: appTheme.gridActionSpacing) {
                 MapResponsiveControls(
                     map: map,
-                    animateToSelectedIncidentBounds: animateToSelectedIncidentBounds
+                    animateToSelectedIncidentBounds: animateToSelectedIncidentBounds,
+                    isSatelliteMapType: $isSatelliteMapType
                 )
             }
         } else {
             MapResponsiveControls(
                 map: map,
-                animateToSelectedIncidentBounds: animateToSelectedIncidentBounds
+                animateToSelectedIncidentBounds: animateToSelectedIncidentBounds,
+                isSatelliteMapType: $isSatelliteMapType
             )
         }
 
+    }
+}
+
+private struct MapLayersView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @Binding var isSatelliteMapType: Bool
+
+    var borderColor: Color = appTheme.colors.primaryBlueColor
+    var borderWidth: CGFloat = 3
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: appTheme.gridActionSpacing) {
+            Text(t.t("~~Map type"))
+                .fontHeader3()
+
+            let imageSize = appTheme.buttonSize
+            HStack {
+                VStack(spacing: appTheme.gridItemSpacing) {
+                    Button {
+                        isSatelliteMapType = false
+                    } label: {
+                        Image(systemName: "map")
+                            .frame(width: imageSize, height: imageSize)
+                            .if (!isSatelliteMapType) {
+                                $0.roundedBorder(color: borderColor, lineWidth: borderWidth)
+                            }
+                    }
+                    Text(t.t("~~Default"))
+                }
+                VStack(spacing: appTheme.gridItemSpacing) {
+                    Button {
+                        isSatelliteMapType = true
+                    } label: {
+                        Image(systemName: "mountain.2")
+                            .frame(width: imageSize, height: imageSize)
+                            .if (isSatelliteMapType) {
+                                $0.roundedBorder(color: borderColor, lineWidth: borderWidth)
+                            }
+                    }
+                    Text(t.t("~~Satellite"))
+                }
+            }
+        }
     }
 }
 
