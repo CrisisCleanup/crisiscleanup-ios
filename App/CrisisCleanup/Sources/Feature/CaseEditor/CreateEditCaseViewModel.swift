@@ -118,6 +118,8 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     private let editIncidentWorksiteSubject = CurrentValueSubject<ExistingWorksiteIdentifier, Never>(ExistingWorksiteIdentifierNone)
     @Published private(set) var editIncidentWorksite = ExistingWorksiteIdentifierNone
 
+    @Published private(set) var incidentCreation = incidentCreationNow
+
     private let isFirstVisible = ManagedAtomic(true)
 
     private var subscriptions = Set<AnyCancellable>()
@@ -261,6 +263,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         subscribeSaving()
         subscribeEditableState()
 
+        subscribeIncidentState()
         subscribeCaseData()
         subscribeWorksiteChange()
         subscribeLocationState()
@@ -361,6 +364,25 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
             self.editableViewState.isEditable = !isTransient
         }
         .store(in: &subscriptions)
+    }
+
+    private func subscribeIncidentState() {
+        viewState
+            .compactMap { state in
+                switch state {
+                case .caseData(let caseData):
+                    if let startAt = caseData.incident.startAt {
+                        let daysDifference = startAt.distance(to: Date.now)
+                        return IncidentCreation(isOldIncident: daysDifference > 180.days, relativeTime: startAt.relativeTime)
+                    }
+                default:
+                    return nil
+                }
+                return nil
+            }
+            .receive(on: RunLoop.main)
+            .assign(to: \.incidentCreation, on: self)
+            .store(in: &subscriptions)
     }
 
     private func subscribeCaseData() {
@@ -1116,3 +1138,10 @@ struct InvalidWorksiteInfo: Equatable {
         timestamp = Date.now
     }
 }
+
+struct IncidentCreation: Equatable {
+    let isOldIncident: Bool
+    let relativeTime: String
+}
+
+private let incidentCreationNow = IncidentCreation(isOldIncident: false, relativeTime: "")

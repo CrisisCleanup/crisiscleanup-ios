@@ -36,7 +36,8 @@ struct IncidentRecord: Identifiable, Equatable {
             activePhoneNumbers: phoneNumbers,
             formFields: formFields,
             turnOnRelease: turnOnRelease,
-            disasterLiteral: type
+            disasterLiteral: type,
+            startAt: startAt
         )
     }
 }

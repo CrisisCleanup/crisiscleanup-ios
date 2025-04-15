@@ -94,6 +94,7 @@ private struct CreateEditCaseLayoutView: View {
 }
 
 private struct CreateEditCaseContentView: View {
+    @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewLayout: ViewLayoutDescription
@@ -121,6 +122,9 @@ private struct CreateEditCaseContentView: View {
 
     @State private var arePhotoOptionsOpen = false
 
+    @State private var showConfirmOldIncident = false
+    @State private var hasConfirmedDormantIncident = false
+
     init(
         isCompactLayout: Bool,
         isSaveBarVisible: Bool
@@ -138,6 +142,8 @@ private struct CreateEditCaseContentView: View {
     var body: some View {
         let disableMutation = viewModel.editableViewState.disabled
         let editSections = viewModel.editSections
+
+        let incidentCreation = viewModel.incidentCreation
 
         ScrollViewReader { proxy in
             VStack(spacing: 0) {
@@ -251,6 +257,34 @@ private struct CreateEditCaseContentView: View {
                     // TODO: Adjust to content height (remove Spacer)
                     .presentationDetents([.fraction(0.35)])
                 }
+                .sheet(isPresented: $showConfirmOldIncident) {
+                    if let caseState = viewModel.caseData {
+                        ConfirmOldIncidentView(
+                            isCreateWorksite: viewModel.isCreateWorksite,
+                            incidentName: caseState.incident.shortName,
+                            incidentCreateRelativeTime: incidentCreation.relativeTime,
+                            onConfirm: {
+                                hasConfirmedDormantIncident = true
+                                showConfirmOldIncident = false
+                            },
+                            onAbort: {
+                                dismiss()
+                                showConfirmOldIncident = false
+                            }
+                        )
+                        .interactiveDismissDisabled()
+                        .presentationDetents([.fraction(0.3)])
+                    } else {
+                        ProgressView()
+                            .circularProgress()
+                            .padding()
+                            .interactiveDismissDisabled()
+                            .presentationDetents([.fraction(0.3)])
+                    }
+                }
+                .onChange(of: incidentCreation) { newValue in
+                    showConfirmOldIncident = newValue.isOldIncident && !hasConfirmedDormantIncident
+                }
 
                 if isSaveBarVisible {
                     if focusableViewState.isFocused {
@@ -266,6 +300,54 @@ private struct CreateEditCaseContentView: View {
                 }
             }
         }
+    }
+}
+
+private struct ConfirmOldIncidentView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    var isCreateWorksite = false
+    var incidentName = ""
+    var incidentCreateRelativeTime = ""
+    var onConfirm = {}
+    var onAbort = {}
+
+    var body: some View {
+        let confirmContinueKey = isCreateWorksite
+        ? "~~{incident_name} was created {relative_time}. Continue creating a Case for {incident_name}?"
+        : "~~{incident_name} was created {relative_time}. Continue editing this Case for {incident_name}?"
+
+        VStack {
+            Text(t.t("~~Old Incident"))
+                .fontHeader3()
+                .padding(.vertical)
+
+            Text(t.t(confirmContinueKey)
+                .replacingOccurrences(of: "{incident_name}", with: incidentName)
+                .replacingOccurrences(of: "{relative_time}", with: incidentCreateRelativeTime)
+            )
+
+            HStack(spacing: appTheme.gridActionSpacing) {
+                Spacer()
+
+                Button {
+                    onAbort()
+                } label: {
+                    Text(t.t("actions.no"))
+                        .fontHeader4()
+                }
+
+                Button {
+                    onConfirm()
+                } label: {
+                    Text(t.t("actions.yes"))
+                        .fontHeader4()
+                }
+                .padding(.vertical)
+            }
+            .buttonStyle(.plain)
+        }
+        .listItemPadding()
     }
 }
 

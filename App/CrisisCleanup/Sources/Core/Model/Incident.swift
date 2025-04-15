@@ -1,3 +1,5 @@
+import Foundation
+
 // sourcery: copyBuilder, skipCopyInit
 public struct Incident: Equatable {
     let id: Int64
@@ -9,6 +11,7 @@ public struct Incident: Equatable {
     let formFields: [IncidentFormField]
     let turnOnRelease: Bool
     let disasterLiteral: String
+    let startAt: Date?
 
     // sourcery:begin: skipCopy
     let displayLabel: String
@@ -31,7 +34,8 @@ public struct Incident: Equatable {
         activePhoneNumbers: [String],
         formFields: [IncidentFormField],
         turnOnRelease: Bool,
-        disasterLiteral: String
+        disasterLiteral: String,
+        startAt: Date? = nil
     ) {
         self.id = id
         self.name = name
@@ -42,6 +46,7 @@ public struct Incident: Equatable {
         self.formFields = formFields
         self.turnOnRelease = turnOnRelease
         self.disasterLiteral = disasterLiteral
+        self.startAt = startAt
 
         displayLabel = caseLabel.isBlank ? name : "\(caseLabel): \(name)"
         disaster = disasterFromLiteral(disasterLiteral)
