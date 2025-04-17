@@ -154,7 +154,8 @@ class CasesViewModel: ObservableObject {
 
         mapBoundsManager = CasesMapBoundsManager(
             incidentSelector,
-            incidentBoundsProvider
+            incidentBoundsProvider,
+            appPreferences
         )
 
         mapMarkerManager = CasesMapMarkerManager(
@@ -178,6 +179,10 @@ class CasesViewModel: ObservableObject {
         if appEnv.isDebuggable {
             debugOverlay = TileCoordinateOverlay()
         }
+    }
+
+    deinit {
+        mapBoundsManager.unsubscribe()
     }
 
     func onViewAppear() {
@@ -705,10 +710,22 @@ class CasesViewModel: ObservableObject {
 
         let center = region.center
         let span = region.span
-        qsm.mapBoundsSubject.value = CoordinateBounds(
-            southWest: center.subtract(span).latLng,
-            northEast: center.add(span).latLng
+        let halfSpan = MKCoordinateSpan(
+            latitudeDelta: span.latitudeDelta / 2,
+            longitudeDelta: span.longitudeDelta / 2
         )
+        let southWest = center.subtract(halfSpan).latLng
+        let northEast = center.add(halfSpan).latLng
+
+        qsm.mapBoundsSubject.value = CoordinateBounds(
+            southWest: southWest,
+            northEast: northEast
+        )
+
+        mapBoundsManager.cacheBounds(LatLngBounds(
+            southWest: southWest,
+            northEast: northEast
+        ))
 
         // TODO: Redesign entire map (data) state
         // Seems like there is a map view bug. This accounts for those times.

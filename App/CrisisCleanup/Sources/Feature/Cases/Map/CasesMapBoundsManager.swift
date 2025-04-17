@@ -1,9 +1,11 @@
 import Combine
 import Foundation
+import MapKit
 
 internal class CasesMapBoundsManager {
     private let incidentSelector: IncidentSelector
     private let incidentBoundsProvider: IncidentBoundsProvider
+    private let preferencesDataSource: AppPreferencesDataStore
 
     private var mapBoundsCache = MapViewCameraBoundsDefault.bounds
 
@@ -12,52 +14,159 @@ internal class CasesMapBoundsManager {
     private let mapCameraBoundsSubject = CurrentValueSubject<MapViewCameraBounds, Never>(MapViewCameraBoundsDefault)
     let mapCameraBoundsPublisher: any Publisher<MapViewCameraBounds, Never>
 
+    private var incidentIdCache = EmptyIncident.id
+
     let isDeterminingBoundsPublisher: any Publisher<Bool, Never>
 
-    private var incidentIdCache: Int64 = EmptyIncident.id
+    private let zeroBounds = LatLngBounds(
+        southWest: LatLng(0.0, 0.0),
+        northEast: LatLng(0.0, 0.0)
+    )
+
+    private let mapLoadTime = Date.now
+
+    private var isStarted: Bool {
+        mapLoadTime.distance(to: Date.now) > 2.seconds
+    }
+
+    private let saveIncidentMapBoundsPublisher = CurrentValueSubject<IncidentCoordinateBounds, Never>(IncidentCoordinateBoundsNone)
 
     private var disposables = Set<AnyCancellable>()
 
     init(
         _ incidentSelector: IncidentSelector,
-        _ incidentBoundsProvider: IncidentBoundsProvider
+        _ incidentBoundsProvider: IncidentBoundsProvider,
+        _ preferencesDataSource: AppPreferencesDataStore
     ) {
         self.incidentSelector = incidentSelector
         self.incidentBoundsProvider = incidentBoundsProvider
+        self.preferencesDataSource = preferencesDataSource
 
         mapCameraBoundsPublisher = mapCameraBoundsSubject
 
         let incidentIdPublisher = incidentSelector.incidentId.eraseToAnyPublisher()
         let incidentPublisher = incidentSelector.incident.eraseToAnyPublisher()
 
-        let incidentBoundsPublisher = incidentBoundsProvider.mappingBoundsIncidentIds.eraseToAnyPublisher()
+        let mappingBoundsIncidentIds = incidentBoundsProvider.mappingBoundsIncidentIds.eraseToAnyPublisher()
 
         isDeterminingBoundsPublisher = Publishers.CombineLatest(
             incidentIdPublisher,
-            incidentBoundsPublisher
+            mappingBoundsIncidentIds
         )
         .map { id, ids in
             ids.contains(id)
         }
 
-        incidentPublisher
+        incidentIdPublisher
+            .receive(on: RunLoop.main)
+            .assign(to: \.incidentIdCache, on: self)
+            .store(in: &disposables)
+
+        let incidentBounds = incidentPublisher
             .map { incident in
-                self.incidentIdCache = incident.id
-                return self.incidentBoundsProvider.mapIncidentBounds(incident)
+                return incidentBoundsProvider.mapIncidentBounds(incident)
             }
             .switchToLatest()
-            .sink { incidentBounds in
-                if incidentBounds.locations.isNotEmpty {
-                    let bounds = incidentBounds.bounds
-                    self.mapCameraBoundsSubject.value = MapViewCameraBounds(bounds)
-                    self.cacheBounds(bounds)
+            .map { incidentBounds in
+                return if incidentBounds.locations.isEmpty {
+                    self.zeroBounds
+                } else {
+                    incidentBounds.bounds
+                }
+            }
+            .removeDuplicates()
+
+        let savedBounds = Publishers.CombineLatest(
+            incidentIdPublisher,
+            preferencesDataSource.preferences.eraseToAnyPublisher()
+        )
+            .map { (incidentId, preferences) in
+                return if let mapBounds = preferences.casesMapBounds,
+                          incidentId != EmptyIncident.id,
+                          incidentId == mapBounds.incidentId {
+                    mapBounds.latLngBounds
+                } else {
+                    self.zeroBounds
+                }
+            }
+
+        // Starting bounds
+        Publishers.CombineLatest(
+            incidentBounds,
+            savedBounds
+        )
+        .throttle(
+            for: .seconds(1),
+            scheduler: RunLoop.current,
+            latest: true
+        )
+        .receive(on: RunLoop.main)
+        .sink { (ib, sb) in
+            let bounds = if self.isStarted {
+                self.zeroBounds
+            } else {
+                if sb != self.zeroBounds {
+                    sb
+                } else if ib != self.zeroBounds {
+                    ib
+                } else {
+                    self.zeroBounds
+                }
+            }
+            if bounds != self.zeroBounds {
+                self.cacheBounds(bounds, cacheToDisk: false)
+                self.mapCameraBoundsSubject.value = MapViewCameraBounds(bounds, 0)
+            }
+        }
+        .store(in: &disposables)
+
+        // Incident change bounds
+        incidentBounds
+            .debounce(for: .seconds(0.1), scheduler: RunLoop.current)
+            .receive(on: RunLoop.main)
+            .sink { ib in
+                if self.isStarted,
+                   ib != self.zeroBounds {
+                    self.cacheBounds(ib, cacheToDisk: true)
+                    self.mapCameraBoundsSubject.value = MapViewCameraBounds(ib)
                 }
             }
             .store(in: &disposables)
+
+        saveIncidentMapBoundsPublisher
+        .filter { $0 != IncidentCoordinateBoundsNone}
+        .throttle(
+            for: .seconds(0.6),
+            scheduler: RunLoop.current,
+            latest: true
+        )
+        .sink { bounds in
+            Task {
+                self.preferencesDataSource.setCasesMapBounds(bounds)
+            }
+        }
+        .store(in: &disposables)
+    }
+
+    func unsubscribe() {
+        _ = cancelSubscriptions(disposables)
+    }
+
+    private func cacheBounds(_ bounds: LatLngBounds, cacheToDisk: Bool) {
+        if bounds == mapBoundsCache {
+            return
+        }
+
+        mapBoundsCache = bounds
+
+        if isStarted,
+           cacheToDisk {
+            saveIncidentMapBoundsPublisher.value = bounds.asIncidentCoordinateBounds(incidentIdCache)
+        }
     }
 
     func cacheBounds(_ bounds: LatLngBounds) {
-        mapBoundsCache = bounds
+        cacheBounds(bounds, cacheToDisk: isStarted)
     }
 
     func restoreBounds() {
@@ -67,11 +176,16 @@ internal class CasesMapBoundsManager {
     func restoreIncidentBounds() {
         let incidentId = incidentIdCache
         if let incidentBounds = incidentBoundsProvider.getIncidentBounds(incidentId) {
-            let bounds = incidentBounds.bounds
-            let latLngBounds = LatLngBounds(southWest: bounds.southWest, northEast: bounds.northEast)
-
-            mapCameraBoundsSubject.value = MapViewCameraBounds(latLngBounds)
-            mapBoundsCache = latLngBounds
+            mapCameraBoundsSubject.value = MapViewCameraBounds(incidentBounds.bounds)
         }
+    }
+}
+
+extension IncidentCoordinateBounds {
+    var latLngBounds: LatLngBounds {
+        return LatLngBounds(
+            southWest: LatLng(south, west),
+            northEast: LatLng(north, east)
+        )
     }
 }
