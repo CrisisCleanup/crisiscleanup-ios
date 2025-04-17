@@ -69,7 +69,7 @@ struct CasesLayoutView: View {
                         router.viewCase(incidentId: incidentId, worksiteId: worksiteId)
                     }
                 )
-                .onReceive(viewModel.$incidentLocationBounds) { bounds in
+                .onReceive(viewModel.$mapCameraBounds) { bounds in
                     animateToSelectedIncidentBounds(bounds.bounds)
                 }
                 .onReceive(viewModel.$mapMarkersChangeSet) { changes in
@@ -375,7 +375,7 @@ private struct MapResponsiveControls: View {
         }
 
         Button {
-            let bounds = viewModel.incidentLocationBounds.bounds
+            let bounds = viewModel.incidentMapBounds.bounds
             animateToSelectedIncidentBounds(bounds)
         } label: {
             Image("ic_zoom_interactive", bundle: .module)

@@ -59,7 +59,8 @@ class CasesViewModel: ObservableObject {
 
     private let mapBoundsManager: CasesMapBoundsManager
 
-    @Published private(set) var incidentLocationBounds = MapViewCameraBoundsDefault
+    @Published private(set) var mapCameraBounds = MapViewCameraBoundsDefault
+    @Published private(set) var incidentMapBounds = MapViewCameraBoundsDefault
 
     @Published private(set) var isMapBusy: Bool = false
     private let isGeneratingWorksiteMarkers = CurrentValueSubject<Bool, Never>(false)
@@ -188,7 +189,7 @@ class CasesViewModel: ObservableObject {
     func onViewAppear() {
         subscribeLoading()
         subscribeIncidentsData()
-        subscribeIncidentBounds()
+        subscribeCameraBounds()
         subscribeWorksiteInBounds()
         subscribeDataPullStats()
         subscribeViewState()
@@ -280,7 +281,14 @@ class CasesViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
-    private func subscribeIncidentBounds() {
+    private func subscribeCameraBounds() {
+        mapBoundsManager.incidentBoundsPublisher
+            .eraseToAnyPublisher()
+            .map { MapViewCameraBounds($0) }
+            .receive(on: RunLoop.main)
+            .assign(to: \.incidentMapBounds, on: self)
+            .store(in: &subscriptions)
+
         mapBoundsManager.mapCameraBoundsPublisher
             .eraseToAnyPublisher()
             .receive(on: RunLoop.main)
@@ -295,7 +303,7 @@ class CasesViewModel: ObservableObject {
                 }
 
                 if updateBounds {
-                    self.incidentLocationBounds = bounds
+                    self.mapCameraBounds = bounds
                 }
             })
             .store(in: &subscriptions)

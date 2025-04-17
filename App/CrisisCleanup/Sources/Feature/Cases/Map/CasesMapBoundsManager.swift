@@ -15,13 +15,9 @@ internal class CasesMapBoundsManager {
     let mapCameraBoundsPublisher: any Publisher<MapViewCameraBounds, Never>
 
     private var incidentIdCache = EmptyIncident.id
+    let incidentBoundsPublisher: any Publisher<LatLngBounds, Never>
 
     let isDeterminingBoundsPublisher: any Publisher<Bool, Never>
-
-    private let zeroBounds = LatLngBounds(
-        southWest: LatLng(0.0, 0.0),
-        northEast: LatLng(0.0, 0.0)
-    )
 
     private let mapLoadTime = Date.now
 
@@ -57,24 +53,29 @@ internal class CasesMapBoundsManager {
             ids.contains(id)
         }
 
-        incidentIdPublisher
-            .receive(on: RunLoop.main)
-            .assign(to: \.incidentIdCache, on: self)
-            .store(in: &disposables)
+        let zeroBounds = LatLngBounds(
+            southWest: LatLng(0.0, 0.0),
+            northEast: LatLng(0.0, 0.0)
+        )
 
-        let incidentBounds = incidentPublisher
+        incidentBoundsPublisher = incidentPublisher
             .map { incident in
                 return incidentBoundsProvider.mapIncidentBounds(incident)
             }
             .switchToLatest()
             .map { incidentBounds in
                 return if incidentBounds.locations.isEmpty {
-                    self.zeroBounds
+                    zeroBounds
                 } else {
                     incidentBounds.bounds
                 }
             }
             .removeDuplicates()
+
+        incidentIdPublisher
+            .receive(on: RunLoop.main)
+            .assign(to: \.incidentIdCache, on: self)
+            .store(in: &disposables)
 
         let savedBounds = Publishers.CombineLatest(
             incidentIdPublisher,
@@ -86,13 +87,13 @@ internal class CasesMapBoundsManager {
                           incidentId == mapBounds.incidentId {
                     mapBounds.latLngBounds
                 } else {
-                    self.zeroBounds
+                    zeroBounds
                 }
             }
 
         // Starting bounds
         Publishers.CombineLatest(
-            incidentBounds,
+            incidentBoundsPublisher.eraseToAnyPublisher(),
             savedBounds
         )
         .throttle(
@@ -103,17 +104,17 @@ internal class CasesMapBoundsManager {
         .receive(on: RunLoop.main)
         .sink { (ib, sb) in
             let bounds = if self.isStarted {
-                self.zeroBounds
+                zeroBounds
             } else {
-                if sb != self.zeroBounds {
+                if sb != zeroBounds {
                     sb
-                } else if ib != self.zeroBounds {
+                } else if ib != zeroBounds {
                     ib
                 } else {
-                    self.zeroBounds
+                    zeroBounds
                 }
             }
-            if bounds != self.zeroBounds {
+            if bounds != zeroBounds {
                 self.cacheBounds(bounds, cacheToDisk: false)
                 self.mapCameraBoundsSubject.value = MapViewCameraBounds(bounds, 0)
             }
@@ -121,12 +122,13 @@ internal class CasesMapBoundsManager {
         .store(in: &disposables)
 
         // Incident change bounds
-        incidentBounds
+        incidentBoundsPublisher
+            .eraseToAnyPublisher()
             .debounce(for: .seconds(0.1), scheduler: RunLoop.current)
             .receive(on: RunLoop.main)
             .sink { ib in
                 if self.isStarted,
-                   ib != self.zeroBounds {
+                   ib != zeroBounds {
                     self.cacheBounds(ib, cacheToDisk: true)
                     self.mapCameraBoundsSubject.value = MapViewCameraBounds(ib)
                 }
