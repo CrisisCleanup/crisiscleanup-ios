@@ -160,6 +160,14 @@ extension NetworkRequestProvider {
         )
     }
 
+    var worksite: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksite"),
+            addTokenHeader: true,
+            timeoutInterval: 15.seconds
+        )
+    }
+
     var worksitesCount: NetworkRequest {
         NetworkRequest(
             apiUrl("worksites/count"),
@@ -184,7 +192,8 @@ extension NetworkRequestProvider {
     var workTypeRequests: NetworkRequest {
         NetworkRequest(
             apiUrl("worksite_requests"),
-            addTokenHeader: true
+            addTokenHeader: true,
+            timeoutInterval: 15.seconds
         )
     }
 

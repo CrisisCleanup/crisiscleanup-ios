@@ -16,6 +16,7 @@ extension NetworkRequest {
 		bodyParameters: Encodable?,
 		addTokenHeader: Bool,
 		clearCookies: Bool,
+		timeoutInterval: TimeInterval?,
 		// This is to prevent overriding the default init if it exists already
 		forCopyInit: Void? = nil
 	) {
@@ -28,6 +29,7 @@ extension NetworkRequest {
 		self.bodyParameters = bodyParameters
 		self.addTokenHeader = addTokenHeader
 		self.clearCookies = clearCookies
+		self.timeoutInterval = timeoutInterval
 	}
 
 	// struct copy, lets you overwrite specific variables retaining the value of the rest
@@ -48,6 +50,7 @@ extension NetworkRequest {
 		var bodyParameters: Encodable?
 		var addTokenHeader: Bool
 		var clearCookies: Bool
+		var timeoutInterval: TimeInterval?
 
 		fileprivate init(original: NetworkRequest) {
 			self.url = original.url
@@ -59,6 +62,7 @@ extension NetworkRequest {
 			self.bodyParameters = original.bodyParameters
 			self.addTokenHeader = original.addTokenHeader
 			self.clearCookies = original.clearCookies
+			self.timeoutInterval = original.timeoutInterval
 		}
 
 		fileprivate func toNetworkRequest() -> NetworkRequest {
@@ -71,7 +75,8 @@ extension NetworkRequest {
 				formParameters: formParameters,
 				bodyParameters: bodyParameters,
 				addTokenHeader: addTokenHeader,
-				clearCookies: clearCookies
+				clearCookies: clearCookies,
+				timeoutInterval: timeoutInterval
 			)
 		}
 	}
