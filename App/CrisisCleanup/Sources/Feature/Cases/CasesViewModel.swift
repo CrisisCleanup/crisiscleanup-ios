@@ -599,7 +599,7 @@ class CasesViewModel: ObservableObject {
                     if self.isTableView {
                         let sortBy = self.pendingTableSort.exchange(AtomicSortBy(.none), ordering: .relaxed).value
                         if sortBy != .none {
-                            self.setSortBy(sortBy)
+                            self.setTableSortBy(sortBy)
                         }
                         self.qsm.locationPermission.value = true
                     }
@@ -815,14 +815,14 @@ class CasesViewModel: ObservableObject {
         return tableData
     }
 
-    private func setSortBy(_ sortBy: WorksiteSortBy) {
+    private func setTableSortBy(_ sortBy: WorksiteSortBy) {
         appPreferences.setTableViewSortBy(sortBy)
     }
 
     private func changeTableSort(_ sortBy: WorksiteSortBy) {
         if sortBy == .nearest {
             if locationManager.requestLocationAccess() {
-                setSortBy(sortBy)
+                setTableSortBy(sortBy)
             } else {
                 pendingTableSort.store(AtomicSortBy(sortBy), ordering: .relaxed)
 
@@ -835,7 +835,7 @@ class CasesViewModel: ObservableObject {
                 // TODO: How to revert view's selected sort by without too much complexity?
             }
         } else {
-            setSortBy(sortBy)
+            setTableSortBy(sortBy)
         }
     }
 

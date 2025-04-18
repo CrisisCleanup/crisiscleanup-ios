@@ -79,6 +79,7 @@ public protocol AppDependency: Dependency {
     var worksiteProvider: WorksiteProvider { get }
     var existingWorksiteSelector: ExistingWorksiteSelector { get }
     var worksiteInteractor: WorksiteInteractor { get }
+    var incidentMapTracker: IncidentMapTracker { get }
 }
 
 extension MainComponent {
