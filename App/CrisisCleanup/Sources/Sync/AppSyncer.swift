@@ -336,6 +336,8 @@ class AppSyncer: SyncPuller, SyncPusher {
         }
     }
 
+    // TODO: Move both background tasks below into BackgroundTaskCoordinator and apply better pattern
+
     private let syncMediaGuard = ManagedAtomic(false)
     func scheduleSyncMedia() {
         var syncingTask: Task<Void, Error>? = nil
@@ -403,4 +405,13 @@ class AppSyncer: SyncPuller, SyncPusher {
             }
         }
     }
+}
+
+
+public enum SyncResult {
+    case notAttempted(reason: String),
+         success(notes: String),
+         partial(notes: String),
+         Error(message: String),
+         invalidAccountTokens
 }
