@@ -239,9 +239,8 @@ private struct FrequencyDailyWeeklyViews: View {
 
             FlowStack(
                 alignment: .leading,
-                // TODO: Common dimensions
-                horizontalSpacing: 16,
-                verticalSpacing: 16
+                horizontalSpacing: appTheme.gridActionSpacing,
+                verticalSpacing: appTheme.gridActionSpacing
             ) {
                 ForEach(rruleDayOptions, id: \.self) { option in
                     let isSelected = selectedDays.contains(option)

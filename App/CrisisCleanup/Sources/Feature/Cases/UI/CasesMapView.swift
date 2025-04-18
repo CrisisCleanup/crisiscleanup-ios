@@ -8,6 +8,8 @@ class Coordinator: NSObject, MKMapViewDelegate {
     let viewModel: CasesViewModel
     let onSelectWorksite: (Int64) -> Void
 
+    fileprivate var isTintApplied: Bool = false
+
     init(
         _ viewModel: CasesViewModel,
         _ onSelectWorksite: @escaping (Int64) -> Void
@@ -38,7 +40,7 @@ class Coordinator: NSObject, MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         switch overlay {
         case let overlay as MKPolygon:
-            return createPolygonRenderer(for: overlay)
+            return isTintApplied ? overlayMapRenderer(overlay, 1.0) : BlankPolygonRenderer(overlay: overlay)
         case let overlay as MKTileOverlay:
             return createTileRenderer(for: overlay)
         default:
@@ -62,11 +64,7 @@ class Coordinator: NSObject, MKMapViewDelegate {
         return mapView.view(for: annotation)
     }
 
-    func createPolygonRenderer(for polygon: MKPolygon) -> MKPolygonRenderer {
-        overlayMapRenderer(polygon, 1.0)
-    }
-
-    func createTileRenderer(for overlay: MKTileOverlay) -> MKTileOverlayRenderer {
+    private func createTileRenderer(for overlay: MKTileOverlay) -> MKTileOverlayRenderer {
         MKTileOverlayRenderer(tileOverlay: overlay)
     }
 }
@@ -74,21 +72,19 @@ class Coordinator: NSObject, MKMapViewDelegate {
 internal struct CasesMapView : UIViewRepresentable {
     @Binding var map: MKMapView
     @Binding var focusWorksiteCenter: CLLocationCoordinate2D?
+    @Binding var isSatelliteMapType: Bool
 
     @ObservedObject var viewModel: CasesViewModel
+
+    let mapOverlays: [MKOverlay]
 
     let onSelectWorksite: (Int64) -> Void
 
     func makeUIView(context: Context) -> MKMapView {
-        map.overrideUserInterfaceStyle = .light
-        map.mapType = .standard
-        map.pointOfInterestFilter = .excludingAll
-        map.camera.centerCoordinateDistance = 20
-        map.showsUserLocation = false
-        map.isRotateEnabled = false
-        map.isPitchEnabled = false
-
-        map.overlayPolygons()
+        map.configure(
+            overlays: mapOverlays,
+            isScrollEnabled: true
+        )
 
         if let overlay = viewModel.debugOverlay{
             map.addOverlay(overlay, level: .aboveLabels)
@@ -111,6 +107,18 @@ internal struct CasesMapView : UIViewRepresentable {
             uiView.animaiteToCenter(worksiteCoordinates)
             Task { @MainActor in
                 viewModel.editedWorksiteLocation = nil
+            }
+        }
+
+        if let coordinator = (map.delegate as? Coordinator),
+           coordinator.isTintApplied == isSatelliteMapType {
+            // Overlays references don't match on first toggle
+            let polygonOverlays = map.overlays.filter { $0 is MKPolygon }
+            map.removeOverlays(polygonOverlays)
+
+            coordinator.isTintApplied = !isSatelliteMapType
+            if !isSatelliteMapType {
+                map.addOverlays(mapOverlays)
             }
         }
     }

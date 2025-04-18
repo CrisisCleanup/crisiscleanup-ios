@@ -12,6 +12,7 @@ struct NetworkRequest: URLRequestConvertible {
     let bodyParameters: Encodable?
     let addTokenHeader: Bool
     let clearCookies: Bool
+    let timeoutInterval: TimeInterval?
 
     init(
         _ url: URL,
@@ -22,7 +23,8 @@ struct NetworkRequest: URLRequestConvertible {
         formParameters: Encodable? = nil,
         bodyParameters: Encodable? = nil,
         addTokenHeader: Bool = false,
-        clearCookies: Bool = false
+        clearCookies: Bool = false,
+        timeoutInterval: Double? = nil
     ) {
         self.url = url
         self.method = method
@@ -33,6 +35,7 @@ struct NetworkRequest: URLRequestConvertible {
         self.bodyParameters = bodyParameters
         self.addTokenHeader = addTokenHeader
         self.clearCookies = clearCookies
+        self.timeoutInterval = timeoutInterval
     }
 
     func addPaths(_ paths: String...) -> Self {
@@ -114,6 +117,10 @@ struct NetworkRequest: URLRequestConvertible {
                     into: request
                 )
                 request.setValue("application/json", forHTTPHeaderField: "Accept")
+            }
+
+            if let timeout = timeoutInterval {
+                request.timeoutInterval = timeout
             }
         }
     }

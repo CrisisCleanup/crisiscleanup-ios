@@ -59,7 +59,8 @@ class CasesViewModel: ObservableObject {
 
     private let mapBoundsManager: CasesMapBoundsManager
 
-    @Published private(set) var incidentLocationBounds = MapViewCameraBoundsDefault
+    @Published private(set) var mapCameraBounds = MapViewCameraBoundsDefault
+    @Published private(set) var incidentMapBounds = MapViewCameraBoundsDefault
 
     @Published private(set) var isMapBusy: Bool = false
     private let isGeneratingWorksiteMarkers = CurrentValueSubject<Bool, Never>(false)
@@ -154,7 +155,8 @@ class CasesViewModel: ObservableObject {
 
         mapBoundsManager = CasesMapBoundsManager(
             incidentSelector,
-            incidentBoundsProvider
+            incidentBoundsProvider,
+            appPreferences
         )
 
         mapMarkerManager = CasesMapMarkerManager(
@@ -180,10 +182,14 @@ class CasesViewModel: ObservableObject {
         }
     }
 
+    deinit {
+        mapBoundsManager.unsubscribe()
+    }
+
     func onViewAppear() {
         subscribeLoading()
         subscribeIncidentsData()
-        subscribeIncidentBounds()
+        subscribeCameraBounds()
         subscribeWorksiteInBounds()
         subscribeDataPullStats()
         subscribeViewState()
@@ -275,7 +281,14 @@ class CasesViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
-    private func subscribeIncidentBounds() {
+    private func subscribeCameraBounds() {
+        mapBoundsManager.incidentBoundsPublisher
+            .eraseToAnyPublisher()
+            .map { MapViewCameraBounds($0) }
+            .receive(on: RunLoop.main)
+            .assign(to: \.incidentMapBounds, on: self)
+            .store(in: &subscriptions)
+
         mapBoundsManager.mapCameraBoundsPublisher
             .eraseToAnyPublisher()
             .receive(on: RunLoop.main)
@@ -290,7 +303,7 @@ class CasesViewModel: ObservableObject {
                 }
 
                 if updateBounds {
-                    self.incidentLocationBounds = bounds
+                    self.mapCameraBounds = bounds
                 }
             })
             .store(in: &subscriptions)
@@ -586,7 +599,7 @@ class CasesViewModel: ObservableObject {
                     if self.isTableView {
                         let sortBy = self.pendingTableSort.exchange(AtomicSortBy(.none), ordering: .relaxed).value
                         if sortBy != .none {
-                            self.setSortBy(sortBy)
+                            self.setTableSortBy(sortBy)
                         }
                         self.qsm.locationPermission.value = true
                     }
@@ -705,10 +718,22 @@ class CasesViewModel: ObservableObject {
 
         let center = region.center
         let span = region.span
-        qsm.mapBoundsSubject.value = CoordinateBounds(
-            southWest: center.subtract(span).latLng,
-            northEast: center.add(span).latLng
+        let halfSpan = MKCoordinateSpan(
+            latitudeDelta: span.latitudeDelta / 2,
+            longitudeDelta: span.longitudeDelta / 2
         )
+        let southWest = center.subtract(halfSpan).latLng
+        let northEast = center.add(halfSpan).latLng
+
+        qsm.mapBoundsSubject.value = CoordinateBounds(
+            southWest: southWest,
+            northEast: northEast
+        )
+
+        mapBoundsManager.cacheBounds(LatLngBounds(
+            southWest: southWest,
+            northEast: northEast
+        ))
 
         // TODO: Redesign entire map (data) state
         // Seems like there is a map view bug. This accounts for those times.
@@ -790,14 +815,14 @@ class CasesViewModel: ObservableObject {
         return tableData
     }
 
-    private func setSortBy(_ sortBy: WorksiteSortBy) {
+    private func setTableSortBy(_ sortBy: WorksiteSortBy) {
         appPreferences.setTableViewSortBy(sortBy)
     }
 
     private func changeTableSort(_ sortBy: WorksiteSortBy) {
         if sortBy == .nearest {
             if locationManager.requestLocationAccess() {
-                setSortBy(sortBy)
+                setTableSortBy(sortBy)
             } else {
                 pendingTableSort.store(AtomicSortBy(sortBy), ordering: .relaxed)
 
@@ -810,7 +835,7 @@ class CasesViewModel: ObservableObject {
                 // TODO: How to revert view's selected sort by without too much complexity?
             }
         } else {
-            setSortBy(sortBy)
+            setTableSortBy(sortBy)
         }
     }
 

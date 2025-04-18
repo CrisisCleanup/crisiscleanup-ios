@@ -52,7 +52,7 @@ class CasesMapMarkerManager {
                 let east = CoordinatesUtil.lerpLongitude(halfNe.longitude, ne.longitude, evenDistWeight, false)
                 sw = LatLng(south, west)
                 ne = LatLng(north, east)
-                // TODO How to best determine count?
+                // TODO: How to best determine count?
             } else {
                 sw = halfSw
                 ne = halfNe

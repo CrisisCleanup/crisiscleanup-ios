@@ -29,6 +29,7 @@ struct CasesLayoutView: View {
     let openAuthScreen: () -> Void
 
     @State var map = MKMapView()
+    @State private var isSatelliteMapType = false
     @State private var showMapBusyIndicator = false
     @State private var phoneCallNumbers = [ParsedPhoneNumber]()
 
@@ -60,13 +61,15 @@ struct CasesLayoutView: View {
                 CasesMapView(
                     map: $map,
                     focusWorksiteCenter: $viewModel.editedWorksiteLocation,
+                    isSatelliteMapType: $isSatelliteMapType,
                     viewModel: viewModel,
+                    mapOverlays: map.makeOverlayPolygons(),
                     onSelectWorksite: { worksiteId in
                         let incidentId = viewModel.incidentsData.selectedId
                         router.viewCase(incidentId: incidentId, worksiteId: worksiteId)
                     }
                 )
-                .onReceive(viewModel.$incidentLocationBounds) { bounds in
+                .onReceive(viewModel.$mapCameraBounds) { bounds in
                     animateToSelectedIncidentBounds(bounds.bounds)
                 }
                 .onReceive(viewModel.$mapMarkersChangeSet) { changes in
@@ -108,6 +111,7 @@ struct CasesLayoutView: View {
             CasesOverlayElements(
                 openAuthScreen: openAuthScreen,
                 map: $map,
+                isSatelliteMapType: $isSatelliteMapType,
                 incidentSelectViewBuilder: incidentSelectViewBuilder,
                 isLoadingIncidents: isLoadingIncidents,
                 hasNoIncidents: hasNoIncidents,
@@ -245,6 +249,7 @@ private struct CasesOverlayElements: View {
     let openAuthScreen: () -> Void
 
     @Binding var map: MKMapView
+    @Binding var isSatelliteMapType: Bool
 
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
 
@@ -270,11 +275,11 @@ private struct CasesOverlayElements: View {
 
             HStack(spacing: 0) {
                 if isMapView {
-                    // TODO: Common dimensions
-                    VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: appTheme.gridActionSpacing) {
                         MapControls(
                             map: map,
                             animateToSelectedIncidentBounds: animateToSelectedIncidentBounds,
+                            isSatelliteMapType: $isSatelliteMapType,
                             isCompactLayout: isCompactLayout
                         )
 
@@ -286,21 +291,22 @@ private struct CasesOverlayElements: View {
 
                 Spacer()
 
-                // TODO: Common dimensions
-                VStack(spacing: 16) {
+                VStack(spacing: appTheme.gridActionSpacing) {
                     if !isCompactLayout {
                         Spacer()
                     }
 
-                    Button {
-                        if viewModel.useMyLocation() {
-                            map.userTrackingMode = .follow
+                    if isMapView {
+                        Button {
+                            if viewModel.useMyLocation() {
+                                map.userTrackingMode = .follow
+                            }
+                        } label: {
+                            Image(systemName: "location")
+                                .padding()
                         }
-                    } label: {
-                        Image(systemName: "location")
-                            .padding()
+                        .styleRoundedRectanglePrimary()
                     }
-                    .styleRoundedRectanglePrimary()
 
                     Button {
                         router.createEditCase(
@@ -340,8 +346,10 @@ private struct MapResponsiveControls: View {
     @EnvironmentObject var viewModel: CasesViewModel
 
     let map: MKMapView
-
     let animateToSelectedIncidentBounds: (LatLngBounds) -> Void
+    @Binding var isSatelliteMapType: Bool
+
+    @State private var showLayersView = false
 
     var body: some View {
         Button {
@@ -367,7 +375,7 @@ private struct MapResponsiveControls: View {
         }
 
         Button {
-            let bounds = viewModel.incidentLocationBounds.bounds
+            let bounds = viewModel.incidentMapBounds.bounds
             animateToSelectedIncidentBounds(bounds)
         } label: {
             Image("ic_zoom_interactive", bundle: .module)
@@ -376,13 +384,28 @@ private struct MapResponsiveControls: View {
                 .shadow(radius: appTheme.shadowRadius)
         }
 
-//        Button {
-//        } label: {
-//            Image("ic_layers", bundle: .module)
-//                .mapOverlayButton()
-//                .cornerRadius(appTheme.cornerRadius)
-//                .shadow(radius: appTheme.shadowRadius)
-//        }
+        Button {
+            showLayersView = true
+        } label: {
+            Image("ic_layers", bundle: .module)
+                .mapOverlayButton()
+                .cornerRadius(appTheme.cornerRadius)
+                .shadow(radius: appTheme.shadowRadius)
+        }
+        .sheet(
+            isPresented: $showLayersView,
+            onDismiss: {
+                showLayersView = false
+            }
+        ) {
+            MapLayersView(isSatelliteMapType: $isSatelliteMapType)
+                .listItemModifier()
+                .onChange(of: isSatelliteMapType) { newValue in
+                    map.mapType = newValue ? .satellite : .standard
+                    // TODO: Toggle overlay
+                }
+                .presentationDetents([.medium, .fraction(0.3)])
+        }
     }
 }
 
@@ -393,6 +416,8 @@ private struct MapControls: View {
 
     let map: MKMapView
     let animateToSelectedIncidentBounds: (LatLngBounds) -> Void
+    @Binding var isSatelliteMapType: Bool
+
     var isCompactLayout = false
 
     func zoomDelta(scale: Double) {
@@ -426,20 +451,65 @@ private struct MapControls: View {
         .shadow(radius: appTheme.shadowRadius)
 
         if isCompactLayout {
-            // TODO: Common dimensions
-            HStack(spacing: 16) {
+            HStack(spacing: appTheme.gridActionSpacing) {
                 MapResponsiveControls(
                     map: map,
-                    animateToSelectedIncidentBounds: animateToSelectedIncidentBounds
+                    animateToSelectedIncidentBounds: animateToSelectedIncidentBounds,
+                    isSatelliteMapType: $isSatelliteMapType
                 )
             }
         } else {
             MapResponsiveControls(
                 map: map,
-                animateToSelectedIncidentBounds: animateToSelectedIncidentBounds
+                animateToSelectedIncidentBounds: animateToSelectedIncidentBounds,
+                isSatelliteMapType: $isSatelliteMapType
             )
         }
 
+    }
+}
+
+private struct MapLayersView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @Binding var isSatelliteMapType: Bool
+
+    var borderColor: Color = appTheme.colors.primaryBlueColor
+    var borderWidth: CGFloat = 3
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: appTheme.gridActionSpacing) {
+            Text(t.t("~~Map type"))
+                .fontHeader3()
+
+            let imageSize = appTheme.buttonSize
+            HStack {
+                VStack(spacing: appTheme.gridItemSpacing) {
+                    Button {
+                        isSatelliteMapType = false
+                    } label: {
+                        Image(systemName: "map")
+                            .frame(width: imageSize, height: imageSize)
+                            .if (!isSatelliteMapType) {
+                                $0.roundedBorder(color: borderColor, lineWidth: borderWidth)
+                            }
+                    }
+                    Text(t.t("~~Default"))
+                }
+                VStack(spacing: appTheme.gridItemSpacing) {
+                    Button {
+                        isSatelliteMapType = true
+                    } label: {
+                        Image(systemName: "mountain.2")
+                            .frame(width: imageSize, height: imageSize)
+                            .if (isSatelliteMapType) {
+                                $0.roundedBorder(color: borderColor, lineWidth: borderWidth)
+                            }
+                    }
+                    Text(t.t("~~Satellite"))
+                }
+            }
+        }
     }
 }
 

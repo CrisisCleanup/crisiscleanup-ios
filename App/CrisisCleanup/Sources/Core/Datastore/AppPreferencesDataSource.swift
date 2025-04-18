@@ -17,6 +17,8 @@ public protocol AppPreferencesDataStore {
     func setLanguageKey(_ key: String)
     func setTableViewSortBy(_ sortBy: WorksiteSortBy)
     func setShareLocationWithOrg(_ share: Bool)
+    func setCasesMapBounds(_ bounds: IncidentCoordinateBounds)
+    func setTeamMapBounds(_ bounds: IncidentCoordinateBounds)
 }
 
 extension AppPreferencesDataStore {
@@ -130,6 +132,22 @@ class AppPreferencesUserDefaults: AppPreferencesDataStore {
         update(
             UserDefaults.standard.appPreferences.copy {
                 $0.shareLocationWithOrg = share
+            }
+        )
+    }
+
+    func setCasesMapBounds(_ bounds: IncidentCoordinateBounds) {
+        update(
+            UserDefaults.standard.appPreferences.copy {
+                $0.casesMapBounds = bounds
+            }
+        )
+    }
+
+    func setTeamMapBounds(_ bounds: IncidentCoordinateBounds) {
+        update(
+            UserDefaults.standard.appPreferences.copy {
+                $0.teamMapBounds = bounds
             }
         )
     }

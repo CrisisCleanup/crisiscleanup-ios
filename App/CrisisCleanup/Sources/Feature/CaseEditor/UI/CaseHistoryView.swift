@@ -87,8 +87,7 @@ private struct CaseHistoryUser: View {
 private struct CaseHistoryEvents: View {
     let events: [CaseHistoryEvent]
     var body: some View {
-        // TODO: Common dimensions
-        VStack(spacing: 16) {
+        VStack(spacing: appTheme.edgeSpacing) {
             ForEach(events, id: \.id) { event in
                 VStack(
                     alignment: .leading,
@@ -109,8 +108,7 @@ private struct CaseHistoryEvents: View {
                 .frame(maxWidth: .infinity)
             }
         }
-        // TODO: Common dimensions
-        .padding(.all, 16)
+        .padding()
         .background(appTheme.colors.neutralBackgroundColor)
     }
 }

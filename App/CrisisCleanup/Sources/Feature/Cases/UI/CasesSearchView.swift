@@ -27,7 +27,9 @@ struct CasesSearchView: View {
                         dismiss()
                     } label: {
                         let buttonSize = appTheme.buttonSize
+                        // TODO: Size is not consistent with other custom back images
                         Image(systemName: "chevron.backward")
+                            .font(Font.system(size: 18, weight: .semibold))
                             .frame(width: buttonSize, height: buttonSize)
                     }
 
@@ -97,6 +99,7 @@ struct CasesSearchView: View {
                 ProgressView()
             }
         }
+        .background(SwipeBackGestureController())
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .onReceive(viewModel.$selectedWorksite) { (incidentId, worksiteId) in

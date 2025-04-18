@@ -25,7 +25,7 @@ class CoordinatesUtil {
         from + (to - from) * lerp
     }
 
-    // TODO Write tests
+    // TODO: Write tests
     static func lerpLongitude(
         _ from: Double,
         _ to: Double,

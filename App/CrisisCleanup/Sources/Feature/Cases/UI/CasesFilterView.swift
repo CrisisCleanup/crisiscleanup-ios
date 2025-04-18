@@ -3,16 +3,40 @@ import SVGView
 import SwiftUI
 
 struct CasesFilterView: View {
+    @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
+
+    @EnvironmentObject var viewLayout: ViewLayoutDescription
 
     @ObservedObject var viewModel: CasesFilterViewModel
 
     private let referenceScrollSpace = "scrollFrom"
 
+    @State private var confirmAbadonChanges = false
+
     var body: some View {
         ZStack {
-            FiltersContentView()
+            if viewLayout.isListDetailLayout {
+                GeometryReader { proxy in
+                    HStack {
+                        CasesFilterActions(isVertical: true)
+                            .frame(width: proxy.size.width * listDetailListFractionalWidth)
+
+                        FiltersContentView(
+                            isSaveBarVisible: false
+                        )
+                        .frame(width: proxy.size.width * listDetailDetailFractionalWidth)
+                        .coordinateSpace(name: referenceScrollSpace)
+                    }
+                }
+                .frame(maxWidth: appTheme.wideContentMaxWidth, alignment: .center)
+            } else {
+                FiltersContentView(
+                    isSaveBarVisible: true
+                )
                 .coordinateSpace(name: referenceScrollSpace)
+                .frame(maxWidth: appTheme.contentMaxWidth, alignment: .center)
+            }
 
             if viewModel.showExplainLocationPermission {
                 LocationAppSettingsDialog(
@@ -22,9 +46,47 @@ struct CasesFilterView: View {
                     viewModel.showExplainLocationPermission = false
                 }
             }
+
+            if confirmAbadonChanges {
+                AlertDialog(
+                    title: t.t("~~Filter changes"),
+                    positiveActionText: t.t("actions.apply_filters"),
+                    negativeActionText: t.t("~~Abandon"),
+                    dismissDialog: {
+                        confirmAbadonChanges = false
+                    },
+                    negativeAction: {
+                        dismiss()
+                    },
+                    positiveAction: {
+                        viewModel.applyFilters(viewModel.casesFilters)
+                        dismiss()
+                    },
+                    content: {
+                        Text(t.t("~~Filters have changed. Would you like to apply or abandon the changes?"))
+                    }
+                )
+            }
         }
         .screenTitle(t.t("worksiteFilters.filters"))
+        // TODO: Make modifier
+        .navigationBarBackButtonHidden()
+        .navigationBarItems(leading: Button(action: {
+            if viewModel.isFiltersChanged {
+                confirmAbadonChanges = true
+            } else {
+                dismiss()
+            }
+        }) {
+            HStack(spacing: 6) {
+                Image(systemName: "chevron.backward")
+                    .font(Font.system(size: 16, weight: .semibold))
+                // TODO: Translations
+                Text("Back")
+            }
+        })
         .hideNavBarUnderSpace()
+        .background(SwipeBackGestureController())
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)
@@ -36,8 +98,12 @@ private struct FiltersContentView: View {
 
     @EnvironmentObject var viewModel: CasesFilterViewModel
 
+    private var isSaveBarVisible = false
+
     private let contentScrollChangeSubject = CurrentValueSubject<(String, CGFloat), Never>(("", 0.0))
     private let contentScrollStopDelay: AnyPublisher<String, Never>
+
+    @State private var tabSliderHeight: CGFloat = 0
 
     @State private var sectionCollapse = [
         false,
@@ -48,7 +114,11 @@ private struct FiltersContentView: View {
         false
     ]
 
-    init() {
+    init(
+        isSaveBarVisible: Bool
+    ) {
+        self.isSaveBarVisible = isSaveBarVisible
+
         contentScrollStopDelay = contentScrollChangeSubject
             .debounce(for: .seconds(0.2), scheduler: RunLoop.current)
             .map { $0.0 }
@@ -57,77 +127,103 @@ private struct FiltersContentView: View {
 
     var body: some View {
         ScrollViewReader { proxy in
-            FocusSectionSlider(
-                sectionTitles: viewModel.filterSectionTitles,
-                proxy: proxy,
-                onScrollToSection: { index in
-                    if index >= 0 && index < sectionCollapse.count {
-                        sectionCollapse[index] = false
-                    }
-                }
-            )
-            .padding(.vertical)
-
-            VStack {
-                ScrollView {
-                    FilterSlidersSection()
-
-                    ForEach(viewModel.indexedTitles, id: \.0) { (index, sectionTitle) in
-                        FormListSectionSeparator()
-
-                        let sectionTitle = viewModel.filterSectionTitles[index]
-                        VStack(alignment: .leading) {
-                            FilterSectionTitle(title: sectionTitle, isCollapsed: $sectionCollapse[index])
-
-                            switch index {
-                            case 0:
-                                if !sectionCollapse[0] {
-                                    FilterDistanceSection(
-                                        distances: viewModel.distanceOptions
-                                    )
-                                }
-                            case 1:
-                                if !sectionCollapse[1] {
-                                    FilterGeneralSection()
-                                }
-                            case 2:
-                                if !sectionCollapse[2] {
-                                    FilterPersonalInfoSection()
-                                }
-                            case 3:
-                                if !sectionCollapse[3] {
-                                    FilterFlagsSection()
-                                }
-                            case 4:
-                                if !sectionCollapse[4] {
-                                    FilterWorkSection()
-                                }
-                            case 5:
-                                if !sectionCollapse[5] {
-                                    CalendarFormField(
-                                        title: t.t("worksiteFilters.created"),
-                                        start: $viewModel.filterCreatedAtStart,
-                                        end: $viewModel.filterCreatedAtEnd
-                                    )
-                                    .padding([.horizontal, .bottom])
-
-                                    CalendarFormField(
-                                        title: t.t("worksiteFilters.updated"),
-                                        start: $viewModel.filterUpdatedAtStart,
-                                        end: $viewModel.filterUpdatedAtEnd
-                                    )
-                                    .padding([.horizontal, .bottom])
-                                }
-                            default:
-                                Text("Filter section not implemented")
-                            }
+            VStack(spacing: 0) {
+                FocusSectionSlider(
+                    sectionTitles: viewModel.filterSectionTitles,
+                    proxy: proxy,
+                    onScrollToSection: { index in
+                        if index >= 0 && index < sectionCollapse.count {
+                            sectionCollapse[index] = false
                         }
-                        .id("section\(index)")
-                        .onScrollSectionFocus(
-                            proxy,
-                            scrollToId: "scrollBar\(index)",
-                            scrollChangeSubject: contentScrollChangeSubject
-                        )
+                    }
+                )
+                .overlay(
+                    GeometryReader { reader in
+                        Color.clear.preference(key: FocusSectionSliderTopHeightKey.self, value: reader.size.height)
+                    }
+                )
+                .onPreferenceChange(FocusSectionSliderTopHeightKey.self) {
+                    tabSliderHeight = $0
+                }
+
+                ScrollView {
+                    VStack(spacing: 0) {
+                        Divider()
+                            .frame(height: appTheme.edgeSpacing * 2)
+
+                        FilterSlidersSection()
+
+                        FormListSectionSeparator()
+                            .padding(.top, appTheme.gridItemSpacing)
+
+                        ForEach(viewModel.indexedTitles, id: \.0) { (index, sectionTitle) in
+                            VStack(alignment: .leading, spacing: 0) {
+                                let sectionTitle = viewModel.filterSectionTitles[index]
+                                FilterSectionTitle(title: sectionTitle, isCollapsed: $sectionCollapse[index])
+
+                                let isCollapsed = index >= 0 && index < sectionCollapse.count && sectionCollapse[index]
+                                let isExpanded = !isCollapsed
+
+                                switch index {
+                                case 0:
+                                    if isExpanded {
+                                        FilterDistanceSection(
+                                            distances: viewModel.distanceOptions
+                                        )
+                                    }
+                                case 1:
+                                    if isExpanded {
+                                        FilterGeneralSection()
+                                    }
+                                case 2:
+                                    if isExpanded {
+                                        FilterPersonalInfoSection()
+                                    }
+                                case 3:
+                                    if isExpanded {
+                                        FilterFlagsSection()
+                                    }
+                                case 4:
+                                    if isExpanded {
+                                        FilterWorkSection()
+                                    }
+                                case 5:
+                                    if isExpanded {
+                                        CalendarFormField(
+                                            title: t.t("worksiteFilters.created"),
+                                            start: $viewModel.filterCreatedAtStart,
+                                            end: $viewModel.filterCreatedAtEnd
+                                        )
+                                        .padding([.horizontal, .bottom])
+
+                                        CalendarFormField(
+                                            title: t.t("worksiteFilters.updated"),
+                                            start: $viewModel.filterUpdatedAtStart,
+                                            end: $viewModel.filterUpdatedAtEnd
+                                        )
+                                        .padding([.horizontal, .bottom])
+                                    }
+                                default:
+                                    Text("Filter section not implemented")
+                                }
+
+                                if index < sectionCollapse.count - 1 {
+                                    FormListSectionSeparator()
+                                        .if (isExpanded) {
+                                            $0.padding(.top, appTheme.gridItemSpacing)
+                                        }
+                                }
+                            }
+                            .id("section\(index)")
+                            .onScrollSectionFocus(
+                                proxy,
+                                scrollToId: "scrollBar\(index)",
+                                scrollChangeSubject: contentScrollChangeSubject,
+                                // Math is off or rounding error(s) require
+                                // tiny additional offset for correct section tracking
+                                yOffset: tabSliderHeight + 0.11
+                            )
+                        }
                     }
                 }
                 .scrollDismissesKeyboard(.immediately)
@@ -139,9 +235,11 @@ private struct FiltersContentView: View {
                     }
                 }
 
-                FilterButtons()
-                    .environmentObject(viewModel)
-                    .listItemPadding()
+                if isSaveBarVisible {
+                    CasesFilterActions()
+                        .environmentObject(viewModel)
+                        .padding(appTheme.edgeSpacing)
+                }
             }
         }
     }
@@ -235,6 +333,7 @@ private struct FilterSlidersSection: View {
         .padding(.horizontal)
 
         FormListSectionSeparator()
+            .padding(.vertical)
 
         VStack(alignment: .leading) {
             let updatedText = t.t("worksiteFilters.updated")
@@ -703,7 +802,7 @@ struct CalendarSelectView: View {
     }
 }
 
-struct FilterButtons: View {
+private struct FilterActions: View {
     @Environment(\.translator) var t: KeyAssetTranslator
     @Environment(\.dismiss) var dismiss
 
@@ -711,26 +810,35 @@ struct FilterButtons: View {
 
     var body: some View {
         let filters = viewModel.casesFilters
-        HStack {
-            let filterCount = filters.changeCount
-            let noFilters = filterCount == 0
-            Button {
-                viewModel.clearFilters()
-            } label: {
-                Text(t.t("actions.clear_filters"))
-            }
-            .styleCancel()
-            .disabled(noFilters)
 
-            let applyFilters = t.t("actions.apply_filters")
-            let applyText = noFilters ? applyFilters : "\(applyFilters) (\(filterCount))"
-            Button {
-                viewModel.applyFilters(filters)
-                dismiss()
-            } label: {
-                Text(applyText)
-            }
-            .stylePrimary()
+        let filterCount = filters.changeCount
+        let noFilters = filterCount == 0
+        Button {
+            viewModel.clearFilters()
+        } label: {
+            Text(t.t("actions.clear_filters"))
+        }
+        .styleCancel()
+        .disabled(noFilters)
+
+        let applyFilters = t.t("actions.apply_filters")
+        let applyText = noFilters ? applyFilters : "\(applyFilters) (\(filterCount))"
+        Button {
+            viewModel.applyFilters(filters)
+            dismiss()
+        } label: {
+            Text(applyText)
+        }
+        .stylePrimary()
+    }
+}
+
+private struct CasesFilterActions: View {
+    var isVertical = false
+
+    var body: some View {
+        StackActionsView(isVertical: isVertical) {
+            FilterActions()
         }
     }
 }

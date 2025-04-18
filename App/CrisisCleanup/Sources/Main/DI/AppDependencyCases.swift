@@ -74,4 +74,10 @@ extension MainComponent {
             )
         }
     }
+
+    public var incidentMapTracker: IncidentMapTracker {
+        shared {
+            AppIncidentMapTracker(preferenceDataSource: appPreferences)
+        }
+    }
 }

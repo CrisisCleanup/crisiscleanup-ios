@@ -89,8 +89,7 @@ struct MenuView: View {
 
                 Spacer()
 
-                // TODO: Common dimensions
-                HStack(alignment: .center, spacing: 16) {
+                HStack(alignment: .center, spacing: appTheme.gridActionSpacing) {
                     Link(
                         t.t("publicNav.terms"),
                         destination: viewModel.termsOfServiceUrl

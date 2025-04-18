@@ -276,7 +276,19 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
     }
 
     func getWorksite(_ id: Int64) async throws -> NetworkWorksiteFull? {
-        return try await getWorksites([id])?.firstOrNil
+        let request = requestProvider.worksite
+            .addQueryItems(
+                "id__in", "\(id)"
+            )
+        let response = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkWorksitesFullResult.self
+        )
+        if let result = response.value {
+            try result.errors?.tryThrowException()
+            return result.results?.firstOrNil
+        }
+        return nil
     }
 
     func getWorksitesCount(

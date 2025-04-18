@@ -1,6 +1,8 @@
 // Generated using Sourcery 2.0.2 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
+import Foundation
+
 extension Incident {
 	// struct copy, lets you overwrite specific variables retaining the value of the rest
 	// using a closure to set the new values for the copy of the struct
@@ -20,6 +22,7 @@ extension Incident {
 		var formFields: [IncidentFormField]
 		var turnOnRelease: Bool
 		var disasterLiteral: String
+		var startAt: Date?
 
 		fileprivate init(original: Incident) {
 			self.id = original.id
@@ -31,6 +34,7 @@ extension Incident {
 			self.formFields = original.formFields
 			self.turnOnRelease = original.turnOnRelease
 			self.disasterLiteral = original.disasterLiteral
+			self.startAt = original.startAt
 		}
 
 		fileprivate func toIncident() -> Incident {
@@ -43,7 +47,8 @@ extension Incident {
 				activePhoneNumbers: activePhoneNumbers,
 				formFields: formFields,
 				turnOnRelease: turnOnRelease,
-				disasterLiteral: disasterLiteral
+				disasterLiteral: disasterLiteral,
+				startAt: startAt
 			)
 		}
 	}

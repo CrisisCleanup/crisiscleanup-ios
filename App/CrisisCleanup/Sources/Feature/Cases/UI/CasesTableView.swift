@@ -3,7 +3,7 @@ import SwiftUI
 struct CasesTableView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewLayout: ViewLayoutDescription
     @EnvironmentObject var viewModel: CasesViewModel
 
     @Binding var phoneCallNumbers: [ParsedPhoneNumber]
@@ -18,113 +18,117 @@ struct CasesTableView: View {
         let isLoadingData = viewModel.isLoadingData
         let isEditable = viewModel.isTableEditable
 
-        VStack {
-            HStack {
-                TableViewIncidentSelector(
-                    isLoadingIncidents: isLoadingIncidents,
-                    hasNoIncidents: hasNoIncidents,
-                    selectedIncident: viewModel.incidentsData.selected,
-                    incidentSelectViewBuilder: incidentSelectViewBuilder,
-                    isLoadingData: isLoadingData
-                )
+        if viewLayout.isListDetailLayout {
+            ZStack {
+                GeometryReader { proxy in
+                    HStack {
+                        VStack(alignment: .trailing, spacing: appTheme.gridActionSpacing) {
+                            TableViewIncidentSelector(
+                                isLoadingIncidents: isLoadingIncidents,
+                                hasNoIncidents: hasNoIncidents,
+                                selectedIncident: viewModel.incidentsData.selected,
+                                incidentSelectViewBuilder: incidentSelectViewBuilder,
+                                isLoadingData: isLoadingData
+                            )
 
-                Spacer()
+                            TableViewCaseCountSortOptions(
+                                isLoading: isLoadingData,
+                                isEditable: isEditable,
+                                isSpaced: false
+                            )
 
-                TableViewButtons(filtersCount: viewModel.filtersCount)
-            }
-            .padding()
+                            Spacer()
 
-            Group {
-                HStack {
-                    // TODO: Animate
-                    if viewModel.casesCountTableText.isNotBlank {
-                        Text(viewModel.casesCountTableText)
-                            .fontHeader4()
-                            .disabled(isLoadingData)
-                            .onTapGesture {
-                                viewModel.syncWorksitesData()
-                            }
-                            .onLongPressGesture {
-                                viewModel.syncWorksitesData(true)
-                            }
-                    }
-
-                    Spacer()
-
-                    let sortByOptions = viewModel.tableViewSort == .none
-                    ? WorksiteSortBy.allCases
-                    : WorksiteSortBy.allCasesNotNone
-                    Picker("", selection: $viewModel.tableViewSort ) {
-                        ForEach(sortByOptions, id: \.self) { sortBy in
-                            Text(t.t(sortBy.translateKey))
+                            TableViewButtons(filtersCount: viewModel.filtersCount)
                         }
+                        .frame(width: proxy.size.width * listDetailListFractionalWidth)
+                        .if (viewLayout.isShort) {
+                            $0.padding(.vertical)
+                        }
+                        // TODO: Horizontal padding doesn't apply
+
+                        VStack {
+                            // TODO: Show claim action error dialog if error has occurred
+
+                            if viewModel.tableSortResultsMessage.isNotBlank {
+                                Text(viewModel.tableSortResultsMessage)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .listItemPadding()
+                            }
+
+                            TableViewCasesList(
+                                isEditable: isEditable,
+                                showWrongLocationDialog: $showWrongLocationDialog,
+                                phoneCallNumbers: $phoneCallNumbers
+                            )
+                        }
+                        .frame(width: proxy.size.width * listDetailDetailFractionalWidth)
                     }
-                    .disabled(isLoadingData || !isEditable)
-                    .tint(.black)
-                    .roundedCorners()
                 }
-                .listItemPadding()
+                .frame(maxWidth: appTheme.wideContentMaxWidth, alignment: .center)
+            }
+            .frame(maxWidth: .infinity)
+            .background(.white)
+        } else {
+            VStack {
+                HStack(spacing: appTheme.gridActionSpacing) {
+                    TableViewIncidentSelector(
+                        isLoadingIncidents: isLoadingIncidents,
+                        hasNoIncidents: hasNoIncidents,
+                        selectedIncident: viewModel.incidentsData.selected,
+                        incidentSelectViewBuilder: incidentSelectViewBuilder,
+                        isLoadingData: isLoadingData
+                    )
 
-                // TODO: Show phone numbers in bottom sheet if there are more than 1 phone numbers (may be complete)
-                // TODO: Show claim action error dialog if error has occurred
+                    if viewLayout.isWide {
+                        TableViewCaseCountSortOptions(
+                            isLoading: isLoadingData,
+                            isEditable: isEditable,
+                            isSpaced: true
+                        )
+                        .padding(.horizontal)
+                    } else {
+                        Spacer()
+                    }
 
-                if viewModel.tableSortResultsMessage.isNotBlank {
-                    Text(viewModel.tableSortResultsMessage)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    TableViewButtons(filtersCount: viewModel.filtersCount)
+                }
+                .padding()
+
+                VStack {
+                    if !viewLayout.isWide {
+                        HStack {
+                            TableViewCaseCountSortOptions(
+                                isLoading: isLoadingData,
+                                isEditable: isEditable,
+                                isSpaced: true
+                            )
+                        }
                         .listItemPadding()
-                }
+                    }
 
-                let casesData = viewModel.tableData
-                let isTurnOnRelease = viewModel.selectedIncident.turnOnRelease
-                let changingClaimIds = viewModel.worksitesChangingClaimAction
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        LazyVStack {
-                            ForEach(0..<casesData.count, id: \.self) { index in
-                                if index > 0 {
-                                    FormListSectionSeparator()
-                                }
+                    // TODO: Show claim action error dialog if error has occurred
 
-                                let worksite = casesData[index].worksite
-                                let isChangingClaim = changingClaimIds.contains(worksite.id)
-                                CaseTableItemCard(
-                                    worksiteDistance: casesData[index],
-                                    isEditable: isEditable,
-                                    isTurnOnRelease: isTurnOnRelease,
-                                    isChangingClaim: isChangingClaim,
-                                    onWorksiteClaimAction: { claimAction in
-                                        viewModel.onWorksiteClaimAction(worksite, claimAction)
-                                    },
-                                    showWrongLocationDialog: $showWrongLocationDialog,
-                                    phoneCallNumbers: $phoneCallNumbers
-                                )
-                                .if (index == 0) {
-                                    $0.id("case-table-first")
-                                }
-                            }
-                        }
+                    if viewModel.tableSortResultsMessage.isNotBlank {
+                        Text(viewModel.tableSortResultsMessage)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .listItemPadding()
                     }
-                    .onReceive(viewModel.openWorksiteAddFlagCounter) { _ in
-                        if viewModel.takeOpenWorksiteAddFlag() {
-                            router.openCaseFlags(isFromCaseEdit: false)
-                        }
-                    }
-                    .onChange(of: viewModel.tableViewSort) { newValue in
-                        proxy.scrollTo("case-table-first", anchor: .top)
-                    }
+
+                    TableViewCasesList(
+                        isEditable: isEditable,
+                        showWrongLocationDialog: $showWrongLocationDialog,
+                        phoneCallNumbers: $phoneCallNumbers
+                    )
                 }
+                .frame(maxWidth: appTheme.contentMaxWidth, alignment: .center)
             }
-            // TODO: Common dimensions
-            .frame(maxWidth: 800)
+            .background(.white)
         }
-        .background(.white)
 
         if viewModel.isLoadingTableViewData {
-            // TODO: Is VStack necessary?
-            VStack {
-                ProgressView()
-                    .frame(alignment: .center)
-            }
+            ProgressView()
+                .frame(alignment: .center)
         }
     }
 }
@@ -164,7 +168,7 @@ private struct TableViewIncidentSelector: View {
     }
 }
 
-struct TableViewButtons: View {
+private struct TableViewButtons: View {
     @EnvironmentObject var router: NavigationRouter
 
     let filtersCount: Int
@@ -188,7 +192,6 @@ struct TableViewButtons: View {
             Button {
                 router.openFilterCases()
             } label: {
-                // TODO: Badge
                 Image("ic_dials", bundle: .module)
                     .frame(width: buttonSize, height: buttonSize)
                     .background(Color.white)
@@ -201,14 +204,107 @@ struct TableViewButtons: View {
                 }
             }
         }
-        .frame(width: appTheme.buttonSizeDoublePlus1, height: buttonSize)
+    }
+}
+
+private struct TableViewCaseCountSortOptions: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @EnvironmentObject var viewModel: CasesViewModel
+
+    let isLoading: Bool
+    let isEditable: Bool
+    let isSpaced: Bool
+
+    var body: some View {
+        // TODO: Animate
+        if viewModel.casesCountTableText.isNotBlank {
+            Text(viewModel.casesCountTableText)
+                .fontHeader4()
+                .disabled(isLoading)
+                .onTapGesture {
+                    viewModel.syncWorksitesData()
+                }
+                .onLongPressGesture {
+                    viewModel.syncWorksitesData(true)
+                }
+        }
+
+        if isSpaced {
+            Spacer()
+        }
+
+        let sortByOptions = viewModel.tableViewSort == .none
+        ? WorksiteSortBy.allCases
+        : WorksiteSortBy.allCasesNotNone
+        Picker("", selection: $viewModel.tableViewSort ) {
+            ForEach(sortByOptions, id: \.self) { sortBy in
+                Text(t.t(sortBy.translateKey))
+            }
+        }
+        .disabled(isLoading || !isEditable)
+        .tint(.black)
+        .roundedCorners()
+    }
+}
+
+private struct TableViewCasesList: View {
+    @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var viewModel: CasesViewModel
+
+    let isEditable: Bool
+
+    @Binding var showWrongLocationDialog: Bool
+    @Binding var phoneCallNumbers: [ParsedPhoneNumber]
+
+    var body: some View {
+        let casesData = viewModel.tableData
+        let isTurnOnRelease = viewModel.selectedIncident.turnOnRelease
+        let changingClaimIds = viewModel.worksitesChangingClaimAction
+
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack {
+                    ForEach(0..<casesData.count, id: \.self) { index in
+                        if index > 0 {
+                            FormListSectionSeparator()
+                        }
+
+                        let worksite = casesData[index].worksite
+                        let isChangingClaim = changingClaimIds.contains(worksite.id)
+                        CaseTableItemCard(
+                            worksiteDistance: casesData[index],
+                            isEditable: isEditable,
+                            isTurnOnRelease: isTurnOnRelease,
+                            isChangingClaim: isChangingClaim,
+                            onWorksiteClaimAction: { claimAction in
+                                viewModel.onWorksiteClaimAction(worksite, claimAction)
+                            },
+                            showWrongLocationDialog: $showWrongLocationDialog,
+                            phoneCallNumbers: $phoneCallNumbers
+                        )
+                        .if (index == 0) {
+                            $0.id("case-table-first")
+                        }
+                    }
+                }
+            }
+            .onReceive(viewModel.openWorksiteAddFlagCounter) { _ in
+                if viewModel.takeOpenWorksiteAddFlag() {
+                    router.openCaseFlags(isFromCaseEdit: false)
+                }
+            }
+            .onChange(of: viewModel.tableViewSort) { newValue in
+                proxy.scrollTo("case-table-first", anchor: .top)
+            }
+        }
     }
 }
 
 private struct CaseTableItemCard: View {
-    @EnvironmentObject var router: NavigationRouter
     @Environment(\.translator) var t: KeyAssetTranslator
 
+    @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var viewModel: CasesViewModel
 
     let worksiteDistance: WorksiteDistance

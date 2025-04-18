@@ -34,7 +34,7 @@ extension MKMapView {
         setRegion(region, animated: true)
     }
 
-    func overlayPolygons() {
+    func makeOverlayPolygons() -> [MKPolygon] {
         let firstHalf = [
             CLLocationCoordinate2D(latitude: -90, longitude: -180),
             CLLocationCoordinate2D(latitude: -90, longitude: 0),
@@ -52,11 +52,27 @@ extension MKMapView {
         let negativePolygon = MKPolygon(coordinates: firstHalf, count: firstHalf.count)
         let positivePolygon = MKPolygon(coordinates: secondHalf, count: secondHalf.count)
 
-        addOverlay(negativePolygon, level: .aboveRoads)
-        addOverlay(positivePolygon, level: .aboveRoads)
+        return [negativePolygon, positivePolygon]
+    }
+
+    func addOverlays(
+        _ overlays: [MKOverlay],
+        level: MKOverlayLevel = .aboveRoads
+    ) {
+        overlays.forEach {
+            addOverlay($0, level: level)
+        }
     }
 
     func configure(
+        isScrollEnabled: Bool = false,
+        isExistingMap: Bool = false
+    ) {
+        configure(overlays: makeOverlayPolygons())
+    }
+
+    func configure(
+        overlays: [MKOverlay],
         isScrollEnabled: Bool = false,
         isExistingMap: Bool = false
     ) {
@@ -70,7 +86,7 @@ extension MKMapView {
         isPitchEnabled = false
         self.isScrollEnabled = isScrollEnabled
 
-        overlayPolygons()
+        addOverlays(overlays)
     }
 
     func staticMapAnnotationView(_ annotation: MKAnnotation) -> MKAnnotationView? {
@@ -88,12 +104,17 @@ extension MKMapView {
 
 func overlayMapRenderer(
     _ polygon: MKPolygon,
-    _ alpha: Double = 0.5
+    _ alpha: Double = 0.5,
+    _ color: UIColor = .black
 ) -> MKPolygonRenderer {
     let renderer = MKPolygonRenderer(polygon: polygon)
     renderer.alpha = alpha
     renderer.lineWidth = 0
-    renderer.fillColor = UIColor.black
+    renderer.fillColor = color
     renderer.blendMode = .color
     return renderer
+}
+
+class BlankPolygonRenderer: MKPolygonRenderer {
+    override func draw(_ mapRect: MKMapRect, zoomScale: MKZoomScale, in context: CGContext) {}
 }

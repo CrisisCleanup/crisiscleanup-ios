@@ -88,8 +88,7 @@ private struct SideNav: View {
     @EnvironmentObject var viewModel: ViewCaseViewModel
 
     var body: some View {
-        // TODO: Common dimensions
-        VStack(spacing: 16) {
+        VStack(spacing: appTheme.gridActionSpacing) {
             Spacer()
             BottomNavButton("ic_case_share", "actions.share")
             {

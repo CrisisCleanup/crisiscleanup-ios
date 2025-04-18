@@ -8,6 +8,9 @@ public struct AppPreferences: Codable {
     let tableViewSortBy: WorksiteSortBy
     let shareLocationWithOrg: Bool
 
+    let casesMapBounds: IncidentCoordinateBounds?
+    let teamMapBounds: IncidentCoordinateBounds?
+
     init(
         hideOnboarding: Bool = false,
         hideGettingStartedVideo: Bool = false,
@@ -15,7 +18,9 @@ public struct AppPreferences: Codable {
         languageKey: String = "en-US",
         syncAttempt: SyncAttempt = SyncAttempt(),
         tableViewSortBy: WorksiteSortBy = .none,
-        shareLocationWithOrg: Bool = false
+        shareLocationWithOrg: Bool = false,
+        casesMapBounds: IncidentCoordinateBounds? = IncidentCoordinateBoundsNone,
+        teamMapBounds: IncidentCoordinateBounds? = IncidentCoordinateBoundsNone
     ) {
         self.hideOnboarding = hideOnboarding
         self.hideGettingStartedVideo = hideGettingStartedVideo
@@ -24,5 +29,7 @@ public struct AppPreferences: Codable {
         self.syncAttempt = syncAttempt
         self.tableViewSortBy = tableViewSortBy
         self.shareLocationWithOrg = shareLocationWithOrg
+        self.casesMapBounds = casesMapBounds
+        self.teamMapBounds = teamMapBounds
     }
 }

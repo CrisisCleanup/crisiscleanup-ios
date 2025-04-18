@@ -18,6 +18,8 @@ extension AppPreferences {
 		var syncAttempt: SyncAttempt
 		var tableViewSortBy: WorksiteSortBy
 		var shareLocationWithOrg: Bool
+		var casesMapBounds: IncidentCoordinateBounds?
+		var teamMapBounds: IncidentCoordinateBounds?
 
 		fileprivate init(original: AppPreferences) {
 			self.hideOnboarding = original.hideOnboarding
@@ -27,6 +29,8 @@ extension AppPreferences {
 			self.syncAttempt = original.syncAttempt
 			self.tableViewSortBy = original.tableViewSortBy
 			self.shareLocationWithOrg = original.shareLocationWithOrg
+			self.casesMapBounds = original.casesMapBounds
+			self.teamMapBounds = original.teamMapBounds
 		}
 
 		fileprivate func toAppPreferences() -> AppPreferences {
@@ -37,7 +41,9 @@ extension AppPreferences {
 				languageKey: languageKey,
 				syncAttempt: syncAttempt,
 				tableViewSortBy: tableViewSortBy,
-				shareLocationWithOrg: shareLocationWithOrg
+				shareLocationWithOrg: shareLocationWithOrg,
+				casesMapBounds: casesMapBounds,
+				teamMapBounds: teamMapBounds
 			)
 		}
 	}

@@ -64,8 +64,7 @@ private struct LoginOptionsView: View {
                 expandHotline: true
             )
 
-            // TODO: Common dimensions
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: appTheme.gridActionSpacing) {
                 Text(t.translate("actions.login", "Login action"))
                     .fontHeader1()
                     .frame(maxWidth: .infinity, alignment: .leading)

@@ -20,8 +20,7 @@ struct ResetPasswordView: View {
         let disabled = viewModel.editableViewState.disabled
 
         ScrollView {
-            // TODO: Common dimensions
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: appTheme.gridActionSpacing) {
                 if viewModel.isPasswordReset {
                     Text(t.t("resetPassword.password_reset"))
                         .fontHeader3()

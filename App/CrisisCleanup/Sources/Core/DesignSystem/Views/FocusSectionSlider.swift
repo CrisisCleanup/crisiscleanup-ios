@@ -1,6 +1,13 @@
 import Combine
 import SwiftUI
 
+struct FocusSectionSliderTopHeightKey: PreferenceKey {
+    static var defaultValue = CGFloat.zero
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value += nextValue()
+    }
+}
+
 struct FocusSectionSlider: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
@@ -10,6 +17,8 @@ struct FocusSectionSlider: View {
     let onScrollToSection: (Int) -> Void
 
     @State private var visibleItems = [Int: CGFloat]()
+
+    @State private var hasScrolled = false
 
     private let scrollChangeSubject = CurrentValueSubject<(CGFloat), Never>((0.0))
     private let scrollStopDelay: AnyPublisher<CGFloat, Never>
@@ -42,14 +51,17 @@ struct FocusSectionSlider: View {
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack {
+                Divider()
+                    .id("scrollBarFrontBumper")
+                    .frame(width: 1, height: 1)
+
                 ForEach(Array(sectionTitles.enumerated()), id: \.offset) { (index, sectionTranslateKey) in
                     Text("\(index + 1). \(t.t(sectionTranslateKey))")
                         .id("scrollBar\(index)")
                         .fontHeader4()
                         .padding(.leading)
+                        .padding(.horizontal, appTheme.gridItemSpacing)
                         .onTapGesture {
-                            // TODO: Animation sends inexact signals
-                            //       When tapped initially will bounce back to previous section
                             scrollToSection(index)
                         }
                         .background(GeometryReader {
@@ -79,6 +91,9 @@ struct FocusSectionSlider: View {
                     value: -frame.origin.x
                 )
                 .onPreferenceChange(SliderOffsetKey.self) {
+                    if !hasScrolled {
+                        hasScrolled = $0 > 0
+                    }
                     scrollChangeSubject.send($0)
                 }
             })
@@ -94,8 +109,8 @@ struct FocusSectionSlider: View {
                     }
                 }
             }
-            // TODO: Settle on section if content index differs regardless of offset
-            if abs(offset) > 4 {
+            if abs(offset) > 0,
+               (index > 0 || hasScrolled) {
                 scrollToSection(index)
             }
         }
@@ -103,7 +118,6 @@ struct FocusSectionSlider: View {
 }
 
 private struct SliderOffsetKey: PreferenceKey {
-    typealias Value = CGFloat
     static var defaultValue = CGFloat.zero
     static func reduce(value: inout Value, nextValue: () -> Value) {
         value += nextValue()
@@ -111,7 +125,6 @@ private struct SliderOffsetKey: PreferenceKey {
 }
 
 private struct SliderItemOffsetKey: PreferenceKey {
-    typealias Value = CGFloat
     static var defaultValue = CGFloat.zero
     static func reduce(value: inout Value, nextValue: () -> Value) {
         value += nextValue()
@@ -123,6 +136,7 @@ extension View {
         _ proxy: ScrollViewProxy,
         scrollToId: String,
         scrollChangeSubject: any Subject<(String, CGFloat), Never>,
+        yOffset: CGFloat = 0,
         frameName: String = "scrollFrom"
     ) -> some View {
         self.background(GeometryReader {
@@ -132,7 +146,8 @@ extension View {
                 value: -frame.origin.y
             )
             .onPreferenceChange(ContentOffsetKey.self) {
-                if ($0 > -1 && $0 < frame.height) {
+                let y = $0 + yOffset
+                if (y >= 0 && y < frame.height) {
                     scrollChangeSubject.send((scrollToId, $0))
                 }
             }
@@ -141,9 +156,8 @@ extension View {
 }
 
 private struct ContentOffsetKey: PreferenceKey {
-    typealias Value = CGFloat
     static var defaultValue = CGFloat.zero
-    static func reduce(value: inout Value, nextValue: () -> Value) {
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value += nextValue()
     }
 }
