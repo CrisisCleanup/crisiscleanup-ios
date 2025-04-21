@@ -19,8 +19,6 @@
 	<array>
 		<string>fetch</string>
 		<string>processing</string>
-		<string>remote-notification</string>
-		<string>location</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
