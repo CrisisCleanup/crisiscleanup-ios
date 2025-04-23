@@ -128,7 +128,8 @@ extension NetworkRequestProvider {
     var incidentOrganizations: NetworkRequest {
         NetworkRequest(
             apiUrl("incidents"),
-            addTokenHeader: true
+            addTokenHeader: true,
+            timeoutInterval: 10.seconds
         )
     }
 

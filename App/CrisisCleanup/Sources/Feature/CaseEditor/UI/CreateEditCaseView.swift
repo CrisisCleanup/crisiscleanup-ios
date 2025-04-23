@@ -57,6 +57,7 @@ private struct CreateEditCaseLayoutView: View {
 
             if showBusyIndicator {
                 ProgressView()
+                    .controlSize(.large)
             }
 
             if viewModel.showExplainLocationPermission {
@@ -67,9 +68,9 @@ private struct CreateEditCaseLayoutView: View {
         }
         .screenTitle(viewModel.headerTitle)
         .hideNavBarUnderSpace()
-        .onChange(of: viewModel.areEditorsReady) { isReady in
+        .onChange(of: viewModel.editableViewState.isEditable) { isEditable in
             withAnimation {
-                showBusyIndicator = !isReady
+                showBusyIndicator = !isEditable
             }
         }
         .onChange(of: viewModel.navigateBack) { b in
