@@ -353,13 +353,13 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         )
             .map { (b0, b1) in b0 || b1 }
         Publishers.CombineLatest4(
-            $isLoading,
-            $isSaving,
             $areEditorsReady,
+            $caseData,
+            $isSaving,
             isTransientPublisher
         )
-        .map { (b0, b1, editorsReady, b2) in
-            b0 || b1 || !editorsReady || b2 }
+        .map { (editorsReady, cd, saving, transient) in
+            return !editorsReady || cd?.isNetworkLoadFinished != true || saving || transient }
         .sink { isTransient in
             self.editableViewState.isEditable = !isTransient
         }
