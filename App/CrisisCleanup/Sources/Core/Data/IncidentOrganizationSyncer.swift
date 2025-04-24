@@ -58,7 +58,7 @@ class IncidentOrganizationSyncer: OrganizationsSyncer {
         let syncStart = Date.now
         var requestedCount = 0
         var networkDataOffset = 0
-        let pageDataCount = 200
+        let pageDataCount = 100
         do {
             while (networkDataOffset < syncCount) {
                 let worksitesRequest = try await networkDataSource.getIncidentOrganizations(
