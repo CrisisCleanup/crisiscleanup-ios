@@ -3,15 +3,17 @@ import Foundation
 
 public protocol IncidentDataPullReporter {
     var incidentDataPullStats: any Publisher<IncidentDataPullStats, Never> { get }
-    var incidentSecondaryDataPullStats: any Publisher<IncidentDataPullStats, Never> { get }
     var onIncidentDataPullComplete: any Publisher<Int64, Never> { get }
 }
 
 // sourcery: copyBuilder, skipCopyInit
 public struct IncidentDataPullStats {
-    let isStarted: Bool
     let incidentId: Int64
+    // TODO: Update properties and source Builder
+
+    let isStarted: Bool
     let pullStart: Date
+
     let dataCount: Int
     let isPagingRequest: Bool
     let requestedCount: Int

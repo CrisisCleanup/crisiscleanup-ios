@@ -9,7 +9,7 @@ class AppIncidentMapTracker: IncidentMapTracker {
     let lastLocation: any Publisher<IncidentMapCoordinates, Never>
 
     init(
-        preferenceDataSource: AppPreferencesDataStore
+        preferenceDataSource: AppPreferencesDataSource
     ) {
         lastLocation = preferenceDataSource.preferences
             .eraseToAnyPublisher()

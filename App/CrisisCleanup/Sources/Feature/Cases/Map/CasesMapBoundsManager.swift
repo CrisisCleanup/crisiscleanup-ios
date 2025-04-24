@@ -5,7 +5,7 @@ import MapKit
 internal class CasesMapBoundsManager {
     private let incidentSelector: IncidentSelector
     private let incidentBoundsProvider: IncidentBoundsProvider
-    private let preferencesDataSource: AppPreferencesDataStore
+    private let preferencesDataSource: AppPreferencesDataSource
 
     private var mapBoundsCache = MapViewCameraBoundsDefault.bounds
 
@@ -32,7 +32,7 @@ internal class CasesMapBoundsManager {
     init(
         _ incidentSelector: IncidentSelector,
         _ incidentBoundsProvider: IncidentBoundsProvider,
-        _ preferencesDataSource: AppPreferencesDataStore
+        _ preferencesDataSource: AppPreferencesDataSource
     ) {
         self.incidentSelector = incidentSelector
         self.incidentBoundsProvider = incidentBoundsProvider

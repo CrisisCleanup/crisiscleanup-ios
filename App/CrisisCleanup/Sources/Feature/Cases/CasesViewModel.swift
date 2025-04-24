@@ -8,7 +8,7 @@ class CasesViewModel: ObservableObject {
     private let incidentSelector: IncidentSelector
     private let incidentsRepository: IncidentsRepository
     private let worksitesRepository: WorksitesRepository
-    private let appPreferences: AppPreferencesDataStore
+    private let appPreferences: AppPreferencesDataSource
     private let dataPullReporter: IncidentDataPullReporter
     private let worksiteLocationEditor: WorksiteLocationEditor
     private let mapCaseIconProvider: MapCaseIconProvider
@@ -105,7 +105,7 @@ class CasesViewModel: ObservableObject {
         accountDataRepository: AccountDataRepository,
         worksiteChangeRepository: WorksiteChangeRepository,
         organizationsRepository: OrganizationsRepository,
-        appPreferences: AppPreferencesDataStore,
+        appPreferences: AppPreferencesDataSource,
         dataPullReporter: IncidentDataPullReporter,
         worksiteLocationEditor: WorksiteLocationEditor,
         mapCaseIconProvider: MapCaseIconProvider,
@@ -486,23 +486,21 @@ class CasesViewModel: ObservableObject {
     }
 
     private func subscribeDataPullStats() {
-        Publishers.CombineLatest(
-            dataPullReporter.incidentDataPullStats.eraseToAnyPublisher(),
-            dataPullReporter.incidentSecondaryDataPullStats.eraseToAnyPublisher()
-        )
-        .map { (primary, secondary) in
-            let showProgress = primary.isOngoing || secondary.isOngoing
-            let isSecondary = secondary.isOngoing
-            let progress = primary.isOngoing ? primary.progress : secondary.progress
-            return DataProgressMetrics(
-                isSecondaryData: isSecondary,
-                showProgress: showProgress,
-                progress: progress
-            )
-        }
-        .receive(on: RunLoop.main)
-        .assign(to: \.dataProgress, on: self)
-        .store(in: &subscriptions)
+        dataPullReporter.incidentDataPullStats.eraseToAnyPublisher()
+            .map { primary in
+                // TODO: Update after pull stats model is updated
+                let showProgress = primary.isOngoing
+                let isSecondary = false
+                let progress = primary.isOngoing ? primary.progress : 0.0
+                return DataProgressMetrics(
+                    isSecondaryData: isSecondary,
+                    showProgress: showProgress,
+                    progress: progress
+                )
+            }
+            .receive(on: RunLoop.main)
+            .assign(to: \.dataProgress, on: self)
+            .store(in: &subscriptions)
 
         dataPullReporter.onIncidentDataPullComplete.eraseToAnyPublisher()
             .receive(on: RunLoop.main)

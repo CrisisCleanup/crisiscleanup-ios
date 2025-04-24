@@ -50,6 +50,117 @@ extension IncidentCacheRepository {
     }
 }
 
+class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPullReporter {
+    private let accountDataRefresher: AccountDataRefresher
+    private let incidentsRepository: IncidentsRepository
+    private let appPreferences: AppPreferencesDataSource
+    private let syncParameterDao: IncidentDataSyncParameterDao
+    private let incidentCachePreferences: IncidentCachePreferencesDataSource
+    private let locationProvider: LocationManager
+    private let locationBounder: IncidentLocationBounder
+    private let incidentMapTracker: IncidentMapTracker
+    private let networkDataSource: CrisisCleanupNetworkDataSource
+    private let worksitesRepository: WorksitesRepository
+    private let worksiteDao: WorksiteDao
+    private let speedMonitor: DataDownloadSpeedMonitor
+    private let networkMonitor: NetworkMonitor
+    private let syncLogger: SyncLogger
+    private let translator: KeyTranslator
+    private let appEnv: AppEnv
+    private let appLogger: AppLogger
+
+    private let incidentDataPullStatsSubject = CurrentValueSubject<IncidentDataPullStats, Never>(IncidentDataPullStats())
+    var incidentDataPullStats: any Publisher<IncidentDataPullStats, Never>
+
+    private let onIncidentDataPullCompleteSubject = CurrentValueSubject<Int64, Never>(EmptyIncident.id)
+    var onIncidentDataPullComplete: any Publisher<Int64, Never>
+
+    private let syncingIncidentId = CurrentValueSubject<Int64, Never>(EmptyIncident.id)
+    var isSyncingActiveIncident: any Publisher<Bool, Never>
+
+    private let cacheStageSubject = CurrentValueSubject<IncidentCacheStage, Never>(.start)
+    var cacheStage: any Publisher<IncidentCacheStage, Never>
+
+    var cachePreferences: any Publisher<IncidentWorksitesCachePreferences, Never>
+
+    init(
+        accountDataRefresher: AccountDataRefresher,
+        incidentsRepository: IncidentsRepository,
+        appPreferences: AppPreferencesDataSource,
+        syncParameterDao: IncidentDataSyncParameterDao,
+        incidentCachePreferences: IncidentCachePreferencesDataSource,
+        incidentSelector: IncidentSelector,
+        locationProvider: LocationManager,
+        locationBounder: IncidentLocationBounder,
+        incidentMapTracker: IncidentMapTracker,
+        networkDataSource: CrisisCleanupNetworkDataSource,
+        worksitesRepository: WorksitesRepository,
+        worksiteDao: WorksiteDao,
+        speedMonitor: DataDownloadSpeedMonitor,
+        networkMonitor: NetworkMonitor,
+        syncLogger: SyncLogger,
+        translator: KeyTranslator,
+        appEnv: AppEnv,
+        appLoggerFactory: AppLoggerFactory
+    ) {
+        self.accountDataRefresher = accountDataRefresher
+        self.incidentsRepository = incidentsRepository
+        self.appPreferences = appPreferences
+        self.syncParameterDao = syncParameterDao
+        self.incidentCachePreferences = incidentCachePreferences
+        self.locationProvider = locationProvider
+        self.locationBounder = locationBounder
+        self.incidentMapTracker = incidentMapTracker
+        self.networkDataSource = networkDataSource
+        self.worksitesRepository = worksitesRepository
+        self.worksiteDao = worksiteDao
+        self.speedMonitor = speedMonitor
+        self.networkMonitor = networkMonitor
+        self.syncLogger = syncLogger
+        self.translator = translator
+        self.appEnv = appEnv
+        appLogger = appLoggerFactory.getLogger("sync")
+
+        incidentDataPullStats = incidentDataPullStatsSubject
+        onIncidentDataPullComplete = onIncidentDataPullCompleteSubject
+
+        isSyncingActiveIncident = Publishers.CombineLatest(
+            incidentSelector.incidentId.eraseToAnyPublisher(),
+            syncingIncidentId
+        )
+        .map { (incidentId, syncingId) in
+            incidentId == syncingId
+        }
+
+        cacheStage = cacheStageSubject
+        cachePreferences = incidentCachePreferences.preferences
+    }
+
+    func streamSyncStats(_ incidentId: Int64) -> any Publisher<IncidentDataSyncParameters?, Never> {
+        // TODO: Do
+        return CurrentValueSubject<IncidentDataSyncParameters?, Never>(nil)
+    }
+
+    func submitPlan(overwriteExisting: Bool, forcePullIncidents: Bool, cacheSelectedIncident: Bool, cacheActiveIncidentWorksites: Bool, cacheWorksitesAdditional: Bool, restartCacheCheckpoint: Bool, planTimeout: TimeInterval) async -> Bool {
+        // TODO: Do
+        return false
+    }
+
+    func sync() async -> SyncResult {
+        // TODO: Do
+        return SyncResult.notAttempted(reason: "")
+    }
+
+    func resetIncidentSyncStats(_ incidentId: Int64) async -> Int64 {
+        // TODO: Do
+        return 0
+    }
+
+    func updateCachePreferenes(_ preferences: IncidentWorksitesCachePreferences) async {
+        // TODO: Do
+    }
+}
+
 public enum IncidentCacheStage: String, Identifiable, CaseIterable {
     case start,
          incidents,

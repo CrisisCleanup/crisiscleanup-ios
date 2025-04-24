@@ -5,6 +5,7 @@ import Foundation
 import MapKit
 
 public class LocationManager: NSObject, ObservableObject {
+    private let logger: AppLogger
     private let locationManager = CLLocationManager()
 
     @Published private(set) var locationPermission: CLAuthorizationStatus? = nil
@@ -25,11 +26,16 @@ public class LocationManager: NSObject, ObservableObject {
 
     private var subscriptions = Set<AnyCancellable>()
 
-    override init(){
+    init(
+        loggerFactory: AppLoggerFactory
+    ) {
+        logger = loggerFactory.getLogger("location")
+
         super.init()
-        self.locationManager.delegate = self
-        self.locationManager.desiredAccuracy = kCLLocationAccuracyBest
-        self.locationManager.distanceFilter = kCLDistanceFilterNone
+
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyKilometer
+        locationManager.distanceFilter = CLLocationDistance(1000.0)
 
         locationPermission = locationManager.authorizationStatus
 
@@ -54,6 +60,40 @@ public class LocationManager: NSObject, ObservableObject {
         // TODO: Might be wise to check timestamp before broadcasting/returning
         locationSubject.value = reportedLocation
         return reportedLocation
+    }
+
+    func getLocation(
+        timeoutSeconds: Double,
+        staleSeconds: Double = 60.0
+    ) async -> CLLocation? {
+        let staleTimeInterval = TimeInterval(max(1.0, staleSeconds))
+
+        if let firstLocation = locationManager.location,
+           firstLocation.timestamp.distance(to: Date.now) < staleTimeInterval {
+            return firstLocation
+        }
+
+        if timeoutSeconds > 0,
+           hasLocationAccess {
+            do {
+                locationManager.requestLocation()
+
+                let timeoutInterval = TimeInterval(timeoutSeconds)
+                let pollingStart = Date()
+                while pollingStart.distance(to: Date.now) < timeoutInterval {
+                    try await Task.sleep(nanoseconds: 300_000_000)
+
+                    if let requestedLocation = locationManager.location,
+                       requestedLocation.timestamp.distance(to: Date.now) < staleTimeInterval {
+                        return requestedLocation
+                    }
+                }
+            } catch {
+                logger.logError(error)
+            }
+        }
+
+        return nil
     }
 }
 

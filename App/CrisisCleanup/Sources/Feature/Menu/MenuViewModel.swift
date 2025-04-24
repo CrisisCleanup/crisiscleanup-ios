@@ -10,7 +10,7 @@ class MenuViewModel: ObservableObject {
     private let incidentSelector: IncidentSelector
     private let appVersionProvider: AppVersionProvider
     private let databaseVersionProvider: DatabaseVersionProvider
-    private let appPreferences: AppPreferencesDataStore
+    private let appPreferences: AppPreferencesDataSource
     private let accountEventBus: AccountEventBus
     private let locationManager: LocationManager
     private let appEnv: AppEnv
@@ -59,7 +59,7 @@ class MenuViewModel: ObservableObject {
         appVersionProvider: AppVersionProvider,
         appSettingsProvider: AppSettingsProvider,
         databaseVersionProvider: DatabaseVersionProvider,
-        appPreferences: AppPreferencesDataStore,
+        appPreferences: AppPreferencesDataSource,
         accountEventBus: AccountEventBus,
         locationManager: LocationManager,
         appEnv: AppEnv,

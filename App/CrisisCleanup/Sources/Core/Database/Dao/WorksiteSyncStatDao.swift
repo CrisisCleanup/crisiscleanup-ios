@@ -2,6 +2,7 @@ import Combine
 import Foundation
 import GRDB
 
+@available(*, deprecated)
 public class WorksiteSyncStatDao {
     private let database: AppDatabase
     private let reader: DatabaseReader

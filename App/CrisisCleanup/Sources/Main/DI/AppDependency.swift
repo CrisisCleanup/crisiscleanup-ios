@@ -20,7 +20,7 @@ public protocol AppDependency: Dependency {
     var authApi: CrisisCleanupAuthApi { get }
     var networkDataSource: CrisisCleanupNetworkDataSource { get }
 
-    var appPreferences: AppPreferencesDataStore { get }
+    var appPreferences: AppPreferencesDataSource { get }
 
     var translator: KeyAssetTranslator { get }
 
@@ -157,7 +157,7 @@ extension MainComponent {
         }
     }
 
-    public var appPreferences: AppPreferencesDataStore { shared { AppPreferencesUserDefaults() } }
+    public var appPreferences: AppPreferencesDataSource { shared { AppPreferencesUserDefaults() } }
 
     var accountDataSource: AccountInfoDataSource {
         shared {
@@ -234,7 +234,7 @@ extension MainComponent {
 
     public var locationManager: LocationManager {
         shared {
-            LocationManager()
+            LocationManager(loggerFactory: loggerFactory)
         }
     }
 }

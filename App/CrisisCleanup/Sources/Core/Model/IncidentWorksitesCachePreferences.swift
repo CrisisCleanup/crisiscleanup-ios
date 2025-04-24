@@ -1,6 +1,6 @@
 let BOUNDED_REGION_RADIUS_MILES_DEFAULT = 30.0
 
-struct BoundedRegionParameters {
+struct BoundedRegionParameters: Codable {
     let isRegionMyLocation: Bool
     let regionLatitude: Double
     let regionLongitude: Double
@@ -21,7 +21,7 @@ struct BoundedRegionParameters {
 
 let BoundedRegionParametersNone = BoundedRegionParameters()
 
-public struct IncidentWorksitesCachePreferences {
+public struct IncidentWorksitesCachePreferences: Codable {
     let isPaused: Bool
     let isRegionBounded: Bool
     let boundedRegionParameters: BoundedRegionParameters

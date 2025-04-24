@@ -50,7 +50,7 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
 
     private let accountDataSource: AccountInfoDataSource
     private let secureDataSource: SecureDataSource
-    private let preferencesDataSource: AppPreferencesDataStore
+    private let preferencesDataSource: AppPreferencesDataSource
     private let authApi: CrisisCleanupAuthApi
     private let logger: AppLogger
     private let appEnv: AppEnv
@@ -60,7 +60,7 @@ class CrisisCleanupAccountDataRepository: AccountDataRepository {
     init(
         _ accountDataSource: AccountInfoDataSource,
         _ secureDataSource: SecureDataSource,
-        _ preferencesDataSource: AppPreferencesDataStore,
+        _ preferencesDataSource: AppPreferencesDataSource,
         _ accountEventBus: AccountEventBus,
         _ authApi: CrisisCleanupAuthApi,
         _ loggerFactory: AppLoggerFactory,

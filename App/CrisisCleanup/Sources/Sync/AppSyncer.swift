@@ -76,7 +76,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         statusRepository: WorkTypeStatusRepository,
         worksitesRepository: WorksitesRepository,
         worksiteChangeRepository: WorksiteChangeRepository,
-        appPreferencesDataStore: AppPreferencesDataStore,
+        appPreferencesDataSource: AppPreferencesDataSource,
         localImageRepository: LocalImageRepository,
         appLoggerFactory: AppLoggerFactory,
         syncLoggerFactory: SyncLoggerFactory,
@@ -95,7 +95,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         self.accountEventBus = accountEventBus
 
         accountData = accountDataRepository.accountData.eraseToAnyPublisher()
-        appPreferences = appPreferencesDataStore.preferences.eraseToAnyPublisher()
+        appPreferences = appPreferencesDataSource.preferences.eraseToAnyPublisher()
     }
 
     private func validateAccountTokens() async throws -> Bool {
@@ -412,6 +412,6 @@ public enum SyncResult {
     case notAttempted(reason: String),
          success(notes: String),
          partial(notes: String),
-         Error(message: String),
+         error(message: String),
          invalidAccountTokens
 }

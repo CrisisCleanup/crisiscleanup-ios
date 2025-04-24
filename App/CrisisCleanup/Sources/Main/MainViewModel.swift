@@ -5,7 +5,7 @@ class MainViewModel: ObservableObject {
     private let accountDataRepository: AccountDataRepository
     private let appSupportRepository: AppSupportRepository
     private let appVersionProvider: AppVersionProvider
-    private let appPreferences: AppPreferencesDataStore
+    private let appPreferences: AppPreferencesDataSource
     private let incidentSelector: IncidentSelector
     private let appDataRepository: AppDataManagementRepository
     private let externalEventBus: ExternalEventBus
@@ -54,7 +54,7 @@ class MainViewModel: ObservableObject {
         accountDataRepository: AccountDataRepository,
         appSupportRepository: AppSupportRepository,
         appVersionProvider: AppVersionProvider,
-        appPreferences: AppPreferencesDataStore,
+        appPreferences: AppPreferencesDataSource,
         appSettingsProvider: AppSettingsProvider,
         translationsRepository: LanguageTranslationsRepository,
         incidentSelector: IncidentSelector,

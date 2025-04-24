@@ -115,7 +115,7 @@ extension MainComponent {
         shared {
             OfflineFirstIncidentsRepository(
                 dataSource: networkDataSource,
-                appPreferencesDataStore: appPreferences,
+                appPreferencesDataSource: appPreferences,
                 incidentDao: incidentDao,
                 locationDao: locationDao,
                 incidentOrganizationDao: organizationsDao,
@@ -139,7 +139,7 @@ extension MainComponent {
         shared {
             OfflineFirstLanguageTranslationsRepository(
                 dataSource: networkDataSource,
-                appPreferencesDataStore: appPreferences,
+                appPreferencesDataSource: appPreferences,
                 languageDao: languageDao,
                 statusRepository: workTypeStatusRepository,
                 loggerFactory: loggerFactory
@@ -394,5 +394,11 @@ extension MainComponent {
 
     public var syncLogRepository: SyncLogRepository {
         pagingSyncLogRepository
+    }
+
+    var incidentCacheDataDownloadSpeedMonitor: DataDownloadSpeedMonitor {
+        shared {
+            IncidentDataDownloadSpeedMonitor()
+        }
     }
 }
