@@ -487,11 +487,10 @@ class CasesViewModel: ObservableObject {
 
     private func subscribeDataPullStats() {
         dataPullReporter.incidentDataPullStats.eraseToAnyPublisher()
-            .map { primary in
-                // TODO: Update after pull stats model is updated
-                let showProgress = primary.isOngoing
-                let isSecondary = false
-                let progress = primary.isOngoing ? primary.progress : 0.0
+            .map { stats in
+                let showProgress = stats.isOngoing && stats.isPullingWorksites
+                let isSecondary = stats.pullType == .worksitesAdditional
+                let progress = stats.progress
                 return DataProgressMetrics(
                     isSecondaryData: isSecondary,
                     showProgress: showProgress,
