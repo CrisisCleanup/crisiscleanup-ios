@@ -127,7 +127,7 @@ extension NetworkRequestProvider {
 
     var incidentOrganizations: NetworkRequest {
         NetworkRequest(
-            apiUrl("incidents"),
+            apiUrl("organizations"),
             addTokenHeader: true,
             timeoutInterval: 10.seconds
         )

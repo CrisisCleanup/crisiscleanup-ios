@@ -13,6 +13,17 @@ class IncidentOrganizationSyncer: OrganizationsSyncer {
     private let appVersionProvider: AppVersionProvider
     private let logger: AppLogger
 
+    private let organizationFields = [
+        "id",
+        "name",
+        "affiliates",
+        "is_active",
+        "primary_location",
+        "secondary_location",
+        "type_t",
+        "primary_contacts",
+    ]
+
     private let dataPullStatsSubject = CurrentValueSubject<IncidentDataPullStats, Never>(IncidentDataPullStats())
     let dataPullStats: any Publisher<IncidentDataPullStats, Never>
 
@@ -52,6 +63,7 @@ class IncidentOrganizationSyncer: OrganizationsSyncer {
             while (networkDataOffset < syncCount) {
                 let worksitesRequest = try await networkDataSource.getIncidentOrganizations(
                     incidentId: incidentId,
+                    fields: organizationFields,
                     limit: pageDataCount,
                     offset: networkDataOffset
                 )

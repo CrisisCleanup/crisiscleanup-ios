@@ -33,6 +33,7 @@ public protocol CrisisCleanupNetworkDataSource {
 
     func getIncidentOrganizations(
         incidentId: Int64,
+        fields: [String],
         limit: Int,
         offset: Int
     ) async throws -> NetworkOrganizationsResult?
