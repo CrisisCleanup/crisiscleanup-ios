@@ -37,8 +37,11 @@ extension MainComponent {
         )
     }
 
-    var worksiteSyncStatDao: WorksiteSyncStatDao {
-        WorksiteSyncStatDao(appDatabase)
+    var incidentDataSyncParameterDao: IncidentDataSyncParameterDao {
+        IncidentDataSyncParameterDao(
+            appDatabase,
+            loggerFactory.getLogger("sync"),
+        )
     }
 
     var workTypeStatusDao: WorkTypeStatusDao {
@@ -160,7 +163,6 @@ extension MainComponent {
                 writeApi: writeApi,
                 worksitesSyncer: worksitesSyncer,
                 worksitesSecondarySyncer: worksitesSecondarySyncer,
-                worksiteSyncStatDao: worksiteSyncStatDao,
                 worksiteDao: worksiteDao,
                 recentWorksiteDao: recentWorksiteDao,
                 workTypeTransferRequestDao: workTypeTransferRequestDao,
@@ -373,7 +375,7 @@ extension MainComponent {
             CrisisCleanupDataManagementRepository(
                 incidentsRepository: incidentsRepository,
                 worksiteChangeRepository: worksiteChangeRepository,
-                worksiteSyncStatDao: worksiteSyncStatDao,
+                incidentDataSyncParameterDao: incidentDataSyncParameterDao,
                 syncPuller: syncPuller,
                 databaseOperator: databaseOperator,
                 accountEventBus: accountEventBus,

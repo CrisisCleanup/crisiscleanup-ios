@@ -115,10 +115,10 @@ class AppSyncer: SyncPuller, SyncPusher {
         let incidentId = preferences.selectedIncidentId
         if incidentId > 0 {
             if try incidentsRepository.getIncident(incidentId) != nil {
-                let syncStats = try worksitesRepository.getWorksiteSyncStats(incidentId)
-                if syncStats?.shouldSync != false {
-                    pullWorksitesIncidentId = incidentId
-                }
+//                let syncStats = try worksitesRepository.getWorksiteSyncStats(incidentId)
+//                if syncStats?.shouldSync != false {
+//                    pullWorksitesIncidentId = incidentId
+//                }
             }
         }
 
@@ -131,50 +131,7 @@ class AppSyncer: SyncPuller, SyncPusher {
     }
 
     func appPull(_ force: Bool, cancelOngoing: Bool) {
-        pullLock.withLock {
-            if cancelOngoing {
-                pullTask?.cancel()
-            }
-
-            pullTask = Task {
-                do {
-                    if try await !validateAccountTokens() {
-                        return
-                    }
-
-                    try Task.checkCancellation()
-
-                    var (pullIncidents, pullWorksitesIncidentId) = try await getSyncPlan()
-                    if force {
-                        pullIncidents = true
-                    }
-                    if !pullIncidents && pullWorksitesIncidentId <= 0 {
-                        return
-                    }
-
-                    try Task.checkCancellation()
-
-                    if pullIncidents {
-                        self.syncLogger.log("Pulling incidents")
-                        try await internalPullIncidents()
-                        self.syncLogger.log("Incidents pulled")
-                    }
-
-                    try Task.checkCancellation()
-
-                    // TODO: Prevent multiple incidents from refreshing concurrently.
-                    if pullWorksitesIncidentId > 0 {
-                        self.syncLogger.log("Refreshing incident \(pullWorksitesIncidentId) worksites")
-                        try await self.worksitesRepository.refreshWorksites(pullWorksitesIncidentId)
-                        self.syncLogger.log("Incident \(pullWorksitesIncidentId) worksites refreshed")
-                    }
-                } catch {
-                    appLogger.logError(error)
-                    // TODO: Handle proper
-                    print(error)
-                }
-            }
-        }
+        // TODO: Delete after replacing
     }
 
     func stopPull() {
@@ -224,37 +181,7 @@ class AppSyncer: SyncPuller, SyncPusher {
     }
 
     func appPullIncidentWorksitesDelta(_ forceRefreshAll: Bool) {
-        pullDeltaLock.withLock {
-            pullDeltaTask?.cancel()
-            pullDeltaTask = Task {
-                do {
-                    let incidentId = try await appPreferences.asyncFirst().selectedIncidentId
-                    if let syncStats = try worksitesRepository.getWorksiteSyncStats(incidentId),
-                       syncStats.isDeltaPull {
-                        syncLogger.log("App pull \(incidentId) delta")
-                        do {
-                            defer {
-                                syncLogger.log("App pull \(incidentId) delta end")
-                                syncLogger.flush()
-                            }
-
-                            try await worksitesRepository.refreshWorksites(
-                                incidentId,
-                                forceQueryDeltas: !forceRefreshAll,
-                                forceRefreshAll: forceRefreshAll
-                            )
-                        } catch {
-                            if !(error is CancellationError) {
-                                syncLogger.log("\(incidentId) delta fail \(error)")
-                            }
-                        }
-                    }
-                } catch {
-                    // TODO: Handle proper
-                    print(error)
-                }
-            }
-        }
+        // TODO: Delete after replacing
     }
 
     private func pullSelectedIncidentWorksites() -> Task<Void, Error> {

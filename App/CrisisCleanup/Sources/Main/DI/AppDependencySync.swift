@@ -34,7 +34,6 @@ extension MainComponent {
             networkDataSource: networkDataSource,
             networkDataCache: worksitesNetworkDataCache,
             worksiteDao: worksiteDao,
-            worksiteSyncStatDao: worksiteSyncStatDao,
             appVersionProvider: appVersionProvider,
             loggerFactory: loggerFactory
         )
@@ -56,7 +55,6 @@ extension MainComponent {
             networkDataSource: networkDataSource,
             networkDataCache: worksitesNetworkDataCache,
             worksiteDao: worksiteDao,
-            worksiteSyncStatDao: worksiteSyncStatDao,
             appVersionProvider: appVersionProvider,
             loggerFactory: loggerFactory
         )

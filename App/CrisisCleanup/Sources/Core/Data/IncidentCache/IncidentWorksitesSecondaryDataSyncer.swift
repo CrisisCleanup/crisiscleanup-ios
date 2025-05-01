@@ -14,7 +14,6 @@ class IncidentWorksitesSecondaryDataSyncer: WorksitesSecondaryDataSyncer {
     private let networkDataSource: CrisisCleanupNetworkDataSource
     private let networkDataCache: WorksitesNetworkDataCache
     private let worksiteDao: WorksiteDao
-    private let worksiteSyncStatDao: WorksiteSyncStatDao
     private let appVersionProvider: AppVersionProvider
     private let logger: AppLogger
 
@@ -27,14 +26,12 @@ class IncidentWorksitesSecondaryDataSyncer: WorksitesSecondaryDataSyncer {
         networkDataSource: CrisisCleanupNetworkDataSource,
         networkDataCache: WorksitesNetworkDataCache,
         worksiteDao: WorksiteDao,
-        worksiteSyncStatDao: WorksiteSyncStatDao,
         appVersionProvider: AppVersionProvider,
         loggerFactory: AppLoggerFactory
     ) {
         self.networkDataSource = networkDataSource
         self.networkDataCache = networkDataCache
         self.worksiteDao = worksiteDao
-        self.worksiteSyncStatDao = worksiteSyncStatDao
         self.appVersionProvider = appVersionProvider
         logger = loggerFactory.getLogger("incident-worksites-syncer")
         dataPullStats = dataPullStatsSubject
