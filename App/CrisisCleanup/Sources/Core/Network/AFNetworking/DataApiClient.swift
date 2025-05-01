@@ -204,10 +204,16 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         throw response.error ?? networkError
     }
 
-    func getIncidentOrganizations(incidentId: Int64, limit: Int, offset: Int) async throws -> NetworkOrganizationsResult? {
+    func getIncidentOrganizations(
+        incidentId: Int64,
+        fields: [String],
+        limit: Int,
+        offset: Int
+    ) async throws -> NetworkOrganizationsResult? {
         let request = requestProvider.incidentOrganizations
-            .addPaths(String(incidentId), "organizations")
             .addQueryItems(
+                "incident", String(incidentId),
+                "fields", fields.joined(separator: ","),
                 "limit", String(limit),
                 "offset", String(offset)
             )
