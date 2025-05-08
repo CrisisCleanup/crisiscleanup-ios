@@ -163,7 +163,7 @@ extension NetworkRequestProvider {
 
     var worksite: NetworkRequest {
         NetworkRequest(
-            apiUrl("worksite"),
+            apiUrl("worksites"),
             addTokenHeader: true,
             timeoutInterval: 15.seconds
         )
