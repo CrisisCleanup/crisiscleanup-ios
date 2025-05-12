@@ -100,7 +100,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         )
         if let result = response.value {
             try result.errors?.tryThrowException()
-            return result.results ?? [NetworkIncidentOrganization]()
+            return result.results ?? []
         }
         throw response.error ?? networkError
     }
@@ -132,7 +132,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         )
         if let result = response.value {
             try result.errors?.tryThrowException()
-            return result.results ?? [NetworkIncident]()
+            return result.results ?? []
         }
         throw response.error ?? networkError
     }
@@ -183,7 +183,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         )
         if let result = response.value {
             try result.errors?.tryThrowException()
-            return result.results ?? [NetworkIncidentShort]()
+            return result.results ?? []
         }
         throw response.error ?? networkError
     }
@@ -199,7 +199,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         )
         if let result = response.value {
             try result.errors?.tryThrowException()
-            return result.results ?? [NetworkLocation]()
+            return result.results ?? []
         }
         throw response.error ?? networkError
     }
@@ -276,7 +276,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         )
         if let result = response.value {
             try result.errors?.tryThrowException()
-            return result.results ?? [NetworkWorksiteFull]()
+            return result.results ?? []
         }
         throw response.error ?? networkError
     }
@@ -317,6 +317,18 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         throw response.error ?? networkError
     }
 
+    private func processWorksitesPage(_ request: NetworkRequest) async throws -> NetworkWorksitesPageResult {
+        let response = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkWorksitesPageResult.self
+        )
+        if let result = response.value {
+            try result.errors?.tryThrowException()
+            return result
+        }
+        throw response.error ?? networkError
+    }
+
     func getWorksitesPage(
         incidentId: Int64,
         pageCount: Int,
@@ -324,7 +336,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         latitude: Double?,
         longitude: Double?,
         updatedAtAfter: Date?
-    ) async throws -> [NetworkWorksitePage] {
+    ) async throws -> NetworkWorksitesPageResult {
         let page = (pageOffset ?? 0) <= 1 ? nil : String(pageOffset!)
         let centerCoordinates: String? = latitude == nil && longitude == nil ? nil : "\(latitude!),\(longitude!)"
         let request = requestProvider.worksitesPage
@@ -335,13 +347,30 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
                 "center_coordinates", centerCoordinates,
                 "updated_at__gt", updatedAtAfter == nil ? nil : dateFormatter.string(from: updatedAtAfter!)
             )
+        return try await processWorksitesPage(request)
+    }
+
+    func getWorksitesPageUpdatedAt(incidentId: Int64, pageCount: Int, updatedAt: Date, isPagingBackwards: Bool) async throws -> NetworkWorksitesPageResult {
+        let updatedAtKey = isPagingBackwards ? "updated_at__lt" : "updated_at__gt"
+        let sortValue = isPagingBackwards ? "-updated_at" : "updated_at"
+        let request = requestProvider.worksitesPage
+            .addQueryItems(
+                "incident", String(incidentId),
+                "limit", String(pageCount),
+                updatedAtKey, dateFormatter.string(from: updatedAt),
+                "sort", sortValue
+            )
+        return try await processWorksitesPage(request)
+    }
+
+    private func processWorksitesFlagsFormData(_ request: NetworkRequest) async throws -> NetworkFlagsFormDataResult {
         let response = await networkClient.callbackContinue(
             requestConvertible: request,
-            type: NetworkWorksitesPageResult.self
+            type: NetworkFlagsFormDataResult.self
         )
         if let result = response.value {
             try result.errors?.tryThrowException()
-            return result.results ?? [NetworkWorksitePage]()
+            return result
         }
         throw response.error ?? networkError
     }
@@ -349,26 +378,29 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
     func getWorksitesFlagsFormDataPage(
         incidentId: Int64,
         pageCount: Int,
-        pageOffset: Int?,
-        updatedAtAfter: Date?
-    ) async throws -> [NetworkFlagsFormData] {
-        let offset = (pageOffset ?? 0) <= 1 ? nil : String(pageOffset! * pageCount)
+        updatedAt: Date,
+        isPagingBackwards: Bool,
+    ) async throws -> NetworkFlagsFormDataResult {
+        let updatedAtKey = isPagingBackwards ? "updated_at__lt" : "updated_at__gt"
+        let sortValue = isPagingBackwards ? "-updated_at" : "updated_at"
         let request = requestProvider.worksitesFlagsFormData
             .addQueryItems(
                 "incident", String(incidentId),
                 "limit", String(pageCount),
-                "offset", offset,
-                "updated_at__gt", updatedAtAfter == nil ? nil : dateFormatter.string(from: updatedAtAfter!)
+                updatedAtKey, dateFormatter.string(from: updatedAt),
+                "sort", sortValue,
             )
-        let response = await networkClient.callbackContinue(
-            requestConvertible: request,
-            type: NetworkFlagsFormDataResult.self
-        )
-        if let result = response.value {
-            try result.errors?.tryThrowException()
-            return result.results ?? [NetworkFlagsFormData]()
-        }
-        throw response.error ?? networkError
+        return try await processWorksitesFlagsFormData(request)
+    }
+
+    func getWorksitesFlagsFormData(_ ids: Set<Int64>) async throws -> [NetworkFlagsFormData] {
+        let request = requestProvider.worksitesFlagsFormData
+            .addQueryItems(
+                "id__in", ids
+                    .map { "\($0)"}
+                    .joined(separator: ",")
+            )
+        return try await processWorksitesFlagsFormData(request).data ?? []
     }
 
     func getLocationSearchWorksites(_ incidentId: Int64, _ q: String, _ limit: Int) async throws -> [NetworkWorksiteLocationSearch] {
@@ -385,7 +417,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         )
         if let result = response.value {
             try result.errors?.tryThrowException()
-            return result.results ?? [NetworkWorksiteLocationSearch]()
+            return result.results ?? []
         }
         throw response.error ?? networkError
     }
@@ -402,7 +434,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         )
         if let result = response.value {
             try result.errors?.tryThrowException()
-            return result.results ?? [NetworkWorksiteShort]()
+            return result.results ?? []
         }
         throw response.error ?? networkError
     }
@@ -411,7 +443,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         return await networkClient.callbackContinue(
             requestConvertible: requestProvider.languages,
             type: NetworkLanguagesResult.self
-        ).value?.results ?? [NetworkLanguageDescription]()
+        ).value?.results ?? []
     }
 
     func getLanguageTranslations(_ key: String) async throws -> NetworkLanguageTranslation? {
@@ -456,7 +488,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         )
         if let result = response.value {
             try result.errors?.tryThrowException()
-            return result.results ?? [NetworkWorkTypeRequest]()
+            return result.results ?? []
         }
         throw response.error ?? networkError
     }
@@ -472,7 +504,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         )
         if let result = response.value {
             try result.errors?.tryThrowException()
-            return result.results ?? [NetworkIncidentOrganization]()
+            return result.results ?? []
         }
         throw response.error ?? networkError
     }
@@ -484,7 +516,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         )
         if let result = response.value {
             try result.errors?.tryThrowException()
-            return result.results ?? [NetworkPersonContact]()
+            return result.results ?? []
         }
         throw response.error ?? networkError
     }
@@ -513,7 +545,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         )
         if let result = response.value {
             try result.errors?.tryThrowException()
-            return result.events ?? [NetworkCaseHistoryEvent]()
+            return result.events ?? []
         }
         throw response.error ?? networkError
     }

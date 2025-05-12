@@ -3,17 +3,14 @@ extension MainComponent {
         shared {
             AppSyncer (
                 accountDataRepository: accountDataRepository,
-                accountDataRefresher: accountDataRefresher,
-                incidentsRepository: incidentsRepository,
+                incidentCacheRepository: incidentCacheRepository,
                 languageRepository: languageTranslationsRepository,
                 statusRepository: workTypeStatusRepository,
-                worksitesRepository: worksitesRepository,
                 worksiteChangeRepository: worksiteChangeRepository,
                 appPreferencesDataSource: appPreferences,
                 localImageRepository: localImageRepository,
                 appLoggerFactory: loggerFactory,
                 syncLoggerFactory: syncLoggerFactory,
-                accountEventBus: accountEventBus
             )
         }
     }
@@ -21,23 +18,6 @@ extension MainComponent {
     public var syncPuller: SyncPuller { appSyncer }
 
     public var syncPusher: SyncPusher { appSyncer }
-
-    private var worksitesNetworkDataCache: WorksitesNetworkDataCache {
-        WorksitesNetworkDataFileCache(
-            networkDataSource: networkDataSource,
-            loggerFactory: loggerFactory
-        )
-    }
-
-    var worksitesSyncer: WorksitesSyncer {
-        IncidentWorksitesSyncer(
-            networkDataSource: networkDataSource,
-            networkDataCache: worksitesNetworkDataCache,
-            worksiteDao: worksiteDao,
-            appVersionProvider: appVersionProvider,
-            loggerFactory: loggerFactory
-        )
-    }
 
     var organizationsSyncer: OrganizationsSyncer {
         IncidentOrganizationSyncer(
@@ -50,17 +30,9 @@ extension MainComponent {
         )
     }
 
-    var worksitesSecondarySyncer: WorksitesSecondaryDataSyncer {
-        IncidentWorksitesSecondaryDataSyncer(
-            networkDataSource: networkDataSource,
-            networkDataCache: worksitesNetworkDataCache,
-            worksiteDao: worksiteDao,
-            appVersionProvider: appVersionProvider,
-            loggerFactory: loggerFactory
-        )
+    public var incidentDataPullReporter: IncidentDataPullReporter {
+        incidentCacheRepository as! IncidentDataPullReporter
     }
-
-    public var incidentDataPullReporter: IncidentDataPullReporter { worksitesRepository as! IncidentDataPullReporter }
 
     var listsSyncer: ListsSyncer {
         AccountListsSyncer(

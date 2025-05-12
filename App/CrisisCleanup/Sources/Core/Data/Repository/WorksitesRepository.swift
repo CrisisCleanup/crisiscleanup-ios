@@ -56,6 +56,11 @@ public protocol WorksitesRepository {
         viewStart: Date
     )
 
+    func getRecentWorksitesCenterLocation(
+        _ incidentId: Int64,
+        limit: Int
+    ) async throws -> CLLocationCoordinate2D?
+
     func getUnsyncedCounts(_ worksiteId: Int64) throws -> [Int]
 
     func shareWorksite(

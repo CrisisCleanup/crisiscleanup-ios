@@ -365,14 +365,30 @@ public struct NetworkWorksiteShort: Codable, Equatable {
     }
 }
 
-public struct NetworkWorksitesPageResult: Codable, Equatable {
+protocol WorksiteDataResult {
+    associatedtype T
+
+    var count: Int? { get }
+    var data: [T]? { get }
+}
+
+protocol WorksiteDataSubset {
+    var id: Int64 { get }
+    var updatedAt: Date { get }
+}
+
+public struct NetworkWorksitesPageResult: Codable, Equatable, WorksiteDataResult {
+    typealias T = NetworkWorksitePage
+
     let errors: [NetworkCrisisCleanupApiError]?
     let count: Int?
     let results: [NetworkWorksitePage]?
+
+    var data: [NetworkWorksitePage]? { results }
 }
 
 // Copy similar changes from [NetworkWorksiteShort] above
-public struct NetworkWorksitePage: Codable, Equatable {
+public struct NetworkWorksitePage: Codable, Equatable, WorksiteDataSubset {
     let id: Int64
     let address: String
     let autoContactFrequencyT: String

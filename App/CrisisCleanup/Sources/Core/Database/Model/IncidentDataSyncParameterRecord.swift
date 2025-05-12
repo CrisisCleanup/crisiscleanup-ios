@@ -11,11 +11,11 @@ struct IncidentDataSyncParameterRecord: Identifiable, Equatable {
     let boundedSyncedAt: Date
 
     func asExternalModel(_ logger: AppLogger) -> IncidentDataSyncParameters {
-        var boundedRegionData: IncidentDataSyncParameters.BoundedRegion? = nil
+        var savedRegion: IncidentDataSyncParameters.BoundedRegion? = nil
         if boundedRegion.isNotBlank {
             let jsonDecoder = JsonDecoderFactory().decoder()
             do {
-                boundedRegionData = try jsonDecoder.decode(IncidentDataSyncParameters.BoundedRegion.self, from: boundedRegion.data(using: .utf8)!)
+                savedRegion = try jsonDecoder.decode(IncidentDataSyncParameters.BoundedRegion.self, from: boundedRegion.data(using: .utf8)!)
             } catch {
                 logger.logError(error)
             }
@@ -33,7 +33,7 @@ struct IncidentDataSyncParameterRecord: Identifiable, Equatable {
                     after: additionalUpdatedAfter
                 )
             ),
-            boundedRegion: boundedRegionData,
+            boundedRegion: savedRegion,
             boundedSyncedAt: boundedSyncedAt
         )
     }

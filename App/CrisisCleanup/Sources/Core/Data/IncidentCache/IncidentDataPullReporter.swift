@@ -10,6 +10,10 @@ internal class IncidentDataPullStatsUpdater {
     private var pullStats: IncidentDataPullStats
     private let updatePullStats: (IncidentDataPullStats) -> Void
 
+    var startedAt: Date {
+        pullStats.startTime
+    }
+
     init(
         _ updatePullStats: @escaping (IncidentDataPullStats) -> Void,
         _ pullStats: IncidentDataPullStats = IncidentDataPullStats()

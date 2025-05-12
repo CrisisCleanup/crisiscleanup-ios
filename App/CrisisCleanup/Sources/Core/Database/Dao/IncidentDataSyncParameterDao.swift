@@ -22,7 +22,7 @@ public class IncidentDataSyncParameterDao {
             .fetchOne(db)
     }
 
-    func streamWorksiteSyncStats(_ incidentId: Int64) -> AnyPublisher<IncidentDataSyncParameters?, Never> {
+    func streamIncidentDataSyncParameters(_ incidentId: Int64) -> AnyPublisher<IncidentDataSyncParameters?, Never> {
         ValueObservation
             .tracking({ db in try self.fetchSyncStats(db, incidentId) })
             .removeDuplicates()

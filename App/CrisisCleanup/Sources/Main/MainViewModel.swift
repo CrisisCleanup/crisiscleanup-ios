@@ -157,15 +157,14 @@ class MainViewModel: ObservableObject {
     }
 
     private func subscribeIncidentsData() {
-        incidentSelector.incidentsData.eraseToAnyPublisher()
+        incidentSelector.incidentId.eraseToAnyPublisher()
+            .filter { $0 != EmptyIncident.id }
             .removeDuplicates()
-            .sink { data in
-                self.incidentsData = data
-
-                if !data.isEmpty {
-                    self.sync(true)
-                    self.syncPuller.appPullIncident(data.selectedId)
-                }
+            .sink { id in
+                self.sync(
+                    forcePullIncidents: false,
+                    syncFullWorksites: true
+                )
             }
             .store(in: &subscriptions)
     }
@@ -183,29 +182,29 @@ class MainViewModel: ObservableObject {
         .filter { (_, translationCount, _) in
             translationCount > 0
         }
-        .receive(on: RunLoop.main)
-        .sink { (accountData, _, minSupport) in
+        .map { (accountData, _, minSupport) in
             let isUnsupported = self.appVersionProvider.buildNumber < minSupport.minBuild
-            self.viewData =  MainViewData(
+            return MainViewData(
                 state: isUnsupported ? .unsupportedBuild : .ready,
                 accountData: accountData
             )
         }
+        .receive(on: RunLoop.main)
+        .assign(to: \.viewData, on: self)
         .store(in: &subscriptions)
 
         accountDataPublisher
             .removeDuplicates()
             .sink { accountData in
                 if accountData.areTokensValid {
-                    self.sync(false)
-
-                    let data = self.incidentsData
-                    if !data.isEmpty {
-                        self.syncPuller.appPullIncident(data.selectedId)
-                    }
+                    self.sync(
+                        forcePullIncidents: true,
+                        syncFullWorksites: false
+                    )
 
                     Task {
                         await self.accountDataRefresher.updateMyOrganization(true)
+                        await self.accountDataRefresher.updateApprovedIncidents()
                     }
 
                     self.logger.setAccountId(String(accountData.id))
@@ -306,6 +305,20 @@ class MainViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
+    private func sync(
+        forcePullIncidents: Bool,
+        syncFullWorksites: Bool
+    ) {
+        syncPuller.appPullIncidentData(
+            cancelOngoing: false,
+            forcePullIncidents: forcePullIncidents,
+            cacheSelectedIncident: true,
+            cacheActiveIncidentWorksites: false,
+            cacheFullWorksites: syncFullWorksites,
+            restartCacheCheckpoint: false
+        )
+    }
+
     func onRequireCheckAcceptTerms() {
         acceptTermsErrorMessage = translator.t("termsConditionsModal.must_check_box")
     }
@@ -383,9 +396,5 @@ class MainViewModel: ObservableObject {
         Task {
             await shareLocationRepository.shareLocation()
         }
-    }
-
-    private func sync(_ cancelOngoing: Bool) {
-        syncPuller.appPull(false, cancelOngoing: cancelOngoing)
     }
 }

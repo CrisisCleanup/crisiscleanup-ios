@@ -628,7 +628,14 @@ class CasesViewModel: ObservableObject {
     }
 
     func syncWorksitesData(_ forceRefreshAll: Bool = false) {
-        syncPuller.appPullIncidentWorksitesDelta(forceRefreshAll)
+        syncPuller.appPullIncidentData(
+            cancelOngoing: false,
+            forcePullIncidents: false,
+            cacheSelectedIncident: false,
+            cacheActiveIncidentWorksites: true,
+            cacheFullWorksites: true,
+            restartCacheCheckpoint: forceRefreshAll
+        )
     }
 
     private func setTileRendererLocation() {

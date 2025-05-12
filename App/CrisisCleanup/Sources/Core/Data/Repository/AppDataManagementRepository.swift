@@ -93,8 +93,7 @@ class CrisisCleanupDataManagementRepository: AppDataManagementRepository {
     }
 
     private func stopSyncPull() {
-        syncPuller.stopPullIncident()
-        syncPuller.stopPull()
+        syncPuller.stopPullWorksites()
     }
 
     private func isPersistedAppDataCleared() -> Bool {

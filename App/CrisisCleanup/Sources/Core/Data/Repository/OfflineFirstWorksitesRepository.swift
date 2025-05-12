@@ -2,11 +2,9 @@ import Combine
 import CoreLocation
 import Foundation
 
-class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullReporter {
+class OfflineFirstWorksitesRepository: WorksitesRepository {
     private let dataSource: CrisisCleanupNetworkDataSource
     private let writeApi: CrisisCleanupWriteApi
-    private let worksitesSyncer: WorksitesSyncer
-    private let worksitesSecondarySyncer: WorksitesSecondaryDataSyncer
     private let worksiteDao: WorksiteDao
     private let recentWorksiteDao: RecentWorksiteDao
     private let workTypeTransferRequestDao: WorkTypeTransferRequestDao
@@ -26,10 +24,6 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     private let isDeterminingWorksitesCountSubject = CurrentValueSubject<Bool, Never>(false)
     var isDeterminingWorksitesCount: any Publisher<Bool, Never>
 
-    var incidentDataPullStats: any Publisher<IncidentDataPullStats, Never>
-    var incidentSecondaryDataPullStats: any Publisher<IncidentDataPullStats, Never>
-    var onIncidentDataPullComplete: any Publisher<Int64, Never>
-
     private let orgIdPublisher: AnyPublisher<Int64, Never>
     private let organizationAffiliatesPublisher: AnyPublisher<Set<Int64>, Never>
 
@@ -38,8 +32,6 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     init(
         dataSource: CrisisCleanupNetworkDataSource,
         writeApi: CrisisCleanupWriteApi,
-        worksitesSyncer: WorksitesSyncer,
-        worksitesSecondarySyncer: WorksitesSecondaryDataSyncer,
         worksiteDao: WorksiteDao,
         recentWorksiteDao: RecentWorksiteDao,
         workTypeTransferRequestDao: WorkTypeTransferRequestDao,
@@ -53,8 +45,6 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     ) {
         self.dataSource = dataSource
         self.writeApi = writeApi
-        self.worksitesSyncer = worksitesSyncer
-        self.worksitesSecondarySyncer = worksitesSecondarySyncer
         self.worksiteDao = worksiteDao
         self.recentWorksiteDao = recentWorksiteDao
         self.accountDataRepository = accountDataRepository
@@ -68,10 +58,6 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         isLoading = isLoadingSubject
         syncWorksitesFullIncidentId = syncWorksitesFullIncidentIdSubject
         isDeterminingWorksitesCount = isDeterminingWorksitesCountSubject
-
-        incidentDataPullStats = worksitesSyncer.dataPullStats
-        incidentSecondaryDataPullStats = worksitesSecondarySyncer.dataPullStats
-        onIncidentDataPullComplete = worksitesSecondarySyncer.onFullDataPullComplete
 
         orgIdPublisher = accountDataRepository.accountData
             .eraseToAnyPublisher()
@@ -258,6 +244,10 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
                 logger.logError(error)
             }
         }
+    }
+
+    func getRecentWorksitesCenterLocation(_ incidentId: Int64, limit: Int) async throws -> CLLocationCoordinate2D? {
+        try recentWorksiteDao.getRecentWorksitesCenterLocation(incidentId, limit: limit)
     }
 
     func getUnsyncedCounts(_ worksiteId: Int64) throws -> [Int] {

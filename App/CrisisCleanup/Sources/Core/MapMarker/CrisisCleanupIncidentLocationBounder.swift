@@ -7,7 +7,7 @@ class CrisisCleanupIncidentLocationBounder: IncidentLocationBounder {
     private let locationsRepository: LocationsRepository
     private let logger: AppLogger
 
-    private let bounderLock = NSLock()
+    private let bounderLock = NSRecursiveLock()
     private var bounderIncidentId = EmptyIncident.id
     private var incidentBounds: IncidentBounds? = nil
 

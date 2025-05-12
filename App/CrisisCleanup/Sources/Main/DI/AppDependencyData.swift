@@ -161,8 +161,6 @@ extension MainComponent {
             OfflineFirstWorksitesRepository(
                 dataSource: networkDataSource,
                 writeApi: writeApi,
-                worksitesSyncer: worksitesSyncer,
-                worksitesSecondarySyncer: worksitesSecondarySyncer,
                 worksiteDao: worksiteDao,
                 recentWorksiteDao: recentWorksiteDao,
                 workTypeTransferRequestDao: workTypeTransferRequestDao,
@@ -203,6 +201,47 @@ extension MainComponent {
                 networkDataSource: networkDataSource,
                 locationBoundsConverter: locationBoundsConverter,
                 loggerFactory: loggerFactory
+            )
+        }
+    }
+
+    private var incidentCachePreferences: IncidentCachePreferencesDataSource {
+        shared {
+            IncidentCachePreferencesUserDefaults()
+        }
+    }
+
+    private var locationBounder: IncidentLocationBounder {
+        shared {
+            CrisisCleanupIncidentLocationBounder(
+                incidentsRepository: incidentsRepository,
+                locationsRepository: locationsRepository,
+                loggerFactory: loggerFactory
+            )
+        }
+    }
+
+    var incidentCacheRepository: IncidentCacheRepository {
+        shared {
+            IncidentWorksitesCacheRepository(
+                accountDataRefresher: accountDataRefresher,
+                incidentsRepository: incidentsRepository,
+                appPreferences: appPreferences,
+                syncParameterDao: incidentDataSyncParameterDao,
+                incidentCachePreferences: incidentCachePreferences,
+                incidentSelector: incidentSelector,
+                locationProvider: locationManager,
+                locationBounder: locationBounder,
+                incidentMapTracker: incidentMapTracker,
+                networkDataSource: networkDataSource,
+                worksitesRepository: worksitesRepository,
+                worksiteDao: worksiteDao,
+                speedMonitor: incidentCacheDataDownloadSpeedMonitor,
+                networkMonitor: networkMonitor,
+                syncLogger: syncLoggerFactory.getLogger("sync"),
+                translator: translator,
+                appEnv: appEnv,
+                appLoggerFactory: loggerFactory
             )
         }
     }

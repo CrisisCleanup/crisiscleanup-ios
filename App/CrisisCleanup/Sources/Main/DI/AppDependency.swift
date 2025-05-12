@@ -92,7 +92,7 @@ extension MainComponent {
 
     public var networkMonitor: NetworkMonitor {
         shared {
-            NetworkReachability(appSettingsProvider.reachabilityHost)
+            AppNetworkMonitor()
         }
     }
 

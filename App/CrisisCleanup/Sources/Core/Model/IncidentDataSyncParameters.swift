@@ -65,14 +65,14 @@ public struct IncidentDataSyncParameters: Equatable {
         let radius: Double
 
         // sourcery:begin: skipCopy
-        lazy var isDefined: Bool = {
+        var isDefined: Bool {
             radius > 0 &&
             (latitude != 0.0 || longitude != 0.0) &&
             -90 < latitude &&
             latitude < 90 &&
             -180 <= longitude &&
             longitude <= 180
-        }()
+        }
         // sourcery:end
 
         func isSignificantChange(

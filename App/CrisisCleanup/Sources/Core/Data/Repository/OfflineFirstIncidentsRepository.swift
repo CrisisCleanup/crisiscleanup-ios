@@ -181,14 +181,14 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         }
     }
 
-    func pullIncidents() async throws {
+    func pullIncidents(force: Bool) async throws {
         var isSuccessful = false
         do {
             defer {
                 appPreferencesDataSource.setSyncAttempt(isSuccessful)
             }
 
-            try await syncInternal()
+            try await syncInternal(forcePullAll: force)
             isSuccessful = true
         }
     }

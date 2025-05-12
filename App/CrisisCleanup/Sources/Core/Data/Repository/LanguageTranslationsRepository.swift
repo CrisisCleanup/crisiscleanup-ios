@@ -10,8 +10,6 @@ public protocol LanguageTranslationsRepository: KeyAssetTranslator {
 
     func loadLanguages(_ force: Bool) async
 
-    func setLanguage(_ key: String)
-
     func setLanguageFromSystem()
 
     func getLanguageOptions() async -> [LanguageIdName]
@@ -22,10 +20,6 @@ public protocol LanguageTranslationsRepository: KeyAssetTranslator {
 extension LanguageTranslationsRepository {
     func loadLanguages() async {
         await loadLanguages(false)
-    }
-
-    func setLanguage() {
-        setLanguage("")
     }
 }
 
@@ -160,7 +154,7 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
         }
     }
 
-    func setLanguage(_ key: String) {
+    private func setLanguage(_ key: String) {
         setLanguageTask?.cancel()
         setLanguageTask = Task {
             isSettingLanguageSubject.value = true
