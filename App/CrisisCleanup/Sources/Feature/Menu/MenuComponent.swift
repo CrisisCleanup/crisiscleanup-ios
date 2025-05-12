@@ -11,6 +11,8 @@ class MenuComponent: Component<AppDependency>, MenuViewBuilder {
         worksitesRepository: dependency.worksitesRepository,
         accountDataRepository: dependency.accountDataRepository,
         accountDataRefresher: dependency.accountDataRefresher,
+        incidentCacheRepository: dependency.incidentCacheRepository,
+        dataDownloadSpeedMonitor: dependency.dataDownloadSpeedMonitor,
         syncLogRepository: dependency.syncLogRepository,
         incidentSelector: dependency.incidentSelector,
         appVersionProvider: dependency.appVersionProvider,

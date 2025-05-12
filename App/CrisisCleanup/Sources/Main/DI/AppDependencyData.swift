@@ -221,7 +221,13 @@ extension MainComponent {
         }
     }
 
-    var incidentCacheRepository: IncidentCacheRepository {
+    public var dataDownloadSpeedMonitor: DataDownloadSpeedMonitor {
+        shared {
+            IncidentDataDownloadSpeedMonitor()
+        }
+    }
+
+    public var incidentCacheRepository: IncidentCacheRepository {
         shared {
             IncidentWorksitesCacheRepository(
                 accountDataRefresher: accountDataRefresher,
@@ -236,7 +242,7 @@ extension MainComponent {
                 networkDataSource: networkDataSource,
                 worksitesRepository: worksitesRepository,
                 worksiteDao: worksiteDao,
-                speedMonitor: incidentCacheDataDownloadSpeedMonitor,
+                speedMonitor: dataDownloadSpeedMonitor,
                 networkMonitor: networkMonitor,
                 syncLogger: syncLoggerFactory.getLogger("sync"),
                 translator: translator,
@@ -435,11 +441,5 @@ extension MainComponent {
 
     public var syncLogRepository: SyncLogRepository {
         pagingSyncLogRepository
-    }
-
-    var incidentCacheDataDownloadSpeedMonitor: DataDownloadSpeedMonitor {
-        shared {
-            IncidentDataDownloadSpeedMonitor()
-        }
     }
 }

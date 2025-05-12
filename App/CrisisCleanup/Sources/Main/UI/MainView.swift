@@ -31,6 +31,7 @@ struct MainView: View {
     let inviteTeammateViewBuilder: InviteTeammateViewBuilder
     let requestRedeployViewBuilder: RequestRedeployViewBuilder
     let listsViewBuilder: ListsViewBuilder
+    let incidentCacheViewBuilder: IncidentWorksitesCacheViewBuilder
     let syncInsightsViewBuilder: SyncInsightsViewBuilder
 
     @State private var selectedTab = TopLevelDestination.cases
@@ -106,6 +107,7 @@ struct MainView: View {
                             inviteTeammateViewBuilder: inviteTeammateViewBuilder,
                             requestRedeployViewBuilder: requestRedeployViewBuilder,
                             listsViewBuilder: listsViewBuilder,
+                            incidentCacheViewBuilder: incidentCacheViewBuilder,
                             syncInsightsViewBuilder: syncInsightsViewBuilder,
                             selectedTab: $selectedTab,
                             showTabDivider: !deviceSize.isLargeScreen,
@@ -305,6 +307,7 @@ private struct MainNavigationStack: View {
     let inviteTeammateViewBuilder: InviteTeammateViewBuilder
     let requestRedeployViewBuilder: RequestRedeployViewBuilder
     let listsViewBuilder: ListsViewBuilder
+    let incidentCacheViewBuilder: IncidentWorksitesCacheViewBuilder
     let syncInsightsViewBuilder: SyncInsightsViewBuilder
 
     @Binding var selectedTab: TopLevelDestination
@@ -397,6 +400,8 @@ private struct MainNavigationStack: View {
                     listsViewBuilder.listsView
                 case .viewList(let listId):
                     listsViewBuilder.viewListView(listId)
+                case .incidentDataCaching:
+                    incidentCacheViewBuilder.incidentWorksitesCacheView
                 case .syncInsights:
                     if viewModel.isNotProduction {
                         syncInsightsViewBuilder.syncInsightsView

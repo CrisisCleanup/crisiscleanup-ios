@@ -34,6 +34,7 @@ public protocol AppDependency: Dependency {
     var worksitesRepository: WorksitesRepository { get }
     var searchWorksitesRepository: SearchWorksitesRepository { get }
     var organizationsRepository: OrganizationsRepository { get }
+    var incidentCacheRepository: IncidentCacheRepository { get }
     var worksiteChangeRepository: WorksiteChangeRepository  { get }
     var syncLogRepository: SyncLogRepository  { get }
     var addressSearchRepository: AddressSearchRepository { get }
@@ -48,6 +49,7 @@ public protocol AppDependency: Dependency {
     var listsRepository: ListsRepository { get }
     var shareLocationRepository: ShareLocationRepository { get }
     var appDataManagementRepository: AppDataManagementRepository { get }
+    var dataDownloadSpeedMonitor: DataDownloadSpeedMonitor { get }
 
     var authenticateViewBuilder: AuthenticateViewBuilder { get }
     var incidentSelectViewBuilder: IncidentSelectViewBuilder { get }

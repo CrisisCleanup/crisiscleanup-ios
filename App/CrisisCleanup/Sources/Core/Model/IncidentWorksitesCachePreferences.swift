@@ -26,17 +26,23 @@ public struct IncidentWorksitesCachePreferences: Codable {
     let isRegionBounded: Bool
     let boundedRegionParameters: BoundedRegionParameters
 
-    lazy var isAutoCache: Bool = {
-        !(isPaused || isRegionBounded)
-    }()
+    let isAutoCache: Bool
+    let isBoundedNearMe: Bool
+    let isBoundedByCoordinates: Bool
 
-    lazy var isBoundedNearMe: Bool = {
-        isRegionBounded && boundedRegionParameters.isRegionMyLocation
-    }()
+    init(
+        isPaused: Bool,
+        isRegionBounded: Bool,
+        boundedRegionParameters: BoundedRegionParameters
+    ) {
+        self.isPaused = isPaused
+        self.isRegionBounded = isRegionBounded
+        self.boundedRegionParameters = boundedRegionParameters
 
-    lazy var isBoundedByCoordinates: Bool = {
-        isRegionBounded && !boundedRegionParameters.isRegionMyLocation
-    }()
+        isAutoCache = !(isPaused || isRegionBounded)
+        isBoundedNearMe = isRegionBounded && boundedRegionParameters.isRegionMyLocation
+        isBoundedByCoordinates = isRegionBounded && !boundedRegionParameters.isRegionMyLocation
+    }
 }
 
 let InitialIncidentWorksitesCachePreferences = IncidentWorksitesCachePreferences(

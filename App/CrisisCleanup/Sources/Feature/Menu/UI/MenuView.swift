@@ -37,6 +37,11 @@ struct MenuView: View {
                     toggleGettingStartedSection: { viewModel.showGettingStartedVideo(true) }
                 )
 
+                IncidentCacheView(
+                    incidentCachePreferences: viewModel.incidentCachePreferences,
+                    hasSpeedNotAdaptive: viewModel.incidentDataCacheMetrics.hasSpeedNotAdaptive
+                )
+
                 Button(t.t("list.lists")) {
                     router.openLists()
                 }
@@ -313,5 +318,48 @@ private struct RequestLocationView: View {
             }
         }
         .padding()
+    }
+}
+
+private struct IncidentCacheView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @EnvironmentObject var router: NavigationRouter
+
+    let incidentCachePreferences: IncidentWorksitesCachePreferences
+    let hasSpeedNotAdaptive: Bool
+
+
+    var body: some View {
+        VStack {
+            if hasSpeedNotAdaptive {
+                Text(t.t("appMenu.good_internet_use_adaptive"))
+            }
+
+            HStack(alignment: .center) {
+                let syncingPolicy = if incidentCachePreferences.isPaused {
+                    t.t("appMenu.pause_downloading_cases")
+                } else if incidentCachePreferences.isBoundedNearMe {
+                    t.t("appMenu.download_cases_near_me")
+                } else if incidentCachePreferences.isBoundedByCoordinates {
+                    t.t("appMenu.download_cases_specific_area")
+                } else {
+                    t.t("appMenu.adaptively_download_cases")
+                }
+
+                Text(syncingPolicy)
+
+                Spacer()
+
+                Button {
+                    router.openIncidentDataCaching()
+                } label: {
+                    Text(t.t("actions.change"))
+                }
+                .foregroundStyle(appTheme.colors.actionLinkColor)
+                .padding(.bottom)
+            }
+            .padding([.horizontal, .top])
+        }
     }
 }

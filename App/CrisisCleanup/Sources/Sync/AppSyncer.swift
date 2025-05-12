@@ -173,7 +173,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         // TODO: Run sync in background task (if not running to completion)
         Task {
             do {
-                if let invalidTokens = try await validateAccountTokens() {
+                if let _ = try await validateAccountTokens() {
                     return
                 }
 
@@ -198,7 +198,7 @@ class AppSyncer: SyncPuller, SyncPusher {
     func syncPushWorksitesAsync() async {
         Task {
             do {
-                if let invalidTokens = try await validateAccountTokens() {
+                if let _ = try await validateAccountTokens() {
                     return
                 }
 
