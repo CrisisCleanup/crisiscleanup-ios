@@ -173,22 +173,23 @@ class AppSyncer: SyncPuller, SyncPusher {
         // TODO: Run sync in background task (if not running to completion)
         Task {
             do {
-                if let _ = try await validateAccountTokens() {
+                if let _ = try await self.validateAccountTokens() {
                     return
                 }
 
                 try Task.checkCancellation()
 
-                let isSyncAttempted = await worksiteChangeRepository.trySyncWorksite(worksiteId)
+                let isSyncAttempted = await self.worksiteChangeRepository.trySyncWorksite(worksiteId)
                 if isSyncAttempted {
-                    await worksiteChangeRepository.syncUnattemptedWorksite(worksiteId)
+                    await self.worksiteChangeRepository.syncUnattemptedWorksite(worksiteId)
 
                     if scheduleMediaSync {
-                        scheduleSyncMedia()
+                        self.scheduleSyncMedia()
                     }
                 }
 
             } catch {
+                self.appLogger.logError(error)
                 // TODO: Handle proper
                 print(error)
             }
@@ -244,6 +245,7 @@ class AppSyncer: SyncPuller, SyncPusher {
                     // TODO: Schedule delayed background sync
                 }
             } catch {
+                appLogger.logError(error)
                 // TODO: Handle proper. Could be cancellation.
                 print("Sync media error \(error)")
             }

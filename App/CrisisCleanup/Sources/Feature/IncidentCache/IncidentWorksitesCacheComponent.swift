@@ -29,10 +29,12 @@ class IncidentWorksitesCacheComponent: Component<AppDependency>, IncidentWorksit
     private var incidentWorksitesCacheViewModel: IncidentWorksitesCacheViewModel {
         if viewModel == nil {
             viewModel = IncidentWorksitesCacheViewModel(
-//                incidentSelector: dependency.incidentSelector,
-//                syncPuller: dependency.syncPuller,
-//                loggerFactory: dependency.loggerFactory,
-//                appEnv: dependency.appEnv
+                incidentSelector: dependency.incidentSelector,
+                incidentCacheRepository: dependency.incidentCacheRepository,
+                locationManager: dependency.locationManager,
+                syncPuller: dependency.syncPuller,
+                appEnv: dependency.appEnv,
+                loggerFactory: dependency.loggerFactory,
             )
         }
         return viewModel!

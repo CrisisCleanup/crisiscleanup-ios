@@ -161,8 +161,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         let incidentIds: Set<Int64>
         let selectedIncidentId: Int64
         do {
-            let incidentsPublisher = incidentsRepository.incidents.eraseToAnyPublisher()
-            let incidents = try await incidentsPublisher.asyncFirst()
+            let incidents = try incidentsRepository.getIncidents(Date(timeIntervalSince1970: 0))
             incidentIds = Set(incidents.map { $0.id })
 
             let preferencesPublisher = appPreferences.preferences.eraseToAnyPublisher()
