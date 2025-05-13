@@ -68,7 +68,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         )
         requestProvider = networkRequestProvider
 
-        jsonDecoder = JsonDecoderFactory().decoder()
+        jsonDecoder = JsonDecoderFactory().multiDateDecoder()
         dateFormatter = ISO8601DateFormatter()
 
         worksiteCoreDataFieldsQ = worksiteCoreDataFields.commaJoined
