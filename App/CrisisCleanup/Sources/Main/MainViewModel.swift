@@ -70,7 +70,7 @@ class MainViewModel: ObservableObject {
         shareLocationRepository: ShareLocationRepository,
         networkMonitor: NetworkMonitor,
         logger: AppLogger,
-        appEnv: AppEnv
+        appEnv: AppEnv,
     ) {
         self.accountDataRepository = accountDataRepository
         self.appSupportRepository = appSupportRepository

@@ -1,8 +1,8 @@
 import Atomics
-import Combine
+@preconcurrency import Combine
 import Foundation
 
-public protocol AccountDataRepository {
+public protocol AccountDataRepository: Sendable {
     var accountData: any Publisher<AccountData, Never> { get }
 
     var isAuthenticated: any Publisher<Bool, Never> { get }
@@ -35,7 +35,7 @@ public protocol AccountDataRepository {
     func clearAccountTokens()
 }
 
-class CrisisCleanupAccountDataRepository: AccountDataRepository {
+final class CrisisCleanupAccountDataRepository: AccountDataRepository {
     internal let accountDataSubject = CurrentValueSubject<AccountData, Never>(emptyAccountData)
     let accountData: any Publisher<AccountData, Never>
 

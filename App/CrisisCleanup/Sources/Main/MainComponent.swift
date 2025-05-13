@@ -31,7 +31,7 @@ public class MainComponent: BootstrapComponent,
     public let addressSearchRepository: AddressSearchRepository
     public let externalEventBus: ExternalEventBus
 
-    lazy var mainViewModel: MainViewModel = MainViewModel(
+    lazy var mainViewModel = MainViewModel(
         accountDataRepository: accountDataRepository,
         appSupportRepository: appSupportRepository,
         appVersionProvider: appVersionProvider,

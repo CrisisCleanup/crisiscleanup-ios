@@ -96,7 +96,7 @@ class AFNetworkingClient {
     }
 }
 
-private class LogEventMonitor : EventMonitor {
+private final class LogEventMonitor : EventMonitor {
     func requestDidFinish(_ request: Request) {
 //        if let headers = request.response?.headers {
 //            print(headers)
