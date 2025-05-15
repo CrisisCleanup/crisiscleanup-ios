@@ -1,4 +1,5 @@
 import Combine
+import CombineExt
 
 extension Publisher where Self.Failure == Never {
     func sink(receiveValue: @escaping ((Self.Output) async -> Void)) -> AnyCancellable {
@@ -66,4 +67,16 @@ func cancelSubscriptions(_ subscriptions: Set<AnyCancellable>) -> Set<AnyCancell
         s.cancel()
     }
     return Set<AnyCancellable>()
+}
+
+extension Publisher {
+    func shareReplay(_ bufferSize: Int) -> AnyPublisher<Output, Failure> {
+        multicast(subject: ReplaySubject(bufferSize: bufferSize))
+            .autoconnect()
+            .eraseToAnyPublisher()
+    }
+
+    func replay1() -> AnyPublisher<Output, Failure> {
+        shareReplay(1)
+    }
 }

@@ -10,7 +10,7 @@ public struct IncidentDataSyncParameters: Equatable {
     let boundedSyncedAt: Date
 
     // sourcery:begin: skipCopy
-    lazy var lastUpdated: Date? = {
+    var lastUpdated: Date? {
         var latest = boundedSyncedAt
         for timeMarker in [
             syncDataMeasures.core,
@@ -23,7 +23,7 @@ public struct IncidentDataSyncParameters: Equatable {
         }
 
         return IncidentDataSyncParameters.timeMarkerZero.distance(to: latest) < 1.days ? nil : latest
-    }()
+    }
     // sourcery:end
 
     // sourcery: copyBuilder, skipCopyInit

@@ -1,5 +1,6 @@
 import Atomics
 import Combine
+import CombineExt
 import Foundation
 import MapKit
 import SwiftUI
@@ -26,6 +27,8 @@ class CasesViewModel: ObservableObject {
     private let incidentWorksitesCount: AnyPublisher<IncidentIdWorksiteCount, Never>
     var selectedIncident: Incident { incidentsData.selected }
     var incidentId: Int64 { incidentsData.selectedId }
+
+    private let incidentIdPublisher: AnyPublisher<Int64, Never>
 
     @Published private(set) var dataProgress = DataProgressMetrics()
 
@@ -71,6 +74,10 @@ class CasesViewModel: ObservableObject {
     @Published private(set) var debugOverlay: MKTileOverlay?
     private let mapMarkerManager: CasesMapMarkerManager
     internal var mapView: MKMapView?
+
+    private let epochZero = Date(timeIntervalSince1970: 0)
+    private let tileClearRefreshInterval = 5.seconds
+    private var tileRefreshedTimestamp = Date(timeIntervalSince1970: 0)
 
     private let mapMarkersChangeSetSubject = CurrentValueSubject<AnnotationsChangeSet, Never>(emptyAnnotationsChangeSet)
     @Published private(set) var mapMarkersChangeSet = emptyAnnotationsChangeSet
@@ -137,10 +144,14 @@ class CasesViewModel: ObservableObject {
         self.syncPuller = syncPuller
         logger = loggerFactory.getLogger("cases")
 
-        incidentWorksitesCount = worksitesRepository.streamIncidentWorksitesCount(incidentSelector.incidentId)
+        incidentIdPublisher = incidentSelector.incidentId
             .eraseToAnyPublisher()
-            .share()
+            .removeDuplicates()
+            .replay1()
+
+        incidentWorksitesCount = worksitesRepository.streamIncidentWorksitesCount(incidentIdPublisher)
             .eraseToAnyPublisher()
+            .replay1()
 
         tableViewDataLoader = CasesTableViewDataLoader(
             worksiteProvider: worksiteProvider,
@@ -279,6 +290,15 @@ class CasesViewModel: ObservableObject {
             .receive(on: RunLoop.main)
             .assign(to: \.incidentsData, on: self)
             .store(in: &subscriptions)
+
+        incidentIdPublisher
+            .receive(on: RunLoop.main)
+            .sink {
+                self.tileRefreshedTimestamp = self.epochZero
+                self.mapDotsOverlay.setIncident($0, 0, clearCache: true)
+                self.reloadMapOverlay()
+            }
+            .store(in: &subscriptions)
     }
 
     private func subscribeCameraBounds() {
@@ -399,8 +419,8 @@ class CasesViewModel: ObservableObject {
 
         let totalCasesCount = Publishers.CombineLatest3(
             $isLoadingData,
-            incidentSelector.incidentId.eraseToAnyPublisher(),
-            incidentWorksitesCount
+            incidentIdPublisher,
+            incidentWorksitesCount,
         )
             .throttle(for: .seconds(0.1), scheduler: RunLoop.current, latest: true)
             .map { (isLoading, incidentId, worksitesCount) in
@@ -617,12 +637,11 @@ class CasesViewModel: ObservableObject {
         Publishers.CombineLatest3(
             incidentWorksitesCount,
             dataPullReporter.incidentDataPullStats.eraseToAnyPublisher(),
-            filterRepository.casesFiltersLocation.eraseToAnyPublisher()
+            filterRepository.casesFiltersLocation.eraseToAnyPublisher(),
         )
-        .debounce(for: .seconds(0.016), scheduler: RunLoop.current)
-        .throttle(for: .seconds(1.0), scheduler: RunLoop.current, latest: true)
-        .sink { count, stats, filtersLocation in
-            self.refreshTiles(count, stats, filtersLocation)
+        .throttle(for: .seconds(0.6), scheduler: RunLoop.current, latest: true)
+        .sink { count, stats, _ in
+            self.refreshTiles(count, stats)
         }
         .store(in: &subscriptions)
     }
@@ -654,24 +673,43 @@ class CasesViewModel: ObservableObject {
         return false
     }
 
+    private func reloadMapOverlay() {
+        if let map = mapView,
+           let renderer = map.renderer(for: mapDotsOverlay) as? MKTileOverlayRenderer {
+            renderer.reloadData()
+        }
+    }
+
     private func refreshTiles(
         _ idCount: IncidentIdWorksiteCount,
         _ pullStats: IncidentDataPullStats,
-        _ filtersLocation: (CasesFilter, Bool, Double)
     ) {
-        let casesCount = idCount.totalCount
-        var clearCache = casesCount == 0
-        clearCache = mapDotsOverlay.onStateChange(
-            incidentId,
-            casesCount,
-            filtersLocation,
-            clearCache
-        )
+        if mapDotsOverlay.tilesIncident != idCount.id ||
+            idCount.id != pullStats.incidentId {
+            return
+        }
 
-        if clearCache || pullStats.isEnded,
-           let map = mapView,
-           let renderer = map.renderer(for: mapDotsOverlay) as? MKTileOverlayRenderer {
-            renderer.reloadData()
+        let now = Date.now
+
+        if pullStats.isEnded {
+            tileRefreshedTimestamp = now
+            mapDotsOverlay.setIncident(idCount.id, idCount.totalCount, clearCache: true)
+            reloadMapOverlay()
+            return
+        }
+
+        if !pullStats.isStarted || idCount.totalCount == 0 {
+            return
+        }
+
+        let sinceLastRefresh = tileRefreshedTimestamp.distance(to: now)
+        let refreshTiles = tileRefreshedTimestamp == epochZero ||
+        pullStats.startTime.distance(to: now) > tileClearRefreshInterval &&
+        sinceLastRefresh > tileClearRefreshInterval
+        if (refreshTiles) {
+            tileRefreshedTimestamp = now
+            mapDotsOverlay.setIncident(idCount.id, idCount.totalCount, clearCache: true)
+            reloadMapOverlay()
         }
     }
 
@@ -892,12 +930,6 @@ extension CLLocationCoordinate2D {
             longitude: longitude - span.longitudeDelta
         )
     }
-}
-
-public struct IncidentIdWorksiteCount {
-    let id: Int64
-    let totalCount: Int
-    let filteredCount: Int
 }
 
 struct WorksiteDistance {
