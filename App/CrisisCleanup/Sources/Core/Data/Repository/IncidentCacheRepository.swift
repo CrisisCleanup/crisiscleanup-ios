@@ -27,7 +27,7 @@ public protocol IncidentCacheRepository {
 
     func resetIncidentSyncStats(_ incidentId: Int64) throws
 
-    func updateCachePreferenes(_ preferences: IncidentWorksitesCachePreferences) async
+    func updateCachePreferenes(_ preferences: IncidentWorksitesCachePreferences)
 }
 
 extension IncidentCacheRepository {
@@ -149,6 +149,10 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
             .assertNoFailure()
     }
 
+    private func getIncidents() async -> [IncidentIdNameType] {
+        await incidentsRepository.getIncidentsList()
+    }
+
     func submitPlan(
         overwriteExisting: Bool,
         forcePullIncidents: Bool,
@@ -161,7 +165,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         let incidentIds: Set<Int64>
         let selectedIncidentId: Int64
         do {
-            let incidents = try incidentsRepository.getIncidents(Date(timeIntervalSince1970: 0))
+            let incidents = await getIncidents()
             incidentIds = Set(incidents.map { $0.id })
 
             let preferencesPublisher = appPreferences.preferences.eraseToAnyPublisher()
@@ -318,16 +322,16 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
 
             let isPaused = syncPreferences.isPaused
 
-            let incidents = try await incidentsRepository.incidents.eraseToAnyPublisher().asyncFirst()
+            let incidents = await getIncidents()
             if incidents.isEmpty {
                 return .error(message: "Failed to sync Incidents")
             }
-            let incidentIds = Set(incidents.map { $0.id} )
-            if !incidentIds.contains(incidentId) {
+
+            incidentName = incidents.first(where: { $0.id == incidentId })?.name ?? ""
+            if incidentName.isBlank {
                 return .partial(notes: "Incident not found. Waiting for Incident select.")
             }
 
-            incidentName = incidents.first(where: { $0.id == incidentId })!.name
             let worksitesCoreStatsUpdater = IncidentDataPullStatsUpdater {
                 self.reportStats(syncPlan, $0)
             }
@@ -1240,7 +1244,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         try syncParameterDao.deleteSyncParameters(incidentId)
     }
 
-    func updateCachePreferenes(_ preferences: IncidentWorksitesCachePreferences) async {
+    func updateCachePreferenes(_ preferences: IncidentWorksitesCachePreferences) {
         incidentCachePreferences.setPreferences(preferences)
     }
 

@@ -4,7 +4,6 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
     let networkClient: AFNetworkingClient
     let requestProvider: NetworkRequestProvider
 
-    private let jsonDecoder: JSONDecoder
     private let dateFormatter: ISO8601DateFormatter
 
     private let networkError: Error
@@ -58,17 +57,18 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         accountEventBus: AccountEventBus,
         appEnv: AppEnv
     ) {
+        let jsonDecoder = JsonDecoderFactory().multiDateDecoder()
         self.networkClient = AFNetworkingClient(
             appEnv,
             interceptor: AccessTokenInterceptor(
                 accountDataRepository: accountDataRepository,
                 authApiClient: authApiClient,
                 accountEventBus: accountEventBus
-            )
+            ),
+            jsonDecoder: jsonDecoder
         )
         requestProvider = networkRequestProvider
 
-        jsonDecoder = JsonDecoderFactory().multiDateDecoder()
         dateFormatter = ISO8601DateFormatter()
 
         worksiteCoreDataFieldsQ = worksiteCoreDataFields.commaJoined
