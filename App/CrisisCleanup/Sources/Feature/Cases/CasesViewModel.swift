@@ -609,8 +609,9 @@ class CasesViewModel: ObservableObject {
     private func subscribeLocationStatus() {
         locationManager.$locationPermission
             .receive(on: RunLoop.main)
-            .sink { _ in
-                if self.locationManager.hasLocationAccess {
+            .sink {
+                if let status = $0,
+                   self.locationManager.isAuthorized(status) {
                     self.isMyLocationEnabled = true
 
                     if self.isTableView {

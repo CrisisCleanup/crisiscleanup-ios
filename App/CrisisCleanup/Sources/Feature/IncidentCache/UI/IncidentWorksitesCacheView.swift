@@ -8,6 +8,8 @@ struct IncidentWorksitesCacheView: View {
         ZStack {
             Text("Incident caching")
         }
+        .onAppear { viewModel.onViewAppear() }
+        .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)
     }
 }

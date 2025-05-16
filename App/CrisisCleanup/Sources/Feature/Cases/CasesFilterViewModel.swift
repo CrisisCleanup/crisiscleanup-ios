@@ -237,21 +237,23 @@ class CasesFilterViewModel: ObservableObject {
     }
 
     private func subscribeLocationStatus() {
-        locationManager.$locationPermission
+        let permissionChanges = locationManager.$locationPermission.removeDuplicates()
+
+        permissionChanges
             .receive(on: RunLoop.main)
-            .sink { _ in
-                if self.locationManager.hasLocationAccess {
-                    if let cachedDistance = self.distanceOptionCached.exchange(AtomicDoubleOptional(), ordering: .relaxed).value {
-                        self.changeFilters {
-                            $0.distance = cachedDistance
-                        }
+            .sink {
+                if let status = $0,
+                   self.locationManager.isAuthorized(status),
+                   let cachedDistance = self.distanceOptionCached.exchange(AtomicDoubleOptional(), ordering: .relaxed).value {
+                    self.changeFilters {
+                        $0.distance = cachedDistance
                     }
                 }
             }
             .store(in: &subscriptions)
 
         Publishers.CombineLatest(
-            locationManager.$locationPermission,
+            permissionChanges,
             $casesFilters
         )
         .map { (_, filters) in

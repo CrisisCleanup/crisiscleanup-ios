@@ -4,7 +4,7 @@ import CoreLocation
 import Foundation
 import SwiftUI
 
-class CaseChangeLocationAddressViewModel: ObservableObject, MoveMapChangeListener {
+class CaseChangeLocationAddressViewModel: ObservableObject {
     private var worksiteProvider: EditableWorksiteProvider
     private let locationManager: LocationManager
     private let incidentBoundsProvider: IncidentBoundsProvider
@@ -48,13 +48,10 @@ class CaseChangeLocationAddressViewModel: ObservableObject, MoveMapChangeListene
 
     @Published var closeSearchBarTrigger = false
 
-    private let mapCoordinatesSubject = CurrentValueSubject<CLLocationCoordinate2D, Never>(DefaultCoordinates2d)
+    let mapCenterMover: MapCenterMover
     @Published var mapCoordinates = DefaultCoordinates2d
-    private var isCaseCoordinatesAssignedGuard = false
-    private var initialCaseCoordinates = DefaultCoordinates2d
-    private(set) var isPinCenterScreen = false
+
     @Published var showExplainLocationPermission = false
-    private var useMyLocationActionTime = Date(timeIntervalSince1970: 0)
 
     @Published var locationOutOfBoundsMessage = ""
 
@@ -83,6 +80,8 @@ class CaseChangeLocationAddressViewModel: ObservableObject, MoveMapChangeListene
         self.existingWorksiteSelector = existingWorksiteSelector
         self.networkMonitor = networkMonitor
         self.translator = translator
+
+        mapCenterMover = AppMapCenterMover(locationManager: locationManager)
 
         let logger = loggerFactory.getLogger("move-on-map")
 
@@ -117,9 +116,7 @@ class CaseChangeLocationAddressViewModel: ObservableObject, MoveMapChangeListene
 
         if isFirstVisible.exchange(false, ordering: .relaxed) {
             let latLng = worksiteProvider.editableWorksite.value.coordinates
-            let coordinates = latLng.coordinates
-            mapCoordinatesSubject.value = coordinates
-            initialCaseCoordinates = coordinates
+            mapCenterMover.setInitialCoordinates(latLng.coordinates)
         }
     }
 
@@ -183,18 +180,10 @@ class CaseChangeLocationAddressViewModel: ObservableObject, MoveMapChangeListene
     }
 
     private func subscribeLocationState() {
-        locationManager.$locationPermission
-            .receive(on: RunLoop.main)
-            .sink { _ in
-                if self.locationManager.hasLocationAccess {
-                    if self.useMyLocationActionTime.distance(to: Date.now) < 20.seconds {
-                        self.updateCoordinatesToMyLocation()
-                    }
-                }
-            }
+        mapCenterMover.subscribeLocationStatus()
             .store(in: &subscriptions)
 
-        mapCoordinatesSubject
+        mapCenterMover.mapCoordinates.eraseToAnyPublisher()
             .receive(on: RunLoop.main)
             .assign(to: \.mapCoordinates, on: self)
             .store(in: &subscriptions)
@@ -220,48 +209,10 @@ class CaseChangeLocationAddressViewModel: ObservableObject, MoveMapChangeListene
             .store(in: &subscriptions)
     }
 
-    private func updateCoordinatesToMyLocation() {
-        if let location = locationManager.getLocation() {
-            isPinCenterScreen = false
-            mapCoordinatesSubject.value = location.coordinate
-        }
-    }
-
     func useMyLocation() {
-        useMyLocationActionTime = Date.now
-        if locationManager.requestLocationAccess() {
-            updateCoordinatesToMyLocation()
-        }
-
-        if locationManager.isDeniedLocationAccess {
+        if !mapCenterMover.useMyLocation() {
             showExplainLocationPermission = true
         }
-    }
-
-    private func isValidMapChange(_ coordinates: CLLocationCoordinate2D) -> Bool {
-        if isCaseCoordinatesAssignedGuard {
-            return true
-        }
-
-        if initialCaseCoordinates.approximatelyEquals(DefaultCoordinates2d) {
-            return false
-        }
-        if coordinates.approximatelyEquals(initialCaseCoordinates, tolerance: 1e-3) {
-            isCaseCoordinatesAssignedGuard = true
-            return true
-        }
-
-        return false
-    }
-
-    func onMapChange(mapCenter: CLLocationCoordinate2D) {
-        guard isValidMapChange(mapCenter) else {
-            return
-        }
-
-        isPinCenterScreen = true
-
-        mapCoordinatesSubject.value = mapCenter
     }
 
     func onExistingWorksiteSelected(_ result: CaseSummaryResult) {
@@ -358,7 +309,7 @@ class CaseChangeLocationAddressViewModel: ObservableObject, MoveMapChangeListene
     }
 
     func commitLocationCoordinates(_ coordinates: LatLng) {
-        mapCoordinatesSubject.value = coordinates.coordinates
+        mapCenterMover.updateCoordinates(coordinates.coordinates)
         commitChanges()
     }
 
@@ -376,11 +327,7 @@ class CaseChangeLocationAddressViewModel: ObservableObject, MoveMapChangeListene
     }
 
     private func assumeChanges(_ coordinates: CLLocationCoordinate2D) -> Worksite {
-        let worksite = worksiteProvider.editableWorksite.value
-        return worksite.copy {
-            $0.latitude = coordinates.latitude
-            $0.longitude = coordinates.longitude
-        }
+        worksiteProvider.copyCoordinates(coordinates)
     }
 
     private func assumeChanges(_ coordinates: LatLng) -> Worksite {

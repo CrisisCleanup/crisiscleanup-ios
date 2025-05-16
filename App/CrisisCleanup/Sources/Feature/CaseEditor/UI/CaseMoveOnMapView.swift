@@ -59,7 +59,7 @@ private struct CaseMoveOnMapLayoutView: View {
                             if animateTopSearchBar {
                                 SearchResultsView(showSearchingIndicator: $showSearchingIndicator)
                             } else {
-                                MoveOnMapView()
+                                OutOfBoundsMoveOnMapView()
                             }
                         }
                         .frame(width: proxy.size.width * listDetailDetailFractionalWidth)
@@ -78,7 +78,7 @@ private struct CaseMoveOnMapLayoutView: View {
                     if animateTopSearchBar {
                         SearchResultsView(showSearchingIndicator: $showSearchingIndicator)
                     } else {
-                        MoveOnMapView()
+                        OutOfBoundsMoveOnMapView()
 
                         UseMyLocationButton(useMyLocation: viewModel.useMyLocation)
 
@@ -211,7 +211,7 @@ private struct UseMyLocationButton: View {
     }
 }
 
-private struct MoveOnMapView: View {
+private struct OutOfBoundsMoveOnMapView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var viewModel: CaseChangeLocationAddressViewModel
@@ -221,11 +221,11 @@ private struct MoveOnMapView: View {
 
     var body: some View {
         let outOfBoundsMessage = viewModel.locationOutOfBoundsMessage
-        MoveOnMapMapView(
+        MoveOnMapView(
             map: $map,
             targetCoordinates: $viewModel.mapCoordinates,
             isTargetOutOfBounds: $isLocationOutOfBounds,
-            mapChangeListener: viewModel
+            mapCenterMover: viewModel.mapCenterMover
         )
         .if (isLocationOutOfBounds) { view in
             view.overlay(alignment: .bottomLeading) {

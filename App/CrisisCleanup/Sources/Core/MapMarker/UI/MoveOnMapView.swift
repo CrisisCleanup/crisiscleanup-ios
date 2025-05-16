@@ -2,10 +2,10 @@ import MapKit
 import SwiftUI
 
 class MoveOnMapCoordinator: NSObject, MKMapViewDelegate {
-    let mapChangeListener: MoveMapChangeListener
+    let mapCenterMover: MapCenterMover
 
-    init(mapChangeListener: MoveMapChangeListener) {
-        self.mapChangeListener = mapChangeListener
+    init(mapCenterMover: MapCenterMover) {
+        self.mapCenterMover = mapCenterMover
     }
 
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
@@ -17,16 +17,16 @@ class MoveOnMapCoordinator: NSObject, MKMapViewDelegate {
     }
 
     func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-        mapChangeListener.onMapChange(mapCenter: mapView.centerCoordinate)
+        mapCenterMover.onMapMove(mapCenter: mapView.centerCoordinate)
     }
 }
 
-struct MoveOnMapMapView : UIViewRepresentable {
+struct MoveOnMapView : UIViewRepresentable {
     @Binding var map: MKMapView
     @Binding var targetCoordinates: CLLocationCoordinate2D
     @Binding var isTargetOutOfBounds: Bool
 
-    var mapChangeListener: MoveMapChangeListener
+    var mapCenterMover: MapCenterMover
 
     private func makeAnnotation(imageName: String, id: String) -> CustomPinAnnotation {
         let image = UIImage(named: imageName, in: .module, with: .none)!
@@ -59,10 +59,10 @@ struct MoveOnMapMapView : UIViewRepresentable {
     }
 
     func makeCoordinator() -> MoveOnMapCoordinator {
-        MoveOnMapCoordinator(mapChangeListener: mapChangeListener)
+        MoveOnMapCoordinator(mapCenterMover: mapCenterMover)
     }
 
-    func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<MoveOnMapMapView>) {
+    func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<MoveOnMapView>) {
         if let annotation = uiView.annotations.first(where: { $0 is CustomPinAnnotation }),
            var customAnnotation = annotation as? CustomPinAnnotation {
             let expectedId = isTargetOutOfBounds ? "out-of-bounds" : "in-bounds"
@@ -74,7 +74,7 @@ struct MoveOnMapMapView : UIViewRepresentable {
                 map.addAnnotation(customAnnotation)
             }
 
-            if mapChangeListener.isPinCenterScreen {
+            if mapCenterMover.isPinCenterScreen {
                 UIView.animate(withDuration: 0.3) {
                     customAnnotation.coordinate = targetCoordinates
                 }
