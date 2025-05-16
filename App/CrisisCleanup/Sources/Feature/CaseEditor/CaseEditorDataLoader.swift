@@ -1,5 +1,6 @@
 import Atomics
 import Combine
+import CombineExt
 import Foundation
 
 internal class CaseEditorDataLoader {
@@ -99,7 +100,7 @@ internal class CaseEditorDataLoader {
         incidentDataStream = incidentsRepository.streamIncident(incidentIdIn)
             .eraseToAnyPublisher()
             .removeDuplicates()
-            .map { incident in
+            .flatMapLatest { incident in
                 let publisher: AnyPublisher<IncidentBoundsPair?, Never>
                 if let incident = incident {
                     publisher = incidentBoundsProvider.mapIncidentBounds(incident)
@@ -113,7 +114,6 @@ internal class CaseEditorDataLoader {
                 }
                 return publisher
             }
-            .switchToLatest()
             .removeDuplicates()
             .eraseToAnyPublisher()
 

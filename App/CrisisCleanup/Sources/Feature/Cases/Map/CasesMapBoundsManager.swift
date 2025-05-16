@@ -1,4 +1,5 @@
 import Combine
+import CombineExt
 import Foundation
 import MapKit
 
@@ -59,10 +60,9 @@ internal class CasesMapBoundsManager {
         )
 
         incidentBoundsPublisher = incidentPublisher
-            .map { incident in
-                return incidentBoundsProvider.mapIncidentBounds(incident)
+            .flatMapLatest { incident in
+                incidentBoundsProvider.mapIncidentBounds(incident)
             }
-            .switchToLatest()
             .map { incidentBounds in
                 return if incidentBounds.locations.isEmpty {
                     zeroBounds
@@ -71,6 +71,7 @@ internal class CasesMapBoundsManager {
                 }
             }
             .removeDuplicates()
+            .replay1()
 
         incidentIdPublisher
             .receive(on: RunLoop.main)
