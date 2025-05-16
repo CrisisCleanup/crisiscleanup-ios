@@ -4,14 +4,17 @@ private let reuseIdentifier = "reuse-identifier"
 
 class CustomPinAnnotation: NSObject, MKAnnotation {
     dynamic var coordinate: CLLocationCoordinate2D
-    var image: UIImage?
+    let image: UIImage?
+    let id: String
 
     init(
         _ coordinate: CLLocationCoordinate2D,
-        _ image: UIImage? = nil
+        image: UIImage? = nil,
+        id: String = ""
     ) {
         self.coordinate = coordinate
         self.image = image
+        self.id = id
         super.init()
     }
 }
@@ -68,7 +71,11 @@ extension MKMapView {
         isScrollEnabled: Bool = false,
         isExistingMap: Bool = false
     ) {
-        configure(overlays: makeOverlayPolygons())
+        configure(
+            overlays: makeOverlayPolygons(),
+            isScrollEnabled: isScrollEnabled,
+            isExistingMap: isExistingMap,
+        )
     }
 
     func configure(
@@ -94,6 +101,25 @@ extension MKMapView {
             if let annotation = annotation as? CustomPinAnnotation {
                 let view = MKAnnotationView(annotation: annotation, reuseIdentifier: reuseIdentifier)
                 view.image = annotation.image
+                return view
+            }
+            return nil
+        }
+        return annotationView
+    }
+
+    func reusableAnnotationView(_ annotation: MKAnnotation) -> MKAnnotationView? {
+        var identifier = reuseIdentifier
+        var image: UIImage? = nil
+        if let customAnnotation = annotation as? CustomPinAnnotation {
+            identifier = customAnnotation.id
+            image = customAnnotation.image
+        }
+
+        guard let annotationView = dequeueReusableAnnotationView(withIdentifier: identifier) else {
+            if let annotationImage = image {
+                let view = MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+                view.image = annotationImage
                 return view
             }
             return nil

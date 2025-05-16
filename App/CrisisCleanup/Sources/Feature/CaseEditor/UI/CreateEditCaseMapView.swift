@@ -27,7 +27,7 @@ struct CreateEditCaseMapView : UIViewRepresentable {
         map.delegate = context.coordinator
 
         let image = UIImage(named: "cc_map_pin", in: .module, with: .none)!
-        let casePin = CustomPinAnnotation(latLng.coordinates, image)
+        let casePin = CustomPinAnnotation(latLng.coordinates, image: image)
         map.addAnnotation(casePin)
         map.showAnnotations([casePin], animated: false)
 

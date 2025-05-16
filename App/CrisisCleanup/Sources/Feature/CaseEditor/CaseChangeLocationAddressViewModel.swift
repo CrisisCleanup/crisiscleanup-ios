@@ -4,7 +4,7 @@ import CoreLocation
 import Foundation
 import SwiftUI
 
-class CaseChangeLocationAddressViewModel: ObservableObject {
+class CaseChangeLocationAddressViewModel: ObservableObject, MoveMapChangeListener {
     private var worksiteProvider: EditableWorksiteProvider
     private let locationManager: LocationManager
     private let incidentBoundsProvider: IncidentBoundsProvider
@@ -50,7 +50,9 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
 
     private let mapCoordinatesSubject = CurrentValueSubject<CLLocationCoordinate2D, Never>(DefaultCoordinates2d)
     @Published var mapCoordinates = DefaultCoordinates2d
-    private(set) var isPinCenterScreen: Bool = false
+    private var isCaseCoordinatesAssignedGuard = false
+    private var initialCaseCoordinates = DefaultCoordinates2d
+    private(set) var isPinCenterScreen = false
     @Published var showExplainLocationPermission = false
     private var useMyLocationActionTime = Date(timeIntervalSince1970: 0)
 
@@ -117,7 +119,7 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
             let latLng = worksiteProvider.editableWorksite.value.coordinates
             let coordinates = latLng.coordinates
             mapCoordinatesSubject.value = coordinates
-            mapCoordinates = coordinates
+            initialCaseCoordinates = coordinates
         }
     }
 
@@ -236,9 +238,30 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
         }
     }
 
-    func onMapChange(_ center: CLLocationCoordinate2D) {
+    private func isValidMapChange(_ coordinates: CLLocationCoordinate2D) -> Bool {
+        if isCaseCoordinatesAssignedGuard {
+            return true
+        }
+
+        if initialCaseCoordinates.approximatelyEquals(DefaultCoordinates2d) {
+            return false
+        }
+        if coordinates.approximatelyEquals(initialCaseCoordinates, tolerance: 1e-3) {
+            isCaseCoordinatesAssignedGuard = true
+            return true
+        }
+
+        return false
+    }
+
+    func onMapChange(mapCenter: CLLocationCoordinate2D) {
+        guard isValidMapChange(mapCenter) else {
+            return
+        }
+
         isPinCenterScreen = true
-        mapCoordinatesSubject.value = center
+
+        mapCoordinatesSubject.value = mapCenter
     }
 
     func onExistingWorksiteSelected(_ result: CaseSummaryResult) {

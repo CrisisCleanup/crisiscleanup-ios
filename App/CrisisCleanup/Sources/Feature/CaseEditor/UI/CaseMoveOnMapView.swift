@@ -217,15 +217,17 @@ private struct MoveOnMapView: View {
     @EnvironmentObject var viewModel: CaseChangeLocationAddressViewModel
 
     @State private var map = MKMapView()
+    @State private var isLocationOutOfBounds = false
 
     var body: some View {
         let outOfBoundsMessage = viewModel.locationOutOfBoundsMessage
         MoveOnMapMapView(
             map: $map,
-            caseCoordinates: $viewModel.mapCoordinates,
-            viewModel: viewModel
+            targetCoordinates: $viewModel.mapCoordinates,
+            isTargetOutOfBounds: $isLocationOutOfBounds,
+            mapChangeListener: viewModel
         )
-        .if (outOfBoundsMessage.isNotBlank) { view in
+        .if (isLocationOutOfBounds) { view in
             view.overlay(alignment: .bottomLeading) {
                 Text(outOfBoundsMessage)
                     .fontBodySmall()
@@ -233,6 +235,9 @@ private struct MoveOnMapView: View {
                     .background(.white.disabledAlpha())
                     .padding()
             }
+        }
+        .onChange(of: viewModel.locationOutOfBoundsMessage) { newValue in
+            isLocationOutOfBounds = newValue.isNotBlank
         }
     }
 }
@@ -274,72 +279,6 @@ private struct MoveOnMapBottomActions: View {
                 BottomActions()
             }
             .listItemModifier()
-        }
-    }
-}
-
-private class MoveOnMapCoordinator: NSObject, MKMapViewDelegate {
-    let viewModel: CaseChangeLocationAddressViewModel
-
-    init(viewModel: CaseChangeLocationAddressViewModel) {
-        self.viewModel = viewModel
-    }
-
-    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-        overlayMapRenderer(overlay as! MKPolygon)
-    }
-
-    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        mapView.staticMapAnnotationView(annotation)
-    }
-
-    func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-        viewModel.onMapChange(mapView.centerCoordinate)
-    }
-}
-
-private struct MoveOnMapMapView : UIViewRepresentable {
-    @Binding var map: MKMapView
-    @Binding var caseCoordinates: CLLocationCoordinate2D
-
-    @ObservedObject var viewModel: CaseChangeLocationAddressViewModel
-
-    // TODO: Crossing incident bounds causes makeUIView to be called when the map already exists? Solve and remove guards in method below.
-    //       Likely due to the conditional overlay.
-    func makeUIView(context: Context) -> MKMapView {
-        map.configure(
-            isScrollEnabled: true,
-            isExistingMap: map.annotations.isNotEmpty
-        )
-
-        map.delegate = context.coordinator
-
-        if map.annotations.isEmpty {
-            let image = UIImage(named: "cc_map_pin", in: .module, with: .none)!
-            let casePin = CustomPinAnnotation(caseCoordinates, image)
-            map.addAnnotation(casePin)
-            map.showAnnotations([casePin], animated: false)
-        }
-
-        return map
-    }
-
-    func makeCoordinator() -> MoveOnMapCoordinator {
-        MoveOnMapCoordinator(viewModel: viewModel)
-    }
-
-    func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<MoveOnMapMapView>) {
-        if let annotation = uiView.annotations.firstOrNil,
-           let pinAnnotation = annotation as? CustomPinAnnotation {
-            if viewModel.isPinCenterScreen {
-                UIView.animate(withDuration: 0.3) {
-                    pinAnnotation.coordinate = caseCoordinates
-                }
-            } else {
-                pinAnnotation.coordinate = caseCoordinates
-
-                uiView.animaiteToCenter(caseCoordinates)
-            }
         }
     }
 }
