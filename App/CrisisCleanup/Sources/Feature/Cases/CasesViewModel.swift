@@ -222,11 +222,9 @@ class CasesViewModel: ObservableObject {
     }
 
     private func subscribeLoading() {
-        // TODO: How to share this publisher
-        //       .share() requires replay otherwise lack of initial
-        //       signal won't trigger combined signals downstream
         let incidentsLoading = incidentsRepository.isLoading
             .eraseToAnyPublisher()
+            .replay1()
 
         incidentsLoading
             .receive(on: RunLoop.main)

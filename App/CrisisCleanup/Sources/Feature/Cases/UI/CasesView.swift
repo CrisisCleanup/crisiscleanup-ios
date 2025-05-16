@@ -113,7 +113,6 @@ struct CasesLayoutView: View {
                 map: $map,
                 isSatelliteMapType: $isSatelliteMapType,
                 incidentSelectViewBuilder: incidentSelectViewBuilder,
-                isLoadingIncidents: isLoadingIncidents,
                 hasNoIncidents: hasNoIncidents,
                 animateToSelectedIncidentBounds: animateToSelectedIncidentBounds,
                 isShortScreen: viewLayout.isShort
@@ -151,7 +150,6 @@ private struct MapViewTopActions: View {
 
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
 
-    let isLoadingIncidents: Bool
     @State private var openIncidentSelect = false
 
     @State private var showCountProgress = false
@@ -177,7 +175,6 @@ private struct MapViewTopActions: View {
                     onDismiss: { openIncidentSelect = false }
                 )
             }
-            .disabled(isLoadingIncidents)
 
             Spacer()
 
@@ -253,7 +250,6 @@ private struct CasesOverlayElements: View {
 
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
 
-    let isLoadingIncidents: Bool
     let hasNoIncidents: Bool
 
     let animateToSelectedIncidentBounds: (_ bounds: LatLngBounds) -> Void
@@ -268,7 +264,6 @@ private struct CasesOverlayElements: View {
             if isMapView {
                 MapViewTopActions(
                     incidentSelectViewBuilder: incidentSelectViewBuilder,
-                    isLoadingIncidents: isLoadingIncidents
                 )
                 .padding(.bottom)
             }

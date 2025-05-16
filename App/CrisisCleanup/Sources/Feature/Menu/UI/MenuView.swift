@@ -18,7 +18,6 @@ struct MenuView: View {
                 viewModel: viewModel,
                 incidentSelectViewBuilder: incidentSelectViewBuilder,
                 openAuthScreen: openAuthScreen,
-                isLoadingIncidents: viewModel.isLoadingIncidents
             )
             .tint(.black)
             .padding()
@@ -147,7 +146,6 @@ private struct TopBar: View {
     @ObservedObject var viewModel: MenuViewModel
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
     let openAuthScreen: () -> Void
-    let isLoadingIncidents: Bool
 
     @State var showIncidentSelect = false
 
@@ -178,7 +176,6 @@ private struct TopBar: View {
                     onDismiss: { showIncidentSelect = false }
                 )
             }
-            .disabled(isLoadingIncidents)
 
             Spacer()
 
