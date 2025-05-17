@@ -1,6 +1,8 @@
 import Atomics
 import Combine
+import CombineExt
 import Foundation
+import MapKit
 import SwiftUI
 
 class IncidentWorksitesCacheViewModel: ObservableObject {
@@ -14,14 +16,9 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
 
     @Published private(set) var incident = EmptyIncident
 
-    let boundedRegionDataEditor: BoundedRegionDataEditor
-
     @Published private(set) var isSyncing = false
     @Published private(set) var syncStage = IncidentCacheStage.start
     @Published private(set) var lastSynced: String? = nil
-
-    private let isUpdatingCachePreferencesSubject = CurrentValueSubject<Bool, Never>(false)
-    @Published private(set) var isUpdatingCachePreferences = false
 
     private let isUserActed = ManagedAtomic(false)
 
@@ -33,8 +30,15 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
         isUserActed.load(ordering: .relaxed)
     }
 
+    let mapCenterMover: MapCenterMover
+    @Published var mapCoordinates = DefaultCoordinates2d
+
+    @Published private(set) var showExplainPermissionLocation = false
+
     private let epochZero = Date(timeIntervalSince1970: 0)
     private let useMyLocationExpirationTime = Date(timeIntervalSince1970: 0)
+
+    private let isFirstVisible = ManagedAtomic(true)
 
     private var subscriptions = Set<AnyCancellable>()
 
@@ -52,7 +56,7 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
         self.syncPuller = syncPuller
         logger = loggerFactory.getLogger("incident-cache")
 
-        boundedRegionDataEditor = IncidentCacheBoundedRegionDataEditor(
+        mapCenterMover = AppMapCenterMover(
             locationManager: locationManager,
         )
 
@@ -71,25 +75,38 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
     }
 
     private func subscribeSyncing() {
-        incidentCacheRepository.isSyncingActiveIncident.eraseToAnyPublisher()
-            .receive(on: RunLoop.main)
-            .assign(to: \.isSyncing, on: self)
-            .store(in: &subscriptions)
-
         incidentCacheRepository.cacheStage.eraseToAnyPublisher()
             .receive(on: RunLoop.main)
             .assign(to: \.syncStage, on: self)
             .store(in: &subscriptions)
 
+        Publishers.CombineLatest(
+            incidentCacheRepository.isSyncingActiveIncident.eraseToAnyPublisher(),
+            $syncStage,
+        )
+        .map { (isSyncingActiveIncident, stage) in
+            isSyncingActiveIncident && stage != .end
+        }
+        .receive(on: RunLoop.main)
+        .assign(to: \.isSyncing, on: self)
+        .store(in: &subscriptions)
+
         $incident
             .filter { $0 != EmptyIncident }
-            .flatMap {
+            .flatMapLatest {
                 self.incidentCacheRepository.streamSyncStats($0.id)
                     .eraseToAnyPublisher()
-                    .compactMap { $0?.lastUpdated?.relativeTime }
+            }
+            .compactMap {
+                $0?.lastUpdated?.relativeTime
             }
             .receive(on: RunLoop.main)
             .assign(to: \.lastSynced, on: self)
+            .store(in: &subscriptions)
+
+        incidentSelector.incident.eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.incident, on: self)
             .store(in: &subscriptions)
     }
 
@@ -103,16 +120,16 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
         incidentCacheRepository.cachePreferences.eraseToAnyPublisher()
             .sink { preferences in
                 // TODO: Atomic compare and set
-//                if editingPreferencesSubject.value == InitialIncidentWorksitesCachePreferences {
-//                    editingPreferencesSubject.value = preferences
-//
-//                    let syncingRegionParameters = preferences.boundedRegionParameters
-//                    with(syncingRegionParameters) { p in
-//                        if p.regionLatitude != 0.0 || p.regionLongitude != 0.0 {
-//                            boundedRegionDataEditor.setCoordinates(p.regionLatitude, p.regionLongitude)
-//                        }
-//                    }
-//
+                if self.editingPreferencesSubject.value == InitialIncidentWorksitesCachePreferences {
+                    self.editingPreferencesSubject.value = preferences
+
+                    let syncingRegionParameters = preferences.boundedRegionParameters
+                    with(syncingRegionParameters) { p in
+                        if p.regionLatitude != 0.0 || p.regionLongitude != 0.0 {
+                            self.mapCoordinates = CLLocationCoordinate2DMake(p.regionLatitude, p.regionLongitude)
+                        }
+                    }
+
 //                    if syncingRegionParameters.isRegionMyLocation,
 //                       !locationManager.hasLocationAccess
 //                    {
@@ -125,7 +142,7 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
 //                            }
 //                        )
 //                    }
-//                }
+                }
             }
             .store(in: &subscriptions)
 
@@ -136,11 +153,15 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
                 latest: true
             )
             .sink {
-                if !self.hasUserInteracted {
-                    return
+                if self.hasUserInteracted {
+                    self.incidentCacheRepository.updateCachePreferenes($0)
+                } else {
+                    if self.isFirstVisible.exchange(false, ordering: .relaxed) {
+                        let brp = $0.boundedRegionParameters
+                        let coordinates = CLLocationCoordinate2DMake(brp.regionLatitude, brp.regionLongitude)
+                        self.mapCenterMover.setInitialCoordinates(coordinates)
+                    }
                 }
-
-                self.incidentCacheRepository.updateCachePreferenes($0)
             }
             .store(in: &subscriptions)
     }
@@ -191,12 +212,17 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
         onPreferencesSent()
     }
 
+    private func pullIncidentData() {
+        print("Mocking pullIncidentData..., uncomment later")
+        //        syncPuller.appPullIncidentData(cancelOngoing: true)
+    }
+
     func resumeCachingCases() {
         isUserActed.store(true, ordering: .sequentiallyConsistent)
 
         updatePreferences(isPaused: false, isRegionBounded: false)
 
-        syncPuller.appPullIncidentData(cancelOngoing: true)
+        pullIncidentData()
     }
 
     func pauseCachingCases() {
@@ -216,7 +242,7 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
         }
 
 //        let permissionStatus = if isNearMe {
-//            boundedRegionDataEditor.checkMyLocation()
+//            locationManager.hasLocationAccess
 //        } else {
 //            nil
 //        }
@@ -231,7 +257,7 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
 //                    boundedRegionDataEditor.useMyLocation()
 //                }
 //
-//                syncPuller.appPullIncidentData(cancelOngoing: true)
+//                pullIncidentData()
 //            }
 //        } else {
 //            if isUserAction {
@@ -242,7 +268,7 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
     }
 
     func resync() {
-        syncPuller.appPullIncidentData(cancelOngoing: true)
+        pullIncidentData()
     }
 
     func resetCaching() {

@@ -33,7 +33,7 @@ struct RadioButton: View {
         Button {
             onSelect()
         } label: {
-            HStack{
+            HStack {
                 let radioImg = isSelected ? "circle.inset.filled" : "circle"
                 Image(systemName: radioImg)
                     .foregroundColor(isSelected && isEnabled ? Color.black : Color.gray)
@@ -56,8 +56,9 @@ struct ContentRadioButton<Content>: View where Content: View {
     private let isSelected: Bool
     private let onSelect: () -> Void
 
-    private var nestedLevel: Int? = nil
-    private var isListItem: Bool = false
+    private let nestedLevel: Int?
+    private let isListItem: Bool
+    private let buttonContentAlignment: VerticalAlignment
 
     private let content: Content
 
@@ -66,12 +67,14 @@ struct ContentRadioButton<Content>: View where Content: View {
         _ onSelect: @escaping () -> Void,
         nestedLevel: Int? = nil,
         isListItem: Bool = false,
+        buttonContentAlignment: VerticalAlignment = .center,
         @ViewBuilder content: () -> Content
     ) {
         self.isSelected = isSelected
         self.onSelect = onSelect
         self.nestedLevel = nestedLevel
         self.isListItem = isListItem
+        self.buttonContentAlignment = buttonContentAlignment
         self.content = content()
     }
 
@@ -79,7 +82,7 @@ struct ContentRadioButton<Content>: View where Content: View {
         Button {
             onSelect()
         } label: {
-            HStack{
+            HStack(alignment: buttonContentAlignment) {
                 let radioImg = isSelected ? "circle.inset.filled" : "circle"
                 Image(systemName: radioImg)
                     .foregroundColor(isSelected && isEnabled ? Color.black : Color.gray)
@@ -93,5 +96,6 @@ struct ContentRadioButton<Content>: View where Content: View {
                 $0.listItemModifier()
             }
         }
+        .buttonStyle(.plain)
     }
 }

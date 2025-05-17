@@ -328,9 +328,10 @@ private struct IncidentCacheView: View {
 
 
     var body: some View {
-        VStack {
+        VStack(alignment: .leading) {
             if hasSpeedNotAdaptive {
                 Text(t.t("appMenu.good_internet_use_adaptive"))
+                    .padding(.bottom, appTheme.listItemVerticalPadding)
             }
 
             HStack(alignment: .center) {
@@ -356,7 +357,7 @@ private struct IncidentCacheView: View {
                 .foregroundStyle(appTheme.colors.actionLinkColor)
                 .padding(.bottom)
             }
-            .padding([.horizontal, .top])
         }
+        .padding([.horizontal, .top])
     }
 }
