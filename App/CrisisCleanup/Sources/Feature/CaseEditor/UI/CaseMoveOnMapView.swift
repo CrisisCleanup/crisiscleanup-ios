@@ -218,12 +218,14 @@ private struct OutOfBoundsMoveOnMapView: View {
 
     @State private var map = MKMapView()
     @State private var isLocationOutOfBounds = false
+    @State private var isPinCenterScreen = false
 
     var body: some View {
         let outOfBoundsMessage = viewModel.locationOutOfBoundsMessage
         MoveOnMapView(
             map: $map,
             targetCoordinates: $viewModel.mapCoordinates,
+            isPinCenterScreen: $viewModel.isPinCenterScreen,
             isTargetOutOfBounds: $isLocationOutOfBounds,
             mapCenterMover: viewModel.mapCenterMover
         )

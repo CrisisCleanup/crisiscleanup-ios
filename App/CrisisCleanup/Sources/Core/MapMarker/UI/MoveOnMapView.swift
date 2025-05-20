@@ -4,8 +4,20 @@ import SwiftUI
 class MoveOnMapCoordinator: NSObject, MKMapViewDelegate {
     let mapCenterMover: MapCenterMover
 
+    private var hasInteracted = false
+
     init(mapCenterMover: MapCenterMover) {
         self.mapCenterMover = mapCenterMover
+    }
+
+    private func regionDidChangeFromUserInteraction(
+        _ mapView: MKMapView,
+        gestureState: UIGestureRecognizer.State
+    ) -> Bool {
+        mapView.subviews
+            .compactMap { $0.gestureRecognizers }
+            .reduce([], +)
+            .contains { $0.state == gestureState }
     }
 
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
@@ -17,16 +29,23 @@ class MoveOnMapCoordinator: NSObject, MKMapViewDelegate {
     }
 
     func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-        mapCenterMover.onMapMove(mapCenter: mapView.centerCoordinate)
+        let isUserAction = regionDidChangeFromUserInteraction(mapView, gestureState: .ended)
+        mapCenterMover.onMapMove(
+            mapView.centerCoordinate,
+            isUserAction: isUserAction,
+            isMapMoving: animated
+        )
     }
 }
 
 struct MoveOnMapView : UIViewRepresentable {
     @Binding var map: MKMapView
     @Binding var targetCoordinates: CLLocationCoordinate2D
+    @Binding var isPinCenterScreen: Bool
     @Binding var isTargetOutOfBounds: Bool
 
     var mapCenterMover: MapCenterMover
+    var isScrollEnabled: Bool = true
 
     private func makeAnnotation(imageName: String, id: String) -> CustomPinAnnotation {
         let image = UIImage(named: imageName, in: .module, with: .none)!
@@ -41,7 +60,7 @@ struct MoveOnMapView : UIViewRepresentable {
         let isNewMap = map.annotations.isEmpty
 
         map.configure(
-            isScrollEnabled: true,
+            isScrollEnabled: isScrollEnabled,
             isExistingMap: !isNewMap,
         )
 
@@ -63,6 +82,10 @@ struct MoveOnMapView : UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<MoveOnMapView>) {
+        if map.isScrollEnabled != isScrollEnabled {
+            map.isScrollEnabled = isScrollEnabled
+        }
+
         if let annotation = uiView.annotations.first(where: { $0 is CustomPinAnnotation }),
            var customAnnotation = annotation as? CustomPinAnnotation {
             let expectedId = isTargetOutOfBounds ? "out-of-bounds" : "in-bounds"
@@ -74,7 +97,7 @@ struct MoveOnMapView : UIViewRepresentable {
                 map.addAnnotation(customAnnotation)
             }
 
-            if mapCenterMover.isPinCenterScreen {
+            if isPinCenterScreen {
                 UIView.animate(withDuration: 0.3) {
                     customAnnotation.coordinate = targetCoordinates
                 }

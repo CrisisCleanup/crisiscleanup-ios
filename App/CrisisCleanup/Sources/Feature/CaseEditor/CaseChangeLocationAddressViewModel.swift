@@ -50,6 +50,7 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
 
     let mapCenterMover: MapCenterMover
     @Published var mapCoordinates = DefaultCoordinates2d
+    @Published var isPinCenterScreen = false
 
     @Published var showExplainLocationPermission = false
 
@@ -183,9 +184,14 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
         mapCenterMover.subscribeLocationStatus()
             .store(in: &subscriptions)
 
-        mapCenterMover.mapCoordinates.eraseToAnyPublisher()
+        mapCenterMover.mapCoordinatesPublisher
             .receive(on: RunLoop.main)
             .assign(to: \.mapCoordinates, on: self)
+            .store(in: &subscriptions)
+
+        mapCenterMover.isPinCenterScreenPublisher
+            .receive(on: RunLoop.main)
+            .assign(to: \.isPinCenterScreen, on: self)
             .store(in: &subscriptions)
 
         $mapCoordinates

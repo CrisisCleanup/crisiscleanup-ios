@@ -26,14 +26,14 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
     @Published private(set) var editingPreferences = InitialIncidentWorksitesCachePreferences
 
     private var hasUserInteracted: Bool {
-        // TODO: Account for boundedRegionDataEditor
-        isUserActed.load(ordering: .relaxed)
+        isUserActed.load(ordering: .relaxed) || mapCenterMover.isUserActed
     }
 
-    let mapCenterMover: MapCenterMover
+    let mapCenterMover: any MapCenterMover
     @Published var mapCoordinates = DefaultCoordinates2d
+    @Published var isPinCenterScreen = false
 
-    @Published private(set) var showExplainPermissionLocation = false
+    @Published var showExplainLocationPermission = false
 
     private let epochZero = Date(timeIntervalSince1970: 0)
     private let useMyLocationExpirationTime = Date(timeIntervalSince1970: 0)
@@ -59,6 +59,7 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
         mapCenterMover = AppMapCenterMover(
             locationManager: locationManager,
         )
+        mapCenterMover.overridePinCenterScreen(false)
 
         isNotProduction = appEnv.isNotProduction
     }
@@ -66,8 +67,7 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
     func onViewAppear() {
         subscribeSyncing()
         subscribeCachePreferences()
-        subscribeBoundedRegion()
-        subscribeMyLocation()
+        subscribeCoordinates()
     }
 
     func onViewDisappear() {
@@ -116,33 +116,42 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
             .assign(to: \.editingPreferences, on: self)
             .store(in: &subscriptions)
 
-        // TODO: Finish when boundedRegionDataEditor is available
         incidentCacheRepository.cachePreferences.eraseToAnyPublisher()
             .sink { preferences in
-                // TODO: Atomic compare and set
                 if self.editingPreferencesSubject.value == InitialIncidentWorksitesCachePreferences {
-                    self.editingPreferencesSubject.value = preferences
+                    var preferences = preferences
 
                     let syncingRegionParameters = preferences.boundedRegionParameters
                     with(syncingRegionParameters) { p in
                         if p.regionLatitude != 0.0 || p.regionLongitude != 0.0 {
-                            self.mapCoordinates = CLLocationCoordinate2DMake(p.regionLatitude, p.regionLongitude)
+                            self.mapCenterMover.setInitialCoordinates(CLLocationCoordinate2DMake(p.regionLatitude, p.regionLongitude))
                         }
                     }
 
-//                    if syncingRegionParameters.isRegionMyLocation,
-//                       !locationManager.hasLocationAccess
-//                    {
-//                        editingPreferencesSubject.compareAndSet(
-//                            preferences,
-//                            editingPreferencesSubject.value.copy { ep in
-//                                ep.boundedRegionParameters = syncingRegionParameters.copy { srp in
-//                                    srp.isRegionMyLocation = false
-//                                }
-//                            }
-//                        )
-//                    }
+                    if syncingRegionParameters.isRegionMyLocation,
+                       !self.locationManager.hasLocationAccess
+                    {
+                        preferences = preferences.copy { p in
+                            p.boundedRegionParameters = syncingRegionParameters.copy { srp in
+                                srp.isRegionMyLocation = false
+                            }
+                        }
+                    }
+
+                    // TODO: Atomic compare and set
+                    self.editingPreferencesSubject.value = preferences
                 }
+            }
+            .store(in: &subscriptions)
+
+        $editingPreferences
+            .map {
+                $0.isBoundedByCoordinates
+            }
+            .receive(on: RunLoop.main)
+            .sink {
+                self.mapCenterMover.overridePinCenterScreen($0)
+                self.isPinCenterScreen = $0
             }
             .store(in: &subscriptions)
 
@@ -155,31 +164,39 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
             .sink {
                 if self.hasUserInteracted {
                     self.incidentCacheRepository.updateCachePreferenes($0)
-                } else {
-                    if self.isFirstVisible.exchange(false, ordering: .relaxed) {
-                        let brp = $0.boundedRegionParameters
-                        let coordinates = CLLocationCoordinate2DMake(brp.regionLatitude, brp.regionLongitude)
-                        self.mapCenterMover.setInitialCoordinates(coordinates)
+                }
+            }
+            .store(in: &subscriptions)
+    }
+
+    private func subscribeCoordinates() {
+        mapCenterMover.subscribeLocationStatus()
+            .store(in: &subscriptions)
+
+        mapCenterMover.mapCoordinatesPublisher
+            .receive(on: RunLoop.main)
+            .assign(to: \.mapCoordinates, on: self)
+            .store(in: &subscriptions)
+
+        $mapCoordinates
+            .throttle(
+                for: .seconds(0.1),
+                scheduler: RunLoop.current,
+                latest: true
+            )
+            .receive(on: RunLoop.main)
+            .sink { coordinates in
+                if self.hasUserInteracted {
+                    let preferences = self.editingPreferencesSubject.value
+                    self.editingPreferencesSubject.value = preferences.copy { p in
+                        p.boundedRegionParameters = p.boundedRegionParameters.copy { brp in
+                            brp.regionLatitude = coordinates.latitude
+                            brp.regionLongitude = coordinates.longitude
+                        }
                     }
                 }
             }
             .store(in: &subscriptions)
-    }
-
-    private func subscribeMyLocation() {
-        locationManager.$locationPermission
-            .sink {
-                if let status = $0,
-                   self.locationManager.isAuthorized(status),
-                   self.useMyLocationExpirationTime.distance(to: Date.now) < 0.seconds {
-                    self.boundCachingCases(isNearMe: true)
-                }
-            }
-            .store(in: &subscriptions)
-    }
-
-    private func subscribeBoundedRegion() {
-        // TODO: Update preferences with boundedRegionDataEditor.centerCoordinates if hasUserInteracted
     }
 
     private func updatePreferences(
@@ -214,7 +231,7 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
 
     private func pullIncidentData() {
         print("Mocking pullIncidentData..., uncomment later")
-        //        syncPuller.appPullIncidentData(cancelOngoing: true)
+        // syncPuller.appPullIncidentData(cancelOngoing: true)
     }
 
     func resumeCachingCases() {
@@ -233,6 +250,7 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
         syncPuller.stopPullWorksites()
     }
 
+    // TODO: Simplify state management
     func boundCachingCases(
         isNearMe: Bool,
         isUserAction: Bool = false
@@ -241,30 +259,25 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
             isUserActed.store(true, ordering: .sequentiallyConsistent)
         }
 
-//        let permissionStatus = if isNearMe {
-//            locationManager.hasLocationAccess
-//        } else {
-//            nil
-//        }
-//
-//        if isNearMe || locationManager.isAuthorized(permissionStatus) {
-//            updatePreferences(
-//                isPaused: false,
-//                isRegionBounded: true,
-//                isNearMe: isNearMe
-//            ) {
-//                if isNearMe {
-//                    boundedRegionDataEditor.useMyLocation()
-//                }
-//
-//                pullIncidentData()
-//            }
-//        } else {
-//            if isUserAction {
-//                let now = Date.now
-//                // TODO: Finish
-//            }
-//        }
+        let hasLocationPermission = isNearMe ? locationManager.hasLocationAccess : nil
+
+        if !isNearMe || hasLocationPermission == true {
+            updatePreferences(
+                isPaused: false,
+                isRegionBounded: true,
+                isNearMe: isNearMe
+            ) {
+                if isNearMe {
+                    _ = self.mapCenterMover.useMyLocation()
+                }
+
+                self.pullIncidentData()
+            }
+        } else {
+            if isUserAction {
+                _ = mapCenterMover.useMyLocation()
+            }
+        }
     }
 
     func resync() {

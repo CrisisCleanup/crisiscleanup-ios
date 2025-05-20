@@ -1,35 +1,53 @@
 import Combine
 import CoreLocation
 
+// TODO: Improve state management
+//       Maybe refactor into separate than cram all this functionality into one
 protocol MapCenterMover {
-    var mapCoordinates: any Publisher<CLLocationCoordinate2D, Never> { get }
-    var isPinCenterScreen: Bool { get }
+    var mapCoordinatesPublisher: Published<CLLocationCoordinate2D>.Publisher { get }
+    var isPinCenterScreenPublisher: Published<Bool>.Publisher { get }
+
+    var isUserActed: Bool { get }
 
     func subscribeLocationStatus() -> AnyCancellable
 
     func setInitialCoordinates(_ coordinates: CLLocationCoordinate2D)
+
     func useMyLocation() -> Bool
-    func onMapMove(mapCenter: CLLocationCoordinate2D)
+    func onMapMove(
+        _ mapCenter: CLLocationCoordinate2D,
+        isUserAction: Bool,
+        isMapMoving: Bool
+    )
     func updateCoordinates(_ coordinates: CLLocationCoordinate2D)
+    func overridePinCenterScreen(_ pin: Bool?)
 }
 
 class AppMapCenterMover: MapCenterMover {
     private let locationManager: LocationManager
 
-    private let mapCoordinatesSubject = CurrentValueSubject<CLLocationCoordinate2D, Never>(DefaultCoordinates2d)
-    let mapCoordinates: any Publisher<CLLocationCoordinate2D, Never>
+    private(set) var isUserActed = false
+
+    @Published private(set) var mapCoordinates = DefaultCoordinates2d
+    var mapCoordinatesPublisher: Published<CLLocationCoordinate2D>.Publisher {
+        $mapCoordinates
+    }
 
     private var isCoordinatesMovedGuard = false
     private var initialCoordinates = DefaultCoordinates2d
 
-    private(set) var isPinCenterScreen = false
+    @Published private(set) var isPinCenterScreen = false
+    var isPinCenterScreenPublisher: Published<Bool>.Publisher {
+        $isPinCenterScreen
+    }
 
     private var useMyLocationExpirationTime = Date(timeIntervalSince1970: 0)
+
+    private var overridePinCenter: Bool? = nil
 
     init(locationManager: LocationManager) {
         self.locationManager = locationManager
 
-        mapCoordinates = mapCoordinatesSubject
     }
 
     func subscribeLocationStatus() -> AnyCancellable {
@@ -45,14 +63,17 @@ class AppMapCenterMover: MapCenterMover {
     }
 
     func setInitialCoordinates(_ coordinates: CLLocationCoordinate2D) {
-        mapCoordinatesSubject.value = coordinates
+        mapCoordinates = coordinates
         initialCoordinates = coordinates
     }
 
     private func setLocationCoordinates() {
         if let location = locationManager.getLocation() {
-            isPinCenterScreen = false
-            mapCoordinatesSubject.value = location.coordinate
+            if overridePinCenter == nil {
+                isPinCenterScreen = false
+            }
+
+            mapCoordinates = location.coordinate
         }
     }
 
@@ -82,17 +103,35 @@ class AppMapCenterMover: MapCenterMover {
         return false
     }
 
-    func onMapMove(mapCenter: CLLocationCoordinate2D) {
+    func onMapMove(
+        _ mapCenter: CLLocationCoordinate2D,
+        isUserAction: Bool,
+        isMapMoving: Bool,
+    ) {
         guard isValidMapChange(mapCenter) else {
             return
         }
 
-        isPinCenterScreen = true
+        if isUserAction {
+            isUserActed = true
+        }
 
-        mapCoordinatesSubject.value = mapCenter
+        if isUserAction || !isMapMoving {
+            if overridePinCenter == nil  {
+                isPinCenterScreen = true
+            }
+
+            if overridePinCenter == true || isPinCenterScreen {
+                mapCoordinates = mapCenter
+            }
+        }
     }
 
     func updateCoordinates(_ coordinates: CLLocationCoordinate2D) {
-        mapCoordinatesSubject.value = coordinates
+        mapCoordinates = coordinates
+    }
+
+    func overridePinCenterScreen(_ pin: Bool?) {
+        overridePinCenter = pin
     }
 }

@@ -18,6 +18,17 @@ struct RadioButtons: View {
     }
 }
 
+struct RadioButtonImage: View {
+    @Environment(\.isEnabled) var isEnabled
+    let isSelected: Bool
+
+    var body: some View {
+        let radioImg = isSelected ? "circle.inset.filled" : "circle"
+        Image(systemName: radioImg)
+            .foregroundColor(isSelected && isEnabled ? Color.black : Color.gray)
+    }
+}
+
 struct RadioButton: View {
     @Environment(\.isEnabled) var isEnabled
 
@@ -34,9 +45,7 @@ struct RadioButton: View {
             onSelect()
         } label: {
             HStack {
-                let radioImg = isSelected ? "circle.inset.filled" : "circle"
-                Image(systemName: radioImg)
-                    .foregroundColor(isSelected && isEnabled ? Color.black : Color.gray)
+                RadioButtonImage(isSelected: isSelected)
                     .if (nestedLevel != nil) {
                         $0.padding(.leading, Double(nestedLevel!) * appTheme.nestedItemPadding)
                     }
@@ -83,9 +92,7 @@ struct ContentRadioButton<Content>: View where Content: View {
             onSelect()
         } label: {
             HStack(alignment: buttonContentAlignment) {
-                let radioImg = isSelected ? "circle.inset.filled" : "circle"
-                Image(systemName: radioImg)
-                    .foregroundColor(isSelected && isEnabled ? Color.black : Color.gray)
+                RadioButtonImage(isSelected: isSelected)
                     .if (nestedLevel != nil) {
                         $0.padding(.leading, Double(nestedLevel!) * appTheme.nestedItemPadding)
                     }
