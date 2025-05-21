@@ -96,11 +96,18 @@ extension MKMapView {
         addOverlays(overlays)
     }
 
-    func staticMapAnnotationView(_ annotation: MKAnnotation) -> MKAnnotationView? {
+    func staticMapAnnotationView(
+        _ annotation: MKAnnotation,
+        imageHeightOffsetWeight: CGFloat = -0.5
+    ) -> MKAnnotationView? {
         guard let annotationView = dequeueReusableAnnotationView(withIdentifier: reuseIdentifier) else {
             if let annotation = annotation as? CustomPinAnnotation {
                 let view = MKAnnotationView(annotation: annotation, reuseIdentifier: reuseIdentifier)
                 view.image = annotation.image
+                if let annotationImage = annotation.image,
+                   imageHeightOffsetWeight != 0 {
+                    view.centerOffset = CGPointMake(0, annotationImage.size.height * imageHeightOffsetWeight)
+                }
                 return view
             }
             return nil
@@ -108,7 +115,10 @@ extension MKMapView {
         return annotationView
     }
 
-    func reusableAnnotationView(_ annotation: MKAnnotation) -> MKAnnotationView? {
+    func reusableAnnotationView(
+        _ annotation: MKAnnotation,
+        imageHeightOffsetWeight: CGFloat = -0.5
+    ) -> MKAnnotationView? {
         var identifier = reuseIdentifier
         var image: UIImage? = nil
         if let customAnnotation = annotation as? CustomPinAnnotation {
@@ -120,6 +130,7 @@ extension MKMapView {
             if let annotationImage = image {
                 let view = MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
                 view.image = annotationImage
+                view.centerOffset = CGPointMake(0, annotationImage.size.height * imageHeightOffsetWeight)
                 return view
             }
             return nil

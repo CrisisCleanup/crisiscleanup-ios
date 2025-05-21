@@ -87,8 +87,16 @@ class AppMapCenterMover: MapCenterMover {
         return !locationManager.isDeniedLocationAccess
     }
 
-    private func isValidMapChange(_ coordinates: CLLocationCoordinate2D) -> Bool {
+    private func isValidMapChange(
+        _ coordinates: CLLocationCoordinate2D,
+        isUserAction: Bool
+    ) -> Bool {
         if isCoordinatesMovedGuard {
+            return true
+        }
+
+        if isUserAction {
+            isCoordinatesMovedGuard = true
             return true
         }
 
@@ -108,7 +116,7 @@ class AppMapCenterMover: MapCenterMover {
         isUserAction: Bool,
         isMapMoving: Bool,
     ) {
-        guard isValidMapChange(mapCenter) else {
+        guard isValidMapChange(mapCenter, isUserAction: isUserAction) else {
             return
         }
 

@@ -7,6 +7,8 @@ class MoveOnMapCoordinator: NSObject, MKMapViewDelegate {
 
     private var hasInteracted = false
 
+    fileprivate let animationManager = CircleAnimationManager()
+
     init(mapCenterMover: MapCenterMover) {
         self.mapCenterMover = mapCenterMover
     }
@@ -25,12 +27,18 @@ class MoveOnMapCoordinator: NSObject, MKMapViewDelegate {
         switch overlay {
         case let overlay as MKPolygon:
             return overlayMapRenderer(overlay)
-        case let overlay as MKCircle:
-            return overlayCircleRenderer(
+        case let overlay as AnimatedCircleOverlay:
+            let renderer = AnimatedCircleRenderer(
                 overlay,
-                strokeColor: UIColor(appTheme.colors.primaryOrangeColor),
                 fillColor: UIColor(appTheme.colors.primaryOrangeColor.disabledAlpha()),
+                strokeColor: UIColor(appTheme.colors.primaryOrangeColor),
+                lineWidth: 5
             )
+
+            animationManager.circle = overlay
+            animationManager.renderer = renderer
+
+            return renderer
         default:
             return MKOverlayRenderer(overlay: overlay)
         }
@@ -93,44 +101,55 @@ struct MoveOnMapView : UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<MoveOnMapView>) {
-        if map.isScrollEnabled != isScrollEnabled {
-            map.isScrollEnabled = isScrollEnabled
-        }
+        uiView.isScrollEnabled = isScrollEnabled
 
-        let circleOverlay = map.overlays.first(where: { $0 is MKCircle })
-        if boundingRadius > 0 {
-            var isChanged = true
-            if let overlay = circleOverlay as? MKCircle,
-               overlay.coordinate.approximatelyEquals(targetCoordinates),
-               overlay.radius == boundingRadius.milesToMeters {
-                isChanged = false
-            }
-            if isChanged {
-                if let overlay = circleOverlay {
-                    map.removeOverlay(overlay)
-                }
-                let updatedOverlay = MKCircle(center: targetCoordinates, radius: boundingRadius.milesToMeters)
-                map.addOverlay(updatedOverlay)
-            }
-        } else if let overlay = circleOverlay {
-            map.removeOverlay(overlay)
-        }
+        updateCircleOverlay(
+            uiView,
+            context.coordinator,
+            boundingRadius.milesToMeters,
+            targetCoordinates,
+        )
 
         if let annotation = uiView.annotations.first(where: { $0 is CustomPinAnnotation }),
            var customAnnotation = annotation as? CustomPinAnnotation {
             let expectedId = isTargetOutOfBounds ? "out-of-bounds" : "in-bounds"
             if customAnnotation.id != expectedId {
-                map.removeAnnotation(customAnnotation)
+                uiView.removeAnnotation(customAnnotation)
                 let imageName = isTargetOutOfBounds ? "cc_map_pin_oob" : "cc_map_pin"
                 customAnnotation = makeAnnotation(imageName: imageName, id: expectedId)
                 // TODO: Animate from removed coordinate to target coordinate
-                map.addAnnotation(customAnnotation)
+                uiView.addAnnotation(customAnnotation)
             }
 
-            uiView.animateToCenter(targetCoordinates, 7)
-            UIView.animate(withDuration: 0.3) {
+            if isPinCenterScreen {
+                UIView.animate(withDuration: 0.3) {
+                    customAnnotation.coordinate = targetCoordinates
+                }
+            } else {
                 customAnnotation.coordinate = targetCoordinates
+
+                uiView.animateToCenter(targetCoordinates, 7)
             }
+        }
+    }
+
+    private func updateCircleOverlay(
+        _ mapView: MKMapView,
+        _ coordinator: MoveOnMapCoordinator,
+        _ radius: Double,
+        _ center: CLLocationCoordinate2D,
+    ) {
+        let circleOverlay = map.overlays.first(where: { $0 is AnimatedCircleOverlay })
+        if let circle = circleOverlay,
+            circle.coordinate.approximatelyEquals(center) {
+            coordinator.animationManager.animateRadius(to: radius)
+        } else {
+            if let overlay = circleOverlay {
+                mapView.removeOverlay(overlay)
+            }
+
+            let updatedOverlay = AnimatedCircleOverlay(center: center, radius: radius)
+            mapView.addOverlay(updatedOverlay)
         }
     }
 }

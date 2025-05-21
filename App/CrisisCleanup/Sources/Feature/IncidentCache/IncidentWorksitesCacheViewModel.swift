@@ -66,8 +66,8 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
 
     func onViewAppear() {
         subscribeSyncing()
-        subscribeCachePreferences()
         subscribeCoordinates()
+        subscribeCachePreferences()
     }
 
     func onViewDisappear() {
@@ -110,6 +110,36 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
+    private func subscribeCoordinates() {
+        mapCenterMover.subscribeLocationStatus()
+            .store(in: &subscriptions)
+
+        mapCenterMover.mapCoordinatesPublisher
+            .receive(on: RunLoop.main)
+            .assign(to: \.mapCoordinates, on: self)
+            .store(in: &subscriptions)
+
+        $mapCoordinates
+            .throttle(
+                for: .seconds(0.1),
+                scheduler: RunLoop.current,
+                latest: true
+            )
+            .receive(on: RunLoop.main)
+            .sink { coordinates in
+                if self.hasUserInteracted {
+                    let preferences = self.editingPreferencesSubject.value
+                    self.editingPreferencesSubject.value = preferences.copy { p in
+                        p.boundedRegionParameters = p.boundedRegionParameters.copy { brp in
+                            brp.regionLatitude = coordinates.latitude
+                            brp.regionLongitude = coordinates.longitude
+                        }
+                    }
+                }
+            }
+            .store(in: &subscriptions)
+    }
+
     private func subscribeCachePreferences() {
         editingPreferencesSubject
             .receive(on: RunLoop.main)
@@ -124,7 +154,8 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
                     let syncingRegionParameters = preferences.boundedRegionParameters
                     with(syncingRegionParameters) { p in
                         if p.regionLatitude != 0.0 || p.regionLongitude != 0.0 {
-                            self.mapCenterMover.setInitialCoordinates(CLLocationCoordinate2DMake(p.regionLatitude, p.regionLongitude))
+                            let initialCoordinates = CLLocationCoordinate2DMake(p.regionLatitude, p.regionLongitude)
+                            self.mapCenterMover.setInitialCoordinates(initialCoordinates)
                         }
                     }
 
@@ -164,36 +195,6 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
             .sink {
                 if self.hasUserInteracted {
                     self.incidentCacheRepository.updateCachePreferenes($0)
-                }
-            }
-            .store(in: &subscriptions)
-    }
-
-    private func subscribeCoordinates() {
-        mapCenterMover.subscribeLocationStatus()
-            .store(in: &subscriptions)
-
-        mapCenterMover.mapCoordinatesPublisher
-            .receive(on: RunLoop.main)
-            .assign(to: \.mapCoordinates, on: self)
-            .store(in: &subscriptions)
-
-        $mapCoordinates
-            .throttle(
-                for: .seconds(0.1),
-                scheduler: RunLoop.current,
-                latest: true
-            )
-            .receive(on: RunLoop.main)
-            .sink { coordinates in
-                if self.hasUserInteracted {
-                    let preferences = self.editingPreferencesSubject.value
-                    self.editingPreferencesSubject.value = preferences.copy { p in
-                        p.boundedRegionParameters = p.boundedRegionParameters.copy { brp in
-                            brp.regionLatitude = coordinates.latitude
-                            brp.regionLongitude = coordinates.longitude
-                        }
-                    }
                 }
             }
             .store(in: &subscriptions)

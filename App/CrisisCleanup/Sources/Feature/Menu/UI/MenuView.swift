@@ -334,7 +334,7 @@ private struct IncidentCacheView: View {
                     .padding(.bottom, appTheme.listItemVerticalPadding)
             }
 
-            HStack(alignment: .center) {
+            HStack(alignment: .center, spacing: appTheme.gridItemSpacing) {
                 let syncingPolicy = if incidentCachePreferences.isPaused {
                     t.t("appMenu.pause_downloading_cases")
                 } else if incidentCachePreferences.isBoundedNearMe {
@@ -355,9 +355,9 @@ private struct IncidentCacheView: View {
                     Text(t.t("actions.change"))
                 }
                 .foregroundStyle(appTheme.colors.actionLinkColor)
-                .padding(.bottom)
+                .padding()
             }
         }
-        .padding([.horizontal, .top])
+        .padding(.horizontal)
     }
 }

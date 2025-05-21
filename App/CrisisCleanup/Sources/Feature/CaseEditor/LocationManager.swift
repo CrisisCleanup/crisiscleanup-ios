@@ -117,4 +117,8 @@ extension LocationManager: CLLocationManagerDelegate {
         }
         locationSubject.value = location
     }
+
+    public func locationManager(_ manager: CLLocationManager, didFailWithError error: any Error) {
+        logger.logError(error)
+    }
 }
