@@ -20,7 +20,7 @@ class CustomPinAnnotation: NSObject, MKAnnotation {
 }
 
 extension MKMapView {
-    func animaiteToCenter(
+    func animateToCenter(
         _ center: CLLocationCoordinate2D,
         _ zoomLevel: Int = 11
     ) {
@@ -130,7 +130,7 @@ extension MKMapView {
 
 func overlayMapRenderer(
     _ polygon: MKPolygon,
-    _ alpha: Double = 0.5,
+    _ alpha: Double = 0.6,
     _ color: UIColor = .black
 ) -> MKPolygonRenderer {
     let renderer = MKPolygonRenderer(polygon: polygon)
@@ -138,6 +138,19 @@ func overlayMapRenderer(
     renderer.lineWidth = 0
     renderer.fillColor = color
     renderer.blendMode = .color
+    return renderer
+}
+
+func overlayCircleRenderer(
+    _ circle: MKCircle,
+    strokeColor: UIColor,
+    fillColor: UIColor,
+    strokeWidth: Double = 4.0,
+) -> MKCircleRenderer {
+    let renderer = MKCircleRenderer(circle: circle)
+    renderer.lineWidth = strokeWidth
+    renderer.strokeColor = strokeColor
+    renderer.fillColor = fillColor
     return renderer
 }
 

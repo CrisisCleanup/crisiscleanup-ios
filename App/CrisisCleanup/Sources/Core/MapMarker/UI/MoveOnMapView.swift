@@ -1,3 +1,4 @@
+import CoreLocation
 import MapKit
 import SwiftUI
 
@@ -21,7 +22,18 @@ class MoveOnMapCoordinator: NSObject, MKMapViewDelegate {
     }
 
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-        overlayMapRenderer(overlay as! MKPolygon)
+        switch overlay {
+        case let overlay as MKPolygon:
+            return overlayMapRenderer(overlay)
+        case let overlay as MKCircle:
+            return overlayCircleRenderer(
+                overlay,
+                strokeColor: UIColor(appTheme.colors.primaryOrangeColor),
+                fillColor: UIColor(appTheme.colors.primaryOrangeColor.disabledAlpha()),
+            )
+        default:
+            return MKOverlayRenderer(overlay: overlay)
+        }
     }
 
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
@@ -43,6 +55,7 @@ struct MoveOnMapView : UIViewRepresentable {
     @Binding var targetCoordinates: CLLocationCoordinate2D
     @Binding var isPinCenterScreen: Bool
     @Binding var isTargetOutOfBounds: Bool
+    @Binding var boundingRadius: Double
 
     var mapCenterMover: MapCenterMover
     var isScrollEnabled: Bool = true
@@ -70,8 +83,6 @@ struct MoveOnMapView : UIViewRepresentable {
             let annotation = makeAnnotation(imageName: "cc_map_pin", id: "in-bounds")
             map.addAnnotation(annotation)
             map.showAnnotations([annotation], animated: false)
-
-            // TODO: Set initial map zoom depending if is Incident bounds (zoomed out) or not (zoomed in)
         }
 
         return map
@@ -86,6 +97,25 @@ struct MoveOnMapView : UIViewRepresentable {
             map.isScrollEnabled = isScrollEnabled
         }
 
+        let circleOverlay = map.overlays.first(where: { $0 is MKCircle })
+        if boundingRadius > 0 {
+            var isChanged = true
+            if let overlay = circleOverlay as? MKCircle,
+               overlay.coordinate.approximatelyEquals(targetCoordinates),
+               overlay.radius == boundingRadius.milesToMeters {
+                isChanged = false
+            }
+            if isChanged {
+                if let overlay = circleOverlay {
+                    map.removeOverlay(overlay)
+                }
+                let updatedOverlay = MKCircle(center: targetCoordinates, radius: boundingRadius.milesToMeters)
+                map.addOverlay(updatedOverlay)
+            }
+        } else if let overlay = circleOverlay {
+            map.removeOverlay(overlay)
+        }
+
         if let annotation = uiView.annotations.first(where: { $0 is CustomPinAnnotation }),
            var customAnnotation = annotation as? CustomPinAnnotation {
             let expectedId = isTargetOutOfBounds ? "out-of-bounds" : "in-bounds"
@@ -97,14 +127,9 @@ struct MoveOnMapView : UIViewRepresentable {
                 map.addAnnotation(customAnnotation)
             }
 
-            if isPinCenterScreen {
-                UIView.animate(withDuration: 0.3) {
-                    customAnnotation.coordinate = targetCoordinates
-                }
-            } else {
+            uiView.animateToCenter(targetCoordinates, 7)
+            UIView.animate(withDuration: 0.3) {
                 customAnnotation.coordinate = targetCoordinates
-
-                uiView.animaiteToCenter(targetCoordinates)
             }
         }
     }

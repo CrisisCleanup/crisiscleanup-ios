@@ -104,7 +104,7 @@ internal struct CasesMapView : UIViewRepresentable {
 
     func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<CasesMapView>) {
         if let worksiteCoordinates = focusWorksiteCenter {
-            uiView.animaiteToCenter(worksiteCoordinates)
+            uiView.animateToCenter(worksiteCoordinates)
             Task { @MainActor in
                 viewModel.editedWorksiteLocation = nil
             }

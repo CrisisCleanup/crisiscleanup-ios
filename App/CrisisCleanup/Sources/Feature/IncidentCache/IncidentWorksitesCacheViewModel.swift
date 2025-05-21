@@ -230,8 +230,7 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
     }
 
     private func pullIncidentData() {
-        print("Mocking pullIncidentData..., uncomment later")
-        // syncPuller.appPullIncidentData(cancelOngoing: true)
+        syncPuller.appPullIncidentData(cancelOngoing: true)
     }
 
     func resumeCachingCases() {

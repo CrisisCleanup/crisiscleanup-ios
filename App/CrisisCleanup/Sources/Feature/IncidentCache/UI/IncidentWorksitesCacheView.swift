@@ -16,6 +16,8 @@ struct IncidentWorksitesCacheView: View {
     @State private var contentSize = CGSizeZero
     @State private var animateMapSize = CGSize(width: 128, height: 128)
 
+    @State private var boundingRadius = 1.0
+
     private func updateMapSize(_ preferences: IncidentWorksitesCachePreferences) {
         let mapWidth = {
             if contentSize.width > 0 {
@@ -26,7 +28,7 @@ struct IncidentWorksitesCacheView: View {
         }()
 
         let minSize = min(contentSize.width, contentSize.height)
-        let mapHeight = preferences.isRegionBounded ? minSize : minSize / 3
+        let mapHeight = preferences.isRegionBounded ? minSize : appTheme.listItemMapHeight
 
         let mapSize = CGSize(width: mapWidth, height: mapHeight)
         if mapSize != animateMapSize {
@@ -49,17 +51,28 @@ struct IncidentWorksitesCacheView: View {
                                 isSyncing: $animateIsSyncing,
                             )
 
-                            SyncChoicesView()
+                            // TODO: Scroll does not take on first select
+                            //       Due to animating map view?
+                            let scrollToRadiusSection = {
+                                withAnimation {
+                                    scrollView.scrollTo("radius-section", anchor: .bottom)
+                                }
+                            }
+                            SyncChoicesView(
+                                scrollToNearMeSection: scrollToRadiusSection,
+                                scrollToBoundedSection: scrollToRadiusSection,
+                            )
 
                             MoveOnMapView(
                                 map: $map,
                                 targetCoordinates: $viewModel.mapCoordinates,
                                 isPinCenterScreen: $viewModel.isPinCenterScreen,
                                 isTargetOutOfBounds: $isLocationOutOfBounds,
+                                boundingRadius: $boundingRadius,
                                 mapCenterMover: viewModel.mapCenterMover,
                                 isScrollEnabled: editingParameters.isBoundedByCoordinates,
                             )
-                            .id("map-view")
+                            .id("map-view-section")
                             .frame(maxWidth: .infinity)
                             .frame(
                                 width: animateMapSize.width,
@@ -69,9 +82,10 @@ struct IncidentWorksitesCacheView: View {
                             .animation(.easeInOut, value: animateMapSize)
                             .disabled(!editingParameters.isRegionBounded)
 
-                            // TODO: Radius. Enable/disable.
-                            Text("Radius")
-                                .id("radius-view")
+                            BoundingRadiusView(
+                                boundingRadius: $boundingRadius,
+                            )
+                            .id("radius-section")
 
                             if viewModel.showExplainLocationPermission {
                                 LocationAppSettingsDialog {
@@ -177,7 +191,6 @@ private struct SyncChoiceItem: View {
     @State private var textOffset: CGFloat = 0
 
     var body: some View {
-        // TODO: Center align text with button. Start align texts.
         Button {
             onSelect()
         } label: {
@@ -214,6 +227,9 @@ private struct SyncChoiceItem: View {
 private struct SyncChoicesView: View {
     @EnvironmentObject var viewModel: IncidentWorksitesCacheViewModel
 
+    let scrollToNearMeSection: () -> Void
+    let scrollToBoundedSection: () -> Void
+
     var body: some View {
         let editingParameters = viewModel.editingPreferences
 
@@ -238,7 +254,7 @@ private struct SyncChoicesView: View {
                 subTextTranslateKey: "appCache.near_me_description",
                 onSelect: {
                     viewModel.boundCachingCases(isNearMe: true, isUserAction: true)
-                    // TODO: Scroll to near me section
+                    scrollToNearMeSection()
                 }
             )
 
@@ -248,9 +264,45 @@ private struct SyncChoicesView: View {
                 subTextTranslateKey: "appCache.choose_area_description",
                 onSelect: {
                     viewModel.boundCachingCases(isNearMe: false, isUserAction: true)
-                    // TODO: Scroll to bounded section
+                    scrollToBoundedSection()
                 }
             )
+        }
+    }
+}
+
+private struct BoundingRadiusView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @EnvironmentObject var viewModel: IncidentWorksitesCacheViewModel
+
+    @Binding var boundingRadius: Double
+
+    var body: some View {
+        let editingParameters = viewModel.editingPreferences
+
+        HStack(alignment: .center) {
+            let fixedRadius = String(format: "%.1f", editingParameters.boundedRegionParameters.regionRadiusMiles)
+            let radiusText = t.t("appCache.radius")
+                .replacingOccurrences(of: "{magnitude}", with: fixedRadius)
+            Text(radiusText)
+
+            Spacer()
+
+            Slider(
+                value: $boundingRadius,
+                in: 1...120,
+            )
+        }
+        .disabled(!editingParameters.isRegionBounded)
+        .listItemModifier()
+        .onChange(of: editingParameters) { newValue in
+            boundingRadius = newValue.isRegionBounded ? newValue.boundedRegionParameters.regionRadiusMiles : 0.0
+        }
+        .onChange(of: boundingRadius) { newValue in
+            if newValue != editingParameters.boundedRegionParameters.regionRadiusMiles {
+                viewModel.setBoundedRegionRadius(newValue)
+            }
         }
     }
 }

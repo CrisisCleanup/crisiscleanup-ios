@@ -219,6 +219,7 @@ private struct OutOfBoundsMoveOnMapView: View {
     @State private var map = MKMapView()
     @State private var isLocationOutOfBounds = false
     @State private var isPinCenterScreen = false
+    @State private var boundingRadius = 0.0
 
     var body: some View {
         let outOfBoundsMessage = viewModel.locationOutOfBoundsMessage
@@ -227,6 +228,7 @@ private struct OutOfBoundsMoveOnMapView: View {
             targetCoordinates: $viewModel.mapCoordinates,
             isPinCenterScreen: $viewModel.isPinCenterScreen,
             isTargetOutOfBounds: $isLocationOutOfBounds,
+            boundingRadius: $boundingRadius,
             mapCenterMover: viewModel.mapCenterMover
         )
         .if (isLocationOutOfBounds) { view in

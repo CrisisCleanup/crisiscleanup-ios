@@ -37,6 +37,6 @@ struct ViewCaseMapView : UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<ViewCaseMapView>) {
-        uiView.animaiteToCenter(caseCoordinates)
+        uiView.animateToCenter(caseCoordinates)
     }
 }

@@ -44,12 +44,9 @@ struct CreateEditCaseMapView : UIViewRepresentable {
             let coordinates = latLng.coordinates
             pinAnnotation.coordinate = coordinates
 
-            var zoom = 12
-            if isCreateWorksite && hasInitialCoordinates {
-                zoom = 6
-            }
+            let zoom = isCreateWorksite && hasInitialCoordinates ? 6 : 12
 
-            uiView.animaiteToCenter(coordinates, zoom)
+            uiView.animateToCenter(coordinates, zoom)
         }
     }
 }
