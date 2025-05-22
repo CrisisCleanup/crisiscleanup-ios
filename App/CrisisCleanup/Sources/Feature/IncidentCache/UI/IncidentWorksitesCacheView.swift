@@ -66,6 +66,7 @@ struct IncidentWorksitesCacheView: View {
             }
         }
         .navigationTitle(t.t("appCache.sync_strategy"))
+        .hideNavBarUnderSpace()
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)
