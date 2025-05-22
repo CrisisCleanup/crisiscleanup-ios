@@ -3,6 +3,10 @@ import Foundation
 private let relativeTimeFormatter = RelativeDateTimeFormatter()
 
 extension Date {
+    static var epochZero: Date {
+        Date(timeIntervalSince1970: 0)
+    }
+
     var relativeTime: String {
         relativeTimeFormatter.localizedString(for: self, relativeTo: Date.now)
     }

@@ -17,12 +17,12 @@ internal func makeCrisisCleanupPinAnnotation(
 
 struct MoveMapView : UIViewRepresentable {
     @Binding var map: MKMapView
-    @Binding var targetCoordinates: CLLocationCoordinate2D
-    @Binding var isPinCenterScreen: Bool
-    @Binding var isTargetOutOfBounds: Bool
+
+    var targetCoordinates: CLLocationCoordinate2D
+    var isPinCenterScreen: Bool
+    var isTargetOutOfBounds: Bool
 
     var regionChangeListener: MapViewRegionChangeListener
-    var isScrollEnabled: Bool = true
 
     private func makeAnnotation(imageName: String, id: String) -> CustomPinAnnotation {
         makeCrisisCleanupPinAnnotation(targetCoordinates, imageName: imageName, id: id)
@@ -32,7 +32,7 @@ struct MoveMapView : UIViewRepresentable {
         let isNewMap = map.annotations.isEmpty
 
         map.configure(
-            isScrollEnabled: isScrollEnabled,
+            isScrollEnabled: true,
             isExistingMap: !isNewMap,
         )
 
@@ -51,8 +51,6 @@ struct MoveMapView : UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<MoveMapView>) {
-        uiView.isScrollEnabled = isScrollEnabled
-
         if let annotation = uiView.annotations.first(where: { $0 is CustomPinAnnotation }),
            var customAnnotation = annotation as? CustomPinAnnotation {
             let expectedId = isTargetOutOfBounds ? "out-of-bounds" : "in-bounds"

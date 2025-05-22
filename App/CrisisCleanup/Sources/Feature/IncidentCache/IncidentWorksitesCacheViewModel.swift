@@ -12,8 +12,6 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
     private let syncPuller: SyncPuller
     private let logger: AppLogger
 
-    private let isNotProduction: Bool
-
     @Published private(set) var incident = EmptyIncident
 
     @Published private(set) var isSyncing = false
@@ -25,11 +23,12 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
     private let editingPreferencesSubject = CurrentValueSubject<IncidentWorksitesCachePreferences, Never>(InitialIncidentWorksitesCachePreferences)
     @Published private(set) var editingPreferences = InitialIncidentWorksitesCachePreferences
 
+    @Published private var isUserMapActed: Bool = false
     private var hasUserInteracted: Bool {
-        isUserActed.load(ordering: .relaxed) || mapCenterMover.isUserActed
+        isUserActed.load(ordering: .relaxed) || isUserMapActed
     }
 
-    let mapCenterMover: any MapCenterMover
+    let mapCenterMover: any CircleBoundMapMover
     @Published var mapCoordinates = DefaultCoordinates2d
     @Published var isPinCenterScreen = false
 
@@ -47,7 +46,6 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
         incidentCacheRepository: IncidentCacheRepository,
         locationManager: LocationManager,
         syncPuller: SyncPuller,
-        appEnv: AppEnv,
         loggerFactory: AppLoggerFactory,
     ) {
         self.incidentSelector = incidentSelector
@@ -56,16 +54,13 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
         self.syncPuller = syncPuller
         logger = loggerFactory.getLogger("incident-cache")
 
-        mapCenterMover = AppMapCenterMover(
+        mapCenterMover = AppCircleBoundMapMover(
             locationManager: locationManager,
         )
-        mapCenterMover.overridePinCenterScreen(false)
-
-        isNotProduction = appEnv.isNotProduction
     }
 
     func onViewAppear() {
-        subscribeMapLoad()
+        subscribeViewState()
         subscribeSyncing()
         subscribeCoordinates()
         subscribeCachePreferences()
@@ -75,9 +70,29 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
         subscriptions = cancelSubscriptions(subscriptions)
     }
 
-    private func subscribeMapLoad() {
-        mapCenterMover.subscribeMapLoad()
+    private func subscribeViewState() {
+        incidentSelector.incident.eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.incident, on: self)
             .store(in: &subscriptions)
+
+        mapCenterMover.isUserActedPublisher
+            .receive(on: RunLoop.main)
+            .assign(to: \.isUserMapActed, on: self)
+            .store(in: &subscriptions)
+
+        Publishers.CombineLatest(
+            $editingPreferences,
+            $isUserMapActed,
+        )
+        .map { (preferences, isMapMoved) in
+            preferences.isBoundedByCoordinates && isMapMoved
+        }
+        .receive(on: RunLoop.main)
+        .sink {
+            self.isPinCenterScreen = $0
+        }
+        .store(in: &subscriptions)
     }
 
     private func subscribeSyncing() {
@@ -108,11 +123,6 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
             }
             .receive(on: RunLoop.main)
             .assign(to: \.lastSynced, on: self)
-            .store(in: &subscriptions)
-
-        incidentSelector.incident.eraseToAnyPublisher()
-            .receive(on: RunLoop.main)
-            .assign(to: \.incident, on: self)
             .store(in: &subscriptions)
     }
 
@@ -161,7 +171,7 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
                     with(syncingRegionParameters) { p in
                         if p.regionLatitude != 0.0 || p.regionLongitude != 0.0 {
                             let initialCoordinates = CLLocationCoordinate2DMake(p.regionLatitude, p.regionLongitude)
-                            self.mapCenterMover.setInitialCoordinates(initialCoordinates)
+                            self.mapCenterMover.updateCoordinates(initialCoordinates)
                         }
                     }
 
@@ -180,20 +190,6 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
                 }
             }
             .store(in: &subscriptions)
-
-        Publishers.CombineLatest(
-            $editingPreferences,
-            mapCenterMover.isMapLoadedPublisher.eraseToAnyPublisher(),
-        )
-        .map { (preferences, isMapLoaded) in
-            preferences.isBoundedByCoordinates && isMapLoaded
-        }
-        .receive(on: RunLoop.main)
-        .sink {
-            self.mapCenterMover.overridePinCenterScreen($0)
-            self.isPinCenterScreen = $0
-        }
-        .store(in: &subscriptions)
 
         $editingPreferences
             .throttle(
@@ -284,7 +280,9 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
             }
         } else {
             if isUserAction {
-                _ = mapCenterMover.useMyLocation()
+                if !mapCenterMover.useMyLocation() {
+                    showExplainLocationPermission = true
+                }
             }
         }
     }

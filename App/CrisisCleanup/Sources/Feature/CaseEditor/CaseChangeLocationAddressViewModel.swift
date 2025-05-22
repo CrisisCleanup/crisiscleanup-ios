@@ -117,7 +117,7 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
 
         if isFirstVisible.exchange(false, ordering: .relaxed) {
             let latLng = worksiteProvider.editableWorksite.value.coordinates
-            mapCenterMover.setInitialCoordinates(latLng.coordinates)
+            mapCenterMover.updateCoordinates(latLng.coordinates)
         }
     }
 

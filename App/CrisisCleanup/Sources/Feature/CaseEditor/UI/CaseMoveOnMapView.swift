@@ -223,9 +223,9 @@ private struct OutOfBoundsMoveOnMapView: View {
         let outOfBoundsMessage = viewModel.locationOutOfBoundsMessage
         MoveMapView(
             map: $map,
-            targetCoordinates: $viewModel.mapCoordinates,
-            isPinCenterScreen: $viewModel.isPinCenterScreen,
-            isTargetOutOfBounds: $isLocationOutOfBounds,
+            targetCoordinates: viewModel.mapCoordinates,
+            isPinCenterScreen: viewModel.isPinCenterScreen,
+            isTargetOutOfBounds: isLocationOutOfBounds,
             regionChangeListener: viewModel.mapCenterMover
         )
         .if (isLocationOutOfBounds) { view in

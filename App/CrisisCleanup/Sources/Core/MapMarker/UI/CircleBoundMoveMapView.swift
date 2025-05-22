@@ -2,15 +2,14 @@ import CoreLocation
 import MapKit
 import SwiftUI
 
-
 struct CircleBoundMoveMapView : UIViewRepresentable {
     @Binding var map: MKMapView
-    @Binding var targetCoordinates: CLLocationCoordinate2D
-    @Binding var isPinCenterScreen: Bool
-    @Binding var boundingRadius: Double
 
     var regionChangeListener: MapViewRegionChangeListener
-    var isScrollEnabled: Bool = true
+    var isScrollEnabled: Bool
+    var targetCoordinates: CLLocationCoordinate2D
+    var isPinCenterScreen: Bool
+    var boundingRadius: Double
 
     func makeUIView(context: Context) -> MKMapView {
         let isNewMap = map.annotations.isEmpty

@@ -1,9 +1,11 @@
 import Combine
 import CoreLocation
+import Foundation
 
-protocol MapCenterMover: MapViewRegionChangeListener {
+protocol CircleBoundMapMover: MapViewRegionChangeListener {
+    var isUserActedPublisher: Published<Bool>.Publisher { get }
+
     var mapCoordinatesPublisher: Published<CLLocationCoordinate2D>.Publisher { get }
-    var isPinCenterScreenPublisher: Published<Bool>.Publisher { get }
 
     func subscribeLocationStatus() -> AnyCancellable
 
@@ -11,22 +13,20 @@ protocol MapCenterMover: MapViewRegionChangeListener {
     func updateCoordinates(_ coordinates: CLLocationCoordinate2D)
 }
 
-class AppMapCenterMover: MapCenterMover {
+class AppCircleBoundMapMover: CircleBoundMapMover {
     private let locationManager: LocationManager
 
-    private var isUserActed = false
+    @Published private(set) var isUserActed = false
+    var isUserActedPublisher: Published<Bool>.Publisher {
+        $isUserActed
+    }
 
     @Published private(set) var mapCoordinates = DefaultCoordinates2d
     var mapCoordinatesPublisher: Published<CLLocationCoordinate2D>.Publisher {
         $mapCoordinates
     }
 
-    @Published private(set) var isPinCenterScreen = false
-    var isPinCenterScreenPublisher: Published<Bool>.Publisher {
-        $isPinCenterScreen
-    }
-
-    private var useMyLocationExpirationTime = Date(timeIntervalSince1970: 0)
+    private var useMyLocationExpirationTime = Date.epochZero
 
     init(locationManager: LocationManager) {
         self.locationManager = locationManager
@@ -46,8 +46,6 @@ class AppMapCenterMover: MapCenterMover {
 
     private func setLocationCoordinates() {
         if let location = locationManager.getLocation() {
-            isPinCenterScreen = false
-
             mapCoordinates = location.coordinate
         }
     }
@@ -71,9 +69,11 @@ class AppMapCenterMover: MapCenterMover {
             isUserActed = true
         }
 
-        isPinCenterScreen = isUserAction || (isUserActed && !isMapMoving)
+        if !isUserActed {
+            return
+        }
 
-        if isPinCenterScreen {
+        if isUserAction || !isMapMoving {
             mapCoordinates = mapCenter
         }
     }

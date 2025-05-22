@@ -33,7 +33,6 @@ class IncidentWorksitesCacheComponent: Component<AppDependency>, IncidentWorksit
                 incidentCacheRepository: dependency.incidentCacheRepository,
                 locationManager: dependency.locationManager,
                 syncPuller: dependency.syncPuller,
-                appEnv: dependency.appEnv,
                 loggerFactory: dependency.loggerFactory,
             )
         }
