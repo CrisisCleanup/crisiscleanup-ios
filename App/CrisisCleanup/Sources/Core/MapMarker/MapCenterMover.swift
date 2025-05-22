@@ -3,7 +3,7 @@ import CoreLocation
 
 // TODO: Improve state management
 //       Refactor into separate use Cases
-protocol MapCenterMover {
+protocol MapCenterMover: MapViewRegionChangeListener {
     var mapCoordinatesPublisher: Published<CLLocationCoordinate2D>.Publisher { get }
     var isPinCenterScreenPublisher: Published<Bool>.Publisher { get }
 
@@ -19,11 +19,6 @@ protocol MapCenterMover {
     func setInitialCoordinates(_ coordinates: CLLocationCoordinate2D)
 
     func useMyLocation() -> Bool
-    func onMapMove(
-        _ mapCenter: CLLocationCoordinate2D,
-        isUserAction: Bool,
-        isMapMoving: Bool
-    )
     func updateCoordinates(_ coordinates: CLLocationCoordinate2D)
     func overridePinCenterScreen(_ pin: Bool?)
 }
@@ -133,7 +128,7 @@ class AppMapCenterMover: MapCenterMover {
         return false
     }
 
-    func onMapMove(
+    func onRegionChange(
         _ mapCenter: CLLocationCoordinate2D,
         isUserAction: Bool,
         isMapMoving: Bool,

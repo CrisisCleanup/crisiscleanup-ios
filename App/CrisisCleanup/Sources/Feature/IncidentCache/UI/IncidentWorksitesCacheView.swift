@@ -11,7 +11,6 @@ struct IncidentWorksitesCacheView: View {
     @State private var disableScroll: Bool = false
 
     @State private var map = MKMapView()
-    @State private var isLocationOutOfBounds = false
 
     @State private var contentSize = CGSizeZero
     @State private var animateMapSize = CGSize(width: 128, height: 128)
@@ -63,13 +62,12 @@ struct IncidentWorksitesCacheView: View {
                                 scrollToBoundedSection: scrollToRadiusSection,
                             )
 
-                            MoveOnMapView(
+                            CircleBoundMoveMapView(
                                 map: $map,
                                 targetCoordinates: $viewModel.mapCoordinates,
                                 isPinCenterScreen: $viewModel.isPinCenterScreen,
-                                isTargetOutOfBounds: $isLocationOutOfBounds,
                                 boundingRadius: $boundingRadius,
-                                mapCenterMover: viewModel.mapCenterMover,
+                                regionChangeListener: viewModel.mapCenterMover,
                                 isScrollEnabled: editingParameters.isBoundedByCoordinates,
                             )
                             .id("map-view-section")
