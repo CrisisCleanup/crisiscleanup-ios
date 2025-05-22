@@ -65,6 +65,7 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
     }
 
     func onViewAppear() {
+        subscribeMapLoad()
         subscribeSyncing()
         subscribeCoordinates()
         subscribeCachePreferences()
@@ -72,6 +73,11 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
 
     func onViewDisappear() {
         subscriptions = cancelSubscriptions(subscriptions)
+    }
+
+    private func subscribeMapLoad() {
+        mapCenterMover.subscribeMapLoad()
+            .store(in: &subscriptions)
     }
 
     private func subscribeSyncing() {
@@ -175,16 +181,19 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
             }
             .store(in: &subscriptions)
 
-        $editingPreferences
-            .map {
-                $0.isBoundedByCoordinates
-            }
-            .receive(on: RunLoop.main)
-            .sink {
-                self.mapCenterMover.overridePinCenterScreen($0)
-                self.isPinCenterScreen = $0
-            }
-            .store(in: &subscriptions)
+        Publishers.CombineLatest(
+            $editingPreferences,
+            mapCenterMover.isMapLoadedPublisher.eraseToAnyPublisher(),
+        )
+        .map { (preferences, isMapLoaded) in
+            preferences.isBoundedByCoordinates && isMapLoaded
+        }
+        .receive(on: RunLoop.main)
+        .sink {
+            self.mapCenterMover.overridePinCenterScreen($0)
+            self.isPinCenterScreen = $0
+        }
+        .store(in: &subscriptions)
 
         $editingPreferences
             .throttle(

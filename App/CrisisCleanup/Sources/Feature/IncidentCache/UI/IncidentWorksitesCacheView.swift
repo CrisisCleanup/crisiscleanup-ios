@@ -81,6 +81,11 @@ struct IncidentWorksitesCacheView: View {
                             )
                             .animation(.easeInOut, value: animateMapSize)
                             .disabled(!editingParameters.isRegionBounded)
+                            .overlay(content: {
+                                if !editingParameters.isRegionBounded {
+                                    Color.black.disabledAlpha()
+                                }
+                            })
 
                             BoundingRadiusView(
                                 boundingRadius: $boundingRadius,
@@ -135,7 +140,7 @@ private struct SyncInfoActionView: View {
             .listItemPadding()
             .frame(maxWidth: .infinity, alignment: .leading)
 
-        HStack(alignment: .center) {
+        HStack(alignment: .center, spacing: appTheme.gridItemSpacing) {
             let syncStageMessage = switch (viewModel.syncStage) {
             case .start: t.t("appCache.ready_to_sync")
             case .incidents: t.t("appCache.syncing_incidents")

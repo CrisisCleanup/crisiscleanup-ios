@@ -2,14 +2,19 @@ import Combine
 import CoreLocation
 
 // TODO: Improve state management
-//       Maybe refactor into separate than cram all this functionality into one
+//       Refactor into separate use Cases
 protocol MapCenterMover {
     var mapCoordinatesPublisher: Published<CLLocationCoordinate2D>.Publisher { get }
     var isPinCenterScreenPublisher: Published<Bool>.Publisher { get }
 
+    // TODO: Research better design
+    var isMapLoadedPublisher: any Publisher<Bool, Never> { get }
+
     var isUserActed: Bool { get }
 
     func subscribeLocationStatus() -> AnyCancellable
+    // TODO: Research better design
+    func subscribeMapLoad() -> AnyCancellable
 
     func setInitialCoordinates(_ coordinates: CLLocationCoordinate2D)
 
@@ -45,9 +50,16 @@ class AppMapCenterMover: MapCenterMover {
 
     private var overridePinCenter: Bool? = nil
 
+    // TODO: Research better design
+    //       Hack due to too many animations interrupting one another
+    //       Figure how to set view state after map (and views) have settled all animations
+    private let mapLoadSubject = CurrentValueSubject<Date, Never>(Date.now)
+    let isMapLoadedSubject = CurrentValueSubject<Bool, Never>(false)
+    var isMapLoadedPublisher: any Publisher<Bool, Never>
+
     init(locationManager: LocationManager) {
         self.locationManager = locationManager
-
+        isMapLoadedPublisher = isMapLoadedSubject
     }
 
     func subscribeLocationStatus() -> AnyCancellable {
@@ -58,6 +70,16 @@ class AppMapCenterMover: MapCenterMover {
                    self.locationManager.isAuthorized(status),
                    self.useMyLocationExpirationTime.distance(to: Date.now) < 0.seconds {
                     self.setLocationCoordinates()
+                }
+            }
+    }
+
+    func subscribeMapLoad() -> AnyCancellable {
+        mapLoadSubject
+            .debounce(for: .seconds(0.5), scheduler: RunLoop.current)
+            .sink { _ in
+                if !self.isMapLoadedSubject.value {
+                    self.isMapLoadedSubject.value = true
                 }
             }
     }
@@ -116,6 +138,8 @@ class AppMapCenterMover: MapCenterMover {
         isUserAction: Bool,
         isMapMoving: Bool,
     ) {
+        mapLoadSubject.value = Date.now
+
         guard isValidMapChange(mapCenter, isUserAction: isUserAction) else {
             return
         }

@@ -34,6 +34,7 @@ extension MKOverlayRenderer {
 class AnimatedCircleOverlay: NSObject, MKOverlay {
     let coordinate: CLLocationCoordinate2D
 
+    // TODO: Does not draw over adjacent tiles at times
     private(set) var boundingMapRect: MKMapRect
 
     var targetRadius: CLLocationDistance
