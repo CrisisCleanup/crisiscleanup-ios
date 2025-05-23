@@ -167,6 +167,7 @@ private struct TopBar: View {
                     isSpaceConstrained: true
                 )
             }
+            .disabled(viewModel.incidentsData.isFirstLoad)
             .sheet(
                 isPresented: $showIncidentSelect,
                 onDismiss: {

@@ -3,7 +3,6 @@ import CoreLocation
 import Foundation
 
 public protocol IncidentCacheRepository {
-    var isSyncingData: any Publisher<Bool, Never> { get }
     var isSyncingActiveIncident: any Publisher<Bool, Never> { get }
     var cacheStage: any Publisher<IncidentCacheStage, Never> { get }
 
@@ -84,8 +83,6 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
     private let syncPlanLock = NSRecursiveLock()
     private var submittedSyncPlan = EmptySyncPlan
 
-    var isSyncingData: any Publisher<Bool, Never>
-
     private let syncingIncidentId = CurrentValueSubject<Int64, Never>(EmptyIncident.id)
     var isSyncingActiveIncident: any Publisher<Bool, Never>
 
@@ -135,17 +132,26 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         incidentDataPullStats = incidentDataPullStatsSubject
         onIncidentDataPullComplete = onIncidentDataPullCompleteSubject
 
-        isSyncingData = cacheStageSubject.map {
-            $0 != .start && $0 != .end
+        let isSyncingData = cacheStageSubject.map {
+            $0.isSyncingStage
         }
 
-        isSyncingActiveIncident = Publishers.CombineLatest3(
+        let isSyncingInitialIncidents = Publishers.CombineLatest(
+            syncingIncidentId,
+            cacheStageSubject,
+        )
+            .map { (syncingId, cacheStage) in
+                syncingId == EmptyIncident.id && cacheStage == .incidents
+            }
+
+        isSyncingActiveIncident = Publishers.CombineLatest4(
+            isSyncingData.eraseToAnyPublisher(),
             incidentSelector.incidentId.eraseToAnyPublisher(),
             syncingIncidentId,
-            isSyncingData.eraseToAnyPublisher(),
+            isSyncingInitialIncidents,
         )
-        .map { (incidentId, syncingId, isSyncing) in
-            incidentId == syncingId && isSyncing
+        .map { (isSyncing, incidentId, syncingId, initialIncidents) in
+            isSyncing && incidentId == syncingId || initialIncidents
         }
 
         cacheStage = cacheStageSubject
@@ -505,7 +511,6 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         }
     }
 
-    // TODO: Test different location determinations
     private func getLocation(_ incidentId: Int64) async -> CLLocationCoordinate2D? {
         if let deviceLocation = await locationProvider.getLocation(timeoutSeconds: 10.0) {
             return deviceLocation.coordinate
@@ -1282,6 +1287,17 @@ public enum IncidentCacheStage: String, Identifiable, CaseIterable {
          end
 
     public var id: String { rawValue }
+}
+
+private let staticCacheStages = Set([
+    IncidentCacheStage.start,
+    .end,
+])
+
+extension IncidentCacheStage {
+    var isSyncingStage: Bool {
+        !staticCacheStages.contains(self)
+    }
 }
 
 fileprivate struct IncidentDataSyncPlan: Equatable {

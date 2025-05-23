@@ -27,6 +27,7 @@ struct CasesTableView: View {
                                 selectedIncident: viewModel.incidentsData.selected,
                                 incidentSelectViewBuilder: incidentSelectViewBuilder,
                                 isLoading: isLoadingData,
+                                isFirstLoad: viewModel.incidentsData.isFirstLoad,
                             )
 
                             TableViewCaseCountSortOptions(
@@ -75,6 +76,7 @@ struct CasesTableView: View {
                         selectedIncident: viewModel.incidentsData.selected,
                         incidentSelectViewBuilder: incidentSelectViewBuilder,
                         isLoading: isLoadingData,
+                        isFirstLoad: viewModel.incidentsData.isFirstLoad,
                     )
 
                     if viewLayout.isWide {
@@ -135,6 +137,7 @@ private struct TableViewIncidentSelector: View {
     let selectedIncident: Incident
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
     let isLoading: Bool
+    let isFirstLoad: Bool
 
     @State private var openIncidentSelect = false
 
@@ -150,6 +153,7 @@ private struct TableViewIncidentSelector: View {
             )
             .tint(.black)
         }
+        .disabled(isFirstLoad)
         .sheet(
             isPresented: $openIncidentSelect,
             onDismiss: {

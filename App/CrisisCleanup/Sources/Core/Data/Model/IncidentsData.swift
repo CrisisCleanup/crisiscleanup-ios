@@ -13,6 +13,7 @@ public struct IncidentsData: Equatable {
     // sourcery:begin: skipCopy
     let isEmpty: Bool
     let selectedId: Int64
+    let isFirstLoad: Bool
     // sourcery:end
 
     init(
@@ -25,6 +26,7 @@ public struct IncidentsData: Equatable {
         self.incidents = incidents
         isEmpty = incidents.isEmpty
         selectedId = selected.id
+        isFirstLoad = isLoading && isEmpty
     }
 }
 

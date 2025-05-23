@@ -163,6 +163,7 @@ private struct MapViewTopActions: View {
                 )
                 .shadow(radius: appTheme.shadowRadius)
             }
+            .disabled(viewModel.incidentsData.isFirstLoad)
             .sheet(
                 isPresented: $openIncidentSelect,
                 onDismiss: {
