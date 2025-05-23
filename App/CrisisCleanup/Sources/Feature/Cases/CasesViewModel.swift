@@ -298,24 +298,30 @@ class CasesViewModel: ObservableObject {
             .assign(to: \.incidentMapBounds, on: self)
             .store(in: &subscriptions)
 
-        mapBoundsManager.mapCameraBoundsPublisher
-            .eraseToAnyPublisher()
-            .receive(on: RunLoop.main)
-            .sink(receiveValue: { bounds in
-                var updateBounds = !self.hasDisappeared
-                if self.hasDisappeared {
-                    self.hasDisappeared = false
-                    if self.incidentId != self.incidentOnDisappear {
-                        self.incidentOnDisappear = self.incidentId
-                        updateBounds = true
-                    }
+        Publishers.CombineLatest(
+            mapBoundsManager.mapCameraBoundsPublisher.eraseToAnyPublisher(),
+            qsm.isTableViewSubject.removeDuplicates(),
+        )
+        .filter { (_, isTableView) in
+            !isTableView
+        }
+        .map { $0.0 }
+        .receive(on: RunLoop.main)
+        .sink(receiveValue: { bounds in
+            var updateBounds = !self.hasDisappeared
+            if self.hasDisappeared {
+                self.hasDisappeared = false
+                if self.incidentId != self.incidentOnDisappear {
+                    self.incidentOnDisappear = self.incidentId
+                    updateBounds = true
                 }
+            }
 
-                if updateBounds {
-                    self.mapCameraBounds = bounds
-                }
-            })
-            .store(in: &subscriptions)
+            if updateBounds {
+                self.mapCameraBounds = bounds
+            }
+        })
+        .store(in: &subscriptions)
     }
 
     private func subscribeWorksiteInBounds() {
