@@ -101,13 +101,7 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
             .assign(to: \.syncStage, on: self)
             .store(in: &subscriptions)
 
-        Publishers.CombineLatest(
-            incidentCacheRepository.isSyncingActiveIncident.eraseToAnyPublisher(),
-            $syncStage,
-        )
-        .map { (isSyncingActiveIncident, stage) in
-            isSyncingActiveIncident && stage != .end
-        }
+        incidentCacheRepository.isSyncingActiveIncident.eraseToAnyPublisher()
         .receive(on: RunLoop.main)
         .assign(to: \.isSyncing, on: self)
         .store(in: &subscriptions)

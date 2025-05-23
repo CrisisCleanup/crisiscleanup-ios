@@ -9,6 +9,7 @@ class CasesViewModel: ObservableObject {
     private let incidentSelector: IncidentSelector
     private let incidentsRepository: IncidentsRepository
     private let worksitesRepository: WorksitesRepository
+    private let incidentCacheRepository: IncidentCacheRepository
     private let appPreferences: AppPreferencesDataSource
     private let dataPullReporter: IncidentDataPullReporter
     private let worksiteLocationEditor: WorksiteLocationEditor
@@ -32,7 +33,6 @@ class CasesViewModel: ObservableObject {
 
     @Published private(set) var dataProgress = DataProgressMetrics()
 
-    @Published private(set) var isLoadingIncidents = true
     @Published private(set) var isLoadingData = false
 
     private let qsm: CasesQueryStateManager
@@ -109,6 +109,7 @@ class CasesViewModel: ObservableObject {
         incidentBoundsProvider: IncidentBoundsProvider,
         incidentsRepository: IncidentsRepository,
         worksitesRepository: WorksitesRepository,
+        incidentCacheRepository: IncidentCacheRepository,
         accountDataRepository: AccountDataRepository,
         worksiteChangeRepository: WorksiteChangeRepository,
         organizationsRepository: OrganizationsRepository,
@@ -130,6 +131,7 @@ class CasesViewModel: ObservableObject {
         self.incidentSelector = incidentSelector
         self.incidentsRepository = incidentsRepository
         self.worksitesRepository = worksitesRepository
+        self.incidentCacheRepository = incidentCacheRepository
         self.appPreferences = appPreferences
         self.dataPullReporter = dataPullReporter
         self.worksiteLocationEditor = worksiteLocationEditor
@@ -222,21 +224,11 @@ class CasesViewModel: ObservableObject {
     }
 
     private func subscribeLoading() {
-        let incidentsLoading = incidentsRepository.isLoading
-            .eraseToAnyPublisher()
-            .replay1()
-
-        incidentsLoading
-            .receive(on: RunLoop.main)
-            .assign(to: \.isLoadingIncidents, on: self)
-            .store(in: &subscriptions)
-
-        Publishers.CombineLatest3(
-            incidentsLoading,
-            $dataProgress,
+        Publishers.CombineLatest(
+            incidentCacheRepository.isSyncingActiveIncident.eraseToAnyPublisher(),
             worksitesRepository.isDeterminingWorksitesCount.eraseToAnyPublisher()
         )
-        .map { b0, progress, b2 in b0 || progress.isLoadingPrimary || b2 }
+        .map { b0, b1 in b0 || b1 }
         .receive(on: RunLoop.main)
         .assign(to: \.isLoadingData, on: self)
         .store(in: &subscriptions)
@@ -249,14 +241,13 @@ class CasesViewModel: ObservableObject {
         )
             .map { b0, b1 in b0 || b1 }
             .eraseToAnyPublisher()
-        Publishers.CombineLatest4(
-            incidentsLoading,
+        Publishers.CombineLatest3(
             mapBoundsManager.isDeterminingBoundsPublisher.eraseToAnyPublisher(),
             isRenderingMapOverlay,
             isDelayingRegionBug
         )
             .receive(on: RunLoop.main)
-            .map { b0, b1, b2, b3 in b0 || b1 || b2 || b3 }
+            .map { b0, b1, b2 in b0 || b1 || b2 }
             .assign(to: \.isMapBusy, on: self)
             .store(in: &subscriptions)
 
@@ -495,8 +486,8 @@ class CasesViewModel: ObservableObject {
             $casesCountMapText,
             $isLoadingData
         )
-        .map { countText, loading in
-            countText.isNotBlank || loading
+        .map { countText, isLoading in
+            countText.isNotBlank || isLoading
         }
         .receive(on: RunLoop.main)
         .assign(to: \.hasCasesCountProgress, on: self)

@@ -25,7 +25,7 @@ struct CircleBoundMoveMapView : UIViewRepresentable {
             let annotation = makeCrisisCleanupPinAnnotation(
                 targetCoordinates,
                 imageName: "cc_map_pin",
-                id: ""
+                id: "cc-map-pin"
             )
             map.addAnnotation(annotation)
         }

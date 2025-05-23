@@ -46,7 +46,6 @@ struct CasesLayoutView: View {
     }
 
     var body: some View {
-        let isLoadingIncidents = viewModel.isLoadingIncidents
         let hasNoIncidents = viewModel.incidentsData.incidents.isEmpty
 
         ZStack {
@@ -54,7 +53,6 @@ struct CasesLayoutView: View {
                 CasesTableView(
                     phoneCallNumbers: $phoneCallNumbers,
                     incidentSelectViewBuilder: incidentSelectViewBuilder,
-                    isLoadingIncidents: isLoadingIncidents,
                     hasNoIncidents: hasNoIncidents
                 )
             } else {
@@ -234,6 +232,9 @@ private struct MapViewTopActions: View {
             withAnimation(.easeIn(duration: appTheme.visibleSlowAnimationDuration)) {
                 showCountProgress = b
             }
+        }
+        .onAppear {
+            showCountProgress = viewModel.hasCasesCountProgress
         }
     }
 }

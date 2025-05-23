@@ -3,6 +3,7 @@ import CoreLocation
 import Foundation
 
 public protocol IncidentCacheRepository {
+    var isSyncingData: any Publisher<Bool, Never> { get }
     var isSyncingActiveIncident: any Publisher<Bool, Never> { get }
     var cacheStage: any Publisher<IncidentCacheStage, Never> { get }
 
@@ -83,6 +84,8 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
     private let syncPlanLock = NSRecursiveLock()
     private var submittedSyncPlan = EmptySyncPlan
 
+    var isSyncingData: any Publisher<Bool, Never>
+
     private let syncingIncidentId = CurrentValueSubject<Int64, Never>(EmptyIncident.id)
     var isSyncingActiveIncident: any Publisher<Bool, Never>
 
@@ -132,12 +135,17 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         incidentDataPullStats = incidentDataPullStatsSubject
         onIncidentDataPullComplete = onIncidentDataPullCompleteSubject
 
-        isSyncingActiveIncident = Publishers.CombineLatest(
+        isSyncingData = cacheStageSubject.map {
+            $0 != .start && $0 != .end
+        }
+
+        isSyncingActiveIncident = Publishers.CombineLatest3(
             incidentSelector.incidentId.eraseToAnyPublisher(),
-            syncingIncidentId
+            syncingIncidentId,
+            isSyncingData.eraseToAnyPublisher(),
         )
-        .map { (incidentId, syncingId) in
-            incidentId == syncingId
+        .map { (incidentId, syncingId, isSyncing) in
+            incidentId == syncingId && isSyncing
         }
 
         cacheStage = cacheStageSubject

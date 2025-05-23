@@ -15,7 +15,6 @@ struct MenuView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             TopBar(
-                viewModel: viewModel,
                 incidentSelectViewBuilder: incidentSelectViewBuilder,
                 openAuthScreen: openAuthScreen,
             )
@@ -137,13 +136,15 @@ struct MenuView: View {
             }
             .presentationDetents([.fraction(0.33), .medium])
         }
+        .environmentObject(viewModel)
     }
 }
 
 private struct TopBar: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    @ObservedObject var viewModel: MenuViewModel
+    @EnvironmentObject var viewModel: MenuViewModel
+
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
     let openAuthScreen: () -> Void
 
@@ -162,7 +163,7 @@ private struct TopBar: View {
                     incident: selectedIncident,
                     showDropdown: !selectedIncident.isEmptyIncident,
                     text: title,
-                    isLoading: viewModel.showHeaderLoading,
+                    isLoading: viewModel.isLoadingIncidentData,
                     isSpaceConstrained: true
                 )
             }

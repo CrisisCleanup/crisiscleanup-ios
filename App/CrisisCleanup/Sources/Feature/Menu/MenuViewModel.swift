@@ -25,8 +25,7 @@ class MenuViewModel: ObservableObject {
     let privacyPolicyUrl: URL
     let gettingStartedVideoUrl: URL
 
-    @Published private(set) var isLoadingIncidents = true
-    @Published private(set) var showHeaderLoading = false
+    @Published private(set) var isLoadingIncidentData = true
 
     @Published private(set) var profilePicture: AccountProfilePicture? = nil
 
@@ -126,21 +125,11 @@ class MenuViewModel: ObservableObject {
     }
 
     private func subscribeLoading() {
-        let incidentsLoading = incidentsRepository.isLoading.eraseToAnyPublisher().share()
-
-        incidentsLoading
+        incidentCacheRepository.isSyncingActiveIncident.eraseToAnyPublisher()
             .receive(on: RunLoop.main)
-            .assign(to: \.isLoadingIncidents, on: self)
+            .assign(to: \.isLoadingIncidentData, on: self)
             .store(in: &subscriptions)
 
-        Publishers.CombineLatest(
-            incidentsLoading,
-            worksitesRepository.isLoading.eraseToAnyPublisher()
-        )
-        .map { b0, b1 in b0 || b1 }
-        .receive(on: RunLoop.main)
-        .assign(to: \.showHeaderLoading, on: self)
-        .store(in: &subscriptions)
     }
 
     private func subscribeIncidentsData() {
