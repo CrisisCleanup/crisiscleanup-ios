@@ -161,7 +161,8 @@ private struct SyncInfoActionView: View {
 
         HStack(alignment: .center, spacing: appTheme.gridItemSpacing) {
             let syncStageMessage = switch (viewModel.syncStage) {
-            case .start: t.t("appCache.ready_to_sync")
+            case .inactive: t.t("appCache.ready_to_sync")
+            case .start: t.t("~~Starting sync...")
             case .incidents: t.t("appCache.syncing_incidents")
             case .worksitesBounded: t.t("appCache.syncing_cases_in_designated_area")
             case .worksitesPreload: t.t("appCache.syncing_nearby_cases")

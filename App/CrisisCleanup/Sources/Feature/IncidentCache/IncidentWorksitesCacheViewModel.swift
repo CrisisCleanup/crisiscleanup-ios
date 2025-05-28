@@ -15,7 +15,7 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
     @Published private(set) var incident = EmptyIncident
 
     @Published private(set) var isSyncing = false
-    @Published private(set) var syncStage = IncidentCacheStage.start
+    @Published private(set) var syncStage = IncidentCacheStage.inactive
     @Published private(set) var lastSynced: String? = nil
 
     private let isUserActed = ManagedAtomic(false)

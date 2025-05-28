@@ -118,9 +118,7 @@ class AppSyncer: SyncPuller, SyncPusher {
             }
 
             pullTaskLock.withLock {
-                if cancelOngoing {
-                    pullTask?.cancel()
-                }
+                stopPullWorksites()
 
                 pullTask = syncTask
             }

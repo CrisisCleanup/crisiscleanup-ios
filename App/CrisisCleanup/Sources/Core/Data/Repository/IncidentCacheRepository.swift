@@ -83,10 +83,13 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
     private let syncPlanLock = NSRecursiveLock()
     private var submittedSyncPlan = EmptySyncPlan
 
+    private let planSubmissionCountSubject = CurrentValueSubject<Int, Never>(0)
+    private let planSubmissionCounter = AtomicInt()
+
     private let syncingIncidentId = CurrentValueSubject<Int64, Never>(EmptyIncident.id)
     var isSyncingActiveIncident: any Publisher<Bool, Never>
 
-    private let cacheStageSubject = CurrentValueSubject<IncidentCacheStage, Never>(.start)
+    private let cacheStageSubject = CurrentValueSubject<IncidentCacheStage, Never>(.inactive)
     var cacheStage: any Publisher<IncidentCacheStage, Never>
 
     var cachePreferences: any Publisher<IncidentWorksitesCachePreferences, Never>
@@ -144,14 +147,23 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                 syncingId == EmptyIncident.id && cacheStage == .incidents
             }
 
-        isSyncingActiveIncident = Publishers.CombineLatest4(
+        let isSyncingMatchingIncident = Publishers.CombineLatest3(
             isSyncingData.eraseToAnyPublisher(),
             incidentSelector.incidentId.eraseToAnyPublisher(),
             syncingIncidentId,
+        )
+            .map { (isSyncing, incidentId, syncingId) in
+                isSyncing && incidentId == syncingId
+            }
+        isSyncingActiveIncident = Publishers.CombineLatest3(
+            isSyncingMatchingIncident,
+            planSubmissionCountSubject,
             isSyncingInitialIncidents,
         )
-        .map { (isSyncing, incidentId, syncingId, initialIncidents) in
-            isSyncing && incidentId == syncingId || initialIncidents
+        .map { (isSyncingMatching, submissionCount, isSyncingInitial) in
+            isSyncingMatching ||
+            submissionCount > 0 ||
+            isSyncingInitial
         }
 
         cacheStage = cacheStageSubject
@@ -176,61 +188,69 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         restartCacheCheckpoint:
         Bool, planTimeout: TimeInterval
     ) async -> Bool {
-        let incidentIds: Set<Int64>
-        let selectedIncidentId: Int64
         do {
-            let incidents = await getIncidents()
-            incidentIds = Set(incidents.map { $0.id })
+            planSubmissionCountSubject.value = planSubmissionCounter.incrementAndGet()
 
-            let preferencesPublisher = appPreferences.preferences.eraseToAnyPublisher()
-            selectedIncidentId = try await preferencesPublisher.asyncFirst().selectedIncidentId
-        } catch {
-            appLogger.logError(error)
-            return false
-        }
-
-        let isIncidentCached = incidentIds.contains(selectedIncidentId)
-
-        if !incidentIds.isEmpty,
-           !isIncidentCached,
-           selectedIncidentId == EmptyIncident.id,
-           !forcePullIncidents
-        {
-            return false
-        }
-
-        let proposedPlan = IncidentDataSyncPlan(
-            incidentId: selectedIncidentId,
-            syncIncidents: forcePullIncidents || !isIncidentCached,
-            syncSelectedIncident: cacheSelectedIncident || !isIncidentCached,
-            syncActiveIncidentWorksites: cacheActiveIncidentWorksites,
-            syncWorksitesAdditional: cacheWorksitesAdditional,
-            restartCache: restartCacheCheckpoint
-        )
-
-        return syncPlanLock.withLock {
-            var isRedundant = false
-
-            if !overwriteExisting,
-               !proposedPlan.syncIncidents,
-               !restartCacheCheckpoint {
-                with(submittedSyncPlan) { submitted in
-                    if selectedIncidentId == submitted.incidentId,
-                       submitted.timestamp.distance(to: proposedPlan.timestamp) < planTimeout,
-                       proposedPlan.syncSelectedIncidentLevel <= submitted.syncSelectedIncidentLevel,
-                       proposedPlan.syncWorksitesLevel <= submitted.syncWorksitesLevel {
-                        syncLogger.log("Skipping redudnant sync plan for \(selectedIncidentId)")
-                        isRedundant = true
-                    }
-                }
+            defer {
+                planSubmissionCountSubject.value = planSubmissionCounter.decrementAndGet()
             }
 
-            if isRedundant {
+            let incidentIds: Set<Int64>
+            let selectedIncidentId: Int64
+            do {
+                let incidents = await getIncidents()
+                incidentIds = Set(incidents.map { $0.id })
+
+                let preferencesPublisher = appPreferences.preferences.eraseToAnyPublisher()
+                selectedIncidentId = try await preferencesPublisher.asyncFirst().selectedIncidentId
+            } catch {
+                appLogger.logError(error)
                 return false
-            } else {
-                submittedSyncPlan = proposedPlan
-                syncLogger.log("Setting sync plan for \(selectedIncidentId)")
-                return true
+            }
+
+            let isIncidentCached = incidentIds.contains(selectedIncidentId)
+
+            if !incidentIds.isEmpty,
+               !isIncidentCached,
+               selectedIncidentId == EmptyIncident.id,
+               !forcePullIncidents
+            {
+                return false
+            }
+
+            let proposedPlan = IncidentDataSyncPlan(
+                incidentId: selectedIncidentId,
+                syncIncidents: forcePullIncidents || !isIncidentCached,
+                syncSelectedIncident: cacheSelectedIncident || !isIncidentCached,
+                syncActiveIncidentWorksites: cacheActiveIncidentWorksites,
+                syncWorksitesAdditional: cacheWorksitesAdditional,
+                restartCache: restartCacheCheckpoint
+            )
+
+            return syncPlanLock.withLock {
+                var isRedundant = false
+
+                if !overwriteExisting,
+                   !proposedPlan.syncIncidents,
+                   !restartCacheCheckpoint {
+                    with(submittedSyncPlan) { submitted in
+                        if selectedIncidentId == submitted.incidentId,
+                           submitted.timestamp.distance(to: proposedPlan.timestamp) < planTimeout,
+                           proposedPlan.syncSelectedIncidentLevel <= submitted.syncSelectedIncidentLevel,
+                           proposedPlan.syncWorksitesLevel <= submitted.syncWorksitesLevel {
+                            syncLogger.log("Skipping redundant sync plan for \(selectedIncidentId)")
+                            isRedundant = true
+                        }
+                    }
+                }
+
+                if isRedundant {
+                    return false
+                } else {
+                    submittedSyncPlan = proposedPlan
+                    syncLogger.log("Setting sync plan for \(selectedIncidentId)")
+                    return true
+                }
             }
         }
     }
@@ -247,7 +267,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         }
 
         let indentation = switch stage {
-        case .start: ""
+        case .inactive, .start: ""
         default: "  "
         }
         let stageDetails = "\(stage) \(details)".trim()
@@ -286,16 +306,17 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
 
     func sync() async throws -> SyncResult {
         var syncPlanTemp = EmptySyncPlan
+        var incidentIdTemp = EmptyIncident.id
         syncPlanLock.withLock {
             syncPlanTemp = submittedSyncPlan
+            incidentIdTemp = syncPlanTemp.incidentId
+            syncingIncidentId.value = incidentIdTemp
+            logStage(incidentIdTemp, .start)
         }
+
         let syncPlan = syncPlanTemp
-
-        let incidentId = syncPlan.incidentId
-        syncingIncidentId.value = incidentId
+        let incidentId = incidentIdTemp
         var incidentName = ""
-
-        logStage(incidentId, .start)
 
         var partialSyncReasons = [String]()
 
@@ -314,12 +335,12 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                     if submittedSyncPlan == syncPlan {
                         submittedSyncPlan = EmptySyncPlan
                         cacheStageSubject.value = .end
-                    }
-                }
 
-                if syncingIncidentId.value == incidentId {
-                    syncingIncidentId.value = EmptyIncident.id
-                    logStage(incidentId, .end)
+                        if syncingIncidentId.value == incidentId {
+                            syncingIncidentId.value = EmptyIncident.id
+                            logStage(incidentId, .end)
+                        }
+                    }
                 }
 
                 syncLogger.flush()
@@ -1276,7 +1297,8 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
 }
 
 public enum IncidentCacheStage: String, Identifiable, CaseIterable {
-    case start,
+    case inactive,
+         start,
          incidents,
          worksitesBounded,
          worksitesPreload,
@@ -1290,7 +1312,7 @@ public enum IncidentCacheStage: String, Identifiable, CaseIterable {
 }
 
 private let staticCacheStages = Set([
-    IncidentCacheStage.start,
+    IncidentCacheStage.inactive,
     .end,
 ])
 
