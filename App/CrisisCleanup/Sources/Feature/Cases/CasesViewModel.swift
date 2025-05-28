@@ -322,6 +322,13 @@ class CasesViewModel: ObservableObject {
             }
         })
         .store(in: &subscriptions)
+
+        $isTableView.removeDuplicates()
+            .receive(on: RunLoop.main)
+            .sink { _ in
+                self.mapBoundsManager.restoreBounds()
+            }
+            .store(in: &subscriptions)
     }
 
     private func subscribeWorksiteInBounds() {

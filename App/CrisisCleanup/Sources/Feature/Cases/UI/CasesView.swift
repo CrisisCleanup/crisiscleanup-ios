@@ -81,6 +81,7 @@ struct CasesLayoutView: View {
                 }
                 .onChange(of: viewModel.isMyLocationEnabled) { enabled in
                     if enabled {
+                        // TODO: Does this center once or follow until disengaged?
                         map.userTrackingMode = .follow
                     }
                 }
