@@ -13,10 +13,10 @@ class AppSyncer: SyncPuller, SyncPusher {
     private let appLogger: AppLogger
     private let syncLogger: SyncLogger
 
+    private let incidentDataSyncNotifier: IncidentDataSyncNotifier
+
     private let accountData: AnyPublisher<AccountData, Never>
     private let appPreferences: AnyPublisher<AppPreferences, Never>
-
-    // TODO: IncidentDataSyncNotifier (uses IncidentDataPullReporter)
 
     private let pullTaskLock = NSRecursiveLock()
     private var pullTask: Task<SyncResult, Never>? = nil
@@ -33,6 +33,8 @@ class AppSyncer: SyncPuller, SyncPusher {
         worksiteChangeRepository: WorksiteChangeRepository,
         appPreferencesDataSource: AppPreferencesDataSource,
         localImageRepository: LocalImageRepository,
+        incidentDataPullReporter: IncidentDataPullReporter,
+        systemNotifier: SystemNotifier,
         appLoggerFactory: AppLoggerFactory,
         syncLoggerFactory: SyncLoggerFactory,
     ) {
@@ -42,8 +44,15 @@ class AppSyncer: SyncPuller, SyncPusher {
         self.statusRepository = statusRepository
         self.worksiteChangeRepository = worksiteChangeRepository
         self.localImageRepository = localImageRepository
-        appLogger = appLoggerFactory.getLogger("sync")
+        let logger = appLoggerFactory.getLogger("sync")
+        appLogger = logger
         syncLogger = syncLoggerFactory.getLogger("app-syncer")
+
+        incidentDataSyncNotifier = IncidentDataSyncNotifier(
+            systemNotifier: systemNotifier,
+            incidentDataPullReporter: incidentDataPullReporter,
+            logger: logger,
+        )
 
         accountData = accountDataRepository.accountData.eraseToAnyPublisher()
         appPreferences = appPreferencesDataSource.preferences.eraseToAnyPublisher()

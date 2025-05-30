@@ -21,6 +21,7 @@ class MenuComponent: Component<AppDependency>, MenuViewBuilder {
         appPreferences: dependency.appPreferences,
         accountEventBus: dependency.accountEventBus,
         locationManager: dependency.locationManager,
+        systemNotifier: dependency.systemNotifier,
         appEnv: dependency.appEnv,
         loggerFactory: dependency.loggerFactory
     )

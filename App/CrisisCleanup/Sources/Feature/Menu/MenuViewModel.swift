@@ -15,6 +15,7 @@ class MenuViewModel: ObservableObject {
     private let appPreferences: AppPreferencesDataSource
     private let accountEventBus: AccountEventBus
     private let locationManager: LocationManager
+    private let systemNotifier: SystemNotifier
     private let appEnv: AppEnv
     private let logger: AppLogger
 
@@ -37,10 +38,12 @@ class MenuViewModel: ObservableObject {
 
     @Published private(set) var shareLocationWithOrg = false
     @Published var showExplainLocationPermission = false
-    @Published private(set) var hasLocationAccess: Bool = false
+    @Published private(set) var hasLocationAccess = false
 
     @Published private(set) var incidentCachePreferences = InitialIncidentWorksitesCachePreferences
     @Published private(set) var incidentDataCacheMetrics = IncidentDataCacheMetrics()
+
+    @Published private(set) var hasNotificationAccess = false
 
     var versionText: String {
         let version = appVersionProvider.version
@@ -68,6 +71,7 @@ class MenuViewModel: ObservableObject {
         appPreferences: AppPreferencesDataSource,
         accountEventBus: AccountEventBus,
         locationManager: LocationManager,
+        systemNotifier: SystemNotifier,
         appEnv: AppEnv,
         loggerFactory: AppLoggerFactory
     ) {
@@ -83,6 +87,7 @@ class MenuViewModel: ObservableObject {
         self.appPreferences = appPreferences
         self.accountEventBus = accountEventBus
         self.locationManager = locationManager
+        self.systemNotifier = systemNotifier
         self.appEnv = appEnv
         logger = loggerFactory.getLogger("menu")
 
@@ -118,6 +123,7 @@ class MenuViewModel: ObservableObject {
         subscribeAppPreferences()
         subscribeLocationStatus()
         subscribeIncidentDataCacheState()
+        subscribeNotificationStatus()
     }
 
     func onViewDisappear() {
@@ -221,6 +227,16 @@ class MenuViewModel: ObservableObject {
         .receive(on: RunLoop.main)
         .assign(to: \.incidentDataCacheMetrics, on: self)
         .store(in: &subscriptions)
+    }
+
+    private func subscribeNotificationStatus() {
+        // Not observable
+        Task {
+            let hasAccess = await self.systemNotifier.isAuthorized()
+            Task { @MainActor in
+                self.hasNotificationAccess = hasAccess
+            }
+        }
     }
 
     func showGettingStartedVideo(_ show: Bool) {
