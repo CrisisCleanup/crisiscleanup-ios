@@ -11,4 +11,5 @@ extension Double {
 
 extension Double {
     var kmToMiles: Double { self * 0.621371 }
+    var milesToMeters: Double { self * 1609.344 }
 }

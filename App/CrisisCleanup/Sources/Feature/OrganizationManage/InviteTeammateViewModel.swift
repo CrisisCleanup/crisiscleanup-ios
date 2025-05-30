@@ -467,7 +467,7 @@ class InviteTeammateViewModel: ObservableObject {
     }
 
     func refreshIncidents() {
-        syncPuller.appPull(true, cancelOngoing: false)
+        syncPuller.appPullIncidents()
     }
 
     func onSelectOrganization(_ organization: OrganizationIdName) {

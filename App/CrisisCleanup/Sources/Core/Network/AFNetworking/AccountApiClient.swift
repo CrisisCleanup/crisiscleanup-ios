@@ -15,19 +15,7 @@ class AccountApiClient : CrisisCleanupAccountApi {
     ) {
         dateFormatter = ISO8601DateFormatter()
 
-        // TODO: Test coverage. Including locale and time zone.
-        let isoFormat = with(DateFormatter()) {
-            $0.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-        }
-        let millisecondsFormat = with(DateFormatter()) {
-            $0.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
-        }
-        let secondsFormat = with(DateFormatter()) {
-            $0.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
-        }
-        let jsonDecoder = JsonDecoderFactory().decoder(
-            dateDecodingStrategy: .anyFormatter(in: [isoFormat, millisecondsFormat, secondsFormat])
-        )
+        let jsonDecoder = JsonDecoderFactory().multiDateDecoder()
 
         networkClient = AFNetworkingClient(
             appEnv,

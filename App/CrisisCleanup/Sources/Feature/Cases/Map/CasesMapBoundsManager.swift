@@ -1,11 +1,12 @@
 import Combine
+import CombineExt
 import Foundation
 import MapKit
 
 internal class CasesMapBoundsManager {
     private let incidentSelector: IncidentSelector
     private let incidentBoundsProvider: IncidentBoundsProvider
-    private let preferencesDataSource: AppPreferencesDataStore
+    private let preferencesDataSource: AppPreferencesDataSource
 
     private var mapBoundsCache = MapViewCameraBoundsDefault.bounds
 
@@ -32,7 +33,7 @@ internal class CasesMapBoundsManager {
     init(
         _ incidentSelector: IncidentSelector,
         _ incidentBoundsProvider: IncidentBoundsProvider,
-        _ preferencesDataSource: AppPreferencesDataStore
+        _ preferencesDataSource: AppPreferencesDataSource
     ) {
         self.incidentSelector = incidentSelector
         self.incidentBoundsProvider = incidentBoundsProvider
@@ -59,10 +60,9 @@ internal class CasesMapBoundsManager {
         )
 
         incidentBoundsPublisher = incidentPublisher
-            .map { incident in
-                return incidentBoundsProvider.mapIncidentBounds(incident)
+            .flatMapLatest { incident in
+                incidentBoundsProvider.mapIncidentBounds(incident)
             }
-            .switchToLatest()
             .map { incidentBounds in
                 return if incidentBounds.locations.isEmpty {
                     zeroBounds
@@ -71,6 +71,7 @@ internal class CasesMapBoundsManager {
                 }
             }
             .removeDuplicates()
+            .replay1()
 
         incidentIdPublisher
             .receive(on: RunLoop.main)

@@ -3,264 +3,139 @@ import BackgroundTasks
 import Combine
 import UIKit
 
-public protocol SyncPuller {
-    func appPull(_ force: Bool, cancelOngoing: Bool)
-    func stopPull()
-
-    func pullUnauthenticatedData()
-
-    func pullIncidents() async
-
-    func appPullIncident(_ id: Int64)
-    func stopPullIncident()
-
-    func appPullIncidentWorksitesDelta(_ forceRefreshAll: Bool)
-}
-
-extension SyncPuller {
-    func appPull() {
-        appPull(false, cancelOngoing: false)
-    }
-}
-
-public protocol SyncPusher {
-    func appPushWorksite(_ worksiteId: Int64, _ scheduleMediaSync: Bool)
-
-    func syncPushWorksitesAsync() async
-
-    func scheduleSyncMedia()
-
-    func scheduleSyncWorksites()
-}
-
-extension SyncPusher {
-    func appPushWorksite(_ worksiteId: Int64) {
-        appPushWorksite(worksiteId, false)
-    }
-}
-
 class AppSyncer: SyncPuller, SyncPusher {
-    private let pullLanguageGuard = ManagedAtomic(false)
-
-    private let accountData: AnyPublisher<AccountData, Never>
-    private let appPreferences: AnyPublisher<AppPreferences, Never>
-
     private let accountDataRepository: AccountDataRepository
-    private let accountDataRefresher: AccountDataRefresher
-    private let incidentsRepository: IncidentsRepository
+    private let incidentCacheRepository: IncidentCacheRepository
     private let languageRepository: LanguageTranslationsRepository
     private let statusRepository: WorkTypeStatusRepository
-    private let worksitesRepository: WorksitesRepository
     private let worksiteChangeRepository: WorksiteChangeRepository
     private let localImageRepository: LocalImageRepository
     private let appLogger: AppLogger
     private let syncLogger: SyncLogger
-    private let accountEventBus: AccountEventBus
 
-    private let pullLock = NSRecursiveLock()
-    private var pullTask: Task<Void, Error>? = nil
+    private let accountData: AnyPublisher<AccountData, Never>
+    private let appPreferences: AnyPublisher<AppPreferences, Never>
 
-    private let pullIncidentLock = NSRecursiveLock()
-    private var pullIncidentTask: Task<Void, Error>? = nil
+    // TODO: IncidentDataSyncNotifier (uses IncidentDataPullReporter)
 
-    private let pullDeltaLock = NSRecursiveLock()
-    private var pullDeltaTask: Task<Void, Error>? = nil
+    private let pullTaskLock = NSRecursiveLock()
+    private var pullTask: Task<SyncResult, Never>? = nil
+
+    private let pullLanguageGuard = ManagedAtomic(false)
 
     private var disposables = Set<AnyCancellable>()
 
     init(
         accountDataRepository: AccountDataRepository,
-        accountDataRefresher: AccountDataRefresher,
-        incidentsRepository: IncidentsRepository,
+        incidentCacheRepository: IncidentCacheRepository,
         languageRepository: LanguageTranslationsRepository,
         statusRepository: WorkTypeStatusRepository,
-        worksitesRepository: WorksitesRepository,
         worksiteChangeRepository: WorksiteChangeRepository,
-        appPreferencesDataStore: AppPreferencesDataStore,
+        appPreferencesDataSource: AppPreferencesDataSource,
         localImageRepository: LocalImageRepository,
         appLoggerFactory: AppLoggerFactory,
         syncLoggerFactory: SyncLoggerFactory,
-        accountEventBus: AccountEventBus
     ) {
         self.accountDataRepository = accountDataRepository
-        self.accountDataRefresher = accountDataRefresher
-        self.incidentsRepository = incidentsRepository
+        self.incidentCacheRepository = incidentCacheRepository
         self.languageRepository = languageRepository
         self.statusRepository = statusRepository
-        self.worksitesRepository = worksitesRepository
         self.worksiteChangeRepository = worksiteChangeRepository
         self.localImageRepository = localImageRepository
         appLogger = appLoggerFactory.getLogger("sync")
         syncLogger = syncLoggerFactory.getLogger("app-syncer")
-        self.accountEventBus = accountEventBus
 
         accountData = accountDataRepository.accountData.eraseToAnyPublisher()
-        appPreferences = appPreferencesDataStore.preferences.eraseToAnyPublisher()
+        appPreferences = appPreferencesDataSource.preferences.eraseToAnyPublisher()
     }
 
-    private func validateAccountTokens() async throws -> Bool {
+    private func validateAccountTokens() async throws -> SyncResult? {
         await accountDataRepository.updateAccountTokens()
-        return try await accountData.asyncFirst().areTokensValid
-    }
-
-    private func getSyncPlan() async throws -> (Bool, Int64) {
-        let preferences = try await appPreferences.asyncFirst()
-        let recentIncidents = try incidentsRepository.getIncidents(Date.now.addingTimeInterval(-365.days))
-        var pullIncidents = recentIncidents.isEmpty
-        if !pullIncidents {
-            pullIncidents = preferences.syncAttempt.shouldSyncPassively()
+        let hasValidTokens = try await accountData.asyncFirst().areTokensValid
+        if !hasValidTokens {
+            return .invalidAccountTokens
         }
 
-        var pullWorksitesIncidentId = Int64(0)
-        let incidentId = preferences.selectedIncidentId
-        if incidentId > 0 {
-            if try incidentsRepository.getIncident(incidentId) != nil {
-                let syncStats = try worksitesRepository.getWorksiteSyncStats(incidentId)
-                if syncStats?.shouldSync != false {
-                    pullWorksitesIncidentId = incidentId
-                }
-            }
+        return nil
+    }
+
+    func appPullIncidentData(
+        cancelOngoing: Bool,
+        forcePullIncidents: Bool,
+        cacheSelectedIncident: Bool,
+        cacheActiveIncidentWorksites: Bool,
+        cacheFullWorksites: Bool,
+        restartCacheCheckpoint: Bool
+    ) {
+        Task {
+            await syncPullIncidentData(
+                cancelOngoing: cancelOngoing,
+                forcePullIncidents: forcePullIncidents,
+                cacheSelectedIncident: cacheSelectedIncident,
+                cacheActiveIncidentWorksites: cacheActiveIncidentWorksites,
+                cacheFullWorksites: cacheFullWorksites,
+                restartCacheCheckpoint: restartCacheCheckpoint
+            )
         }
-
-        return (pullIncidents, pullWorksitesIncidentId)
     }
 
-    private func internalPullIncidents() async throws {
-        await accountDataRefresher.updateApprovedIncidents(true)
-        try await self.incidentsRepository.pullIncidents()
-    }
-
-    func appPull(_ force: Bool, cancelOngoing: Bool) {
-        pullLock.withLock {
-            if cancelOngoing {
-                pullTask?.cancel()
+    func syncPullIncidentData(
+        cancelOngoing: Bool,
+        forcePullIncidents: Bool,
+        cacheSelectedIncident: Bool,
+        cacheActiveIncidentWorksites: Bool,
+        cacheFullWorksites: Bool,
+        restartCacheCheckpoint: Bool
+    ) async -> SyncResult {
+        do {
+            if let invalidTokens = try await validateAccountTokens() {
+                return invalidTokens
             }
 
-            pullTask = Task {
+            try Task.checkCancellation()
+
+            let isPlanSubmitted = await incidentCacheRepository.submitPlan(
+                overwriteExisting: cancelOngoing,
+                forcePullIncidents: forcePullIncidents,
+                cacheSelectedIncident: cacheSelectedIncident,
+                cacheActiveIncidentWorksites: cacheActiveIncidentWorksites,
+                cacheWorksitesAdditional: cacheFullWorksites,
+                restartCacheCheckpoint: restartCacheCheckpoint
+            )
+            if !isPlanSubmitted {
+                return .notAttempted(reason: "Sync is redundant or unnecessary")
+            }
+
+            let syncTask = Task {
                 do {
-                    if try await !validateAccountTokens() {
-                        return
-                    }
-
-                    try Task.checkCancellation()
-
-                    var (pullIncidents, pullWorksitesIncidentId) = try await getSyncPlan()
-                    if force {
-                        pullIncidents = true
-                    }
-                    if !pullIncidents && pullWorksitesIncidentId <= 0 {
-                        return
-                    }
-
-                    try Task.checkCancellation()
-
-                    if pullIncidents {
-                        self.syncLogger.log("Pulling incidents")
-                        try await internalPullIncidents()
-                        self.syncLogger.log("Incidents pulled")
-                    }
-
-                    try Task.checkCancellation()
-
-                    // TODO: Prevent multiple incidents from refreshing concurrently.
-                    if pullWorksitesIncidentId > 0 {
-                        self.syncLogger.log("Refreshing incident \(pullWorksitesIncidentId) worksites")
-                        try await self.worksitesRepository.refreshWorksites(pullWorksitesIncidentId)
-                        self.syncLogger.log("Incident \(pullWorksitesIncidentId) worksites refreshed")
-                    }
+                    // TODO: Notify sync
+                    // TODO: Manage background syncing
+                    return try await incidentCacheRepository.sync()
                 } catch {
                     appLogger.logError(error)
-                    // TODO: Handle proper
-                    print(error)
+                    return SyncResult.error(message: error.localizedDescription)
                 }
             }
-        }
-    }
 
-    func stopPull() {
-        pullLock.withLock {
-            pullTask?.cancel()
-        }
-    }
+            pullTaskLock.withLock {
+                stopPullWorksites()
 
-    func pullIncidents() async {
-        do {
-            try await internalPullIncidents()
+                pullTask = syncTask
+            }
+
+            return await syncTask.result.get()
         } catch {
             appLogger.logError(error)
+
+            // TODO: Take additional action as necessary
+
+            return SyncResult.error(message: error.localizedDescription)
         }
     }
 
-    func appPullIncident(_ id: Int64) {
-        if id == EmptyIncident.id {
-            return
-        }
-
-        pullIncidentLock.withLock {
-            pullIncidentTask?.cancel()
-
-            pullIncidentTask = Task {
-                do {
-                    // TODO: Wait for account token and skip if token is invalid
-                    try await withThrowingTaskGroup(of: Void.self) { group -> Void in
-                        group.addTask {
-                            try await self.incidentsRepository.pullIncident(id)
-                            await self.incidentsRepository.pullIncidentOrganizations(id)
-                        }
-                        try await group.waitForAll()
-                    }
-                } catch {
-                    // TODO: Handle proper
-                    print(error)
-                }
-            }
-        }
-    }
-
-    func stopPullIncident() {
-        pullIncidentLock.withLock {
-            pullIncidentTask?.cancel()
-        }
-    }
-
-    func appPullIncidentWorksitesDelta(_ forceRefreshAll: Bool) {
-        pullDeltaLock.withLock {
-            pullDeltaTask?.cancel()
-            pullDeltaTask = Task {
-                do {
-                    let incidentId = try await appPreferences.asyncFirst().selectedIncidentId
-                    if let syncStats = try worksitesRepository.getWorksiteSyncStats(incidentId),
-                       syncStats.isDeltaPull {
-                        syncLogger.log("App pull \(incidentId) delta")
-                        do {
-                            defer {
-                                syncLogger.log("App pull \(incidentId) delta end")
-                                syncLogger.flush()
-                            }
-
-                            try await worksitesRepository.refreshWorksites(
-                                incidentId,
-                                forceQueryDeltas: !forceRefreshAll,
-                                forceRefreshAll: forceRefreshAll
-                            )
-                        } catch {
-                            if !(error is CancellationError) {
-                                syncLogger.log("\(incidentId) delta fail \(error)")
-                            }
-                        }
-                    }
-                } catch {
-                    // TODO: Handle proper
-                    print(error)
-                }
-            }
-        }
-    }
-
-    private func pullSelectedIncidentWorksites() -> Task<Void, Error> {
-        return Task {
-            // TODO: Do
-            try Task.checkCancellation()
+    func stopPullWorksites() {
+        pullTaskLock.withLock {
+            pullTask?.cancel()
         }
     }
 
@@ -272,8 +147,7 @@ class AppSyncer: SyncPuller, SyncPusher {
                 do {
                     try await group.waitForAll()
                 } catch {
-                    // TODO: Handle proper
-                    print(error)
+                    appLogger.logError(error)
                 }
             }
         }
@@ -297,22 +171,23 @@ class AppSyncer: SyncPuller, SyncPusher {
         // TODO: Run sync in background task (if not running to completion)
         Task {
             do {
-                if try await !validateAccountTokens() {
+                if let _ = try await self.validateAccountTokens() {
                     return
                 }
 
                 try Task.checkCancellation()
 
-                let isSyncAttempted = await worksiteChangeRepository.trySyncWorksite(worksiteId)
+                let isSyncAttempted = await self.worksiteChangeRepository.trySyncWorksite(worksiteId)
                 if isSyncAttempted {
-                    await worksiteChangeRepository.syncUnattemptedWorksite(worksiteId)
+                    await self.worksiteChangeRepository.syncUnattemptedWorksite(worksiteId)
 
                     if scheduleMediaSync {
-                        scheduleSyncMedia()
+                        self.scheduleSyncMedia()
                     }
                 }
 
             } catch {
+                self.appLogger.logError(error)
                 // TODO: Handle proper
                 print(error)
             }
@@ -322,7 +197,7 @@ class AppSyncer: SyncPuller, SyncPusher {
     func syncPushWorksitesAsync() async {
         Task {
             do {
-                if try await !validateAccountTokens() {
+                if let _ = try await validateAccountTokens() {
                     return
                 }
 
@@ -368,6 +243,7 @@ class AppSyncer: SyncPuller, SyncPusher {
                     // TODO: Schedule delayed background sync
                 }
             } catch {
+                appLogger.logError(error)
                 // TODO: Handle proper. Could be cancellation.
                 print("Sync media error \(error)")
             }
@@ -405,13 +281,4 @@ class AppSyncer: SyncPuller, SyncPusher {
             }
         }
     }
-}
-
-
-public enum SyncResult {
-    case notAttempted(reason: String),
-         success(notes: String),
-         partial(notes: String),
-         Error(message: String),
-         invalidAccountTokens
 }

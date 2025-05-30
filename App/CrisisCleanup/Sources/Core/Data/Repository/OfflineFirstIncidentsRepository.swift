@@ -27,7 +27,7 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
     let hotlineIncidents: any Publisher<[Incident], Never>
 
     private let dataSource: CrisisCleanupNetworkDataSource
-    private let appPreferencesDataStore: AppPreferencesDataStore
+    private let appPreferencesDataSource: AppPreferencesDataSource
     private let incidentDao: IncidentDao
     private let locationDao: LocationDao
     private let incidentOrganizationDao: IncidentOrganizationDao
@@ -40,7 +40,7 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
 
     init(
         dataSource: CrisisCleanupNetworkDataSource,
-        appPreferencesDataStore: AppPreferencesDataStore,
+        appPreferencesDataSource: AppPreferencesDataSource,
         incidentDao: IncidentDao,
         locationDao: LocationDao,
         incidentOrganizationDao: IncidentOrganizationDao,
@@ -48,7 +48,7 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         loggerFactory: AppLoggerFactory
     ) {
         self.dataSource = dataSource
-        self.appPreferencesDataStore = appPreferencesDataStore
+        self.appPreferencesDataSource = appPreferencesDataSource
         self.incidentDao = incidentDao
         self.locationDao = locationDao
         self.incidentOrganizationDao = incidentOrganizationDao
@@ -181,14 +181,14 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         }
     }
 
-    func pullIncidents() async throws {
+    func pullIncidents(force: Bool) async throws {
         var isSuccessful = false
         do {
             defer {
-                appPreferencesDataStore.setSyncAttempt(isSuccessful)
+                appPreferencesDataSource.setSyncAttempt(isSuccessful)
             }
 
-            try await syncInternal()
+            try await syncInternal(forcePullAll: force)
             isSuccessful = true
         }
     }

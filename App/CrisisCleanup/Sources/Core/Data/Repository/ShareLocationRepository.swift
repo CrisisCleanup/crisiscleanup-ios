@@ -6,7 +6,7 @@ public protocol ShareLocationRepository {
 
 class CrisisCleanupShareLocationRepository: ShareLocationRepository {
     private let accountDataRepository: AccountDataRepository
-    private let appPreferences: AppPreferencesDataStore
+    private let appPreferences: AppPreferencesDataSource
     private let appSupportRepository: AppSupportRepository
     private let locationManager: LocationManager
     private let writeApiClient: CrisisCleanupWriteApi
@@ -21,7 +21,7 @@ class CrisisCleanupShareLocationRepository: ShareLocationRepository {
 
     init(
         accountDataRepository: AccountDataRepository,
-        appPreferences: AppPreferencesDataStore,
+        appPreferences: AppPreferencesDataSource,
         appSupportRepository: AppSupportRepository,
         locationManager: LocationManager,
         writeApiClient: CrisisCleanupWriteApi,

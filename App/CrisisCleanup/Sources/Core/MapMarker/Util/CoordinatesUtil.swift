@@ -1,19 +1,51 @@
 import CoreLocation
 import Foundation
 
-class CoordinatesUtil {
-    static func getMiddleLongitude(_ left: Double, _ right: Double) -> Double {
-        var left = left
-        while left > right {
-            left -= 360
+extension Double {
+    fileprivate var inLongitudeRange: Double {
+        var value = self
+        while value < -180 {
+            value += 360
         }
+        while value > 180 {
+            value -= 360
+        }
+        return value
+    }
+}
 
-        return ((left + right) * 0.5).remainder(dividingBy: 360)
+class CoordinatesUtil {
+    static func getMiddleLongitude(_ a: Double, _ b: Double) -> Double {
+        let a = a.inLongitudeRange
+        let b = b.inLongitudeRange
+
+        let min = min(a, b)
+        let max = max(a, b)
+        let delta = (max - min)
+        let deltaMod360 = delta.remainder(dividingBy: 360)
+
+        if deltaMod360 == 0 {
+            return a
+        } else if deltaMod360 == 180 || deltaMod360 == -180 {
+            return (a + 90).inLongitudeRange
+        } else {
+            return if delta < 180 {
+                (a + b) * 0.5
+            } else {
+                ((min + 360 - max) * 0.5 + max).inLongitudeRange
+            }
+        }
     }
 
     static func getMiddleCoordinate(_ a: LatLng, _ b: LatLng) -> LatLng {
         let latitude = (a.latitude + b.latitude) * 0.5
         let longitude = getMiddleLongitude(a.longitude, b.longitude)
+        return LatLng(latitude, longitude)
+    }
+
+    static func getMiddleCoordinate(_ a: CLLocation, _ b: CLLocation) -> LatLng {
+        let latitude = (a.coordinate.latitude + b.coordinate.latitude) * 0.5
+        let longitude = getMiddleLongitude(a.coordinate.longitude, b.coordinate.longitude)
         return LatLng(latitude, longitude)
     }
 
@@ -87,7 +119,7 @@ extension Array where Element == LocationLatLng {
                 latLngs.count < 3 ? nil : latLngs.latLngBounds
             }
             let areas = multiBounds.enumerated().map { (i, latLngBounds) in
-                latLngBounds == nil ? 0.0 : PolyUtil.shoelaceArea(multiCoords[i])
+                latLngBounds == nil ? 0.0 : PolyUtil.sphericalArea(multiCoords[i])
             }
             return LocationBounds(
                 locationLatLng: $0,
@@ -131,36 +163,38 @@ extension Array where Element == LocationLatLng {
         if centerBoundsOpt != nil && locationPolyOpt?.isNotEmpty == true {
             let locationPoly = locationPolyOpt!
             let centerBounds = centerBoundsOpt!
-            incidentCentroid = centerBounds.center
+            let centroidLocation = centerBounds.center.clLocation
             if !PolyUtil.containsLocation(incidentCentroid, locationPoly) {
-                var closestPoint = locationPoly[0]
-                var closestDistance = PolyUtil.computeSqrDistanceBetween(incidentCentroid, closestPoint)
+                var closestLocation = locationPoly[0].clLocation
+                var closestDistance = closestLocation.distance(from: centroidLocation)
                 for polyPoint in locationPoly {
-                    let distance = PolyUtil.computeSqrDistanceBetween(incidentCentroid, polyPoint)
+                    let polyLocation = polyPoint.clLocation
+                    let distance = polyLocation.distance(from: centroidLocation)
                     if distance < closestDistance {
                         closestDistance = distance
-                        closestPoint = polyPoint
+                        closestLocation = polyLocation
                     }
                 }
 
                 try Task.checkCancellation()
 
-                var furthestPoint = closestPoint
+                var furthestLocation = closestLocation
                 var furthestDistance = closestDistance
-                let delta = closestPoint.subtract(incidentCentroid)
+                let delta = closestLocation.subtract(centroidLocation)
                 let deltaNorm = delta.normalizeOrSelf()
                 if deltaNorm != delta {
                     for polyPoint in locationPoly {
-                        let polyDelta = polyPoint.subtract(incidentCentroid)
+                        let polyLocation = polyPoint.clLocation
+                        let polyDelta = polyLocation.subtract(centroidLocation)
                         let polyDeltaNorm = polyDelta.normalizeOrSelf()
                         if polyDelta != polyDeltaNorm &&
-                            polyDeltaNorm.latitude * deltaNorm.latitude + polyDeltaNorm.longitude * deltaNorm.longitude > 0.9
+                            polyDeltaNorm.coordinate.latitude * deltaNorm.coordinate.latitude +
+                            polyDeltaNorm.coordinate.longitude * deltaNorm.coordinate.longitude > 0.9
                          {
-                            let distance =
-                            PolyUtil.computeSqrDistanceBetween(incidentCentroid, polyPoint)
+                            let distance = polyLocation.distance(from: centroidLocation)
                             if distance > furthestDistance {
                                 furthestDistance = distance
-                                furthestPoint = polyPoint
+                                furthestLocation = polyLocation
                             }
                         }
                     }
@@ -169,7 +203,7 @@ extension Array where Element == LocationLatLng {
 
                     if furthestDistance > closestDistance {
                         // TODO: Spherical interpolate
-                        incidentCentroid = CoordinatesUtil.getMiddleCoordinate(closestPoint, furthestPoint)
+                        incidentCentroid = CoordinatesUtil.getMiddleCoordinate(closestLocation, furthestLocation)
                     }
                 }
             }
@@ -210,7 +244,7 @@ extension Array where Element == LatLng {
             ne = LatLng(center.latitude + halfSpan, ne.longitude)
             sw = LatLng(center.latitude - halfSpan, sw.longitude)
         }
-        // TODO Write tests
+        // TODO: Write tests
         if sw.longitude + 360 - ne.longitude < minLngSpan {
             let halfSpan = minLngSpan * 0.5
             var eastLng = center.latitude - halfSpan
@@ -232,19 +266,29 @@ extension Array where Element == LatLng {
 }
 
 extension LatLng {
-    fileprivate func normalizeOrSelf() -> LatLng {
-        let sqr = latitude * latitude + longitude * longitude
-        if sqr > 0 {
-            let nDist = sqrt(sqr)
-            return LatLng(latitude / nDist, longitude / nDist)
-        }
-        return self
+    fileprivate var clLocation : CLLocation {
+        CLLocation(latitude: latitude, longitude: longitude)
+    }
+}
+
+extension CLLocation {
+    fileprivate func subtract(_ latLng: CLLocation) -> CLLocation {
+        CLLocation(
+            latitude: coordinate.latitude - latLng.coordinate.latitude,
+            longitude: coordinate.longitude - latLng.coordinate.longitude
+        )
     }
 
-    fileprivate func subtract(_ latLng: LatLng) -> LatLng {
-        LatLng(
-            latitude - latLng.latitude,
-            longitude - latLng.longitude
-        )
+    fileprivate func normalizeOrSelf() -> CLLocation {
+        let sqr = coordinate.latitude * coordinate.latitude +
+        coordinate.longitude * coordinate.longitude
+        if sqr > 0 {
+            let nDist = sqrt(sqr)
+            return CLLocation(
+                latitude: coordinate.latitude / nDist,
+                longitude: coordinate.longitude / nDist
+            )
+        }
+        return self
     }
 }

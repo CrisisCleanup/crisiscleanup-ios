@@ -51,7 +51,7 @@ public class LocationDao {
 
     private func fetchLocations(_ db: Database, _ ids: [Int64]) -> [LocationRecord] {
         try! LocationRecord
-            .filter(ids: ids)
+            .filter(ids: Set(ids))
             .fetchAll(db)
     }
 }

@@ -4,7 +4,7 @@ import Foundation
 import SwiftUI
 import MapKit
 
-class Coordinator: NSObject, MKMapViewDelegate {
+class CasesMapViewCoordinator: NSObject, MKMapViewDelegate {
     let viewModel: CasesViewModel
     let onSelectWorksite: (Int64) -> Void
 
@@ -98,13 +98,13 @@ internal struct CasesMapView : UIViewRepresentable {
         return map
     }
 
-    func makeCoordinator() -> Coordinator {
-        Coordinator(viewModel, onSelectWorksite)
+    func makeCoordinator() -> CasesMapViewCoordinator {
+        CasesMapViewCoordinator(viewModel, onSelectWorksite)
     }
 
     func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<CasesMapView>) {
         if let worksiteCoordinates = focusWorksiteCenter {
-            uiView.animaiteToCenter(worksiteCoordinates)
+            uiView.animateToCenter(worksiteCoordinates)
             Task { @MainActor in
                 viewModel.editedWorksiteLocation = nil
             }

@@ -20,7 +20,7 @@ public protocol AppDependency: Dependency {
     var authApi: CrisisCleanupAuthApi { get }
     var networkDataSource: CrisisCleanupNetworkDataSource { get }
 
-    var appPreferences: AppPreferencesDataStore { get }
+    var appPreferences: AppPreferencesDataSource { get }
 
     var translator: KeyAssetTranslator { get }
 
@@ -34,6 +34,7 @@ public protocol AppDependency: Dependency {
     var worksitesRepository: WorksitesRepository { get }
     var searchWorksitesRepository: SearchWorksitesRepository { get }
     var organizationsRepository: OrganizationsRepository { get }
+    var incidentCacheRepository: IncidentCacheRepository { get }
     var worksiteChangeRepository: WorksiteChangeRepository  { get }
     var syncLogRepository: SyncLogRepository  { get }
     var addressSearchRepository: AddressSearchRepository { get }
@@ -48,6 +49,7 @@ public protocol AppDependency: Dependency {
     var listsRepository: ListsRepository { get }
     var shareLocationRepository: ShareLocationRepository { get }
     var appDataManagementRepository: AppDataManagementRepository { get }
+    var dataDownloadSpeedMonitor: DataDownloadSpeedMonitor { get }
 
     var authenticateViewBuilder: AuthenticateViewBuilder { get }
     var incidentSelectViewBuilder: IncidentSelectViewBuilder { get }
@@ -92,7 +94,7 @@ extension MainComponent {
 
     public var networkMonitor: NetworkMonitor {
         shared {
-            NetworkReachability(appSettingsProvider.reachabilityHost)
+            AppNetworkMonitor()
         }
     }
 
@@ -157,7 +159,7 @@ extension MainComponent {
         }
     }
 
-    public var appPreferences: AppPreferencesDataStore { shared { AppPreferencesUserDefaults() } }
+    public var appPreferences: AppPreferencesDataSource { shared { AppPreferencesUserDefaults() } }
 
     var accountDataSource: AccountInfoDataSource {
         shared {
@@ -234,7 +236,7 @@ extension MainComponent {
 
     public var locationManager: LocationManager {
         shared {
-            LocationManager()
+            LocationManager(loggerFactory: loggerFactory)
         }
     }
 }

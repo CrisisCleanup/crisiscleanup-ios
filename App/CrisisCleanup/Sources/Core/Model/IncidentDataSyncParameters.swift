@@ -1,15 +1,17 @@
 import Foundation
 
-public struct IncidentDataSyncParameters {
+// sourcery: copyBuilder, skipCopyInit
+public struct IncidentDataSyncParameters: Equatable {
     static let timeMarkerZero = Date(timeIntervalSince1970: 0)
 
     let incidentId: Int64
     let syncDataMeasures: SyncDataMeasure
     let boundedRegion: BoundedRegion?
-    let boundedSyncAt: Date
+    let boundedSyncedAt: Date
 
-    lazy var lastUpdated: Date? = {
-        var latest = boundedSyncAt
+    // sourcery:begin: skipCopy
+    var lastUpdated: Date? {
+        var latest = boundedSyncedAt
         for timeMarker in [
             syncDataMeasures.core,
             syncDataMeasures.additional,
@@ -21,9 +23,11 @@ public struct IncidentDataSyncParameters {
         }
 
         return IncidentDataSyncParameters.timeMarkerZero.distance(to: latest) < 1.days ? nil : latest
-    }()
+    }
+    // sourcery:end
 
-    struct SyncDataMeasure {
+    // sourcery: copyBuilder, skipCopyInit
+    struct SyncDataMeasure: Equatable {
         static func relative(_ reference: Date = Date.now) -> SyncDataMeasure {
             return SyncDataMeasure(
                 core: SyncTimeMarker.relative(reference),
@@ -35,7 +39,8 @@ public struct IncidentDataSyncParameters {
         let additional: SyncTimeMarker
     }
 
-    struct SyncTimeMarker {
+    // sourcery: copyBuilder, skipCopyInit
+    struct SyncTimeMarker: Equatable {
         static func relative(_ reference: Date = Date.now) -> SyncTimeMarker {
             return SyncTimeMarker(
                 before: reference,
@@ -46,24 +51,29 @@ public struct IncidentDataSyncParameters {
         let before: Date
         let after: Date
 
+        // sourcery:begin: skipCopy
         var isDeltaSync: Bool {
             return timeMarkerZero.distance(to: before) < 1.days
         }
+        // sourcery:end
     }
 
-    struct BoundedRegion {
+    // sourcery: copyBuilder, skipCopyInit
+    struct BoundedRegion: Codable, Equatable {
         let latitude: Double
         let longitude: Double
         let radius: Double
 
-        lazy var isDefined: Bool = {
+        // sourcery:begin: skipCopy
+        var isDefined: Bool {
             radius > 0 &&
             (latitude != 0.0 || longitude != 0.0) &&
             -90 < latitude &&
             latitude < 90 &&
             -180 <= longitude &&
             longitude <= 180
-        }()
+        }
+        // sourcery:end
 
         func isSignificantChange(
             _ other: BoundedRegion,

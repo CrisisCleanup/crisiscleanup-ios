@@ -12,6 +12,9 @@ final class NetworkFlagsFormDataTests: XCTestCase {
 
         let entry = result.results![2]
 
+        let dateFormatter = with(DateFormatter()) {
+            $0.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
+        }
         let expected = NetworkFlagsFormData(
             id: 229138,
             caseNumber: "VW2UVP",
@@ -55,7 +58,8 @@ final class NetworkFlagsFormDataTests: XCTestCase {
             ],
             flags: [],
             phone1: "1234567890",
-            reportedBy: 861
+            reportedBy: 861,
+            updatedAt: dateFormatter.date(from: "2024-10-06T01:54:26.818440Z")!
         )
         XCTAssertEqual(expected, entry)
     }

@@ -2,12 +2,9 @@ import Combine
 import CoreLocation
 import Foundation
 
-class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullReporter {
+class OfflineFirstWorksitesRepository: WorksitesRepository {
     private let dataSource: CrisisCleanupNetworkDataSource
     private let writeApi: CrisisCleanupWriteApi
-    private let worksitesSyncer: WorksitesSyncer
-    private let worksitesSecondarySyncer: WorksitesSecondaryDataSyncer
-    private let worksiteSyncStatDao: WorksiteSyncStatDao
     private let worksiteDao: WorksiteDao
     private let recentWorksiteDao: RecentWorksiteDao
     private let workTypeTransferRequestDao: WorkTypeTransferRequestDao
@@ -27,10 +24,6 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     private let isDeterminingWorksitesCountSubject = CurrentValueSubject<Bool, Never>(false)
     var isDeterminingWorksitesCount: any Publisher<Bool, Never>
 
-    var incidentDataPullStats: any Publisher<IncidentDataPullStats, Never>
-    var incidentSecondaryDataPullStats: any Publisher<IncidentDataPullStats, Never>
-    var onIncidentDataPullComplete: any Publisher<Int64, Never>
-
     private let orgIdPublisher: AnyPublisher<Int64, Never>
     private let organizationAffiliatesPublisher: AnyPublisher<Set<Int64>, Never>
 
@@ -39,9 +32,6 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     init(
         dataSource: CrisisCleanupNetworkDataSource,
         writeApi: CrisisCleanupWriteApi,
-        worksitesSyncer: WorksitesSyncer,
-        worksitesSecondarySyncer: WorksitesSecondaryDataSyncer,
-        worksiteSyncStatDao: WorksiteSyncStatDao,
         worksiteDao: WorksiteDao,
         recentWorksiteDao: RecentWorksiteDao,
         workTypeTransferRequestDao: WorkTypeTransferRequestDao,
@@ -55,9 +45,6 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
     ) {
         self.dataSource = dataSource
         self.writeApi = writeApi
-        self.worksitesSyncer = worksitesSyncer
-        self.worksitesSecondarySyncer = worksitesSecondarySyncer
-        self.worksiteSyncStatDao = worksiteSyncStatDao
         self.worksiteDao = worksiteDao
         self.recentWorksiteDao = recentWorksiteDao
         self.accountDataRepository = accountDataRepository
@@ -71,10 +58,6 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         isLoading = isLoadingSubject
         syncWorksitesFullIncidentId = syncWorksitesFullIncidentIdSubject
         isDeterminingWorksitesCount = isDeterminingWorksitesCountSubject
-
-        incidentDataPullStats = worksitesSyncer.dataPullStats
-        incidentSecondaryDataPullStats = worksitesSecondarySyncer.dataPullStats
-        onIncidentDataPullComplete = worksitesSecondarySyncer.onFullDataPullComplete
 
         orgIdPublisher = accountDataRepository.accountData
             .eraseToAnyPublisher()
@@ -212,86 +195,6 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
         )
     }
 
-    private func queryUpdatedSyncStats(
-        _ incidentId: Int64,
-        _ reset: Bool
-    ) async throws -> IncidentDataSyncStats {
-        if !reset {
-            if let syncStats = try worksiteSyncStatDao.getSyncStats(incidentId) {
-                if !syncStats.isDataVersionOutdated {
-                    return syncStats
-                }
-            }
-        }
-
-        let syncStart = Date.now
-        let worksitesCount =
-            await worksitesSyncer.networkWorksitesCount(incidentId, Date(timeIntervalSince1970: 0))
-        let syncStats = IncidentDataSyncStats(
-            incidentId: incidentId,
-            syncStart: syncStart,
-            dataCount: worksitesCount,
-            // TODO: Preserve previous attempt metrics (if used)
-            syncAttempt: SyncAttempt(
-                successfulSeconds: 0,
-                attemptedSeconds: 0,
-                attemptedCounter: 0
-            ),
-            appBuildVersionCode: appVersionProvider.buildNumber
-        )
-        try await worksiteSyncStatDao.upsertStats(syncStats.asWorksiteSyncStatsRecord())
-        return syncStats
-    }
-
-    func refreshWorksites(
-        _ incidentId: Int64,
-        forceQueryDeltas: Bool,
-        forceRefreshAll: Bool
-    ) async throws {
-        if incidentId == EmptyIncident.id {
-            return
-        }
-
-        // TODO: Enforce single process syncing per incident since this may be very long running
-
-        isLoadingSubject.value = true
-        do {
-            defer {
-                isLoadingSubject.value = false
-            }
-
-            let syncStats = try await queryUpdatedSyncStats(incidentId, forceRefreshAll)
-            let savedWorksitesCount = try worksiteDao.getWorksitesCount(incidentId)
-            if syncStats.syncAttempt.shouldSyncPassively() ||
-                savedWorksitesCount < syncStats.dataCount ||
-                forceQueryDeltas
-            {
-                try await worksitesSyncer.sync(incidentId, syncStats)
-            }
-
-            try await syncAdditional(incidentId)
-        } catch {
-            if error is CancellationError {
-                throw error
-            }
-
-            // Updating sync stats here (or in finally) could overwrite "concurrent" sync that previously started. Think it through before updating sync attempt.
-
-            logger.logError(error)
-        }
-    }
-
-    private func syncAdditional(_ incidentId: Int64) async throws {
-        if let syncStats = try worksiteSyncStatDao.getFullSyncStats(incidentId),
-           syncStats.hasSyncedCore {
-            try await worksitesSecondarySyncer.sync(incidentId, syncStats.secondaryStats)
-        }
-    }
-
-    func getWorksiteSyncStats(_ incidentId: Int64) throws -> IncidentDataSyncStats? {
-        try worksiteSyncStatDao.getSyncStats(incidentId)
-    }
-
     func syncNetworkWorksite(_ worksite: NetworkWorksiteFull, _ syncedAt: Date) async throws -> Bool {
         let records = worksite.asRecords()
         return try await worksiteDao.syncNetworkWorksite(records, syncedAt)
@@ -341,6 +244,10 @@ class OfflineFirstWorksitesRepository: WorksitesRepository, IncidentDataPullRepo
                 logger.logError(error)
             }
         }
+    }
+
+    func getRecentWorksitesCenterLocation(_ incidentId: Int64, limit: Int) async throws -> CLLocationCoordinate2D? {
+        try recentWorksiteDao.getRecentWorksitesCenterLocation(incidentId, limit: limit)
     }
 
     func getUnsyncedCounts(_ worksiteId: Int64) throws -> [Int] {

@@ -26,7 +26,7 @@ class IncidentSelectRepository: IncidentSelector {
             .map { data in data.selected.id }
     }
 
-    private let preferencesStore: AppPreferencesDataStore
+    private let preferencesStore: AppPreferencesDataSource
 
     private var incidentIdCache: Int64 = EmptyIncident.id
 
@@ -34,7 +34,7 @@ class IncidentSelectRepository: IncidentSelector {
 
     init(
         accountDataRepository: AccountDataRepository,
-        preferencesStore: AppPreferencesDataStore,
+        preferencesStore: AppPreferencesDataSource,
         incidentsRepository: IncidentsRepository
     ) {
         self.preferencesStore = preferencesStore

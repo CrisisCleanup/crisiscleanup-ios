@@ -14,7 +14,7 @@ public struct AppPreferences: Codable {
     init(
         hideOnboarding: Bool = false,
         hideGettingStartedVideo: Bool = false,
-        selectedIncidentId: Int64 = 0,
+        selectedIncidentId: Int64 = EmptyIncident.id,
         languageKey: String = "en-US",
         syncAttempt: SyncAttempt = SyncAttempt(),
         tableViewSortBy: WorksiteSortBy = .none,

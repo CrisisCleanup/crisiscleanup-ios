@@ -10,7 +10,7 @@ class CreateEditCaseMapCoordinator: NSObject, MKMapViewDelegate {
     }
 
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        mapView.staticMapAnnotationView(annotation)
+        mapView.staticMapAnnotationView(annotation, imageHeightOffsetWeight: -0.5)
     }
 }
 
@@ -27,7 +27,7 @@ struct CreateEditCaseMapView : UIViewRepresentable {
         map.delegate = context.coordinator
 
         let image = UIImage(named: "cc_map_pin", in: .module, with: .none)!
-        let casePin = CustomPinAnnotation(latLng.coordinates, image)
+        let casePin = CustomPinAnnotation(latLng.coordinates, image: image)
         map.addAnnotation(casePin)
         map.showAnnotations([casePin], animated: false)
 
@@ -44,12 +44,9 @@ struct CreateEditCaseMapView : UIViewRepresentable {
             let coordinates = latLng.coordinates
             pinAnnotation.coordinate = coordinates
 
-            var zoom = 12
-            if isCreateWorksite && hasInitialCoordinates {
-                zoom = 6
-            }
+            let zoom = isCreateWorksite && hasInitialCoordinates ? 6 : 12
 
-            uiView.animaiteToCenter(coordinates, zoom)
+            uiView.animateToCenter(coordinates, zoom)
         }
     }
 }

@@ -1,8 +1,7 @@
 import Combine
 import Foundation
 
-// Should be named *DataSource. Minor transgression. Correction not necessary.
-public protocol AppPreferencesDataStore {
+public protocol AppPreferencesDataSource {
     var preferences: any Publisher<AppPreferences, Never> { get }
 
     func reset()
@@ -21,7 +20,7 @@ public protocol AppPreferencesDataStore {
     func setTeamMapBounds(_ bounds: IncidentCoordinateBounds)
 }
 
-extension AppPreferencesDataStore {
+extension AppPreferencesDataSource {
     func setSyncAttempt(_ isSuccessful: Bool) {
         setSyncAttempt(isSuccessful, Date().timeIntervalSince1970)
     }
@@ -30,7 +29,7 @@ extension AppPreferencesDataStore {
 fileprivate let jsonDecoder = JsonDecoderFactory().decoder()
 fileprivate let jsonEncoder = JsonEncoderFactory().encoder()
 
-class AppPreferencesUserDefaults: AppPreferencesDataStore {
+class AppPreferencesUserDefaults: AppPreferencesDataSource {
     let preferences: any Publisher<AppPreferences, Never>
 
     init() {
@@ -56,7 +55,7 @@ class AppPreferencesUserDefaults: AppPreferencesDataStore {
             UserDefaults.standard.appPreferences.copy {
                 $0.hideOnboarding = false
                 $0.hideGettingStartedVideo = false
-                $0.selectedIncidentId = 0
+                $0.selectedIncidentId = EmptyIncident.id
                 $0.languageKey = "en-US"
                 $0.syncAttempt = SyncAttempt()
                 $0.tableViewSortBy = .none

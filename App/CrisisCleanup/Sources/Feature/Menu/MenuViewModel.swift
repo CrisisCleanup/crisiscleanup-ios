@@ -7,10 +7,12 @@ class MenuViewModel: ObservableObject {
     private let worksitesRepository: WorksitesRepository
     private let accountDataRepository: AccountDataRepository
     private let accountDataRefresher: AccountDataRefresher
+    private let incidentCacheRepository: IncidentCacheRepository
+    private let dataDownloadSpeedMonitor: DataDownloadSpeedMonitor
     private let incidentSelector: IncidentSelector
     private let appVersionProvider: AppVersionProvider
     private let databaseVersionProvider: DatabaseVersionProvider
-    private let appPreferences: AppPreferencesDataStore
+    private let appPreferences: AppPreferencesDataSource
     private let accountEventBus: AccountEventBus
     private let locationManager: LocationManager
     private let appEnv: AppEnv
@@ -23,8 +25,7 @@ class MenuViewModel: ObservableObject {
     let privacyPolicyUrl: URL
     let gettingStartedVideoUrl: URL
 
-    @Published private(set) var isLoadingIncidents = true
-    @Published private(set) var showHeaderLoading = false
+    @Published private(set) var isLoadingIncidentData = true
 
     @Published private(set) var profilePicture: AccountProfilePicture? = nil
 
@@ -37,6 +38,9 @@ class MenuViewModel: ObservableObject {
     @Published private(set) var shareLocationWithOrg = false
     @Published var showExplainLocationPermission = false
     @Published private(set) var hasLocationAccess: Bool = false
+
+    @Published private(set) var incidentCachePreferences = InitialIncidentWorksitesCachePreferences
+    @Published private(set) var incidentDataCacheMetrics = IncidentDataCacheMetrics()
 
     var versionText: String {
         let version = appVersionProvider.version
@@ -54,12 +58,14 @@ class MenuViewModel: ObservableObject {
         worksitesRepository: WorksitesRepository,
         accountDataRepository: AccountDataRepository,
         accountDataRefresher: AccountDataRefresher,
+        incidentCacheRepository: IncidentCacheRepository,
+        dataDownloadSpeedMonitor: DataDownloadSpeedMonitor,
         syncLogRepository: SyncLogRepository,
         incidentSelector: IncidentSelector,
         appVersionProvider: AppVersionProvider,
         appSettingsProvider: AppSettingsProvider,
         databaseVersionProvider: DatabaseVersionProvider,
-        appPreferences: AppPreferencesDataStore,
+        appPreferences: AppPreferencesDataSource,
         accountEventBus: AccountEventBus,
         locationManager: LocationManager,
         appEnv: AppEnv,
@@ -69,6 +75,8 @@ class MenuViewModel: ObservableObject {
         self.worksitesRepository = worksitesRepository
         self.accountDataRepository = accountDataRepository
         self.accountDataRefresher = accountDataRefresher
+        self.incidentCacheRepository = incidentCacheRepository
+        self.dataDownloadSpeedMonitor = dataDownloadSpeedMonitor
         self.incidentSelector = incidentSelector
         self.appVersionProvider = appVersionProvider
         self.databaseVersionProvider = databaseVersionProvider
@@ -109,6 +117,7 @@ class MenuViewModel: ObservableObject {
         subscribeProfilePicture()
         subscribeAppPreferences()
         subscribeLocationStatus()
+        subscribeIncidentDataCacheState()
     }
 
     func onViewDisappear() {
@@ -116,21 +125,11 @@ class MenuViewModel: ObservableObject {
     }
 
     private func subscribeLoading() {
-        let incidentsLoading = incidentsRepository.isLoading.eraseToAnyPublisher().share()
-
-        incidentsLoading
+        incidentCacheRepository.isSyncingActiveIncident.eraseToAnyPublisher()
             .receive(on: RunLoop.main)
-            .assign(to: \.isLoadingIncidents, on: self)
+            .assign(to: \.isLoadingIncidentData, on: self)
             .store(in: &subscriptions)
 
-        Publishers.CombineLatest(
-            incidentsLoading,
-            worksitesRepository.isLoading.eraseToAnyPublisher()
-        )
-        .map { b0, b1 in b0 || b1 }
-        .receive(on: RunLoop.main)
-        .assign(to: \.showHeaderLoading, on: self)
-        .store(in: &subscriptions)
     }
 
     private func subscribeIncidentsData() {
@@ -199,6 +198,31 @@ class MenuViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
+    private func subscribeIncidentDataCacheState() {
+        incidentCacheRepository.cachePreferences
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.incidentCachePreferences, on: self)
+            .store(in: &subscriptions)
+
+        Publishers.CombineLatest(
+            $incidentCachePreferences,
+            dataDownloadSpeedMonitor.isSlowSpeed
+                .eraseToAnyPublisher()
+                .removeDuplicates()
+        )
+        .map { (preferences, isSlow) in
+            IncidentDataCacheMetrics(
+                isSlow: isSlow,
+                isPaused: preferences.isPaused,
+                isRegionBound: preferences.isRegionBounded
+            )
+        }
+        .receive(on: RunLoop.main)
+        .assign(to: \.incidentDataCacheMetrics, on: self)
+        .store(in: &subscriptions)
+    }
+
     func showGettingStartedVideo(_ show: Bool) {
         let hide = !show
         appPreferences.setHideGettingStartedVideo(hide)
@@ -249,3 +273,23 @@ struct MenuItemVisibility {
     let showGettingStartedVideo: Bool
 }
 private let hideMenuItems = MenuItemVisibility(showOnboarding: false, showGettingStartedVideo: false)
+
+struct IncidentDataCacheMetrics {
+    let isSlow: Bool?
+    let isPaused: Bool
+    let isRegionBound: Bool
+
+    let hasSpeedNotAdaptive: Bool
+
+    init(
+        isSlow: Bool? = nil,
+        isPaused: Bool = false,
+        isRegionBound: Bool = false
+    ) {
+        self.isSlow = isSlow
+        self.isPaused = isPaused
+        self.isRegionBound = isRegionBound
+
+        hasSpeedNotAdaptive = isSlow == false && (isPaused || isRegionBound)
+    }
+}

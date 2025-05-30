@@ -11,6 +11,7 @@ class CasesComponent: Component<AppDependency>, CasesViewBuilder {
         incidentBoundsProvider: dependency.incidentBoundsProvider,
         incidentsRepository: dependency.incidentsRepository,
         worksitesRepository: dependency.worksitesRepository,
+        incidentCacheRepository: dependency.incidentCacheRepository,
         accountDataRepository: dependency.accountDataRepository,
         worksiteChangeRepository: dependency.worksiteChangeRepository,
         organizationsRepository: dependency.organizationsRepository,
@@ -27,7 +28,7 @@ class CasesComponent: Component<AppDependency>, CasesViewBuilder {
         translator: dependency.translator,
         syncPuller: dependency.syncPuller,
         loggerFactory: dependency.loggerFactory,
-        appEnv: dependency.appEnv
+        appEnv: dependency.appEnv,
     )
 
     func casesView(_ openAuthScreen: @escaping () -> Void) -> AnyView {

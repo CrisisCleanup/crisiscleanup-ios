@@ -15,6 +15,8 @@ public protocol EditableWorksiteProvider {
     func setStale()
     func takeStale() -> Bool
 
+    func copyCoordinates(_ coordinates: CLLocationCoordinate2D) -> Worksite
+
     func setEditedLocation(_ coordinates: CLLocationCoordinate2D)
     func clearEditedLocation()
 
@@ -74,6 +76,14 @@ class SingleEditableWorksiteProvider: EditableWorksiteProvider, WorksiteLocation
 
     func takeStale() -> Bool {
         _isStale.exchange(false, ordering: .acquiring)
+    }
+
+    func copyCoordinates(_ coordinates: CLLocationCoordinate2D) -> Worksite {
+        let worksite = editableWorksite.value
+        return worksite.copy {
+            $0.latitude = coordinates.latitude
+            $0.longitude = coordinates.longitude
+        }
     }
 
     private let editedLocation = ManagedAtomic(OptionalCoordinates())

@@ -15,8 +15,7 @@ extension Bundle {
         _ type: T.Type
     ) -> T {
         let data = self.loadTestResource(resourceFileName)
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = JsonDecoderFactory().multiDateDecoder()
         return try! decoder.decode(type, from: data)
     }
 }
@@ -35,7 +34,7 @@ internal func fillNetworkIncident(
     isArchived: Bool = false,
     fields: [NetworkIncidentFormField]? = nil
 ) -> NetworkIncident {
-    return NetworkIncident(
+    NetworkIncident(
         id: id,
         startAt: dateFormatter.date(from: startAt)!,
         name: name,

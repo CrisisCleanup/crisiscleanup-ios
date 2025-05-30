@@ -4,7 +4,7 @@ import Foundation
 
 private let jsonDecoder = JsonDecoderFactory().decoder()
 
-class AccessTokenInterceptor: RequestInterceptor {
+final class AccessTokenInterceptor: RequestInterceptor, @unchecked Sendable {
     private let accountDataRepository: AccountDataRepository
     private let accountDataPublisher: AnyPublisher<AccountData, Never>
     private let authApiClient: CrisisCleanupAuthApi

@@ -1,5 +1,6 @@
 import Atomics
 import Combine
+import CombineExt
 import Foundation
 import MapKit
 import SwiftUI
@@ -8,7 +9,8 @@ class CasesViewModel: ObservableObject {
     private let incidentSelector: IncidentSelector
     private let incidentsRepository: IncidentsRepository
     private let worksitesRepository: WorksitesRepository
-    private let appPreferences: AppPreferencesDataStore
+    private let incidentCacheRepository: IncidentCacheRepository
+    private let appPreferences: AppPreferencesDataSource
     private let dataPullReporter: IncidentDataPullReporter
     private let worksiteLocationEditor: WorksiteLocationEditor
     private let mapCaseIconProvider: MapCaseIconProvider
@@ -27,9 +29,10 @@ class CasesViewModel: ObservableObject {
     var selectedIncident: Incident { incidentsData.selected }
     var incidentId: Int64 { incidentsData.selectedId }
 
+    private let incidentIdPublisher: AnyPublisher<Int64, Never>
+
     @Published private(set) var dataProgress = DataProgressMetrics()
 
-    @Published private(set) var isLoadingIncidents = true
     @Published private(set) var isLoadingData = false
 
     private let qsm: CasesQueryStateManager
@@ -72,6 +75,10 @@ class CasesViewModel: ObservableObject {
     private let mapMarkerManager: CasesMapMarkerManager
     internal var mapView: MKMapView?
 
+    private let epochZero = Date(timeIntervalSince1970: 0)
+    private let tileClearRefreshInterval = 5.seconds
+    private var tileRefreshedTimestamp = Date(timeIntervalSince1970: 0)
+
     private let mapMarkersChangeSetSubject = CurrentValueSubject<AnnotationsChangeSet, Never>(emptyAnnotationsChangeSet)
     @Published private(set) var mapMarkersChangeSet = emptyAnnotationsChangeSet
     private let mapAnnotationsExchanger: MapAnnotationsExchanger
@@ -102,10 +109,11 @@ class CasesViewModel: ObservableObject {
         incidentBoundsProvider: IncidentBoundsProvider,
         incidentsRepository: IncidentsRepository,
         worksitesRepository: WorksitesRepository,
+        incidentCacheRepository: IncidentCacheRepository,
         accountDataRepository: AccountDataRepository,
         worksiteChangeRepository: WorksiteChangeRepository,
         organizationsRepository: OrganizationsRepository,
-        appPreferences: AppPreferencesDataStore,
+        appPreferences: AppPreferencesDataSource,
         dataPullReporter: IncidentDataPullReporter,
         worksiteLocationEditor: WorksiteLocationEditor,
         mapCaseIconProvider: MapCaseIconProvider,
@@ -123,6 +131,7 @@ class CasesViewModel: ObservableObject {
         self.incidentSelector = incidentSelector
         self.incidentsRepository = incidentsRepository
         self.worksitesRepository = worksitesRepository
+        self.incidentCacheRepository = incidentCacheRepository
         self.appPreferences = appPreferences
         self.dataPullReporter = dataPullReporter
         self.worksiteLocationEditor = worksiteLocationEditor
@@ -137,10 +146,14 @@ class CasesViewModel: ObservableObject {
         self.syncPuller = syncPuller
         logger = loggerFactory.getLogger("cases")
 
-        incidentWorksitesCount = worksitesRepository.streamIncidentWorksitesCount(incidentSelector.incidentId)
+        incidentIdPublisher = incidentSelector.incidentId
             .eraseToAnyPublisher()
-            .share()
+            .removeDuplicates()
+            .replay1()
+
+        incidentWorksitesCount = worksitesRepository.streamIncidentWorksitesCount(incidentIdPublisher)
             .eraseToAnyPublisher()
+            .replay1()
 
         tableViewDataLoader = CasesTableViewDataLoader(
             worksiteProvider: worksiteProvider,
@@ -211,23 +224,11 @@ class CasesViewModel: ObservableObject {
     }
 
     private func subscribeLoading() {
-        // TODO: How to share this publisher
-        //       .share() requires replay otherwise lack of initial
-        //       signal won't trigger combined signals downstream
-        let incidentsLoading = incidentsRepository.isLoading
-            .eraseToAnyPublisher()
-
-        incidentsLoading
-            .receive(on: RunLoop.main)
-            .assign(to: \.isLoadingIncidents, on: self)
-            .store(in: &subscriptions)
-
-        Publishers.CombineLatest3(
-            incidentsLoading,
-            $dataProgress,
+        Publishers.CombineLatest(
+            incidentCacheRepository.isSyncingActiveIncident.eraseToAnyPublisher(),
             worksitesRepository.isDeterminingWorksitesCount.eraseToAnyPublisher()
         )
-        .map { b0, progress, b2 in b0 || progress.isLoadingPrimary || b2 }
+        .map { b0, b1 in b0 || b1 }
         .receive(on: RunLoop.main)
         .assign(to: \.isLoadingData, on: self)
         .store(in: &subscriptions)
@@ -240,14 +241,13 @@ class CasesViewModel: ObservableObject {
         )
             .map { b0, b1 in b0 || b1 }
             .eraseToAnyPublisher()
-        Publishers.CombineLatest4(
-            incidentsLoading,
+        Publishers.CombineLatest3(
             mapBoundsManager.isDeterminingBoundsPublisher.eraseToAnyPublisher(),
             isRenderingMapOverlay,
             isDelayingRegionBug
         )
             .receive(on: RunLoop.main)
-            .map { b0, b1, b2, b3 in b0 || b1 || b2 || b3 }
+            .map { b0, b1, b2 in b0 || b1 || b2 }
             .assign(to: \.isMapBusy, on: self)
             .store(in: &subscriptions)
 
@@ -279,6 +279,15 @@ class CasesViewModel: ObservableObject {
             .receive(on: RunLoop.main)
             .assign(to: \.incidentsData, on: self)
             .store(in: &subscriptions)
+
+        incidentIdPublisher
+            .receive(on: RunLoop.main)
+            .sink {
+                self.tileRefreshedTimestamp = self.epochZero
+                self.mapDotsOverlay.setIncident($0, 0, clearCache: true)
+                self.reloadMapOverlay()
+            }
+            .store(in: &subscriptions)
     }
 
     private func subscribeCameraBounds() {
@@ -289,23 +298,36 @@ class CasesViewModel: ObservableObject {
             .assign(to: \.incidentMapBounds, on: self)
             .store(in: &subscriptions)
 
-        mapBoundsManager.mapCameraBoundsPublisher
-            .eraseToAnyPublisher()
-            .receive(on: RunLoop.main)
-            .sink(receiveValue: { bounds in
-                var updateBounds = !self.hasDisappeared
-                if self.hasDisappeared {
-                    self.hasDisappeared = false
-                    if self.incidentId != self.incidentOnDisappear {
-                        self.incidentOnDisappear = self.incidentId
-                        updateBounds = true
-                    }
+        Publishers.CombineLatest(
+            mapBoundsManager.mapCameraBoundsPublisher.eraseToAnyPublisher(),
+            qsm.isTableViewSubject.removeDuplicates(),
+        )
+        .filter { (_, isTableView) in
+            !isTableView
+        }
+        .map { $0.0 }
+        .receive(on: RunLoop.main)
+        .sink(receiveValue: { bounds in
+            var updateBounds = !self.hasDisappeared
+            if self.hasDisappeared {
+                self.hasDisappeared = false
+                if self.incidentId != self.incidentOnDisappear {
+                    self.incidentOnDisappear = self.incidentId
+                    updateBounds = true
                 }
+            }
 
-                if updateBounds {
-                    self.mapCameraBounds = bounds
-                }
-            })
+            if updateBounds {
+                self.mapCameraBounds = bounds
+            }
+        })
+        .store(in: &subscriptions)
+
+        $isTableView.removeDuplicates()
+            .receive(on: RunLoop.main)
+            .sink { _ in
+                self.mapBoundsManager.restoreBounds()
+            }
             .store(in: &subscriptions)
     }
 
@@ -399,8 +421,8 @@ class CasesViewModel: ObservableObject {
 
         let totalCasesCount = Publishers.CombineLatest3(
             $isLoadingData,
-            incidentSelector.incidentId.eraseToAnyPublisher(),
-            incidentWorksitesCount
+            incidentIdPublisher,
+            incidentWorksitesCount,
         )
             .throttle(for: .seconds(0.1), scheduler: RunLoop.current, latest: true)
             .map { (isLoading, incidentId, worksitesCount) in
@@ -477,8 +499,8 @@ class CasesViewModel: ObservableObject {
             $casesCountMapText,
             $isLoadingData
         )
-        .map { countText, loading in
-            countText.isNotBlank || loading
+        .map { countText, isLoading in
+            countText.isNotBlank || isLoading
         }
         .receive(on: RunLoop.main)
         .assign(to: \.hasCasesCountProgress, on: self)
@@ -486,23 +508,20 @@ class CasesViewModel: ObservableObject {
     }
 
     private func subscribeDataPullStats() {
-        Publishers.CombineLatest(
-            dataPullReporter.incidentDataPullStats.eraseToAnyPublisher(),
-            dataPullReporter.incidentSecondaryDataPullStats.eraseToAnyPublisher()
-        )
-        .map { (primary, secondary) in
-            let showProgress = primary.isOngoing || secondary.isOngoing
-            let isSecondary = secondary.isOngoing
-            let progress = primary.isOngoing ? primary.progress : secondary.progress
-            return DataProgressMetrics(
-                isSecondaryData: isSecondary,
-                showProgress: showProgress,
-                progress: progress
-            )
-        }
-        .receive(on: RunLoop.main)
-        .assign(to: \.dataProgress, on: self)
-        .store(in: &subscriptions)
+        dataPullReporter.incidentDataPullStats.eraseToAnyPublisher()
+            .map { stats in
+                let showProgress = stats.isOngoing && stats.isPullingWorksites
+                let isSecondary = stats.pullType == .worksitesAdditional
+                let progress = stats.progress
+                return DataProgressMetrics(
+                    isSecondaryData: isSecondary,
+                    showProgress: showProgress,
+                    progress: progress
+                )
+            }
+            .receive(on: RunLoop.main)
+            .assign(to: \.dataProgress, on: self)
+            .store(in: &subscriptions)
 
         dataPullReporter.onIncidentDataPullComplete.eraseToAnyPublisher()
             .receive(on: RunLoop.main)
@@ -592,8 +611,9 @@ class CasesViewModel: ObservableObject {
     private func subscribeLocationStatus() {
         locationManager.$locationPermission
             .receive(on: RunLoop.main)
-            .sink { _ in
-                if self.locationManager.hasLocationAccess {
+            .sink {
+                if let status = $0,
+                   self.locationManager.isAuthorized(status) {
                     self.isMyLocationEnabled = true
 
                     if self.isTableView {
@@ -620,18 +640,24 @@ class CasesViewModel: ObservableObject {
         Publishers.CombineLatest3(
             incidentWorksitesCount,
             dataPullReporter.incidentDataPullStats.eraseToAnyPublisher(),
-            filterRepository.casesFiltersLocation.eraseToAnyPublisher()
+            filterRepository.casesFiltersLocation.eraseToAnyPublisher(),
         )
-        .debounce(for: .seconds(0.016), scheduler: RunLoop.current)
-        .throttle(for: .seconds(1.0), scheduler: RunLoop.current, latest: true)
-        .sink { count, stats, filtersLocation in
-            self.refreshTiles(count, stats, filtersLocation)
+        .throttle(for: .seconds(0.6), scheduler: RunLoop.current, latest: true)
+        .sink { count, stats, _ in
+            self.refreshTiles(count, stats)
         }
         .store(in: &subscriptions)
     }
 
     func syncWorksitesData(_ forceRefreshAll: Bool = false) {
-        syncPuller.appPullIncidentWorksitesDelta(forceRefreshAll)
+        syncPuller.appPullIncidentData(
+            cancelOngoing: false,
+            forcePullIncidents: false,
+            cacheSelectedIncident: false,
+            cacheActiveIncidentWorksites: true,
+            cacheFullWorksites: true,
+            restartCacheCheckpoint: forceRefreshAll
+        )
     }
 
     private func setTileRendererLocation() {
@@ -650,24 +676,43 @@ class CasesViewModel: ObservableObject {
         return false
     }
 
+    private func reloadMapOverlay() {
+        if let map = mapView,
+           let renderer = map.renderer(for: mapDotsOverlay) as? MKTileOverlayRenderer {
+            renderer.reloadData()
+        }
+    }
+
     private func refreshTiles(
         _ idCount: IncidentIdWorksiteCount,
         _ pullStats: IncidentDataPullStats,
-        _ filtersLocation: (CasesFilter, Bool, Double)
     ) {
-        let casesCount = idCount.totalCount
-        var clearCache = casesCount == 0
-        clearCache = mapDotsOverlay.onStateChange(
-            incidentId,
-            casesCount,
-            filtersLocation,
-            clearCache
-        )
+        if mapDotsOverlay.tilesIncident != idCount.id ||
+            idCount.id != pullStats.incidentId {
+            return
+        }
 
-        if clearCache || pullStats.isEnded,
-           let map = mapView,
-           let renderer = map.renderer(for: mapDotsOverlay) as? MKTileOverlayRenderer {
-            renderer.reloadData()
+        let now = Date.now
+
+        if pullStats.isEnded {
+            tileRefreshedTimestamp = now
+            mapDotsOverlay.setIncident(idCount.id, idCount.totalCount, clearCache: true)
+            reloadMapOverlay()
+            return
+        }
+
+        if !pullStats.isStarted || idCount.totalCount == 0 {
+            return
+        }
+
+        let sinceLastRefresh = tileRefreshedTimestamp.distance(to: now)
+        let refreshTiles = tileRefreshedTimestamp == epochZero ||
+        pullStats.startTime.distance(to: now) > tileClearRefreshInterval &&
+        sinceLastRefresh > tileClearRefreshInterval
+        if (refreshTiles) {
+            tileRefreshedTimestamp = now
+            mapDotsOverlay.setIncident(idCount.id, idCount.totalCount, clearCache: true)
+            reloadMapOverlay()
         }
     }
 
@@ -888,12 +933,6 @@ extension CLLocationCoordinate2D {
             longitude: longitude - span.longitudeDelta
         )
     }
-}
-
-public struct IncidentIdWorksiteCount {
-    let id: Int64
-    let totalCount: Int
-    let filteredCount: Int
 }
 
 struct WorksiteDistance {

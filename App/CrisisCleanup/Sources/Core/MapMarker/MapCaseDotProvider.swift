@@ -131,7 +131,7 @@ struct DotDrawProperties: Equatable {
 
     init (
         bitmapSize: Double = 8.0,
-        dotDiameter: Double = 4.0,
+        dotDiameter: Double = 5.0,
         strokeWidth: Double = 0.5
     ) {
         self.strokeWidth = strokeWidth

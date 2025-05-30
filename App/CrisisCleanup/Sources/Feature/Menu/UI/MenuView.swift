@@ -15,10 +15,8 @@ struct MenuView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             TopBar(
-                viewModel: viewModel,
                 incidentSelectViewBuilder: incidentSelectViewBuilder,
                 openAuthScreen: openAuthScreen,
-                isLoadingIncidents: viewModel.isLoadingIncidents
             )
             .tint(.black)
             .padding()
@@ -35,6 +33,11 @@ struct MenuView: View {
                     gettingStartedUrl: viewModel.gettingStartedVideoUrl,
                     isNonProduction: !viewModel.isProduction,
                     toggleGettingStartedSection: { viewModel.showGettingStartedVideo(true) }
+                )
+
+                IncidentCacheView(
+                    incidentCachePreferences: viewModel.incidentCachePreferences,
+                    hasSpeedNotAdaptive: viewModel.incidentDataCacheMetrics.hasSpeedNotAdaptive
                 )
 
                 Button(t.t("list.lists")) {
@@ -133,16 +136,17 @@ struct MenuView: View {
             }
             .presentationDetents([.fraction(0.33), .medium])
         }
+        .environmentObject(viewModel)
     }
 }
 
 private struct TopBar: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    @ObservedObject var viewModel: MenuViewModel
+    @EnvironmentObject var viewModel: MenuViewModel
+
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
     let openAuthScreen: () -> Void
-    let isLoadingIncidents: Bool
 
     @State var showIncidentSelect = false
 
@@ -159,10 +163,11 @@ private struct TopBar: View {
                     incident: selectedIncident,
                     showDropdown: !selectedIncident.isEmptyIncident,
                     text: title,
-                    isLoading: viewModel.showHeaderLoading,
+                    isLoading: viewModel.isLoadingIncidentData,
                     isSpaceConstrained: true
                 )
             }
+            .disabled(viewModel.incidentsData.isFirstLoad)
             .sheet(
                 isPresented: $showIncidentSelect,
                 onDismiss: {
@@ -173,7 +178,6 @@ private struct TopBar: View {
                     onDismiss: { showIncidentSelect = false }
                 )
             }
-            .disabled(isLoadingIncidents)
 
             Spacer()
 
@@ -313,5 +317,49 @@ private struct RequestLocationView: View {
             }
         }
         .padding()
+    }
+}
+
+private struct IncidentCacheView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    @EnvironmentObject var router: NavigationRouter
+
+    let incidentCachePreferences: IncidentWorksitesCachePreferences
+    let hasSpeedNotAdaptive: Bool
+
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            if hasSpeedNotAdaptive {
+                Text(t.t("appMenu.good_internet_use_adaptive"))
+                    .padding(.bottom, appTheme.listItemVerticalPadding)
+            }
+
+            HStack(alignment: .center, spacing: appTheme.gridItemSpacing) {
+                let syncingPolicy = if incidentCachePreferences.isPaused {
+                    t.t("appMenu.pause_downloading_cases")
+                } else if incidentCachePreferences.isBoundedNearMe {
+                    t.t("appMenu.download_cases_near_me")
+                } else if incidentCachePreferences.isBoundedByCoordinates {
+                    t.t("appMenu.download_cases_specific_area")
+                } else {
+                    t.t("appMenu.adaptively_download_cases")
+                }
+
+                Text(syncingPolicy)
+
+                Spacer()
+
+                Button {
+                    router.openIncidentDataCaching()
+                } label: {
+                    Text(t.t("actions.change"))
+                }
+                .foregroundStyle(appTheme.colors.actionLinkColor)
+                .padding()
+            }
+        }
+        .padding(.horizontal)
     }
 }

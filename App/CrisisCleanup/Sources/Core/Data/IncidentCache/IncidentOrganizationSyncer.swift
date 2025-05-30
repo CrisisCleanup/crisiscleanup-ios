@@ -47,26 +47,15 @@ class IncidentOrganizationSyncer: OrganizationsSyncer {
     }
 
     func sync(_ incidentId: Int64) async throws {
-        let statsUpdater = IncidentDataPullStatsUpdater(
-            { stats in self.dataPullStatsSubject.value = stats }
-        )
-        statsUpdater.beginPull(incidentId)
-
-        do {
-            defer { statsUpdater.endPull() }
-            try await saveOrganizationsData(incidentId, statsUpdater)
-        }
+        try await saveOrganizationsData(incidentId)
     }
 
     private func saveOrganizationsData(
         _ incidentId: Int64,
-        _ statsUpdater: IncidentDataPullStatsUpdater
     ) async throws {
         var syncCount = 100
-        statsUpdater.updateDataCount(syncCount)
-        statsUpdater.setPagingRequest()
-
         let syncStart = Date.now
+
         var requestedCount = 0
         var networkDataOffset = 0
         let pageDataCount = 100
@@ -80,7 +69,6 @@ class IncidentOrganizationSyncer: OrganizationsSyncer {
                 )
 
                 syncCount = worksitesRequest?.count ?? 0
-                statsUpdater.updateDataCount(syncCount)
 
                 if let results = worksitesRequest?.results {
                     try await networkDataCache.saveOrganizations(
@@ -98,7 +86,6 @@ class IncidentOrganizationSyncer: OrganizationsSyncer {
                 try Task.checkCancellation()
 
                 requestedCount = min(networkDataOffset, syncCount)
-                statsUpdater.updateRequestedCount(requestedCount)
             }
         } catch {
             if error is CancellationError {
@@ -122,7 +109,6 @@ class IncidentOrganizationSyncer: OrganizationsSyncer {
                     primaryContacts
                 )
 
-                statsUpdater.addSavedCount(Int(Double(organizations.count) * 0.5))
                 dbSaveCount += pageDataCount
             } else {
                 break
@@ -144,8 +130,6 @@ class IncidentOrganizationSyncer: OrganizationsSyncer {
                     organizationContactCrossRefs,
                     organizationAffiliates
                 )
-
-                statsUpdater.addSavedCount(Int(Double(organizations.count) * 0.5))
             } else {
                 break
             }

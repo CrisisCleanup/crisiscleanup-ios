@@ -3,7 +3,8 @@ import SwiftUI
 private let fontBaseName = "NunitoSans10pt"
 private let appFontRegularName = "\(fontBaseName)-Regular"
 private let appFontBoldName = "\(fontBaseName)-Bold"
-private let smallFontSize = 14.0
+private let smallFontSize = 12.0
+private let mediumFontSize = 14.0
 private let largeFontSize = 16.0
 extension Font {
     static var bodyLarge: Font {
@@ -12,6 +13,10 @@ extension Font {
 
     static var bodySmall: Font {
         Font.custom(appFontRegularName, size: smallFontSize)
+    }
+
+    static var bodyMedium: Font {
+        Font.custom(appFontRegularName, size: mediumFontSize)
     }
 
     static var header1: Font {
@@ -40,6 +45,10 @@ extension UIFont {
         UIFont(name: appFontRegularName, size: smallFontSize)!
     }
 
+    static var bodyMedium: UIFont {
+        UIFont(name: appFontRegularName, size: mediumFontSize)!
+    }
+
     static var bodyLarge: UIFont {
         UIFont(name: appFontRegularName, size: largeFontSize)!
     }
@@ -62,7 +71,8 @@ fileprivate struct FontLineHeight: ViewModifier {
     }
 }
 
-private let bodySmallModifier = FontLineHeight(font: Font.bodySmall, lineHeight: 16.8)
+private let bodySmallModifier = FontLineHeight(font: Font.bodySmall, lineHeight: 16.0)
+private let bodyMediumModifier = FontLineHeight(font: Font.bodyMedium, lineHeight: 20.0)
 private let header1Modifier = FontLineHeight(font: Font.header1, lineHeight: 28.7)
 private let header2Modifier = FontLineHeight(font: Font.header2, lineHeight: 27.28)
 private let header3Modifier = FontLineHeight(font: Font.header3, lineHeight: 24.55)
@@ -73,6 +83,13 @@ extension View {
         ModifiedContent(
             content: self,
             modifier: bodySmallModifier
+        )
+    }
+
+    func fontBodyMedium() -> some View {
+        ModifiedContent(
+            content: self,
+            modifier: bodyMediumModifier
         )
     }
 

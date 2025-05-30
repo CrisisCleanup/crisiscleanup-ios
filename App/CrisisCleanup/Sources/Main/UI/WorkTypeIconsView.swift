@@ -31,8 +31,7 @@ internal struct WorkTypeIconsView: View {
                         }
                     }
                 } else {
-                    ForEach(iconImages.indices) { i in
-                        let image = iconImages[i]
+                    ForEach(iconImages, id: \.self) { image in
                         Image(uiImage: image)
                     }
                 }

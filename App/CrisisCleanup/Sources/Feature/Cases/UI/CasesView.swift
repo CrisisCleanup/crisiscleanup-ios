@@ -46,7 +46,6 @@ struct CasesLayoutView: View {
     }
 
     var body: some View {
-        let isLoadingIncidents = viewModel.isLoadingIncidents
         let hasNoIncidents = viewModel.incidentsData.incidents.isEmpty
 
         ZStack {
@@ -54,7 +53,6 @@ struct CasesLayoutView: View {
                 CasesTableView(
                     phoneCallNumbers: $phoneCallNumbers,
                     incidentSelectViewBuilder: incidentSelectViewBuilder,
-                    isLoadingIncidents: isLoadingIncidents,
                     hasNoIncidents: hasNoIncidents
                 )
             } else {
@@ -83,6 +81,7 @@ struct CasesLayoutView: View {
                 }
                 .onChange(of: viewModel.isMyLocationEnabled) { enabled in
                     if enabled {
+                        // TODO: Does this center once or follow until disengaged?
                         map.userTrackingMode = .follow
                     }
                 }
@@ -113,7 +112,6 @@ struct CasesLayoutView: View {
                 map: $map,
                 isSatelliteMapType: $isSatelliteMapType,
                 incidentSelectViewBuilder: incidentSelectViewBuilder,
-                isLoadingIncidents: isLoadingIncidents,
                 hasNoIncidents: hasNoIncidents,
                 animateToSelectedIncidentBounds: animateToSelectedIncidentBounds,
                 isShortScreen: viewLayout.isShort
@@ -151,7 +149,6 @@ private struct MapViewTopActions: View {
 
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
 
-    let isLoadingIncidents: Bool
     @State private var openIncidentSelect = false
 
     @State private var showCountProgress = false
@@ -167,6 +164,7 @@ private struct MapViewTopActions: View {
                 )
                 .shadow(radius: appTheme.shadowRadius)
             }
+            .disabled(viewModel.incidentsData.isFirstLoad)
             .sheet(
                 isPresented: $openIncidentSelect,
                 onDismiss: {
@@ -177,7 +175,6 @@ private struct MapViewTopActions: View {
                     onDismiss: { openIncidentSelect = false }
                 )
             }
-            .disabled(isLoadingIncidents)
 
             Spacer()
 
@@ -238,6 +235,9 @@ private struct MapViewTopActions: View {
                 showCountProgress = b
             }
         }
+        .onAppear {
+            showCountProgress = viewModel.hasCasesCountProgress
+        }
     }
 }
 
@@ -253,7 +253,6 @@ private struct CasesOverlayElements: View {
 
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
 
-    let isLoadingIncidents: Bool
     let hasNoIncidents: Bool
 
     let animateToSelectedIncidentBounds: (_ bounds: LatLngBounds) -> Void
@@ -268,7 +267,6 @@ private struct CasesOverlayElements: View {
             if isMapView {
                 MapViewTopActions(
                     incidentSelectViewBuilder: incidentSelectViewBuilder,
-                    isLoadingIncidents: isLoadingIncidents
                 )
                 .padding(.bottom)
             }
