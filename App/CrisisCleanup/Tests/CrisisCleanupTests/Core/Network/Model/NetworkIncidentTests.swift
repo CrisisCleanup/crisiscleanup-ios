@@ -25,7 +25,11 @@ final class NetworkIncidentTests: XCTestCase {
             60, "2017-08-24T00:00:00Z",
             "Big Hurricane (Fake)", "hurricane_harvey", "d", "hurricane",
             [NetworkIncidentLocation(63, 41823)],
-            isArchived: true
+            activePhone: [
+                4104561234,
+                3014561234,
+            ],
+            isArchived: true,
         ),
         fillNetworkIncident(
             151, "2019-07-22T00:00:00Z",

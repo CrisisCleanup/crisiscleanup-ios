@@ -98,7 +98,10 @@
       "incident_type": "hurricane",
       "is_archived": true,
       "turn_on_release": false,
-      "active_phone_number": null
+      "active_phone_number": [
+          4104561234,
+          3014561234
+      ]
     },
     {
       "id": 151,

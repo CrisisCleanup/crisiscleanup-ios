@@ -9,7 +9,9 @@ extension NetworkIncident {
             shortName: shortName,
             caseLabel: caseLabel,
             type: type,
-            activePhoneNumber: activePhoneNumber?.commaJoined,
+            activePhoneNumber: activePhoneNumber?
+                .map { "\($0)"}
+                .commaJoined,
             turnOnRelease: turnOnRelease,
             isArchived: isArchived ?? false
         )
