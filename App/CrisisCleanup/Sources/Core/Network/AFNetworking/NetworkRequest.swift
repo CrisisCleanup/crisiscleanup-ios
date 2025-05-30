@@ -8,8 +8,8 @@ struct NetworkRequest: URLRequestConvertible {
     let headers: HTTPHeaders?
     let additionalPaths: [String]?
     let queryParameters: [URLQueryItem]?
-    let formParameters: Encodable?
-    let bodyParameters: Encodable?
+    let formParameters: (Encodable & Sendable)?
+    let bodyParameters: (Encodable & Sendable)?
     let addTokenHeader: Bool
     let clearCookies: Bool
     let timeoutInterval: TimeInterval?
@@ -20,8 +20,8 @@ struct NetworkRequest: URLRequestConvertible {
         headers: HTTPHeaders? = nil,
         additionalPaths: [String]? = nil,
         queryParameters: [URLQueryItem]? = nil,
-        formParameters: Encodable? = nil,
-        bodyParameters: Encodable? = nil,
+        formParameters: (Encodable & Sendable)? = nil,
+        bodyParameters: (Encodable & Sendable)? = nil,
         addTokenHeader: Bool = false,
         clearCookies: Bool = false,
         timeoutInterval: Double? = nil

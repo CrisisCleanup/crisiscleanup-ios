@@ -57,6 +57,7 @@ private struct CreateEditCaseLayoutView: View {
 
             if showBusyIndicator {
                 ProgressView()
+                    .controlSize(.large)
             }
 
             if viewModel.showExplainLocationPermission {
@@ -67,9 +68,9 @@ private struct CreateEditCaseLayoutView: View {
         }
         .screenTitle(viewModel.headerTitle)
         .hideNavBarUnderSpace()
-        .onChange(of: viewModel.areEditorsReady) { isReady in
+        .onChange(of: viewModel.editableViewState.isEditable) { isEditable in
             withAnimation {
-                showBusyIndicator = !isReady
+                showBusyIndicator = !isEditable
             }
         }
         .onChange(of: viewModel.navigateBack) { b in
@@ -273,7 +274,7 @@ private struct CreateEditCaseContentView: View {
                             }
                         )
                         .interactiveDismissDisabled()
-                        .presentationDetents([.fraction(0.3)])
+                        .presentationDetents([.fraction(0.4)])
                     } else {
                         ProgressView()
                             .circularProgress()
@@ -317,7 +318,7 @@ private struct ConfirmOldIncidentView: View {
         ? "~~{incident_name} was created {relative_time}. Continue creating a Case for {incident_name}?"
         : "~~{incident_name} was created {relative_time}. Continue editing this Case for {incident_name}?"
 
-        VStack {
+        VStack(alignment: .leading) {
             Text(t.t("~~Old Incident"))
                 .fontHeader3()
                 .padding(.vertical)

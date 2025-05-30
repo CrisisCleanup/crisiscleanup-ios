@@ -9,7 +9,6 @@ struct CasesTableView: View {
     @Binding var phoneCallNumbers: [ParsedPhoneNumber]
 
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
-    let isLoadingIncidents: Bool
     let hasNoIncidents: Bool
 
     @State private var showWrongLocationDialog = false
@@ -24,11 +23,11 @@ struct CasesTableView: View {
                     HStack {
                         VStack(alignment: .trailing, spacing: appTheme.gridActionSpacing) {
                             TableViewIncidentSelector(
-                                isLoadingIncidents: isLoadingIncidents,
                                 hasNoIncidents: hasNoIncidents,
                                 selectedIncident: viewModel.incidentsData.selected,
                                 incidentSelectViewBuilder: incidentSelectViewBuilder,
-                                isLoadingData: isLoadingData
+                                isLoading: isLoadingData,
+                                isFirstLoad: viewModel.incidentsData.isFirstLoad,
                             )
 
                             TableViewCaseCountSortOptions(
@@ -73,11 +72,11 @@ struct CasesTableView: View {
             VStack {
                 HStack(spacing: appTheme.gridActionSpacing) {
                     TableViewIncidentSelector(
-                        isLoadingIncidents: isLoadingIncidents,
                         hasNoIncidents: hasNoIncidents,
                         selectedIncident: viewModel.incidentsData.selected,
                         incidentSelectViewBuilder: incidentSelectViewBuilder,
-                        isLoadingData: isLoadingData
+                        isLoading: isLoadingData,
+                        isFirstLoad: viewModel.incidentsData.isFirstLoad,
                     )
 
                     if viewLayout.isWide {
@@ -134,11 +133,11 @@ struct CasesTableView: View {
 }
 
 private struct TableViewIncidentSelector: View {
-    let isLoadingIncidents: Bool
     let hasNoIncidents: Bool
     let selectedIncident: Incident
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
-    let isLoadingData: Bool
+    let isLoading: Bool
+    let isFirstLoad: Bool
 
     @State private var openIncidentSelect = false
 
@@ -149,11 +148,12 @@ private struct TableViewIncidentSelector: View {
             IncidentHeaderView(
                 incident: selectedIncident,
                 showDropdown: !hasNoIncidents,
-                isLoading: isLoadingData,
+                isLoading: isLoading,
                 isSpaceConstrained: true
             )
             .tint(.black)
         }
+        .disabled(isFirstLoad)
         .sheet(
             isPresented: $openIncidentSelect,
             onDismiss: {
@@ -164,7 +164,6 @@ private struct TableViewIncidentSelector: View {
                 onDismiss: { openIncidentSelect = false }
             )
         }
-        .disabled(isLoadingIncidents)
     }
 }
 

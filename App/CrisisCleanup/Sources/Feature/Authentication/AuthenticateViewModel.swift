@@ -20,15 +20,14 @@ class AuthenticateViewModel: ObservableObject {
         accountDataRepository: AccountDataRepository,
         accountEventBus: AccountEventBus,
         incidentsRepository: IncidentsRepository,
-        translator: KeyAssetTranslator,
-        appEnv: AppEnv
+        translator: KeyAssetTranslator
     ) {
         self.accountDataRepository = accountDataRepository
         self.accountEventBus = accountEventBus
         self.incidentsRepository = incidentsRepository
         self.translator = translator
 
-        showRegister = !appEnv.isAustraliaBuild
+        showRegister = false
     }
 
     func onViewAppear() {

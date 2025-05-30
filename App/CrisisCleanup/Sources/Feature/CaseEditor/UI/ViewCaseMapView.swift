@@ -10,7 +10,7 @@ class ViewCaseMapCoordinator: NSObject, MKMapViewDelegate {
     }
 
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        mapView.staticMapAnnotationView(annotation)
+        mapView.staticMapAnnotationView(annotation, imageHeightOffsetWeight: -0.5)
     }
 }
 
@@ -25,7 +25,7 @@ struct ViewCaseMapView : UIViewRepresentable {
         map.delegate = context.coordinator
 
         let image = UIImage(named: "cc_map_pin", in: .module, with: .none)!
-        let casePin = CustomPinAnnotation(caseCoordinates, image)
+        let casePin = CustomPinAnnotation(caseCoordinates, image: image)
         map.addAnnotation(casePin)
         map.showAnnotations([casePin], animated: false)
 
@@ -37,6 +37,6 @@ struct ViewCaseMapView : UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<ViewCaseMapView>) {
-        uiView.animaiteToCenter(caseCoordinates)
+        uiView.animateToCenter(caseCoordinates)
     }
 }

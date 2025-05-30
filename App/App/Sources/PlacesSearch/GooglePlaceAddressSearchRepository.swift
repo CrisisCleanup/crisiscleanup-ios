@@ -28,7 +28,8 @@ class GooglePlaceAddressSearchRepository: AddressSearchRepository {
                 } else {
                     placemark = placemarks?.first
                 }
-                continuation.resume(returning: placemark?.asLocationAddress(location.coordinate))
+                let locationAddress = placemark?.asLocationAddress(location.coordinate)
+                continuation.resume(returning: locationAddress)
             }
         }
     }

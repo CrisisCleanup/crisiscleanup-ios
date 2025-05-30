@@ -1,16 +1,23 @@
-struct NetworkFlagsFormDataResult: Codable, Equatable {
+import Foundation
+
+public struct NetworkFlagsFormDataResult: Codable, Equatable, WorksiteDataResult {
+    typealias T = NetworkFlagsFormData
+
     let errors: [NetworkCrisisCleanupApiError]?
     let count: Int?
     let results: [NetworkFlagsFormData]?
+
+    var data: [NetworkFlagsFormData]? { results }
 }
 
-public struct NetworkFlagsFormData: Codable, Equatable {
+public struct NetworkFlagsFormData: Codable, Equatable, WorksiteDataSubset {
     let id: Int64
     let caseNumber: String
     let formData: [KeyDynamicValuePair]
     let flags: [NetworkFlag]
     let phone1: String?
     let reportedBy: Int64
+    let updatedAt: Date
 
     enum CodingKeys: String, CodingKey {
         case id,
@@ -18,7 +25,8 @@ public struct NetworkFlagsFormData: Codable, Equatable {
              formData = "form_data",
              flags,
              phone1,
-             reportedBy = "reported_by"
+             reportedBy = "reported_by",
+             updatedAt = "updated_at"
     }
 
     public struct NetworkFlag: Codable, Equatable {

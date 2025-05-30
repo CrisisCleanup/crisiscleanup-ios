@@ -91,7 +91,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
 
     var hasInitialCoordinates: Bool { locationInputData.coordinates == caseData?.worksite.coordinates }
     @Published var showExplainLocationPermission = false
-    private var useMyLocationActionTime = Date(timeIntervalSince1970: 0)
+    private var useMyLocationExpirationTime = Date(timeIntervalSince1970: 0)
     @Published var locationOutOfBoundsMessage = ""
 
     private let invalidWorksiteInfoSubject = CurrentValueSubject<InvalidWorksiteInfo, Never>(InvalidWorksiteInfo())
@@ -353,13 +353,13 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         )
             .map { (b0, b1) in b0 || b1 }
         Publishers.CombineLatest4(
-            $isLoading,
-            $isSaving,
             $areEditorsReady,
+            $caseData,
+            $isSaving,
             isTransientPublisher
         )
-        .map { (b0, b1, editorsReady, b2) in
-            b0 || b1 || !editorsReady || b2 }
+        .map { (editorsReady, cd, saving, transient) in
+            return !editorsReady || cd?.isNetworkLoadFinished != true || saving || transient }
         .sink { isTransient in
             self.editableViewState.isEditable = !isTransient
         }
@@ -477,11 +477,11 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     private func subscribeLocationState() {
         locationManager.$locationPermission
             .receive(on: RunLoop.main)
-            .sink { _ in
-                if self.locationManager.hasLocationAccess {
-                    if self.useMyLocationActionTime.distance(to: Date.now) < 20.seconds {
-                        self.updateCoordinatesToMyLocation()
-                    }
+            .sink {
+                if let status = $0,
+                   self.locationManager.isAuthorized(status),
+                   self.useMyLocationExpirationTime.distance(to: Date.now) < 0.seconds {
+                    self.updateCoordinatesToMyLocation()
                 }
             }
             .store(in: &subscriptions)
@@ -664,8 +664,10 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
 
     private func updateCoordinatesToMyLocation() {
         if let location = locationManager.getLocation() {
-            let latLng = location.coordinate.latLng
+            let coordinates = location.coordinate
+            let latLng = coordinates.latLng
             locationInputData.coordinates = latLng
+            worksiteProvider.editableWorksite.value = worksiteProvider.copyCoordinates(coordinates)
 
             Task {
                 if let address = await locationSearchManager.queryAddress(latLng) {
@@ -678,9 +680,10 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     }
 
     func useMyLocation() {
-        useMyLocationActionTime = Date.now
         if locationManager.requestLocationAccess() {
             updateCoordinatesToMyLocation()
+        } else {
+            useMyLocationExpirationTime = Date.now.addingTimeInterval(20.seconds)
         }
 
         if locationManager.isDeniedLocationAccess {

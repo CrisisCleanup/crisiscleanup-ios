@@ -39,14 +39,6 @@ public protocol WorksitesRepository {
         longitudeRight: Double
     ) throws -> Int
 
-    func refreshWorksites(
-        _ incidentId: Int64,
-        forceQueryDeltas: Bool,
-        forceRefreshAll: Bool
-    ) async throws
-
-    func getWorksiteSyncStats(_ incidentId: Int64) throws -> IncidentDataSyncStats?
-
     func getLocalId(_ networkWorksiteId: Int64) throws -> Int64
 
     func syncNetworkWorksite(
@@ -63,6 +55,11 @@ public protocol WorksitesRepository {
         worksiteId: Int64,
         viewStart: Date
     )
+
+    func getRecentWorksitesCenterLocation(
+        _ incidentId: Int64,
+        limit: Int
+    ) async throws -> CLLocationCoordinate2D?
 
     func getUnsyncedCounts(_ worksiteId: Int64) throws -> [Int]
 
@@ -85,14 +82,6 @@ public protocol WorksitesRepository {
 }
 
 extension WorksitesRepository {
-    func refreshWorksites(_ incidentId: Int64) async throws {
-        try await refreshWorksites(
-            incidentId,
-            forceQueryDeltas: false,
-            forceRefreshAll: false
-        )
-    }
-
     func syncNetworkWorksite(_ worksite: NetworkWorksiteFull) async throws -> Bool {
         return try await syncNetworkWorksite(worksite, Date())
     }

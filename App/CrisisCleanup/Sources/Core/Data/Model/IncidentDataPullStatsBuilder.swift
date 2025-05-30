@@ -13,48 +13,54 @@ extension IncidentDataPullStats {
 	}
 
 	struct Builder {
-		var isStarted: Bool
 		var incidentId: Int64
-		var pullStart: Date
-		var dataCount: Int
-		var isPagingRequest: Bool
-		var requestedCount: Int
-		var savedCount: Int
+		var incidentName: String
+		var pullType: IncidentPullDataType
+		var isIndeterminate: Bool
+		var stepTotal: Int
+		var currentStep: Int
+		var notificationMessage: String
+		var isStarted: Bool
+		var startTime: Date
 		var isEnded: Bool
+		var dataCount: Int
+		var queryCount: Int
+		var savedCount: Int
 		var startProgressAmount: Double
-		var countProgressAmount: Double
-		var requestStartedAmount: Double
-		var saveStartedAmount: Double
 
 		fileprivate init(original: IncidentDataPullStats) {
-			self.isStarted = original.isStarted
 			self.incidentId = original.incidentId
-			self.pullStart = original.pullStart
-			self.dataCount = original.dataCount
-			self.isPagingRequest = original.isPagingRequest
-			self.requestedCount = original.requestedCount
-			self.savedCount = original.savedCount
+			self.incidentName = original.incidentName
+			self.pullType = original.pullType
+			self.isIndeterminate = original.isIndeterminate
+			self.stepTotal = original.stepTotal
+			self.currentStep = original.currentStep
+			self.notificationMessage = original.notificationMessage
+			self.isStarted = original.isStarted
+			self.startTime = original.startTime
 			self.isEnded = original.isEnded
+			self.dataCount = original.dataCount
+			self.queryCount = original.queryCount
+			self.savedCount = original.savedCount
 			self.startProgressAmount = original.startProgressAmount
-			self.countProgressAmount = original.countProgressAmount
-			self.requestStartedAmount = original.requestStartedAmount
-			self.saveStartedAmount = original.saveStartedAmount
 		}
 
 		fileprivate func toIncidentDataPullStats() -> IncidentDataPullStats {
 			return IncidentDataPullStats(
-				isStarted: isStarted,
 				incidentId: incidentId,
-				pullStart: pullStart,
-				dataCount: dataCount,
-				isPagingRequest: isPagingRequest,
-				requestedCount: requestedCount,
-				savedCount: savedCount,
+				incidentName: incidentName,
+				pullType: pullType,
+				isIndeterminate: isIndeterminate,
+				stepTotal: stepTotal,
+				currentStep: currentStep,
+				notificationMessage: notificationMessage,
+				isStarted: isStarted,
+				startTime: startTime,
 				isEnded: isEnded,
-				startProgressAmount: startProgressAmount,
-				countProgressAmount: countProgressAmount,
-				requestStartedAmount: requestStartedAmount,
-				saveStartedAmount: saveStartedAmount
+				dataCount: dataCount,
+				queryCount: queryCount,
+				savedCount: savedCount,
+				startProgressAmount: startProgressAmount
 			)
 		}
 	}

@@ -22,6 +22,7 @@ public class MainComponent: BootstrapComponent,
                             InviteTeammateViewBuilder,
                             RequestRedeployViewBuilder,
                             ListsViewBuilder,
+                            IncidentWorksitesCacheViewBuilder,
                             SyncInsightsViewBuilder
 {
     public let appEnv: AppEnv
@@ -30,7 +31,7 @@ public class MainComponent: BootstrapComponent,
     public let addressSearchRepository: AddressSearchRepository
     public let externalEventBus: ExternalEventBus
 
-    lazy var mainViewModel: MainViewModel = MainViewModel(
+    lazy var mainViewModel = MainViewModel(
         accountDataRepository: accountDataRepository,
         appSupportRepository: appSupportRepository,
         appVersionProvider: appVersionProvider,
@@ -112,6 +113,7 @@ public class MainComponent: BootstrapComponent,
             inviteTeammateViewBuilder: self,
             requestRedeployViewBuilder: self,
             listsViewBuilder: self,
+            incidentCacheViewBuilder: self,
             syncInsightsViewBuilder: self
         )
     }
@@ -313,11 +315,17 @@ public class MainComponent: BootstrapComponent,
 
     // MARK: Lists
 
-    lazy var listsComponent = ListsComponent(parent: self, routerObserver: routerObserver)
+    private lazy var listsComponent = ListsComponent(parent: self, routerObserver: routerObserver)
 
     public var listsView: AnyView { listsComponent.listsView }
 
     public func viewListView(_ listId: Int64) -> AnyView { listsComponent.viewListView(listId) }
+
+    // MARK: Incident data cache
+
+    private lazy var incidentWorksitesCacheComponent = IncidentWorksitesCacheComponent(parent: self, routerObserver: routerObserver)
+
+    public var incidentWorksitesCacheView: AnyView { incidentWorksitesCacheComponent.incidentWorksitesCacheView }
 
     // MARK: Sync insights
 

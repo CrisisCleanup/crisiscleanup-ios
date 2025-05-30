@@ -40,7 +40,8 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
          pasteOrgInviteLink,
          requestRedeploy,
          lists,
-         viewList(_ listId: Int64)
+         viewList(_ listId: Int64),
+         incidentDataCaching
 
     public var id: Int {
         switch self {
@@ -77,6 +78,7 @@ public enum NavigationRoute: Identifiable, Hashable, Codable {
         case .worksiteImages:   return 31
         case .lists:            return 32
         case .viewList:         return 33
+        case .incidentDataCaching: return 34
 
         case .syncInsights: return 77
         }

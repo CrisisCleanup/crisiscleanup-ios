@@ -4,20 +4,23 @@ private let reuseIdentifier = "reuse-identifier"
 
 class CustomPinAnnotation: NSObject, MKAnnotation {
     dynamic var coordinate: CLLocationCoordinate2D
-    var image: UIImage?
+    let image: UIImage?
+    let id: String
 
     init(
         _ coordinate: CLLocationCoordinate2D,
-        _ image: UIImage? = nil
+        image: UIImage? = nil,
+        id: String = ""
     ) {
         self.coordinate = coordinate
         self.image = image
+        self.id = id
         super.init()
     }
 }
 
 extension MKMapView {
-    func animaiteToCenter(
+    func animateToCenter(
         _ center: CLLocationCoordinate2D,
         _ zoomLevel: Int = 11
     ) {
@@ -68,7 +71,11 @@ extension MKMapView {
         isScrollEnabled: Bool = false,
         isExistingMap: Bool = false
     ) {
-        configure(overlays: makeOverlayPolygons())
+        configure(
+            overlays: makeOverlayPolygons(),
+            isScrollEnabled: isScrollEnabled,
+            isExistingMap: isExistingMap,
+        )
     }
 
     func configure(
@@ -89,11 +96,41 @@ extension MKMapView {
         addOverlays(overlays)
     }
 
-    func staticMapAnnotationView(_ annotation: MKAnnotation) -> MKAnnotationView? {
+    func staticMapAnnotationView(
+        _ annotation: MKAnnotation,
+        imageHeightOffsetWeight: CGFloat = -0.5
+    ) -> MKAnnotationView? {
         guard let annotationView = dequeueReusableAnnotationView(withIdentifier: reuseIdentifier) else {
             if let annotation = annotation as? CustomPinAnnotation {
                 let view = MKAnnotationView(annotation: annotation, reuseIdentifier: reuseIdentifier)
                 view.image = annotation.image
+                if let annotationImage = annotation.image,
+                   imageHeightOffsetWeight != 0 {
+                    view.centerOffset = CGPointMake(0, annotationImage.size.height * imageHeightOffsetWeight)
+                }
+                return view
+            }
+            return nil
+        }
+        return annotationView
+    }
+
+    func reusableAnnotationView(
+        _ annotation: MKAnnotation,
+        imageHeightOffsetWeight: CGFloat = -0.5
+    ) -> MKAnnotationView? {
+        var identifier = reuseIdentifier
+        var image: UIImage? = nil
+        if let customAnnotation = annotation as? CustomPinAnnotation {
+            identifier = customAnnotation.id
+            image = customAnnotation.image
+        }
+
+        guard let annotationView = dequeueReusableAnnotationView(withIdentifier: identifier) else {
+            if let annotationImage = image {
+                let view = MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+                view.image = annotationImage
+                view.centerOffset = CGPointMake(0, annotationImage.size.height * imageHeightOffsetWeight)
                 return view
             }
             return nil
@@ -104,7 +141,7 @@ extension MKMapView {
 
 func overlayMapRenderer(
     _ polygon: MKPolygon,
-    _ alpha: Double = 0.5,
+    _ alpha: Double = 0.6,
     _ color: UIColor = .black
 ) -> MKPolygonRenderer {
     let renderer = MKPolygonRenderer(polygon: polygon)
@@ -112,6 +149,19 @@ func overlayMapRenderer(
     renderer.lineWidth = 0
     renderer.fillColor = color
     renderer.blendMode = .color
+    return renderer
+}
+
+func overlayCircleRenderer(
+    _ circle: MKCircle,
+    strokeColor: UIColor,
+    fillColor: UIColor,
+    strokeWidth: Double = 4.0,
+) -> MKCircleRenderer {
+    let renderer = MKCircleRenderer(circle: circle)
+    renderer.lineWidth = strokeWidth
+    renderer.strokeColor = strokeColor
+    renderer.fillColor = fillColor
     return renderer
 }
 

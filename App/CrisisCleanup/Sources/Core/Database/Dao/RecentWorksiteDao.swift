@@ -1,4 +1,5 @@
 import Combine
+import CoreLocation
 import Foundation
 import GRDB
 
@@ -13,11 +14,11 @@ public class RecentWorksiteDao {
 
     func streamRecentWorksites(
         _ incidentId: Int64,
-        _ limit: Int = 29,
-        _ offset: Int = 0
+        limit: Int = 29,
+        offset: Int = 0
     ) -> AnyPublisher<[WorksiteSummary], Error> {
         ValueObservation
-            .tracking { db in try self.fetchRecents(db, incidentId, limit, offset) }
+            .tracking { db in try self.fetchRecents(db, incidentId, limit: limit, offset: offset) }
             .map { $0.map { p in p.worksite.asSummary() } }
             .shared(in: reader)
             .publisher()
@@ -27,8 +28,8 @@ public class RecentWorksiteDao {
     private func fetchRecents(
         _ db: Database,
         _ incidentId: Int64,
-        _ limit: Int = 0,
-        _ offset: Int = 0
+        limit: Int = 0,
+        offset: Int = 0
     ) throws -> [PopulatedRecentWorksite] {
         try RecentWorksiteRecord
             .all()
@@ -40,6 +41,24 @@ public class RecentWorksiteDao {
             .fetchAll(db)
         // TODO: Move filter into SQL
             .filter { $0.worksite.incidentId == incidentId }
+    }
+
+    func getRecentWorksitesCenterLocation(_ incidentId: Int64, limit: Int = 3) throws -> CLLocationCoordinate2D? {
+        let recentWorksites = try reader.read { db in try fetchRecents(db, incidentId, limit: limit) }
+            .map { $0.worksite }
+        if recentWorksites.isNotEmpty {
+            var totalLatitude = 0.0
+            var totalLongitude = 0.0
+            recentWorksites.forEach {
+                totalLatitude += $0.latitude
+                totalLongitude += $0.longitude
+            }
+            let countDouble = Double(recentWorksites.count)
+            let averageLatitude = totalLatitude / countDouble
+            let averageLongitude = totalLongitude / countDouble
+            return CLLocationCoordinate2DMake(averageLatitude, averageLongitude)
+        }
+        return nil
     }
 
     func upsert(_ recentWorksite: RecentWorksiteRecord) async throws {

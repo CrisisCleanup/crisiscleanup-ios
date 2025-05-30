@@ -247,12 +247,22 @@ private struct MediaDisplay: View {
                         Image(systemName: "exclamationmark.circle")
                             .resizable()
                             .scaledToFit()
+                            .onTapGesture {
+                                if !isDeleting {
+                                    openViewImage(caseImage)
+                                }
+                            }
                             .foregroundColor(appTheme.colors.primaryRedColor)
                             .padding()
                     } else {
                         Image(systemName: "photo.circle")
                             .resizable()
                             .scaledToFit()
+                            .onTapGesture {
+                                if !isDeleting {
+                                    openViewImage(caseImage)
+                                }
+                            }
                             .foregroundColor(.gray)
                             .padding()
                     }

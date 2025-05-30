@@ -10,8 +10,6 @@ public protocol LanguageTranslationsRepository: KeyAssetTranslator {
 
     func loadLanguages(_ force: Bool) async
 
-    func setLanguage(_ key: String)
-
     func setLanguageFromSystem()
 
     func getLanguageOptions() async -> [LanguageIdName]
@@ -22,10 +20,6 @@ public protocol LanguageTranslationsRepository: KeyAssetTranslator {
 extension LanguageTranslationsRepository {
     func loadLanguages() async {
         await loadLanguages(false)
-    }
-
-    func setLanguage() {
-        setLanguage("")
     }
 }
 
@@ -38,7 +32,7 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
     let currentLanguage: any Publisher<Language, Never>
 
     private let dataSource: CrisisCleanupNetworkDataSource
-    private let appPreferencesDataStore: AppPreferencesDataStore
+    private let appPreferencesDataSource: AppPreferencesDataSource
     private let languageDao: LanguageDao
     private let logger: AppLogger
 
@@ -53,13 +47,13 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
 
     init(
         dataSource: CrisisCleanupNetworkDataSource,
-        appPreferencesDataStore: AppPreferencesDataStore,
+        appPreferencesDataSource: AppPreferencesDataSource,
         languageDao: LanguageDao,
         statusRepository: WorkTypeStatusRepository,
         loggerFactory: AppLoggerFactory
     ) {
         self.dataSource = dataSource
-        self.appPreferencesDataStore = appPreferencesDataStore
+        self.appPreferencesDataSource = appPreferencesDataSource
         self.languageDao = languageDao
         self.statusRepository = statusRepository
         logger = loggerFactory.getLogger("language-translations")
@@ -75,7 +69,7 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
                 languages.isEmpty ? [EnglishLanguage] : languages
             }
 
-        let languageData = appPreferencesDataStore.preferences
+        let languageData = appPreferencesDataSource.preferences
             .eraseToAnyPublisher()
             .map { languageDao.streamLanguageTranslations($0.languageKey) }
             .switchToLatest()
@@ -94,7 +88,7 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
             language
         }
 
-        appPreferencesDataStore.preferences
+        appPreferencesDataSource.preferences
             .assign(to: \.appPreferences, on: self)
             .store(in: &disposables)
 
@@ -160,7 +154,7 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
         }
     }
 
-    func setLanguage(_ key: String) {
+    private func setLanguage(_ key: String) {
         setLanguageTask?.cancel()
         setLanguageTask = Task {
             isSettingLanguageSubject.value = true
@@ -186,7 +180,7 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
 
                 try Task.checkCancellation()
 
-                appPreferencesDataStore.setLanguageKey(languageKey)
+                appPreferencesDataSource.setLanguageKey(languageKey)
             } catch {
                 logger.logError(error)
             }

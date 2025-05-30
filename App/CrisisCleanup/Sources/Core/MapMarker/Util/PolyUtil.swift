@@ -26,8 +26,8 @@ class PolyUtil {
             let yj = latLngs[j].latitude
 
             let onBoundary = (y * (xi - xj) + yi * (xj - x) + yj * (x - xi) == 0) &&
-                ((xi - x) * (xj - x) <= 0) &&
-                ((yi - y) * (yj - y) <= 0)
+            ((xi - x) * (xj - x) <= 0) &&
+            ((yi - y) * (yj - y) <= 0)
 
             if onBoundary {
                 return !ignoreBoundary
@@ -45,16 +45,32 @@ class PolyUtil {
         return isInside
     }
 
-    static func shoelaceArea(_ latLngs: [LatLng]) -> Double {
-        var sumA = 0.0
-        var sumB = 0.0
+    static func sphericalArea(_ latLngs: [LatLng]) -> Double {
+        guard latLngs.count > 2 else { return 0 }
+
+        var area = 0.0
+
+        let radiansScalar = .pi / 180.0
         for i in latLngs.indices {
-            let a = i % latLngs.count
-            let b = (i + 1) % latLngs.count
-            sumA += latLngs[a].latitude * latLngs[b].longitude
-            sumB = latLngs[b].latitude * latLngs[a].longitude
+            let j = (i + 1) % latLngs.count
+
+            let vertexA = latLngs[i]
+            let vertexB = latLngs[j]
+
+            let phiA = vertexA.latitude * radiansScalar
+            let phiB = vertexB.latitude * radiansScalar
+            let lambdaA = vertexA.longitude * radiansScalar
+            let lambdaB = vertexB.longitude * radiansScalar
+
+            // Calculate the area contribution of this edge
+            area += (lambdaB - lambdaA) * (2 + sin(phiA) + sin(phiB))
         }
-        return abs(sumA - sumB) * 0.5
+
+        // In meters
+        let earthRadius = 6.371e6
+        area = abs(area * earthRadius * earthRadius / 2.0)
+
+        return area
     }
 
     // TODO: Compute spherical distance instead

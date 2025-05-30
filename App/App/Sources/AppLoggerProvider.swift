@@ -14,7 +14,7 @@ class TagLogger: AppLogger {
 
     func logDebug(_ items: Any...) {
         if appEnv.isDebuggable {
-            print(self.tag, items)
+            print(tag, items)
         }
     }
 
@@ -30,9 +30,9 @@ class TagLogger: AppLogger {
 
         if appEnv.isDebuggable {
             if let ge = e as? GenericError {
-                print(self.tag, ge.message)
+                print(tag, ge.message)
             } else {
-                print(self.tag, e)
+                print(tag, e)
             }
         } else {
             if let ge = e as? GenericError {
@@ -61,6 +61,6 @@ class AppLoggerProvider: AppLoggerFactory {
     }
 
     func getLogger(_ tag: String = "app") -> AppLogger {
-        return TagLogger(appEnv: self.appEnv, tag: tag)
+        return TagLogger(appEnv: appEnv, tag: tag)
     }
 }

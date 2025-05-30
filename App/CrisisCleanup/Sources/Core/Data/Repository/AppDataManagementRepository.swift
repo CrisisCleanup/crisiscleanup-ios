@@ -9,7 +9,7 @@ public protocol AppDataManagementRepository {
 class CrisisCleanupDataManagementRepository: AppDataManagementRepository {
     private let incidentsRepository: IncidentsRepository
     private let worksiteChangeRepository: WorksiteChangeRepository
-    private let worksiteSyncStatDao: WorksiteSyncStatDao
+    private let incidentDataSyncParameterDao: IncidentDataSyncParameterDao
     private let syncPuller: SyncPuller
     private let databaseOperator: DatabaseOperator
     private let accountEventBus: AccountEventBus
@@ -23,7 +23,7 @@ class CrisisCleanupDataManagementRepository: AppDataManagementRepository {
     init(
         incidentsRepository: IncidentsRepository,
         worksiteChangeRepository: WorksiteChangeRepository,
-        worksiteSyncStatDao: WorksiteSyncStatDao,
+        incidentDataSyncParameterDao: IncidentDataSyncParameterDao,
         syncPuller: SyncPuller,
         databaseOperator: DatabaseOperator,
         accountEventBus: AccountEventBus,
@@ -31,7 +31,7 @@ class CrisisCleanupDataManagementRepository: AppDataManagementRepository {
     ) {
         self.incidentsRepository = incidentsRepository
         self.worksiteChangeRepository = worksiteChangeRepository
-        self.worksiteSyncStatDao = worksiteSyncStatDao
+        self.incidentDataSyncParameterDao = incidentDataSyncParameterDao
         self.syncPuller = syncPuller
         self.databaseOperator = databaseOperator
         self.accountEventBus = accountEventBus
@@ -68,7 +68,7 @@ class CrisisCleanupDataManagementRepository: AppDataManagementRepository {
                     for _ in 0..<3 {
                         try databaseOperator.clearBackendDataTables()
 
-                        if isAppDataCleared() {
+                        if isPersistedAppDataCleared() {
                             break
                         }
 
@@ -79,7 +79,7 @@ class CrisisCleanupDataManagementRepository: AppDataManagementRepository {
 
                     try Task.checkCancellation()
 
-                    if !isAppDataCleared() {
+                    if !isPersistedAppDataCleared() {
                         logger.logCapture("Unable to clear app data")
                         return
                     }
@@ -93,13 +93,12 @@ class CrisisCleanupDataManagementRepository: AppDataManagementRepository {
     }
 
     private func stopSyncPull() {
-        syncPuller.stopPullIncident()
-        syncPuller.stopPull()
+        syncPuller.stopPullWorksites()
     }
 
-    private func isAppDataCleared() -> Bool {
+    private func isPersistedAppDataCleared() -> Bool {
         incidentsRepository.incidentCount == 0 &&
         worksiteChangeRepository.worksiteChangeCount == 0 &&
-        worksiteSyncStatDao.getWorksiteSyncStatCount() == 0
+        incidentDataSyncParameterDao.getSyncStatCount() == 0
     }
 }

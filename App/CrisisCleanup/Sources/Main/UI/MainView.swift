@@ -31,6 +31,7 @@ struct MainView: View {
     let inviteTeammateViewBuilder: InviteTeammateViewBuilder
     let requestRedeployViewBuilder: RequestRedeployViewBuilder
     let listsViewBuilder: ListsViewBuilder
+    let incidentCacheViewBuilder: IncidentWorksitesCacheViewBuilder
     let syncInsightsViewBuilder: SyncInsightsViewBuilder
 
     @State private var selectedTab = TopLevelDestination.cases
@@ -61,58 +62,57 @@ struct MainView: View {
         let isNavigatingAuth = viewModel.showAuthScreen ||
         !viewModel.viewData.showMainContent
         ZStack {
-            Group {
-                switch viewModel.viewData.state {
-                case .loading:
-                    Image("crisis_cleanup_logo", bundle: .module)
-                        .renderingMode(.original)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(maxWidth: 240)
+            switch viewModel.viewData.state {
+            case .loading:
+                Image("crisis_cleanup_logo", bundle: .module)
+                    .renderingMode(.original)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: 240)
 
-                case .unsupportedBuild:
-                    UnsupportedBuildView(supportedInfo: viewModel.minSupportedVersion)
-                case .ready:
-                    let hideAuthScreen = {
-                        viewModel.showAuthScreen = false
-                    }
-                    if isNavigatingAuth {
-                        AuthenticationNavigationStack(
-                            authenticateViewBuilder: authenticateViewBuilder,
-                            volunteerOrgViewBuilder: volunteerOrgViewBuilder,
-                            exitAuthNavigation: hideAuthScreen
-                        )
-                    } else if !viewModel.viewData.hasAcceptedTerms {
-                        TermsView(viewModel: viewModel)
-                    } else {
-                        MainNavigationStack(
-                            viewModel: viewModel,
-                            casesViewBuilder: casesViewBuilder,
-                            menuViewBuilder: menuViewBuilder,
-                            casesFilterViewBuilder: casesFilterViewBuilder,
-                            casesSearchViewBuilder: casesSearchViewBuilder,
-                            viewCaseViewBuilder: viewCaseViewBuilder,
-                            caseAddNoteViewBuilder: caseAddNoteViewBuilder,
-                            createEditCaseViewBuilder: createEditCaseViewBuilder,
-                            caseShareViewBuilder: caseShareViewBuilder,
-                            caseFlagsViewBuilder: caseFlagsViewBuilder,
-                            caseHistoryViewBuilder: caseHistoryViewBuilder,
-                            transferWorkTypeViewBuilder: transferWorkTypeViewBuilder,
-                            viewImageViewBuilder: viewImageViewBuilder,
-                            worksiteImagesViewBuilder: worksiteImagesViewBuilder,
-                            caseSearchLocationViewBuilder: caseSearchLocationViewBuilder,
-                            caseMoveOnMapViewBuilder: caseMoveOnMapViewBuilder,
-                            userFeedbackViewBuilder: userFeedbackViewBuilder,
-                            inviteTeammateViewBuilder: inviteTeammateViewBuilder,
-                            requestRedeployViewBuilder: requestRedeployViewBuilder,
-                            listsViewBuilder: listsViewBuilder,
-                            syncInsightsViewBuilder: syncInsightsViewBuilder,
-                            selectedTab: $selectedTab,
-                            showTabDivider: !deviceSize.isLargeScreen,
-                            dividerHeight: $dividerHeight,
-                            dividerOffset: $dividerOffset
-                        )
-                    }
+            case .unsupportedBuild:
+                UnsupportedBuildView(supportedInfo: viewModel.minSupportedVersion)
+            case .ready:
+                let hideAuthScreen = {
+                    viewModel.showAuthScreen = false
+                }
+                if isNavigatingAuth {
+                    AuthenticationNavigationStack(
+                        authenticateViewBuilder: authenticateViewBuilder,
+                        volunteerOrgViewBuilder: volunteerOrgViewBuilder,
+                        exitAuthNavigation: hideAuthScreen
+                    )
+                } else if !viewModel.viewData.hasAcceptedTerms {
+                    TermsView(viewModel: viewModel)
+                } else {
+                    MainNavigationStack(
+                        viewModel: viewModel,
+                        casesViewBuilder: casesViewBuilder,
+                        menuViewBuilder: menuViewBuilder,
+                        casesFilterViewBuilder: casesFilterViewBuilder,
+                        casesSearchViewBuilder: casesSearchViewBuilder,
+                        viewCaseViewBuilder: viewCaseViewBuilder,
+                        caseAddNoteViewBuilder: caseAddNoteViewBuilder,
+                        createEditCaseViewBuilder: createEditCaseViewBuilder,
+                        caseShareViewBuilder: caseShareViewBuilder,
+                        caseFlagsViewBuilder: caseFlagsViewBuilder,
+                        caseHistoryViewBuilder: caseHistoryViewBuilder,
+                        transferWorkTypeViewBuilder: transferWorkTypeViewBuilder,
+                        viewImageViewBuilder: viewImageViewBuilder,
+                        worksiteImagesViewBuilder: worksiteImagesViewBuilder,
+                        caseSearchLocationViewBuilder: caseSearchLocationViewBuilder,
+                        caseMoveOnMapViewBuilder: caseMoveOnMapViewBuilder,
+                        userFeedbackViewBuilder: userFeedbackViewBuilder,
+                        inviteTeammateViewBuilder: inviteTeammateViewBuilder,
+                        requestRedeployViewBuilder: requestRedeployViewBuilder,
+                        listsViewBuilder: listsViewBuilder,
+                        incidentCacheViewBuilder: incidentCacheViewBuilder,
+                        syncInsightsViewBuilder: syncInsightsViewBuilder,
+                        selectedTab: $selectedTab,
+                        showTabDivider: !deviceSize.isLargeScreen,
+                        dividerHeight: $dividerHeight,
+                        dividerOffset: $dividerOffset
+                    )
                 }
             }
 
@@ -305,6 +305,7 @@ private struct MainNavigationStack: View {
     let inviteTeammateViewBuilder: InviteTeammateViewBuilder
     let requestRedeployViewBuilder: RequestRedeployViewBuilder
     let listsViewBuilder: ListsViewBuilder
+    let incidentCacheViewBuilder: IncidentWorksitesCacheViewBuilder
     let syncInsightsViewBuilder: SyncInsightsViewBuilder
 
     @Binding var selectedTab: TopLevelDestination
@@ -397,6 +398,8 @@ private struct MainNavigationStack: View {
                     listsViewBuilder.listsView
                 case .viewList(let listId):
                     listsViewBuilder.viewListView(listId)
+                case .incidentDataCaching:
+                    incidentCacheViewBuilder.incidentWorksitesCacheView
                 case .syncInsights:
                     if viewModel.isNotProduction {
                         syncInsightsViewBuilder.syncInsightsView

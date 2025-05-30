@@ -37,8 +37,11 @@ extension MainComponent {
         )
     }
 
-    var worksiteSyncStatDao: WorksiteSyncStatDao {
-        WorksiteSyncStatDao(appDatabase)
+    var incidentDataSyncParameterDao: IncidentDataSyncParameterDao {
+        IncidentDataSyncParameterDao(
+            appDatabase,
+            loggerFactory.getLogger("sync"),
+        )
     }
 
     var workTypeStatusDao: WorkTypeStatusDao {
@@ -115,7 +118,7 @@ extension MainComponent {
         shared {
             OfflineFirstIncidentsRepository(
                 dataSource: networkDataSource,
-                appPreferencesDataStore: appPreferences,
+                appPreferencesDataSource: appPreferences,
                 incidentDao: incidentDao,
                 locationDao: locationDao,
                 incidentOrganizationDao: organizationsDao,
@@ -139,7 +142,7 @@ extension MainComponent {
         shared {
             OfflineFirstLanguageTranslationsRepository(
                 dataSource: networkDataSource,
-                appPreferencesDataStore: appPreferences,
+                appPreferencesDataSource: appPreferences,
                 languageDao: languageDao,
                 statusRepository: workTypeStatusRepository,
                 loggerFactory: loggerFactory
@@ -158,9 +161,6 @@ extension MainComponent {
             OfflineFirstWorksitesRepository(
                 dataSource: networkDataSource,
                 writeApi: writeApi,
-                worksitesSyncer: worksitesSyncer,
-                worksitesSecondarySyncer: worksitesSecondarySyncer,
-                worksiteSyncStatDao: worksiteSyncStatDao,
                 worksiteDao: worksiteDao,
                 recentWorksiteDao: recentWorksiteDao,
                 workTypeTransferRequestDao: workTypeTransferRequestDao,
@@ -201,6 +201,53 @@ extension MainComponent {
                 networkDataSource: networkDataSource,
                 locationBoundsConverter: locationBoundsConverter,
                 loggerFactory: loggerFactory
+            )
+        }
+    }
+
+    private var incidentCachePreferences: IncidentCachePreferencesDataSource {
+        shared {
+            IncidentCachePreferencesUserDefaults()
+        }
+    }
+
+    private var locationBounder: IncidentLocationBounder {
+        shared {
+            CrisisCleanupIncidentLocationBounder(
+                incidentsRepository: incidentsRepository,
+                locationsRepository: locationsRepository,
+                loggerFactory: loggerFactory
+            )
+        }
+    }
+
+    public var dataDownloadSpeedMonitor: DataDownloadSpeedMonitor {
+        shared {
+            IncidentDataDownloadSpeedMonitor()
+        }
+    }
+
+    public var incidentCacheRepository: IncidentCacheRepository {
+        shared {
+            IncidentWorksitesCacheRepository(
+                accountDataRefresher: accountDataRefresher,
+                incidentsRepository: incidentsRepository,
+                appPreferences: appPreferences,
+                syncParameterDao: incidentDataSyncParameterDao,
+                incidentCachePreferences: incidentCachePreferences,
+                incidentSelector: incidentSelector,
+                locationProvider: locationManager,
+                locationBounder: locationBounder,
+                incidentMapTracker: incidentMapTracker,
+                networkDataSource: networkDataSource,
+                worksitesRepository: worksitesRepository,
+                worksiteDao: worksiteDao,
+                speedMonitor: dataDownloadSpeedMonitor,
+                networkMonitor: networkMonitor,
+                syncLogger: syncLoggerFactory.getLogger("sync"),
+                translator: translator,
+                appEnv: appEnv,
+                appLoggerFactory: loggerFactory
             )
         }
     }
@@ -373,7 +420,7 @@ extension MainComponent {
             CrisisCleanupDataManagementRepository(
                 incidentsRepository: incidentsRepository,
                 worksiteChangeRepository: worksiteChangeRepository,
-                worksiteSyncStatDao: worksiteSyncStatDao,
+                incidentDataSyncParameterDao: incidentDataSyncParameterDao,
                 syncPuller: syncPuller,
                 databaseOperator: databaseOperator,
                 accountEventBus: accountEventBus,

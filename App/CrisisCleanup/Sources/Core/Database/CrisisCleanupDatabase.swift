@@ -942,6 +942,29 @@ extension AppDatabase {
             }
         }
 
+        migrator.registerMigration(
+            "consolidate-incident-data-caching",
+            foreignKeyChecks: .immediate
+        ) { db in
+            try db.create(table: "incidentDataSyncParameter") { t in
+                // Incident ID
+                t.primaryKey("id", .integer)
+                    .references("incident", onDelete: .cascade)
+                t.column("updatedBefore", .date)
+                    .notNull()
+                t.column("updatedAfter", .date)
+                    .notNull()
+                t.column("additionalUpdatedBefore", .date)
+                    .notNull()
+                t.column("additionalUpdatedAfter", .date)
+                    .notNull()
+                t.column("boundedRegion", .text)
+                    .notNull()
+                t.column("boundedSyncedAt", .date)
+                    .notNull()
+            }
+        }
+
         return migrator
     }
 }

@@ -76,10 +76,10 @@ class IncidentSelectViewModel: ObservableObject {
     }
 
     func pullIncidents() async {
-        await syncPuller.pullIncidents()
+        _ = await syncPuller.syncPullIncidents()
     }
 
     func refreshIncidents() {
-        syncPuller.appPull(true, cancelOngoing: true)
+        syncPuller.appPullIncidents()
     }
 }

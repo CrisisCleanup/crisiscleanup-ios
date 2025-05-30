@@ -136,7 +136,7 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
     }
 }
 
-class RefreshIncidentsDataOperation: Operation {
+final class RefreshIncidentsDataOperation: Operation, @unchecked Sendable {
     private let puller: SyncPuller
     private let logger: AppLogger
 

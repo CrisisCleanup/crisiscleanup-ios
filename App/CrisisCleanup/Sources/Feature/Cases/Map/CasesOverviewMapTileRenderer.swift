@@ -21,6 +21,10 @@ class CasesMapDotsOverlay: MKTileOverlay {
     private var worksitesCount = 0
     private var filtersLocationCache = (CasesFilter(), false, 0.0)
 
+    var tilesIncident: Int64 {
+        incidentIdCache
+    }
+
     private var locationCoordinates: CLLocation? = nil
 
     private var _emptyTile: Data?
@@ -48,29 +52,19 @@ class CasesMapDotsOverlay: MKTileOverlay {
         maximumZ = zoomThreshold
     }
 
-    func onStateChange(
+    func setIncident(
         _ id: Int64,
         _ worksitesCount: Int,
-        _ filtersLocation: (CasesFilter, Bool, Double),
-        _ clearCache: Bool
-    ) -> Bool {
-        var isChange = false
+        clearCache: Bool
+    ) {
         cacheLock.withLock {
             let isIncidentChanged = id != incidentIdCache
-            incidentIdCache = id
-
-            self.worksitesCount = worksitesCount
-
-            let isFiltersChange = filtersLocationCache.0 != filtersLocation.0 || filtersLocationCache.1 != filtersLocation.1
-            filtersLocationCache = filtersLocation
-
-            if isIncidentChanged || isFiltersChange || clearCache {
-                isChange = true
+            if isIncidentChanged || clearCache {
                 tileCache.clear()
             }
+            incidentIdCache = id
+            self.worksitesCount = worksitesCount
         }
-
-        return isChange
     }
 
     func setLocation(_ coordinates: CLLocation?) {
@@ -90,11 +84,18 @@ class CasesMapDotsOverlay: MKTileOverlay {
             y: path.y,
             zoom: path.z
         )
-        // TODO: Caching framework is poor. Fix when time avails.
-//        if let tileData = tileCache.get(coordinates),
-//           tileData.tileCaseCount == 0 || tileData.tile != nil {
-//            return tileData.tile ?? emptyTile
-//        }
+
+        if let cached = (cacheLock.withLock {
+            return if let tileData = tileCache.get(coordinates),
+                      tileData.incidentId == incidentId,
+                      tileData.tileCaseCount == 0 || tileData.tile != nil {
+                tileData.tile ?? emptyTile
+            } else {
+                nil
+            }
+        }) {
+            return cached
+        }
 
         let tile = try await renderTile(coordinates)
 
@@ -121,21 +122,19 @@ class CasesMapDotsOverlay: MKTileOverlay {
     private func renderTileInternal(_ coordinates: TileCoordinates) async throws -> Data? {
         let incidentId = incidentIdCache
 
-        let (_, imageData) = try await renderTile(incidentId, worksitesCount, coordinates)
+        let (boundedWorksitesCount, imageData) = try await renderTile(incidentId, worksitesCount, coordinates)
 
         let tile = imageData == nil ? emptyTile : imageData
 
-        // TODO: Caching framework is poor. Fix when time avails.
-//        cacheLock.withLock {
-//            if incidentId == incidentIdCache {
-//                let tileData = MapTileCases(
-//                    tileCaseCount: boundedWorksitesCount,
-//                    incidentCaseCount: worksitesCount,
-//                    tile: tile
-//                )
-//                tileCache.add(coordinates, tileData)
-//            }
-//        }
+        cacheLock.withLock {
+            let tileData = MapTileCases(
+                incidentId: incidentId,
+                tileCaseCount: boundedWorksitesCount,
+                incidentCaseCount: worksitesCount,
+                tile: tile
+            )
+            tileCache.add(coordinates, tileData)
+        }
 
         return tile
     }
@@ -250,6 +249,7 @@ class TileCoordinateOverlay: MKTileOverlay {
 }
 
 private struct MapTileCases {
+    let incidentId: Int64
     let tileCaseCount: Int
     let incidentCaseCount: Int
     let tile: Data?

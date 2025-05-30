@@ -1,3 +1,5 @@
+import CoreLocation
+
 public struct Location: Equatable {
     let id: Int64
     let shapeLiteral: String
@@ -41,5 +43,16 @@ enum LocationShape: String, Identifiable, CaseIterable {
 }
 
 private let reverseLookup = LocationShape.allCases.associateBy{ $0.literal }
-func disasterFromLiteral(_ literal: String) -> LocationShape { reverseLookup[literal] ?? LocationShape.unknown
+func disasterFromLiteral(_ literal: String) -> LocationShape {
+    reverseLookup[literal] ?? LocationShape.unknown
+}
+
+protocol IncidentLocationBounder {
+    func isInBounds(
+        _ incidentId: Int64,
+        latitude: Double,
+        longitude: Double,
+    ) async -> Bool
+
+    func getBoundsCenter(_ incidentId: Int64) async -> CLLocation?
 }

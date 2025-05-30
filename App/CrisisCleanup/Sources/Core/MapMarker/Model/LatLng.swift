@@ -35,6 +35,13 @@ extension CLLocation {
     var latLng: LatLng { LatLng(coordinate.latitude, coordinate.longitude) }
 }
 
+extension CLLocationCoordinate2D {
+    func approximatelyEquals(_ other: CLLocationCoordinate2D, tolerance: Double = 1e-5) -> Bool {
+        abs(latitude - other.latitude) < tolerance &&
+        abs(longitude - other.longitude) < tolerance
+    }
+}
+
 private let defaultLat = 40.272621
 private let defaultLng = -96.012327
 let DefaultCoordinates = LatLng(defaultLat, defaultLng)

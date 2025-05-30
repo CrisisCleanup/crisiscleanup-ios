@@ -248,4 +248,8 @@ class NavigationRouter: ObservableObject {
     func viewList(_ list: CrisisCleanupList) {
         path.append(.viewList(list.id))
     }
+
+    func openIncidentDataCaching() {
+        path.append(.incidentDataCaching)
+    }
 }

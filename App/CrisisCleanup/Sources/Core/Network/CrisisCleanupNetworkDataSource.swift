@@ -33,6 +33,7 @@ public protocol CrisisCleanupNetworkDataSource {
 
     func getIncidentOrganizations(
         incidentId: Int64,
+        fields: [String],
         limit: Int,
         offset: Int
     ) async throws -> NetworkOrganizationsResult?
@@ -64,13 +65,24 @@ public protocol CrisisCleanupNetworkDataSource {
         latitude: Double?,
         longitude: Double?,
         updatedAtAfter: Date?
-    ) async throws -> [NetworkWorksitePage]
+    ) async throws -> NetworkWorksitesPageResult
+
+    func getWorksitesPageUpdatedAt(
+        incidentId: Int64,
+        pageCount: Int,
+        updatedAt: Date,
+        isPagingBackwards: Bool,
+    ) async throws -> NetworkWorksitesPageResult
 
     func getWorksitesFlagsFormDataPage(
         incidentId: Int64,
         pageCount: Int,
-        pageOffset: Int?,
-        updatedAtAfter: Date?
+        updatedAt: Date,
+        isPagingBackwards: Bool,
+    ) async throws -> NetworkFlagsFormDataResult
+
+    func getWorksitesFlagsFormData(
+        _ ids: Set<Int64>,
     ) async throws -> [NetworkFlagsFormData]
 
     func getLocationSearchWorksites(
@@ -151,6 +163,62 @@ extension CrisisCleanupNetworkDataSource {
         )
     }
 
+    func getWorksitesCount(_ incidentId: Int64) async throws -> Int {
+        try await getWorksitesCount(incidentId, nil)
+    }
+
+    func getWorksitesPageBefore(
+        _ incidentId: Int64,
+        _ pageCount: Int,
+        _ updatedBefore: Date,
+    ) async throws -> NetworkWorksitesPageResult {
+        try await getWorksitesPageUpdatedAt(
+            incidentId: incidentId,
+            pageCount: pageCount,
+            updatedAt: updatedBefore,
+            isPagingBackwards: true,
+        )
+    }
+
+    func getWorksitesPageAfter(
+        _ incidentId: Int64,
+        _ pageCount: Int,
+        _ updatedAfter: Date,
+    ) async throws -> NetworkWorksitesPageResult {
+        try await getWorksitesPageUpdatedAt(
+            incidentId: incidentId,
+            pageCount: pageCount,
+            updatedAt: updatedAfter,
+            isPagingBackwards: false,
+        )
+    }
+
+    func getWorksitesFlagsFormDataPageBefore(
+        _ incidentId: Int64,
+        _ pageCount: Int,
+        _ updatedBefore: Date,
+    ) async throws -> NetworkFlagsFormDataResult {
+        try await getWorksitesFlagsFormDataPage(
+            incidentId: incidentId,
+            pageCount: pageCount,
+            updatedAt: updatedBefore,
+            isPagingBackwards: true,
+        )
+    }
+
+    func getWorksitesFlagsFormDataPageAfter(
+        _ incidentId: Int64,
+        _ pageCount: Int,
+        _ updatedAfter: Date,
+    ) async throws -> NetworkFlagsFormDataResult {
+        try await getWorksitesFlagsFormDataPage(
+            incidentId: incidentId,
+            pageCount: pageCount,
+            updatedAt: updatedAfter,
+            isPagingBackwards: false,
+        )
+    }
+
     func searchUsers(
         _ q: String,
         _ organization: Int64
@@ -160,17 +228,5 @@ extension CrisisCleanupNetworkDataSource {
 
     func getAppSupportInfo() async -> NetworkAppSupportInfo? {
         await getAppSupportInfo(false)
-    }
-
-    func getWorksitesFlagsFormDataPage(
-        incidentId: Int64,
-        pageCount: Int
-    ) async throws -> [NetworkFlagsFormData] {
-        try await getWorksitesFlagsFormDataPage(
-            incidentId: incidentId,
-            pageCount: pageCount,
-            pageOffset: nil,
-            updatedAtAfter: nil
-        )
     }
 }
