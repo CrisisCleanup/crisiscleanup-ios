@@ -36,8 +36,6 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
 
     private var statusLookup = [String: PopulatedWorkTypeStatus]()
 
-    private var disposables = Set<AnyCancellable>()
-
     init(
         dataSource: CrisisCleanupNetworkDataSource,
         appPreferencesDataSource: AppPreferencesDataSource,

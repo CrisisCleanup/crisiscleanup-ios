@@ -100,6 +100,10 @@ final class CrisisCleanupAccountDataRepository: AccountDataRepository {
             .store(in: &disposables)
     }
 
+    deinit {
+        _ = cancelSubscriptions(disposables)
+    }
+
     func setAccount(
         refreshToken: String,
         accessToken: String,

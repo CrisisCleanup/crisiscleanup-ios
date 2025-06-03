@@ -10,8 +10,6 @@ class WrongLocationFlagManager {
 
     let validCoordinates: any Publisher<LocationAddress?, Never>
 
-    private var disposables = Set<AnyCancellable>()
-
     init(
         _ addressSearchRepository: AddressSearchRepository,
         _ logger: AppLogger

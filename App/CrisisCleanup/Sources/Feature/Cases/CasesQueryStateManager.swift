@@ -78,6 +78,10 @@ internal class CasesQueryStateManager {
             .store(in: &disposables)
     }
 
+    deinit {
+        _ = cancelSubscriptions(disposables)
+    }
+
     private func updateState(build: (inout WorksiteQueryState.Builder) -> Void) {
         worksiteQueryStateSubject.value = worksiteQueryStateSubject.value.copy(build: build)
     }

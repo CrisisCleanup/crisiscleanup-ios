@@ -94,6 +94,10 @@ class IncidentSelectRepository: IncidentSelector {
         .store(in: &disposables)
     }
 
+    deinit {
+        _ = cancelSubscriptions(disposables)
+    }
+
     func setIncident(_ incident: Incident) {
         preferencesStore.setSelectedIncident(incident.id)
         incidentsDataSubject.value = incidentsDataSubject.value.copy {

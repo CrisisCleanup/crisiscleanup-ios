@@ -83,6 +83,10 @@ class ResidentNameSearchManager {
         .eraseToAnyPublisher()
     }
 
+    deinit {
+        _ = cancelSubscriptions(disposables)
+    }
+
     func stopSearchingWorksites() {
         stopSearchingSubject.value = true
     }

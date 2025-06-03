@@ -156,6 +156,10 @@ class MainViewModel: ObservableObject {
         .store(in: &disposables)
     }
 
+    deinit {
+        _ = cancelSubscriptions(disposables)
+    }
+
     private func subscribeIncidentsData() {
         incidentSelector.incidentId.eraseToAnyPublisher()
             .filter { $0 != EmptyIncident.id }

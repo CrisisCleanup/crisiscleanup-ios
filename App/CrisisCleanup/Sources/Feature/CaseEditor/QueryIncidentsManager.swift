@@ -87,4 +87,8 @@ class QueryIncidentsManager {
             })
             .store(in: &disposables)
     }
+
+    deinit {
+        _ = cancelSubscriptions(disposables)
+    }
 }

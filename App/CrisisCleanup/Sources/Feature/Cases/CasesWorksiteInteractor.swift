@@ -23,6 +23,10 @@ class CasesWorksiteInteractor: WorksiteInteractor {
             .store(in: &disposables)
     }
 
+    deinit {
+        _ = cancelSubscriptions(disposables)
+    }
+
     private func clearSelection() {
         selectedCases.removeAll()
     }
