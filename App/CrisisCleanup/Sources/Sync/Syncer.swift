@@ -63,6 +63,7 @@ public enum SyncResult {
          success(notes: String),
          partial(notes: String),
          error(message: String),
+         canceled,
          invalidAccountTokens
 }
 

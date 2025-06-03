@@ -55,7 +55,7 @@ class AppSystemNotifier: NSObject, SystemNotifier, UNUserNotificationCenterDeleg
         do {
             return try await notificationCenter.requestAuthorization(options: [.alert, .badge, .provisional])
         } catch {
-            self.logger.logError(error)
+            logger.logError(error)
         }
         return false
     }
@@ -80,7 +80,7 @@ class AppSystemNotifier: NSObject, SystemNotifier, UNUserNotificationCenterDeleg
         do {
             try await notificationCenter.add(request)
         } catch {
-            self.logger.logError(error)
+            logger.logError(error)
         }
     }
 

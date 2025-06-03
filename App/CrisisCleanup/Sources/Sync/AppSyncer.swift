@@ -23,8 +23,6 @@ class AppSyncer: SyncPuller, SyncPusher {
 
     private let pullLanguageGuard = ManagedAtomic(false)
 
-    private var disposables = Set<AnyCancellable>()
-
     init(
         accountDataRepository: AccountDataRepository,
         incidentCacheRepository: IncidentCacheRepository,
@@ -35,6 +33,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         localImageRepository: LocalImageRepository,
         incidentDataPullReporter: IncidentDataPullReporter,
         systemNotifier: SystemNotifier,
+        translator: KeyTranslator,
         appLoggerFactory: AppLoggerFactory,
         syncLoggerFactory: SyncLoggerFactory,
     ) {
@@ -51,6 +50,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         incidentDataSyncNotifier = IncidentDataSyncNotifier(
             systemNotifier: systemNotifier,
             incidentDataPullReporter: incidentDataPullReporter,
+            translator: translator,
             logger: logger,
         )
 
@@ -117,12 +117,12 @@ class AppSyncer: SyncPuller, SyncPusher {
 
             let syncTask = Task {
                 do {
-                    // TODO: Notify sync
-                    // TODO: Manage background syncing
-                    return try await incidentCacheRepository.sync()
+                    return try await incidentDataSyncNotifier.notifySync {
+                        try await self.incidentCacheRepository.sync()
+                    }
                 } catch {
                     appLogger.logError(error)
-                    return SyncResult.error(message: error.localizedDescription)
+                    return .error(message: error.localizedDescription)
                 }
             }
 
@@ -133,12 +133,11 @@ class AppSyncer: SyncPuller, SyncPusher {
             }
 
             return await syncTask.result.get()
+        } catch is CancellationError {
+            return .canceled
         } catch {
             appLogger.logError(error)
-
-            // TODO: Take additional action as necessary
-
-            return SyncResult.error(message: error.localizedDescription)
+            return .error(message: error.localizedDescription)
         }
     }
 

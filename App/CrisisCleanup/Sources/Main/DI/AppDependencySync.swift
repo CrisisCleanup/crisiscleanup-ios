@@ -11,6 +11,7 @@ extension MainComponent {
                 localImageRepository: localImageRepository,
                 incidentDataPullReporter: incidentDataPullReporter,
                 systemNotifier: systemNotifier,
+                translator: translator,
                 appLoggerFactory: loggerFactory,
                 syncLoggerFactory: syncLoggerFactory,
             )

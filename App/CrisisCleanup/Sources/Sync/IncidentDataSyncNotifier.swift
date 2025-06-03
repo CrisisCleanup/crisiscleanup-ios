@@ -20,17 +20,47 @@ class IncidentDataSyncNotifier {
     init(
         systemNotifier: SystemNotifier,
         incidentDataPullReporter: IncidentDataPullReporter,
+        translator: KeyTranslator,
         logger: AppLogger,
     ) {
         self.systemNotifier = systemNotifier
         self.logger = logger
 
-
         incidentDataPullReporter.incidentDataPullStats
             .sink { stats in
                 if stats.isOngoing,
                 self.isSyncing {
-                    // TODO: Update notification
+                    let title = translator.t("~~Syncing {incident_name}")
+                        .replacingOccurrences(of: "{incident_name}", with: stats.incidentName)
+                    let text = {
+                        var message = stats.notificationMessage
+                        if message.isBlank {
+                            message = if stats.isIndeterminate {
+                                translator.t("~~Saving data...")
+                            } else if (stats.pullType == .worksitesCore) {
+                                translator.t("~~Saved {case_count}/{total_case_count} Cases.")
+                                    .replacingOccurrences(of: "{case_count}", with: "\(stats.savedCount)")
+                                    .replacingOccurrences(of: "{total_case_count}", with: "\(stats.dataCount)")
+                            } else {
+                                translator.t("~~Saved {case_count}/{total_case_count} offline Cases.",)
+                                    .replacingOccurrences(of: "{case_count}", with: "\(stats.savedCount)")
+                                    .replacingOccurrences(of: "{total_case_count}", with: "\(stats.dataCount)")
+                            }
+                            if 1 <= stats.currentStep,
+                               stats.currentStep <= stats.stepTotal {
+                                message = translator.t("~~({current_step}/{total_step_count}) {message}")
+                                    .replacingOccurrences(of: "{current_step}", with: "\(stats.currentStep)")
+                                    .replacingOccurrences(of: "{total_step_count}", with: "\(stats.stepTotal)")
+                                    .replacingOccurrences(of: "{message}", with: message)
+                            }
+                        }
+                        return message
+                    }()
+                    await self.systemNotifier.scheduleNotification(
+                        title: title,
+                        body: text,
+                        identifier: self.syncNotificationId
+                    )
                 } else if stats.isEnded {
                     self.systemNotifier.clearNotifications(self.syncNotificationId)
                 }
@@ -40,5 +70,28 @@ class IncidentDataSyncNotifier {
 
     deinit {
         _ = cancelSubscriptions(disposables)
+    }
+
+    func notifySync<T>(_ syncOperation: @escaping () async throws -> T) async throws -> T {
+        _ = syncCounterLock.withLock {
+            syncCounter.getAndIncrement() == 0
+        }
+
+        // TODO: Delete
+        logger.logDebug("Sync notification start \(syncCounter.get())")
+
+        do {
+            defer {
+                if syncCounter.decrementAndGet() == 0 {
+                    systemNotifier.clearNotifications(syncNotificationId)
+                }
+
+                // TODO: Delete
+                logger.logDebug("Sync notification start \(syncCounter.get())")
+            }
+
+            let result = try await syncOperation()
+            return result
+        }
     }
 }
