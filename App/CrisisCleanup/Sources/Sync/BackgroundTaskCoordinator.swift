@@ -58,11 +58,20 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
     private func scheduleBackgroundTask(
         _ taskType: BackgroundTaskType,
         _ secondsFromNow: Double,
-        isProcessingTask: Bool = false
+        isProcessingTask: Bool = false,
+        requiresNetwork: Bool = true,
     ) {
-        let request = isProcessingTask
-        ? BGProcessingTaskRequest(identifier: taskType.rawValue)
-        : BGAppRefreshTaskRequest(identifier: taskType.rawValue)
+        let request = {
+            let task: BGTaskRequest
+            if isProcessingTask {
+                let processingTask = BGProcessingTaskRequest(identifier: taskType.rawValue)
+                processingTask.requiresNetworkConnectivity = requiresNetwork
+                task = processingTask
+            } else {
+                task = BGAppRefreshTaskRequest(identifier: taskType.rawValue)
+            }
+            return task
+        }()
         request.earliestBeginDate = Date(timeIntervalSinceNow: max(0.0, secondsFromNow))
 
         do {
@@ -76,20 +85,28 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
         scheduleBackgroundTask(
             BackgroundTaskType.refresh,
             secondsFromNow,
-            isProcessingTask: true
+            isProcessingTask: true,
         )
     }
 
     func schedulePushWorksites(secondsFromNow: Double) {
-        scheduleBackgroundTask(BackgroundTaskType.pushWorksites, secondsFromNow)
+        scheduleBackgroundTask(
+            BackgroundTaskType.pushWorksites,
+            secondsFromNow,
+        )
     }
 
     func schedulePushWorksiteMedia(secondsFromNow: Double) {
-        scheduleBackgroundTask(BackgroundTaskType.pushWorksiteMedia, secondsFromNow)
+        scheduleBackgroundTask(
+            BackgroundTaskType.pushWorksiteMedia,
+            secondsFromNow,
+            isProcessingTask: true,
+        )
     }
 
     private func handleRefresh(_ task: BGProcessingTask) {
-        scheduleRefresh(secondsFromNow: 4 * 60 * 60)
+        // TODO: Adjust refresh interval based on remaining Incident data
+        scheduleRefresh(secondsFromNow: 4 * 3600)
 
         let refreshStartTime = Date()
 
@@ -98,22 +115,15 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
 
         let operation = RefreshIncidentsDataOperation(syncPuller: syncPuller, appLogger: logger)
 
-        let backgroundTaskId = UIApplication.shared.beginBackgroundTask {
-            let extensionTimeEnd = Date()
-            self.logger.logDebug("Refresh background time over. Started \(refreshStartTime). Ended \(extensionTimeEnd).")
-
+        let backgroundTaskId = UIApplication.shared.beginBackgroundTask(withName: "refresh-incidents-data") {
             queue.cancelAllOperations()
         }
 
         task.expirationHandler = {
-            // After all operations are cancelled, the completion block below is called to set the task to complete.
             queue.cancelAllOperations()
         }
 
         operation.completionBlock = {
-            let refreshCompleteTime = Date()
-            self.logger.logDebug("Refresh task is completing. Started \(refreshStartTime). Completed \(refreshCompleteTime).")
-
             if backgroundTaskId != .invalid {
                 UIApplication.shared.endBackgroundTask(backgroundTaskId)
             }
@@ -136,7 +146,7 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
     }
 }
 
-final class RefreshIncidentsDataOperation: Operation, @unchecked Sendable {
+final class RefreshIncidentsDataOperation: AsyncOperation, @unchecked Sendable {
     private let puller: SyncPuller
     private let logger: AppLogger
 
@@ -150,14 +160,21 @@ final class RefreshIncidentsDataOperation: Operation, @unchecked Sendable {
         logger = appLogger
     }
 
-    override func main() {
-        do {
-            // TODO: Implement
-            logger.logDebug("Pending refresh incidents data")
+    override func operate() async {
+        let result = await puller.syncPullIncidentData(
+            cancelOngoing: false,
+            forcePullIncidents: false,
+            cacheSelectedIncident: true,
+            cacheActiveIncidentWorksites: true,
+            cacheFullWorksites: true,
+            restartCacheCheckpoint: false
+        )
 
+        switch result {
+        case .success:
             isSuccessful = true
-        } catch {
-            logger.logError(error)
+        default:
+            isSuccessful = false
         }
     }
 }

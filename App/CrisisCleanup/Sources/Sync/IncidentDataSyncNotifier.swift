@@ -81,20 +81,16 @@ class IncidentDataSyncNotifier {
 
     func notifySync<T>(_ syncOperation: @escaping () async throws -> T) async throws -> T {
         _ = syncCounterLock.withLock {
-            syncCounter.getAndIncrement() == 0
+            syncCounter.getAndIncrement()
         }
-
-        // TODO: Delete
-        logger.logDebug("Sync notification start \(syncCounter.get())")
 
         do {
             defer {
-                if syncCounter.decrementAndGet() == 0 {
-                    clearNotifications()
+                syncCounterLock.withLock {
+                    if syncCounter.decrementAndGet() == 0 {
+                        clearNotifications()
+                    }
                 }
-
-                // TODO: Delete
-                logger.logDebug("Sync notification out \(syncCounter.get())")
             }
 
             let result = try await syncOperation()

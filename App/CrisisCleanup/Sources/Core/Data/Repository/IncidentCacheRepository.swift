@@ -1,6 +1,7 @@
 import Combine
 import CoreLocation
 import Foundation
+import SwiftUI
 
 public protocol IncidentCacheRepository {
     var isSyncingActiveIncident: any Publisher<Bool, Never> { get }
@@ -288,7 +289,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
 
         try await op()
 
-        try Task.checkCancellation()
+        try await checkCancelTimeout()
 
         statsUpdater.clearNotificationMessage()
     }
@@ -300,6 +301,20 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         syncPlanLock.withLock {
             if submittedSyncPlan == plan {
                 incidentDataPullStatsSubject.value = stats
+            }
+        }
+    }
+
+    private func checkCancelTimeout() async throws {
+        try Task.checkCancellation()
+
+        let appState = await UIApplication.shared.applicationState
+        if appState == .background {
+            let backgroundTime = await UIApplication.shared.backgroundTimeRemaining
+            if backgroundTime < 15 {
+                throw CancellationError()
+            } else {
+                appLogger.logDebug("Background time remaining is \(backgroundTime)")
             }
         }
     }
@@ -350,6 +365,9 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                 logStage(incidentId, .incidents)
 
                 await accountDataRefresher.updateApprovedIncidents(true)
+
+                try await checkCancelTimeout()
+
                 try await incidentsRepository.pullIncidents(force: true)
             }
 
@@ -379,7 +397,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
             }
 
             if syncPlan.restartCache {
-                try Task.checkCancellation()
+                try await checkCancelTimeout()
 
                 logStage(incidentId, .worksitesCore, "Restarting Worksites cache")
 
@@ -403,7 +421,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                 try await syncParameterDao.insertSyncStats(syncStats.asRecord(appLogger))
             }
 
-            try Task.checkCancellation()
+            try await checkCancelTimeout()
 
             var isSlowDownload = false
             var skipWorksiteCaching = false
@@ -455,11 +473,11 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                     )
                 }
 
-                try Task.checkCancellation()
+                try await checkCancelTimeout()
                 worksitesCoreStatsUpdater.clearStep()
             }
 
-            try Task.checkCancellation()
+            try await checkCancelTimeout()
 
             if isPaused,
                isSlowDownload {
@@ -468,7 +486,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
             }
 
             if syncPlan.syncSelectedIncident {
-                try Task.checkCancellation()
+                try await checkCancelTimeout()
 
                 logStage(incidentId, .activeIncidentOrganization)
 
@@ -484,7 +502,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
             }
 
             if !(skipWorksiteCaching || syncPreferences.isRegionBounded) {
-                try Task.checkCancellation()
+                try await checkCancelTimeout()
 
                 logStage(incidentId, .worksitesAdditional)
 
@@ -513,7 +531,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                     )
                 }
 
-                try Task.checkCancellation()
+                try await checkCancelTimeout()
                 worksitesAdditionalStatsUpdater.clearStep()
             }
         } catch {
@@ -717,7 +735,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         var isSlowDownload: Bool? = nil
 
         repeat {
-            try Task.checkCancellation()
+            try await checkCancelTimeout()
 
             let locationDetails = "\(liveRegion.latitude),\(liveRegion.longitude)"
 
@@ -774,7 +792,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                 savedWorksiteIds = Set(networkData.map { $0.id })
 
                 if !savedWorksiteIds.isEmpty {
-                    try Task.checkCancellation()
+                    try await checkCancelTimeout()
 
                     do {
                         let networkWorksites =
@@ -785,7 +803,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                     }
                 }
 
-                try Task.checkCancellation()
+                try await checkCancelTimeout()
 
                 let maxRadius = liveRegion.radius
 
@@ -885,7 +903,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
             savedCount = beforeResult.count
         }
 
-        try Task.checkCancellation()
+        try await checkCancelTimeout()
 
         // TODO: Deltas should account for deleted and/or reclassified
 
@@ -939,7 +957,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         var savedCount = 0
 
         repeat {
-            try Task.checkCancellation()
+            try await checkCancelTimeout()
 
             let networkData = try await downloadSpeedTracker.time {
                 // TODO: Edge case where paging data breaks where Cases are equally updated_at
@@ -1053,7 +1071,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         var savedCount = 0
 
         repeat {
-            try Task.checkCancellation()
+            try await checkCancelTimeout()
 
             let networkData = try await downloadSpeedTracker.time {
                 // TODO: Edge case where paging data breaks where Cases are equally updated_at
@@ -1161,7 +1179,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
 
             offset += limit
 
-            try Task.checkCancellation()
+            try await checkCancelTimeout()
         }
     }
 
@@ -1207,7 +1225,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
             savedCount = beforeResult.count
         }
 
-        try Task.checkCancellation()
+        try await checkCancelTimeout()
 
         // TODO: Deltas should account for deleted and/or reclassified
 
@@ -1270,7 +1288,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
 
             offset += limit
 
-            try Task.checkCancellation()
+            try await checkCancelTimeout()
         }
     }
 
