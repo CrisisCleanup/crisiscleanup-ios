@@ -218,9 +218,26 @@ class AppSyncer: SyncPuller, SyncPusher {
         return false
     }
 
-    func scheduleSyncMedia() {
+    private func runInBackground(
+        taskName: String,
+        action: @escaping () async -> Void,
+    ) {
+        let backgroundTaskID = UIApplication.shared.beginBackgroundTask(withName: taskName) {}
         Task {
-            let _ = await syncMedia()
+            let application = await UIApplication.shared
+            do {
+                defer {
+                    application.endBackgroundTask(backgroundTaskID)
+                }
+
+                await action()
+            }
+        }
+    }
+
+    func scheduleSyncMedia() {
+        runInBackground(taskName: "app-upload-media") {
+            let _ = await self.syncMedia()
         }
     }
 
@@ -245,8 +262,8 @@ class AppSyncer: SyncPuller, SyncPusher {
     }
 
     func scheduleSyncWorksites() {
-        Task {
-            await syncWorksitesAndMedia()
+        runInBackground(taskName: "app-upload-worksites") {
+            await self.syncWorksitesAndMedia()
         }
     }
 }
