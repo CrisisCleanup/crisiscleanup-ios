@@ -308,15 +308,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
     private func checkCancelTimeout() async throws {
         try Task.checkCancellation()
 
-        let appState = await UIApplication.shared.applicationState
-        if appState == .background {
-            let backgroundTime = await UIApplication.shared.backgroundTimeRemaining
-            if backgroundTime < 15 {
-                throw CancellationError()
-            } else {
-                appLogger.logDebug("Background time remaining is \(backgroundTime)")
-            }
-        }
+        _ = try await UIApplication.shared.checkTimeout(15)
     }
 
     func sync() async throws -> SyncResult {

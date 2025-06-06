@@ -70,11 +70,11 @@ public enum SyncResult {
 public protocol SyncPusher {
     func appPushWorksite(_ worksiteId: Int64, _ scheduleMediaSync: Bool)
 
-    func syncPushWorksitesAsync() async
-
     func scheduleSyncMedia()
-
     func scheduleSyncWorksites()
+
+    func syncMedia() async -> Bool
+    func syncWorksites() async
 }
 
 extension SyncPusher {

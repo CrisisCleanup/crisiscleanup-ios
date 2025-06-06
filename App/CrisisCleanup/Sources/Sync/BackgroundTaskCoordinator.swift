@@ -27,15 +27,18 @@ extension BackgroundTaskCoordinator {
 class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
     private let syncPuller: SyncPuller
     private let syncPusher: SyncPusher
+    private let worksiteChangeRepository: WorksiteChangeRepository
     private let logger: AppLogger
 
     init(
         syncPuller: SyncPuller,
         syncPusher: SyncPusher,
+        worksiteChangeRepository: WorksiteChangeRepository,
         loggerFactory: AppLoggerFactory
     ) {
         self.syncPuller = syncPuller
         self.syncPusher = syncPusher
+        self.worksiteChangeRepository = worksiteChangeRepository
         logger = loggerFactory.getLogger("sync")
     }
 
@@ -51,7 +54,7 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
         }
 
         scheduler.register(forTaskWithIdentifier: BackgroundTaskType.pushWorksiteMedia.rawValue, using: nil) { task in
-            self.handlePushWorksitesMedia(task as! BGAppRefreshTask)
+            self.handlePushWorksitesMedia(task as! BGProcessingTask)
         }
     }
 
@@ -108,8 +111,6 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
         // TODO: Adjust refresh interval based on remaining Incident data
         scheduleRefresh(secondsFromNow: 4 * 3600)
 
-        let refreshStartTime = Date()
-
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = 1
 
@@ -135,14 +136,66 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
     }
 
     private func handlePushWorksites(_ task: BGAppRefreshTask) {
-        // TODO: Implement
-        logger.logDebug("Sync/push worksites data")
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 1
 
+        let operation = UploadWorksitesOperation(
+            syncPusher: syncPusher,
+            worksiteChangeRepository: worksiteChangeRepository,
+            appLogger: logger
+        )
+
+        let backgroundTaskId = UIApplication.shared.beginBackgroundTask(withName: "upload-worksites") {
+            queue.cancelAllOperations()
+        }
+
+        task.expirationHandler = {
+            queue.cancelAllOperations()
+        }
+
+        operation.completionBlock = {
+            if backgroundTaskId != .invalid {
+                UIApplication.shared.endBackgroundTask(backgroundTaskId)
+            }
+
+            let nextPushInterval: TimeInterval = (operation.isSuccessful ? 7 : 1.3) * 3600
+            self.schedulePushWorksites(secondsFromNow: nextPushInterval)
+            if operation.isSuccessful {
+                self.schedulePushWorksiteMedia(secondsFromNow: 30)
+            }
+
+            task.setTaskCompleted(success: operation.isSuccessful)
+        }
+
+        queue.addOperations([operation], waitUntilFinished: false)
     }
 
-    private func handlePushWorksitesMedia(_ task: BGAppRefreshTask) {
-        // TODO: Implement
-        logger.logDebug("Sync/push worksites media")
+    private func handlePushWorksitesMedia(_ task: BGProcessingTask) {
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 1
+
+        let operation = UploadWorksiteMediaOperation(syncPusher: syncPusher, appLogger: logger)
+
+        let backgroundTaskId = UIApplication.shared.beginBackgroundTask(withName: "upload-media") {
+            queue.cancelAllOperations()
+        }
+
+        task.expirationHandler = {
+            queue.cancelAllOperations()
+        }
+
+        operation.completionBlock = {
+            if backgroundTaskId != .invalid {
+                UIApplication.shared.endBackgroundTask(backgroundTaskId)
+            }
+
+            let nextPushInterval: TimeInterval = (operation.isSuccessful ? 13 : 3) * 3600
+            self.schedulePushWorksiteMedia(secondsFromNow: nextPushInterval)
+
+            task.setTaskCompleted(success: operation.isSuccessful)
+        }
+
+        queue.addOperations([operation], waitUntilFinished: false)
     }
 }
 
@@ -176,5 +229,48 @@ final class RefreshIncidentsDataOperation: AsyncOperation, @unchecked Sendable {
         default:
             isSuccessful = false
         }
+    }
+}
+
+final class UploadWorksitesOperation: AsyncOperation, @unchecked Sendable {
+    private let pusher: SyncPusher
+    private let worksiteChangeRepository: WorksiteChangeRepository
+    private let logger: AppLogger
+
+    private(set) var isSuccessful = false
+
+    init(
+        syncPusher: SyncPusher,
+        worksiteChangeRepository: WorksiteChangeRepository,
+        appLogger: AppLogger
+    ) {
+        pusher = syncPusher
+        self.worksiteChangeRepository = worksiteChangeRepository
+        logger = appLogger
+    }
+
+    override func operate() async {
+        await pusher.syncWorksites()
+
+        isSuccessful = worksiteChangeRepository.worksiteChangeCount == 0
+    }
+}
+
+final class UploadWorksiteMediaOperation: AsyncOperation, @unchecked Sendable {
+    private let pusher: SyncPusher
+    private let logger: AppLogger
+
+    private(set) var isSuccessful = false
+
+    init(
+        syncPusher: SyncPusher,
+        appLogger: AppLogger
+    ) {
+        pusher = syncPusher
+        logger = appLogger
+    }
+
+    override func operate() async {
+        isSuccessful = await pusher.syncMedia()
     }
 }

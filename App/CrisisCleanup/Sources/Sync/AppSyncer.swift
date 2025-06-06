@@ -176,7 +176,6 @@ class AppSyncer: SyncPuller, SyncPusher {
     // MARK: SyncPusher
 
     func appPushWorksite(_ worksiteId: Int64, _ scheduleMediaSync: Bool) {
-        // TODO: Run sync in background task (if not running to completion)
         Task {
             do {
                 if let _ = try await self.validateAccountTokens() {
@@ -193,100 +192,61 @@ class AppSyncer: SyncPuller, SyncPusher {
                         self.scheduleSyncMedia()
                     }
                 }
-
             } catch {
                 self.appLogger.logError(error)
-                // TODO: Handle proper
-                print(error)
             }
         }
     }
-
-    func syncPushWorksitesAsync() async {
-        Task {
-            do {
-                if let _ = try await validateAccountTokens() {
-                    return
-                }
-
-                try Task.checkCancellation()
-
-                _ = await worksiteChangeRepository.syncWorksites()
-            } catch {
-                // TODO: Handle proper
-                print(error)
-            }
-        }
-    }
-
-    // TODO: Move both background tasks below into BackgroundTaskCoordinator and apply better pattern
 
     private let syncMediaGuard = ManagedAtomic(false)
-    func scheduleSyncMedia() {
-        var syncingTask: Task<Void, Error>? = nil
+    func syncMedia() async -> Bool {
+        do {
+            defer {
+                self.syncMediaGuard.store(false, ordering: .sequentiallyConsistent)
+            }
 
-        var bgTaskId: UIBackgroundTaskIdentifier = .invalid
-        bgTaskId = UIApplication.shared.beginBackgroundTask(withName: "sync-media") {
-            syncingTask?.cancel()
-            UIApplication.shared.endBackgroundTask(bgTaskId)
+            if self.syncMediaGuard.exchange(true, ordering: .sequentiallyConsistent) {
+                return false
+            }
+
+            let isSyncedAll = try await worksiteChangeRepository.syncWorksiteMedia()
+            return isSyncedAll
+        } catch {
+            appLogger.logError(error)
         }
 
-        let bgTaskIdConst = bgTaskId
-        syncingTask = Task {
-            do {
-                defer {
-                    self.syncMediaGuard.store(false, ordering: .sequentiallyConsistent)
+        return false
+    }
 
-                    Task { @MainActor in
-                        UIApplication.shared.endBackgroundTask(bgTaskIdConst)
-                    }
-                }
-
-                if self.syncMediaGuard.exchange(true, ordering: .sequentiallyConsistent) {
-                    return
-                }
-
-                let isSyncAll = try await worksiteChangeRepository.syncWorksiteMedia()
-                if !isSyncAll {
-                    // TODO: Schedule delayed background sync
-                }
-            } catch {
-                appLogger.logError(error)
-                // TODO: Handle proper. Could be cancellation.
-                print("Sync media error \(error)")
-            }
+    func scheduleSyncMedia() {
+        Task {
+            let _ = await syncMedia()
         }
     }
 
     private let syncWorksitesGuard = ManagedAtomic(false)
-    func scheduleSyncWorksites() {
-        var syncingTask: Task<Void, Error>? = nil
-
-        var bgTaskId: UIBackgroundTaskIdentifier = .invalid
-        bgTaskId = UIApplication.shared.beginBackgroundTask(withName: "sync-worksites") {
-            syncingTask?.cancel()
-            UIApplication.shared.endBackgroundTask(bgTaskId)
-        }
-
-        let bgTaskIdConst = bgTaskId
-        syncingTask = Task {
-            do {
-                defer {
-                    self.syncWorksitesGuard.store(false, ordering: .sequentiallyConsistent)
-
-                    Task { @MainActor in
-                        UIApplication.shared.endBackgroundTask(bgTaskIdConst)
-                    }
-                }
-
-                if self.syncWorksitesGuard.exchange(true, ordering: .sequentiallyConsistent) {
-                    return
-                }
-
-                _ = await worksiteChangeRepository.syncWorksites()
-
-                scheduleSyncMedia()
+    func syncWorksites() async {
+        do {
+            defer {
+                self.syncWorksitesGuard.store(false, ordering: .sequentiallyConsistent)
             }
+
+            if self.syncWorksitesGuard.exchange(true, ordering: .sequentiallyConsistent) {
+                return
+            }
+
+            await worksiteChangeRepository.syncWorksites()
+        }
+    }
+
+    private func syncWorksitesAndMedia() async {
+        await syncWorksites()
+        _ = await syncMedia()
+    }
+
+    func scheduleSyncWorksites() {
+        Task {
+            await syncWorksitesAndMedia()
         }
     }
 }

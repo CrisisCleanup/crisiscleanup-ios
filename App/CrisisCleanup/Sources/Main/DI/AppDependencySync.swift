@@ -60,6 +60,7 @@ extension MainComponent {
             AppBackgroundTaskCoordinator(
                 syncPuller: syncPuller,
                 syncPusher: syncPusher,
+                worksiteChangeRepository: worksiteChangeRepository,
                 loggerFactory: loggerFactory
             )
         }

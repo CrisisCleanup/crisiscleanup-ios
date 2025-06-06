@@ -1,6 +1,7 @@
 import Atomics
 import Combine
 import Foundation
+import SwiftUI
 
 public protocol WorksiteChangeRepository {
     var worksiteChangeCount: Int { get }
@@ -25,10 +26,7 @@ public protocol WorksiteChangeRepository {
         releases: [String]
     ) async throws -> Bool
 
-    /**
-     * - Returns: TRUE if sync was attempted or FALSE otherwise
-     */
-    func syncWorksites(_ syncWorksiteCount: Int) async -> Bool
+    func syncWorksites(_ syncWorksiteCount: Int) async
 
     /**
      * - Returns: Worksite ID containing the photo if found or -1 otherwise
@@ -61,7 +59,7 @@ extension WorksiteChangeRepository {
         )
     }
 
-    func syncWorksites() async -> Bool {
+    func syncWorksites() async {
         await syncWorksites(0)
     }
 }
@@ -204,7 +202,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         return false
     }
 
-    func syncWorksites(_ syncWorksiteCount: Int) async -> Bool {
+    func syncWorksites(_ syncWorksiteCount: Int) async {
         if !syncWorksiteGuard.exchange(true, ordering: .sequentiallyConsistent) {
             var worksiteId: Int64
             do {
@@ -237,12 +235,12 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
                     _ = try await trySyncWorksite(worksiteId, true)
 
                     try Task.checkCancellation()
+                    _ = try await UIApplication.shared.checkTimeout(10)
                 }
             } catch {
                 // TODO: Indicate error with notification
             }
         }
-        return false
     }
 
     func saveDeletePhoto(_ fileId: Int64) throws -> Int64 {
@@ -502,6 +500,7 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
         var isSyncedAll = true
         for worksiteImageUpload in worksitesWithImages {
             try Task.checkCancellation()
+            _ = try await UIApplication.shared.checkTimeout(15)
 
             let worksiteId = worksiteImageUpload.worksiteId
             let syncCount = try await localImageRepository.syncWorksiteMedia(worksiteId)

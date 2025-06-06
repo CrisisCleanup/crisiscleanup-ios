@@ -198,6 +198,7 @@ class CrisisCleanupLocalImageRepository: LocalImageRepository {
 
                 for localImage in imagesPendingUpload {
                     try Task.checkCancellation()
+                    _ = try await UIApplication.shared.checkTimeout(15)
 
                     let isSynced = try await syncLocalImage(
                         worksiteId,
