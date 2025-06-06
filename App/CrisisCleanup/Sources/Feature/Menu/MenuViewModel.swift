@@ -36,14 +36,17 @@ class MenuViewModel: ObservableObject {
 
     @Published private(set) var menuItemVisibility = hideMenuItems
 
+    private var requestNotificationPermissionTimestasmp = Date.epochZero
+    @Published private(set) var hasNotificationAccess = false
+    @Published private(set) var notifyDataSyncProgress = false
+    @Published var showExplainNotificationPermission = false
+
     @Published private(set) var shareLocationWithOrg = false
     @Published var showExplainLocationPermission = false
     @Published private(set) var hasLocationAccess = false
 
     @Published private(set) var incidentCachePreferences = InitialIncidentWorksitesCachePreferences
     @Published private(set) var incidentDataCacheMetrics = IncidentDataCacheMetrics()
-
-    @Published private(set) var hasNotificationAccess = false
 
     var versionText: String {
         let version = appVersionProvider.version
@@ -123,11 +126,14 @@ class MenuViewModel: ObservableObject {
         subscribeAppPreferences()
         subscribeLocationStatus()
         subscribeIncidentDataCacheState()
-        subscribeNotificationStatus()
     }
 
     func onViewDisappear() {
         subscriptions = cancelSubscriptions(subscriptions)
+    }
+
+    func onActivePhase() {
+        updateNotificationState()
     }
 
     private func subscribeLoading() {
@@ -174,24 +180,18 @@ class MenuViewModel: ObservableObject {
     }
 
     private func subscribeAppPreferences() {
-        let appPreferencesPublisher = appPreferences.preferences.eraseToAnyPublisher()
-
-        appPreferencesPublisher
-            .map {
-                return MenuItemVisibility(
+        appPreferences.preferences.eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .sink {
+                self.menuItemVisibility = MenuItemVisibility(
                     showOnboarding: !$0.hideOnboarding,
                     showGettingStartedVideo: !$0.hideGettingStartedVideo
                 )
-            }
-            .receive(on: RunLoop.main)
-            .assign(to: \.menuItemVisibility, on: self)
-            .store(in: &subscriptions)
 
-        appPreferencesPublisher
-            .map { $0.shareLocationWithOrg }
-            .removeDuplicates()
-            .receive(on: RunLoop.main)
-            .assign(to: \.shareLocationWithOrg, on: self)
+                self.shareLocationWithOrg = $0.shareLocationWithOrg
+
+                self.notifyDataSyncProgress = $0.notifyDataSyncProgress ?? false
+            }
             .store(in: &subscriptions)
     }
 
@@ -229,12 +229,23 @@ class MenuViewModel: ObservableObject {
         .store(in: &subscriptions)
     }
 
-    private func subscribeNotificationStatus() {
-        // Not observable
+    private func updateNotificationState() {
         Task {
             let hasAccess = await self.systemNotifier.isAuthorized()
+            if hasAccess {
+                // TODO: Atomic update
+                if self.requestNotificationPermissionTimestasmp.distance(to: Date.now) < 30.seconds {
+                    self.requestNotificationPermissionTimestasmp = Date.epochZero
+                    appPreferences.setNotifyDataSyncProgress(true)
+                }
+            }
             Task { @MainActor in
-                self.hasNotificationAccess = hasAccess
+                self.hasLocationAccess = hasAccess
+
+                if !hasAccess {
+                    self.showExplainNotificationPermission = false
+                    self.notifyDataSyncProgress = false
+                }
             }
         }
     }
@@ -259,9 +270,29 @@ class MenuViewModel: ObservableObject {
         return false
     }
 
-
     func shareLocationWithOrg(_ share: Bool) {
         appPreferences.setShareLocationWithOrg(share)
+    }
+
+    func notifyDataSyncProgress(_ notify: Bool) {
+        if notify {
+            Task {
+                var hasAccess = await self.systemNotifier.isAuthorized()
+                if !hasAccess {
+                    hasAccess = await self.systemNotifier.requestPermission()
+                }
+
+                if !hasAccess {
+                    self.requestNotificationPermissionTimestasmp = Date.now
+                    Task { @MainActor in
+                        self.showExplainNotificationPermission = true
+                    }
+                }
+            }
+        } else {
+            showExplainNotificationPermission = false
+            appPreferences.setNotifyDataSyncProgress(false)
+        }
     }
 
     func clearRefreshToken() {

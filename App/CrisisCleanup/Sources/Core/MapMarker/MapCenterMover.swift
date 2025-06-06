@@ -26,7 +26,7 @@ class AppMapCenterMover: MapCenterMover {
         $isPinCenterScreen
     }
 
-    private var useMyLocationExpirationTime = Date(timeIntervalSince1970: 0)
+    private var useMyLocationExpirationTime = Date.epochZero
 
     init(locationManager: LocationManager) {
         self.locationManager = locationManager

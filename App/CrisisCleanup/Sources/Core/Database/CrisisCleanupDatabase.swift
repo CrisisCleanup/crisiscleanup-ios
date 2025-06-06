@@ -203,7 +203,7 @@ extension AppDatabase {
             }
         }
 
-        let epoch0 = Date(timeIntervalSince1970: 0)
+        let epoch0 = Date.epochZero
 
         migrator.registerMigration(
             "worksite",

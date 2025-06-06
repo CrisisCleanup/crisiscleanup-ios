@@ -37,14 +37,16 @@ class IncidentDataSyncNotifier {
                         if message.isBlank {
                             message = if stats.isIndeterminate {
                                 translator.t("~~Saving data...")
-                            } else if (stats.pullType == .worksitesCore) {
+                            } else if stats.pullType == .worksitesCore {
                                 translator.t("~~Saved {case_count}/{total_case_count} Cases.")
                                     .replacingOccurrences(of: "{case_count}", with: "\(stats.savedCount)")
                                     .replacingOccurrences(of: "{total_case_count}", with: "\(stats.dataCount)")
-                            } else {
+                            } else if stats.pullType == .worksitesAdditional {
                                 translator.t("~~Saved {case_count}/{total_case_count} offline Cases.",)
                                     .replacingOccurrences(of: "{case_count}", with: "\(stats.savedCount)")
                                     .replacingOccurrences(of: "{total_case_count}", with: "\(stats.dataCount)")
+                            } else {
+                                translator.t("~~Saving more data...")
                             }
                             if 1 <= stats.currentStep,
                                stats.currentStep <= stats.stepTotal {
@@ -62,14 +64,19 @@ class IncidentDataSyncNotifier {
                         identifier: self.syncNotificationId
                     )
                 } else if stats.isEnded {
-                    self.systemNotifier.clearNotifications(self.syncNotificationId)
+                    self.clearNotifications()
                 }
             }
             .store(in: &disposables)
     }
 
     deinit {
+        clearNotifications()
         _ = cancelSubscriptions(disposables)
+    }
+
+    private func clearNotifications() {
+        systemNotifier.clearNotifications(self.syncNotificationId)
     }
 
     func notifySync<T>(_ syncOperation: @escaping () async throws -> T) async throws -> T {
@@ -83,11 +90,11 @@ class IncidentDataSyncNotifier {
         do {
             defer {
                 if syncCounter.decrementAndGet() == 0 {
-                    systemNotifier.clearNotifications(syncNotificationId)
+                    clearNotifications()
                 }
 
                 // TODO: Delete
-                logger.logDebug("Sync notification start \(syncCounter.get())")
+                logger.logDebug("Sync notification out \(syncCounter.get())")
             }
 
             let result = try await syncOperation()

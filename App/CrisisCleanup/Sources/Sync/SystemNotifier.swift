@@ -1,6 +1,8 @@
 import UserNotifications
 
 public protocol SystemNotifier {
+    func requestPermission() async -> Bool
+
     func isAuthorized() async -> Bool
 
     func scheduleNotification(
@@ -19,7 +21,7 @@ extension SystemNotifier {
         body: String,
         identifier: String,
     ) async {
-        await scheduleNotification(title: title, body: body, identifier: identifier, delay: 0)
+        await scheduleNotification(title: title, body: body, identifier: identifier, delay: 1)
     }
 }
 

@@ -16,6 +16,7 @@ public protocol AppPreferencesDataSource {
     func setLanguageKey(_ key: String)
     func setTableViewSortBy(_ sortBy: WorksiteSortBy)
     func setShareLocationWithOrg(_ share: Bool)
+    func setNotifyDataSyncProgress(_ notify: Bool)
     func setCasesMapBounds(_ bounds: IncidentCoordinateBounds)
     func setTeamMapBounds(_ bounds: IncidentCoordinateBounds)
 }
@@ -131,6 +132,14 @@ class AppPreferencesUserDefaults: AppPreferencesDataSource {
         update(
             UserDefaults.standard.appPreferences.copy {
                 $0.shareLocationWithOrg = share
+            }
+        )
+    }
+
+    func setNotifyDataSyncProgress(_ notify: Bool) {
+        update(
+            UserDefaults.standard.appPreferences.copy {
+                $0.notifyDataSyncProgress = notify
             }
         )
     }

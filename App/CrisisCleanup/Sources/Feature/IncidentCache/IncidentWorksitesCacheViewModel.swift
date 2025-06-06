@@ -34,8 +34,7 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
 
     @Published var showExplainLocationPermission = false
 
-    private let epochZero = Date(timeIntervalSince1970: 0)
-    private let useMyLocationExpirationTime = Date(timeIntervalSince1970: 0)
+    private let useMyLocationExpirationTime = Date.epochZero
 
     private let isFirstVisible = ManagedAtomic(true)
 

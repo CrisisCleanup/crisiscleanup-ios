@@ -22,7 +22,7 @@ public struct AppMetrics: Codable {
 
     init(
         openBuild: Int64 = 0,
-        openTimestamp: Date = Date.init(timeIntervalSince1970: 0),
+        openTimestamp: Date = Date.epochZero,
         minSupportedVersion: MinSupportedAppVersion? = nil
     ) {
         self.openBuild = openBuild

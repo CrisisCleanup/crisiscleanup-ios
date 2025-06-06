@@ -13,7 +13,7 @@ class CrisisCleanupShareLocationRepository: ShareLocationRepository {
     private let logger: AppLogger
 
     private let shareLock = NSLock()
-    private var shareTimestamp = Date(timeIntervalSince1970: 0)
+    private var shareTimestamp = Date.epochZero
     private let shareInterval = 1.minutes
 
     // TODO: Remote config
