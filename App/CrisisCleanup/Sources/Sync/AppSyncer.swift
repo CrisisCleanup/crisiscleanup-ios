@@ -225,12 +225,17 @@ class AppSyncer: SyncPuller, SyncPusher {
         taskName: String,
         action: @escaping () async -> Void,
     ) {
-        let backgroundTaskID = UIApplication.shared.beginBackgroundTask(withName: taskName) {}
+        let backgroundTaskId = UIApplication.shared.beginBackgroundTask(withName: taskName)
+
+        guard backgroundTaskId != .invalid else {
+            return
+        }
+
         Task {
             let application = await UIApplication.shared
             do {
                 defer {
-                    application.endBackgroundTask(backgroundTaskID)
+                    application.endBackgroundTask(backgroundTaskId)
                 }
 
                 await action()
