@@ -7,11 +7,19 @@ class GooglePlaceAddressSearchRepository: AddressSearchRepository {
     private lazy var placeClient: GMSPlacesClient = GMSPlacesClient.shared()
     private lazy var geocoder = CLGeocoder()
 
+    private let logger: AppLogger
+
     private let staleResultDuration = 1.hours
 
     // TODO: Use configurable maxSize
     private let placeAutocompleteResultCache =
     LRUCache<String, (Date, [GMSAutocompletePrediction])>(countLimit: 30)
+
+    init(
+        loggerFactory: AppLoggerFactory
+    ) {
+        logger = loggerFactory.getLogger("search")
+    }
 
     func clearCache() {
         placeAutocompleteResultCache.removeAllValues()
@@ -23,8 +31,7 @@ class GooglePlaceAddressSearchRepository: AddressSearchRepository {
             geocoder.reverseGeocodeLocation(location) { (placemarks, error) in
                 var placemark: CLPlacemark? = nil
                 if let geocodeError = error {
-                    // TODO: Report
-                    print(geocodeError)
+                    self.logger.logError(geocodeError)
                 } else {
                     placemark = placemarks?.first
                 }
@@ -78,8 +85,7 @@ class GooglePlaceAddressSearchRepository: AddressSearchRepository {
                 sessionToken: token,
                 callback: { predictions, error in
                     if let predictionError = error {
-                        // TODO: Report
-                        print("prediction error \(predictionError)")
+                        self.logger.logError(predictionError)
                     } else {
                         self.placeAutocompleteResultCache.setValue((now, predictions ?? []), forKey: query)
                     }
@@ -118,8 +124,7 @@ class GooglePlaceAddressSearchRepository: AddressSearchRepository {
         let addresses = await withCheckedContinuation { continuation in
             geocoder.geocodeAddressString(placeText) { placemarks, error in
                 if let geocodeError = error {
-                    // TODO: Report
-                    print(geocodeError)
+                    self.logger.logError(geocodeError)
                 }
                 continuation.resume(returning: placemarks)
             }
@@ -144,8 +149,7 @@ class GooglePlaceAddressSearchRepository: AddressSearchRepository {
             )
             placeClient.fetchPlace(with: placeRequest) { place, error in
                 if let error = error {
-                    // TODO: Report
-                    print(error)
+                    self.logger.logError(error)
                 }
                 continuation.resume(returning: place)
             }

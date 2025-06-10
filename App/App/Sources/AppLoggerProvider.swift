@@ -1,20 +1,24 @@
 import CrisisCleanup
 import Firebase
+import OSLog
 
 class TagLogger: AppLogger {
     let appEnv: AppEnv
     let tag: String
+    let osLogger: Logger
 
     private var crashlytics: Crashlytics { Crashlytics.crashlytics() }
 
     init(appEnv: AppEnv, tag: String) {
         self.appEnv = appEnv
         self.tag = tag
+        osLogger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: tag)
     }
 
     func logDebug(_ items: Any...) {
         if appEnv.isDebuggable {
-            print(tag, items)
+            let joined = items.map { "\($0)" }.joined(separator: ", ")
+            osLogger.debug("\(joined)")
         }
     }
 
@@ -30,8 +34,9 @@ class TagLogger: AppLogger {
 
         if appEnv.isDebuggable {
             if let ge = e as? GenericError {
-                print(tag, ge.message)
+                osLogger.error("\(ge.message)")
             } else {
+                osLogger.error("\(e.localizedDescription)")
                 print(tag, e)
             }
         } else {

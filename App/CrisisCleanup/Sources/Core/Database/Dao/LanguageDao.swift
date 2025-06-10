@@ -5,10 +5,15 @@ import GRDB
 public class LanguageDao {
     private let database: AppDatabase
     private let reader: DatabaseReader
+    private let logger: AppLogger
 
-    init(_ database: AppDatabase) {
+    init(
+        _ database: AppDatabase,
+        logger: AppLogger,
+    ) {
         self.database = database
         reader = database.reader
+        self.logger = logger
     }
 
     func getLanguageCount() -> Int {
@@ -31,7 +36,7 @@ public class LanguageDao {
     func getLanguageTranslations(_ key: String) -> LanguageTranslations? {
         try! reader.read {
             try fetchLanguageTranslations($0, key)
-        }?.asExternalModel()
+        }?.asExternalModel(logger)
     }
 
     func streamLanguageTranslations(_ key: String) -> AnyPublisher<LanguageTranslations?, Error> {
@@ -40,7 +45,7 @@ public class LanguageDao {
             .removeDuplicates()
             .shared(in: reader)
             .publisher()
-            .map { $0?.asExternalModel() }
+            .map { $0?.asExternalModel(self.logger) }
             .eraseToAnyPublisher()
     }
     private func fetchLanguageTranslations(_ db: Database, _ key: DatabaseValueConvertible) throws -> LanguageTranslationRecord? {

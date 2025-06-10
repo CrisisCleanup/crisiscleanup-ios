@@ -9,7 +9,7 @@ struct LanguageTranslationRecord: Identifiable, Equatable {
 
     var id: String { key }
 
-    func asExternalModel() -> LanguageTranslations {
+    func asExternalModel(_ logger: AppLogger) -> LanguageTranslations {
         var translations = [String: String]()
         if let json = translationJson {
             if json.isNotBlank {
@@ -17,8 +17,7 @@ struct LanguageTranslationRecord: Identifiable, Equatable {
                 do {
                     translations = try jsonDecoder.decode([String: String].self, from: json.data(using: .utf8)!)
                 } catch {
-                    // TODO: Log error proper
-                    print("Language decode error \(error)")
+                    logger.logError(error)
                 }
             }
         }

@@ -18,7 +18,10 @@ extension MainComponent {
     }
 
     var languageDao: LanguageDao {
-        LanguageDao(appDatabase)
+        LanguageDao(
+            appDatabase,
+            logger: loggerFactory.getLogger("data"),
+        )
     }
 
     var incidentDao: IncidentDao {
