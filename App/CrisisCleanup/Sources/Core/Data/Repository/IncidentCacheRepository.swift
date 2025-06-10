@@ -447,6 +447,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                 // TODO: If not preloaded and times out try caching around coordinates
                 let shortResult = try await cacheWorksitesCore(
                     incidentId,
+                    syncPlan.timestamp,
                     isPaused,
                     syncStats,
                     worksitesCoreStatsUpdater,
@@ -459,6 +460,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                 {
                     _ = try await cacheWorksitesCore(
                         incidentId,
+                        syncPlan.timestamp,
                         false,
                         syncStats,
                         worksitesCoreStatsUpdater,
@@ -506,6 +508,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
 
                 let additionalResult = try await cacheAdditionalWorksiteData(
                     incidentId,
+                    syncPlan.timestamp,
                     isPaused,
                     syncStats,
                     worksitesAdditionalStatsUpdater,
@@ -517,6 +520,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                 {
                     _ = try await cacheAdditionalWorksiteData(
                         incidentId,
+                        syncPlan.timestamp,
                         false,
                         syncStats,
                         worksitesAdditionalStatsUpdater,
@@ -859,6 +863,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
 
     private func cacheWorksitesCore(
         _ incidentId: Int64,
+        _ syncStart: Date,
         _ isPaused: Bool,
         _ syncParameters: IncidentDataSyncParameters,
         _ statsUpdater: IncidentDataPullStatsUpdater,
@@ -902,6 +907,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         let afterResult = try await cacheWorksitesAfter(
             IncidentCacheStage.worksitesCore,
             incidentId,
+            syncStart,
             isPaused,
             9000,
             timeMarkers,
@@ -1038,6 +1044,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
     private func cacheWorksitesAfter<T: WorksiteDataResult, U: WorksiteDataSubset>(
         _ stage: IncidentCacheStage,
         _ incidentId: Int64,
+        _ syncStart: Date,
         _ isPaused: Bool,
         _ unmeteredDataCountThreshold: Int,
         _ timeMarkers: IncidentDataSyncParameters.SyncTimeMarker,
@@ -1078,7 +1085,17 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                 return result.data ?? []
             }
 
+            func updateUpdatedAfter(_ timestamp: Date) async throws {
+                if stage == .worksitesCore {
+                    try await syncParameterDao.updateUpdatedAfter(incidentId, timestamp)
+                } else {
+                    try await syncParameterDao.updateAdditionalUpdatedAfter(incidentId, timestamp)
+                }
+            }
+
             if networkData.isEmpty {
+                try await updateUpdatedAfter(syncStart)
+
                 log("Cached \(savedCount)/\(initialCount) after. No Cases after \(afterTimeMarker)")
             } else {
                 if let averageSpeed = downloadSpeedTracker.averageSpeed() {
@@ -1106,11 +1123,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                 queryCount = min(queryCount * 2, maxQueryCount)
                 afterTimeMarker = networkData.last!.updatedAt
 
-                if stage == .worksitesCore {
-                    try await syncParameterDao.updateUpdatedAfter(incidentId, afterTimeMarker)
-                } else {
-                    try await syncParameterDao.updateAdditionalUpdatedAfter(incidentId, afterTimeMarker)
-                }
+                try await updateUpdatedAfter(afterTimeMarker)
 
                 log("Cached \(deduplicateWorksites.count) (\(savedCount)/\(initialCount)) after, up to \(afterTimeMarker)")
             }
@@ -1177,6 +1190,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
 
     private func cacheAdditionalWorksiteData(
         _ incidentId: Int64,
+        _ syncStart: Date,
         _ isPaused: Bool,
         _ syncParameters: IncidentDataSyncParameters,
         _ statsUpdater: IncidentDataPullStatsUpdater,
@@ -1224,6 +1238,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         let afterResult = try await cacheWorksitesAfter(
             .worksitesAdditional,
             incidentId,
+            syncStart,
             isPaused,
             3000,
             timeMarkers,
