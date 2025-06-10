@@ -23,6 +23,10 @@ class AppSyncer: SyncPuller, SyncPusher {
 
     private let pullLanguageGuard = ManagedAtomic(false)
 
+    private let syncMediaGuard = ManagedAtomic(false)
+
+    private let syncWorksitesGuard = ManagedAtomic(false)
+
     init(
         accountDataRepository: AccountDataRepository,
         incidentCacheRepository: IncidentCacheRepository,
@@ -198,15 +202,14 @@ class AppSyncer: SyncPuller, SyncPusher {
         }
     }
 
-    private let syncMediaGuard = ManagedAtomic(false)
     func syncMedia() async -> Bool {
+        guard !self.syncMediaGuard.exchange(true, ordering: .sequentiallyConsistent) else {
+            return false
+        }
+
         do {
             defer {
                 self.syncMediaGuard.store(false, ordering: .sequentiallyConsistent)
-            }
-
-            if self.syncMediaGuard.exchange(true, ordering: .sequentiallyConsistent) {
-                return false
             }
 
             let isSyncedAll = try await worksiteChangeRepository.syncWorksiteMedia()
@@ -241,15 +244,14 @@ class AppSyncer: SyncPuller, SyncPusher {
         }
     }
 
-    private let syncWorksitesGuard = ManagedAtomic(false)
     func syncWorksites() async {
+        guard !self.syncWorksitesGuard.exchange(true, ordering: .sequentiallyConsistent) else {
+            return
+        }
+
         do {
             defer {
                 self.syncWorksitesGuard.store(false, ordering: .sequentiallyConsistent)
-            }
-
-            if self.syncWorksitesGuard.exchange(true, ordering: .sequentiallyConsistent) {
-                return
             }
 
             await worksiteChangeRepository.syncWorksites()
