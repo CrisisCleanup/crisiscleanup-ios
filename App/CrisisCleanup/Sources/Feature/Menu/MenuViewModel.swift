@@ -1,3 +1,4 @@
+import Atomics
 import Combine
 import CoreLocation
 import SwiftUI
@@ -32,7 +33,7 @@ class MenuViewModel: ObservableObject {
 
     @Published private(set) var incidentsData = LoadingIncidentsData
     @Published private(set) var hotlineIncidents = [Incident]()
-    private var isHotlineIncidentsRefreshed = false
+    private var isHotlineIncidentsRefreshed = ManagedAtomic(false)
 
     @Published private(set) var menuItemVisibility = hideMenuItems
 
@@ -109,23 +110,20 @@ class MenuViewModel: ObservableObject {
     }
 
     func onViewAppear() {
-        Task {
-            await accountDataRefresher.updateProfilePicture()
-        }
-
-        if !isHotlineIncidentsRefreshed {
-            isHotlineIncidentsRefreshed = true
-            Task {
-                await self.incidentsRepository.pullHotlineIncidents()
-            }
-        }
-
         subscribeLoading()
         subscribeIncidentsData()
         subscribeProfilePicture()
         subscribeAppPreferences()
         subscribeLocationStatus()
         subscribeIncidentDataCacheState()
+
+        Task {
+            await accountDataRefresher.updateProfilePicture()
+
+            if !isHotlineIncidentsRefreshed.exchange(true, ordering: .relaxed) {
+                await self.incidentsRepository.pullHotlineIncidents()
+            }
+        }
     }
 
     func onViewDisappear() {
