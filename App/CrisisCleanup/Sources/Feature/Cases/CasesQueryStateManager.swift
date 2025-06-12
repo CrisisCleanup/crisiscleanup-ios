@@ -20,21 +20,22 @@ internal class CasesQueryStateManager {
     init(
         _ incidentSelector: IncidentSelector,
         _ filterRepository: CasesFilterRepository,
+        _ appPreferences: AppPreferencesDataSource,
         _ mapChangeDebounceTimeout: Double = 0.1
     ) {
         worksiteQueryState = worksiteQueryStateSubject
             .eraseToAnyPublisher()
 
         incidentSelector.incident
-            .sink(receiveValue: { incident in
+            .sink { incident in
                 self.updateState { $0.incidentId = incident.id }
-            })
+            }
             .store(in: &disposables)
 
         isTableViewSubject
-            .sink(receiveValue: { b in
+            .sink { b in
                 self.updateState { $0.isTableView = b }
-            })
+            }
             .store(in: &disposables)
 
         mapZoomSubject
@@ -43,9 +44,9 @@ internal class CasesQueryStateManager {
                 scheduler: RunLoop.main,
                 latest: true
             )
-            .sink(receiveValue: { zoom in
+            .sink { zoom in
                 self.updateState { $0.zoom = zoom }
-            })
+            }
             .store(in: &disposables)
 
         mapBoundsSubject
@@ -54,28 +55,39 @@ internal class CasesQueryStateManager {
                 scheduler: RunLoop.main,
                 latest: true
             )
-            .sink(receiveValue: { bounds in
+            .sink { bounds in
                 self.updateState { $0.coordinateBounds = bounds }
-            })
+            }
             .store(in: &disposables)
 
         tableViewSort
-            .sink(receiveValue: { sortBy in
+            .sink { sortBy in
                 self.updateState { $0.tableViewSort = sortBy }
-            })
+            }
             .store(in: &disposables)
 
         filterRepository.casesFiltersLocation
-            .sink(receiveValue: { (filters, _, _) in
+            .sink { (filters, _, _) in
                 self.updateState { $0.filters = filters }
-            })
+            }
             .store(in: &disposables)
 
         locationPermission
-            .sink(receiveValue: { hasPermission in
+            .sink { hasPermission in
                 self.updateState { $0.hasLocationPermission = hasPermission }
-            })
+            }
             .store(in: &disposables)
+
+        Task {
+            do {
+                let preferencesPublisher = appPreferences.preferences.eraseToAnyPublisher()
+                let cached = try await preferencesPublisher.asyncFirst()
+                let isTableViewCached = cached.isWorkScreenTableView ?? false
+                if isTableViewCached != self.isTableViewSubject.value {
+                    self.isTableViewSubject.value = isTableViewCached
+                }
+            } catch {}
+        }
     }
 
     deinit {

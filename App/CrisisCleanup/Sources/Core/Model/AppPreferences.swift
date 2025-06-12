@@ -12,6 +12,8 @@ public struct AppPreferences: Codable {
     let casesMapBounds: IncidentCoordinateBounds?
     let teamMapBounds: IncidentCoordinateBounds?
 
+    let isWorkScreenTableView: Bool?
+
     init(
         hideOnboarding: Bool = false,
         hideGettingStartedVideo: Bool = false,
@@ -22,7 +24,8 @@ public struct AppPreferences: Codable {
         shareLocationWithOrg: Bool = false,
         notifyDataSyncProgress: Bool? = false,
         casesMapBounds: IncidentCoordinateBounds? = IncidentCoordinateBoundsNone,
-        teamMapBounds: IncidentCoordinateBounds? = IncidentCoordinateBoundsNone
+        teamMapBounds: IncidentCoordinateBounds? = IncidentCoordinateBoundsNone,
+        isWorkScreenTableView: Bool? = false,
     ) {
         self.hideOnboarding = hideOnboarding
         self.hideGettingStartedVideo = hideGettingStartedVideo
@@ -34,5 +37,6 @@ public struct AppPreferences: Codable {
         self.notifyDataSyncProgress = notifyDataSyncProgress
         self.casesMapBounds = casesMapBounds
         self.teamMapBounds = teamMapBounds
+        self.isWorkScreenTableView = isWorkScreenTableView
     }
 }

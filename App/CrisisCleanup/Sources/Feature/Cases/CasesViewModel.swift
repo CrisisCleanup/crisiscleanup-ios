@@ -178,7 +178,8 @@ class CasesViewModel: ObservableObject {
 
         let queryStateManager = CasesQueryStateManager(
             incidentSelector,
-            filterRepository
+            filterRepository,
+            appPreferences,
         )
         qsm = queryStateManager
 
@@ -802,6 +803,8 @@ class CasesViewModel: ObservableObject {
 
     func toggleTableView() {
         qsm.isTableViewSubject.value.toggle()
+
+        appPreferences.setWorkScreenView(qsm.isTableViewSubject.value)
     }
 
     private func fetchTableData(_ wqs: WorksiteQueryState) async throws -> [WorksiteDistance] {

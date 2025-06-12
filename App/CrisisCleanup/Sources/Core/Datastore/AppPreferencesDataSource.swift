@@ -19,6 +19,7 @@ public protocol AppPreferencesDataSource {
     func setNotifyDataSyncProgress(_ notify: Bool)
     func setCasesMapBounds(_ bounds: IncidentCoordinateBounds)
     func setTeamMapBounds(_ bounds: IncidentCoordinateBounds)
+    func setWorkScreenView(_ isTableView: Bool)
 }
 
 extension AppPreferencesDataSource {
@@ -60,6 +61,9 @@ class AppPreferencesUserDefaults: AppPreferencesDataSource {
                 $0.languageKey = "en-US"
                 $0.syncAttempt = SyncAttempt()
                 $0.tableViewSortBy = .none
+                // TODO: Tutorial
+                $0.shareLocationWithOrg = false
+                $0.isWorkScreenTableView = false
             }
         )
     }
@@ -156,6 +160,14 @@ class AppPreferencesUserDefaults: AppPreferencesDataSource {
         update(
             UserDefaults.standard.appPreferences.copy {
                 $0.teamMapBounds = bounds
+            }
+        )
+    }
+
+    func setWorkScreenView(_ isTableView: Bool) {
+        update(
+            UserDefaults.standard.appPreferences.copy {
+                $0.isWorkScreenTableView = isTableView
             }
         )
     }

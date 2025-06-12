@@ -21,6 +21,7 @@ extension AppPreferences {
         var notifyDataSyncProgress: Bool?
         var casesMapBounds: IncidentCoordinateBounds?
         var teamMapBounds: IncidentCoordinateBounds?
+        var isWorkScreenTableView: Bool?
 
         fileprivate init(original: AppPreferences) {
             self.hideOnboarding = original.hideOnboarding
@@ -33,6 +34,7 @@ extension AppPreferences {
             self.notifyDataSyncProgress = original.notifyDataSyncProgress
             self.casesMapBounds = original.casesMapBounds
             self.teamMapBounds = original.teamMapBounds
+            self.isWorkScreenTableView = original.isWorkScreenTableView
         }
 
         fileprivate func toAppPreferences() -> AppPreferences {
@@ -46,7 +48,8 @@ extension AppPreferences {
                 shareLocationWithOrg: shareLocationWithOrg,
                 notifyDataSyncProgress: notifyDataSyncProgress,
                 casesMapBounds: casesMapBounds,
-                teamMapBounds: teamMapBounds
+                teamMapBounds: teamMapBounds,
+                isWorkScreenTableView: isWorkScreenTableView,
             )
         }
     }
