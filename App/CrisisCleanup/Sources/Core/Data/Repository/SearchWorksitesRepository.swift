@@ -95,7 +95,7 @@ class MemorySearchWorksitesRepository: SearchWorksitesRepository {
                         city: networkWorksite.city,
                         state: networkWorksite.state,
                         zipCode: networkWorksite.postalCode ?? "",
-                        county: networkWorksite.county,
+                        county: networkWorksite.county ?? "",
                         caseNumber: networkWorksite.caseNumber,
                         workType: workType
                     )

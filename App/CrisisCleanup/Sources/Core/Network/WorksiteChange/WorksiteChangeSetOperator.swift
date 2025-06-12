@@ -151,7 +151,7 @@ extension NetworkWorksiteFull {
             ),
             caseNumber: caseNumber,
             city: city.change(coreA.city, coreB.city),
-            county: county.change(coreA.county, coreB.county),
+            county: baseChange(county, coreA.county, coreB.county) ?? "",
             email: baseChange(email, coreA.email, coreB.email) ?? "",
             // Member of my org/favorite change is performed in a followup call
             favorite: favorite,
