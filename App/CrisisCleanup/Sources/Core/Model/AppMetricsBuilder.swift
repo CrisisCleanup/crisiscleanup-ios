@@ -4,31 +4,34 @@
 import Foundation
 
 extension AppMetrics {
-	// struct copy, lets you overwrite specific variables retaining the value of the rest
-	// using a closure to set the new values for the copy of the struct
-	func copy(build: (inout Builder) -> Void) -> AppMetrics {
-		var builder = Builder(original: self)
-		build(&builder)
-		return builder.toAppMetrics()
-	}
+    // struct copy, lets you overwrite specific variables retaining the value of the rest
+    // using a closure to set the new values for the copy of the struct
+    func copy(build: (inout Builder) -> Void) -> AppMetrics {
+        var builder = Builder(original: self)
+        build(&builder)
+        return builder.toAppMetrics()
+    }
 
-	struct Builder {
-		var openBuild: Int64
-		var openTimestamp: Date
-		var minSupportedVersion: MinSupportedAppVersion
+    struct Builder {
+        var openBuild: Int64
+        var openTimestamp: Date
+        var minSupportedVersion: MinSupportedAppVersion
+        var installBuild: Int64
 
-		fileprivate init(original: AppMetrics) {
-			self.openBuild = original.openBuild
-			self.openTimestamp = original.openTimestamp
-			self.minSupportedVersion = original.minSupportedVersion
-		}
+        fileprivate init(original: AppMetrics) {
+            self.openBuild = original.openBuild
+            self.openTimestamp = original.openTimestamp
+            self.minSupportedVersion = original.minSupportedVersion
+            self.installBuild = original.installBuild
+        }
 
-		fileprivate func toAppMetrics() -> AppMetrics {
-			return AppMetrics(
-				openBuild: openBuild,
-				openTimestamp: openTimestamp,
-				minSupportedVersion: minSupportedVersion
-			)
-		}
-	}
+        fileprivate func toAppMetrics() -> AppMetrics {
+            return AppMetrics(
+                openBuild: openBuild,
+                openTimestamp: openTimestamp,
+                minSupportedVersion: minSupportedVersion,
+                installBuild: installBuild,
+            )
+        }
+    }
 }

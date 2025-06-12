@@ -7,6 +7,10 @@ var dateNowRoundedSeconds: Date {
     return Date(timeIntervalSince1970: seconds)
 }
 
+func clearUserDefaults() {
+    UserDefaults.standard.removePersistentDomain(forName: Bundle.main.bundleIdentifier!)
+}
+
 func XCTAssertNearNow(
     _ date: Date,
     _ tolerance: Double = 1.seconds

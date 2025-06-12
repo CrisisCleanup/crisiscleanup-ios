@@ -1,5 +1,6 @@
 import Foundation
 
+// sourcery: AutoMockable
 public protocol AppVersionProvider {
     var version: (Int64, String) { get }
     var versionString: String { get }

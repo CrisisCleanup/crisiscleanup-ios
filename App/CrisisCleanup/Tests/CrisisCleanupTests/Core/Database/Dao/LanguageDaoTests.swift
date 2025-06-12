@@ -4,6 +4,8 @@ import XCTest
 @testable import CrisisCleanup
 
 class LanguageDaoTests: XCTestCase {
+    private let logger = SilentAppLogger()
+
     private func insertLanguage(
         _ dbQueue: DatabaseQueue,
         _ languageTranslation: LanguageTranslationRecord
@@ -41,7 +43,7 @@ class LanguageDaoTests: XCTestCase {
             syncedAt: dateNowRoundedSeconds.addingTimeInterval(1.days)
         )
 
-        let languageDao = LanguageDao(appDb)
+        let languageDao = LanguageDao(appDb, logger: logger)
         try await languageDao.upsertLanguageTranslation(languageTranslationUpdate)
 
         let recordsSecond = try await appDb.reader.read { db in
@@ -56,7 +58,7 @@ class LanguageDaoTests: XCTestCase {
 
         let languageTranslation = try insertLanguage(dbQueue)
 
-        let languageDao = LanguageDao(appDb)
+        let languageDao = LanguageDao(appDb, logger: logger)
         let languages = [
             LanguageTranslationRecord(
                 key: languageTranslation.key,
