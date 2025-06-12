@@ -49,9 +49,9 @@ struct CasesFilterView: View {
 
             if confirmAbadonChanges {
                 AlertDialog(
-                    title: t.t("~~Filter changes"),
+                    title: t.t("worksiteFilters.filter_changes"),
                     positiveActionText: t.t("actions.apply_filters"),
-                    negativeActionText: t.t("~~Abandon"),
+                    negativeActionText: t.t("actions.abandon"),
                     dismissDialog: {
                         confirmAbadonChanges = false
                     },
@@ -63,7 +63,7 @@ struct CasesFilterView: View {
                         dismiss()
                     },
                     content: {
-                        Text(t.t("~~Filters have changed. Would you like to apply or abandon the changes?"))
+                        Text(t.t("worksiteFilters.filter_changes_confirmation"))
                     }
                 )
             }

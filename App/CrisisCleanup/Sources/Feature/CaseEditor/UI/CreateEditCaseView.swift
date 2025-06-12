@@ -315,11 +315,11 @@ private struct ConfirmOldIncidentView: View {
 
     var body: some View {
         let confirmContinueKey = isCreateWorksite
-        ? "~~{incident_name} was created {relative_time}. Continue creating a Case for {incident_name}?"
-        : "~~{incident_name} was created {relative_time}. Continue editing this Case for {incident_name}?"
+        ? "caseForm.old_incident_case_create_confirm"
+        : "caseForm.old_incident_case_edit_confirm"
 
         VStack(alignment: .leading) {
-            Text(t.t("~~Old Incident"))
+            Text(t.t("caseForm.old_incident"))
                 .fontHeader3()
                 .padding(.vertical)
 
