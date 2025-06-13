@@ -29,7 +29,7 @@ internal func fillNetworkIncident(
     _ caseLabel: String,
     _ incidentType: String,
     _ locations: [NetworkIncidentLocation],
-    activePhone: [String]? = nil,
+    activePhone: [Int64]? = nil,
     turnOnRelease: Bool = false,
     isArchived: Bool = false,
     fields: [NetworkIncidentFormField]? = nil

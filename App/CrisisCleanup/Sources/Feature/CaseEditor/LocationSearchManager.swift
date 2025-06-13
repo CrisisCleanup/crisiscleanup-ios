@@ -162,6 +162,10 @@ internal class LocationSearchManager {
         .eraseToAnyPublisher()
     }
 
+    deinit {
+        _ = cancelSubscriptions(disposables)
+    }
+
     func queryAddress(_ coordinates: LatLng) async -> LocationAddress? {
         isSearchingCoordinateAddress.value = true
         do {

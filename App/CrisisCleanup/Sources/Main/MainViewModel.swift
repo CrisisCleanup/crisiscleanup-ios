@@ -113,8 +113,8 @@ class MainViewModel: ObservableObject {
     }
 
     func onBackgroundPhase() {
-        backgroundTaskCoordinator.scheduleRefresh(secondsFromNow: 30 * 60)
-        backgroundTaskCoordinator.schedulePushWorksites(secondsFromNow: 10 * 60)
+        backgroundTaskCoordinator.scheduleRefresh(secondsFromNow: 29 * 60)
+        backgroundTaskCoordinator.schedulePushWorksites(secondsFromNow: 9 * 60)
     }
 
     func onViewAppear() {
@@ -154,6 +154,10 @@ class MainViewModel: ObservableObject {
             self.onPersistentInvite(inviteInfo)
         }
         .store(in: &disposables)
+    }
+
+    deinit {
+        _ = cancelSubscriptions(disposables)
     }
 
     private func subscribeIncidentsData() {

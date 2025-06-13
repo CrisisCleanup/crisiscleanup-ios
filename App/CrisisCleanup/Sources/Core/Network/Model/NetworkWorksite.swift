@@ -14,7 +14,7 @@ public struct NetworkWorksiteFull: Codable, Equatable {
     let autoContactFrequencyT: String
     let caseNumber: String
     let city: String
-    let county: String
+    let county: String?
     let email: String?
     let events: [NetworkEvent]
     let favorite: NetworkType?
@@ -74,7 +74,7 @@ public struct NetworkWorksiteFull: Codable, Equatable {
         autoContactFrequencyT: String,
         caseNumber: String,
         city: String,
-        county: String,
+        county: String?,
         email: String?,
         events: [NetworkEvent],
         favorite: NetworkType?,
@@ -265,7 +265,7 @@ public struct NetworkWorksiteShort: Codable, Equatable {
     let address: String
     let caseNumber: String
     let city: String
-    let county: String
+    let county: String?
     // Full does not have this field. Updates should not overwrite
     let createdAt: Date
     // Differs from full
@@ -394,7 +394,7 @@ public struct NetworkWorksitePage: Codable, Equatable, WorksiteDataSubset {
     let autoContactFrequencyT: String
     let caseNumber: String
     let city: String
-    let county: String
+    let county: String?
     // Full does not have this field. Updates should not overwrite
     var createdAt: Date
     let email: String?
@@ -477,7 +477,7 @@ public struct NetworkWorksiteCoreData: Codable, Equatable {
     let autoContactFrequencyT: String
     let caseNumber: String
     let city: String
-    let county: String
+    let county: String?
     let email: String?
     let favorite: NetworkType?
     let flags: [NetworkFlag]

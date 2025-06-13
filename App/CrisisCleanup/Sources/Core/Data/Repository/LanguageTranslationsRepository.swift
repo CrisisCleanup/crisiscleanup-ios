@@ -98,6 +98,10 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
         .store(in: &disposables)
     }
 
+    deinit {
+        _ = cancelSubscriptions(disposables)
+    }
+
     private func pullLanguages() async throws {
         let languageDescriptions = try await dataSource.getLanguages()
             .map { $0.asRecord() }

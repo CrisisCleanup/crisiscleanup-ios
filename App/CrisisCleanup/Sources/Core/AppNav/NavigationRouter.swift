@@ -19,6 +19,10 @@ class NavigationRouter: ObservableObject {
         .store(in: &disposables)
     }
 
+    deinit {
+        _ = cancelSubscriptions(disposables)
+    }
+
     private func clearNavigationStack(_ replaceRoutes: [NavigationRoute] = []) {
         if replaceRoutes.isEmpty {
             path.removeAll()

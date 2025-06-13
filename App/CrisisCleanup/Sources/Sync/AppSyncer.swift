@@ -13,17 +13,19 @@ class AppSyncer: SyncPuller, SyncPusher {
     private let appLogger: AppLogger
     private let syncLogger: SyncLogger
 
+    private let incidentDataSyncNotifier: IncidentDataSyncNotifier
+
     private let accountData: AnyPublisher<AccountData, Never>
     private let appPreferences: AnyPublisher<AppPreferences, Never>
-
-    // TODO: IncidentDataSyncNotifier (uses IncidentDataPullReporter)
 
     private let pullTaskLock = NSRecursiveLock()
     private var pullTask: Task<SyncResult, Never>? = nil
 
     private let pullLanguageGuard = ManagedAtomic(false)
 
-    private var disposables = Set<AnyCancellable>()
+    private let syncMediaGuard = ManagedAtomic(false)
+
+    private let syncWorksitesGuard = ManagedAtomic(false)
 
     init(
         accountDataRepository: AccountDataRepository,
@@ -33,6 +35,9 @@ class AppSyncer: SyncPuller, SyncPusher {
         worksiteChangeRepository: WorksiteChangeRepository,
         appPreferencesDataSource: AppPreferencesDataSource,
         localImageRepository: LocalImageRepository,
+        incidentDataPullReporter: IncidentDataPullReporter,
+        systemNotifier: SystemNotifier,
+        translator: KeyTranslator,
         appLoggerFactory: AppLoggerFactory,
         syncLoggerFactory: SyncLoggerFactory,
     ) {
@@ -42,8 +47,16 @@ class AppSyncer: SyncPuller, SyncPusher {
         self.statusRepository = statusRepository
         self.worksiteChangeRepository = worksiteChangeRepository
         self.localImageRepository = localImageRepository
-        appLogger = appLoggerFactory.getLogger("sync")
+        let logger = appLoggerFactory.getLogger("sync")
+        appLogger = logger
         syncLogger = syncLoggerFactory.getLogger("app-syncer")
+
+        incidentDataSyncNotifier = IncidentDataSyncNotifier(
+            systemNotifier: systemNotifier,
+            incidentDataPullReporter: incidentDataPullReporter,
+            translator: translator,
+            logger: logger,
+        )
 
         accountData = accountDataRepository.accountData.eraseToAnyPublisher()
         appPreferences = appPreferencesDataSource.preferences.eraseToAnyPublisher()
@@ -108,12 +121,12 @@ class AppSyncer: SyncPuller, SyncPusher {
 
             let syncTask = Task {
                 do {
-                    // TODO: Notify sync
-                    // TODO: Manage background syncing
-                    return try await incidentCacheRepository.sync()
+                    return try await incidentDataSyncNotifier.notifySync {
+                        try await self.incidentCacheRepository.sync()
+                    }
                 } catch {
                     appLogger.logError(error)
-                    return SyncResult.error(message: error.localizedDescription)
+                    return .error(message: error.localizedDescription)
                 }
             }
 
@@ -124,12 +137,11 @@ class AppSyncer: SyncPuller, SyncPusher {
             }
 
             return await syncTask.result.get()
+        } catch is CancellationError {
+            return .canceled
         } catch {
             appLogger.logError(error)
-
-            // TODO: Take additional action as necessary
-
-            return SyncResult.error(message: error.localizedDescription)
+            return .error(message: error.localizedDescription)
         }
     }
 
@@ -168,7 +180,6 @@ class AppSyncer: SyncPuller, SyncPusher {
     // MARK: SyncPusher
 
     func appPushWorksite(_ worksiteId: Int64, _ scheduleMediaSync: Bool) {
-        // TODO: Run sync in background task (if not running to completion)
         Task {
             do {
                 if let _ = try await self.validateAccountTokens() {
@@ -185,100 +196,81 @@ class AppSyncer: SyncPuller, SyncPusher {
                         self.scheduleSyncMedia()
                     }
                 }
-
             } catch {
                 self.appLogger.logError(error)
-                // TODO: Handle proper
-                print(error)
             }
         }
     }
 
-    func syncPushWorksitesAsync() async {
+    func syncMedia() async -> Bool {
+        guard !self.syncMediaGuard.exchange(true, ordering: .sequentiallyConsistent) else {
+            return false
+        }
+
+        do {
+            defer {
+                self.syncMediaGuard.store(false, ordering: .sequentiallyConsistent)
+            }
+
+            let isSyncedAll = try await worksiteChangeRepository.syncWorksiteMedia()
+            return isSyncedAll
+        } catch {
+            appLogger.logError(error)
+        }
+
+        return false
+    }
+
+    private func runInBackground(
+        taskName: String,
+        action: @escaping () async -> Void,
+    ) {
+        let backgroundTaskId = UIApplication.shared.beginBackgroundTask(withName: taskName)
+
+        guard backgroundTaskId != .invalid else {
+            return
+        }
+
         Task {
+            let application = await UIApplication.shared
             do {
-                if let _ = try await validateAccountTokens() {
-                    return
+                defer {
+                    application.endBackgroundTask(backgroundTaskId)
                 }
 
-                try Task.checkCancellation()
-
-                _ = await worksiteChangeRepository.syncWorksites()
-            } catch {
-                // TODO: Handle proper
-                print(error)
+                await action()
             }
         }
     }
 
-    // TODO: Move both background tasks below into BackgroundTaskCoordinator and apply better pattern
-
-    private let syncMediaGuard = ManagedAtomic(false)
     func scheduleSyncMedia() {
-        var syncingTask: Task<Void, Error>? = nil
-
-        var bgTaskId: UIBackgroundTaskIdentifier = .invalid
-        bgTaskId = UIApplication.shared.beginBackgroundTask(withName: "sync-media") {
-            syncingTask?.cancel()
-            UIApplication.shared.endBackgroundTask(bgTaskId)
-        }
-
-        let bgTaskIdConst = bgTaskId
-        syncingTask = Task {
-            do {
-                defer {
-                    self.syncMediaGuard.store(false, ordering: .sequentiallyConsistent)
-
-                    Task { @MainActor in
-                        UIApplication.shared.endBackgroundTask(bgTaskIdConst)
-                    }
-                }
-
-                if self.syncMediaGuard.exchange(true, ordering: .sequentiallyConsistent) {
-                    return
-                }
-
-                let isSyncAll = try await worksiteChangeRepository.syncWorksiteMedia()
-                if !isSyncAll {
-                    // TODO: Schedule delayed background sync
-                }
-            } catch {
-                appLogger.logError(error)
-                // TODO: Handle proper. Could be cancellation.
-                print("Sync media error \(error)")
-            }
+        runInBackground(taskName: "app-upload-media") {
+            let _ = await self.syncMedia()
         }
     }
 
-    private let syncWorksitesGuard = ManagedAtomic(false)
-    func scheduleSyncWorksites() {
-        var syncingTask: Task<Void, Error>? = nil
-
-        var bgTaskId: UIBackgroundTaskIdentifier = .invalid
-        bgTaskId = UIApplication.shared.beginBackgroundTask(withName: "sync-worksites") {
-            syncingTask?.cancel()
-            UIApplication.shared.endBackgroundTask(bgTaskId)
+    func syncWorksites() async {
+        guard !self.syncWorksitesGuard.exchange(true, ordering: .sequentiallyConsistent) else {
+            return
         }
 
-        let bgTaskIdConst = bgTaskId
-        syncingTask = Task {
-            do {
-                defer {
-                    self.syncWorksitesGuard.store(false, ordering: .sequentiallyConsistent)
-
-                    Task { @MainActor in
-                        UIApplication.shared.endBackgroundTask(bgTaskIdConst)
-                    }
-                }
-
-                if self.syncWorksitesGuard.exchange(true, ordering: .sequentiallyConsistent) {
-                    return
-                }
-
-                _ = await worksiteChangeRepository.syncWorksites()
-
-                scheduleSyncMedia()
+        do {
+            defer {
+                self.syncWorksitesGuard.store(false, ordering: .sequentiallyConsistent)
             }
+
+            await worksiteChangeRepository.syncWorksites()
+        }
+    }
+
+    private func syncWorksitesAndMedia() async {
+        await syncWorksites()
+        _ = await syncMedia()
+    }
+
+    func scheduleSyncWorksites() {
+        runInBackground(taskName: "app-upload-worksites") {
+            await self.syncWorksitesAndMedia()
         }
     }
 }

@@ -32,7 +32,7 @@ public struct NetworkIncident: Codable, Equatable {
     let caseLabel: String
     let locations: [NetworkIncidentLocation]
     let type: String
-    let activePhoneNumber: [String]?
+    let activePhoneNumber: [Int64]?
     let turnOnRelease: Bool
     let isArchived: Bool?
 
@@ -60,7 +60,7 @@ public struct NetworkIncident: Codable, Equatable {
         caseLabel: String,
         locations: [NetworkIncidentLocation],
         type: String,
-        activePhoneNumber: [String]?,
+        activePhoneNumber: [Int64]?,
         turnOnRelease: Bool,
         isArchived: Bool?,
         fields: [NetworkIncidentFormField]? = nil
@@ -87,7 +87,7 @@ public struct NetworkIncident: Codable, Equatable {
         self.caseLabel = try container.decode(String.self, forKey: .caseLabel)
         self.locations = try container.decode([NetworkIncidentLocation].self, forKey: .locations)
         self.type = try container.decode(String.self, forKey: .type)
-        self.activePhoneNumber = container.decodeIterableString(.activePhoneNumber)
+        self.activePhoneNumber = container.decodeIterableInt64(.activePhoneNumber)
         self.turnOnRelease = try container.decode(Bool.self, forKey: .turnOnRelease)
         self.isArchived = try container.decodeIfPresent(Bool.self, forKey: .isArchived)
         self.fields = try container.decodeIfPresent([NetworkIncidentFormField].self, forKey: .fields)

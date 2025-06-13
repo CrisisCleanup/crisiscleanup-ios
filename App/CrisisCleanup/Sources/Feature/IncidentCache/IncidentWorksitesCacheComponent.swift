@@ -26,6 +26,10 @@ class IncidentWorksitesCacheComponent: Component<AppDependency>, IncidentWorksit
             .store(in: &disposables)
     }
 
+    deinit {
+        _ = cancelSubscriptions(disposables)
+    }
+
     private var incidentWorksitesCacheViewModel: IncidentWorksitesCacheViewModel {
         if viewModel == nil {
             viewModel = IncidentWorksitesCacheViewModel(

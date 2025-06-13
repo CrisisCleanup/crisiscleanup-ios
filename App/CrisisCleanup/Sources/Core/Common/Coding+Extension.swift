@@ -32,6 +32,15 @@ extension KeyedDecodingContainer {
         }
         return nil
     }
+
+    func decodeIterableInt64(_ key: KeyedDecodingContainer<Key>.Key) -> [Int64]? {
+        if let single = try? decodeIfPresent(Int64.self, forKey: key) {
+            return [single]
+        } else if let many = try? decodeIfPresent([Int64].self, forKey: key) {
+            return many
+        }
+        return nil
+    }
 }
 
 class JsonDecoderFactory {

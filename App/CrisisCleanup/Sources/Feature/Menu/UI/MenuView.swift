@@ -1,16 +1,22 @@
 import SwiftUI
 
 struct MenuView: View {
+    @Environment(\.scenePhase) var scenePhase
     @Environment(\.translator) var t: KeyAssetTranslator
+
     @EnvironmentObject var appAlertState: AppAlertViewState
     @EnvironmentObject var router: NavigationRouter
 
     @ObservedObject var viewModel: MenuViewModel
+
     let incidentSelectViewBuilder: IncidentSelectViewBuilder
     let openAuthScreen: () -> Void
 
     @State private var shareLocationWithOrg = false
     @State private var showExplainLocationPermission = false
+
+    @State private var notifyDataSyncProgress = false
+    @State private var showExplainNotificationPermission = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -63,6 +69,23 @@ struct MenuView: View {
                 }
                 .styleOutline()
                 .padding([.horizontal, .bottom])
+
+                Toggle(
+                    t.t("~~Enable notifications"),
+                    isOn: $notifyDataSyncProgress
+                )
+                .padding([.horizontal, .bottom])
+                .onReceive(viewModel.$notifyDataSyncProgress) { notify in
+                    if notify != notifyDataSyncProgress {
+                        notifyDataSyncProgress = notify
+                    }
+                }
+                .onChange(of: notifyDataSyncProgress) { notify in
+                    viewModel.notifyDataSyncProgress(notify)
+                }
+                .onReceive(viewModel.$hasNotificationAccess) { hasAccess in
+                    notifyDataSyncProgress = hasAccess && viewModel.notifyDataSyncProgress
+                }
 
                 Toggle(
                     t.t("appMenu.share_location_organization"),
@@ -122,6 +145,11 @@ struct MenuView: View {
         .background(.white)
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
+        .onChange(of: scenePhase) { newPhase in
+            if newPhase == .active {
+                viewModel.onActivePhase()
+            }
+        }
         .onChange(of: viewModel.showExplainLocationPermission) { show in
             showExplainLocationPermission = show
         }
@@ -129,10 +157,26 @@ struct MenuView: View {
             isPresented: $showExplainLocationPermission,
             onDismiss: {
                 viewModel.showExplainLocationPermission = false
+                shareLocationWithOrg = viewModel.hasLocationAccess && viewModel.shareLocationWithOrg
             }
         ) {
             RequestLocationView {
                 viewModel.showExplainLocationPermission = false
+            }
+            .presentationDetents([.fraction(0.33), .medium])
+        }
+        .onChange(of: viewModel.showExplainNotificationPermission) { show in
+            showExplainNotificationPermission = show
+        }
+        .sheet(
+            isPresented: $showExplainNotificationPermission,
+            onDismiss: {
+                viewModel.showExplainNotificationPermission = false
+                notifyDataSyncProgress = viewModel.hasNotificationAccess && viewModel.notifyDataSyncProgress
+            }
+        ) {
+            RequestNotificationView {
+                viewModel.showExplainNotificationPermission = false
             }
             .presentationDetents([.fraction(0.33), .medium])
         }
@@ -299,17 +343,19 @@ private struct MenuScreenNonProductionView: View {
     }
 }
 
-private struct RequestLocationView: View {
+private struct OpenSettingsView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
+    let bodyKey: String
+    var actionKey: String = "info.app_settings"
     var onDismiss: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text(t.t("appMenu.share_location_organization_description"))
+            Text(t.t(bodyKey))
             HStack {
                 Spacer()
-                Button(t.t("info.app_settings")) {
+                Button(t.t(actionKey)) {
                     openSystemAppSettings()
                     onDismiss()
                 }
@@ -317,6 +363,32 @@ private struct RequestLocationView: View {
             }
         }
         .padding()
+    }
+}
+
+private struct RequestLocationView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    var onDismiss: () -> Void = {}
+
+    var body: some View {
+        OpenSettingsView(
+            bodyKey: "appMenu.share_location_organization_description",
+            onDismiss: onDismiss
+        )
+    }
+}
+
+private struct RequestNotificationView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
+    var onDismiss: () -> Void = {}
+
+    var body: some View {
+        OpenSettingsView(
+            bodyKey: "~~Notification access is needed to receive alerts. Grant notification access in Settings.",
+            onDismiss: onDismiss
+        )
     }
 }
 

@@ -55,6 +55,10 @@ class AppAlertViewState: ObservableObject {
             .store(in: &disposables)
     }
 
+    deinit {
+        _ = cancelSubscriptions(disposables)
+    }
+
     private func updateShowAlert() {
         var alertType: AppAlertType? = nil
         if hasNoInternet,

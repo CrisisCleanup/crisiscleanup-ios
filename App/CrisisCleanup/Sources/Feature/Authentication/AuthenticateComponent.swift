@@ -54,6 +54,10 @@ class AuthenticateComponent: Component<AppDependency> {
             .store(in: &disposables)
     }
 
+    deinit {
+        _ = cancelSubscriptions(disposables)
+    }
+
     private var authenticateViewModel: AuthenticateViewModel {
         if viewModel == nil {
             viewModel = AuthenticateViewModel(

@@ -100,10 +100,7 @@ class SyncInsightsViewModel: ObservableObject {
 
     func syncPending() {
         if worksitesPendingSync.isNotEmpty {
-            // TODO: Sync pending in background task independent of this view model
-            Task {
-                await syncPusher.syncPushWorksitesAsync()
-            }
+            logger.logDebug("Functionality is no longer necessary")
         }
     }
 }

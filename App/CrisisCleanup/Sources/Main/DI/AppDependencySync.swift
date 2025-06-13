@@ -9,6 +9,9 @@ extension MainComponent {
                 worksiteChangeRepository: worksiteChangeRepository,
                 appPreferencesDataSource: appPreferences,
                 localImageRepository: localImageRepository,
+                incidentDataPullReporter: incidentDataPullReporter,
+                systemNotifier: systemNotifier,
+                translator: translator,
                 appLoggerFactory: loggerFactory,
                 syncLoggerFactory: syncLoggerFactory,
             )
@@ -57,6 +60,7 @@ extension MainComponent {
             AppBackgroundTaskCoordinator(
                 syncPuller: syncPuller,
                 syncPusher: syncPusher,
+                worksiteChangeRepository: worksiteChangeRepository,
                 loggerFactory: loggerFactory
             )
         }

@@ -43,6 +43,7 @@ class LocalAppMetricsDataSource: AppMetricsDataSource {
         update(UserDefaults.standard.appMetrics.copy {
             $0.openBuild = appBuild
             $0.openTimestamp = timestamp
+            $0.installBuild = $0.installBuild <= 0 ? appBuild : $0.installBuild
         })
     }
 

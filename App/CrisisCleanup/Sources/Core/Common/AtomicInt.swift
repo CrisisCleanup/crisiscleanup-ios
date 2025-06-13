@@ -4,11 +4,11 @@ class AtomicInt {
     private let storage = ManagedAtomic<Int>(0)
 
     init(_ initialValue: Int = 0) {
-        storage.store(initialValue, ordering: .relaxed)
+        set(initialValue)
     }
 
     var value: Int {
-        return storage.load(ordering: .relaxed)
+        storage.load(ordering: .relaxed)
     }
 
     func set(_ newValue: Int) {
@@ -16,14 +16,18 @@ class AtomicInt {
     }
 
     func get() -> Int {
-        return storage.load(ordering: .relaxed)
+        value
     }
 
     func incrementAndGet() -> Int {
-        return storage.loadThenWrappingIncrement(ordering: .relaxed) + 1
+        storage.wrappingIncrementThenLoad(ordering: .relaxed)
     }
 
     func decrementAndGet() -> Int {
-        return storage.loadThenWrappingDecrement(ordering: .relaxed) - 1
+        storage.wrappingDecrementThenLoad(ordering: .relaxed)
+    }
+
+    func getAndIncrement() -> Int {
+        storage.loadThenWrappingIncrement(ordering: .relaxed)
     }
 }

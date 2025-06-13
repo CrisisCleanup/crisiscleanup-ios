@@ -91,7 +91,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
 
     var hasInitialCoordinates: Bool { locationInputData.coordinates == caseData?.worksite.coordinates }
     @Published var showExplainLocationPermission = false
-    private var useMyLocationExpirationTime = Date(timeIntervalSince1970: 0)
+    private var useMyLocationExpirationTime = Date.epochZero
     @Published var locationOutOfBoundsMessage = ""
 
     private let invalidWorksiteInfoSubject = CurrentValueSubject<InvalidWorksiteInfo, Never>(InvalidWorksiteInfo())

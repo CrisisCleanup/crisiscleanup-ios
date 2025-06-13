@@ -11,8 +11,6 @@ class PropertyInputData: ObservableObject {
     @Published var phoneNumberError = ""
     @Published var emailError = ""
 
-    private var disposables = Set<AnyCancellable>()
-
     func load(_ worksite: Worksite) {
         residentName = worksite.name
         phoneNumber = worksite.phone1

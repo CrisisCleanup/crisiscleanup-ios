@@ -32,5 +32,4 @@ class WorksiteChangeSerializerMock: WorksiteChangeSerializer {
             return serializeReturnValue
         }
     }
-
 }

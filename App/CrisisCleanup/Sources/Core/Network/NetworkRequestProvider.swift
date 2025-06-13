@@ -95,33 +95,33 @@ extension NetworkRequestProvider {
     var incidents: NetworkRequest {
         NetworkRequest(
             apiUrl("incidents"),
-            addTokenHeader: true
+            addTokenHeader: true,
         )
     }
 
     var incidentsNoAuth: NetworkRequest {
         NetworkRequest(
-            apiUrl("incidents")
+            apiUrl("incidents"),
         )
     }
 
     var incidentsList: NetworkRequest {
         NetworkRequest(
-            apiUrl("incidents_list")
+            apiUrl("incidents_list"),
         )
     }
 
     var incidentLocations: NetworkRequest {
         NetworkRequest(
             apiUrl("locations"),
-            addTokenHeader: true
+            addTokenHeader: true,
         )
     }
 
     var incident: NetworkRequest {
         NetworkRequest(
             apiUrl("incidents"),
-            addTokenHeader: true
+            addTokenHeader: true,
         )
     }
 
@@ -129,35 +129,36 @@ extension NetworkRequestProvider {
         NetworkRequest(
             apiUrl("organizations"),
             addTokenHeader: true,
-            timeoutInterval: 10.seconds
+            timeoutInterval: 10.seconds,
         )
     }
 
     var worksitesCoreData: NetworkRequest {
         NetworkRequest(
             apiUrl("worksites"),
-            addTokenHeader: true
+            addTokenHeader: true,
+            timeoutInterval: 10.seconds,
         )
     }
 
     var worksitesLocationSearch: NetworkRequest {
         NetworkRequest(
             apiUrl("worksites"),
-            addTokenHeader: true
+            addTokenHeader: true,
         )
     }
 
     var worksitesSearch: NetworkRequest {
         NetworkRequest(
             apiUrl("worksites_all"),
-            addTokenHeader: true
+            addTokenHeader: true,
         )
     }
 
     var worksites: NetworkRequest {
         NetworkRequest(
             apiUrl("worksites"),
-            addTokenHeader: true
+            addTokenHeader: true,
         )
     }
 
@@ -165,7 +166,7 @@ extension NetworkRequestProvider {
         NetworkRequest(
             apiUrl("worksites"),
             addTokenHeader: true,
-            timeoutInterval: 15.seconds
+            timeoutInterval: 10.seconds,
         )
     }
 
@@ -179,14 +180,16 @@ extension NetworkRequestProvider {
     var worksitesPage: NetworkRequest {
         NetworkRequest(
             apiUrl("worksites_page"),
-            addTokenHeader: true
+            addTokenHeader: true,
+            timeoutInterval: 10.seconds,
         )
     }
 
     var worksitesFlagsFormData: NetworkRequest {
         NetworkRequest(
             apiUrl("worksites_data_flags"),
-            addTokenHeader: true
+            addTokenHeader: true,
+            timeoutInterval: 10.seconds,
         )
     }
 
@@ -194,7 +197,7 @@ extension NetworkRequestProvider {
         NetworkRequest(
             apiUrl("worksite_requests"),
             addTokenHeader: true,
-            timeoutInterval: 15.seconds
+            timeoutInterval: 10.seconds,
         )
     }
 

@@ -26,6 +26,10 @@ class CasesFilterComponent: Component<AppDependency>, CasesFilterViewBuilder {
             .store(in: &disposables)
     }
 
+    deinit {
+        _ = cancelSubscriptions(disposables)
+    }
+
     private var casesFilterViewModel: CasesFilterViewModel {
         if viewModel == nil {
             viewModel =

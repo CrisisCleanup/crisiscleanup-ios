@@ -8,6 +8,7 @@ public protocol AppDependency: Dependency {
     var databaseOperator: DatabaseOperator { get }
     var loggerFactory: AppLoggerFactory { get }
     var networkMonitor: NetworkMonitor { get }
+    var systemNotifier: SystemNotifier { get }
 
     var inputValidator: InputValidator { get }
     var phoneNumberParser: PhoneNumberParser { get }
@@ -95,6 +96,12 @@ extension MainComponent {
     public var networkMonitor: NetworkMonitor {
         shared {
             AppNetworkMonitor()
+        }
+    }
+
+    public var systemNotifier: SystemNotifier {
+        shared {
+            AppSystemNotifier(loggerFactory: loggerFactory)
         }
     }
 

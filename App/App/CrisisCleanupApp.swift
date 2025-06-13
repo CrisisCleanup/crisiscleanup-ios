@@ -14,7 +14,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         let loggerFactory: AppLoggerFactory = AppLoggerProvider(appEnv)
         let externalEventBus = CrisisCleanupExternalEventBus()
 
-        let placesSearch = GooglePlaceAddressSearchRepository()
+        let placesSearch = GooglePlaceAddressSearchRepository(loggerFactory: loggerFactory)
 
         return MainComponent(
             appEnv: appEnv,

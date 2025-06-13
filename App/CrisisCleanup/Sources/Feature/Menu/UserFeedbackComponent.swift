@@ -26,6 +26,10 @@ class UserFeedbackComponent: Component<AppDependency>, UserFeedbackViewBuilder {
             .store(in: &disposables)
     }
 
+    deinit {
+        _ = cancelSubscriptions(disposables)
+    }
+
     private var userFeedbackViewModel: UserFeedbackViewModel {
         if viewModel == nil {
             viewModel =

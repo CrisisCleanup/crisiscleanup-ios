@@ -8,7 +8,7 @@ public class AccountDataRefresher {
     private let accountEventBus: AccountEventBus
     private let logger: AppLogger
 
-    private var accountDataUpdateTime = Date(timeIntervalSince1970: 0)
+    private var accountDataUpdateTime = Date.epochZero
 
     private let updateLock = NSLock()
 

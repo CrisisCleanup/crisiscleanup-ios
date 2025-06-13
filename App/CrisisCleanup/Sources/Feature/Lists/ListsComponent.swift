@@ -32,6 +32,10 @@ class ListsComponent: Component<AppDependency>, ListsViewBuilder {
             .store(in: &disposables)
     }
 
+    deinit {
+        _ = cancelSubscriptions(disposables)
+    }
+
     private var listsViewModel: ListsViewModel {
         if _listsViewModel == nil {
             _listsViewModel = ListsViewModel(

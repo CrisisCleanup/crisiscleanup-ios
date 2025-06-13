@@ -45,6 +45,10 @@ class TextInputFocusableView: ObservableObject {
             .store(in: &disposables)
     }
 
+    deinit {
+        _ = cancelSubscriptions(disposables)
+    }
+
     func clear() {
         focusState = nil
     }

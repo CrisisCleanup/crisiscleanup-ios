@@ -75,9 +75,8 @@ class CasesViewModel: ObservableObject {
     private let mapMarkerManager: CasesMapMarkerManager
     internal var mapView: MKMapView?
 
-    private let epochZero = Date(timeIntervalSince1970: 0)
     private let tileClearRefreshInterval = 5.seconds
-    private var tileRefreshedTimestamp = Date(timeIntervalSince1970: 0)
+    private var tileRefreshedTimestamp = Date.epochZero
 
     private let mapMarkersChangeSetSubject = CurrentValueSubject<AnnotationsChangeSet, Never>(emptyAnnotationsChangeSet)
     @Published private(set) var mapMarkersChangeSet = emptyAnnotationsChangeSet
@@ -179,7 +178,8 @@ class CasesViewModel: ObservableObject {
 
         let queryStateManager = CasesQueryStateManager(
             incidentSelector,
-            filterRepository
+            filterRepository,
+            appPreferences,
         )
         qsm = queryStateManager
 
@@ -283,7 +283,7 @@ class CasesViewModel: ObservableObject {
         incidentIdPublisher
             .receive(on: RunLoop.main)
             .sink {
-                self.tileRefreshedTimestamp = self.epochZero
+                self.tileRefreshedTimestamp = Date.epochZero
                 self.mapDotsOverlay.setIncident($0, 0, clearCache: true)
                 self.reloadMapOverlay()
             }
@@ -706,7 +706,7 @@ class CasesViewModel: ObservableObject {
         }
 
         let sinceLastRefresh = tileRefreshedTimestamp.distance(to: now)
-        let refreshTiles = tileRefreshedTimestamp == epochZero ||
+        let refreshTiles = tileRefreshedTimestamp == Date.epochZero ||
         pullStats.startTime.distance(to: now) > tileClearRefreshInterval &&
         sinceLastRefresh > tileClearRefreshInterval
         if (refreshTiles) {
@@ -803,6 +803,8 @@ class CasesViewModel: ObservableObject {
 
     func toggleTableView() {
         qsm.isTableViewSubject.value.toggle()
+
+        appPreferences.setWorkScreenView(qsm.isTableViewSubject.value)
     }
 
     private func fetchTableData(_ wqs: WorksiteQueryState) async throws -> [WorksiteDistance] {
