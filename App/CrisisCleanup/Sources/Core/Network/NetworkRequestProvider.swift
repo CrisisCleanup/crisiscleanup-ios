@@ -181,7 +181,7 @@ extension NetworkRequestProvider {
         NetworkRequest(
             apiUrl("worksites_page"),
             addTokenHeader: true,
-            timeoutInterval: 30.seconds,
+            timeoutInterval: 10.seconds,
         )
     }
 
