@@ -477,7 +477,7 @@ private struct MapLayersView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: appTheme.gridActionSpacing) {
-            Text(t.t("~~Map type"))
+            Text(t.t("worksiteMap.toggle_map_type"))
                 .fontHeader3()
 
             let imageSize = appTheme.buttonSize
@@ -492,7 +492,7 @@ private struct MapLayersView: View {
                                 $0.roundedBorder(color: borderColor, lineWidth: borderWidth)
                             }
                     }
-                    Text(t.t("~~Default"))
+                    Text(t.t("worksiteMap.street_map"))
                 }
                 VStack(spacing: appTheme.gridItemSpacing) {
                     Button {
@@ -504,7 +504,7 @@ private struct MapLayersView: View {
                                 $0.roundedBorder(color: borderColor, lineWidth: borderWidth)
                             }
                     }
-                    Text(t.t("~~Satellite"))
+                    Text(t.t("worksiteMap.satellite_map"))
                 }
             }
         }
