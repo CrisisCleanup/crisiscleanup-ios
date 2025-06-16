@@ -38,6 +38,7 @@ extension Worksite {
             svi: svi,
             what3Words: what3Words ?? "",
             updatedAt: modifiedAt,
+            networkPhotoCount: nil,
             isLocalFavorite: isLocalFavorite
         )
 

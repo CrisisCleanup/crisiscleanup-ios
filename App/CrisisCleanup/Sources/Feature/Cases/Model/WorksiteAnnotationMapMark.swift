@@ -35,7 +35,9 @@ extension WorksiteMapMark {
             isFavorite: isFavorite,
             isImportant: isHighPriority,
             isFilteredOut: isFilteredOut,
-            isVisited: isVisited
+            isDuplicate: isDuplicate,
+            isVisited: isVisited,
+            hasPhotos: hasPhotos,
         )
 
         let statusId = statusClaim.status.literal
@@ -54,7 +56,8 @@ extension WorksiteMapMark {
         (hasMultipleWorkTypes ? 1 << 1 : 0) |
         (isFilteredOut ? 1 << 2 : 0) |
         (isDuplicate ? 1 << 3 : 0) |
-        (isVisited ? 1 << 4 : 0)
+        (isVisited ? 1 << 4 : 0) |
+        (hasPhotos ? 1 << 5 : 0)
         point.reuseIdentifier = "\(statusId)-\(workTypeId)-\(remainingIds)"
 
         // mapIconOffset = Offset(0.5f + xOffset, 0.5f + yOffset),

@@ -195,7 +195,9 @@ class CasesMapDotsOverlay: MKTileOverlay {
                         $0.workType,
                         $0.workTypeCount > 1,
                         isFilteredOut: $0.isFilteredOut,
-                        isDuplicate: $0.isDuplicate
+                        isDuplicate: $0.isDuplicate,
+                        isVisited: false,
+                        hasPhotos: $0.hasPhotos,
                     ),
                        let xyNorm = coordinates.fromLatLng($0.latitude, $0.longitude) {
                         let (xNorm, yNorm) = xyNorm

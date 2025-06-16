@@ -65,14 +65,17 @@ class InMemoryDotProvider: MapCaseDotProvider {
         isImportant: Bool,
         isFilteredOut: Bool,
         isDuplicate: Bool,
-        isVisited: Bool
+        isVisited: Bool,
+        hasPhotos: Bool,
     ) -> UIImage? {
         getIcon(
             statusClaim,
             workType,
             hasMultipleWorkTypes,
             isFilteredOut: isFilteredOut,
-            isDuplicate: isDuplicate
+            isDuplicate: isDuplicate,
+            isVisited: isVisited,
+            hasPhotos: hasPhotos,
         )
     }
 
@@ -82,7 +85,8 @@ class InMemoryDotProvider: MapCaseDotProvider {
         _ hasMultipleWorkTypes: Bool,
         isFilteredOut: Bool,
         isDuplicate: Bool,
-        isVisited: Bool
+        isVisited: Bool,
+        hasPhotos: Bool,
     ) -> UIImage? {
         let cacheKey = DotCacheKey(statusClaim, isDuplicate: isDuplicate, isFilteredOut: isFilteredOut)
         let cachedIcon = cacheLock.withLock {

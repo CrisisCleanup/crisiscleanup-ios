@@ -416,32 +416,34 @@ public struct NetworkWorksitePage: Codable, Equatable, WorksiteDataSubset {
     var updatedAt: Date
     let what3words: String?
     private let workTypes: [NetworkWorksiteFull.WorkTypeShort]
+    let photoCount: Int?
 
     enum CodingKeys: String, CodingKey {
-        case id
-        case address
-        case autoContactFrequencyT = "auto_contact_frequency_t"
-        case caseNumber = "case_number"
-        case city
-        case county
-        case createdAt = "created_at"
-        case email
-        case favoriteId = "favorite_id"
-        case flags
-        case incident
-        case keyWorkType = "key_work_type"
-        case location
-        case name
-        case phone1
-        case phone2
-        case plusCode = "pluscode"
-        case postalCode = "postal_code"
-        case reportedBy = "reported_by"
-        case state
-        case svi
-        case updatedAt = "updated_at"
-        case what3words = "what3words"
-        case workTypes = "work_types"
+        case id,
+             address,
+             autoContactFrequencyT = "auto_contact_frequency_t",
+             caseNumber = "case_number",
+             city,
+             county,
+             createdAt = "created_at",
+             email,
+             favoriteId = "favorite_id",
+             flags,
+             incident,
+             keyWorkType = "key_work_type",
+             location,
+             name,
+             phone1,
+             phone2,
+             plusCode = "pluscode",
+             postalCode = "postal_code",
+             reportedBy = "reported_by",
+             state,
+             svi,
+             updatedAt = "updated_at",
+             what3words = "what3words",
+             workTypes = "work_types",
+             photoCount = "photos_count"
     }
 
     private var newsetWorkTypeMap: [String: (Int, NetworkWorkTypeShort)] {

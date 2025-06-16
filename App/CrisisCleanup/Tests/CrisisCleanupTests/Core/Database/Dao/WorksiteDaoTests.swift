@@ -369,6 +369,7 @@ func testWorksiteRecord(
         svi: nil,
         what3Words: nil,
         updatedAt: updatedAt,
+        networkPhotoCount: nil,
         isLocalFavorite: false
     )
 }
@@ -408,6 +409,7 @@ func testWorksiteFullRecord(
         svi: 6.235,
         what3Words: "what,three,words",
         updatedAt: createdAt.addingTimeInterval(99.seconds),
+        networkPhotoCount: nil,
         isLocalFavorite: false
     )
 }
@@ -448,6 +450,7 @@ func testWorksiteShortRecord(
         svi: 0.548,
         what3Words: nil,
         updatedAt: createdAt.addingTimeInterval(66.seconds),
+        networkPhotoCount: nil,
         isLocalFavorite: false
     )
 }

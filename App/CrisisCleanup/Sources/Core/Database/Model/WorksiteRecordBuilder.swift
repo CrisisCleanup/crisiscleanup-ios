@@ -33,6 +33,7 @@ extension WorksiteRecord {
 		svi: Double?,
 		what3Words: String?,
 		updatedAt: Date,
+		networkPhotoCount: Int?,
 		isLocalFavorite: Bool,
 		// This is to prevent overriding the default init if it exists already
 		forCopyInit: Void? = nil
@@ -64,6 +65,7 @@ extension WorksiteRecord {
 		self.svi = svi
 		self.what3Words = what3Words
 		self.updatedAt = updatedAt
+		self.networkPhotoCount = networkPhotoCount
 		self.isLocalFavorite = isLocalFavorite
 	}
 
@@ -103,6 +105,7 @@ extension WorksiteRecord {
 		var svi: Double?
 		var what3Words: String?
 		var updatedAt: Date
+		var networkPhotoCount: Int?
 		var isLocalFavorite: Bool
 
 		fileprivate init(original: WorksiteRecord) {
@@ -133,6 +136,7 @@ extension WorksiteRecord {
 			self.svi = original.svi
 			self.what3Words = original.what3Words
 			self.updatedAt = original.updatedAt
+			self.networkPhotoCount = original.networkPhotoCount
 			self.isLocalFavorite = original.isLocalFavorite
 		}
 
@@ -165,6 +169,7 @@ extension WorksiteRecord {
 				svi: svi,
 				what3Words: what3Words,
 				updatedAt: updatedAt,
+				networkPhotoCount: networkPhotoCount,
 				isLocalFavorite: isLocalFavorite
 			)
 		}

@@ -11,6 +11,7 @@ public struct WorksiteMapMark: Equatable {
     let isHighPriority: Bool
     let isDuplicate: Bool
     let isFilteredOut: Bool
+    let hasPhotos: Bool
 
     init(
         id: Int64,
@@ -23,7 +24,8 @@ public struct WorksiteMapMark: Equatable {
         isFavorite: Bool = false,
         isHighPriority: Bool = false,
         isDuplicate: Bool = false,
-        isFilteredOut: Bool = false
+        isFilteredOut: Bool = false,
+        hasPhotos: Bool = false,
     ) {
         self.id = id
         self.incidentId = incidentId
@@ -36,5 +38,6 @@ public struct WorksiteMapMark: Equatable {
         self.isHighPriority = isHighPriority
         self.isDuplicate = isDuplicate
         self.isFilteredOut = isFilteredOut
+        self.hasPhotos = hasPhotos
     }
 }

@@ -31,6 +31,9 @@ extension NetworkWorksiteFull {
             svi: svi == nil ? nil : Double(svi!),
             what3Words: what3words,
             updatedAt: updatedAt,
+            networkPhotoCount: files.map { $0.mimeContentType }
+                .filter { $0.starts(with: "image/") }
+                .count,
             isLocalFavorite: false
         )
     }
@@ -67,6 +70,7 @@ extension NetworkWorksiteCoreData {
             svi: svi == nil ? nil : Double(svi!),
             what3Words: what3words,
             updatedAt: updatedAt,
+            networkPhotoCount: nil,
             isLocalFavorite: false
         )
     }
@@ -103,6 +107,7 @@ extension NetworkWorksitePage {
             svi: svi == nil ? nil : Double(svi!),
             what3Words: what3words,
             updatedAt: updatedAt,
+            networkPhotoCount: photoCount,
             isLocalFavorite: false
         )
     }

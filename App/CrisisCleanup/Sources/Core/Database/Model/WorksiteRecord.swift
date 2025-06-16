@@ -314,6 +314,7 @@ struct WorksiteRecord : Identifiable, Equatable {
     let svi: Double?
     let what3Words: String?
     let updatedAt: Date
+    let networkPhotoCount: Int?
 
     // TODO: Write tests throughout (model, data, edit feature)
     /**
@@ -363,7 +364,8 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
              svi,
              what3Words,
              updatedAt,
-             isLocalFavorite
+             isLocalFavorite,
+             networkPhotoCount
     }
 
     mutating func didInsert(_ inserted: InsertionSuccess) {
@@ -400,7 +402,8 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
                 state       =:state,
                 svi         =:svi,
                 what3Words  =COALESCE(:what3Words, what3Words),
-                updatedAt   =:updatedAt
+                updatedAt   =:updatedAt,
+                networkPhotoCount   =COALESCE(:photoCount, networkPhotoCount)
                 WHERE id=:id AND networkId=:networkId
                 """,
             arguments: [
@@ -431,6 +434,7 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
                 "svi": svi,
                 "what3Words": what3Words,
                 "updatedAt": updatedAt,
+                "photoCount": networkPhotoCount,
             ]
         )
     }
@@ -448,7 +452,8 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
         plusCode: String?,
         svi: Double?,
         reportedBy: Int64?,
-        what3Words: String?
+        what3Words: String?,
+        photoCount: Int?
     ) throws {
         try db.execute(
             sql:
@@ -457,7 +462,7 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
                 SET
                 autoContactFrequencyT=COALESCE(autoContactFrequencyT, :autoContactFrequencyT),
                 caseNumber  =CASE WHEN LENGTH(caseNumber)==0 THEN :caseNumber ELSE caseNumber END,
-                caseNumberOrder=CASE WHEN LENGTH(caseNumber)==0 THEN :caseNumberOrder ELSE caseNumberOrder END,
+                caseNumberOrder =CASE WHEN LENGTH(caseNumber)==0 THEN :caseNumberOrder ELSE caseNumberOrder END,
                 email       =COALESCE(email, :email),
                 favoriteId  =COALESCE(favoriteId, :favoriteId),
                 phone1      =CASE WHEN LENGTH(COALESCE(phone1,''))<2 THEN :phone1 ELSE phone1 END,
@@ -465,7 +470,8 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
                 plusCode    =COALESCE(plusCode, :plusCode),
                 reportedBy  =COALESCE(reportedBy, :reportedBy),
                 svi         =COALESCE(svi, :svi),
-                what3Words  =COALESCE(what3Words, :what3Words)
+                what3Words  =COALESCE(what3Words, :what3Words),
+                networkPhotoCount   =COALESCE(:photoCount, networkPhotoCount)
                 WHERE id=:id
                 """,
             arguments: [
@@ -481,6 +487,7 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
                 "reportedBy": reportedBy,
                 "svi": svi,
                 "what3Words": what3Words,
+                "photoCount": photoCount,
             ])
     }
 
@@ -546,7 +553,8 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
             Columns.isLocalFavorite,
             Columns.reportedBy,
             Columns.svi,
-            Columns.updatedAt
+            Columns.updatedAt,
+            Columns.networkPhotoCount,
         ]
     }
 }

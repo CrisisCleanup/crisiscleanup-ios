@@ -47,7 +47,11 @@ class WorkTypeIconImageGenerator {
         _ iconProvider: MapCaseIconProvider,
         _ workType: WorkTypeType,
         isFavorite: Bool = false,
-        isImportant: Bool = false
+        isImportant: Bool = false,
+        isFilteredOut: Bool = false,
+        isDuplicate: Bool = false,
+        isVisited: Bool = false,
+        hasPhotos: Bool = false,
     ) -> [UIImage] {
         var images: [UIImage] = []
         var statusIndex = statusIndex
@@ -63,7 +67,10 @@ class WorkTypeIconImageGenerator {
                     i>0,
                     isFavorite: isFavorite,
                     isImportant: isImportant,
-                    isVisited: true
+                    isFilteredOut: isFilteredOut,
+                    isDuplicate: isDuplicate,
+                    isVisited: isVisited,
+                    hasPhotos: hasPhotos,
                 )
                 images.append(image ?? UIImage(named: "cases")!)
                 statusIndex += 1
