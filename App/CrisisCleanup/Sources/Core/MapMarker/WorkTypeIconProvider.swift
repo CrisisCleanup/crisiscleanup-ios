@@ -4,7 +4,8 @@ import LRUCache
 import SwiftUI
 
 class WorkTypeIconProvider: MapCaseIconProvider {
-    private static func loadIcon(_ iconName: String) -> UIImage {
+    // TODO: Resize image before rastering
+    private static func loadIcon(_ iconName: String, size: CGSize) -> UIImage {
         UIImage(named: iconName, in: .module, compatibleWith: nil)!
     }
 
@@ -18,32 +19,37 @@ class WorkTypeIconProvider: MapCaseIconProvider {
     private let shadowRadius = 2.0
     private let shadowColor = 0xFF666666
 
-    private let bitmapSize: Double
+    private let bitmapSize: CGSize
+    private let bitmapLength: Double
     private var bitmapCenterOffset = (0.0, 0.0)
 
-    private let cornerMarkSize: Double
+    private let cornerMarkLength: Double
+    private let cornerMarkSize: CGSize
 
     var iconOffset: (Double, Double)
 
+
     private lazy var plusImageLazy: UIImage = {
-        let image = WorkTypeIconProvider.loadIcon("ic_work_type_plus")
+        let image = WorkTypeIconProvider.loadIcon("ic_work_type_plus", size: cornerMarkSize)
         let filteredImage = grayscaleToColor(image, fromColorInt: 0xFF000000, toColorInt: 0xFFFFFFFF)
         return UIImage(cgImage: filteredImage)
     }()
 
     private lazy var cameraImageLazy: UIImage = {
-        let image = WorkTypeIconProvider.loadIcon("ic_work_type_photos")
+        let image = WorkTypeIconProvider.loadIcon("ic_work_type_photos", size: cornerMarkSize)
         let filteredImage = grayscaleToColor(image, fromColorInt: 0xFF000000, toColorInt: 0xFFFFFFFF)
         return UIImage(cgImage: filteredImage)
     }()
 
     init() {
-        bitmapSize = 36.0 + 2 * shadowRadius
-        let centerOffset = bitmapSize * 0.5
+        bitmapLength = 48 + 2 * shadowRadius
+        bitmapSize = CGSizeMake(bitmapLength, bitmapLength)
+        let centerOffset = bitmapLength * 0.5
         bitmapCenterOffset = (centerOffset, centerOffset)
         iconOffset = bitmapCenterOffset
 
-        cornerMarkSize = bitmapSize * 0.4
+        cornerMarkLength = bitmapLength * 0.4
+        cornerMarkSize = CGSizeMake(cornerMarkLength, cornerMarkLength)
     }
 
     private func cacheIconBitmap(_ cacheKey: CacheKey) -> UIImage {
@@ -129,7 +135,7 @@ class WorkTypeIconProvider: MapCaseIconProvider {
 
         var bwImage = bwCache.value(forKey: iconName)
         if bwImage == nil {
-            let baseImage = WorkTypeIconProvider.loadIcon(iconName)
+            let baseImage = WorkTypeIconProvider.loadIcon(iconName, size: bitmapSize)
             bwCache.setValue(bwImage, forKey: iconName)
             bwImage = baseImage
         }
@@ -157,18 +163,20 @@ class WorkTypeIconProvider: MapCaseIconProvider {
             imageMark: UIImage,
             isLeftAligned: Bool,
             isFiltered: Bool,
-            bottomOffset: CGFloat = 0.0
+            bottomOffset: CGFloat = 0.0,
+            markScale: CGFloat = 1.2,
+            padding: CGFloat = 1.0,
         ) -> UIImage {
             let markImageSize = imageMark.size
 
             let size = baseImage.size
-            let padding = 1.0
-            let markWidth = markImageSize.width
+            let markWidth = markImageSize.width * markScale
+            let markHeight = markImageSize.height * markScale
             let rightBounds = isLeftAligned ? padding + markWidth : size.width - padding
             let bottomBounds = size.height - padding
             let x = rightBounds - markWidth
-            let y = bottomBounds - markImageSize.height - bottomOffset
-            let offsetRect = CGRectMake(x, y, markWidth, markImageSize.height)
+            let y = bottomBounds - markHeight - bottomOffset
+            let offsetRect = CGRectMake(x, y, markWidth, markHeight)
 
             UIGraphicsBeginImageContextWithOptions(size, false, 1)
 
@@ -206,7 +214,7 @@ class WorkTypeIconProvider: MapCaseIconProvider {
         )
         : plussedImage
 
-        let scaledImage = photodImage.scaleImage(imageSize: bitmapSize, offset: shadowRadius, scaleToScreen: true)
+        let scaledImage = photodImage.scaleImage(imageSize: bitmapLength, offset: shadowRadius, scaleToScreen: true)
         return scaledImage.cgImage!
     }
 }
