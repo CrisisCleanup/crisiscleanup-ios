@@ -31,7 +31,7 @@ extension NetworkWorksiteFull {
             svi: svi == nil ? nil : Double(svi!),
             what3Words: what3words,
             updatedAt: updatedAt,
-            networkPhotoCount: files.map { $0.mimeContentType }
+            networkPhotoCount: files.map { $0.mimeContentType ?? "" }
                 .filter { $0.starts(with: "image/") }
                 .count,
             isLocalFavorite: false

@@ -7,7 +7,7 @@ extension NetworkFile {
             fileTypeT: fileTypeT,
             fullUrl: fullUrl,
             largeThumbnailUrl: largeThumbnailUrl,
-            mimeContentType: mimeContentType,
+            mimeContentType: mimeContentType ?? "",
             smallThumbnailUrl: smallThumbnailUrl,
             tag: tag,
             title: title,

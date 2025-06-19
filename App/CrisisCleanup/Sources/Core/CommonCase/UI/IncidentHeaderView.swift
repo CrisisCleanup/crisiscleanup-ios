@@ -31,6 +31,7 @@ struct IncidentHeaderView: View {
             if isLoading {
                 ProgressView()
                     .circularProgress()
+                    .accessibilityIdentifier("incidentSelectLoadingIndicator")
             }
         }
     }
