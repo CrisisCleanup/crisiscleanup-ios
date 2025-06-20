@@ -1,4 +1,5 @@
 import Combine
+import CombineExt
 import CoreLocation
 import Foundation
 
@@ -69,8 +70,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository {
 
         organizationLocationAreaBounds = orgIdPublisher
             .filter { $0 > 0 }
-            .map { organizationsRepository.streamPrimarySecondaryAreas($0).eraseToAnyPublisher() }
-            .switchToLatest()
+            .flatMapLatest { organizationsRepository.streamPrimarySecondaryAreas($0).eraseToAnyPublisher() }
             .eraseToAnyPublisher()
     }
 
@@ -79,16 +79,12 @@ class OfflineFirstWorksitesRepository: WorksitesRepository {
         let incidentIdPublisher = incidentIdStream.eraseToAnyPublisher()
         return Publishers.CombineLatest4(
             incidentIdPublisher,
-            incidentIdPublisher
-                .map { id in self.worksiteDao.streamIncidentWorksitesCount(id).eraseToAnyPublisher() }
-                .switchToLatest()
-                .assertNoFailure()
-                .eraseToAnyPublisher(),
+            incidentIdPublisher.flatMapLatest { id in self.worksiteDao.streamIncidentWorksitesCount(id).assertNoFailure() },
             filtersRepository.casesFiltersLocation.eraseToAnyPublisher(),
-            organizationLocationAreaBounds
+            organizationLocationAreaBounds,
         )
         .debounce(for: .seconds(0.1), scheduler: RunLoop.current)
-        .map { id, totalCount, filtersLocation, areaBounds in
+        .flatMapLatest { id, totalCount, filtersLocation, areaBounds in
             self.latestIncidentWorksitesCountPublisher.publisher {
                 let filters = filtersLocation.0
                 if !filters.isDefault {
@@ -118,7 +114,6 @@ class OfflineFirstWorksitesRepository: WorksitesRepository {
                 )
             }
         }
-        .switchToLatest()
         .assertNoFailure()
     }
 

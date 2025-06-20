@@ -18,7 +18,7 @@ class TagLogger: AppLogger {
     func logDebug(_ items: Any...) {
         if appEnv.isDebuggable {
             let joined = items.map { "\($0)" }.joined(separator: ", ")
-            osLogger.debug("\(joined)")
+            osLogger.debug("\(joined, privacy: .public)")
         }
     }
 

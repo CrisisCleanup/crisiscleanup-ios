@@ -1,7 +1,6 @@
 import Combine
 
-// TODO: Migrate to CombineExt flatMapLatest
-//       Also migrate map+switchToLatest
+// TODO: Migrate map+switchToLatest = CombineExt.flatMapLatest where possible
 public class LatestAsyncPublisher<T> {
     private var cancellable: Task<(), Never>?
 

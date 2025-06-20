@@ -4,10 +4,12 @@ import CoreLocation
 import LRUCache
 import MapKit
 
+// TODO: Rename file to match class after bugs are solved
 class CasesMapDotsOverlay: MKTileOverlay {
     private let worksitesRepository: WorksitesRepository
     private let mapCaseDotProvider: MapCaseDotProvider
     private let filterRepository: CasesFilterRepository
+    private let logger: AppLogger
 
     private let renderingCounter = ManagedAtomic(0)
     private let renderingCount = CurrentValueSubject<Int, Never>(0)
@@ -17,12 +19,11 @@ class CasesMapDotsOverlay: MKTileOverlay {
 
     private let cacheLock = NSLock()
     private var tileCache = TileDataCache(3000)
-    private var incidentIdCache: Int64 = -1
-    private var worksitesCount = 0
+    private var incidentWorksiteCountCache = IdCount(EmptyIncident.id, 0)
     private var filtersLocationCache = (CasesFilter(), false, 0.0)
 
     var tilesIncident: Int64 {
-        incidentIdCache
+        incidentWorksiteCountCache.id
     }
 
     private var locationCoordinates: CLLocation? = nil
@@ -39,11 +40,13 @@ class CasesMapDotsOverlay: MKTileOverlay {
     init(
         worksitesRepository: WorksitesRepository,
         mapCaseDotProvider: MapCaseDotProvider,
-        filterRepository: CasesFilterRepository
+        filterRepository: CasesFilterRepository,
+        logger: AppLogger,
     ) {
         self.worksitesRepository = worksitesRepository
         self.mapCaseDotProvider = mapCaseDotProvider
         self.filterRepository = filterRepository
+        self.logger = logger
 
         isBusy = renderingCount
             .map { $0 > 0 }
@@ -58,13 +61,16 @@ class CasesMapDotsOverlay: MKTileOverlay {
         clearCache: Bool
     ) {
         cacheLock.withLock {
-            let isIncidentChanged = id != incidentIdCache
+            let isIncidentChanged = id != incidentWorksiteCountCache.id
             if isIncidentChanged || clearCache {
                 tileCache.clear()
             }
-            incidentIdCache = id
-            self.worksitesCount = worksitesCount
+            incidentWorksiteCountCache = IdCount(id, worksitesCount)
         }
+    }
+
+    func redraw() {
+        setIncident(incidentWorksiteCountCache.id, incidentWorksiteCountCache.count, clearCache: true)
     }
 
     func setLocation(_ coordinates: CLLocation?) {
@@ -72,7 +78,9 @@ class CasesMapDotsOverlay: MKTileOverlay {
     }
 
     override func loadTile(at path: MKTileOverlayPath) async throws -> Data {
-        let incidentId = incidentIdCache
+        let incidentCache = incidentWorksiteCountCache
+        let incidentId = incidentCache.id
+        let worksitesCount = incidentCache.count
 
         if path.z >= zoomThreshold ||
             worksitesCount == 0 {
@@ -88,6 +96,7 @@ class CasesMapDotsOverlay: MKTileOverlay {
         if let cached = (cacheLock.withLock {
             return if let tileData = tileCache.get(coordinates),
                       tileData.incidentId == incidentId,
+                      tileData.incidentCaseCount == worksitesCount,
                       tileData.tileCaseCount == 0 || tileData.tile != nil {
                 tileData.tile ?? emptyTile
             } else {
@@ -99,7 +108,7 @@ class CasesMapDotsOverlay: MKTileOverlay {
 
         let tile = try await renderTile(coordinates)
 
-        if incidentId != incidentIdCache {
+        if incidentId != incidentWorksiteCountCache.id {
             throw CancellationError()
         }
 
@@ -120,7 +129,9 @@ class CasesMapDotsOverlay: MKTileOverlay {
     }
 
     private func renderTileInternal(_ coordinates: TileCoordinates) async throws -> Data? {
-        let incidentId = incidentIdCache
+        let incidentCache = incidentWorksiteCountCache
+        let incidentId = incidentCache.id
+        let worksitesCount = incidentCache.count
 
         let (boundedWorksitesCount, imageData) = try await renderTile(incidentId, worksitesCount, coordinates)
 
@@ -169,7 +180,7 @@ class CasesMapDotsOverlay: MKTileOverlay {
             )
 
             // Incident has changed this tile is invalid
-            if (incidentId != incidentIdCache) {
+            if (incidentId != incidentWorksiteCountCache.id) {
                 throw CancellationError()
             }
 
@@ -278,5 +289,15 @@ private class TileDataCache {
 
     func get(_ coordinates: TileCoordinates) -> MapTileCases? {
         cache.value(forKey: coordinates)
+    }
+}
+
+private struct IdCount {
+    let id: Int64
+    let count: Int
+
+    init(_ id: Int64, _ count: Int) {
+        self.id = id
+        self.count = count
     }
 }
