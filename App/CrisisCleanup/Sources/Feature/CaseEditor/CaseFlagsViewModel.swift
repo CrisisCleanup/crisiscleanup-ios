@@ -459,7 +459,7 @@ class CaseFlagsViewModel: ObservableObject {
                             true
                         )
 
-                        incidentSelectManager.setIncident(incidentChange)
+                        let _ = await incidentSelectManager.submitIncidentChange(incidentChange)
                         incidentWorksiteChangeSubject.value =
                         (changeIncidentId, startingWorksite.id)
                     } catch {

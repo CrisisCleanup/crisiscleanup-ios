@@ -56,7 +56,7 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         fullIncidentQueryFields = incidentsQueryFields + ["form_fields"]
 
         isLoading = isLoadingSubject
-        let incidentsStream = incidentDao.streamIncidents().share()
+        let incidentsStream = incidentDao.streamIncidents()
         incidents = incidentsStream
         hotlineIncidents = incidentsStream.map {
             $0.filter { incident in incident.activePhoneNumbers.isNotEmpty }

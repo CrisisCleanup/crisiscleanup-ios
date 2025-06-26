@@ -173,11 +173,12 @@ class ViewListViewModel: ObservableObject {
                     isChangingIncidentSubject.value = false
                 }
 
-                incidentSelector.setIncident(changeIncident)
-                openWorksiteIdSubject.value = ExistingWorksiteIdentifier(
-                    incidentId: changeIncident.id,
-                    worksiteId: changeWorksite.id
-                )
+                if await incidentSelector.submitIncidentChange(changeIncident) {
+                    openWorksiteIdSubject.value = ExistingWorksiteIdentifier(
+                        incidentId: changeIncident.id,
+                        worksiteId: changeWorksite.id
+                    )
+                }
             }
         }
     }
