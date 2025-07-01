@@ -11,8 +11,10 @@ extension Publisher where Self.Failure == Never {
     }
 }
 
-extension Publisher where Self.Failure == Never {
-    func asyncMap<T>(_ transform: @escaping ((Self.Output) async -> T)) -> Publishers.FlatMap<Future<T, Never>, Self> {
+extension Publisher where Failure == Never {
+    func asyncMap<T>(
+        _ transform: @escaping (Output) async -> T
+    ) -> Publishers.FlatMap<Future<T, Never>, Self> {
         flatMap { value in
             Future { promise in
                 Task {
@@ -21,15 +23,35 @@ extension Publisher where Self.Failure == Never {
             }
         }
     }
+}
 
-    func asyncThrowsMap<T>(_ transform: @escaping ((Self.Output) async throws -> T)) -> Publishers.FlatMap<Future<T, Never>, Self> {
-        flatMap { value in
-            Future { promise in
-                Task {
-                    promise(.success(try await transform(value)))
+extension Publisher {
+    func mapLatest<T>(
+        _ transform: @escaping @Sendable (Output) async throws -> T,
+    ) -> AnyPublisher<T, Failure> where Output: Sendable, T: Sendable {
+        map { value in
+            Deferred {
+                Future<T, Error> { promise in
+                    Task {
+                        do {
+                            let result = try await transform(value)
+                            try Task.checkCancellation()
+                            promise(.success(result))
+                        } catch {
+                            promise(.failure(error))
+                        }
+                    }
                 }
             }
+            .catch { error -> Empty<T, Never> in
+                if !(error is CancellationError) {
+                    // TODO: Handle error
+                }
+                return Empty()
+            }
         }
+        .switchToLatest()
+        .eraseToAnyPublisher()
     }
 }
 
@@ -71,8 +93,7 @@ func cancelSubscriptions(_ subscriptions: Set<AnyCancellable>) -> Set<AnyCancell
 
 extension Publisher {
     func shareReplay(_ bufferSize: Int) -> AnyPublisher<Output, Failure> {
-        multicast(subject: ReplaySubject(bufferSize: bufferSize))
-            .autoconnect()
+        share(replay: bufferSize)
             .eraseToAnyPublisher()
     }
 

@@ -60,7 +60,6 @@ class InviteTeammateViewModel: ObservableObject {
     @Published private(set) var myOrgInviteQrCode: UIImage?
 
     // TODO: Test affiliate org features when supported
-    private let affiliateInviteLatestPublisher = LatestAsyncThrowsPublisher<OrgQrCode>()
     private let generatingAffiliateOrgQrCodeSubject = CurrentValueSubject<Int64, Never>(0)
     @Published private(set) var isGeneratingAffiliateQrCode = false
     @Published private var affiliateOrgInviteQrCode = OrgQrCode(orgId: 0, qrCode: nil)
@@ -413,37 +412,34 @@ class InviteTeammateViewModel: ObservableObject {
             otherOrg.id > 0 &&
             affiliates?.contains(otherOrg.id) == true
         }
-        .map { (account, otherOrgIdName, _) in
-            self.affiliateInviteLatestPublisher.publisher {
-                let otherOrgId = otherOrgIdName.id
+        .mapLatest { (account, otherOrgIdName, _) in
+            let otherOrgId = otherOrgIdName.id
 
-                self.generatingAffiliateOrgQrCodeSubject.value = otherOrgId
-                do {
-                    defer {
-                        // TODO: Atomic update
-                        if self.generatingAffiliateOrgQrCodeSubject.value == otherOrgId {
-                            self.generatingAffiliateOrgQrCodeSubject.value = 0
-                        }
+            self.generatingAffiliateOrgQrCodeSubject.value = otherOrgId
+            do {
+                defer {
+                    // TODO: Atomic update
+                    if self.generatingAffiliateOrgQrCodeSubject.value == otherOrgId {
+                        self.generatingAffiliateOrgQrCodeSubject.value = 0
                     }
-
-                    let userId = account.id
-                    let invite = await self.orgVolunteerRepository.getOrganizationInvite(
-                        organizationId: otherOrgId,
-                        inviterUserId: userId
-                    )
-
-                    try Task.checkCancellation()
-
-                    let inviteUrl = self.makeInviteUrl(account.id, invite)
-                    let qrCode = self.qrCodeGenerator.generate(inviteUrl)
-
-                    try Task.checkCancellation()
-
-                    return OrgQrCode(orgId: otherOrgId, qrCode: qrCode)
                 }
+
+                let userId = account.id
+                let invite = await self.orgVolunteerRepository.getOrganizationInvite(
+                    organizationId: otherOrgId,
+                    inviterUserId: userId
+                )
+
+                try Task.checkCancellation()
+
+                let inviteUrl = self.makeInviteUrl(account.id, invite)
+                let qrCode = self.qrCodeGenerator.generate(inviteUrl)
+
+                try Task.checkCancellation()
+
+                return OrgQrCode(orgId: otherOrgId, qrCode: qrCode)
             }
         }
-        .switchToLatest()
         .receive(on: RunLoop.main)
         .assign(to: \.affiliateOrgInviteQrCode, on: self)
         .store(in: &subscriptions)

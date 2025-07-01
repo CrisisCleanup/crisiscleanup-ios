@@ -36,7 +36,7 @@ class IncidentSelectRepository: IncidentSelector {
         self.preferencesStore = preferencesStore
         logger = loggerFactory.getLogger("incident-data")
 
-        incidentsData = incidentsDataSubject
+        incidentsData = incidentsDataSubject.removeDuplicates()
         let dataSource = incidentsData.eraseToAnyPublisher().share(replay: 1)
         incident = dataSource.map { $0.selected }
         incidentId = dataSource.map { $0.selectedId }

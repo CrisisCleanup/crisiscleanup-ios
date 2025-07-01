@@ -1,4 +1,5 @@
 import Combine
+import CombineExt
 import Foundation
 
 public protocol CasesFilterRepository {
@@ -18,14 +19,14 @@ class CrisisCleanupCasesFilterRepository: CasesFilterRepository {
     private let locationManager: LocationManager
     private let networkDataSource: CrisisCleanupNetworkDataSource
 
-    private let applyFilterTimestampSubject = CurrentValueSubject<Double, Never>(0)
+    private let applyFilterTimestampSubject = CurrentValueRelay<Double>(0)
 
     private(set) var casesFilters = CasesFilter()
     let casesFiltersLocation: any Publisher<(CasesFilter, Bool, Double), Never>
 
     let filtersCount: any Publisher<Int, Never>
 
-    private var subscriptions = Set<AnyCancellable>()
+    private var disposables = Set<AnyCancellable>()
 
     init(
         dataSource: CasesFiltersDataSource,
@@ -54,9 +55,13 @@ class CrisisCleanupCasesFilterRepository: CasesFilterRepository {
             .map { $0.0 }
             .receive(on: RunLoop.main)
             .assign(to: \.casesFilters, on: self)
-            .store(in: &subscriptions)
+            .store(in: &disposables)
 
         // TODO: For now update or clear work type filters when incident changes
+    }
+
+    deinit {
+        _ = cancelSubscriptions(disposables)
     }
 
     func changeFilters(_ filters: CasesFilter) {
@@ -68,7 +73,7 @@ class CrisisCleanupCasesFilterRepository: CasesFilterRepository {
     }
 
     func reapplyFilters() {
-        applyFilterTimestampSubject.value = Date.now.timeIntervalSince1970
+        applyFilterTimestampSubject.accept(Date.now.timeIntervalSince1970)
     }
 }
 

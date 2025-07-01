@@ -46,17 +46,14 @@ class ResidentNameSearchManager {
             }
             .store(in: &disposables)
 
-        let worksitesSearchLatestPublisher = LatestAsyncPublisher<(String, [CaseSummaryResult])>()
         let worksitesSearch = searchQuery
             .filter { $0.count >= querySearchThresholdLength }
-            .map { q in
-                worksitesSearchLatestPublisher.publisher {
-                    let worksitesSearch = await searchWorksitesRepository.locationSearchWorksites(incidentId, q)
-                    let worksites = worksitesSearch.map { $0.asCaseLocation(iconProvider) }
-                    return (q, worksites)
-                }
+            .mapLatest { q in
+                let worksitesSearch = await searchWorksitesRepository.locationSearchWorksites(incidentId, q)
+                let worksites = worksitesSearch.map { $0.asCaseLocation(iconProvider) }
+                try Task.checkCancellation()
+                return (q, worksites)
             }
-            .switchToLatest()
             .eraseToAnyPublisher()
 
         searchResults = Publishers.CombineLatest4(

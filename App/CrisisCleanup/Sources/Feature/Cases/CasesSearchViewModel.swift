@@ -32,10 +32,6 @@ class CasesSearchViewModel: ObservableObject {
 
     private let emptyResults = [CaseSummaryResult]()
 
-    private let latestSearchResultsPublisher = LatestAsyncThrowsPublisher<CasesSearchResults>()
-    private let latestLocalSearchResultsPublisher = LatestAsyncThrowsPublisher<CasesSearchResults>()
-    private let latestCombineResultsPublisher = LatestAsyncThrowsPublisher<CasesSearchResults>()
-
     private var subscriptions = Set<AnyCancellable>()
 
     init(
@@ -145,14 +141,14 @@ class CasesSearchViewModel: ObservableObject {
         let numericRegex = #/^\d+$/#
         let networkSearchResults = Publishers.CombineLatest(
             incidentIdPublisher,
-            searchQueryIntermediate
+            searchQueryIntermediate,
         )
             .throttle(
                 for: throttleDelayPeriod,
                 scheduler: RunLoop.current,
                 latest: true
             )
-            .map { (incidentId, q) in self.latestSearchResultsPublisher.publisher {
+            .mapLatest { (incidentId, q) in
                 if incidentId != EmptyIncident.id {
                     if q.count < 3 {
                         return CasesSearchResults(q)
@@ -181,19 +177,18 @@ class CasesSearchViewModel: ObservableObject {
                 try Task.checkCancellation()
 
                 return CasesSearchResults(q, false)
-            }}
-            .switchToLatest()
+            }
 
         let localSearchResults = Publishers.CombineLatest(
             incidentIdPublisher,
-            searchQueryIntermediate
+            searchQueryIntermediate,
         )
             .throttle(
                 for: throttleDelayPeriod,
                 scheduler: RunLoop.current,
                 latest: true
             )
-            .map { (incidentId, q) in self.latestLocalSearchResultsPublisher.publisher {
+            .mapLatest { (incidentId, q) in
                 if incidentId != EmptyIncident.id {
                     if q.count < 2 {
                         return CasesSearchResults(q)
@@ -238,22 +233,22 @@ class CasesSearchViewModel: ObservableObject {
                 try Task.checkCancellation()
 
                 return CasesSearchResults(q, false)
-            }}
-            .switchToLatest()
+            }
 
         Publishers.CombineLatest4(
             searchQueryIntermediate,
             $isSearching,
             localSearchResults,
-            networkSearchResults
+            networkSearchResults,
         )
         .filter { incidentQ, _, localResults, networkResults in
             let q = incidentQ
             return q == localResults.q || q == networkResults.q
         }
-        .map { incidentQ, searching, localResults, networkResults in self.latestCombineResultsPublisher.publisher {
+        .mapLatest { incidentQ, searching, localResults, networkResults in
             let q = incidentQ
             var isShortQ = false
+
             self.isCombiningResults.value = true
             do {
                 defer { self.isCombiningResults.value = false }
@@ -300,21 +295,23 @@ class CasesSearchViewModel: ObservableObject {
                         isShortQ = localResults.isShortQ && networkResults.isShortQ
                         return combined
                     }
+
                     if hasLocalResults {
                         isShortQ = localResults.isShortQ
                         return localResults.options
                     }
+
                     if hasNetworkResults {
                         isShortQ = networkResults.isShortQ
                         return networkResults.options
                     }
+
                     return [CaseSummaryResult]()
                 }()
 
                 return CasesSearchResults(q, isShortQ && !searching, options)
             }
-        }}
-        .switchToLatest()
+        }
         .receive(on: RunLoop.main)
         .assign(to: \.searchResults, on: self)
         .store(in: &subscriptions)

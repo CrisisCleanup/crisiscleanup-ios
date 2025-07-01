@@ -22,8 +22,6 @@ class OfflineFirstCaseHistoryRepository: CaseHistoryRepository {
     private let loadingWorksiteEvents = CurrentValueSubject<Int64, Never>(EmptyWorksite.id)
     let loadingWorksiteId: any Publisher<Int64, Never>
 
-    private let loadEventsLatestPublisher = LatestAsyncPublisher<[CaseHistoryUserEvents]>()
-
     init(
         caseHistoryDao: CaseHistoryDao,
         personContactDao: PersonContactDao,
@@ -50,20 +48,17 @@ class OfflineFirstCaseHistoryRepository: CaseHistoryRepository {
     }
 
     func streamEvents(_ worksiteId: Int64) -> any Publisher<[CaseHistoryUserEvents], Never> { caseHistoryDao.streamEvents(worksiteId)
-            .map { events in
-                self.loadEventsLatestPublisher.publisher {
-                    self.loadingWorksiteEvents.value = worksiteId
-                    do {
-                        defer { self.loadingWorksiteEvents.value = EmptyWorksite.id }
+            .mapLatest { events in
+                self.loadingWorksiteEvents.value = worksiteId
+                do {
+                    defer { self.loadingWorksiteEvents.value = EmptyWorksite.id }
 
-                        return try await self.loadEvents(events)
-                    } catch {
-                        self.logger.logError(error)
-                    }
-                    return []
+                    return try await self.loadEvents(events)
+                } catch {
+                    self.logger.logError(error)
                 }
+                return []
             }
-            .switchToLatest()
     }
 
     private func loadEvents(

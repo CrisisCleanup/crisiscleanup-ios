@@ -119,7 +119,6 @@ class CaseShareViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
-    private let latestContactOptionsPublisher = LatestAsyncPublisher<[ShareContactInfo]>()
     private func subscribeQueryState() {
         $receiverContactManual
             .receive(on: RunLoop.main)
@@ -137,9 +136,9 @@ class CaseShareViewModel: ObservableObject {
 
         Publishers.CombineLatest(
             organizationId,
-            contactQuery
+            contactQuery,
         )
-        .map { orgId, query in self.latestContactOptionsPublisher.publisher {
+        .mapLatest { orgId, query in
             if query.count < 2 {
                 return []
             }
@@ -155,8 +154,7 @@ class CaseShareViewModel: ObservableObject {
                 )
             }
             return contacts
-        }}
-        .switchToLatest()
+        }
         .receive(on: RunLoop.main)
         .assign(to: \.contactOptions, on: self)
         .store(in: &subscriptions)

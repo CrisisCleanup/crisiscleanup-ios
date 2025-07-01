@@ -95,10 +95,6 @@ class CasesViewModel: ObservableObject {
     @Published var showExplainLocationPermission = false
     @Published private(set) var isMyLocationEnabled = false
 
-    private let latestBoundedMarkersPublisher = LatestAsyncThrowsPublisher<IncidentAnnotations>()
-    private let latestMapMarkersPublisher = LatestAsyncThrowsPublisher<AnnotationsChangeSet>()
-    private let latestTableDataPublisher = LatestAsyncPublisher<[WorksiteDistance]>()
-
     private var onZoomIncidentTimestamp = Date.distantPast
 
     private var subscriptions = Set<AnyCancellable>()
@@ -146,10 +142,7 @@ class CasesViewModel: ObservableObject {
         let casesLogger = loggerFactory.getLogger("cases")
         logger = casesLogger
 
-        incidentIdPublisher = incidentSelector.incidentId
-            .eraseToAnyPublisher()
-            .removeDuplicates()
-            .replay1()
+        incidentIdPublisher = incidentSelector.incidentId.eraseToAnyPublisher()
 
         incidentWorksitesCount = worksitesRepository.streamIncidentWorksitesCount(incidentIdPublisher)
             .eraseToAnyPublisher()
@@ -347,79 +340,75 @@ class CasesViewModel: ObservableObject {
                 scheduler: RunLoop.current,
                 latest: true
             )
-            .flatMapLatest { (wqs, _, changedCase) in
-                self.latestBoundedMarkersPublisher.publisher {
-                    let queryIncidentId = wqs.incidentId
-                    let queryFilters = wqs.filters
+            .mapLatest { (wqs, _, changedCase) in
+                let queryIncidentId = wqs.incidentId
+                let queryFilters = wqs.filters
 
-                    let isZoomedOut = wqs.zoom < CasesConstant.MapMarkersZoomLevel
-                    if wqs.isTableView ||
-                        queryIncidentId == EmptyIncident.id ||
-                        isZoomedOut
-                    {
-                        return IncidentAnnotations(
-                            queryIncidentId,
-                            queryFilters,
-                            isClean: isZoomedOut
-                        )
-                    }
-
-                    _ = self.mapAnnotationsExchanger.onAnnotationStateChange(
-                        queryIncidentId,
-                        queryFilters,
-                        changedCase
-                    )
-
-                    try Task.checkCancellation()
-
-                    var annotations = [WorksiteAnnotationMapMark]()
-                    self.isGeneratingWorksiteMarkers.value = true
-                    do {
-                        defer { self.isGeneratingWorksiteMarkers.value = false }
-
-                        annotations = try await self.generateWorksiteMarkers(wqs)
-                    } catch {
-                        self.logger.logError(error)
-                    }
-
-                    try Task.checkCancellation()
-
+                let isZoomedOut = wqs.zoom < CasesConstant.MapMarkersZoomLevel
+                if wqs.isTableView ||
+                    queryIncidentId == EmptyIncident.id ||
+                    isZoomedOut
+                {
                     return IncidentAnnotations(
                         queryIncidentId,
                         queryFilters,
-                        changedCase,
-                        annotations
+                        isClean: isZoomedOut
                     )
                 }
+
+                _ = self.mapAnnotationsExchanger.onAnnotationStateChange(
+                    queryIncidentId,
+                    queryFilters,
+                    changedCase
+                )
+
+                try Task.checkCancellation()
+
+                var annotations = [WorksiteAnnotationMapMark]()
+                self.isGeneratingWorksiteMarkers.value = true
+                do {
+                    defer { self.isGeneratingWorksiteMarkers.value = false }
+
+                    annotations = try await self.generateWorksiteMarkers(wqs)
+                } catch {
+                    self.logger.logError(error)
+                }
+
+                try Task.checkCancellation()
+
+                return IncidentAnnotations(
+                    queryIncidentId,
+                    queryFilters,
+                    changedCase,
+                    annotations
+                )
             }
             .share()
 
         worksitesInBounds
-            .flatMapLatest { incidentAnnotations in
-                self.latestMapMarkersPublisher.publisher {
-                    if incidentAnnotations.isClean {
-                        self.mapAnnotationsExchanger.onClean(
-                            incidentAnnotations.incidentId,
-                            incidentAnnotations.filters,
-                            incidentAnnotations.changedCase
-                        )
-                        throw CancellationError()
-                    }
-
-                    let changes = try self.mapAnnotationsExchanger.getChange(incidentAnnotations)
-
-                    try Task.checkCancellation()
-
-                    return changes
+            .mapLatest { incidentAnnotations in
+                if incidentAnnotations.isClean {
+                    self.mapAnnotationsExchanger.onClean(
+                        incidentAnnotations.incidentId,
+                        incidentAnnotations.filters,
+                        incidentAnnotations.changedCase
+                    )
+                    throw CancellationError()
                 }
+
+                let changes = try self.mapAnnotationsExchanger.getChange(incidentAnnotations)
+
+                try Task.checkCancellation()
+
+                return changes
             }
             .receive(on: RunLoop.main)
-            .sink(receiveValue: { changes in
+            .sink { changes in
                 if changes.annotations.incidentId == self.incidentId,
                    changes.annotations.filters == self.filterRepository.casesFilters {
                     self.mapMarkersChangeSetSubject.value = changes
                 }
-            })
+            }
             .store(in: &subscriptions)
 
         let totalCasesCount = Publishers.CombineLatest3(
@@ -441,7 +430,8 @@ class CasesViewModel: ObservableObject {
                 return totalCount
             }
             .eraseToAnyPublisher()
-            .share()
+            .removeDuplicates()
+            .replay1()
 
         let t = self.translator
         Publishers.CombineLatest(
@@ -461,7 +451,7 @@ class CasesViewModel: ObservableObject {
         Publishers.CombineLatest3(
             totalCasesCount,
             qsm.worksiteQueryState,
-            worksitesInBounds
+            worksitesInBounds,
         )
         .map { (totalCount, wqs, incidentAnnotations) in
             if wqs.isTableView ||
@@ -585,20 +575,18 @@ class CasesViewModel: ObservableObject {
             $worksitesChangingClaimAction,
             qsm.worksiteQueryState
         )
-        .flatMapLatest { (_, _, wqs) in
-            if (!wqs.isTableView) {
-                return Just([WorksiteDistance]()).eraseToAnyPublisher()
+        .mapLatest { (_, _, wqs) in
+            if !wqs.isTableView {
+                return [WorksiteDistance]()
             }
 
             self.tableSortResultsMessageSubject.value = ""
-            return self.latestTableDataPublisher.publisher {
-                do {
-                    return try await self.fetchTableData(wqs)
-                } catch {
-                    self.logger.logError(error)
-                }
-                return []
+            do {
+                return try await self.fetchTableData(wqs)
+            } catch {
+                self.logger.logError(error)
             }
+            return []
         }
         .receive(on: RunLoop.main)
         .assign(to: \.tableData, on: self)
