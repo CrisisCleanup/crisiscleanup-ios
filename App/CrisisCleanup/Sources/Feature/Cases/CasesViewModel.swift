@@ -77,6 +77,7 @@ class CasesViewModel: ObservableObject {
 
     private let tileClearRefreshInterval = 10.seconds
     private var tileRefreshedTimestamp = Date.epochZero
+    private var pendingTileRefreshTimestamp = Date.epochZero
 
     private let mapMarkersChangeSetSubject = CurrentValueSubject<AnnotationsChangeSet, Never>(emptyAnnotationsChangeSet)
     @Published private(set) var mapMarkersChangeSet = emptyAnnotationsChangeSet
@@ -641,6 +642,25 @@ class CasesViewModel: ObservableObject {
             self.refreshTiles(count, stats)
         }
         .store(in: &subscriptions)
+
+        // Wait for full generation before redrawing or there will be gaps in tiles
+        mapDotsOverlay.isBusy.eraseToAnyPublisher()
+            .removeDuplicates()
+            .debounce(for: .seconds(0.6), scheduler: RunLoop.current)
+            .filter { !$0 }
+            .sink { _ in
+                if self.pendingTileRefreshTimestamp > self.tileRefreshedTimestamp {
+                    do {
+                        let idCount = try await self.incidentWorksitesCount.asyncFirst()
+                        if idCount.id == self.incidentId {
+                            self.redrawDotsOverlay(idCount)
+                        }
+                    } catch {
+                        self.logger.logError(error)
+                    }
+                }
+            }
+            .store(in: &subscriptions)
     }
 
     func syncWorksitesData(_ forceRefreshAll: Bool = false) {
@@ -683,6 +703,12 @@ class CasesViewModel: ObservableObject {
         worksitesCount: Int,
         timestamp: Date,
     ) {
+        if mapDotsOverlay.isGeneratingTiles {
+            pendingTileRefreshTimestamp = Date.now
+            mapDotsOverlay.setIncident(incidentId, worksitesCount, clearCache: true)
+            return
+        }
+
         tileRefreshedTimestamp = timestamp
         mapDotsOverlay.setIncident(incidentId, worksitesCount, clearCache: true)
         reloadTileRenderers()
