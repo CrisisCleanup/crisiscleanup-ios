@@ -422,8 +422,14 @@ extension MainComponent {
         shared {
             CrisisCleanupDataManagementRepository(
                 incidentsRepository: incidentsRepository,
+                accountDataRepository: accountDataRepository,
                 worksiteChangeRepository: worksiteChangeRepository,
                 incidentDataSyncParameterDao: incidentDataSyncParameterDao,
+                incidentCacheRepository: incidentCacheRepository,
+                languageTranslationsRepository: languageTranslationsRepository,
+                workTypeStatusRepository: workTypeStatusRepository,
+                casesFilterRepository: casesFilterRepository,
+                appSupportRepository: appSupportRepository,
                 syncPuller: syncPuller,
                 databaseOperator: databaseOperator,
                 accountEventBus: accountEventBus,

@@ -40,7 +40,7 @@ class CasesMapViewCoordinator: NSObject, MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         switch overlay {
         case let overlay as MKPolygon:
-            return isTintApplied ? overlayMapRenderer(overlay, 1.0) : BlankPolygonRenderer(overlay: overlay)
+            return isTintApplied ? overlayMapRenderer(overlay, 1.0) : BlankRenderer(overlay: overlay)
         case let overlay as MKTileOverlay:
             return createTileRenderer(for: overlay)
         default:

@@ -16,17 +16,18 @@ struct InfoWorkView : View {
 
             VStack (alignment: .trailing) {
                 if profile.unclaimed.isNotEmpty {
-                    WorkTypeAction(t.t("actions.claim_all_alt"), true) {
-                        viewModel.claimAll()
-                    }
+                    WorkTypeAction(
+                        t.t("actions.claim_all_alt"), true, isDisabledBusy: true) {
+                            viewModel.claimAll()
+                        }
                 }
 
                 if profile.releasableCount > 0 {
-                    WorkTypeAction(t.t("actions.release_all"), false) {
+                    WorkTypeAction(t.t("actions.release_all"), false, isDisabledBusy: true) {
                         viewModel.releaseAll()
                     }
                 } else if profile.requestableCount > 0 {
-                    WorkTypeAction(t.t("actions.request_all"), false) {
+                    WorkTypeAction(t.t("actions.request_all"), false, isDisabledBusy: true) {
                         viewModel.requestAll()
                     }
                 }
@@ -63,51 +64,74 @@ struct WorkTypeAction: View {
     private let title: String
     private let isPrimary: Bool
     private let disabled: Bool?
+    private let isDisabledBusy: Bool
     private let action: () -> Void
 
     init(
         _ title: String,
         _ isPrimary: Bool,
         disabled: Bool? = nil,
+        isDisabledBusy: Bool = false,
         action: @escaping () -> Void
     ) {
         self.title = title
         self.isPrimary = isPrimary
         self.disabled = disabled
+        self.isDisabledBusy = isDisabledBusy
         self.action = action
     }
 
     var body: some View {
         let isDisabled = disabled ?? editableView.disabled
+        let showBusy = isDisabledBusy && isDisabled
         Button {
             action()
         } label: {
             if isPrimary {
                 let backgroundColor = isDisabled ? .gray : appTheme.colors.themePrimaryContainer
-                Text(title)
-                    .lineLimit(1)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .minimumScaleFactor(0.5)
-                    .padding()
-                    .frame(minWidth: 100)
-                    .background(backgroundColor.animation(.easeInOut))
-                    .cornerRadius(appTheme.cornerRadius)
-                    .tint(.black)
-                    .fontHeader4()
+                if showBusy {
+                    ProgressView().circularProgress()
+                        .padding()
+                        .background(backgroundColor.animation(.easeInOut))
+                        .cornerRadius(appTheme.cornerRadius)
+                } else {
+                    Text(title)
+                        .lineLimit(1)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .minimumScaleFactor(0.5)
+                        .padding()
+                    // TODO: Common dimensions
+                        .frame(minWidth: 100)
+                        .background(backgroundColor.animation(.easeInOut))
+                        .cornerRadius(appTheme.cornerRadius)
+                        .tint(.black)
+                        .fontHeader4()
+                }
             } else {
                 let borderColor: Color = isDisabled ? .gray : .black
-                Text(title)
-                    .lineLimit(1)
-                    .padding()
-                    .frame(minWidth: 100)
-                    .background(.white)
-                    .cornerRadius(appTheme.cornerRadius)
-                    .tint(.black)
-                    .fontHeader4()
-                    .roundedBorder(
-                        color: borderColor,
-                        lineWidth: appTheme.buttonOutlineWidth
-                    )
+                if showBusy {
+                    ProgressView().circularProgress()
+                        .padding()
+                        .cornerRadius(appTheme.cornerRadius)
+                        .roundedBorder(
+                            color: borderColor,
+                            lineWidth: appTheme.buttonOutlineWidth,
+                        )
+                } else {
+                    Text(title)
+                        .lineLimit(1)
+                        .padding()
+                    // TODO: Common dimensions
+                        .frame(minWidth: 100)
+                        .background(.white)
+                        .cornerRadius(appTheme.cornerRadius)
+                        .tint(.black)
+                        .fontHeader4()
+                        .roundedBorder(
+                            color: borderColor,
+                            lineWidth: appTheme.buttonOutlineWidth,
+                        )
+                }
             }
         }
         .disabled(isDisabled)

@@ -113,7 +113,7 @@ class MapAnnotationsExchanger {
             isChanged = self.isChanged(
                 incidentAnnotations.incidentId,
                 incidentAnnotations.filters,
-                incidentAnnotations.changedCase
+                incidentAnnotations.changedCase,
             )
         }
 

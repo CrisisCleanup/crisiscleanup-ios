@@ -4,7 +4,8 @@ import LRUCache
 import SwiftUI
 
 class WorkTypeIconProvider: MapCaseIconProvider {
-    private static func loadIcon(_ iconName: String) -> UIImage {
+    // TODO: Resize image before rastering
+    private static func loadIcon(_ iconName: String, size: CGSize) -> UIImage {
         UIImage(named: iconName, in: .module, compatibleWith: nil)!
     }
 
@@ -18,26 +19,37 @@ class WorkTypeIconProvider: MapCaseIconProvider {
     private let shadowRadius = 2.0
     private let shadowColor = 0xFF666666
 
-    private let bitmapSize: Double
+    private let bitmapSize: CGSize
+    private let bitmapLength: Double
     private var bitmapCenterOffset = (0.0, 0.0)
 
-    private let plusImageSize: Double
+    private let cornerMarkLength: Double
+    private let cornerMarkSize: CGSize
 
     var iconOffset: (Double, Double)
 
+
     private lazy var plusImageLazy: UIImage = {
-        let image = WorkTypeIconProvider.loadIcon("ic_work_type_plus")
+        let image = WorkTypeIconProvider.loadIcon("ic_work_type_plus", size: cornerMarkSize)
+        let filteredImage = grayscaleToColor(image, fromColorInt: 0xFF000000, toColorInt: 0xFFFFFFFF)
+        return UIImage(cgImage: filteredImage)
+    }()
+
+    private lazy var cameraImageLazy: UIImage = {
+        let image = WorkTypeIconProvider.loadIcon("ic_work_type_photos", size: cornerMarkSize)
         let filteredImage = grayscaleToColor(image, fromColorInt: 0xFF000000, toColorInt: 0xFFFFFFFF)
         return UIImage(cgImage: filteredImage)
     }()
 
     init() {
-        bitmapSize = 36.0 + 2 * shadowRadius
-        let centerOffset = bitmapSize * 0.5
+        bitmapLength = 48 + 2 * shadowRadius
+        bitmapSize = CGSizeMake(bitmapLength, bitmapLength)
+        let centerOffset = bitmapLength * 0.5
         bitmapCenterOffset = (centerOffset, centerOffset)
         iconOffset = bitmapCenterOffset
 
-        plusImageSize = bitmapSize * 0.4
+        cornerMarkLength = bitmapLength * 0.4
+        cornerMarkSize = CGSizeMake(cornerMarkLength, cornerMarkLength)
     }
 
     private func cacheIconBitmap(_ cacheKey: CacheKey) -> UIImage {
@@ -58,7 +70,8 @@ class WorkTypeIconProvider: MapCaseIconProvider {
         isImportant: Bool,
         isFilteredOut: Bool,
         isDuplicate: Bool,
-        isVisited: Bool
+        isVisited: Bool,
+        hasPhotos: Bool,
     ) -> UIImage? {
         let cacheKey = CacheKey(
             statusClaim,
@@ -68,7 +81,8 @@ class WorkTypeIconProvider: MapCaseIconProvider {
             isImportant: isImportant,
             isFilteredOut: isFilteredOut,
             isDuplicate: isDuplicate,
-            isVisited: isVisited
+            isVisited: isVisited,
+            hasPhotos: hasPhotos,
         )
         let existing = cacheLock.withLock { cache.value(forKey: cacheKey) }
         guard existing == nil else { return existing }
@@ -82,15 +96,19 @@ class WorkTypeIconProvider: MapCaseIconProvider {
         _ hasMultipleWorkTypes: Bool,
         isFilteredOut: Bool,
         isDuplicate: Bool,
-        isVisited: Bool
+        isVisited: Bool,
+        hasPhotos: Bool,
     ) -> UIImage? {
-        return getIcon(
+        getIcon(
             statusClaim,
             workType,
             hasMultipleWorkTypes,
             isFavorite: false,
             isImportant: false,
-            isVisited: false
+            isFilteredOut: isFilteredOut,
+            isDuplicate: isDuplicate,
+            isVisited: isVisited,
+            hasPhotos: hasPhotos,
         )
     }
 
@@ -117,7 +135,7 @@ class WorkTypeIconProvider: MapCaseIconProvider {
 
         var bwImage = bwCache.value(forKey: iconName)
         if bwImage == nil {
-            let baseImage = WorkTypeIconProvider.loadIcon(iconName)
+            let baseImage = WorkTypeIconProvider.loadIcon(iconName, size: bitmapSize)
             bwCache.setValue(bwImage, forKey: iconName)
             bwImage = baseImage
         }
@@ -140,18 +158,25 @@ class WorkTypeIconProvider: MapCaseIconProvider {
         ? filteredUiImage
         : filteredUiImage.withShadow(blur: 6)
 
-        var plussedImage = shadowImage
-        if cacheKey.hasMultipleWorkTypes {
-            let plusImage = plusImageLazy
-            let plusSize = plusImage.size
+        func drawImageMark(
+            baseImage: UIImage,
+            imageMark: UIImage,
+            isLeftAligned: Bool,
+            isFiltered: Bool,
+            bottomOffset: CGFloat = 0.0,
+            markScale: CGFloat = 1.2,
+            padding: CGFloat = 1.0,
+        ) -> UIImage {
+            let markImageSize = imageMark.size
 
-            let size = plussedImage.size
-            let padding = 1.0
-            let rightBounds = size.width - padding
+            let size = baseImage.size
+            let markWidth = markImageSize.width * markScale
+            let markHeight = markImageSize.height * markScale
+            let rightBounds = isLeftAligned ? padding + markWidth : size.width - padding
             let bottomBounds = size.height - padding
-            let x = rightBounds - plusSize.width
-            let y = bottomBounds - plusSize.height
-            let offsetRect = CGRectMake(x, y, plusSize.width, plusSize.height)
+            let x = rightBounds - markWidth
+            let y = bottomBounds - markHeight - bottomOffset
+            let offsetRect = CGRectMake(x, y, markWidth, markHeight)
 
             UIGraphicsBeginImageContextWithOptions(size, false, 1)
 
@@ -159,17 +184,37 @@ class WorkTypeIconProvider: MapCaseIconProvider {
             context.interpolationQuality = .high
             context.setShouldAntialias(true)
 
-            plussedImage.draw(in: CGRect(origin: .zero, size: size))
-            if cacheKey.isFilteredOut {
-                plusImage.draw(in: offsetRect, blendMode: .normal, alpha: filteredOutMarkerAlpha)
+            baseImage.draw(in: CGRect(origin: .zero, size: size))
+            if isFiltered {
+                imageMark.draw(in: offsetRect, blendMode: .normal, alpha: filteredOutMarkerAlpha)
             } else {
-                plusImage.draw(in: offsetRect)
+                imageMark.draw(in: offsetRect)
             }
-            plussedImage = UIGraphicsGetImageFromCurrentImageContext()!
+            let markedImage = UIGraphicsGetImageFromCurrentImageContext()!
             UIGraphicsEndImageContext()
+            return markedImage
         }
 
-        let scaledImage = plussedImage.scaleImage(imageSize: bitmapSize, offset: shadowRadius, scaleToScreen: true)
+        let plussedImage = cacheKey.hasMultipleWorkTypes
+        ? drawImageMark(
+            baseImage: shadowImage,
+            imageMark: plusImageLazy,
+            isLeftAligned: false,
+            isFiltered: cacheKey.isFilteredOut
+        )
+        : shadowImage
+
+        let photodImage = cacheKey.hasPhotos
+        ? drawImageMark(
+            baseImage: plussedImage,
+            imageMark: cameraImageLazy,
+            isLeftAligned: true,
+            isFiltered: cacheKey.isFilteredOut,
+            bottomOffset: 4.0,
+        )
+        : plussedImage
+
+        let scaledImage = photodImage.scaleImage(imageSize: bitmapLength, offset: shadowRadius, scaleToScreen: true)
         return scaledImage.cgImage!
     }
 }
@@ -184,6 +229,7 @@ private struct CacheKey: Hashable {
     let isFilteredOut: Bool
     let isDuplicate: Bool
     let isVisited: Bool
+    let hasPhotos: Bool
 
     init(
         _ statusClaim: WorkTypeStatusClaim,
@@ -193,7 +239,8 @@ private struct CacheKey: Hashable {
         isImportant: Bool = false,
         isFilteredOut: Bool = false,
         isDuplicate: Bool = false,
-        isVisited: Bool = false
+        isVisited: Bool = false,
+        hasPhotos: Bool = false,
     ) {
         self.statusClaim = statusClaim
         self.workType = workType
@@ -203,5 +250,6 @@ private struct CacheKey: Hashable {
         self.isFilteredOut = isFilteredOut
         self.isDuplicate = isDuplicate
         self.isVisited = isVisited
+        self.hasPhotos = hasPhotos
     }
 }

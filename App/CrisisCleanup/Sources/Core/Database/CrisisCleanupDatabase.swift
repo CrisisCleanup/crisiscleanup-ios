@@ -965,6 +965,16 @@ extension AppDatabase {
             }
         }
 
+        migrator.registerMigration(
+            "worksite-network-photo-count",
+            foreignKeyChecks: .immediate
+        ) { db in
+            try db.alter(table: "worksite") { t in
+                t.add(column: "networkPhotoCount", .integer)
+                    .defaults(to: 0)
+            }
+        }
+
         return migrator
     }
 }

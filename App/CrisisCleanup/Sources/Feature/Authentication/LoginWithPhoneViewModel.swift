@@ -236,6 +236,43 @@ class LoginWithPhoneViewModel: ObservableObject {
         selectedAccountSubject.value = accountInfo
     }
 
+    private func attemptAuthentication(
+        accountId: Int64,
+        otpId: Int64,
+        accountData: AccountData
+    ) async throws -> (isSuccessful: Bool, message: String) {
+        var authErrorMessage = ""
+        var isSuccessful = false
+
+        if let tokens = try await self.authApi.oneTimePasswordLogin(
+            accountId: accountId,
+            oneTimePasswordId: oneTimePasswordId
+        ),
+           tokens.refreshToken.isNotBlank,
+           tokens.accessToken.isNotBlank,
+           let accountProfile = await dataApi.getProfile(tokens.accessToken) {
+            let emailAddress = accountData.emailAddress
+            if emailAddress.isNotBlank &&
+                emailAddress.lowercased() != accountProfile.email.lowercased() {
+                authErrorMessage = translator.t("loginWithPhone.log_out_before_different_account")
+
+                // TODO: Clear account data and support logging in with different email address?
+            } else if accountProfile.organization.isActive == false {
+                accountEventBus.onAccountInactiveOrganizations(accountId)
+            } else {
+                accountDataRepository.setAccount(
+                    accountProfile,
+                    refreshToken: tokens.refreshToken,
+                    accessToken: tokens.accessToken,
+                    expiresIn: tokens.expiresIn
+                )
+                isSuccessful = true
+            }
+        }
+
+        return (isSuccessful, authErrorMessage)
+    }
+
     func authenticate(_ code: String) {
         let selectedUserId = selectedAccount.userId
         if isSelectAccount,
@@ -289,39 +326,22 @@ class LoginWithPhoneViewModel: ObservableObject {
                 }
             }
 
-            if selectedUserId != 0,
+            let authUserId = selectedAccountSubject.value.userId
+            if authUserId != 0,
                oneTimePasswordId != 0 {
                 let accountData = try await accountDataRepository.accountData.eraseToAnyPublisher().asyncFirst()
-                if let tokens = try await self.authApi.oneTimePasswordLogin(
-                    accountId: selectedUserId,
-                    oneTimePasswordId: oneTimePasswordId
-                ),
-                   tokens.refreshToken.isNotBlank,
-                   tokens.accessToken.isNotBlank,
-                   let accountProfile = await dataApi.getProfile(tokens.accessToken) {
-                    let emailAddress = accountData.emailAddress
-                    if emailAddress.isNotBlank &&
-                        emailAddress.lowercased() != accountProfile.email.lowercased() {
-                        message = translator.t("loginWithPhone.log_out_before_different_account")
-
-                        // TODO: Clear account data and support logging in with different email address?
-                    } else if accountProfile.organization.isActive == false {
-                        accountEventBus.onAccountInactiveOrganizations(selectedUserId)
-                    } else {
-                        accountDataRepository.setAccount(
-                            accountProfile,
-                            refreshToken: tokens.refreshToken,
-                            accessToken: tokens.accessToken,
-                            expiresIn: tokens.expiresIn
-                        )
-                        isSuccessful = true
-                    }
-                }
+                let (isAuthSuccessful, authErrorMessage) = try await attemptAuthentication(
+                    accountId: authUserId,
+                    otpId: oneTimePasswordId,
+                    accountData: accountData
+                )
+                message = authErrorMessage
+                isSuccessful = isAuthSuccessful
             }
 
             if !isSuccessful,
                !isSelectAccountSubject.value,
-               errorMessage.isBlank {
+               message.isBlank {
                 message = translator.t("loginWithPhone.login_failed_try_again")
             }
 

@@ -12,6 +12,7 @@ public protocol BackgroundTaskCoordinator {
     func scheduleRefresh(secondsFromNow: Double)
     func schedulePushWorksites(secondsFromNow: Double)
     func schedulePushWorksiteMedia(secondsFromNow: Double)
+    func scheduleInactiveCheckup(secondsFromNow: Double)
 }
 
 extension BackgroundTaskCoordinator {
@@ -22,23 +23,33 @@ extension BackgroundTaskCoordinator {
     func schedulePushWorksiteMedia() {
         schedulePushWorksiteMedia(secondsFromNow: 600)
     }
+
+    func scheduleInactiveCheckup() {
+        schedulePushWorksiteMedia(secondsFromNow: 15 * 86400)
+    }
 }
 
 class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
     private let syncPuller: SyncPuller
     private let syncPusher: SyncPusher
     private let worksiteChangeRepository: WorksiteChangeRepository
+    private let appSupportRepository: AppSupportRepository
+    private let dataManagementRepository: AppDataManagementRepository
     private let logger: AppLogger
 
     init(
         syncPuller: SyncPuller,
         syncPusher: SyncPusher,
         worksiteChangeRepository: WorksiteChangeRepository,
+        appSupportRepository: AppSupportRepository,
+        dataManagementRepository: AppDataManagementRepository,
         loggerFactory: AppLoggerFactory
     ) {
         self.syncPuller = syncPuller
         self.syncPusher = syncPusher
         self.worksiteChangeRepository = worksiteChangeRepository
+        self.appSupportRepository = appSupportRepository
+        self.dataManagementRepository = dataManagementRepository
         logger = loggerFactory.getLogger("sync")
     }
 
@@ -55,6 +66,10 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
 
         scheduler.register(forTaskWithIdentifier: BackgroundTaskType.pushWorksiteMedia.rawValue, using: nil) { task in
             self.handlePushWorksitesMedia(task as! BGProcessingTask)
+        }
+
+        scheduler.register(forTaskWithIdentifier: BackgroundTaskType.clearInactive.rawValue, using: nil) { task in
+            self.handleClearInactive(task as! BGProcessingTask)
         }
     }
 
@@ -104,6 +119,14 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
             BackgroundTaskType.pushWorksiteMedia,
             secondsFromNow,
             isProcessingTask: true,
+        )
+    }
+
+    func scheduleInactiveCheckup(secondsFromNow: Double) {
+        scheduleBackgroundTask(
+            .clearInactive,
+            secondsFromNow,
+            isProcessingTask: true
         )
     }
 
@@ -197,6 +220,38 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
 
         queue.addOperations([operation], waitUntilFinished: false)
     }
+
+    private func handleClearInactive(_ task: BGProcessingTask) {
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 1
+
+        let operation = ClearInactiveDataOperation(
+            appSupportRepository: appSupportRepository,
+            dataManagementRepository: dataManagementRepository,
+            appLogger: logger,
+        )
+
+        let backgroundTaskId = UIApplication.shared.beginBackgroundTask(withName: "clear-inactive") {
+            queue.cancelAllOperations()
+        }
+
+        task.expirationHandler = {
+            queue.cancelAllOperations()
+        }
+
+        operation.completionBlock = {
+            if backgroundTaskId != .invalid {
+                UIApplication.shared.endBackgroundTask(backgroundTaskId)
+            }
+
+            let nextCheckInterval: TimeInterval = (operation.isSuccessful ? 15 : 1).days
+            self.schedulePushWorksiteMedia(secondsFromNow: nextCheckInterval)
+
+            task.setTaskCompleted(success: operation.isSuccessful)
+        }
+
+        queue.addOperations([operation], waitUntilFinished: false)
+    }
 }
 
 final class RefreshIncidentsDataOperation: AsyncOperation, @unchecked Sendable {
@@ -272,5 +327,45 @@ final class UploadWorksiteMediaOperation: AsyncOperation, @unchecked Sendable {
 
     override func operate() async {
         isSuccessful = await pusher.syncMedia()
+    }
+}
+
+final class ClearInactiveDataOperation: AsyncOperation, @unchecked Sendable {
+    private let appSupportRepository: AppSupportRepository
+    private let dataManagementRepository: AppDataManagementRepository
+    private let logger: AppLogger
+
+    private(set) var isSuccessful = false
+
+    private let clearDuration = 180.days
+
+    init(
+        appSupportRepository: AppSupportRepository,
+        dataManagementRepository: AppDataManagementRepository,
+        appLogger: AppLogger
+    ) {
+        self.appSupportRepository = appSupportRepository
+        self.dataManagementRepository = dataManagementRepository
+        logger = appLogger
+    }
+
+    override func operate() async {
+        do {
+            let metrics = try await appSupportRepository.appMetrics.eraseToAnyPublisher().asyncFirst()
+            let latestAppOpen = metrics.openTimestamp
+            let delta = latestAppOpen.distance(to: Date.now)
+
+            if clearDuration <= delta,
+               delta <= 999.days {
+                isSuccessful = await dataManagementRepository.backgroundClearAppData(false)
+            } else {
+                let daysToClear = (clearDuration - delta) / 86400.0
+                logger.logDebug("App will clear in \(daysToClear) days due to inactivity.")
+                isSuccessful = true
+            }
+        } catch {
+            logger.logError(error)
+            isSuccessful = false
+        }
     }
 }

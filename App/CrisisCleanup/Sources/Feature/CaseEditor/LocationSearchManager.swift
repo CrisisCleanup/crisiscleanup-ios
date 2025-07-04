@@ -65,88 +65,83 @@ internal class LocationSearchManager {
             .filter { $0.count >= querySearchThresholdLength }
             .eraseToAnyPublisher()
 
-        let worksitesSearchLatestPublisher = LatestAsyncThrowsPublisher<(String, [CaseSummaryResult])>()
         let worksitesSearch = searchQuery
-            .map { q in
-                worksitesSearchLatestPublisher.publisher {
-                    isSearchingWorksites.value = true
-                    do {
-                        defer {
-                            if (activeQuery.load(ordering: .sequentiallyConsistent).value == q) {
-                                isSearchingWorksites.value = false
-                            }
+            .mapLatest { q in
+                isSearchingWorksites.value = true
+                do {
+                    defer {
+                        if (activeQuery.load(ordering: .sequentiallyConsistent).value == q) {
+                            isSearchingWorksites.value = false
                         }
-
-                        let worksitesSearch = await searchWorksitesRepository.locationSearchWorksites(incidentId, q)
-
-                        try Task.checkCancellation()
-
-                        let worksites = worksitesSearch.map {
-                            $0.asCaseLocation(iconProvider)
-                        }
-                        return (q, worksites)
-                    } catch {
-                        logger.logError(error)
                     }
 
-                    return (q, [])
+                    let worksitesSearch = await searchWorksitesRepository.locationSearchWorksites(incidentId, q)
+
+                    try Task.checkCancellation()
+
+                    let worksites = worksitesSearch.map {
+                        $0.asCaseLocation(iconProvider)
+                    }
+                    return (q, worksites)
+                } catch {
+                    logger.logError(error)
                 }
+
+                return (q, [])
             }
-            .switchToLatest()
             .eraseToAnyPublisher()
 
         let oneMinute = 1.0 / 60.0
-        let addressSearchLatestPublisher = LatestAsyncPublisher<(String, [KeySearchAddress])>()
         let addressSearch = searchQuery
-            .map { q in
-                addressSearchLatestPublisher.publisher {
-                    isSearchingAddresses.value = true
-                    do {
-                        defer {
-                            if (activeQuery.load(ordering: .sequentiallyConsistent).value == q) {
-                                isSearchingAddresses.value = false
-                            }
+            .mapLatest { q in
+                isSearchingAddresses.value = true
+                do {
+                    defer {
+                        if (activeQuery.load(ordering: .sequentiallyConsistent).value == q) {
+                            isSearchingAddresses.value = false
                         }
-
-                        let incidentBounds = worksiteProvider.incidentBounds
-
-                        var center: LatLng?
-                        if let coordinates = locationManager.getLocation() {
-                            let deviceLocation = LatLng(
-                                coordinates.coordinate.latitude,
-                                coordinates.coordinate.longitude
-                            )
-                            if incidentBounds.containsLocation(deviceLocation) {
-                                center = deviceLocation
-                            }
-                        }
-                        if (center == nil && incidentBounds.centroid != DefaultCoordinates) {
-                            center = incidentBounds.centroid
-                        }
-
-                        var searchSw: LatLng?
-                        var searchNe: LatLng?
-                        let boundsSw = incidentBounds.bounds.southWest
-                        let boundsNe = incidentBounds.bounds.northEast
-                        if (boundsNe.latitude - boundsSw.latitude > oneMinute &&
-                            (boundsSw.longitude + 360 - boundsNe.longitude > oneMinute)
-                        ) {
-                            searchSw = boundsSw
-                            searchNe = boundsNe
-                        }
-
-                        let addresses = await addressSearchRepository.searchAddresses(
-                            q,
-                            countryCodes: ["US"],
-                            center: center,
-                            southwest: searchSw,
-                            northeast: searchNe
-                        )
-                        return (q, addresses)
                     }
+
+                    let incidentBounds = worksiteProvider.incidentBounds
+
+                    var center: LatLng?
+                    if let coordinates = locationManager.getLocation() {
+                        let deviceLocation = LatLng(
+                            coordinates.coordinate.latitude,
+                            coordinates.coordinate.longitude
+                        )
+                        if incidentBounds.containsLocation(deviceLocation) {
+                            center = deviceLocation
+                        }
+                    }
+                    if (center == nil && incidentBounds.centroid != DefaultCoordinates) {
+                        center = incidentBounds.centroid
+                    }
+
+                    var searchSw: LatLng?
+                    var searchNe: LatLng?
+                    let boundsSw = incidentBounds.bounds.southWest
+                    let boundsNe = incidentBounds.bounds.northEast
+                    if (boundsNe.latitude - boundsSw.latitude > oneMinute &&
+                        (boundsSw.longitude + 360 - boundsNe.longitude > oneMinute)
+                    ) {
+                        searchSw = boundsSw
+                        searchNe = boundsNe
+                    }
+
+                    let addresses = await addressSearchRepository.searchAddresses(
+                        q,
+                        countryCodes: ["US"],
+                        center: center,
+                        southwest: searchSw,
+                        northeast: searchNe
+                    )
+
+                    try Task.checkCancellation()
+
+                    return (q, addresses)
                 }
             }
-            .switchToLatest()
             .eraseToAnyPublisher()
 
         searchResults = Publishers.CombineLatest3(

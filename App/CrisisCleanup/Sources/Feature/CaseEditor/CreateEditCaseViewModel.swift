@@ -760,7 +760,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
             if copiedWorksite.isNew {
                 copiedWorksite = transferNotes(copiedWorksite, takeEditingNote: true)
                 worksiteProvider.updateIncidentChangeWorksite(copiedWorksite)
-                incidentSelector.setIncident(changeIncident)
+                incidentSelector.selectIncident(changeIncident)
                 changeWorksiteIncidentId = changeIncident.id
             } else {
                 _ = worksiteProvider.takeIncidentChanged()
@@ -863,7 +863,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
 
                 worksiteProvider.setEditedLocation(worksite.coordinates.coordinates)
                 if isIncidentChange {
-                    incidentSelector.setIncident(saveChangeIncident)
+                    let _ = await incidentSelector.submitIncidentChange(saveChangeIncident)
                 } else {
                     editorSetTime = nil
                     dataLoader.reloadData(worksiteId)

@@ -8,7 +8,7 @@ public struct NetworkFile: Codable, Equatable {
     let fileTypeT: String
     let fullUrl: String?
     let largeThumbnailUrl: String?
-    let mimeContentType: String
+    let mimeContentType: String?
     let notes: String?
     let smallThumbnailUrl: String?
     let tag: String?

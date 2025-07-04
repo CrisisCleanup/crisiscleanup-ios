@@ -192,7 +192,7 @@ class IncidentWorksitesCacheViewModel: ObservableObject {
             )
             .sink {
                 if self.hasUserInteracted {
-                    self.incidentCacheRepository.updateCachePreferenes($0)
+                    self.incidentCacheRepository.updateCachePreferences($0)
                 }
             }
             .store(in: &subscriptions)

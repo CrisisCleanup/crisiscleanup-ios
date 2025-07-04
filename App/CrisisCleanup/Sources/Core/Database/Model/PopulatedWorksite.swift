@@ -130,6 +130,9 @@ struct PopulatedWorksiteMapVisual: Decodable, FetchableRecord {
         let reportedBy: Int64?
         let svi: Double?
         let updatedAt: Date
+
+        // Photo fields
+        let networkPhotoCount: Int?
     }
 
     let id: Int64
@@ -142,8 +145,27 @@ struct PopulatedWorksiteMapVisual: Decodable, FetchableRecord {
     let worksiteFormData: [WorksiteFormDataRecord]
     let workTypes: [WorkTypeRecord]
 
+    // For photos
+    let networkFiles: [NetworkFileInfo]
+    let worksiteLocalImages: [WorksiteLocalImageRecord]
+
     func asExternalModel(_ isFilteredOut: Bool = false) -> WorksiteMapMark {
-        WorksiteMapMark(
+        let hasNetworkPhotos = if let photoCount = worksite.networkPhotoCount,
+            photoCount > 0 {
+                true
+            } else {
+                false
+            }
+        let hasPhotos = hasNetworkPhotos ||
+        networkFiles
+            .filter {
+                $0.networkFile.mimeContentType.starts(with: "image/") &&
+                $0.networkFileLocalImage?.isDeleted != true
+            }
+            .isNotEmpty ||
+        worksiteLocalImages.isNotEmpty
+
+        return WorksiteMapMark(
             id: id,
             incidentId: worksite.incidentId,
             latitude: worksite.latitude,
@@ -163,7 +185,8 @@ struct PopulatedWorksiteMapVisual: Decodable, FetchableRecord {
             isDuplicate: worksiteFlags.contains {
                 $0.reasonT == duplicateFlagLiteral
             },
-            isFilteredOut: isFilteredOut
+            isFilteredOut: isFilteredOut,
+            hasPhotos: hasPhotos,
         )
     }
 }

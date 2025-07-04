@@ -125,7 +125,8 @@ private struct MainContent: View {
             }
         }
 
-        if isBusy {
+        if isBusy,
+           selectedTab != .info {
             ProgressView()
         }
 

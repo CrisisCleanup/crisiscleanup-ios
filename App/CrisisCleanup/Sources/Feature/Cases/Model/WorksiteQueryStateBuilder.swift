@@ -5,11 +5,9 @@ extension WorksiteQueryState {
 	// A default style constructor for the .copy fn to use
 	init(
 		incidentId: Int64,
-		q: String,
 		zoom: Double,
 		coordinateBounds: CoordinateBounds,
 		isTableView: Bool,
-		isZoomInteractive: Bool,
 		tableViewSort: WorksiteSortBy,
 		filters: CasesFilter,
 		hasLocationPermission: Bool,
@@ -17,11 +15,9 @@ extension WorksiteQueryState {
 		forCopyInit: Void? = nil
 	) {
 		self.incidentId = incidentId
-		self.q = q
 		self.zoom = zoom
 		self.coordinateBounds = coordinateBounds
 		self.isTableView = isTableView
-		self.isZoomInteractive = isZoomInteractive
 		self.tableViewSort = tableViewSort
 		self.filters = filters
 		self.hasLocationPermission = hasLocationPermission
@@ -37,22 +33,18 @@ extension WorksiteQueryState {
 
 	struct Builder {
 		var incidentId: Int64
-		var q: String
 		var zoom: Double
 		var coordinateBounds: CoordinateBounds
 		var isTableView: Bool
-		var isZoomInteractive: Bool
 		var tableViewSort: WorksiteSortBy
 		var filters: CasesFilter
 		var hasLocationPermission: Bool
 
 		fileprivate init(original: WorksiteQueryState) {
 			self.incidentId = original.incidentId
-			self.q = original.q
 			self.zoom = original.zoom
 			self.coordinateBounds = original.coordinateBounds
 			self.isTableView = original.isTableView
-			self.isZoomInteractive = original.isZoomInteractive
 			self.tableViewSort = original.tableViewSort
 			self.filters = original.filters
 			self.hasLocationPermission = original.hasLocationPermission
@@ -61,11 +53,9 @@ extension WorksiteQueryState {
 		fileprivate func toWorksiteQueryState() -> WorksiteQueryState {
 			return WorksiteQueryState(
 				incidentId: incidentId,
-				q: q,
 				zoom: zoom,
 				coordinateBounds: coordinateBounds,
 				isTableView: isTableView,
-				isZoomInteractive: isZoomInteractive,
 				tableViewSort: tableViewSort,
 				filters: filters,
 				hasLocationPermission: hasLocationPermission

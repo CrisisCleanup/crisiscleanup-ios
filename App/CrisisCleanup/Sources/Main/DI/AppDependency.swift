@@ -236,7 +236,8 @@ extension MainComponent {
             IncidentSelectRepository(
                 accountDataRepository: accountDataRepository,
                 preferencesStore: appPreferences,
-                incidentsRepository: incidentsRepository
+                incidentsRepository: incidentsRepository,
+                loggerFactory: loggerFactory,
             )
         }
     }

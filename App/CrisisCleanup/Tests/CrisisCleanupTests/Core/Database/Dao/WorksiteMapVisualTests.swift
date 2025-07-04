@@ -65,6 +65,7 @@ class WorksiteMapVisualTests: XCTestCase {
             svi: nil,
             what3Words: "",
             updatedAt: updatedAtA,
+            networkPhotoCount: nil,
             isLocalFavorite: false
         )
         _ = try await WorksiteTestUtil.insertWorksites(dbQueue, now, [worksite])

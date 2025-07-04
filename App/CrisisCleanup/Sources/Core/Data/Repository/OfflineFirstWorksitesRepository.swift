@@ -1,4 +1,5 @@
 import Combine
+import CombineExt
 import CoreLocation
 import Foundation
 
@@ -28,6 +29,8 @@ class OfflineFirstWorksitesRepository: WorksitesRepository {
     private let organizationAffiliatesPublisher: AnyPublisher<Set<Int64>, Never>
 
     private let organizationLocationAreaBounds: AnyPublisher<OrganizationLocationAreaBounds, Never>
+
+    private var disposables = Set<AnyCancellable>()
 
     init(
         dataSource: CrisisCleanupNetworkDataSource,
@@ -62,64 +65,68 @@ class OfflineFirstWorksitesRepository: WorksitesRepository {
         orgIdPublisher = accountDataRepository.accountData
             .eraseToAnyPublisher()
             .map { $0.org.id }
+            .removeDuplicates()
+            .replay1()
             .eraseToAnyPublisher()
         organizationAffiliatesPublisher = orgIdPublisher
-            .map { orgId in organizationsRepository.getOrganizationAffiliateIds(orgId, addOrganizationId: true) }
+            .map {
+                organizationsRepository.getOrganizationAffiliateIds($0, addOrganizationId: true)
+            }
             .eraseToAnyPublisher()
 
         organizationLocationAreaBounds = orgIdPublisher
             .filter { $0 > 0 }
-            .map { organizationsRepository.streamPrimarySecondaryAreas($0).eraseToAnyPublisher() }
-            .switchToLatest()
+            .flatMapLatest { organizationsRepository.streamPrimarySecondaryAreas($0).eraseToAnyPublisher() }
             .eraseToAnyPublisher()
     }
 
-    private let latestIncidentWorksitesCountPublisher = LatestAsyncPublisher<IncidentIdWorksiteCount>()
     func streamIncidentWorksitesCount(_ incidentIdStream: any Publisher<Int64, Never>) -> any Publisher<IncidentIdWorksiteCount, Never> {
         let incidentIdPublisher = incidentIdStream.eraseToAnyPublisher()
-        return Publishers.CombineLatest4(
-            incidentIdPublisher,
-            incidentIdPublisher
-                .map { id in self.worksiteDao.streamIncidentWorksitesCount(id).eraseToAnyPublisher() }
-                .switchToLatest()
+        let incidentWorksitesCountPublisher = incidentIdPublisher.flatMapLatest { id in
+            self.worksiteDao.streamIncidentWorksitesCount(id)
+                .map { (id, $0) }
                 .assertNoFailure()
-                .eraseToAnyPublisher(),
-            filtersRepository.casesFiltersLocation.eraseToAnyPublisher(),
-            organizationLocationAreaBounds
+        }
+        let filtersPublisher = filtersRepository.casesFiltersLocation.eraseToAnyPublisher()
+
+        return Publishers.CombineLatest3(
+            incidentWorksitesCountPublisher,
+            filtersPublisher,
+            organizationLocationAreaBounds,
         )
         .debounce(for: .seconds(0.1), scheduler: RunLoop.current)
-        .map { id, totalCount, filtersLocation, areaBounds in
-            self.latestIncidentWorksitesCountPublisher.publisher {
-                let filters = filtersLocation.0
-                if !filters.isDefault {
-                    self.isDeterminingWorksitesCountSubject.value = true
-                    do {
-                        defer { self.isDeterminingWorksitesCountSubject.value = false }
+        .mapLatest { idCount, filtersLocation, areaBounds in
+            let (id, totalCount) = idCount
 
-                        let organizationAffiliates = try await self.organizationAffiliatesPublisher.asyncFirst()
-                        return try await self.worksiteDao.getWorksitesCount(
-                            id,
-                            totalCount,
-                            filters,
-                            organizationAffiliates,
-                            self.locationManager.getLocation(),
-                            areaBounds
-                        )
-                    } catch {
-                        self.logger.logError(error)
-                    }
+            let filters = filtersLocation.0
+            if !filters.isDefault {
+                self.isDeterminingWorksitesCountSubject.value = true
+                do {
+                    defer { self.isDeterminingWorksitesCountSubject.value = false }
+
+                    let organizationAffiliates = try await self.organizationAffiliatesPublisher.asyncFirst()
+                    let result = try await self.worksiteDao.getWorksitesCount(
+                        id,
+                        totalCount,
+                        filters,
+                        organizationAffiliates,
+                        self.locationManager.getLocation(),
+                        areaBounds,
+                    )
+                    return result
+                } catch {
+                    self.logger.logError(error)
                 }
-
-                self.isDeterminingWorksitesCountSubject.value = false
-                return IncidentIdWorksiteCount(
-                    id: id,
-                    totalCount: totalCount,
-                    filteredCount: totalCount
-                )
             }
+
+            return IncidentIdWorksiteCount(
+                id: id,
+                totalCount: totalCount,
+                filteredCount: totalCount,
+            )
         }
-        .switchToLatest()
         .assertNoFailure()
+        .eraseToAnyPublisher()
     }
 
     func getWorksite(_ id: Int64) async throws -> Worksite? {
@@ -133,13 +140,13 @@ class OfflineFirstWorksitesRepository: WorksitesRepository {
     func streamLocalWorksite(_ worksiteId: Int64) -> any Publisher<LocalWorksite?, Never> {
         worksiteDao.streamLocalWorksite(worksiteId)
             .assertNoFailure()
-            .asyncMap({ localWorksite in
+            .asyncMap { localWorksite in
                 let orgId = try! await self.orgIdPublisher.asyncFirst()
                 return localWorksite?.asExternalModel(
                     orgId,
                     self.languageTranslationsRepository
                 )
-            })
+            }
     }
 
     func streamRecentWorksites(_ incidentId: Int64) -> any Publisher<[WorksiteSummary], Never> {

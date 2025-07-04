@@ -71,7 +71,7 @@ struct MenuView: View {
                 .padding([.horizontal, .bottom])
 
                 Toggle(
-                    t.t("~~Enable notifications"),
+                    t.t("appMenu.enable_notifications"),
                     isOn: $notifyDataSyncProgress
                 )
                 .padding([.horizontal, .bottom])
@@ -118,12 +118,14 @@ struct MenuView: View {
                 HStack(alignment: .center, spacing: appTheme.gridActionSpacing) {
                     Link(
                         t.t("publicNav.terms"),
-                        destination: viewModel.termsOfServiceUrl
+                        destination: viewModel.termsOfServiceUrl,
                     )
+                    .accessibilityIdentifier("menuTermsAction")
                     Link(
                         t.t("nav.privacy"),
                         destination: viewModel.privacyPolicyUrl
                     )
+                    .accessibilityIdentifier("menuPrivacyAction")
                 }
                 .padding(.vertical, appTheme.listItemVerticalPadding)
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -195,6 +197,7 @@ private struct TopBar: View {
     @State var showIncidentSelect = false
 
     var body: some View {
+        let disableIncidentSelect = viewModel.incidentsData.isFirstLoad
         HStack {
             Button {
                 showIncidentSelect.toggle()
@@ -211,7 +214,10 @@ private struct TopBar: View {
                     isSpaceConstrained: true
                 )
             }
-            .disabled(viewModel.incidentsData.isFirstLoad)
+            .disabled(disableIncidentSelect)
+            .if (!disableIncidentSelect) {
+                $0.accessibilityIdentifier("menuIncidentSelect")
+            }
             .sheet(
                 isPresented: $showIncidentSelect,
                 onDismiss: {
@@ -241,6 +247,7 @@ private struct TopBar: View {
                         .frame(width: imageSize, height: imageSize)
                 }
             }
+            .accessibilityIdentifier("menuAccountToggle")
         }
     }
 }
@@ -386,7 +393,7 @@ private struct RequestNotificationView: View {
 
     var body: some View {
         OpenSettingsView(
-            bodyKey: "~~Notification access is needed to receive alerts. Grant notification access in Settings.",
+            bodyKey: "appMenu.notification_access_request",
             onDismiss: onDismiss
         )
     }

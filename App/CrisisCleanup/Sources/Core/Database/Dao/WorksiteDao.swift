@@ -218,9 +218,9 @@ public class WorksiteDao {
         let workTypes = records.workTypes
         let files = records.files
 
-        let worksiteId = try WorksiteRecord.getWorksiteId(db, core.networkId)
-        if worksiteId != nil && worksiteId! > 0 {
-            let worksiteId = worksiteId!
+
+        if let worksiteId = try WorksiteRecord.getWorksiteId(db, core.networkId),
+           worksiteId > 0 {
             try WorksiteRecord.syncFillWorksite(
                 db,
                 worksiteId,
@@ -234,7 +234,8 @@ public class WorksiteDao {
                 plusCode: core.plusCode,
                 svi: core.svi,
                 reportedBy: core.reportedBy,
-                what3Words: core.what3Words
+                what3Words: core.what3Words,
+                photoCount: core.networkPhotoCount,
             )
 
             let flagsReasons = Set(try WorksiteFlagRecord.getReasons(db, worksiteId))
@@ -506,6 +507,9 @@ public class WorksiteDao {
                 .including(all: WorksiteRootRecord.worksiteFormData)
                 .including(all: WorksiteRootRecord.workTypes)
                 .annotated(with: WorksiteRootRecord.workTypes.count)
+                .including(all: WorksiteRootRecord.networkFiles
+                    .including(optional: NetworkFileRecord.networkFileLocalImage))
+                .including(all: WorksiteRootRecord.worksiteLocalImages)
                 .limit(limit, offset: offset)
                 .asRequest(of: PopulatedWorksiteMapVisual.self)
             return try request.fetchAll(db)

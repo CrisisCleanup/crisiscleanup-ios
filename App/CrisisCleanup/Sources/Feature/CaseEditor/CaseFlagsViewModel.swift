@@ -198,18 +198,14 @@ class CaseFlagsViewModel: ObservableObject {
             .store(in: &subscriptions)
     }
 
-    private let latestNearbyOrganizationsPublisher = LatestAsyncPublisher<[IncidentOrganization]?>()
     private func subscribeNearbyOrganizations() {
-        editableWorksite.map { worksite in
-            self.latestNearbyOrganizationsPublisher.publisher {
-                let coordinates = worksite.coordinates
-                return await self.organizationsRepository.getNearbyClaimingOrganizations(
-                    coordinates.latitude,
-                    coordinates.longitude
-                )
-            }
+        editableWorksite.mapLatest { worksite in
+            let coordinates = worksite.coordinates
+            return await self.organizationsRepository.getNearbyClaimingOrganizations(
+                coordinates.latitude,
+                coordinates.longitude
+            )
         }
-        .switchToLatest()
         .receive(on: RunLoop.main)
         .assign(to: \.nearbyOrganizations, on: self)
         .store(in: &subscriptions)
@@ -459,7 +455,7 @@ class CaseFlagsViewModel: ObservableObject {
                             true
                         )
 
-                        incidentSelectManager.setIncident(incidentChange)
+                        let _ = await incidentSelectManager.submitIncidentChange(incidentChange)
                         incidentWorksiteChangeSubject.value =
                         (changeIncidentId, startingWorksite.id)
                     } catch {

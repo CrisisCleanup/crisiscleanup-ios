@@ -56,17 +56,16 @@ class WrongLocationFlagManager {
             .eraseToAnyPublisher()
 
         validCoordinates = wrongLocationCoordinatesParse.asyncMap {
-            var address: LocationAddress? = nil
-
             if let latLng = $0 {
                 isVerifyingCoordinates.value = true
                 do {
                     defer { isVerifyingCoordinates.value = false }
 
-                    address = await addressSearchRepository.getAddress(latLng)
+                    return await addressSearchRepository.getAddress(latLng)
                 }
             }
-            return address
+
+            return nil
         }
     }
 }

@@ -34,7 +34,7 @@ struct IncidentSelectView: View {
                                 .bold(isSelected)
                                 .fullWidthSelector()
                                 .onTapGesture {
-                                    viewModel.incidentSelector.setIncident(incident)
+                                    viewModel.incidentSelector.selectIncident(incident)
                                     onDismiss()
                                 }
                                 .if (incident.id == incidentId0) {

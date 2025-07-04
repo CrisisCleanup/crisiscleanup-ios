@@ -28,7 +28,7 @@ public protocol IncidentCacheRepository {
 
     func resetIncidentSyncStats(_ incidentId: Int64) throws
 
-    func updateCachePreferenes(_ preferences: IncidentWorksitesCachePreferences)
+    func updateCachePreferences(_ preferences: IncidentWorksitesCachePreferences)
 }
 
 extension IncidentCacheRepository {
@@ -774,8 +774,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                     !savedWorksiteIds.contains($0.id)
                 }
                 if deduplicateWorksites.isEmpty {
-                    let duplicateCount = networkData.count - deduplicateWorksites.count
-                    log("\(duplicateCount) duplicate(s), before")
+                    log("\(networkData.count) duplicate(s), bounded")
                     break
                 }
 
@@ -1000,8 +999,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                     !savedWorksiteIds.contains($0.id)
                 }
                 if deduplicateWorksites.isEmpty {
-                    let duplicateCount = networkData.count - deduplicateWorksites.count
-                    log("\(duplicateCount) duplicate(s), before")
+                    log("\(networkData.count) duplicate(s), before")
                     break
                 }
 
@@ -1110,8 +1108,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                     !savedWorksiteIds.contains($0.id)
                 }
                 if deduplicateWorksites.isEmpty {
-                    let duplicateCount = networkData.count - deduplicateWorksites.count
-                    log("\(duplicateCount) duplicate(s) after")
+                    log("\(networkData.count) duplicate(s) after")
                     break
                 }
 
@@ -1303,7 +1300,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         try syncParameterDao.deleteSyncParameters(incidentId)
     }
 
-    func updateCachePreferenes(_ preferences: IncidentWorksitesCachePreferences) {
+    func updateCachePreferences(_ preferences: IncidentWorksitesCachePreferences) {
         incidentCachePreferences.setPreferences(preferences)
     }
 

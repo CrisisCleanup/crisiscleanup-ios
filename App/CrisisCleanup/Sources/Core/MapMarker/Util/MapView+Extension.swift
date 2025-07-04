@@ -165,6 +165,8 @@ func overlayCircleRenderer(
     return renderer
 }
 
-class BlankPolygonRenderer: MKPolygonRenderer {
-    override func draw(_ mapRect: MKMapRect, zoomScale: MKZoomScale, in context: CGContext) {}
+class BlankRenderer: MKOverlayRenderer {
+    override func canDraw(_ mapRect: MKMapRect, zoomScale: MKZoomScale) -> Bool {
+        false
+    }
 }

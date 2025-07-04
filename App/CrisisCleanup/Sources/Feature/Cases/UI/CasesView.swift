@@ -421,7 +421,15 @@ private struct MapControls: View {
     func zoomDelta(scale: Double) {
         var region = map.region
         let latDelta = region.span.latitudeDelta * scale
+        guard latDelta < 180 else {
+            return
+        }
+
         let longDelta = region.span.longitudeDelta * scale
+        guard longDelta < 360 else {
+            return
+        }
+
         region.span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: longDelta)
         map.setRegion(region, animated: true)
     }

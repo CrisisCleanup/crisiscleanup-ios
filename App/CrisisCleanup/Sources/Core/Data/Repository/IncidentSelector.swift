@@ -1,4 +1,5 @@
 import Combine
+import CombineExt
 import Foundation
 
 public protocol IncidentSelector {
@@ -6,90 +7,85 @@ public protocol IncidentSelector {
     var incident: any Publisher<Incident, Never> { get }
     var incidentsData: any Publisher<IncidentsData, Never> { get }
 
-    func setIncident(_ incident: Incident)
+    func selectIncident(_ incident: Incident)
+    func submitIncidentChange(_ incident: Incident) async -> Bool
 }
 
 class IncidentSelectRepository: IncidentSelector {
-    private let incidentsDataSubject = CurrentValueSubject<IncidentsData, Never>(LoadingIncidentsData)
+    private let preferencesStore: AppPreferencesDataSource
+    private let logger: AppLogger
+
+    private let incidentsDataSubject = CurrentValueRelay<IncidentsData>(LoadingIncidentsData)
+
+    private let incidentsSource: AnyPublisher<[Incident], Never>
 
     let incidentsData: any Publisher<IncidentsData, Never>
 
-    var incident: any Publisher<Incident, Never> {
-        incidentsData
-            .eraseToAnyPublisher()
-            .map { data in data.selected }
-    }
+    let incident: any Publisher<Incident, Never>
 
-    var incidentId: any Publisher<Int64, Never> {
-        incidentsData
-            .eraseToAnyPublisher()
-            .map { data in data.selected.id }
-    }
-
-    private let preferencesStore: AppPreferencesDataSource
-
-    private var incidentIdCache: Int64 = EmptyIncident.id
+    let incidentId: any Publisher<Int64, Never>
 
     private var disposables = Set<AnyCancellable>()
 
     init(
         accountDataRepository: AccountDataRepository,
         preferencesStore: AppPreferencesDataSource,
-        incidentsRepository: IncidentsRepository
+        incidentsRepository: IncidentsRepository,
+        loggerFactory: AppLoggerFactory,
     ) {
         self.preferencesStore = preferencesStore
+        logger = loggerFactory.getLogger("incident-data")
 
-        incidentsData = incidentsDataSubject
+        incidentsData = incidentsDataSubject.removeDuplicates()
+        let dataSource = incidentsData.eraseToAnyPublisher().share(replay: 1)
+        incident = dataSource.map { $0.selected }
+        incidentId = dataSource.map { $0.selectedId }
 
         let accountDataPublisher = accountDataRepository.accountData.eraseToAnyPublisher()
         let incidentsPublisher = incidentsRepository.incidents.eraseToAnyPublisher()
         let preferencesPublisher = preferencesStore.preferences.eraseToAnyPublisher()
-        Publishers.CombineLatest3(
-            accountDataPublisher,
+        let isLoadingIncidents = incidentsRepository.isLoading.eraseToAnyPublisher()
+
+        incidentsSource = Publishers.CombineLatest(
             incidentsPublisher,
-            preferencesPublisher
+            accountDataPublisher,
         )
-        .filter { _, incidents, _ in
-            incidents.isNotEmpty
+        .map { incidents, accountData in
+            accountData.isCrisisCleanupAdmin
+            ? incidents
+            : incidents.filter { accountData.approvedIncidents.contains($0.id) }
         }
-        .map({ accountData, incidents, preferences in
-            if accountData.id > 0,
-               !accountData.isCrisisCleanupAdmin {
-                let filteredIncidents = incidents.filter {
-                    accountData.approvedIncidents.contains($0.id)
-                }
-                return (filteredIncidents, preferences)
+        .eraseToAnyPublisher()
+
+        let preferencesIncidentId = preferencesPublisher.map {
+            $0.selectedIncidentId
+        }
+
+        let selectedIncident = Publishers.CombineLatest(
+            preferencesIncidentId,
+            incidentsSource,
+        )
+            .map { selectedId, incidents in
+                incidents.first(where: { $0.id == selectedId })
+                ?? incidents.firstOrNil
+                ?? EmptyIncident
             }
 
-            return (incidents, preferences)
-        })
-        .sink { incidents, preferences in
-            guard incidents.isNotEmpty else {
-                return
-            }
-
-            if self.incidentIdCache == EmptyIncident.id {
-                let targetId = preferences.selectedIncidentId
-                var targetIncident = incidents.first { $0.id == targetId } ?? EmptyIncident
-                if targetIncident.isEmptyIncident {
-                    targetIncident = incidents[0]
-                }
-
-                if targetIncident.id != preferences.selectedIncidentId {
-                    self.preferencesStore.setSelectedIncident(targetIncident.id)
-                } else {
-                    self.incidentIdCache = targetIncident.id
-                    self.incidentsDataSubject.value = IncidentsData(
-                        isLoading: false,
-                        selected: targetIncident,
-                        incidents: incidents
-                    )
-                }
-            } else {
-                self.incidentsDataSubject.value = self.incidentsDataSubject.value.copy {
-                    $0.incidents = incidents
-                }
-            }
+        Publishers.CombineLatest3(
+            isLoadingIncidents,
+            incidentsSource,
+            selectedIncident,
+        )
+        .map { isLoading, incidents, selected in
+            let loading = isLoading && incidents.isEmpty
+            return IncidentsData(
+                isLoading: loading,
+                selected: selected,
+                incidents: incidents,
+            )
+        }
+        .sink {
+            self.incidentsDataSubject.accept($0)
         }
         .store(in: &disposables)
     }
@@ -98,10 +94,23 @@ class IncidentSelectRepository: IncidentSelector {
         _ = cancelSubscriptions(disposables)
     }
 
-    func setIncident(_ incident: Incident) {
-        preferencesStore.setSelectedIncident(incident.id)
-        incidentsDataSubject.value = incidentsDataSubject.value.copy {
-            $0.selected = incident
+    func selectIncident(_ incident: Incident) {
+        Task {
+            await submitIncidentChange(incident)
         }
+    }
+
+    func submitIncidentChange(_ incident: Incident) async -> Bool {
+        let incidentId = incident.id
+        do {
+            let incidents = try await incidentsSource.asyncFirst()
+            if let incident = incidents.first(where: { $0.id == incidentId }) {
+                preferencesStore.setSelectedIncident(incident.id)
+            }
+            return true
+        } catch {
+            logger.logError(error)
+        }
+        return false
     }
 }
