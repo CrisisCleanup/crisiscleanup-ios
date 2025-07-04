@@ -30,27 +30,27 @@ class IncidentDataSyncNotifier {
             .sink { stats in
                 if stats.isOngoing,
                 self.isSyncing {
-                    let title = translator.t("~~Syncing {incident_name}")
+                    let title = translator.t("sync.syncing_incident_name")
                         .replacingOccurrences(of: "{incident_name}", with: stats.incidentName)
                     let text = {
                         var message = stats.notificationMessage
                         if message.isBlank {
                             message = if stats.isIndeterminate {
-                                translator.t("~~Saving data...")
+                                translator.t("sync.saving_data")
                             } else if stats.pullType == .worksitesCore {
-                                translator.t("~~Saved {case_count}/{total_case_count} Cases.")
+                                translator.t("sync.saved_case_count_of_total_count")
                                     .replacingOccurrences(of: "{case_count}", with: "\(stats.savedCount)")
                                     .replacingOccurrences(of: "{total_case_count}", with: "\(stats.dataCount)")
                             } else if stats.pullType == .worksitesAdditional {
-                                translator.t("~~Saved {case_count}/{total_case_count} offline Cases.",)
+                                translator.t("sync.saved_case_count_of_total_count_offline",)
                                     .replacingOccurrences(of: "{case_count}", with: "\(stats.savedCount)")
                                     .replacingOccurrences(of: "{total_case_count}", with: "\(stats.dataCount)")
                             } else {
-                                translator.t("~~Saving more data...")
+                                translator.t("sync.saving_more_data")
                             }
                             if 1 <= stats.currentStep,
                                stats.currentStep <= stats.stepTotal {
-                                message = translator.t("~~({current_step}/{total_step_count}) {message}")
+                                message = translator.t("({current_step}/{total_step_count}) {message}")
                                     .replacingOccurrences(of: "{current_step}", with: "\(stats.currentStep)")
                                     .replacingOccurrences(of: "{total_step_count}", with: "\(stats.stepTotal)")
                                     .replacingOccurrences(of: "{message}", with: message)

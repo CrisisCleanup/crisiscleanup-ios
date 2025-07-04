@@ -71,7 +71,7 @@ struct MenuView: View {
                 .padding([.horizontal, .bottom])
 
                 Toggle(
-                    t.t("~~Enable notifications"),
+                    t.t("appMenu.enable_notifications"),
                     isOn: $notifyDataSyncProgress
                 )
                 .padding([.horizontal, .bottom])
@@ -393,7 +393,7 @@ private struct RequestNotificationView: View {
 
     var body: some View {
         OpenSettingsView(
-            bodyKey: "~~Notification access is needed to receive alerts. Grant notification access in Settings.",
+            bodyKey: "appMenu.notification_access_request",
             onDismiss: onDismiss
         )
     }
