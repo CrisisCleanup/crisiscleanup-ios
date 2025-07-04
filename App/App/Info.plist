@@ -7,6 +7,7 @@
 		<string>com.crisiscleanup.refresh</string>
 		<string>com.crisiscleanup.upload_worksite_changes</string>
 		<string>com.crisiscleanup.upload_worksite_media</string>
+		<string>com.crisiscleanup.clear_inactive</string>
 	</array>
 	<key>UIAppFonts</key>
 	<array>

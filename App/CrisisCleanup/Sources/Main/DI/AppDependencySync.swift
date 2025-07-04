@@ -61,6 +61,8 @@ extension MainComponent {
                 syncPuller: syncPuller,
                 syncPusher: syncPusher,
                 worksiteChangeRepository: worksiteChangeRepository,
+                appSupportRepository: appSupportRepository,
+                dataManagementRepository: appDataManagementRepository,
                 loggerFactory: loggerFactory
             )
         }

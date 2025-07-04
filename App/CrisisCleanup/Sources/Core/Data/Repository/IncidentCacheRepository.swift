@@ -28,7 +28,7 @@ public protocol IncidentCacheRepository {
 
     func resetIncidentSyncStats(_ incidentId: Int64) throws
 
-    func updateCachePreferenes(_ preferences: IncidentWorksitesCachePreferences)
+    func updateCachePreferences(_ preferences: IncidentWorksitesCachePreferences)
 }
 
 extension IncidentCacheRepository {
@@ -1300,7 +1300,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         try syncParameterDao.deleteSyncParameters(incidentId)
     }
 
-    func updateCachePreferenes(_ preferences: IncidentWorksitesCachePreferences) {
+    func updateCachePreferences(_ preferences: IncidentWorksitesCachePreferences) {
         incidentCachePreferences.setPreferences(preferences)
     }
 
