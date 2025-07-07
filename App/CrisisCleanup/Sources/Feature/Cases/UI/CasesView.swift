@@ -361,9 +361,9 @@ private struct MapResponsiveControls: View {
                     lookingAtCenter: map.centerCoordinate,
                     fromDistance: CLLocationDistance(mapMarkerZoomLevelHeight),
                     pitch: 0.0,
-                    heading: 0.0
+                    heading: 0.0,
                 ),
-                animated: true
+                animated: true,
             )
         } label: {
             Image("ic_zoom_incident", bundle: .module)

@@ -29,7 +29,7 @@ extension MainComponent {
             incidentOrganizationDao: organizationsDao,
             personContactDao: personContactDao,
             appVersionProvider: appVersionProvider,
-            loggerFactory: loggerFactory
+            loggerFactory: loggerFactory,
         )
     }
 
@@ -41,7 +41,7 @@ extension MainComponent {
         AccountListsSyncer(
             networkDataSource: networkDataSource,
             listsRepository: listsRepository,
-            loggerFactory: loggerFactory
+            loggerFactory: loggerFactory,
         )
     }
 
@@ -50,7 +50,7 @@ extension MainComponent {
             AppSyncLoggerFactory(
                 syncLogDao,
                 pagingSyncLogRepository,
-                appEnv
+                appEnv,
             )
         }
     }
@@ -63,7 +63,7 @@ extension MainComponent {
                 worksiteChangeRepository: worksiteChangeRepository,
                 appSupportRepository: appSupportRepository,
                 dataManagementRepository: appDataManagementRepository,
-                loggerFactory: loggerFactory
+                loggerFactory: loggerFactory,
             )
         }
     }
@@ -77,7 +77,7 @@ private class AppSyncLoggerFactory: SyncLoggerFactory {
     init(
         _ syncLogDao: SyncLogDao,
         _ syncLogRepository: PagingSyncLogRepository,
-        _ appEnv: AppEnv
+        _ appEnv: AppEnv,
     ) {
         self.syncLogDao = syncLogDao
         self.syncLogger = syncLogRepository

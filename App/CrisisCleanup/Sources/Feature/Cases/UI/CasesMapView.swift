@@ -4,6 +4,25 @@ import Foundation
 import SwiftUI
 import MapKit
 
+extension MKMapView {
+    var zoomLevel: Double {
+        let center = region.center
+        let span = region.span
+        let centerPixelSpace = MKMapPoint(center)
+        let topLeftPixelSpace = MKMapPoint(CLLocationCoordinate2D(
+            latitude: center.latitude + span.latitudeDelta * 0.5,
+            longitude: center.longitude - span.longitudeDelta * 0.5,
+        ))
+        let zoomWidth = (centerPixelSpace.x - topLeftPixelSpace.x) * 2
+        let viewBoundsWidth = bounds.size.width
+        let zoomScale = zoomWidth / Double(viewBoundsWidth)
+        let zoomExponent = log2(zoomScale)
+        let z = 21 - zoomExponent
+
+        return z
+    }
+}
+
 class CasesMapViewCoordinator: NSObject, MKMapViewDelegate {
     let viewModel: CasesViewModel
     let onSelectWorksite: (Int64) -> Void
@@ -29,8 +48,7 @@ class CasesMapViewCoordinator: NSObject, MKMapViewDelegate {
     }
 
     func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-        // From https://medium.com/@dmytrobabych/getting-actual-rotation-and-zoom-level-for-mapkit-mkmapview-e7f03f430aa9
-        let zoom = log2(360.0 * mapView.frame.size.width / (mapView.region.span.longitudeDelta * 128))
+        let zoom = mapView.zoomLevel
 
         // There is a bug with map view where sometimes the map is animating but regionDidChangeAnimated doesn't report it correctly.
         // Assume animation should always happen so inform view model when not reported
