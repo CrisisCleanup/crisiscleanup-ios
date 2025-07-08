@@ -17,7 +17,7 @@ class ViewLayoutDescription: ObservableObject {
     @Published private(set) var isOneColumnLayout = true
     @Published private(set) var isWide = false
     @Published private(set) var isShort = false
-    @Published private(set) var isLargeScreen = false
+    @Published private(set) var isTopTabLayout = false
 
     private var orientationObserver: NSObjectProtocol?
 
@@ -54,12 +54,16 @@ class ViewLayoutDescription: ObservableObject {
 
         var isMac = false
         var isIpad = false
+        var isSimulator = false
 #if targetEnvironment(macCatalyst)
         isMac = true
+#elseif targetEnvironment(simulator)
+        isSimulator = true
+        isIpad = UIDevice.current.model == "iPad"
 #else
         isIpad = UIDevice.current.model == "iPad"
 #endif
-        isLargeScreen = isMac || isIpad
+        isTopTabLayout = isMac || (isSimulator && isIpad)
     }
 
     private func update(
