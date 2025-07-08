@@ -8,18 +8,44 @@ extension MKMapView {
     var zoomLevel: Double {
         let center = region.center
         let span = region.span
-        let centerPixelSpace = MKMapPoint(center)
-        let topLeftPixelSpace = MKMapPoint(CLLocationCoordinate2D(
+        let centerFlatSpacePoint = MKMapPoint(center)
+        let topLeftFlatSpacePoint = MKMapPoint(CLLocationCoordinate2D(
             latitude: center.latitude + span.latitudeDelta * 0.5,
             longitude: center.longitude - span.longitudeDelta * 0.5,
         ))
-        let zoomWidth = (centerPixelSpace.x - topLeftPixelSpace.x) * 2
+        let zoomWidth = (centerFlatSpacePoint.x - topLeftFlatSpacePoint.x) * 2
         let viewBoundsWidth = bounds.size.width
         let zoomScale = zoomWidth / Double(viewBoundsWidth)
         let zoomExponent = log2(zoomScale)
         let z = 21 - zoomExponent
 
         return z
+    }
+
+    func region(for zoom: Double) -> MKCoordinateRegion {
+        let zoomExponent = 21 - zoom
+        let zoomScale = pow(2.0, zoomExponent)
+
+        let viewBoundsWidth = bounds.size.width
+        let zoomWidth = zoomScale * Double(viewBoundsWidth)
+
+        let viewBoundsHeight = bounds.size.height
+        let zoomHeight = zoomScale * Double(viewBoundsHeight)
+
+        let center = region.center
+        let centerFlatSpacePoint = MKMapPoint(center)
+        let leftFlatSpacePoint = centerFlatSpacePoint.x - zoomWidth / 2
+        let topFlatSpacePoint = centerFlatSpacePoint.y - zoomHeight / 2
+        let topLeftFlatSpacePoint = MKMapPoint(x: leftFlatSpacePoint, y: topFlatSpacePoint)
+        let topLeftCoordinate = topLeftFlatSpacePoint.coordinate
+
+        let span = MKCoordinateSpan(
+            latitudeDelta: (topLeftCoordinate.latitude - center.latitude) * 2,
+            longitudeDelta: (center.longitude - topLeftCoordinate.longitude) * 2,
+        )
+        let region = MKCoordinateRegion(center: center, span: span)
+
+        return region
     }
 }
 

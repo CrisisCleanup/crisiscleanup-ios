@@ -351,20 +351,11 @@ private struct MapResponsiveControls: View {
 
     var body: some View {
         Button {
-            // TODO: Calculate consistent distance rather than empirical magic number
-            //       Print mapView.region.span to see inconsistency even when fromDistance is constant
-            //       Panning the map shows a changing centerCoordinateDistance
-            let mapMarkerZoomLevelHeight = 300_000
+            let region = map.region(for: CasesConstant.MapMarkersZoomLevel)
+
             viewModel.onZoomIncident()
-            map.setCamera(
-                MKMapCamera(
-                    lookingAtCenter: map.centerCoordinate,
-                    fromDistance: CLLocationDistance(mapMarkerZoomLevelHeight),
-                    pitch: 0.0,
-                    heading: 0.0,
-                ),
-                animated: true,
-            )
+            map.setRegion(region, animated: true)
+
         } label: {
             Image("ic_zoom_incident", bundle: .module)
                 .mapOverlayButton()
