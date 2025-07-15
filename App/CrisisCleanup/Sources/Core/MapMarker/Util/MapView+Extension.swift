@@ -22,7 +22,7 @@ class CustomPinAnnotation: NSObject, MKAnnotation {
 extension MKMapView {
     func animateToCenter(
         _ center: CLLocationCoordinate2D,
-        _ zoomLevel: Int = 11
+        zoomLevel: Int = 11
     ) {
         let zoom = zoomLevel < 0 || zoomLevel > 20 ? 9 : zoomLevel
 
