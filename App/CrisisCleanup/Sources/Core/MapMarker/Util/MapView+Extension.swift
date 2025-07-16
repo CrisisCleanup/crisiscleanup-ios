@@ -31,10 +31,12 @@ extension MKMapView {
         let latDelta = 180.0 * zoomScale
         let longDelta = 360.0 * zoomScale
         let span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: longDelta)
-
-        let regionCenter = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: center.latitude, longitude: center.longitude), span: span)
-        let region = regionThatFits(regionCenter)
-        setRegion(region, animated: true)
+        if span.isValid {
+            let center = CLLocationCoordinate2D(latitude: center.latitude, longitude: center.longitude)
+            let regionCenter = MKCoordinateRegion(center: center, span: span)
+            let region = regionThatFits(regionCenter)
+            setRegion(region, animated: true)
+        }
     }
 
     func makeOverlayPolygons() -> [MKPolygon] {

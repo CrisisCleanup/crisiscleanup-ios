@@ -38,11 +38,12 @@ struct CasesLayoutView: View {
         let longDelta = bounds.northEast.longitude - bounds.southWest.longitude
         let span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: longDelta)
 
-        let center = bounds.center
-        let center2d = CLLocationCoordinate2D(latitude: center.latitude, longitude: center.longitude)
-        let regionCenter = MKCoordinateRegion(center: center2d, span: span)
-        let region = map.regionThatFits(regionCenter)
-        map.setRegion(region, animated: true)
+        if span.isValid {
+            let center2d = bounds.center.coordinates
+            let regionCenter = MKCoordinateRegion(center: center2d, span: span)
+            let region = map.regionThatFits(regionCenter)
+            map.setRegion(region, animated: true)
+        }
     }
 
     var body: some View {
@@ -421,8 +422,11 @@ private struct MapControls: View {
             return
         }
 
-        region.span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: longDelta)
-        map.setRegion(region, animated: true)
+        let span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: longDelta)
+        if span.isValid {
+            region.span = span
+            map.setRegion(region, animated: true)
+        }
     }
 
     var body: some View {
