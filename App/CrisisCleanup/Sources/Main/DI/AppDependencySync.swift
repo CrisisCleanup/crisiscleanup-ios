@@ -10,6 +10,7 @@ extension MainComponent {
                 appPreferencesDataSource: appPreferences,
                 localImageRepository: localImageRepository,
                 incidentDataPullReporter: incidentDataPullReporter,
+                networkMonitor: networkMonitor,
                 systemNotifier: systemNotifier,
                 translator: translator,
                 appLoggerFactory: loggerFactory,
