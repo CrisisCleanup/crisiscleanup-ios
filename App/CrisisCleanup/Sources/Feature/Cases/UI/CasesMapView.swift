@@ -22,7 +22,10 @@ extension MKMapView {
         return z
     }
 
-    func region(for zoom: Double) -> MKCoordinateRegion {
+    func region(
+        for zoom: Double,
+        spanDelta: Double = 0,
+    ) -> MKCoordinateRegion {
         let zoomExponent = 21 - zoom
         let zoomScale = pow(2.0, zoomExponent)
 
@@ -40,8 +43,8 @@ extension MKMapView {
         let topLeftCoordinate = topLeftFlatSpacePoint.coordinate
 
         let span = MKCoordinateSpan(
-            latitudeDelta: (topLeftCoordinate.latitude - center.latitude) * 2,
-            longitudeDelta: (center.longitude - topLeftCoordinate.longitude) * 2,
+            latitudeDelta: (topLeftCoordinate.latitude - center.latitude) * 2 + spanDelta,
+            longitudeDelta: (center.longitude - topLeftCoordinate.longitude) * 2 + spanDelta,
         )
         let region = MKCoordinateRegion(center: center, span: span)
 

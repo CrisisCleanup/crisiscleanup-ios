@@ -67,7 +67,7 @@ class CasesViewModel: ObservableObject {
 
     @Published private(set) var isMapBusy: Bool = false
     private let isGeneratingWorksiteMarkers = CurrentValueSubject<Bool, Never>(false)
-    private let isDelayingRegionBug = CurrentValueSubject<Bool, Never>(false)
+    // private let isDelayingRegionBug = CurrentValueSubject<Bool, Never>(false)
 
     private let mapCaseDotProvider = InMemoryDotProvider()
     @Published private(set) var mapDotsOverlay: CasesMapDotsOverlay
@@ -95,8 +95,6 @@ class CasesViewModel: ObservableObject {
 
     @Published var showExplainLocationPermission = false
     @Published private(set) var isMyLocationEnabled = false
-
-    private var onZoomIncidentTimestamp = Date.distantPast
 
     private var subscriptions = Set<AnyCancellable>()
 
@@ -238,13 +236,13 @@ class CasesViewModel: ObservableObject {
         )
             .map { b0, b1 in b0 || b1 }
             .eraseToAnyPublisher()
-        Publishers.CombineLatest3(
+        Publishers.CombineLatest(
             mapBoundsManager.isDeterminingBoundsPublisher.eraseToAnyPublisher(),
             isRenderingMapOverlay,
-            isDelayingRegionBug
+            // isDelayingRegionBug,
         )
         .receive(on: RunLoop.main)
-        .map { b0, b1, b2 in b0 || b1 || b2 }
+        .map { b0, b1 in b0 || b1 }
         .assign(to: \.isMapBusy, on: self)
         .store(in: &subscriptions)
 
@@ -345,7 +343,7 @@ class CasesViewModel: ObservableObject {
                 let queryIncidentId = wqs.incidentId
                 let queryFilters = wqs.filters
 
-                let isZoomedOut = wqs.zoom < CasesConstant.MapMarkersZoomLevel
+                let isZoomedOut = wqs.zoom < CasesConstant.MAP_MARKERS_ZOOM_LEVEL
                 if wqs.isTableView ||
                     queryIncidentId == EmptyIncident.id ||
                     isZoomedOut
@@ -775,26 +773,11 @@ class CasesViewModel: ObservableObject {
         }
     }
 
-    // Compensates for inexact altitude-zoom level derivations
-    func onZoomIncident() {
-        onZoomIncidentTimestamp = Date.now
-    }
-
     func onMapCameraChange(
         _ zoom: Double,
         _ region: MKCoordinateRegion,
         _ didAnimate: Bool
     ) {
-        // Workaround for zoom level derivation from altitude
-        var zoom = zoom
-        if CasesConstant.MapMarkersZoomLevel > zoom {
-            let onZoomDelta = Date.now.timeIntervalSince(onZoomIncidentTimestamp)
-            if onZoomDelta.seconds < 1,
-               CasesConstant.MapMarkersZoomLevel - zoom < 0.3 {
-                zoom = CasesConstant.MapMarkersZoomLevel
-            }
-        }
-
         qsm.mapZoomSubject.value = zoom
 
         let center = region.center
@@ -816,8 +799,9 @@ class CasesViewModel: ObservableObject {
             northEast: northEast
         ))
 
-        // TODO: Redesign entire map (data) state
+        // TODO: Delete if no longer an issue or redesign entire map (data) state
         // Seems like there is a map view bug. This accounts for those times.
+        /*
         if !didAnimate {
             isDelayingRegionBug.value = true
             Task {
@@ -835,6 +819,7 @@ class CasesViewModel: ObservableObject {
                 }
             }
         }
+        */
     }
 
     func toggleTableView() {

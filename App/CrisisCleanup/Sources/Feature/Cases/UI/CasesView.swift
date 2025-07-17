@@ -352,9 +352,7 @@ private struct MapResponsiveControls: View {
 
     var body: some View {
         Button {
-            let region = map.region(for: CasesConstant.MapMarkersZoomLevel)
-
-            viewModel.onZoomIncident()
+            let region = map.region(for: CasesConstant.MAP_MARKERS_ZOOM_LEVEL, spanDelta: -2e-3)
             map.setRegion(region, animated: true)
 
         } label: {
