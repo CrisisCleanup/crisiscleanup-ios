@@ -26,8 +26,8 @@ class IncidentDataSyncNotifier {
         self.systemNotifier = systemNotifier
         self.logger = logger
 
-        incidentDataPullReporter.incidentDataPullStats
-            .sink { stats in
+        incidentDataPullReporter.incidentDataPullStats.eraseToAnyPublisher()
+            .mapLatest { stats in
                 if stats.isOngoing,
                 self.isSyncing {
                     let title = translator.t("sync.syncing_incident_name")
@@ -58,14 +58,32 @@ class IncidentDataSyncNotifier {
                         }
                         return message
                     }()
-                    await self.systemNotifier.scheduleNotification(
-                        title: title,
-                        body: text,
+
+                    return NotificationAction(title: title, text: text)
+                } else if stats.isEnded {
+                    return NotificationAction(clear: true)
+                }
+
+                return NotificationAction()
+            }
+            .mapLatest {
+                if $0.clear {
+                    self.clearNotifications()
+                    return true
+                } else if $0.title.isNotBlank || $0.text.isNotBlank {
+                    try await self.systemNotifier.scheduleNotification(
+                        title: $0.title,
+                        body: $0.text,
                         identifier: self.syncNotificationId
                     )
-                } else if stats.isEnded {
-                    self.clearNotifications()
+                    return true
                 }
+
+                return false
+            }
+            .sink { _ in
+                // TODO: mapLatest above doesn't seem to resolve race conditions
+                //       Reproduce (or add delay) and resolve
             }
             .store(in: &disposables)
     }
@@ -96,5 +114,21 @@ class IncidentDataSyncNotifier {
             let result = try await syncOperation()
             return result
         }
+    }
+}
+
+private struct NotificationAction {
+    let title: String
+    let text: String
+    let clear: Bool
+
+    init(
+        title: String = "",
+        text: String = "",
+        clear: Bool = false,
+    ) {
+        self.title = title
+        self.text = text
+        self.clear = clear
     }
 }
