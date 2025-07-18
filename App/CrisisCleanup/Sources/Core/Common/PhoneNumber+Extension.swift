@@ -2,9 +2,10 @@ import Foundation
 
 public protocol PhoneNumberParser {
     func getPhoneNumbers(_ possiblePhoneNumbers: [String?]) -> [ParsedPhoneNumber]
+    func searchablePhoneNumbers(_ phone1: String, _ phone2: String?) -> String
 }
 
-class PhoneNumberRegexParser: PhoneNumberParser {
+class RegexPhoneNumberParser: PhoneNumberParser {
     private let noNumbersPattern = #/^\D+$/#
 
     private let isTenDigitNumberPattern = #/^\s*\d{10}\s*$/#
@@ -34,7 +35,8 @@ class PhoneNumberRegexParser: PhoneNumberParser {
         }
 
         if isOneTenDigitNumberPattern.matches(s) {
-            return s.trim().substring(1, s.count - 1)
+            let trimmed = s.trim()
+            return String(trimmed.suffix(trimmed.count-1))
         }
 
         if isTenDigitNumberPattern.matches(s) {
@@ -147,26 +149,25 @@ class PhoneNumberRegexParser: PhoneNumberParser {
     func getPhoneNumbers(_ possiblePhoneNumbers: [String?]) -> [ParsedPhoneNumber] {
         possiblePhoneNumbers
             .filter { $0?.isNotBlank == true }
-            .compactMap { $0 }
-            .compactMap { parsePhoneNumbers($0) }
+            .compactMap { parsePhoneNumbers($0!) }
     }
 
-    func searchablePhoneNumbers(_ phone1: String, phone2: String) -> String {
-        getPhoneNumbers([phone1, phone2])
+    func searchablePhoneNumbers(_ phone1: String, _ phone2: String?) -> String {
+        getPhoneNumbers([phone1, phone2 ?? ""])
             .map { $0.parsedNumbers }
             .flatMap { $0 }
             .filter { $0.isNotBlank }
             .map {
                 if $0.starts(with: "1"),
                    $0.count == 11 {
-                    $0.substring(1, $0.count-1)
+                    $0.substring(1, $0.count)
                 } else {
                     $0
                 }
             }
             .flatMap {
                 if $0.count == 10 {
-                    [$0, $0.substring(3, $0.count-1)]
+                    [$0, $0.substring(3, $0.count)]
                 } else {
                     [$0]
                 }

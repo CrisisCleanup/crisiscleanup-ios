@@ -64,6 +64,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
     private let networkDataSource: CrisisCleanupNetworkDataSource
     private let worksitesRepository: WorksitesRepository
     private let worksiteDao: WorksiteDao
+    private let phoneNumberParser: PhoneNumberParser
     private let speedMonitor: DataDownloadSpeedMonitor
     private let networkMonitor: NetworkMonitor
     private let syncLogger: SyncLogger
@@ -108,6 +109,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         networkDataSource: CrisisCleanupNetworkDataSource,
         worksitesRepository: WorksitesRepository,
         worksiteDao: WorksiteDao,
+        phoneNumberParser: PhoneNumberParser,
         speedMonitor: DataDownloadSpeedMonitor,
         networkMonitor: NetworkMonitor,
         syncLogger: SyncLogger,
@@ -126,6 +128,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         self.networkDataSource = networkDataSource
         self.worksitesRepository = worksitesRepository
         self.worksiteDao = worksiteDao
+        self.phoneNumberParser = phoneNumberParser
         self.speedMonitor = speedMonitor
         self.networkMonitor = networkMonitor
         self.syncLogger = syncLogger
@@ -1147,7 +1150,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         _ networkWorksites: [NetworkWorksitePage],
         _ statsUpdater: IncidentDataPullStatsUpdater,
     ) async throws {
-        let worksites = networkWorksites.map { $0.asRecord() }
+        let worksites = networkWorksites.map { $0.asRecord(phoneNumberParser) }
         let flags = networkWorksites.map { worksite in
             worksite.flags.filter { flag in flag.invalidatedAt == nil }
                 .map { flag in flag.asRecord() }

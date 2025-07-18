@@ -26,6 +26,7 @@ class CrisisCleanupListsRepository: ListsRepository {
     private let personContactDao: PersonContactDao
     private let usersRepository: UsersRepository
     private let worksiteDao: WorksiteDao
+    private let phoneNumberParser: PhoneNumberParser
     private let logger: AppLogger
 
     init(
@@ -37,6 +38,7 @@ class CrisisCleanupListsRepository: ListsRepository {
         personContactDao: PersonContactDao,
         usersRepository: UsersRepository,
         worksiteDao: WorksiteDao,
+        phoneNumberParser: PhoneNumberParser,
         loggerFactory: AppLoggerFactory
     ) {
         self.listDao = listDao
@@ -46,6 +48,7 @@ class CrisisCleanupListsRepository: ListsRepository {
         self.networkDataSource = networkDataSource
         self.personContactDao = personContactDao
         self.usersRepository = usersRepository
+        self.phoneNumberParser = phoneNumberParser
         self.worksiteDao = worksiteDao
         logger = loggerFactory.getLogger("lists-repository")
     }
@@ -219,7 +222,7 @@ class CrisisCleanupListsRepository: ListsRepository {
                 do {
                     let syncedAt = Date.now
                     if let networkWorksites = try await networkDataSource.getWorksites(worksiteIds) {
-                        let entities = networkWorksites.map { $0.asRecords() }
+                        let entities = networkWorksites.map { $0.asRecords(phoneNumberParser) }
                         try await worksiteDao.syncWorksites(entities, syncedAt)
                     }
 

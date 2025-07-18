@@ -35,6 +35,7 @@ class WorksiteChangeUpdateSyncTests: XCTestCase {
         worksiteChangeDao = WorksiteChangeDao(
             appDb,
             uuidGenerator: uuidGenerator,
+            phoneNumberParser: RegexPhoneNumberParser(),
             changeSerializer: changeSerializer,
             appVersionProvider: WorksiteTestUtil.testAppVersionProvider,
             syncLogger: syncLogger

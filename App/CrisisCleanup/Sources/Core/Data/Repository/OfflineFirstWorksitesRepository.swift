@@ -13,6 +13,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository {
     private let languageTranslationsRepository: LanguageTranslationsRepository
     private let filtersRepository: CasesFilterRepository
     private let locationManager: LocationManager
+    private let phoneNumberParser: PhoneNumberParser
     private let appVersionProvider: AppVersionProvider
     private let logger: AppLogger
 
@@ -43,6 +44,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository {
         organizationsRepository: OrganizationsRepository,
         filtersRepository: CasesFilterRepository,
         locationManager: LocationManager,
+        phoneNumberParser: PhoneNumberParser,
         appVersionProvider: AppVersionProvider,
         loggerFactory: AppLoggerFactory
     ) {
@@ -55,6 +57,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository {
         self.workTypeTransferRequestDao = workTypeTransferRequestDao
         self.filtersRepository = filtersRepository
         self.locationManager = locationManager
+        self.phoneNumberParser = phoneNumberParser
         self.appVersionProvider = appVersionProvider
         logger = loggerFactory.getLogger("worksites-repository")
 
@@ -203,7 +206,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository {
     }
 
     func syncNetworkWorksite(_ worksite: NetworkWorksiteFull, _ syncedAt: Date) async throws -> Bool {
-        let records = worksite.asRecords()
+        let records = worksite.asRecords(phoneNumberParser)
         return try await worksiteDao.syncNetworkWorksite(records, syncedAt)
     }
 

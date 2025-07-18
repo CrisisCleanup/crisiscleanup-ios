@@ -6,6 +6,7 @@ class WorksiteChangeDao {
     private let database: AppDatabase
     private let reader: DatabaseReader
     private let uuidGenerator: UuidGenerator
+    private let phoneNumberParser: PhoneNumberParser
     private let changeSerializer: WorksiteChangeSerializer
     private let appVersionProvider: AppVersionProvider
     private let syncLogger: SyncLogger
@@ -13,6 +14,7 @@ class WorksiteChangeDao {
     init(
         _ database: AppDatabase,
         uuidGenerator: UuidGenerator,
+        phoneNumberParser: PhoneNumberParser,
         changeSerializer: WorksiteChangeSerializer,
         appVersionProvider: AppVersionProvider,
         syncLogger: SyncLogger
@@ -20,6 +22,7 @@ class WorksiteChangeDao {
         self.database = database
         reader = database.reader
         self.uuidGenerator = uuidGenerator
+        self.phoneNumberParser = phoneNumberParser
         self.changeSerializer = changeSerializer
         self.appVersionProvider = appVersionProvider
         self.syncLogger = syncLogger
@@ -65,6 +68,7 @@ class WorksiteChangeDao {
         return try await database.saveWorksiteChange(
             syncLogger,
             uuidGenerator,
+            phoneNumberParser,
             appVersionProvider,
             changeSerializer,
             worksiteStart: worksiteStart,
@@ -394,6 +398,7 @@ extension AppDatabase {
     fileprivate func saveWorksiteChange(
         _ syncLogger: SyncLogger,
         _ uuidGenerator: UuidGenerator,
+        _ phoneNumberParser: PhoneNumberParser,
         _ appVersionProvider: AppVersionProvider,
         _ changeSerializer: WorksiteChangeSerializer,
         worksiteStart: Worksite,
@@ -420,6 +425,7 @@ extension AppDatabase {
 
                 let changeRecords = worksiteChange.asRecords(
                     uuidGenerator,
+                    phoneNumberParser,
                     primaryWorkType,
                     flagIdLookup: idMapping.flag,
                     noteIdLookup: idMapping.note,

@@ -2,10 +2,10 @@ import XCTest
 @testable import CrisisCleanup
 
 final class PhoneNumberTests: XCTestCase {
-    private var phoneNumberParser: PhoneNumberRegexParser!
+    private var phoneNumberParser: RegexPhoneNumberParser!
 
     override func setUp() async throws {
-        phoneNumberParser = PhoneNumberRegexParser()
+        phoneNumberParser = RegexPhoneNumberParser()
     }
 
     func testInvalidPhoneNumbers() {

@@ -75,6 +75,7 @@ extension MainComponent {
         WorksiteChangeDao(
             appDatabase,
             uuidGenerator: uuidGenerator,
+            phoneNumberParser: phoneNumberParser,
             changeSerializer: worksiteChangeSerializer,
             appVersionProvider: appVersionProvider,
             syncLogger: syncLoggerFactory.getLogger("worksite-change-dao")
@@ -172,6 +173,7 @@ extension MainComponent {
                 organizationsRepository: organizationsRepository,
                 filtersRepository: casesFilterRepository,
                 locationManager: locationManager,
+                phoneNumberParser: phoneNumberParser,
                 appVersionProvider: appVersionProvider,
                 loggerFactory: loggerFactory
             )
@@ -245,6 +247,7 @@ extension MainComponent {
                 networkDataSource: networkDataSource,
                 worksitesRepository: worksitesRepository,
                 worksiteDao: worksiteDao,
+                phoneNumberParser: phoneNumberParser,
                 speedMonitor: dataDownloadSpeedMonitor,
                 networkMonitor: networkMonitor,
                 syncLogger: syncLoggerFactory.getLogger("sync"),
@@ -400,6 +403,7 @@ extension MainComponent {
                 personContactDao: personContactDao,
                 usersRepository: usersRepository,
                 worksiteDao: worksiteDao,
+                phoneNumberParser: phoneNumberParser,
                 loggerFactory: loggerFactory
             )
         }

@@ -3,6 +3,7 @@ import Foundation
 extension Worksite {
     func asRecords(
         _ uuidGenerator: UuidGenerator,
+        _ phoneNumberParser: PhoneNumberParser,
         _ primaryWorkType: WorkType,
         flagIdLookup: [Int64: Int64],
         noteIdLookup: [Int64: Int64],
@@ -31,6 +32,7 @@ extension Worksite {
             name: name,
             phone1: phone1,
             phone2: phone2,
+            phoneSearch: phoneNumberParser.searchablePhoneNumbers(phone1, phone2),
             plusCode: plusCode,
             postalCode: postalCode,
             reportedBy: reportedBy,

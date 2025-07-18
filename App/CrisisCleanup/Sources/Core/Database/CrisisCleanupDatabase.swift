@@ -975,6 +975,30 @@ extension AppDatabase {
             }
         }
 
+        migrator.registerMigration(
+            "worksite-search-fts-phone-search",
+            foreignKeyChecks: .immediate
+        ) { db in
+            try db.alter(table: "worksite") { t in
+                t.add(column: "phoneSearch", .text)
+                    .defaults(to: "")
+            }
+
+            try db.drop(table: "worksiteSearch_ft")
+            try db.dropFTS4SynchronizationTriggers(forTable: "worksiteSearch_ft")
+
+            try db.create(virtualTable: "worksiteSearch_ft", using: FTS4()) { t in
+                t.synchronize(withTable: "worksite")
+                t.tokenizer = .simple
+                t.column("caseNumber")
+                t.column("city")
+                t.column("county")
+                t.column("email")
+                t.column("name")
+                t.column("phoneSearch")
+            }
+        }
+
         return migrator
     }
 }
