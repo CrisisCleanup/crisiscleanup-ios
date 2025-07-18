@@ -71,20 +71,22 @@ class IncidentDataSyncNotifier {
                     self.clearNotifications()
                     return true
                 } else if $0.title.isNotBlank || $0.text.isNotBlank {
-                    try await self.systemNotifier.scheduleNotification(
-                        title: $0.title,
-                        body: $0.text,
-                        identifier: self.syncNotificationId
-                    )
-                    return true
+                    // TODO: There is an issue with final (two) signals
+                    //       Move this guard into the scheduleNotification call and resolve the issue
+                    //       Restructure this mapLatest and the empty final sink after bug is resolved
+                    if await systemNotifier.isAuthorized() {
+                        try await self.systemNotifier.scheduleNotification(
+                            title: $0.title,
+                            body: $0.text,
+                            identifier: self.syncNotificationId
+                        )
+                        return true
+                    }
                 }
 
                 return false
             }
-            .sink { _ in
-                // TODO: mapLatest above doesn't seem to resolve race conditions
-                //       Reproduce (or add delay) and resolve
-            }
+            .sink { _ in }
             .store(in: &disposables)
     }
 

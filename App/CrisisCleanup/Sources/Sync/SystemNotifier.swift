@@ -68,10 +68,6 @@ class AppSystemNotifier: NSObject, SystemNotifier, UNUserNotificationCenterDeleg
         identifier: String,
         delay: TimeInterval,
     ) async throws {
-        guard await isAuthorized() else {
-            return
-        }
-
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
