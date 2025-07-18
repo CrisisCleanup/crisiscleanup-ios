@@ -109,7 +109,7 @@ struct MainView: View {
                         incidentCacheViewBuilder: incidentCacheViewBuilder,
                         syncInsightsViewBuilder: syncInsightsViewBuilder,
                         selectedTab: $selectedTab,
-                        showTabDivider: !deviceSize.isLargeScreen,
+                        showTabDivider: !deviceSize.isTopTabLayout,
                         dividerHeight: $dividerHeight,
                         dividerOffset: $dividerOffset
                     )

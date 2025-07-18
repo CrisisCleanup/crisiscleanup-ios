@@ -89,7 +89,7 @@ extension MainComponent {
     public var appVersionProvider: AppVersionProvider { providesAppVersionProvider }
 
     public var inputValidator: InputValidator { CommonInputValidator() }
-    public var phoneNumberParser: PhoneNumberParser { PhoneNumberRegexParser() }
+    public var phoneNumberParser: PhoneNumberParser { RegexPhoneNumberParser() }
 
     var providesAppVersionProvider: AppVersionProvider { shared { AppleAppVersionProvider() } }
 

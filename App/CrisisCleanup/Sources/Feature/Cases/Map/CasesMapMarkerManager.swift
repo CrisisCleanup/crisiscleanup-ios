@@ -74,8 +74,7 @@ class CasesMapMarkerManager {
         _ boundsNe: LatLng,
         _ casesFilters: CasesFilter
     ) async throws -> ([WorksiteMapMark], Int) {
-        // TODO: Adjust based on device resources and app performance
-        let maxMarkersOnMap = 1024
+        let maxMarkersOnMap = CasesConstant.MAX_MARKERS_ON_MAP
         let middle = CoordinatesUtil.getMiddleCoordinate(boundsSw, boundsNe)
         let q = try getBoundQueryParams(
             maxMarkersOnMap,

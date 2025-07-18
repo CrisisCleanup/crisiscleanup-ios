@@ -58,6 +58,7 @@ class WorksiteMapVisualTests: XCTestCase {
             name: "",
             phone1: "",
             phone2: "",
+            phoneSearch: nil,
             plusCode: "",
             postalCode: "",
             reportedBy: nil,

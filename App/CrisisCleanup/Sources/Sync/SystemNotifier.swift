@@ -10,7 +10,7 @@ public protocol SystemNotifier {
         body: String,
         identifier: String,
         delay: TimeInterval,
-    ) async
+    ) async throws
 
     func clearNotifications(_ notificationId: String)
 }
@@ -20,8 +20,8 @@ extension SystemNotifier {
         title: String,
         body: String,
         identifier: String,
-    ) async {
-        await scheduleNotification(title: title, body: body, identifier: identifier, delay: 1)
+    ) async throws {
+        try await scheduleNotification(title: title, body: body, identifier: identifier, delay: 0.6)
     }
 }
 
@@ -67,17 +67,15 @@ class AppSystemNotifier: NSObject, SystemNotifier, UNUserNotificationCenterDeleg
         body: String,
         identifier: String,
         delay: TimeInterval,
-    ) async {
-        guard await isAuthorized() else {
-            return
-        }
-
+    ) async throws {
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: delay, repeats: false)
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+
+        try Task.checkCancellation()
 
         do {
             try await notificationCenter.add(request)

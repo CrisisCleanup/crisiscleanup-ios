@@ -18,7 +18,7 @@ class CasesMapDotsOverlay: MKTileOverlay {
         renderingCounter.load(ordering: .relaxed) > 0
     }
 
-    private let zoomThreshold = CasesConstant.MapDotsZoomLevel
+    private let zoomThreshold = CasesConstant.MAP_DOTS_ZOOM_LEVEL
 
     private let cacheLock = NSRecursiveLock()
     private var tileCache = TileDataCache(3000)

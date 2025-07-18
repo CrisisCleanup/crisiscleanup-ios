@@ -681,7 +681,6 @@ public class WorksiteDao {
                 db,
                 sql: sql,
                 arguments: [
-                    "incidentId": incidentId,
                     "pattern": pattern,
                     "limit": limit,
                     "offset": offset

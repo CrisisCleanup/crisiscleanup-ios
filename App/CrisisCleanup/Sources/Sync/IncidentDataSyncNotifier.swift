@@ -26,8 +26,8 @@ class IncidentDataSyncNotifier {
         self.systemNotifier = systemNotifier
         self.logger = logger
 
-        incidentDataPullReporter.incidentDataPullStats
-            .sink { stats in
+        incidentDataPullReporter.incidentDataPullStats.eraseToAnyPublisher()
+            .mapLatest { stats in
                 if stats.isOngoing,
                 self.isSyncing {
                     let title = translator.t("sync.syncing_incident_name")
@@ -58,15 +58,35 @@ class IncidentDataSyncNotifier {
                         }
                         return message
                     }()
-                    await self.systemNotifier.scheduleNotification(
-                        title: title,
-                        body: text,
-                        identifier: self.syncNotificationId
-                    )
+
+                    return NotificationAction(title: title, text: text)
                 } else if stats.isEnded {
-                    self.clearNotifications()
+                    return NotificationAction(clear: true)
                 }
+
+                return NotificationAction()
             }
+            .mapLatest {
+                if $0.clear {
+                    self.clearNotifications()
+                    return true
+                } else if $0.title.isNotBlank || $0.text.isNotBlank {
+                    // TODO: There is an issue with final (two) signals
+                    //       Move this guard into the scheduleNotification call and resolve the issue
+                    //       Restructure this mapLatest and the empty final sink after bug is resolved
+                    if await systemNotifier.isAuthorized() {
+                        try await self.systemNotifier.scheduleNotification(
+                            title: $0.title,
+                            body: $0.text,
+                            identifier: self.syncNotificationId
+                        )
+                        return true
+                    }
+                }
+
+                return false
+            }
+            .sink { _ in }
             .store(in: &disposables)
     }
 
@@ -96,5 +116,21 @@ class IncidentDataSyncNotifier {
             let result = try await syncOperation()
             return result
         }
+    }
+}
+
+private struct NotificationAction {
+    let title: String
+    let text: String
+    let clear: Bool
+
+    init(
+        title: String = "",
+        text: String = "",
+        clear: Bool = false,
+    ) {
+        self.title = title
+        self.text = text
+        self.clear = clear
     }
 }

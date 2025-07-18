@@ -285,6 +285,8 @@ class MenuViewModel: ObservableObject {
                     Task { @MainActor in
                         self.showExplainNotificationPermission = true
                     }
+                } else {
+                    appPreferences.setNotifyDataSyncProgress(true)
                 }
             }
         } else {

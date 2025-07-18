@@ -46,7 +46,7 @@ struct CreateEditCaseMapView : UIViewRepresentable {
 
             let zoom = isCreateWorksite && hasInitialCoordinates ? 6 : 12
 
-            uiView.animateToCenter(coordinates, zoom)
+            uiView.animateToCenter(coordinates, zoomLevel: zoom)
         }
     }
 }

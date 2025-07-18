@@ -307,6 +307,7 @@ struct WorksiteRecord : Identifiable, Equatable {
     let name: String
     let phone1: String?
     let phone2: String?
+    let phoneSearch: String?
     let plusCode: String?
     let postalCode: String
     let reportedBy: Int64?
@@ -396,6 +397,7 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
                 name        =:name,
                 phone1      =COALESCE(:phone1, phone1),
                 phone2      =COALESCE(:phone2, phone2),
+                phoneSearch =COALESCE(:phoneSearch, phoneSearch),
                 plusCode    =COALESCE(:plusCode, plusCode),
                 postalCode  =:postalCode,
                 reportedBy  =COALESCE(:reportedBy, reportedBy),
@@ -427,6 +429,7 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
                 "name": name,
                 "phone1": phone1,
                 "phone2": phone2,
+                "phoneSearch": phoneSearch,
                 "plusCode": plusCode,
                 "postalCode": postalCode,
                 "reportedBy": reportedBy,

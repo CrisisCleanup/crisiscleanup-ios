@@ -2,7 +2,7 @@ import Foundation
 
 // Update [NetworkWorksiteCoreData.asRecord] below with similar changes
 extension NetworkWorksiteFull {
-    func asRecord() -> WorksiteRecord {
+    func asRecord(_ phoneNumberParser: PhoneNumberParser) -> WorksiteRecord {
         WorksiteRecord(
             id: nil,
             networkId: id,
@@ -24,6 +24,7 @@ extension NetworkWorksiteFull {
             name: name,
             phone1: phone1,
             phone2: phone2,
+            phoneSearch: phoneNumberParser.searchablePhoneNumbers(phone1, phone2),
             plusCode: plusCode,
             postalCode: postalCode ?? "",
             reportedBy: reportedBy,
@@ -41,7 +42,7 @@ extension NetworkWorksiteFull {
 
 // Copy similar changes from [NetworkWorksiteFull.asEntity] above
 extension NetworkWorksiteCoreData {
-    func asRecord() -> WorksiteRecord {
+    func asRecord(_ phoneNumberParser: PhoneNumberParser) -> WorksiteRecord {
         WorksiteRecord(
             id: nil,
             networkId: id,
@@ -63,6 +64,7 @@ extension NetworkWorksiteCoreData {
             name: name,
             phone1: phone1,
             phone2: phone2,
+            phoneSearch: phoneNumberParser.searchablePhoneNumbers(phone1, phone2),
             plusCode: plusCode,
             postalCode: postalCode ?? "",
             reportedBy: reportedBy,
@@ -77,7 +79,7 @@ extension NetworkWorksiteCoreData {
 }
 
 extension NetworkWorksitePage {
-    func asRecord() -> WorksiteRecord {
+    func asRecord(_ phoneNumberParser: PhoneNumberParser) -> WorksiteRecord {
         let keyWorkType = newestKeyWorkType
         return WorksiteRecord(
             id: nil,
@@ -100,6 +102,7 @@ extension NetworkWorksitePage {
             name: name,
             phone1: phone1,
             phone2: phone2,
+            phoneSearch: phoneNumberParser.searchablePhoneNumbers(phone1, phone2),
             plusCode: plusCode,
             postalCode: postalCode ?? "",
             reportedBy: reportedBy,
@@ -192,8 +195,8 @@ extension NetworkNote {
 }
 
 extension NetworkWorksiteFull {
-    func asRecords() -> WorksiteRecords {
-        let core = asRecord()
+    func asRecords(_ phoneNumberParser: PhoneNumberParser) -> WorksiteRecords {
+        let core = asRecord(phoneNumberParser)
         let workTypes = newestWorkTypes.map { $0.asRecord() }
         let formData = formData.map { $0.asWorksiteRecord() }
         let flags = flags.map { $0.asRecord() }

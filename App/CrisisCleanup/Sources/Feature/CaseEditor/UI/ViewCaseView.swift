@@ -396,6 +396,8 @@ private struct ViewCaseNotes: View {
 }
 
 private struct PropertyInformationView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+
     @EnvironmentObject var viewModel: ViewCaseViewModel
     @EnvironmentObject var router: NavigationRouter
 
@@ -483,6 +485,9 @@ private struct PropertyInformationView: View {
                     let distanceAwayText = viewModel.distanceAway
                     if distanceAwayText.isNotBlank {
                         Text(distanceAwayText)
+                    } else {
+                        let actionDescription = t.t("actions.jump_to_case")
+                        Text(actionDescription)
                     }
                 }
                 .onTapGesture {

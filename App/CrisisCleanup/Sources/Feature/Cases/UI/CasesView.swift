@@ -38,11 +38,12 @@ struct CasesLayoutView: View {
         let longDelta = bounds.northEast.longitude - bounds.southWest.longitude
         let span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: longDelta)
 
-        let center = bounds.center
-        let center2d = CLLocationCoordinate2D(latitude: center.latitude, longitude: center.longitude)
-        let regionCenter = MKCoordinateRegion(center: center2d, span: span)
-        let region = map.regionThatFits(regionCenter)
-        map.setRegion(region, animated: true)
+        if span.isValid {
+            let center2d = bounds.center.coordinates
+            let regionCenter = MKCoordinateRegion(center: center2d, span: span)
+            let region = map.regionThatFits(regionCenter)
+            map.setRegion(region, animated: true)
+        }
     }
 
     var body: some View {
@@ -351,20 +352,9 @@ private struct MapResponsiveControls: View {
 
     var body: some View {
         Button {
-            // TODO: Calculate consistent distance rather than empirical magic number
-            //       Print mapView.region.span to see inconsistency even when fromDistance is constant
-            //       Panning the map shows a changing centerCoordinateDistance
-            let mapMarkerZoomLevelHeight = 300_000
-            viewModel.onZoomIncident()
-            map.setCamera(
-                MKMapCamera(
-                    lookingAtCenter: map.centerCoordinate,
-                    fromDistance: CLLocationDistance(mapMarkerZoomLevelHeight),
-                    pitch: 0.0,
-                    heading: 0.0
-                ),
-                animated: true
-            )
+            let region = map.region(for: CasesConstant.MAP_MARKERS_ZOOM_LEVEL, spanDelta: -2e-3)
+            map.setRegion(region, animated: true)
+
         } label: {
             Image("ic_zoom_incident", bundle: .module)
                 .mapOverlayButton()
@@ -430,8 +420,11 @@ private struct MapControls: View {
             return
         }
 
-        region.span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: longDelta)
-        map.setRegion(region, animated: true)
+        let span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: longDelta)
+        if span.isValid {
+            region.span = span
+            map.setRegion(region, animated: true)
+        }
     }
 
     var body: some View {

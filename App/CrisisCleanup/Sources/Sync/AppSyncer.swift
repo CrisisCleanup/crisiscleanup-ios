@@ -10,6 +10,7 @@ class AppSyncer: SyncPuller, SyncPusher {
     private let statusRepository: WorkTypeStatusRepository
     private let worksiteChangeRepository: WorksiteChangeRepository
     private let localImageRepository: LocalImageRepository
+    private let networkMonitor: NetworkMonitor
     private let appLogger: AppLogger
     private let syncLogger: SyncLogger
 
@@ -36,6 +37,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         appPreferencesDataSource: AppPreferencesDataSource,
         localImageRepository: LocalImageRepository,
         incidentDataPullReporter: IncidentDataPullReporter,
+        networkMonitor: NetworkMonitor,
         systemNotifier: SystemNotifier,
         translator: KeyTranslator,
         appLoggerFactory: AppLoggerFactory,
@@ -47,6 +49,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         self.statusRepository = statusRepository
         self.worksiteChangeRepository = worksiteChangeRepository
         self.localImageRepository = localImageRepository
+        self.networkMonitor = networkMonitor
         let logger = appLoggerFactory.getLogger("sync")
         appLogger = logger
         syncLogger = syncLoggerFactory.getLogger("app-syncer")
@@ -62,7 +65,27 @@ class AppSyncer: SyncPuller, SyncPusher {
         appPreferences = appPreferencesDataSource.preferences.eraseToAnyPublisher()
     }
 
-    private func validateAccountTokens() async throws -> SyncResult? {
+    private func onlinePrecondition() async throws -> SyncResult? {
+        let isOnline = try await networkMonitor.isOnline.eraseToAnyPublisher().asyncFirst()
+        if !isOnline {
+            return .notAttempted(reason: "Not online")
+        }
+
+        return nil
+    }
+
+    private func isOnline() async -> Bool {
+        do {
+            if let _ = try await onlinePrecondition() {
+                return false
+            }
+            return true
+        } catch {}
+
+        return false
+    }
+
+    private func accountTokenPrecondition() async throws -> SyncResult? {
         await accountDataRepository.updateAccountTokens()
         let hasValidTokens = try await accountData.asyncFirst().areTokensValid
         if !hasValidTokens {
@@ -70,6 +93,22 @@ class AppSyncer: SyncPuller, SyncPusher {
         }
 
         return nil
+    }
+
+    private func isPushable() async -> Bool {
+        do {
+            if let _ = try await onlinePrecondition() {
+                return false
+            }
+
+            if let _ = try await accountTokenPrecondition() {
+                return false
+            }
+
+            return true
+        } catch {}
+
+        return false
     }
 
     func appPullIncidentData(
@@ -101,7 +140,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         restartCacheCheckpoint: Bool
     ) async -> SyncResult {
         do {
-            if let invalidTokens = try await validateAccountTokens() {
+            if let invalidTokens = try await accountTokenPrecondition() {
                 return invalidTokens
             }
 
@@ -166,6 +205,10 @@ class AppSyncer: SyncPuller, SyncPusher {
     }
 
     private func pullLanguage() async {
+        if await !isOnline() {
+            return
+        }
+
         if pullLanguageGuard.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged {
             defer { pullLanguageGuard.store(false, ordering: .relaxed) }
 
@@ -174,6 +217,10 @@ class AppSyncer: SyncPuller, SyncPusher {
     }
 
     private func pullStatuses() async {
+        if await !isOnline() {
+            return
+        }
+
         await statusRepository.loadStatuses()
     }
 
@@ -182,7 +229,7 @@ class AppSyncer: SyncPuller, SyncPusher {
     func appPushWorksite(_ worksiteId: Int64, _ scheduleMediaSync: Bool) {
         Task {
             do {
-                if let _ = try await self.validateAccountTokens() {
+                if await !self.isPushable() {
                     return
                 }
 
@@ -203,6 +250,10 @@ class AppSyncer: SyncPuller, SyncPusher {
     }
 
     func syncMedia() async -> Bool {
+        if await !self.isPushable() {
+            return false
+        }
+
         guard !self.syncMediaGuard.exchange(true, ordering: .sequentiallyConsistent) else {
             return false
         }
@@ -250,6 +301,10 @@ class AppSyncer: SyncPuller, SyncPusher {
     }
 
     func syncWorksites() async {
+        if await !self.isPushable() {
+            return
+        }
+
         guard !self.syncWorksitesGuard.exchange(true, ordering: .sequentiallyConsistent) else {
             return
         }

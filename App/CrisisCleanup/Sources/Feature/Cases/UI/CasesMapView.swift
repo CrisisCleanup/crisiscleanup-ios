@@ -4,6 +4,54 @@ import Foundation
 import SwiftUI
 import MapKit
 
+extension MKMapView {
+    var zoomLevel: Double {
+        let center = region.center
+        let span = region.span
+        let centerFlatSpacePoint = MKMapPoint(center)
+        let topLeftFlatSpacePoint = MKMapPoint(CLLocationCoordinate2D(
+            latitude: center.latitude + span.latitudeDelta * 0.5,
+            longitude: center.longitude - span.longitudeDelta * 0.5,
+        ))
+        let zoomWidth = (centerFlatSpacePoint.x - topLeftFlatSpacePoint.x) * 2
+        let viewBoundsWidth = bounds.size.width
+        let zoomScale = zoomWidth / Double(viewBoundsWidth)
+        let zoomExponent = log2(zoomScale)
+        let z = 21 - zoomExponent
+
+        return z
+    }
+
+    func region(
+        for zoom: Double,
+        spanDelta: Double = 0,
+    ) -> MKCoordinateRegion {
+        let zoomExponent = 21 - zoom
+        let zoomScale = pow(2.0, zoomExponent)
+
+        let viewBoundsWidth = bounds.size.width
+        let zoomWidth = zoomScale * Double(viewBoundsWidth)
+
+        let viewBoundsHeight = bounds.size.height
+        let zoomHeight = zoomScale * Double(viewBoundsHeight)
+
+        let center = region.center
+        let centerFlatSpacePoint = MKMapPoint(center)
+        let leftFlatSpacePoint = centerFlatSpacePoint.x - zoomWidth / 2
+        let topFlatSpacePoint = centerFlatSpacePoint.y - zoomHeight / 2
+        let topLeftFlatSpacePoint = MKMapPoint(x: leftFlatSpacePoint, y: topFlatSpacePoint)
+        let topLeftCoordinate = topLeftFlatSpacePoint.coordinate
+
+        let span = MKCoordinateSpan(
+            latitudeDelta: (topLeftCoordinate.latitude - center.latitude) * 2 + spanDelta,
+            longitudeDelta: (center.longitude - topLeftCoordinate.longitude) * 2 + spanDelta,
+        )
+        let region = MKCoordinateRegion(center: center, span: span)
+
+        return region
+    }
+}
+
 class CasesMapViewCoordinator: NSObject, MKMapViewDelegate {
     let viewModel: CasesViewModel
     let onSelectWorksite: (Int64) -> Void
@@ -29,8 +77,7 @@ class CasesMapViewCoordinator: NSObject, MKMapViewDelegate {
     }
 
     func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-        // From https://medium.com/@dmytrobabych/getting-actual-rotation-and-zoom-level-for-mapkit-mkmapview-e7f03f430aa9
-        let zoom = log2(360.0 * mapView.frame.size.width / (mapView.region.span.longitudeDelta * 128))
+        let zoom = mapView.zoomLevel
 
         // There is a bug with map view where sometimes the map is animating but regionDidChangeAnimated doesn't report it correctly.
         // Assume animation should always happen so inform view model when not reported
@@ -104,7 +151,7 @@ internal struct CasesMapView : UIViewRepresentable {
 
     func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<CasesMapView>) {
         if let worksiteCoordinates = focusWorksiteCenter {
-            uiView.animateToCenter(worksiteCoordinates)
+            uiView.animateToCenter(worksiteCoordinates, zoomLevel: 14)
             Task { @MainActor in
                 viewModel.editedWorksiteLocation = nil
             }

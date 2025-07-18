@@ -69,7 +69,7 @@ struct MoveMapView : UIViewRepresentable {
             } else {
                 customAnnotation.coordinate = targetCoordinates
 
-                uiView.animateToCenter(targetCoordinates, 7)
+                uiView.animateToCenter(targetCoordinates, zoomLevel: 7)
             }
         }
     }

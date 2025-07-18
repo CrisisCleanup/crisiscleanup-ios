@@ -20,6 +20,7 @@ class WorksiteChangeDaoTests: XCTestCase {
 
     private var uuidGenerator: UuidGenerator = TestUuidGenerator()
     private var changeSerializer: WorksiteChangeSerializerMock!
+    private static let phoneNumberParser = RegexPhoneNumberParser()
 
     override func setUp() async throws {
         createdAtA = now.addingTimeInterval(-4.days)
@@ -36,6 +37,7 @@ class WorksiteChangeDaoTests: XCTestCase {
         worksiteChangeDao = WorksiteChangeDao(
             appDb,
             uuidGenerator: uuidGenerator,
+            phoneNumberParser: WorksiteChangeDaoTests.phoneNumberParser,
             changeSerializer: changeSerializer,
             appVersionProvider: WorksiteTestUtil.testAppVersionProvider,
             syncLogger: WorksiteTestUtil.silentSyncLogger
@@ -237,6 +239,7 @@ class WorksiteChangeDaoTests: XCTestCase {
     ) async throws -> EditWorksiteRecords {
         let records = worksite.asRecords(
             uuidGenerator,
+            phoneNumberParser,
             worksite.workTypes[0],
             flagIdLookup: [:],
             noteIdLookup: [:],
@@ -383,6 +386,7 @@ class WorksiteChangeDaoTests: XCTestCase {
         let primaryWorkType = newWorksite.workTypes[0]
         let records = newWorksite.asRecords(
             uuidGenerator,
+            WorksiteChangeDaoTests.phoneNumberParser,
             primaryWorkType,
             flagIdLookup: [:],
             noteIdLookup: [:],
@@ -573,6 +577,7 @@ class WorksiteChangeDaoTests: XCTestCase {
     ) async throws -> EditWorksiteRecords {
         let records = worksite.asRecords(
             uuidGenerator,
+            WorksiteChangeDaoTests.phoneNumberParser,
             worksite.workTypes[0],
             flagIdLookup: [:],
             noteIdLookup: [:],
@@ -713,6 +718,7 @@ class WorksiteChangeDaoTests: XCTestCase {
 
         let records = worksiteModified.asRecords(
             uuidGenerator,
+            WorksiteChangeDaoTests.phoneNumberParser,
             primaryWorkType,
             flagIdLookup: [:],
             noteIdLookup: [:],
@@ -893,6 +899,7 @@ class WorksiteChangeDaoTests: XCTestCase {
     ) async throws -> EditWorksiteRecords {
         let records = worksite.asRecords(
             uuidGenerator,
+            WorksiteChangeDaoTests.phoneNumberParser,
             worksite.workTypes[0],
             flagIdLookup: [:],
             noteIdLookup: [:],
@@ -959,6 +966,7 @@ class WorksiteChangeDaoTests: XCTestCase {
 
         let records = worksiteModified.asRecords(
             uuidGenerator,
+            WorksiteChangeDaoTests.phoneNumberParser,
             primaryWorkType,
             flagIdLookup: [:],
             noteIdLookup: [:],
