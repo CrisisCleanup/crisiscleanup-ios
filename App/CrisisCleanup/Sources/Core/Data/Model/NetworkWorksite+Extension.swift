@@ -32,7 +32,7 @@ extension NetworkWorksiteFull {
             svi: svi == nil ? nil : Double(svi!),
             what3Words: what3words,
             updatedAt: updatedAt,
-            networkPhotoCount: files.map { $0.mimeContentType ?? "" }
+            networkPhotoCount: files?.map { $0.mimeContentType ?? "" }
                 .filter { $0.starts(with: "image/") }
                 .count,
             isLocalFavorite: false
@@ -201,7 +201,7 @@ extension NetworkWorksiteFull {
         let formData = formData.map { $0.asWorksiteRecord() }
         let flags = flags.map { $0.asRecord() }
         let notes = notes.map { $0.asRecord() }
-        let files = files.map { $0.asRecord() }
+        let files = files?.map { $0.asRecord() } ?? []
         return WorksiteRecords(
             core,
             flags,

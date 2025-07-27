@@ -18,7 +18,7 @@ public struct NetworkWorksiteFull: Codable, Equatable {
     let email: String?
     let events: [NetworkEvent]
     let favorite: NetworkType?
-    let files: [NetworkFile]
+    let files: [NetworkFile]?
     let flags: [NetworkFlag]
     let formData: [KeyDynamicValuePair]
     let incident: Int64
