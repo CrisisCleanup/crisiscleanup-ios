@@ -1,6 +1,4 @@
 public protocol CrisisCleanupAuthApi {
-    func login(_ email: String, _ password: String) async throws -> NetworkAuthResult?
-
     func oauthLogin(_ email: String, _ password: String) async throws -> NetworkOAuthResult?
 
     func magicLinkLogin(_ token: String) async throws -> NetworkOAuthTokens?

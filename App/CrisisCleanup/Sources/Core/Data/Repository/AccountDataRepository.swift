@@ -21,6 +21,7 @@ public protocol AccountDataRepository: Sendable {
         profilePictureUri: String,
         org: OrgData,
         hasAcceptedTerms: Bool,
+        approvedIncidentIds: Set<Int64>,
         activeRoles: Set<Int>
     )
 
@@ -115,6 +116,7 @@ final class CrisisCleanupAccountDataRepository: AccountDataRepository {
         profilePictureUri: String,
         org: OrgData,
         hasAcceptedTerms: Bool,
+        approvedIncidentIds: Set<Int64>,
         activeRoles: Set<Int>
     ) {
         do {
@@ -130,6 +132,7 @@ final class CrisisCleanupAccountDataRepository: AccountDataRepository {
                 orgId: org.id,
                 orgName: org.name,
                 hasAcceptedTerms: hasAcceptedTerms,
+                incidentIds: approvedIncidentIds,
                 activeRoles: activeRoles
             ))
         } catch {

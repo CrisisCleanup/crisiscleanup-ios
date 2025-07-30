@@ -24,24 +24,6 @@ class AuthApiClient : CrisisCleanupAuthApi {
         try await Task.sleep(nanoseconds: sleepNanos)
     }
 
-    func login(_ email: String, _ password: String) async throws -> NetworkAuthResult? {
-        let payload = NetworkAuthPayload(email: email, password: password)
-        let authRequest = requestProvider.login
-            .setBody(payload)
-
-        for _ in 0..<3 {
-            let loginResult = await networkClient.callbackContinue(
-                requestConvertible: authRequest,
-                type: NetworkAuthResult.self
-            ).value
-            if loginResult?.claims != nil {
-                return loginResult
-            }
-            try await trySleepRandom()
-        }
-        return nil
-    }
-
     func oauthLogin(_ email: String, _ password: String) async throws -> NetworkOAuthResult? {
         let payload = NetworkOAuthPayload(username: email, password: password)
         let authRequest = requestProvider.oauthLogin
