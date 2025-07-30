@@ -17,7 +17,7 @@ struct CaseIncidentView: View {
                     Button {
                         scheduleSync()
                     } label: {
-                        Image(systemName: "arrow.clockwise.icloud")
+                        Image(systemName: "icloud.slash.fill")
                     }
                     .tint(appTheme.colors.primaryOrangeColor)
                 }
