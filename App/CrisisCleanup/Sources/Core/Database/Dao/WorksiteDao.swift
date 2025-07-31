@@ -120,6 +120,7 @@ public class WorksiteDao {
         _ files: [NetworkFileRecord]
     ) throws {
         if files.isEmpty {
+            try NetworkFileRecord.deleteUnspecified(db, worksiteId, [])
             return
         }
 
@@ -127,13 +128,13 @@ public class WorksiteDao {
             try record.upsert(db)
         }
         let ids = Set(files.map { $0.id })
-        try NetworkFileRecord.deleteDeleted(db, worksiteId, ids)
-        try WorksiteToNetworkFileRecord.deleteUnspecified(db, worksiteId, ids)
+        try NetworkFileRecord.deleteUnspecified(db, worksiteId, ids)
         for networkFileId in ids {
             try WorksiteToNetworkFileRecord(
                 id: worksiteId,
-                networkFileId: networkFileId
-            ).insert(db, onConflict: .ignore)
+                networkFileId: networkFileId,
+            )
+            .insert(db, onConflict: .ignore)
         }
     }
 
