@@ -131,7 +131,14 @@ class CasesMapMarkerManager {
             )
         }
         let distanceToMiddleSorted = marksFromCenter.sorted(by: { a, b in
-            a.distanceMeasure - b.distanceMeasure <= 0
+            let deltaDistance = a.distanceMeasure - b.distanceMeasure
+            if deltaDistance < 0 {
+                return true
+            }
+            if deltaDistance > 0 {
+                return false
+            }
+            return a.mark.id < b.mark.id
         })
 
         let endIndex = min(distanceToMiddleSorted.count, maxMarkersOnMap)
