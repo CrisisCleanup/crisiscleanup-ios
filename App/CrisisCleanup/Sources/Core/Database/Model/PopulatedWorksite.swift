@@ -88,7 +88,9 @@ struct PopulatedLocalWorksite: Equatable, Decodable, FetchableRecord {
                     })
                     .map { $0.asExternalModel() },
                 phone1: worksite.phone1 ?? "",
+                phone1Notes: worksite.phone1Notes ?? "",
                 phone2: worksite.phone2 ?? "",
+                phone2Notes: worksite.phone2Notes ?? "",
                 postalCode: worksite.postalCode,
                 reportedBy: worksite.reportedBy,
                 state: worksite.state,

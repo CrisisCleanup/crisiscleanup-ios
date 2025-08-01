@@ -253,6 +253,7 @@ private struct CreateEditCaseContentView: View {
 
                                 isInvalidSave = false
                             }
+                            .padding()
                         }
                     }
                     // TODO: Adjust to content height (remove Spacer)
@@ -292,7 +293,7 @@ private struct CreateEditCaseContentView: View {
                         OpenKeyboardActionsView()
                     } else {
                         CreateEditCaseSaveActions(isVertical: false)
-                            .padding(.vertical, appTheme.edgeSpacing)
+                            .padding(.top, appTheme.edgeSpacing)
                             .if (viewLayout.isWide) {
                                 $0.padding(.horizontal, appTheme.edgeSpacing)
                             }
@@ -536,6 +537,7 @@ private struct PropertyInformation: View {
     @ObservedObject var locationData: LocationInputData
 
     @FocusState private var focusState: TextInputFocused?
+    @State private var previousFocusState: TextInputFocused?
 
     @State private var map = MKMapView()
 
@@ -582,6 +584,15 @@ private struct PropertyInformation: View {
                 TextField(t.t("formLabels.phone1"), text: $propertyData.phoneNumber)
                     .focused($focusState, equals: .caseInfoPhone)
                     .onSubmit {
+                        focusState = .caseInfoPhoneNotes
+                    }
+                    .textFieldBorder()
+                    .disabled(disabled)
+                    .padding(.bottom)
+
+                TextField(t.t("formLabels.phone1_notes"), text: $propertyData.phoneNotes)
+                    .focused($focusState, equals: .caseInfoPhoneNotes)
+                    .onSubmit {
                         focusState = .caseInfoPhone2
                     }
                     .textFieldBorder()
@@ -590,6 +601,15 @@ private struct PropertyInformation: View {
 
                 TextField(t.t("formLabels.phone2"), text: $propertyData.phoneNumberSecondary)
                     .focused($focusState, equals: .caseInfoPhone2)
+                    .onSubmit {
+                        focusState = .caseInfoPhone2Notes
+                    }
+                    .textFieldBorder()
+                    .disabled(disabled)
+                    .padding(.bottom)
+
+                TextField(t.t("formLabels.phone2_notes"), text: $propertyData.phoneNotesSecondary)
+                    .focused($focusState, equals: .caseInfoPhone2Notes)
                     .onSubmit {
                         focusState = .caseInfoEmail
                     }
@@ -626,6 +646,17 @@ private struct PropertyInformation: View {
                 let focusElement = info.invalidElement.focusElement
                 let clearFocus = info.invalidElement == .work || focusElement == .anyTextInput
                 focusState = clearFocus ? nil : focusElement
+            }
+            .onChange(of: focusState) { value in
+                switch previousFocusState {
+                case .caseInfoPhone:
+                    propertyData.formatPhoneNumber(viewModel.inputValidator)
+                case .caseInfoPhone2:
+                    propertyData.formatPhoneNumberSecondary(viewModel.inputValidator)
+                default:
+                    break
+                }
+                previousFocusState = value
             }
 
             VStack(alignment: .leading) {

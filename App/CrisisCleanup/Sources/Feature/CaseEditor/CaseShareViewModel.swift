@@ -239,7 +239,7 @@ class CaseShareViewModel: ObservableObject {
                     return
                 }
             } else {
-                if (!inputValidator.validatePhoneNumber(contact)) {
+                if !inputValidator.validatePhoneNumber(contact).isValid {
                     contactErrorMessage = translator.t("info.enter_valid_phone")
                     return
                 }

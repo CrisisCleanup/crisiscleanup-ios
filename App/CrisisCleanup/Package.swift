@@ -28,6 +28,7 @@ let package = Package(
         .package(url: "https://github.com/smyshlaevalex/FlowStackLayout.git", .upToNextMinor(from: "1.0.1")),
         .package(url: "https://github.com/lorenzofiamingo/swiftui-cached-async-image", .upToNextMinor(from: "2.1.1")),
         .package(url: "https://github.com/CombineCommunity/CombineExt.git", .upToNextMinor(from: "1.8.1")),
+        .package(url: "https://github.com/marmelroy/PhoneNumberKit.git", .upToNextMinor(from: "4.1.3")),
     ],
     targets: [
         .target(
@@ -43,6 +44,7 @@ let package = Package(
                 .product(name: "FlowStackLayout", package: "FlowStackLayout"),
                 .product(name: "CachedAsyncImage", package: "swiftui-cached-async-image"),
                 .product(name: "CombineExt", package: "CombineExt"),
+                .product(name: "PhoneNumberKit", package: "PhoneNumberKit"),
             ],
             path: "Sources",
             resources: [

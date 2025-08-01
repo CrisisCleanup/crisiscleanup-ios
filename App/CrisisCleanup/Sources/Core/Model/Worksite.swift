@@ -47,7 +47,9 @@ public struct Worksite: Equatable {
     let networkId: Int64
     let notes: [WorksiteNote]
     let phone1: String
+    let phone1Notes: String
     let phone2: String
+    let phone2Notes: String
     let plusCode: String?
     let postalCode: String
     let reportedBy: Int64?
@@ -125,7 +127,9 @@ public struct Worksite: Equatable {
         networkId: Int64,
         notes: [WorksiteNote] = [],
         phone1: String,
+        phone1Notes: String,
         phone2: String,
+        phone2Notes: String,
         plusCode: String? = nil,
         postalCode: String,
         reportedBy: Int64?,
@@ -158,7 +162,9 @@ public struct Worksite: Equatable {
         self.networkId = networkId
         self.notes = notes
         self.phone1 = phone1
+        self.phone1Notes = phone1Notes
         self.phone2 = phone2
+        self.phone2Notes = phone2Notes
         self.plusCode = plusCode
         self.postalCode = postalCode
         self.reportedBy = reportedBy
@@ -194,7 +200,9 @@ let EmptyWorksite = Worksite(
     name: "",
     networkId: -1,
     phone1: "",
+    phone1Notes: "",
     phone2: "",
+    phone2Notes: "",
     postalCode: "",
     reportedBy: nil,
     state: "",

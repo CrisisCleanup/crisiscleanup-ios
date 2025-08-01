@@ -15,7 +15,9 @@ public struct NetworkWorksitePush: Codable, Equatable {
     let location: NetworkWorksiteFull.Location
     let name: String
     let phone1: String
+    let phone1Notes: String?
     let phone2: String
+    let phone2Notes: String?
     let plusCode: String?
     let postalCode: String?
     let reportedBy: Int64?
@@ -43,7 +45,9 @@ public struct NetworkWorksitePush: Codable, Equatable {
              location,
              name,
              phone1,
+             phone1Notes = "phone1_notes",
              phone2,
+             phone2Notes = "phone2_notes",
              plusCode = "pluscode",
              postalCode = "postal_code",
              reportedBy = "reported_by",

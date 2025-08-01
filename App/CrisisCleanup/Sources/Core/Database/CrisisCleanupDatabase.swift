@@ -999,6 +999,18 @@ extension AppDatabase {
             }
         }
 
+        migrator.registerMigration(
+            "worksite-phone-notes",
+            foreignKeyChecks: .immediate
+        ) { db in
+            try db.alter(table: "worksite") { t in
+                t.add(column: "phone1Notes", .text)
+                    .defaults(to: "")
+                t.add(column: "phone2Notes", .text)
+                    .defaults(to: "")
+            }
+        }
+
         return migrator
     }
 }

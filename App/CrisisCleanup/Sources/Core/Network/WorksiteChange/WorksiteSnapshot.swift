@@ -68,7 +68,9 @@ struct CoreSnapshot: Codable, Equatable {
     let name: String
     let networkId: Int64
     let phone1: String
+    let phone1Notes: String?
     let phone2: String
+    let phone2Notes: String?
     let plusCode: String?
     let postalCode: String
     let reportedBy: Int64?
@@ -77,6 +79,66 @@ struct CoreSnapshot: Codable, Equatable {
     let updatedAt: Date?
     let what3Words: String?
     let isAssignedToOrgMember: Bool
+
+    init(
+        id: Int64,
+        address: String,
+        autoContactFrequencyT: String,
+        caseNumber: String,
+        city: String,
+        county: String,
+        createdAt: Date?,
+        email: String?,
+        favoriteId: Int64?,
+        formData: [String : DynamicValue],
+        incidentId: Int64,
+        keyWorkTypeId: Int64?,
+        latitude: Double,
+        longitude: Double,
+        name: String,
+        networkId: Int64,
+        phone1: String,
+        phone1Notes: String? = nil,
+        phone2: String,
+        phone2Notes: String? = nil,
+        plusCode: String?,
+        postalCode: String,
+        reportedBy: Int64?,
+        state: String,
+        svi: Float?,
+        updatedAt: Date?,
+        what3Words: String?,
+        isAssignedToOrgMember: Bool,
+    ) {
+        self.id = id
+        self.address = address
+        self.autoContactFrequencyT = autoContactFrequencyT
+        self.caseNumber = caseNumber
+        self.city = city
+        self.county = county
+        self.createdAt = createdAt
+        self.email = email
+        self.favoriteId = favoriteId
+        self.formData = formData
+        self.incidentId = incidentId
+        self.keyWorkTypeId = keyWorkTypeId
+        self.latitude = latitude
+        self.longitude = longitude
+        self.name = name
+        self.networkId = networkId
+        self.phone1 = phone1
+        self.phone1Notes = phone1Notes
+        self.phone2 = phone2
+        self.phone2Notes = phone2Notes
+        self.plusCode = plusCode
+        self.postalCode = postalCode
+        self.reportedBy = reportedBy
+        self.state = state
+        self.svi = svi
+        self.updatedAt = updatedAt
+        self.what3Words = what3Words
+        self.isAssignedToOrgMember = isAssignedToOrgMember
+    }
 
     var networkFormData: [KeyDynamicValuePair] {
         formData.map {

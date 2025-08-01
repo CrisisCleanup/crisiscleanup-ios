@@ -227,7 +227,9 @@ class WorksiteDaoTests: XCTestCase {
         XCTAssertNotNil(full.autoContactFrequencyT)
         XCTAssertNotNil(full.email)
         XCTAssertNotNil(full.phone1)
+        XCTAssertNotNil(full.phone1Notes)
         XCTAssertNotNil(full.phone2)
+        XCTAssertNotNil(full.phone2Notes)
         XCTAssertNotNil(full.plusCode)
         XCTAssertNotNil(full.reportedBy)
         XCTAssertNotNil(full.what3Words)
@@ -361,7 +363,9 @@ func testWorksiteRecord(
         longitude: 0.0,
         name: "",
         phone1: "",
+        phone1Notes: nil,
         phone2: nil,
+        phone2Notes: nil,
         phoneSearch: nil,
         plusCode: nil,
         postalCode: "",
@@ -402,7 +406,9 @@ func testWorksiteFullRecord(
         longitude: -534.15,
         name: "full worksite",
         phone1: "345-414-7825",
+        phone1Notes: "phone one notes",
         phone2: "835-621-8938",
+        phone2Notes: "phone two notes",
         phoneSearch: "3454147825 8356218938 4147825 6218938",
         plusCode: "code 123",
         postalCode: "83425",
@@ -444,7 +450,9 @@ func testWorksiteShortRecord(
         longitude: -157.15,
         name: "short worksite",
         phone1: nil,
+        phone1Notes: nil,
         phone2: nil,
+        phone2Notes: nil,
         phoneSearch: nil,
         plusCode: nil,
         postalCode: "83425-shrt",
