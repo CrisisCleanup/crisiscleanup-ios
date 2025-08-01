@@ -43,10 +43,10 @@ public class AccountDataRefresher {
 
         logger.logCapture("Syncing \(syncTag)")
         do {
-            let profile = try await networkDataSource.getProfileData()
-            if profile.organization.isActive == false {
-                let accountData = try await dataSource.accountData.eraseToAnyPublisher().asyncFirst()
-                let accountId = accountData.id
+            let accountData = try await dataSource.accountData.eraseToAnyPublisher().asyncFirst()
+            let accountId = accountData.id
+            let profile = try await networkDataSource.getProfileData(accountId)
+            if profile.organization?.isActive == false {
                 accountEventBus.onAccountInactiveOrganizations(accountId)
             } else if profile.hasAcceptedTerms != nil {
                 updateLock.withLock {
@@ -54,7 +54,7 @@ public class AccountDataRefresher {
                         profile.files?.profilePictureUrl,
                         profile.hasAcceptedTerms!,
                         profile.approvedIncidents!,
-                        profile.activeRoles
+                        profile.activeRoles!,
                     )
                 }
 

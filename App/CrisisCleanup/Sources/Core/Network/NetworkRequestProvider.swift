@@ -48,7 +48,7 @@ extension NetworkRequestProvider {
 
     var accountProfile: NetworkRequest {
         NetworkRequest(
-            apiUrl("users/me"),
+            apiUrl("users"),
             addTokenHeader: true
         )
     }

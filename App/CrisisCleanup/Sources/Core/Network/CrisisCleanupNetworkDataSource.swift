@@ -1,7 +1,7 @@
 import Foundation
 
 public protocol CrisisCleanupNetworkDataSource {
-    func getProfileData() async throws -> NetworkAccountProfileResult
+    func getProfileData(_ accountId: Int64) async throws -> NetworkAccountProfileResult
 
     func getOrganizations(_ organizations: [Int64]) async throws -> [NetworkIncidentOrganization]
 
