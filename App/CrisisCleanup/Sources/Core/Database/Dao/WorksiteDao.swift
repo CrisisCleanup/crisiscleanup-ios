@@ -120,19 +120,22 @@ public class WorksiteDao {
         _ files: [NetworkFileRecord]
     ) throws {
         if files.isEmpty {
-            try NetworkFileRecord.deleteUnspecified(db, worksiteId, [])
+            try WorksiteToNetworkFileRecord.deleteWorksiteNetworkFiles(db, worksiteId)
             return
         }
 
         for record in files {
             try record.upsert(db)
         }
+        // TODO: Update corresponding network_file_local_images.is_deleted as necessary
+
         let ids = Set(files.map { $0.id })
         try NetworkFileRecord.deleteUnspecified(db, worksiteId, ids)
-        for networkFileId in ids {
+        try WorksiteToNetworkFileRecord.deleteUnspecified(db, worksiteId, ids)
+        for id in ids {
             try WorksiteToNetworkFileRecord(
                 id: worksiteId,
-                networkFileId: networkFileId,
+                networkFileId: id,
             )
             .insert(db, onConflict: .ignore)
         }
