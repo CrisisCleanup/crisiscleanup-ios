@@ -16,13 +16,17 @@ struct NavTabView: View {
 extension View {
     func navTabItem(
         _ destination: TopLevelDestination,
-        _ translator: KeyAssetTranslator
+        _ translator: KeyAssetTranslator,
+        badgeText: String? = nil,
     ) -> some View {
         tabItem {
             NavTabView(
                 text: translator.t(destination.titleTranslateKey),
-                imageName: destination.imageName
+                imageName: destination.imageName,
             )
+        }
+        .if (badgeText != nil) {
+            $0.badge(badgeText!)
         }
     }
 }

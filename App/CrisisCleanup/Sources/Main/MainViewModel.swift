@@ -26,6 +26,8 @@ class MainViewModel: ObservableObject {
     private var isNotAuthenticated: Bool { !viewData.isAuthenticated }
     private var areTokensInvalid: Bool { !viewData.areTokensValid }
 
+    @Published private(set) var isAppUpdateAvailable = false
+
     let termsOfServiceUrl: URL
     let privacyPolicyUrl: URL
     private let isFetchingTermsAcceptanceSubject = CurrentValueSubject<Bool, Never>(false)
@@ -105,7 +107,7 @@ class MainViewModel: ObservableObject {
     func onActivePhase() {
         translationsRepository.setLanguageFromSystem()
         appSupportRepository.onAppOpen()
-        appSupportRepository.pullMinSupportedAppVersion()
+        appSupportRepository.pullAppVersionInfo()
 
         if viewData.isAuthenticated {
             syncPusher.scheduleSyncWorksites()
@@ -268,6 +270,12 @@ class MainViewModel: ObservableObject {
             .map { $0.minSupportedVersion }
             .receive(on: RunLoop.main)
             .assign(to: \.minSupportedVersion, on: self)
+            .store(in: &subscriptions)
+
+        appSupportRepository.isAppUpdateAvailable
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.isAppUpdateAvailable, on: self)
             .store(in: &subscriptions)
     }
 

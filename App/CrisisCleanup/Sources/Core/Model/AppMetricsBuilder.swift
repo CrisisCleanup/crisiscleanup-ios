@@ -17,12 +17,14 @@ extension AppMetrics {
         var openTimestamp: Date
         var minSupportedVersion: MinSupportedAppVersion
         var installBuild: Int64
+        var publishedBuild: Int64?
 
         fileprivate init(original: AppMetrics) {
             self.openBuild = original.openBuild
             self.openTimestamp = original.openTimestamp
             self.minSupportedVersion = original.minSupportedVersion
             self.installBuild = original.installBuild
+            self.publishedBuild = original.publishedBuild
         }
 
         fileprivate func toAppMetrics() -> AppMetrics {
@@ -31,6 +33,7 @@ extension AppMetrics {
                 openTimestamp: openTimestamp,
                 minSupportedVersion: minSupportedVersion,
                 installBuild: installBuild,
+                publishedBuild: publishedBuild,
             )
         }
     }

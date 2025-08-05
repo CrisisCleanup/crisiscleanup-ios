@@ -4,6 +4,7 @@ import CoreLocation
 import SwiftUI
 
 class MenuViewModel: ObservableObject {
+    private let appSupportRepository: AppSupportRepository
     private let incidentsRepository: IncidentsRepository
     private let worksitesRepository: WorksitesRepository
     private let accountDataRepository: AccountDataRepository
@@ -26,6 +27,8 @@ class MenuViewModel: ObservableObject {
     let termsOfServiceUrl: URL
     let privacyPolicyUrl: URL
     let gettingStartedVideoUrl: URL
+
+    @Published private(set) var isAppUpdateAvailable = false
 
     @Published private(set) var isLoadingIncidentData = true
 
@@ -61,6 +64,7 @@ class MenuViewModel: ObservableObject {
     private var subscriptions = Set<AnyCancellable>()
 
     init(
+        appSupportRepository: AppSupportRepository,
         incidentsRepository: IncidentsRepository,
         worksitesRepository: WorksitesRepository,
         accountDataRepository: AccountDataRepository,
@@ -77,8 +81,9 @@ class MenuViewModel: ObservableObject {
         locationManager: LocationManager,
         systemNotifier: SystemNotifier,
         appEnv: AppEnv,
-        loggerFactory: AppLoggerFactory
+        loggerFactory: AppLoggerFactory,
     ) {
+        self.appSupportRepository = appSupportRepository
         self.incidentsRepository = incidentsRepository
         self.worksitesRepository = worksitesRepository
         self.accountDataRepository = accountDataRepository
@@ -110,6 +115,7 @@ class MenuViewModel: ObservableObject {
     }
 
     func onViewAppear() {
+        subscribeAppSupport()
         subscribeLoading()
         subscribeIncidentsData()
         subscribeProfilePicture()
@@ -132,6 +138,14 @@ class MenuViewModel: ObservableObject {
 
     func onActivePhase() {
         updateNotificationState()
+    }
+
+    private func subscribeAppSupport() {
+        appSupportRepository.isAppUpdateAvailable
+            .eraseToAnyPublisher()
+            .receive(on: RunLoop.main)
+            .assign(to: \.isAppUpdateAvailable, on: self)
+            .store(in: &subscriptions)
     }
 
     private func subscribeLoading() {

@@ -7,6 +7,7 @@ protocol MenuViewBuilder {
 
 class MenuComponent: Component<AppDependency>, MenuViewBuilder {
     lazy var menuViewModel: MenuViewModel = MenuViewModel(
+        appSupportRepository: dependency.appSupportRepository,
         incidentsRepository: dependency.incidentsRepository,
         worksitesRepository: dependency.worksitesRepository,
         accountDataRepository: dependency.accountDataRepository,
