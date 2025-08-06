@@ -134,7 +134,7 @@ class TransferWorkTypeViewModel: ObservableObject, KeyAssetTranslator {
                                     orgName: org.name,
                                     isValidEmail: self.inputValidator.validateEmailAddress($0.email),
                                     email: $0.email,
-                                    isValidMobile: self.inputValidator.validatePhoneNumber($0.mobile, allowSpaces: true),
+                                    isValidMobile: self.inputValidator.validatePhoneNumber($0.mobile).isValid,
                                     mobile: $0.mobile
                                 )
                             }

@@ -42,6 +42,7 @@ class InMemoryDotProvider: MapCaseDotProvider {
         let colors = getMapMarkerColors(
             cacheKey.statusClaim,
             isDuplicate: cacheKey.isDuplicate,
+            isMarkedForDelete: cacheKey.isMarkedForDelete,
             isFilteredOut: cacheKey.isFilteredOut,
             isVisited: false,
             isDot: true
@@ -65,6 +66,7 @@ class InMemoryDotProvider: MapCaseDotProvider {
         isImportant: Bool,
         isFilteredOut: Bool,
         isDuplicate: Bool,
+        isMarkedForDelete: Bool,
         isVisited: Bool,
         hasPhotos: Bool,
     ) -> UIImage? {
@@ -74,6 +76,7 @@ class InMemoryDotProvider: MapCaseDotProvider {
             hasMultipleWorkTypes,
             isFilteredOut: isFilteredOut,
             isDuplicate: isDuplicate,
+            isMarkedForDelete: isMarkedForDelete,
             isVisited: isVisited,
             hasPhotos: hasPhotos,
         )
@@ -85,10 +88,16 @@ class InMemoryDotProvider: MapCaseDotProvider {
         _ hasMultipleWorkTypes: Bool,
         isFilteredOut: Bool,
         isDuplicate: Bool,
+        isMarkedForDelete: Bool,
         isVisited: Bool,
         hasPhotos: Bool,
     ) -> UIImage? {
-        let cacheKey = DotCacheKey(statusClaim, isDuplicate: isDuplicate, isFilteredOut: isFilteredOut)
+        let cacheKey = DotCacheKey(
+            statusClaim,
+            isDuplicate: isDuplicate,
+            isMarkedForDelete: isMarkedForDelete,
+            isFilteredOut: isFilteredOut,
+        )
         let cachedIcon = cacheLock.withLock {
             return cache.value(forKey: cacheKey)
         }
@@ -160,15 +169,18 @@ struct DotDrawProperties: Equatable {
 private struct DotCacheKey: Hashable {
     let statusClaim: WorkTypeStatusClaim
     let isDuplicate: Bool
+    let isMarkedForDelete: Bool
     let isFilteredOut: Bool
 
     init(
         _ statusClaim: WorkTypeStatusClaim,
         isDuplicate: Bool = false,
+        isMarkedForDelete: Bool = false,
         isFilteredOut: Bool = false
     ) {
         self.statusClaim = statusClaim
         self.isDuplicate = isDuplicate
+        self.isMarkedForDelete = isMarkedForDelete
         self.isFilteredOut = isFilteredOut
     }
 }

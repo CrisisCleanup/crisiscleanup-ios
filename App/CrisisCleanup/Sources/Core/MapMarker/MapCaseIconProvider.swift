@@ -14,6 +14,7 @@ public protocol MapCaseIconProvider {
         isImportant: Bool,
         isFilteredOut: Bool,
         isDuplicate: Bool,
+        isMarkedForDelete: Bool,
         isVisited: Bool,
         hasPhotos: Bool,
     ) -> UIImage?
@@ -24,6 +25,7 @@ public protocol MapCaseIconProvider {
         _ hasMultipleWorkTypes: Bool,
         isFilteredOut: Bool,
         isDuplicate: Bool,
+        isMarkedForDelete: Bool,
         isVisited: Bool,
         hasPhotos: Bool,
     ) -> UIImage?
@@ -45,6 +47,7 @@ extension MapCaseIconProvider {
             isImportant: isImportant,
             isFilteredOut: false,
             isDuplicate: false,
+            isMarkedForDelete: false,
             isVisited: false,
             hasPhotos: false,
         )
@@ -61,6 +64,7 @@ extension MapCaseIconProvider {
             hasMultipleWorkTypes,
             isFilteredOut: false,
             isDuplicate: false,
+            isMarkedForDelete: false,
             isVisited: false,
             hasPhotos: false,
         )

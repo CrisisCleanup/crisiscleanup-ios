@@ -105,7 +105,9 @@ class WorksiteChangeDaoTests: XCTestCase {
                 testWorksiteNote(64, createdAtB, "note-b"),
             ],
             phone1: "phone1",
+            phone1Notes: "phone1-notes",
             phone2: "phone2",
+            phone2Notes: "phone2-notes",
             plusCode: "plus-code",
             postalCode: "postal-code",
             reportedBy: 573,
@@ -204,6 +206,7 @@ class WorksiteChangeDaoTests: XCTestCase {
                 testWorksiteNote(41, createdAtB, "note-e"),
             ]
             $0.phone1 = "phone1-change"
+            $0.phone1Notes = "phone1-notes-change"
             $0.phone2 = ""
             $0.postalCode = "postal-code-change"
             $0.state = "state-change"

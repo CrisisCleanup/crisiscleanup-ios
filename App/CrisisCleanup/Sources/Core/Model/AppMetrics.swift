@@ -20,16 +20,19 @@ public struct AppMetrics: Codable {
     let openTimestamp: Date
     let minSupportedVersion: MinSupportedAppVersion
     let installBuild: Int64
+    let publishedBuild: Int64?
 
     init(
         openBuild: Int64 = 0,
         openTimestamp: Date = Date.epochZero,
         minSupportedVersion: MinSupportedAppVersion? = nil,
         installBuild: Int64? = nil,
+        publishedBuild: Int64? = nil,
     ) {
         self.openBuild = openBuild
         self.openTimestamp = openTimestamp
         self.minSupportedVersion = minSupportedVersion ?? supportedAppVersion
         self.installBuild = installBuild ?? 0
+        self.publishedBuild = publishedBuild
     }
 }

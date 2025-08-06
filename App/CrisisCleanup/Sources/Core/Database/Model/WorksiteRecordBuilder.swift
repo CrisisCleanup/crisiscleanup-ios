@@ -25,7 +25,9 @@ extension WorksiteRecord {
         longitude: Double,
         name: String,
         phone1: String?,
+        phone1Notes: String?,
         phone2: String?,
+        phone2Notes: String?,
         phoneSearch: String?,
         plusCode: String?,
         postalCode: String,
@@ -58,7 +60,9 @@ extension WorksiteRecord {
         self.longitude = longitude
         self.name = name
         self.phone1 = phone1
+        self.phone1Notes = phone1Notes
         self.phone2 = phone2
+        self.phone2Notes = phone2Notes
         self.phoneSearch = phoneSearch
         self.plusCode = plusCode
         self.postalCode = postalCode
@@ -99,7 +103,9 @@ extension WorksiteRecord {
         var longitude: Double
         var name: String
         var phone1: String?
+        var phone1Notes: String?
         var phone2: String?
+        var phone2Notes: String?
         var phoneSearch: String?
         var plusCode: String?
         var postalCode: String
@@ -131,7 +137,9 @@ extension WorksiteRecord {
             self.longitude = original.longitude
             self.name = original.name
             self.phone1 = original.phone1
+            self.phone1Notes = original.phone1Notes
             self.phone2 = original.phone2
+            self.phone2Notes = original.phone2Notes
             self.phoneSearch = original.phoneSearch
             self.plusCode = original.plusCode
             self.postalCode = original.postalCode
@@ -165,7 +173,9 @@ extension WorksiteRecord {
                 longitude: longitude,
                 name: name,
                 phone1: phone1,
+                phone1Notes: phone1Notes,
                 phone2: phone2,
+                phone2Notes: phone2Notes,
                 phoneSearch: phoneSearch,
                 plusCode: plusCode,
                 postalCode: postalCode,

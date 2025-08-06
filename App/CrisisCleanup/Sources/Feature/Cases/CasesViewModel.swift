@@ -379,7 +379,7 @@ class CasesViewModel: ObservableObject {
                     queryIncidentId,
                     queryFilters,
                     changedCase,
-                    annotations
+                    annotations,
                 )
             }
             .share()
@@ -760,6 +760,7 @@ class CasesViewModel: ObservableObject {
         let ne = wqs.coordinateBounds.northEast
         let marksQuery = try await mapMarkerManager.queryWorksitesInBounds(id, sw, ne, wqs.filters)
 
+        // TODO: Save buckets and count identifier for determining full redraw of markers
         let marks = marksQuery.0
         let markOffsets = try mapMarkerManager.denseMarkerOffsets(marks, qsm.mapZoomSubject.value)
 

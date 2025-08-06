@@ -11,6 +11,8 @@ class RegexPhoneNumberParser: PhoneNumberParser {
     private let isTenDigitNumberPattern = #/^\s*\d{10}\s*$/#
     private let isOneTenDigitNumberPattern = #/^\s*1\d{10}\s*$/#
 
+    private let commonPhoneFormat1Pattern = #/^\+?1?\s?\((\d{3})\)\s*(\d{3})[. -](\d{4})\s*$/#
+
     // TODO: Word boundary does not work when unicode is involved
     private let inParenthesisPattern = #/\((\d{3})\)/#
     private let leadingOnePattern = #/(?:^|\b)\+?1\s/#
@@ -61,6 +63,13 @@ class RegexPhoneNumberParser: PhoneNumberParser {
 
         if noNumbersPattern.matches(raw) {
             return nil
+        }
+
+        let commonFormatMatches = raw.matches(of: commonPhoneFormat1Pattern)
+        if !commonFormatMatches.isEmpty {
+            let firstMatch = commonFormatMatches.first!.output
+            let matchingNumber = "\(firstMatch.1)\(firstMatch.2)\(firstMatch.3)"
+            return singleParsedNumber(matchingNumber)
         }
 
         let unparenthesized = raw.replacing(inParenthesisPattern) { $0.output.1 }

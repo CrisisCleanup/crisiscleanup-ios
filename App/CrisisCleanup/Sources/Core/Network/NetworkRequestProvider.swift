@@ -7,13 +7,6 @@ public protocol NetworkRequestProvider {
 }
 
 extension NetworkRequestProvider {
-    var login: NetworkRequest {
-        NetworkRequest(
-            apiUrl("api-token-auth"),
-            method: .post
-        )
-    }
-
     var oauthLogin: NetworkRequest {
         NetworkRequest(
             apiUrl("api-mobile-auth"),
@@ -55,7 +48,7 @@ extension NetworkRequestProvider {
 
     var accountProfile: NetworkRequest {
         NetworkRequest(
-            apiUrl("users/me"),
+            apiUrl("users"),
             addTokenHeader: true
         )
     }

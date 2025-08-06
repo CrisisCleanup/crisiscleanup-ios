@@ -120,20 +120,24 @@ public class WorksiteDao {
         _ files: [NetworkFileRecord]
     ) throws {
         if files.isEmpty {
+            try WorksiteToNetworkFileRecord.deleteWorksiteNetworkFiles(db, worksiteId)
             return
         }
 
         for record in files {
             try record.upsert(db)
         }
+        // TODO: Update corresponding network_file_local_images.is_deleted as necessary
+
         let ids = Set(files.map { $0.id })
-        try NetworkFileRecord.deleteDeleted(db, worksiteId, ids)
+        try NetworkFileRecord.deleteUnspecified(db, worksiteId, ids)
         try WorksiteToNetworkFileRecord.deleteUnspecified(db, worksiteId, ids)
-        for networkFileId in ids {
+        for id in ids {
             try WorksiteToNetworkFileRecord(
                 id: worksiteId,
-                networkFileId: networkFileId
-            ).insert(db, onConflict: .ignore)
+                networkFileId: id,
+            )
+            .insert(db, onConflict: .ignore)
         }
     }
 
@@ -230,7 +234,9 @@ public class WorksiteDao {
                 email: core.email,
                 favoriteId: core.favoriteId,
                 phone1: core.phone1,
+                phone1Notes: core.phone1Notes,
                 phone2: core.phone2,
+                phone2Notes: core.phone2Notes,
                 plusCode: core.plusCode,
                 svi: core.svi,
                 reportedBy: core.reportedBy,

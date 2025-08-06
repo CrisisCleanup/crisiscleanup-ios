@@ -306,7 +306,9 @@ struct WorksiteRecord : Identifiable, Equatable {
     let longitude: Double
     let name: String
     let phone1: String?
+    let phone1Notes: String?
     let phone2: String?
+    let phone2Notes: String?
     let phoneSearch: String?
     let plusCode: String?
     let postalCode: String
@@ -357,7 +359,9 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
              longitude,
              name,
              phone1,
+             phone1Notes,
              phone2,
+             phone2Notes,
              plusCode,
              postalCode,
              reportedBy,
@@ -383,7 +387,7 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
                 address             =:address,
                 autoContactFrequencyT=COALESCE(:autoContactFrequencyT,autoContactFrequencyT),
                 caseNumber     	    =:caseNumber,
-                caseNumberORder     =:caseNumberOrder,
+                caseNumberOrder     =:caseNumberOrder,
                 city                =:city,
                 county              =:county,
                 createdAt           =COALESCE(:createdAt, createdAt),
@@ -396,7 +400,9 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
                 longitude   =:longitude,
                 name        =:name,
                 phone1      =COALESCE(:phone1, phone1),
+                phone1Notes =COALESCE(:phone1Notes, phone1Notes),
                 phone2      =COALESCE(:phone2, phone2),
+                phone2Notes =COALESCE(:phone2Notes, phone2Notes),
                 phoneSearch =COALESCE(:phoneSearch, phoneSearch),
                 plusCode    =COALESCE(:plusCode, plusCode),
                 postalCode  =:postalCode,
@@ -428,7 +434,9 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
                 "longitude": longitude,
                 "name": name,
                 "phone1": phone1,
+                "phone1Notes": phone1Notes,
                 "phone2": phone2,
+                "phone2Notes": phone2Notes,
                 "phoneSearch": phoneSearch,
                 "plusCode": plusCode,
                 "postalCode": postalCode,
@@ -451,7 +459,9 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
         email: String?,
         favoriteId: Int64?,
         phone1: String?,
+        phone1Notes: String?,
         phone2: String?,
+        phone2Notes: String?,
         plusCode: String?,
         svi: Double?,
         reportedBy: Int64?,
@@ -469,11 +479,13 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
                 email       =COALESCE(email, :email),
                 favoriteId  =COALESCE(favoriteId, :favoriteId),
                 phone1      =CASE WHEN LENGTH(COALESCE(phone1,''))<2 THEN :phone1 ELSE phone1 END,
+                phone1Notes =COALESCE(phone1Notes, :phone1Notes),
                 phone2      =COALESCE(phone2, :phone2),
+                phone2Notes =COALESCE(phone2Notes, :phone2Notes),
                 plusCode    =COALESCE(plusCode, :plusCode),
-                reportedBy  =COALESCE(reportedBy, :reportedBy),
+                reportedBy  =COALESCE(:reportedBy, reportedBy),
                 svi         =COALESCE(svi, :svi),
-                what3Words  =COALESCE(what3Words, :what3Words),
+                what3Words  =COALESCE(:what3Words, what3Words),
                 networkPhotoCount   =COALESCE(:photoCount, networkPhotoCount)
                 WHERE id=:id
                 """,
@@ -485,7 +497,9 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
                 "email": email,
                 "favoriteId": favoriteId,
                 "phone1": phone1,
+                "phone1Notes": phone1Notes,
                 "phone2": phone2,
+                "phone2Notes": phone2Notes,
                 "plusCode": plusCode,
                 "reportedBy": reportedBy,
                 "svi": svi,

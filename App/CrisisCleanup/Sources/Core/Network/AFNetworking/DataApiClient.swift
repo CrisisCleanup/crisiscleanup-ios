@@ -77,8 +77,8 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         networkError = GenericError("Network error")
     }
 
-    func getProfileData() async throws -> NetworkAccountProfileResult {
-        let request = requestProvider.accountProfile
+    func getProfileData(_ accountId: Int64) async throws -> NetworkAccountProfileResult {
+        let request = requestProvider.accountProfile.addPaths("\(accountId)")
         let response = await networkClient.callbackContinue(
             requestConvertible: request,
             type: NetworkAccountProfileResult.self

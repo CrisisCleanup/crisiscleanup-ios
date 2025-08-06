@@ -204,7 +204,11 @@ private struct MainTabs: View {
         TabViewContainer {
             menuViewBuilder.menuView(openAuthScreen)
         }
-        .navTabItem(.menu, viewModel.translator)
+        .navTabItem(
+            .menu,
+            viewModel.translator,
+            badgeText: viewModel.isAppUpdateAvailable ? "" : nil,
+        )
         .tag(TopLevelDestination.menu)
     }
 }

@@ -147,7 +147,7 @@ class WorksiteSyncFillTests: XCTestCase {
             $0.reportedBy = 7835
             $0.state = "\($0.state)-update"
             $0.svi = $0.svi! * 2
-            $0.what3Words = "\($0.what3Words!)-update"
+            $0.what3Words = $0.what3Words!
             $0.updatedAt = $0.updatedAt.addingTimeInterval(99.seconds)
         }
         let recordsA = WorksiteRecords(

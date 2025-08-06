@@ -18,7 +18,7 @@ final class NetworkLanguageTests: XCTestCase {
     }
 
     func testGetTranslations() throws {
-        let result = Bundle(for: NetworkAuthTests.self)
+        let result = Bundle(for: NetworkLanguageTests.self)
             .loadJson("getLanguageTranslation", NetworkLanguageTranslation.self)
 
         XCTAssertEqual("en-US", result.subtag)

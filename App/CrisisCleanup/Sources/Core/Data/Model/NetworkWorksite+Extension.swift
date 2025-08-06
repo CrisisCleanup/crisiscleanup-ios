@@ -23,7 +23,9 @@ extension NetworkWorksiteFull {
             longitude: location.coordinates[0],
             name: name,
             phone1: phone1,
+            phone1Notes: phone1Notes,
             phone2: phone2,
+            phone2Notes: phone2Notes,
             phoneSearch: phoneNumberParser.searchablePhoneNumbers(phone1, phone2),
             plusCode: plusCode,
             postalCode: postalCode ?? "",
@@ -32,7 +34,7 @@ extension NetworkWorksiteFull {
             svi: svi == nil ? nil : Double(svi!),
             what3Words: what3words,
             updatedAt: updatedAt,
-            networkPhotoCount: files.map { $0.mimeContentType ?? "" }
+            networkPhotoCount: files?.map { $0.mimeContentType ?? "" }
                 .filter { $0.starts(with: "image/") }
                 .count,
             isLocalFavorite: false
@@ -63,7 +65,9 @@ extension NetworkWorksiteCoreData {
             longitude: location.coordinates[0],
             name: name,
             phone1: phone1,
+            phone1Notes: phone1Notes,
             phone2: phone2,
+            phone2Notes: phone2Notes,
             phoneSearch: phoneNumberParser.searchablePhoneNumbers(phone1, phone2),
             plusCode: plusCode,
             postalCode: postalCode ?? "",
@@ -101,7 +105,9 @@ extension NetworkWorksitePage {
             longitude: location.coordinates[0],
             name: name,
             phone1: phone1,
+            phone1Notes: phone1Notes,
             phone2: phone2,
+            phone2Notes: phone2Notes,
             phoneSearch: phoneNumberParser.searchablePhoneNumbers(phone1, phone2),
             plusCode: plusCode,
             postalCode: postalCode ?? "",
@@ -201,7 +207,7 @@ extension NetworkWorksiteFull {
         let formData = formData.map { $0.asWorksiteRecord() }
         let flags = flags.map { $0.asRecord() }
         let notes = notes.map { $0.asRecord() }
-        let files = files.map { $0.asRecord() }
+        let files = files?.map { $0.asRecord() } ?? []
         return WorksiteRecords(
             core,
             flags,

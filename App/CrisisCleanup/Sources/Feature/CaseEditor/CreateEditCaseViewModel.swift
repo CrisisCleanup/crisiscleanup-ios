@@ -21,7 +21,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     private let translator: KeyAssetTranslator
     private let incidentSelector: IncidentSelector
     private let worksiteChangeRepository: WorksiteChangeRepository
-    private let inputValidator: InputValidator
+    let inputValidator: InputValidator
     private let syncPusher: SyncPusher
     private let worksiteImageRepository: WorksiteImageRepository
     private let logger: AppLogger

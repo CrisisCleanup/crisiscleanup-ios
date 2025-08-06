@@ -235,6 +235,7 @@ class CasesMapDotsOverlay: MKTileOverlay {
                         worksite.workTypeCount > 1,
                         isFilteredOut: worksite.isFilteredOut,
                         isDuplicate: worksite.isDuplicate,
+                        isMarkedForDelete: worksite.isMarkedForDelete,
                         isVisited: false,
                         hasPhotos: worksite.hasPhotos,
                     ),

@@ -41,6 +41,10 @@ struct MenuView: View {
                     toggleGettingStartedSection: { viewModel.showGettingStartedVideo(true) }
                 )
 
+                if viewModel.isAppUpdateAvailable {
+                    AppUpdateView()
+                }
+
                 IncidentCacheView(
                     incidentCachePreferences: viewModel.incidentCachePreferences,
                     hasSpeedNotAdaptive: viewModel.incidentDataCacheMetrics.hasSpeedNotAdaptive
@@ -396,6 +400,38 @@ private struct RequestNotificationView: View {
             bodyKey: "appMenu.notification_access_request",
             onDismiss: onDismiss
         )
+    }
+}
+
+private struct AppUpdateView: View {
+    @Environment(\.translator) var t: KeyAssetTranslator
+    @Environment(\.openURL) var openUrl
+
+    var body: some View {
+        if let url = URL(string: "itms-apps://itunes.apple.com/app/id6463570192") {
+            HStack(alignment: .center, spacing: appTheme.gridItemSpacing) {
+                Text(t.t("~~A new version of the app is available"))
+                    .overlay(
+                        Circle()
+                            // TODO: Common color with system badge
+                            .fill(.red)
+                            .frame(width: 16, height: 16)
+                            .offset(x: -8, y: -8),
+                        alignment: .topLeading
+                    )
+
+                Spacer()
+
+                Button {
+                    openUrl(url)
+                } label: {
+                    Text(t.t("actions.update"))
+                }
+                .foregroundStyle(appTheme.colors.actionLinkColor)
+                .padding()
+            }
+            .padding(.horizontal)
+        }
     }
 }
 

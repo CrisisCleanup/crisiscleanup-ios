@@ -104,6 +104,7 @@ class CasesMapViewCoordinator: NSObject, MKMapViewDelegate {
                 view.annotation = annotation
 
                 view.image = annotationMapMark.mapIcon ?? UIImage(named: "ic_work_type_unknown", in: .module, with: .none)
+                view.centerOffset = annotationMapMark.mapIconOffset
                 return view
             }
             return annotationView

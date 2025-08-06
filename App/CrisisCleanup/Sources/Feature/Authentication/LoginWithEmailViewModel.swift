@@ -5,6 +5,7 @@ class LoginWithEmailViewModel: ObservableObject {
     private let appEnv: AppEnv
     let appSettings: AppSettingsProvider
     private let authApi: CrisisCleanupAuthApi
+    private let dataApi: CrisisCleanupNetworkDataSource
     private let inputValidator: InputValidator
     private let accessTokenDecoder: AccessTokenDecoder
     private let accountDataRepository: AccountDataRepository
@@ -27,6 +28,7 @@ class LoginWithEmailViewModel: ObservableObject {
         appEnv: AppEnv,
         appSettings: AppSettingsProvider,
         authApi: CrisisCleanupAuthApi,
+        dataApi: CrisisCleanupNetworkDataSource,
         inputValidator: InputValidator,
         accessTokenDecoder: AccessTokenDecoder,
         accountDataRepository: AccountDataRepository,
@@ -37,6 +39,7 @@ class LoginWithEmailViewModel: ObservableObject {
         self.appEnv = appEnv
         self.appSettings = appSettings
         self.authApi = authApi
+        self.dataApi = dataApi
         self.inputValidator = inputValidator
         self.accessTokenDecoder = accessTokenDecoder
         self.accountDataRepository = accountDataRepository
@@ -96,75 +99,6 @@ class LoginWithEmailViewModel: ObservableObject {
         return true
     }
 
-    private func authenticateAsync(
-        _ emailAddress: String,
-        _ password: String
-    ) async -> LoginResult {
-        var errorMessage = ""
-
-        do {
-            guard let result = try await authApi.login(emailAddress, password) else {
-                throw GenericError("Server not found")
-            }
-            guard let oauthResult = try await authApi.oauthLogin(emailAddress, password) else { throw GenericError("OAuth fail") }
-
-            let hasError = result.errors?.isNotEmpty == true || oauthResult.error?.isNotBlank == true
-            if hasError {
-                let loginError = result.errors?.condenseMessages
-                if loginError == "Unable to log in with provided credentials." {
-                    errorMessage = translator.t("loginForm.invalid_credentials_msg")
-                } else {
-                    let logErrorMessage = [
-                        loginError,
-                        oauthResult.error,
-                    ]
-                        .combineTrimText("\n")
-                        .ifBlank { "Server error" }
-                    logger.logError(GenericError(logErrorMessage))
-                }
-            } else {
-                let refreshToken = oauthResult.refreshToken!
-                let accessToken = oauthResult.accessToken!
-                let expirySeconds = Int64(Date().timeIntervalSince1970) + Int64(oauthResult.expiresIn!)
-
-                let claims = result.claims!
-                let profilePicUri = claims.files?.profilePictureUrl ?? ""
-
-                let organization = result.organizations
-                if organization?.isActive == false {
-                    accountEventBus.onAccountInactiveOrganizations(claims.id)
-                } else {
-                    let orgData = if organization?.isActive == true,
-                        organization!.id >= 0 {
-                            OrgData(
-                                id: organization!.id,
-                                name: organization!.name
-                            )
-                        } else {
-                            emptyOrgData
-                        }
-
-                    let success = LoginSuccess(
-                        claims: claims,
-                        orgData: orgData,
-                        profilePictureUri: profilePicUri,
-                        refreshToken: refreshToken,
-                        accessToken: accessToken,
-                        expirySeconds: expirySeconds
-                    )
-                    return LoginResult(errorMessage: "", success: success)
-                }
-            }
-        } catch {
-            errorMessage = "Unknown auth error".localizedString
-        }
-
-        return LoginResult(
-            errorMessage: errorMessage,
-            success: nil
-        )
-    }
-
     func authenticate(_ emailAddress: String, _ password: String) {
         if !validateInput(emailAddress, password) {
             return
@@ -182,27 +116,43 @@ class LoginWithEmailViewModel: ObservableObject {
                 Task { @MainActor in isAuthenticating = false }
             }
 
-            let loginResult = await authenticateAsync(emailAddress, password)
-            if let result = loginResult.success {
-                with(result) { r in
-                    accountDataRepository.setAccount(
-                        refreshToken: r.refreshToken,
-                        accessToken: r.accessToken,
-                        id: r.claims.id,
-                        email: r.claims.email,
-                        firstName: r.claims.firstName,
-                        lastName: r.claims.lastName,
-                        expirySeconds: r.expirySeconds,
-                        profilePictureUri: r.profilePictureUri,
-                        org: r.orgData,
-                        hasAcceptedTerms: r.claims.hasAcceptedTerms == true,
-                        activeRoles: r.claims.activeRoles
-                    )
+            var errorMessage = ""
+
+            do {
+                guard let oauthResult = try await authApi.oauthLogin(emailAddress, password) else {
+                    throw GenericError("OAuth fail")
                 }
-            } else {
-                Task { @MainActor in
-                    errorMessage = loginResult.errorMessage
+
+                let hasError = oauthResult.error?.isNotBlank == true
+                if hasError {
+                    errorMessage = translator.t("info.unknown_error")
+
+                    logger.logError(GenericError("OAuth server error"))
+                } else {
+                    let refreshToken = oauthResult.refreshToken!
+                    let accessToken = oauthResult.accessToken!
+
+                    if let profile = await dataApi.getProfile(accessToken) {
+                        let organization = profile.organization
+                        if organization.isActive == false {
+                            accountEventBus.onAccountInactiveOrganizations(profile.id)
+                        } else {
+                            accountDataRepository.setAccount(
+                                profile,
+                                refreshToken: refreshToken,
+                                accessToken: accessToken,
+                                expiresIn: oauthResult.expiresIn ?? 3600
+                            )
+                        }
+                    }
                 }
+            } catch {
+                errorMessage = "Unknown auth error".localizedString
+            }
+
+            let loginErrorMessage = errorMessage
+            Task { @MainActor in
+                errorMessage = loginErrorMessage
             }
         }
     }
@@ -210,18 +160,4 @@ class LoginWithEmailViewModel: ObservableObject {
     func logout() {
         accountEventBus.onLogout()
     }
-}
-
-fileprivate struct LoginSuccess {
-    let claims: NetworkAuthUserClaims
-    let orgData: OrgData
-    let profilePictureUri: String
-    let refreshToken: String
-    let accessToken: String
-    let expirySeconds: Int64
-}
-
-fileprivate struct LoginResult {
-    let errorMessage: String
-    let success: LoginSuccess?
 }

@@ -142,7 +142,7 @@ class NetworkFileTests: XCTestCase {
         }
 
         try await dbQueue.write { db in
-            try NetworkFileRecord.deleteDeleted(
+            try NetworkFileRecord.deleteUnspecified(
                 db, worksiteIdC, Set([1, 2, 3, 4, 5, 6, 7, 8])
             )
         }
@@ -154,7 +154,7 @@ class NetworkFileTests: XCTestCase {
         )
 
         try await dbQueue.write { db in
-            try NetworkFileRecord.deleteDeleted(
+            try NetworkFileRecord.deleteUnspecified(
                 db, worksiteIdB, Set([3, 4, 6, 7, 8])
             )
         }

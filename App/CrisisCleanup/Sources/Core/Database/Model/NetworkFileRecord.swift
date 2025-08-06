@@ -35,7 +35,7 @@ extension NetworkFileRecord: Codable, FetchableRecord, PersistableRecord {
              url
     }
 
-    static func deleteDeleted(
+    static func deleteUnspecified(
         _ db: Database,
         _ worksiteId: Int64,
         _ keepIds: Set<Int64>
@@ -106,10 +106,19 @@ extension WorksiteToNetworkFileRecord: Codable, FetchableRecord, PersistableReco
     static func deleteUnspecified(
         _ db: Database,
         _ worksiteId: Int64,
-        _ ids: Set<Int64>
+        _ networkFileIds: Set<Int64>,
     ) throws {
         try WorksiteToNetworkFileRecord
-            .filter(Columns.id == worksiteId && !ids.contains(Columns.networkFileId))
+            .filter(Columns.id == worksiteId && !networkFileIds.contains(Columns.networkFileId))
+            .deleteAll(db)
+    }
+
+    static func deleteWorksiteNetworkFiles(
+        _ db: Database,
+        _ worksiteId: Int64,
+    ) throws {
+        try WorksiteToNetworkFileRecord
+            .filter(Columns.id == worksiteId)
             .deleteAll(db)
     }
 

@@ -22,6 +22,7 @@ extension AccountDataRepository {
                     name: a.organization.name
                 ),
                 hasAcceptedTerms: a.hasAcceptedTerms == true,
+                approvedIncidentIds: a.approvedIncidents,
                 activeRoles: a.activeRoles
             )
         }

@@ -6,7 +6,10 @@ protocol AppMetricsDataSource {
 
     func setAppOpen(_ appBuild: Int64, _ timestamp: Date)
 
-    func setMinSupportedVersion(_ minSupportedAppVersion: MinSupportedAppVersion)
+    func setAppVersions(
+        _ supportedAppVersion: MinSupportedAppVersion,
+        _ publishedVersion: Int64,
+    )
 }
 
 extension AppMetricsDataSource {
@@ -47,9 +50,13 @@ class LocalAppMetricsDataSource: AppMetricsDataSource {
         })
     }
 
-    func setMinSupportedVersion(_ minSupportedAppVersion: MinSupportedAppVersion) {
+    func setAppVersions(
+        _ supportedAppVersion: MinSupportedAppVersion,
+        _ publishedVersion: Int64,
+    ) {
         update(UserDefaults.standard.appMetrics.copy {
-            $0.minSupportedVersion = minSupportedAppVersion
+            $0.minSupportedVersion = supportedAppVersion
+            $0.publishedBuild = publishedVersion
         })
     }
 }

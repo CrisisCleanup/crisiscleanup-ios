@@ -14,7 +14,7 @@ struct CasesConstant {
 #if targetEnvironment(macCatalyst)
     static let MAP_MARKERS_ZOOM_LEVEL = 12.0
 #else
-    static let MAP_MARKERS_ZOOM_LEVEL = IS_IPAD ? 12.0 : 10.0
+    static let MAP_MARKERS_ZOOM_LEVEL = IS_IPAD ? 12.0 : 11.0
 #endif
 
 #if targetEnvironment(macCatalyst)

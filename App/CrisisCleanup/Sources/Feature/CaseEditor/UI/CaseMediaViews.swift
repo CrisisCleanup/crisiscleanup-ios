@@ -280,7 +280,7 @@ private struct MediaDisplay: View {
                         .onTapGesture { openViewImage(caseImage) }
                         .overlay(alignment: alignment) {
                             if isTransient {
-                                Image(systemName: "cloud.fill")
+                                Image(systemName: "arrow.clockwise.icloud")
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: 48, height: 48)
@@ -289,7 +289,7 @@ private struct MediaDisplay: View {
                                     .clipShape(Circle())
                             } else {
                                 HStack {
-                                    Image(systemName: "cloud.fill")
+                                    Image(systemName: "icloud.slash.fill")
                                         .resizable()
                                         .scaledToFit()
                                         .frame(width: 16, height: 16)

@@ -1,10 +1,11 @@
 import Foundation
+import MapKit
 
 class CasesMapMarkerManager {
     private let worksitesRepository: WorksitesRepository
     private let locationManager: LocationManager
 
-    let zeroOffset = (0.0, 0.0)
+    let zeroOffset = CGPoint.zero
 
     init(
         worksitesRepository: WorksitesRepository,
@@ -130,7 +131,14 @@ class CasesMapMarkerManager {
             )
         }
         let distanceToMiddleSorted = marksFromCenter.sorted(by: { a, b in
-            a.distanceMeasure - b.distanceMeasure <= 0
+            let deltaDistance = a.distanceMeasure - b.distanceMeasure
+            if deltaDistance < 0 {
+                return true
+            }
+            if deltaDistance > 0 {
+                return false
+            }
+            return a.mark.id < b.mark.id
         })
 
         let endIndex = min(distanceToMiddleSorted.count, maxMarkersOnMap)
@@ -144,13 +152,13 @@ class CasesMapMarkerManager {
     }
 
     private let denseMarkCountThreshold = 15
-    private let denseMarkZoomThreshold = 14.0
+    private let denseMarkZoomThreshold = CasesConstant.MAP_MARKERS_ZOOM_LEVEL + 4.0
     private let denseDegreeThreshold = 0.0001
-    private let denseScreenOffsetScale = 0.6
+    private let denseScreenOffsetScale = 64.0
     func denseMarkerOffsets(
         _ marks: [WorksiteMapMark],
         _ mapZoom: Double
-    ) throws -> [(Double, Double)] {
+    ) throws -> [CGPoint] {
         if marks.count > denseMarkCountThreshold ||
             mapZoom < denseMarkZoomThreshold
         {
@@ -200,9 +208,9 @@ class CasesMapMarkerManager {
                     var offsetDir = .pi * 0.5
                     let deltaDirDegrees = 2.0 * .pi / count
                     $0.enumerated().forEach { (index, _) in
-                        markOffsets[index] = (
+                        markOffsets[index] = CGPointMake(
                             offsetScale * cos(offsetDir),
-                            offsetScale * sin(offsetDir)
+                            offsetScale * sin(offsetDir),
                         )
                         offsetDir += deltaDirDegrees
                     }

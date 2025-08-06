@@ -18,7 +18,7 @@ public struct NetworkWorksiteFull: Codable, Equatable {
     let email: String?
     let events: [NetworkEvent]
     let favorite: NetworkType?
-    let files: [NetworkFile]
+    let files: [NetworkFile]?
     let flags: [NetworkFlag]
     let formData: [KeyDynamicValuePair]
     let incident: Int64
@@ -27,7 +27,9 @@ public struct NetworkWorksiteFull: Codable, Equatable {
     let name: String
     let notes: [NetworkNote]
     let phone1: String
+    let phone1Notes: String?
     let phone2: String?
+    let phone2Notes: String?
     let plusCode: String?
     let postalCode: String?
     let reportedBy: Int64?
@@ -56,16 +58,18 @@ public struct NetworkWorksiteFull: Codable, Equatable {
         case location
         case name
         case notes
-        case phone1
-        case phone2
-        case plusCode = "pluscode"
-        case postalCode = "postal_code"
-        case reportedBy = "reported_by"
-        case state
-        case svi
-        case updatedAt = "updated_at"
-        case what3words = "what3words"
-        case workTypes = "work_types"
+        case phone1,
+             phone1Notes = "phone1_notes",
+             phone2,
+             phone2Notes = "phone2_notes",
+             plusCode = "pluscode",
+             postalCode = "postal_code",
+             reportedBy = "reported_by",
+             state,
+             svi,
+             updatedAt = "updated_at",
+             what3words = "what3words",
+             workTypes = "work_types"
     }
 
     init(
@@ -87,7 +91,9 @@ public struct NetworkWorksiteFull: Codable, Equatable {
         name: String,
         notes: [NetworkNote],
         phone1: String,
+        phone1Notes: String?,
         phone2: String?,
+        phone2Notes: String?,
         plusCode: String?,
         postalCode: String?,
         reportedBy: Int64?,
@@ -115,7 +121,9 @@ public struct NetworkWorksiteFull: Codable, Equatable {
         self.name = name
         self.notes = notes
         self.phone1 = phone1
+        self.phone1Notes = phone1Notes
         self.phone2 = phone2
+        self.phone2Notes = phone2Notes
         self.plusCode = plusCode
         self.postalCode = postalCode
         self.reportedBy = reportedBy
@@ -406,7 +414,9 @@ public struct NetworkWorksitePage: Codable, Equatable, WorksiteDataSubset {
     let location: NetworkWorksiteFull.Location
     let name: String
     let phone1: String
+    let phone1Notes: String?
     let phone2: String?
+    let phone2Notes: String?
     let plusCode: String?
     let postalCode: String?
     let reportedBy: Int64?
@@ -434,7 +444,9 @@ public struct NetworkWorksitePage: Codable, Equatable, WorksiteDataSubset {
              location,
              name,
              phone1,
+             phone1Notes = "phone1_notes",
              phone2,
+             phone2Notes = "phone2_notes",
              plusCode = "pluscode",
              postalCode = "postal_code",
              reportedBy = "reported_by",
@@ -489,7 +501,9 @@ public struct NetworkWorksiteCoreData: Codable, Equatable {
     let name: String
     let notes: [NetworkNote]
     let phone1: String
+    let phone1Notes: String?
     let phone2: String?
+    let phone2Notes: String?
     let plusCode: String?
     let postalCode: String?
     let reportedBy: Int64?
@@ -515,16 +529,18 @@ public struct NetworkWorksiteCoreData: Codable, Equatable {
         case location
         case name
         case notes
-        case phone1
-        case phone2
-        case plusCode = "pluscode"
-        case postalCode = "postal_code"
-        case reportedBy = "reported_by"
-        case state
-        case svi
-        case updatedAt = "updated_at"
-        case what3words = "what3words"
-        case workTypes = "work_types"
+        case phone1,
+             phone1Notes = "phone1_notes",
+             phone2,
+             phone2Notes = "phone2_notes",
+             plusCode = "pluscode",
+             postalCode = "postal_code",
+             reportedBy = "reported_by",
+             state,
+             svi,
+             updatedAt = "updated_at",
+             what3words = "what3words",
+             workTypes = "work_types"
     }
 
     private var newestWorkTypeMap: [String: (Int, NetworkWorkType)] {

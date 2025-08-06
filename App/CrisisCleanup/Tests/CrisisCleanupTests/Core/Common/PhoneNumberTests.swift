@@ -50,6 +50,25 @@ final class PhoneNumberTests: XCTestCase {
         }
     }
 
+    func testCommonFormats() {
+        let inputs = [
+            "(234) 567-8901",
+            "(234) 567.8901",
+            "(234) 567 8901",
+            "1(234) 567-8901",
+            "1(234) 567.8901",
+            "1 (234) 567 8901",
+            "+1(234) 567-8901",
+            "+1 (234) 567.8901",
+            "+1 (234) 567 8901",
+        ]
+
+        for input in inputs {
+            let actual = phoneNumberParser.parsePhoneNumbers(input)?.parsedNumbers
+            XCTAssertEqual(["2345678901"], actual)
+        }
+    }
+
     func testCompact334() {
         let inputs = [
             "234 567 8901",
