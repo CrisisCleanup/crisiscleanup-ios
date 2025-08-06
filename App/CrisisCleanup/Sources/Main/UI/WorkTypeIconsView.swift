@@ -50,6 +50,7 @@ class WorkTypeIconImageGenerator {
         isImportant: Bool = false,
         isFilteredOut: Bool = false,
         isDuplicate: Bool = false,
+        isMarkedForDelete: Bool = false,
         isVisited: Bool = false,
         hasPhotos: Bool = false,
     ) -> [UIImage] {
@@ -69,6 +70,7 @@ class WorkTypeIconImageGenerator {
                     isImportant: isImportant,
                     isFilteredOut: isFilteredOut,
                     isDuplicate: isDuplicate,
+                    isMarkedForDelete: isMarkedForDelete,
                     isVisited: isVisited,
                     hasPhotos: hasPhotos,
                 )

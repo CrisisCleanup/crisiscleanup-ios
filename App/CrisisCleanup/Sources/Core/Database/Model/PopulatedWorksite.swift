@@ -115,6 +115,7 @@ struct PopulatedLocalWorksite: Equatable, Decodable, FetchableRecord {
 
 private let highPriorityFlagLiteral = WorksiteFlagType.highPriority.literal
 private let duplicateFlagLiteral = WorksiteFlagType.duplicate.literal
+private let markedForDeleteFlagLiteral = WorksiteFlagType.markForDeletion.literal
 
 struct PopulatedWorksiteMapVisual: Decodable, FetchableRecord {
     struct WorksiteMapVisualSubset : Decodable {
@@ -186,6 +187,9 @@ struct PopulatedWorksiteMapVisual: Decodable, FetchableRecord {
             },
             isDuplicate: worksiteFlags.contains {
                 $0.reasonT == duplicateFlagLiteral
+            },
+            isMarkedForDelete: worksiteFlags.contains {
+                $0.reasonT == markedForDeleteFlagLiteral
             },
             isFilteredOut: isFilteredOut,
             hasPhotos: hasPhotos,

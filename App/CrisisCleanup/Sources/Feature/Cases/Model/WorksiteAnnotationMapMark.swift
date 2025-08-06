@@ -33,6 +33,7 @@ extension WorksiteMapMark {
             isImportant: isHighPriority,
             isFilteredOut: isFilteredOut,
             isDuplicate: isDuplicate,
+            isMarkedForDelete: isMarkedForDelete,
             isVisited: isVisited,
             hasPhotos: hasPhotos,
         )

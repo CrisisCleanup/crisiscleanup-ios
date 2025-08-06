@@ -108,6 +108,7 @@ internal func getMapMarkerColor(
 internal func getMapMarkerColors(
     _ statusClaim: WorkTypeStatusClaim,
     isDuplicate: Bool,
+    isMarkedForDelete: Bool,
     isFilteredOut: Bool,
     isVisited: Bool,
     isDot: Bool = false
@@ -117,7 +118,7 @@ internal func getMapMarkerColors(
         isVisited: isVisited && !(isDuplicate || isFilteredOut)
     )
 
-    if isDuplicate {
+    if isDuplicate || isMarkedForDelete {
         colors = MapMarkerColor(
             colors.fill.hex(duplicateMarkerAlpha),
             colors.stroke.hex(duplicateMarkerAlpha)

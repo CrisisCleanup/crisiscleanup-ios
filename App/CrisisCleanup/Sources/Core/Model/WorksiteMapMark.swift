@@ -10,6 +10,7 @@ public struct WorksiteMapMark: Equatable {
     let isFavorite: Bool
     let isHighPriority: Bool
     let isDuplicate: Bool
+    let isMarkedForDelete: Bool
     let isFilteredOut: Bool
     let hasPhotos: Bool
 
@@ -24,6 +25,7 @@ public struct WorksiteMapMark: Equatable {
         isFavorite: Bool = false,
         isHighPriority: Bool = false,
         isDuplicate: Bool = false,
+        isMarkedForDelete: Bool = false,
         isFilteredOut: Bool = false,
         hasPhotos: Bool = false,
     ) {
@@ -37,6 +39,7 @@ public struct WorksiteMapMark: Equatable {
         self.isFavorite = isFavorite
         self.isHighPriority = isHighPriority
         self.isDuplicate = isDuplicate
+        self.isMarkedForDelete = isMarkedForDelete
         self.isFilteredOut = isFilteredOut
         self.hasPhotos = hasPhotos
     }

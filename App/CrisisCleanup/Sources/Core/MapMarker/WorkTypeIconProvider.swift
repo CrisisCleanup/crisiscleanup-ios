@@ -70,6 +70,7 @@ class WorkTypeIconProvider: MapCaseIconProvider {
         isImportant: Bool,
         isFilteredOut: Bool,
         isDuplicate: Bool,
+        isMarkedForDelete: Bool,
         isVisited: Bool,
         hasPhotos: Bool,
     ) -> UIImage? {
@@ -81,6 +82,7 @@ class WorkTypeIconProvider: MapCaseIconProvider {
             isImportant: isImportant,
             isFilteredOut: isFilteredOut,
             isDuplicate: isDuplicate,
+            isMarkedForDelete: isMarkedForDelete,
             isVisited: isVisited,
             hasPhotos: hasPhotos,
         )
@@ -96,6 +98,7 @@ class WorkTypeIconProvider: MapCaseIconProvider {
         _ hasMultipleWorkTypes: Bool,
         isFilteredOut: Bool,
         isDuplicate: Bool,
+        isMarkedForDelete: Bool,
         isVisited: Bool,
         hasPhotos: Bool,
     ) -> UIImage? {
@@ -107,6 +110,7 @@ class WorkTypeIconProvider: MapCaseIconProvider {
             isImportant: false,
             isFilteredOut: isFilteredOut,
             isDuplicate: isDuplicate,
+            isMarkedForDelete: isMarkedForDelete,
             isVisited: isVisited,
             hasPhotos: hasPhotos,
         )
@@ -143,6 +147,7 @@ class WorkTypeIconProvider: MapCaseIconProvider {
         let colors = getMapMarkerColors(
             cacheKey.statusClaim,
             isDuplicate: cacheKey.isDuplicate,
+            isMarkedForDelete: cacheKey.isMarkedForDelete,
             isFilteredOut: cacheKey.isFilteredOut,
             isVisited: cacheKey.isVisited
         )
@@ -226,6 +231,7 @@ private struct CacheKey: Hashable {
     let hasMultipleWorkTypes: Bool
     let isFavorite: Bool
     let isImportant: Bool
+    let isMarkedForDelete: Bool
     let isFilteredOut: Bool
     let isDuplicate: Bool
     let isVisited: Bool
@@ -239,6 +245,7 @@ private struct CacheKey: Hashable {
         isImportant: Bool = false,
         isFilteredOut: Bool = false,
         isDuplicate: Bool = false,
+        isMarkedForDelete: Bool = false,
         isVisited: Bool = false,
         hasPhotos: Bool = false,
     ) {
@@ -249,6 +256,7 @@ private struct CacheKey: Hashable {
         self.isImportant = isImportant
         self.isFilteredOut = isFilteredOut
         self.isDuplicate = isDuplicate
+        self.isMarkedForDelete = isMarkedForDelete
         self.isVisited = isVisited
         self.hasPhotos = hasPhotos
     }
