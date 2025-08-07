@@ -50,15 +50,15 @@ extension WorksiteMapMark {
         let workTypeId = lookupKey.rawValue
 
         let isClaimed = statusClaim.isClaimed
-        let hasOffset = additionalScreenOffset != .zero
         let remainingIdentifier: Int64 = (isClaimed ? 1 << 0 : 0) |
         (hasMultipleWorkTypes ? 1 << 1 : 0) |
         (isFilteredOut ? 1 << 2 : 0) |
-        (isDuplicate ? 1 << 3 : 0) |
+        (isDuplicate || isMarkedForDelete ? 1 << 3 : 0) |
         (isVisited ? 1 << 4 : 0) |
-        (hasPhotos ? 1 << 5 : 0) |
-        (hasOffset ? 1 << 6 : 0)
-        point.reuseIdentifier = "\(statusId)-\(workTypeId)-\(remainingIdentifier)"
+        (hasPhotos ? 1 << 5 : 0)
+        let hasOffset = additionalScreenOffset != .zero
+        let offsetIdentifier = hasOffset ? "\(additionalScreenOffset.x)-\(additionalScreenOffset.y)" : "0"
+        point.reuseIdentifier = "\(statusId)-\(workTypeId)-\(remainingIdentifier)-\(offsetIdentifier)"
 
         point.mapIconOffset = additionalScreenOffset
 

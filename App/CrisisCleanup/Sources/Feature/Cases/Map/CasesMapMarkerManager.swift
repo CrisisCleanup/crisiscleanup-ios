@@ -158,11 +158,11 @@ class CasesMapMarkerManager {
     func denseMarkerOffsets(
         _ marks: [WorksiteMapMark],
         _ mapZoom: Double
-    ) throws -> [CGPoint] {
+    ) throws -> MarkerOffsetSummary {
         if marks.count > denseMarkCountThreshold ||
             mapZoom < denseMarkZoomThreshold
         {
-            return []
+            return MarkerOffsetSummary()
         }
 
         try Task.checkCancellation()
@@ -173,8 +173,8 @@ class CasesMapMarkerManager {
             let iMark = marks[i]
             for j in i + 1 ..< max(1, marks.count) {
                 let jMark = marks[j]
-                if abs(iMark.latitude - jMark.latitude) < denseDegreeThreshold &&
-                    abs(iMark.longitude - jMark.longitude) < denseDegreeThreshold
+                if abs(iMark.latitude - jMark.latitude) < denseDegreeThreshold,
+                   abs(iMark.longitude - jMark.longitude) < denseDegreeThreshold
                 {
                     let bucketI = bucketIndices[i]
                     if bucketI >= 0 {
@@ -200,11 +200,12 @@ class CasesMapMarkerManager {
         }
 
         var markOffsets = marks.map { _ in zeroOffset }
+        var markOffsetCount = 0
         if buckets.isNotEmpty {
             buckets.forEach {
-                let count = Double($0.count)
-                let offsetScale = denseScreenOffsetScale + max(count - 5.0, 0.0) * 0.2
-                if count > 1.0 {
+                if $0.count > 1 {
+                    let count = Double($0.count)
+                    let offsetScale = denseScreenOffsetScale + max(count - 5.0, 0.0) * 0.2
                     var offsetDir = .pi * 0.5
                     let deltaDirDegrees = 2.0 * .pi / count
                     $0.enumerated().forEach { (index, _) in
@@ -214,10 +215,18 @@ class CasesMapMarkerManager {
                         )
                         offsetDir += deltaDirDegrees
                     }
+
+                    markOffsetCount += $0.count
                 }
             }
         }
-        return markOffsets
+        return MarkerOffsetSummary(
+            denseDescription: DenseMarkDescription(
+                bucketCount: buckets.count,
+                markOffsetCount: markOffsetCount,
+            ),
+            offsets: markOffsets,
+        )
     }
 }
 
@@ -234,4 +243,27 @@ private struct MarkerFromCenter {
     let deltaLatitude: Double
     let deltaLongitude: Double
     let distanceMeasure: Double
+}
+
+struct DenseMarkDescription: Equatable {
+    let bucketCount: Int
+    let markOffsetCount: Int
+}
+
+let EmptyDenseMarkDescription = DenseMarkDescription(
+    bucketCount: 0,
+    markOffsetCount: 0,
+)
+
+internal struct MarkerOffsetSummary {
+    let denseDescription: DenseMarkDescription
+    let offsets: [CGPoint]
+
+    init(
+        denseDescription: DenseMarkDescription = EmptyDenseMarkDescription,
+        offsets: [CGPoint] = [],
+    ) {
+        self.denseDescription = denseDescription
+        self.offsets = offsets
+    }
 }

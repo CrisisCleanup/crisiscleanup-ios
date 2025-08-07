@@ -329,10 +329,11 @@ class CasesViewModel: ObservableObject {
     }
 
     private func subscribeWorksiteInBounds() {
+        // TODO: Refactor for better structure
         let worksitesInBounds = Publishers.CombineLatest3(
             qsm.worksiteQueryState,
             incidentWorksitesCount,
-            worksiteInteractor.caseChangesPublisher.eraseToAnyPublisher()
+            worksiteInteractor.caseChangesPublisher.eraseToAnyPublisher().removeDuplicates(),
         )
             .throttle(
                 for: .seconds(0.15),
@@ -348,27 +349,31 @@ class CasesViewModel: ObservableObject {
                     queryIncidentId == EmptyIncident.id ||
                     isZoomedOut
                 {
-                    return IncidentAnnotations(
+                    self.mapAnnotationsExchanger.onClean(
                         queryIncidentId,
                         queryFilters,
-                        isClean: isZoomedOut
+                        CaseChangeTime(ExistingWorksiteIdentifierNone),
                     )
+                    throw CancellationError()
                 }
 
-                _ = self.mapAnnotationsExchanger.onAnnotationStateChange(
+                self.mapAnnotationsExchanger.onCleanStateChange(
                     queryIncidentId,
                     queryFilters,
-                    changedCase
+                    changedCase,
                 )
 
                 try Task.checkCancellation()
 
-                var annotations = [WorksiteAnnotationMapMark]()
+                var denseMarkDescription = MapMarkerDenseDescription(
+                    marks: [],
+                    denseDescription: EmptyDenseMarkDescription,
+                )
                 self.isGeneratingWorksiteMarkers.value = true
                 do {
                     defer { self.isGeneratingWorksiteMarkers.value = false }
 
-                    annotations = try await self.generateWorksiteMarkers(wqs)
+                    denseMarkDescription = try await self.generateWorksiteMarkers(wqs)
                 } catch {
                     self.logger.logError(error)
                 }
@@ -379,27 +384,16 @@ class CasesViewModel: ObservableObject {
                     queryIncidentId,
                     queryFilters,
                     changedCase,
-                    annotations,
+                    denseMarkDescription.marks,
+                    denseMarkDescription.denseDescription,
                 )
             }
             .share()
 
         worksitesInBounds
+            .removeDuplicates()
             .mapLatest { incidentAnnotations in
-                if incidentAnnotations.isClean {
-                    self.mapAnnotationsExchanger.onClean(
-                        incidentAnnotations.incidentId,
-                        incidentAnnotations.filters,
-                        incidentAnnotations.changedCase
-                    )
-                    throw CancellationError()
-                }
-
-                let changes = try self.mapAnnotationsExchanger.getChange(incidentAnnotations)
-
-                try Task.checkCancellation()
-
-                return changes
+                try self.mapAnnotationsExchanger.exchange(incidentAnnotations)
             }
             .receive(on: RunLoop.main)
             .sink { changes in
@@ -754,24 +748,29 @@ class CasesViewModel: ObservableObject {
         mapAnnotationsExchanger.onApplied(changes)
     }
 
-    private func generateWorksiteMarkers(_ wqs: WorksiteQueryState) async throws -> [WorksiteAnnotationMapMark] {
+    private func generateWorksiteMarkers(_ wqs: WorksiteQueryState) async throws -> MapMarkerDenseDescription {
         let id = wqs.incidentId
         let sw = wqs.coordinateBounds.southWest
         let ne = wqs.coordinateBounds.northEast
         let marksQuery = try await mapMarkerManager.queryWorksitesInBounds(id, sw, ne, wqs.filters)
 
-        // TODO: Save buckets and count identifier for determining full redraw of markers
         let marks = marksQuery.0
-        let markOffsets = try mapMarkerManager.denseMarkerOffsets(marks, qsm.mapZoomSubject.value)
+        let markerOffsetSummary = try mapMarkerManager.denseMarkerOffsets(marks, qsm.mapZoomSubject.value)
+        let offsets = markerOffsetSummary.offsets
 
         try Task.checkCancellation()
 
         let now = Date.now
-        return marks.enumerated().map { (index, mark) in
+        let mapMarks = marks.enumerated().map { (index, mark) in
             let isSelected = worksiteInteractor.wasCaseSelected(mark.incidentId, mark.id, reference: now)
-            let offset = index < markOffsets.count ? markOffsets[index] : mapMarkerManager.zeroOffset
+            let offset = index < offsets.count ? offsets[index] : mapMarkerManager.zeroOffset
             return mark.asAnnotationMapMark(mapCaseIconProvider, isSelected, offset)
         }
+
+        return MapMarkerDenseDescription(
+            marks: mapMarks,
+            denseDescription: markerOffsetSummary.denseDescription,
+        )
     }
 
     func onMapCameraChange(
@@ -994,4 +993,9 @@ struct DataProgressMetrics {
         self.progress = progress
         isLoadingPrimary = showProgress && !isSecondaryData
     }
+}
+
+private struct MapMarkerDenseDescription {
+    let marks: [WorksiteAnnotationMapMark]
+    let denseDescription: DenseMarkDescription
 }
