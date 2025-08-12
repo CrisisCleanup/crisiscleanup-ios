@@ -581,14 +581,18 @@ private struct PropertyInformation: View {
 
                 ErrorTextView(text: propertyData.phoneNumberError)
                     .id("property-phone-error")
-                TextField(t.t("formLabels.phone1"), text: $propertyData.phoneNumber)
-                    .focused($focusState, equals: .caseInfoPhone)
-                    .onSubmit {
-                        focusState = .caseInfoPhoneNotes
-                    }
-                    .textFieldBorder()
-                    .disabled(disabled)
-                    .padding(.bottom)
+                HStack(alignment: .center, spacing: appTheme.gridItemSpacing) {
+                    TextField(t.t("formLabels.phone1"), text: $propertyData.phoneNumber)
+                        .focused($focusState, equals: .caseInfoPhone)
+                        .onSubmit {
+                            focusState = .caseInfoPhoneNotes
+                        }
+                        .textFieldBorder()
+                        .disabled(disabled)
+                    HelpIcon(t.t("caseForm.phone_number_format"))
+                        .padding(.horizontal, appTheme.gridItemSpacing)
+                }
+                .padding(.bottom)
 
                 TextField(t.t("formLabels.phone1_notes"), text: $propertyData.phoneNotes)
                     .focused($focusState, equals: .caseInfoPhoneNotes)

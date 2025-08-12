@@ -85,7 +85,10 @@ private func getMapMarkerColors(
     var markerColors = statusClaimMapMarkerColors[statusClaim]
     if markerColors == nil,
        let status = statusClaimToStatus[statusClaim] {
-        markerColors = statusMapMarkerColors[status] ?? statusMapMarkerColors[.unknown]!
+        markerColors = statusMapMarkerColors[status]
+    }
+    if markerColors == nil {
+        markerColors = statusMapMarkerColors[.unknown]!
     }
     if isVisited {
         markerColors = MapMarkerColor(

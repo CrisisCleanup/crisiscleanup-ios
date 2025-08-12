@@ -127,6 +127,7 @@ extension MainComponent {
                 locationDao: locationDao,
                 incidentOrganizationDao: organizationsDao,
                 organizationsSyncer: organizationsSyncer,
+                inputValidator: inputValidator,
                 loggerFactory: loggerFactory
             )
         }

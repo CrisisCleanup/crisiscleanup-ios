@@ -31,9 +31,9 @@ class CommonInputValidator: InputValidator {
     func validatePhoneNumber(_ value: String, regionCode: String) -> PhoneNumberValidation {
         var validationError: Error? = nil
         do {
-            var phoneNumber = value
-            if !value.trim().starts(with: "+") {
-                let digits = value.trim().replacing(nonDigitPattern, with: "")
+            var phoneNumber = value.trim()
+            if !phoneNumber.starts(with: "+") {
+                let digits = phoneNumber.replacing(nonDigitPattern, with: "")
                 if digits.count != 10 {
                     phoneNumber = "+\(value)"
                 }
@@ -46,7 +46,8 @@ class CommonInputValidator: InputValidator {
                 let formatted = phoneUtil.format(parsed, toType: format)
                 return PhoneNumberValidation(
                     true,
-                    formatted,
+                    original: value.trim(),
+                    formatted: formatted,
                 )
             }
         } catch {
@@ -54,8 +55,9 @@ class CommonInputValidator: InputValidator {
         }
         return PhoneNumberValidation(
             false,
-            "",
-            validationError,
+            original: value.trim(),
+            formatted: "",
+            error: validationError,
         )
     }
 
@@ -66,15 +68,18 @@ class CommonInputValidator: InputValidator {
 
 public struct  PhoneNumberValidation {
     let isValid: Bool
+    let original: String
     let formatted: String
     let error: Error?
 
     init(
         _ isValid: Bool,
-        _ formatted: String,
-        _ error: Error? = nil
+        original: String,
+        formatted: String,
+        error: Error? = nil
     ) {
         self.isValid = isValid
+        self.original = original
         self.formatted = formatted
         self.error = error
     }

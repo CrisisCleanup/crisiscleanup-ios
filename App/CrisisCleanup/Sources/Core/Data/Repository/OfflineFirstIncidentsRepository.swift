@@ -43,6 +43,7 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         locationDao: LocationDao,
         incidentOrganizationDao: IncidentOrganizationDao,
         organizationsSyncer: OrganizationsSyncer,
+        inputValidator: InputValidator,
         loggerFactory: AppLoggerFactory
     ) {
         self.dataSource = dataSource
@@ -60,6 +61,18 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         incidents = incidentsStream
         hotlineIncidents = incidentsStream.map {
             $0.filter { incident in incident.activePhoneNumbers.isNotEmpty }
+                .map { incident in
+                    incident.copy {
+                        $0.activePhoneNumbers = incident.activePhoneNumbers.map({ phoneNumber in
+                            let validated = inputValidator.validatePhoneNumber(phoneNumber)
+                            return if validated.isValid {
+                                validated.formatted
+                            } else {
+                                phoneNumber
+                            }
+                        })
+                    }
+                }
         }
     }
 
