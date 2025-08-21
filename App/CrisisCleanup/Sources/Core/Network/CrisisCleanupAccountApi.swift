@@ -13,6 +13,8 @@ public protocol CrisisCleanupAccountApi {
     ) async -> Bool
 
     func acceptTerms(_ userId: Int64, _ timestamp: Date) async -> Bool
+
+    func moveToOrganization(action: String, token: String) async -> Bool
 }
 
 extension CrisisCleanupAccountApi {

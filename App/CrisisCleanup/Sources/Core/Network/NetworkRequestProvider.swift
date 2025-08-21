@@ -359,6 +359,22 @@ extension NetworkRequestProvider {
         )
     }
 
+    var requestRedeploy: NetworkRequest {
+        NetworkRequest(
+            apiUrl("incident_requests"),
+            method: .post,
+            addTokenHeader: true
+        )
+    }
+
+    var shareLocation: NetworkRequest {
+        NetworkRequest(
+            apiUrl("user_geo_locations"),
+            method: .post,
+            addTokenHeader: true
+        )
+    }
+
     // MARK: Version support
 
     var minAppVersionSupport: NetworkRequest? {
@@ -421,19 +437,11 @@ extension NetworkRequestProvider {
         )
     }
 
-    var requestRedeploy: NetworkRequest {
+    var transferOrganization: NetworkRequest {
         NetworkRequest(
-            apiUrl("incident_requests"),
+            apiUrl("transfer_requests"),
             method: .post,
-            addTokenHeader: true
-        )
-    }
-
-    var shareLocation: NetworkRequest {
-        NetworkRequest(
-            apiUrl("user_geo_locations"),
-            method: .post,
-            addTokenHeader: true
+            additionalPaths: ["invitation"],
         )
     }
 

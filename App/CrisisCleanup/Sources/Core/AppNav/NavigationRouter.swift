@@ -65,7 +65,10 @@ class NavigationRouter: ObservableObject {
         path.append(.volunteerOrg)
     }
 
-    func openForgotPassword() {
+    func openForgotPassword(_ clearRoutes: Bool = false) {
+        if clearRoutes {
+            clearAuthRoutes()
+        }
         path.append(.recoverPassword(showForgotPassword: true, showMagicLink: true))
     }
 

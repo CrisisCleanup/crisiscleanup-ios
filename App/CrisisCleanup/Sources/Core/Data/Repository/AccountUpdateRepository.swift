@@ -8,6 +8,10 @@ public protocol AccountUpdateRepository {
     func changePassword(password: String, token: String) async -> Bool
     func takeWasPasswordResetRecent() -> Bool
     func acceptTerms() async -> Bool
+    func acceptOrganizationChange(
+        _ action: ChangeOrganizationAction,
+        _ invitationToken: String,
+    ) async -> Bool
 }
 
 class CrisisCleanupAccountUpdateRepository: AccountUpdateRepository {
@@ -75,6 +79,13 @@ class CrisisCleanupAccountUpdateRepository: AccountUpdateRepository {
         }
         return false
     }
+
+    func acceptOrganizationChange(_ action: ChangeOrganizationAction, _ invitationToken: String) async -> Bool {
+        await accountApi.moveToOrganization(
+            action: action.literal,
+            token: invitationToken,
+        )
+    }
 }
 
 public struct PasswordResetInitiation {
@@ -87,5 +98,17 @@ public struct PasswordResetInitiation {
     ) {
         self.expiresAt = expiresAt
         self.errorMessage = errorMessage
+    }
+}
+
+public enum ChangeOrganizationAction: String, Equatable {
+    case all,
+         users
+
+    var literal: String {
+        switch self {
+        case .all: return "all"
+        case .users: return "users"
+        }
     }
 }
