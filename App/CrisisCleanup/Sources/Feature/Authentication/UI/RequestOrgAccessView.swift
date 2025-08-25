@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct RequestOrgAccessView: View {
+    @Environment(\.dismiss) var dismiss
     @Environment(\.translator) var t: KeyAssetTranslator
 
     @EnvironmentObject var router: NavigationRouter
@@ -45,7 +46,27 @@ struct RequestOrgAccessView: View {
                 }
             }
         }
-        .navigationTitle(viewModel.screenTitle)
+        .navigationBarBackButtonHidden()
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    if viewModel.isOrgTransferred,
+                       viewModel.wasAuthenticated {
+                        router.clearRoutes()
+                    } else {
+                        dismiss()
+                    }
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .fontWeight(.semibold)
+                }
+            }
+            ToolbarItem(placement: .principal) {
+                Text(viewModel.screenTitle)
+                    .fontHeader3()
+            }
+        }
+        .navigationBarTitleDisplayMode(.inline)
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)
@@ -131,6 +152,7 @@ internal struct InviterAvatarView: View {
 
 private struct InviteExistingUserView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
+    @Environment(\.dismiss) var dismiss
 
     @EnvironmentObject var viewModel: RequestOrgAccessViewModel
 
@@ -141,7 +163,6 @@ private struct InviteExistingUserView: View {
     @State private var selectedOrgTransfer = TransferOrgOption.notSelected
 
     var body: some View {
-
         if let inviteInfo = inviteDisplay?.inviteInfo {
             let transferInstructions = t.t("invitationSignup.inviting_to_transfer_confirm")
                 .replacingOccurrences(of: "{user}", with: inviteInfo.displayName)
@@ -150,11 +171,30 @@ private struct InviteExistingUserView: View {
             HtmlTextView(htmlContent: transferInstructions)
                 .listItemModifier()
 
-            // TODO: Options
+            ForEach(viewModel.transferOrgOptions, id: \.self) { option in
+                RadioButton(
+                    text: t.t(option.translateKey),
+                    isSelected: option == selectedOrgTransfer,
+                ) {
+                    selectedOrgTransfer = option
+                    viewModel.onChangeTransferOrgOption()
+                }
+                .listItemModifier()
+            }
+
+            let errorMessage = viewModel.transferOrgErrorMessage
+            if errorMessage.isNotBlank {
+                Text(errorMessage)
+                    .foregroundStyle(appTheme.colors.primaryRedColor)
+                    .listItemModifier()
+            }
 
             Button {
-                // TODO: Take correct action
-                // viewModel.transferToOrg()
+                if selectedOrgTransfer == .doNotTransfer {
+                    dismiss()
+                } else {
+                     viewModel.onTransferOrg(selectedOrgTransfer)
+                }
             } label: {
                 BusyButtonContent(
                     isBusy: isLoading,
@@ -162,6 +202,7 @@ private struct InviteExistingUserView: View {
                 )
             }
             .stylePrimary()
+            .disabled(selectedOrgTransfer == .notSelected)
             .padding()
             .accessibilityIdentifier("transferOrgSubmitAction")
         }

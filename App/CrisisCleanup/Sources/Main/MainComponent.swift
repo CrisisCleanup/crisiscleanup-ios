@@ -146,14 +146,14 @@ public class MainComponent: BootstrapComponent,
     ) -> AnyView {
         authenticateComponent.passwordRecoverView(
             showForgotPassword: showForgotPassword,
-            showMagicLink: showMagicLink
+            showMagicLink: showMagicLink,
         )
     }
 
     public func resetPasswordView(closeAuthFlow: @escaping () -> Void, resetCode: String) -> AnyView {
         authenticateComponent.resetPasswordView(
             closeAuthFlow: closeAuthFlow,
-            resetCode: resetCode
+            resetCode: resetCode,
         )
     }
 

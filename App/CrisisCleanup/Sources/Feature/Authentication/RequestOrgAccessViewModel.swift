@@ -11,16 +11,6 @@ class RequestOrgAccessViewModel: ObservableObject {
     private let translator: KeyAssetTranslator
     private let logger: AppLogger
 
-    let transferOrgOptions = [
-        TransferOrgOption.users,
-        .all,
-        .doNotTransfer,
-    ]
-    @Published private(set) var transferOrgErrorMessage = ""
-    private let isTransferringOrgSubject = CurrentValueSubject<Bool, Never>(false)
-    @Published private(set) var isTransferringOrg = false
-    @Published private(set) var isOrgTransferred = false
-
     @Published var screenTitle = ""
 
     internal let showEmailInput: Bool
@@ -47,6 +37,18 @@ class RequestOrgAccessViewModel: ObservableObject {
 
     private let isRequestingInviteSubject = CurrentValueSubject<Bool, Never>(false)
     @Published private var isRequestingInvite = false
+
+    @Published private(set) var wasAuthenticated = false
+
+    let transferOrgOptions = [
+        TransferOrgOption.users,
+        .all,
+        .doNotTransfer,
+    ]
+    @Published private(set) var transferOrgErrorMessage = ""
+    private let isTransferringOrgSubject = CurrentValueSubject<Bool, Never>(false)
+    @Published private(set) var isTransferringOrg = false
+    @Published private(set) var isOrgTransferred = false
 
     @Published private(set) var isLoading = false
 
@@ -86,9 +88,8 @@ class RequestOrgAccessViewModel: ObservableObject {
 
     func onViewAppear() {
         subscribeScreenTitle()
-        subscribeLoading()
+        subscribeLoadingEditable()
         subscribeLanguageOptions()
-        subscribeEditableState()
         subscribeInviteInfo()
     }
 
@@ -115,7 +116,7 @@ class RequestOrgAccessViewModel: ObservableObject {
         .store(in: &subscriptions)
     }
 
-    private func subscribeLoading() {
+    private func subscribeLoadingEditable() {
         isFetchingInviteInfoSubject
             .receive(on: RunLoop.main)
             .assign(to: \.isFetchingInviteInfo, on: self)
@@ -126,16 +127,35 @@ class RequestOrgAccessViewModel: ObservableObject {
             .assign(to: \.isRequestingInvite, on: self)
             .store(in: &subscriptions)
 
-        Publishers.CombineLatest4(
-            isPullingLanguageOptions,
+        isTransferringOrgSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.isTransferringOrg, on: self)
+            .store(in: &subscriptions)
+
+        let isStateTransient = Publishers.CombineLatest3(
             $isFetchingInviteInfo,
             $isRequestingInvite,
             $isTransferringOrg,
         )
-        .map { b0, b1, b2, b3 in b0 || b1 || b2 || b3 }
+            .map { b0, b1, b2 in b0 || b1 || b2 }
+            .removeDuplicates()
+            .replay1()
+
+        Publishers.CombineLatest(
+            isPullingLanguageOptions,
+            isStateTransient,
+        )
+        .map { b0, b1 in b0 || b1 }
         .receive(on: RunLoop.main)
         .assign(to: \.isLoading, on: self)
         .store(in: &subscriptions)
+
+        isStateTransient
+            .receive(on: RunLoop.main)
+            .sink { isBusy in
+                self.editableViewState.isEditable = !isBusy
+            }
+            .store(in: &subscriptions)
 
         requestedOrgSubject
             .receive(on: RunLoop.main)
@@ -186,18 +206,6 @@ class RequestOrgAccessViewModel: ObservableObject {
                 }
             }
         }
-    }
-
-    private func subscribeEditableState() {
-        Publishers.CombineLatest(
-            $isFetchingInviteInfo,
-            $isRequestingInvite
-        )
-        .receive(on: RunLoop.main)
-        .sink(receiveValue: { b0, b1 in
-            self.editableViewState.isEditable = !(b0 || b1)
-        })
-        .store(in: &subscriptions)
     }
 
     private func subscribeInviteInfo() {
@@ -349,15 +357,9 @@ class RequestOrgAccessViewModel: ObservableObject {
                         isTransferringOrgSubject.value = false
                     }
 
-                    await transferToOrg(action)
-
-                    let isAuthenticatedPublisher = self.accountDataRepository.isAuthenticated.eraseToAnyPublisher()
-                    let isAuthenticated = try await isAuthenticatedPublisher.asyncFirst()
-                    if isAuthenticated {
-                        accountEventBus.onLogout()
-                    }
+                    try await transferToOrg(action)
                 } catch {
-                    self.logger.logError(error)
+                    logger.logError(error)
                 }
             }
 
@@ -365,13 +367,22 @@ class RequestOrgAccessViewModel: ObservableObject {
         }
     }
 
-    func transferToOrg(_ action: ChangeOrganizationAction) async {
-        let isTransferred = await accountUpdateRepository.acceptOrganizationChange(action, self.invitationCode)
+    private func transferToOrg(_ action: ChangeOrganizationAction) async throws {
+        let isAuthenticatedPublisher = accountDataRepository.isAuthenticated.eraseToAnyPublisher()
+        let isAuthenticated = try await isAuthenticatedPublisher.asyncFirst()
+
+        let isTransferred = await accountUpdateRepository.acceptOrganizationChange(action, invitationCode)
+
         Task { @MainActor in
             if isTransferred {
                 isOrgTransferred = true
+
+                if isAuthenticated {
+                    wasAuthenticated = true
+                    accountEventBus.onLogout()
+                }
             } else {
-                self.logger.logError(GenericError("User transfer to org failed."))
+                logger.logError(GenericError("User transfer to org failed."))
                 transferOrgErrorMessage = translator.t("~~There was an issue during organization transfer. Try again later or reach out to support for help.")
             }
         }
@@ -392,4 +403,17 @@ enum TransferOrgOption {
          users,
          all,
          doNotTransfer
+
+    var translateKey: String {
+        switch self {
+        case .notSelected:
+            return ""
+        case .users:
+            return "invitationSignup.yes_transfer_just_me"
+        case .all:
+            return "invitationSignup.yes_transfer_me_and_cases"
+        case .doNotTransfer:
+            return "invitationSignup.no_transfer"
+        }
+    }
 }

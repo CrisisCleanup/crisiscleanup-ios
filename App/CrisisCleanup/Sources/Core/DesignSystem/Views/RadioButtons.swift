@@ -50,6 +50,7 @@ struct RadioButton: View {
                         $0.padding(.leading, Double(nestedLevel!) * appTheme.nestedItemPadding)
                     }
                 Text(text)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .foregroundColor(Color.black)
             }
             .if (isListItem) {
