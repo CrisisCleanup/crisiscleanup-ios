@@ -150,9 +150,8 @@ public class MainComponent: BootstrapComponent,
         )
     }
 
-    public func resetPasswordView(closeAuthFlow: @escaping () -> Void, resetCode: String) -> AnyView {
+    public func resetPasswordView(resetCode: String) -> AnyView {
         authenticateComponent.resetPasswordView(
-            closeAuthFlow: closeAuthFlow,
             resetCode: resetCode,
         )
     }

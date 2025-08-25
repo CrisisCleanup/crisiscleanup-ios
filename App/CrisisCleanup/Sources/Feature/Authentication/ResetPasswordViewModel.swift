@@ -2,7 +2,7 @@ import Combine
 import SwiftUI
 
 class ResetPasswordViewModel: ObservableObject {
-    private let resetPasswordToken: String
+    internal let resetPasswordToken: String
 
     private let accountUpdateRepository: AccountUpdateRepository
     private let translator: KeyAssetTranslator

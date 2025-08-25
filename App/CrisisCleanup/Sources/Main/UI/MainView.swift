@@ -242,7 +242,6 @@ private struct AuthenticationNavigationStack: View {
                         )
                     case .resetPassword(let recoverCode):
                         authenticateViewBuilder.resetPasswordView(
-                            closeAuthFlow: exitAuthNavigation,
                             resetCode: recoverCode
                         )
                     case .volunteerOrg:
@@ -412,7 +411,6 @@ private struct MainNavigationStack: View {
                     incidentCacheViewBuilder.incidentWorksitesCacheView
                 case .resetPassword(let recoverCode):
                     authenticateViewBuilder.resetPasswordView(
-                        closeAuthFlow: { dismiss() },
                         resetCode: recoverCode
                     )
                 case .orgUserInvite(let inviteCode):

@@ -384,7 +384,9 @@ class MainViewModel: ObservableObject {
     private func onResetPassword(_ code: String) {
         if code.isNotBlank {
             router.openResetPassword(code)
-            showAuthScreen = true
+            if isNotAuthenticated {
+                showAuthScreen = true
+            }
         }
     }
 
