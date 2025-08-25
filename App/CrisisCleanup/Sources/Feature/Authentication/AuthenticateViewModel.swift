@@ -11,6 +11,7 @@ class AuthenticateViewModel: ObservableObject {
 
     @Published private(set) var viewData = AuthenticateViewData()
     @Published private(set) var accountInfo = ""
+    @Published private(set) var organizationInfo = ""
 
     @Published private(set) var hotlineIncidents = [Incident]()
 
@@ -54,14 +55,15 @@ class AuthenticateViewModel: ObservableObject {
 
         $viewData
             .filter { $0.state == .ready }
-            .map {
-                let account = $0.accountData
-                return self.translator.t("info.account_is")
-                    .replacingOccurrences(of: "{full_name}", with: account.fullName)
-                    .replacingOccurrences(of: "{email_address}", with: account.emailAddress)
-            }
+            .map { $0.accountData }
             .receive(on: RunLoop.main)
-            .assign(to: \.accountInfo, on: self)
+            .sink {
+                self.accountInfo = self.translator.t("info.account_is")
+                    .replacingOccurrences(of: "{full_name}", with: $0.fullName)
+                    .replacingOccurrences(of: "{email_address}", with: $0.emailAddress)
+
+                self.organizationInfo = $0.org.name
+            }
             .store(in: &subscriptions)
     }
 

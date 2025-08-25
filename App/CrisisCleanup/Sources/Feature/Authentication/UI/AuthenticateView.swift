@@ -1,10 +1,6 @@
 import SwiftUI
 
 struct AuthenticateView: View {
-    @Environment(\.translator) var t: KeyAssetTranslator
-
-    @EnvironmentObject var router: NavigationRouter
-
     @ObservedObject var viewModel: AuthenticateViewModel
 
     let dismiss: () -> Void
@@ -15,24 +11,19 @@ struct AuthenticateView: View {
             if viewData.state == .loading {
                 ProgressView()
                     .frame(alignment: .center)
+            } else if viewData.isAccountValid {
+                LogoutView(
+                    dismissScreen: dismiss
+                )
             } else {
-                if viewData.isAccountValid {
-                    let logout = { viewModel.logout() }
-                    LogoutView(
-                        viewModel: viewModel,
-                        logout: logout,
-                        dismissScreen: dismiss
-                    )
-                } else {
-                    LoginOptionsView(
-                        viewModel: viewModel,
-                        dismissScreen: dismiss
-                    )
-                }
+                LoginOptionsView(
+                    dismissScreen: dismiss
+                )
             }
         }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
+        .environmentObject(viewModel)
     }
 }
 
@@ -41,8 +32,7 @@ private struct LoginOptionsView: View {
     @Environment(\.openURL) var openURL
 
     @EnvironmentObject var router: NavigationRouter
-
-    @ObservedObject var viewModel: AuthenticateViewModel
+    @EnvironmentObject var viewModel: AuthenticateViewModel
 
     let dismissScreen: () -> Void
 
@@ -126,9 +116,8 @@ private struct LoginOptionsView: View {
 struct LogoutView: View {
     @Environment(\.translator) var t: KeyAssetTranslator
 
-    @ObservedObject var viewModel: AuthenticateViewModel
+    @EnvironmentObject var viewModel: AuthenticateViewModel
 
-    var logout: () -> ()
     var dismissScreen: () -> ()
 
     var body: some View {
@@ -138,13 +127,19 @@ struct LogoutView: View {
 
             VStack(alignment: .leading) {
                 Text(viewModel.accountInfo)
+                    .padding(.bottom)
                     .accessibilityIdentifier("authedAccountInfoText")
 
+                if viewModel.organizationInfo.isNotBlank {
+                    Text(viewModel.organizationInfo)
+                        .padding(.bottom)
+                }
+
                 Button(t.t("actions.logout")) {
-                    logout()
+                    viewModel.logout()
                 }
                 .stylePrimary()
-                .padding(.vertical)
+                .padding(.bottom)
                 .accessibilityIdentifier("authedLogoutAction")
 
                 Button(t.t("actions.back")) {
