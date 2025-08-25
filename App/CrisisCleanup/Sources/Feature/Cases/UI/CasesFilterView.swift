@@ -1,5 +1,4 @@
 import Combine
-import SVGView
 import SwiftUI
 
 struct CasesFilterView: View {

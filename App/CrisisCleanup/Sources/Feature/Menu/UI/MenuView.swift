@@ -238,10 +238,10 @@ private struct TopBar: View {
             Button {
                 openAuthScreen()
             } label: {
-                if let url = viewModel.profilePicture?.url {
+                if let profilePicture = viewModel.profilePicture {
                     AvatarView(
-                        url: url,
-                        isSvg: viewModel.profilePicture?.isSvg == true
+                        url: profilePicture.url,
+                        isSvg: profilePicture.isSvg,
                     )
                 } else {
                     let imageSize = appTheme.avatarSize

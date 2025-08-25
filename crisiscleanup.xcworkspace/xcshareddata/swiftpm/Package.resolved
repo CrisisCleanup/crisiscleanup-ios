@@ -217,6 +217,15 @@
       }
     },
     {
+      "identity" : "swiftdraw",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swhitty/SwiftDraw.git",
+      "state" : {
+        "revision" : "a535740c4c0925a622bef03806b58904ee611466",
+        "version" : "0.23.1"
+      }
+    },
+    {
       "identity" : "swiftui-cached-async-image",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/lorenzofiamingo/swiftui-cached-async-image",

@@ -4,79 +4,84 @@
 import Foundation
 
 extension AccountData {
-	// A default style constructor for the .copy fn to use
-	init(
-		id: Int64,
-		tokenExpiry: Date,
-		fullName: String,
-		emailAddress: String,
-		profilePictureUri: String,
-		org: OrgData,
-		hasAcceptedTerms: Bool,
-		approvedIncidents: Set<Int64>,
-		isCrisisCleanupAdmin: Bool,
-		areTokensValid: Bool,
-		// This is to prevent overriding the default init if it exists already
-		forCopyInit: Void? = nil
-	) {
-		self.id = id
-		self.tokenExpiry = tokenExpiry
-		self.fullName = fullName
-		self.emailAddress = emailAddress
-		self.profilePictureUri = profilePictureUri
-		self.org = org
-		self.hasAcceptedTerms = hasAcceptedTerms
-		self.approvedIncidents = approvedIncidents
-		self.isCrisisCleanupAdmin = isCrisisCleanupAdmin
-		self.areTokensValid = areTokensValid
-	}
+    // A default style constructor for the .copy fn to use
+    init(
+        id: Int64,
+        tokenExpiry: Date,
+        fullName: String,
+        emailAddress: String,
+        profilePictureUri: String,
+        org: OrgData,
+        hasAcceptedTerms: Bool,
+        approvedIncidents: Set<Int64>,
+        isCrisisCleanupAdmin: Bool,
+        areTokensValid: Bool,
+        isGeneratedProfilePicture: Bool,
+        // This is to prevent overriding the default init if it exists already
+        forCopyInit: Void? = nil
+    ) {
+        self.id = id
+        self.tokenExpiry = tokenExpiry
+        self.fullName = fullName
+        self.emailAddress = emailAddress
+        self.profilePictureUri = profilePictureUri
+        self.org = org
+        self.hasAcceptedTerms = hasAcceptedTerms
+        self.approvedIncidents = approvedIncidents
+        self.isCrisisCleanupAdmin = isCrisisCleanupAdmin
+        self.areTokensValid = areTokensValid
+        self.isGeneratedProfilePicture = isGeneratedProfilePicture
+    }
 
-	// struct copy, lets you overwrite specific variables retaining the value of the rest
-	// using a closure to set the new values for the copy of the struct
-	func copy(build: (inout Builder) -> Void) -> AccountData {
-		var builder = Builder(original: self)
-		build(&builder)
-		return builder.toAccountData()
-	}
+    // struct copy, lets you overwrite specific variables retaining the value of the rest
+    // using a closure to set the new values for the copy of the struct
+    func copy(build: (inout Builder) -> Void) -> AccountData {
+        var builder = Builder(original: self)
+        build(&builder)
+        return builder.toAccountData()
+    }
 
-	struct Builder {
-		var id: Int64
-		var tokenExpiry: Date
-		var fullName: String
-		var emailAddress: String
-		var profilePictureUri: String
-		var org: OrgData
-		var hasAcceptedTerms: Bool
-		var approvedIncidents: Set<Int64>
-		var isCrisisCleanupAdmin: Bool
-		var areTokensValid: Bool
+    struct Builder {
+        var id: Int64
+        var tokenExpiry: Date
+        var fullName: String
+        var emailAddress: String
+        var profilePictureUri: String
+        var org: OrgData
+        var hasAcceptedTerms: Bool
+        var approvedIncidents: Set<Int64>
+        var isCrisisCleanupAdmin: Bool
+        var areTokensValid: Bool
+        var isGeneratedProfilePicture: Bool
 
-		fileprivate init(original: AccountData) {
-			self.id = original.id
-			self.tokenExpiry = original.tokenExpiry
-			self.fullName = original.fullName
-			self.emailAddress = original.emailAddress
-			self.profilePictureUri = original.profilePictureUri
-			self.org = original.org
-			self.hasAcceptedTerms = original.hasAcceptedTerms
-			self.approvedIncidents = original.approvedIncidents
-			self.isCrisisCleanupAdmin = original.isCrisisCleanupAdmin
-			self.areTokensValid = original.areTokensValid
-		}
+        fileprivate init(original: AccountData) {
+            self.id = original.id
+            self.tokenExpiry = original.tokenExpiry
+            self.fullName = original.fullName
+            self.emailAddress = original.emailAddress
+            self.profilePictureUri = original.profilePictureUri
+            self.org = original.org
+            self.hasAcceptedTerms = original.hasAcceptedTerms
+            self.approvedIncidents = original.approvedIncidents
+            self.isCrisisCleanupAdmin = original.isCrisisCleanupAdmin
+            self.areTokensValid = original.areTokensValid
+            self.isGeneratedProfilePicture = original.isGeneratedProfilePicture
+        }
 
-		fileprivate func toAccountData() -> AccountData {
-			return AccountData(
-				id: id,
-				tokenExpiry: tokenExpiry,
-				fullName: fullName,
-				emailAddress: emailAddress,
-				profilePictureUri: profilePictureUri,
-				org: org,
-				hasAcceptedTerms: hasAcceptedTerms,
-				approvedIncidents: approvedIncidents,
-				isCrisisCleanupAdmin: isCrisisCleanupAdmin,
-				areTokensValid: areTokensValid
-			)
-		}
-	}
+        fileprivate func toAccountData() -> AccountData {
+            return AccountData(
+                id: id,
+                tokenExpiry: tokenExpiry,
+                fullName: fullName,
+                emailAddress: emailAddress,
+                profilePictureUri: profilePictureUri,
+                org: org,
+                hasAcceptedTerms: hasAcceptedTerms,
+                approvedIncidents: approvedIncidents,
+                isCrisisCleanupAdmin: isCrisisCleanupAdmin,
+                areTokensValid: areTokensValid,
+                isGeneratedProfilePicture: isGeneratedProfilePicture
+            )
+        }
+    }
 }

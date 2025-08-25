@@ -1,6 +1,5 @@
 import Foundation
 import MapKit
-import SVGView
 import SwiftUI
 
 struct CasesView: View {

@@ -17,8 +17,10 @@ public struct AccountData: Equatable {
     let approvedIncidents: Set<Int64>
     let isCrisisCleanupAdmin: Bool
     let areTokensValid: Bool
+    let isGeneratedProfilePicture: Bool
 
     // sourcery:begin: skipCopy
+
     var hasAuthenticated: Bool { id > 0 }
 
     var isAccessTokenExpired: Bool { tokenExpiry <= Date().addingTimeInterval(-10.minutes) }
@@ -36,5 +38,6 @@ let emptyAccountData = AccountData(
     hasAcceptedTerms: false,
     approvedIncidents: Set(),
     isCrisisCleanupAdmin: false,
-    areTokensValid: false
+    areTokensValid: false,
+    isGeneratedProfilePicture: false,
 )
