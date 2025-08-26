@@ -98,7 +98,8 @@ private struct RequestOrgUserInfoInputView: View {
         let disabled = editableView.disabled
         let isLoading = viewModel.isLoading
 
-        if inviteDisplay == nil {
+        if viewModel.isFromInvite,
+           inviteDisplay == nil {
             ProgressView()
                 .circularProgress()
                 .padding()

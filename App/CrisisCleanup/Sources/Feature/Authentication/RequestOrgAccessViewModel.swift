@@ -11,13 +11,15 @@ class RequestOrgAccessViewModel: ObservableObject {
     private let translator: KeyAssetTranslator
     private let logger: AppLogger
 
+    let showEmailInput: Bool
+    internal let invitationCode: String
+
+    let isFromInvite: Bool
+
     @Published var screenTitle = ""
 
-    internal let showEmailInput: Bool
     @Published var emailAddress = ""
     @Published var emailAddressError = ""
-
-    internal let invitationCode: String
 
     @Published var userInfo = UserInfoInputData()
 
@@ -84,6 +86,8 @@ class RequestOrgAccessViewModel: ObservableObject {
 
         self.showEmailInput = showEmailInput
         self.invitationCode = invitationCode
+
+        isFromInvite = invitationCode.isNotBlank
     }
 
     func onViewAppear() {
