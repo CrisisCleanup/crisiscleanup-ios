@@ -25,6 +25,12 @@ public struct AccountData: Equatable {
 
     var isAccessTokenExpired: Bool { tokenExpiry <= Date().addingTimeInterval(-10.minutes) }
     // sourcery:end
+
+    func filterApproved<T: IncidentIdProvider>(_ incidents: [T]) -> [T] {
+        return isCrisisCleanupAdmin
+        ? incidents
+        : incidents.filter { approvedIncidents.contains($0.id) }
+    }
 }
 
 let emptyOrgData = OrgData(id: 0, name: "")

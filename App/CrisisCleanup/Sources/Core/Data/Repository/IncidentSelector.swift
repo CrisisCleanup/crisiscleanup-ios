@@ -37,7 +37,7 @@ class IncidentSelectRepository: IncidentSelector {
         logger = loggerFactory.getLogger("incident-data")
 
         incidentsData = incidentsDataSubject.removeDuplicates()
-        let dataSource = incidentsData.eraseToAnyPublisher().share(replay: 1)
+        let dataSource = incidentsData.eraseToAnyPublisher().replay1()
         incident = dataSource.map { $0.selected }
         incidentId = dataSource.map { $0.selectedId }
 
@@ -51,9 +51,7 @@ class IncidentSelectRepository: IncidentSelector {
             accountDataPublisher,
         )
         .map { incidents, accountData in
-            accountData.isCrisisCleanupAdmin
-            ? incidents
-            : incidents.filter { accountData.approvedIncidents.contains($0.id) }
+            accountData.filterApproved(incidents)
         }
         .eraseToAnyPublisher()
 
@@ -67,7 +65,6 @@ class IncidentSelectRepository: IncidentSelector {
         )
             .map { selectedId, incidents in
                 incidents.first(where: { $0.id == selectedId })
-                ?? incidents.firstOrNil
                 ?? EmptyIncident
             }
 

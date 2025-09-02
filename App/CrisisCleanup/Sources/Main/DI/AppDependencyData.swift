@@ -123,6 +123,7 @@ extension MainComponent {
             OfflineFirstIncidentsRepository(
                 dataSource: networkDataSource,
                 appPreferencesDataSource: appPreferences,
+                accountInfoDataSource: accountDataSource,
                 incidentDao: incidentDao,
                 locationDao: locationDao,
                 incidentOrganizationDao: organizationsDao,

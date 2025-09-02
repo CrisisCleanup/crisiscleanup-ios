@@ -28,6 +28,7 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
 
     private let dataSource: CrisisCleanupNetworkDataSource
     private let appPreferencesDataSource: AppPreferencesDataSource
+    private let accountInfoDataSource: AccountInfoDataSource
     private let incidentDao: IncidentDao
     private let locationDao: LocationDao
     private let incidentOrganizationDao: IncidentOrganizationDao
@@ -39,6 +40,7 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
     init(
         dataSource: CrisisCleanupNetworkDataSource,
         appPreferencesDataSource: AppPreferencesDataSource,
+        accountInfoDataSource: AccountInfoDataSource,
         incidentDao: IncidentDao,
         locationDao: LocationDao,
         incidentOrganizationDao: IncidentOrganizationDao,
@@ -48,6 +50,7 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
     ) {
         self.dataSource = dataSource
         self.appPreferencesDataSource = appPreferencesDataSource
+        self.accountInfoDataSource = accountInfoDataSource
         self.incidentDao = incidentDao
         self.locationDao = locationDao
         self.incidentOrganizationDao = incidentOrganizationDao
@@ -193,14 +196,17 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
     }
 
     func pullIncidents(force: Bool) async throws {
-        var isSuccessful = false
-        do {
-            defer {
-                appPreferencesDataSource.setSyncAttempt(isSuccessful)
-            }
+        try await syncInternal(forcePullAll: force)
 
-            try await syncInternal(forcePullAll: force)
-            isSuccessful = true
+        let preferencesPublisher = appPreferencesDataSource.preferences.eraseToAnyPublisher()
+        let isUnselectedIncident = try await preferencesPublisher.asyncFirst().selectedIncidentId == EmptyIncident.id
+        if isUnselectedIncident {
+            let incidents = await getIncidentsList()
+            let accountData = try await accountInfoDataSource.accountData.eraseToAnyPublisher().asyncFirst()
+            let approvedIncidents = accountData.filterApproved(incidents)
+            if let firstIncident = approvedIncidents.firstOrNil {
+                appPreferencesDataSource.setSelectedIncident(firstIncident.id)
+            }
         }
     }
 

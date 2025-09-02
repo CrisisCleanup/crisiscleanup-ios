@@ -1,7 +1,11 @@
 import Foundation
 
+protocol IncidentIdProvider {
+    var id: Int64 { get }
+}
+
 // sourcery: copyBuilder, skipCopyInit
-public struct Incident: Equatable {
+public struct Incident: IncidentIdProvider, Equatable {
     let id: Int64
     let name: String
     let shortName: String
@@ -183,7 +187,7 @@ public struct IncidentFormField: Equatable {
     }
 }
 
-public struct IncidentIdNameType: Equatable {
+public struct IncidentIdNameType: IncidentIdProvider, Equatable {
     let id: Int64
     let name: String
     let shortName: String

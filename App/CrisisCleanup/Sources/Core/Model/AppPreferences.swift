@@ -4,7 +4,7 @@ public struct AppPreferences: Codable {
     let hideGettingStartedVideo: Bool
     let selectedIncidentId: Int64
     let languageKey: String
-    let syncAttempt: SyncAttempt
+    let syncAttempt: SyncAttempt?
     let tableViewSortBy: WorksiteSortBy
     let shareLocationWithOrg: Bool
     let notifyDataSyncProgress: Bool?
@@ -19,7 +19,7 @@ public struct AppPreferences: Codable {
         hideGettingStartedVideo: Bool = false,
         selectedIncidentId: Int64 = EmptyIncident.id,
         languageKey: String = "en-US",
-        syncAttempt: SyncAttempt = SyncAttempt(),
+        syncAttempt: SyncAttempt? = nil,
         tableViewSortBy: WorksiteSortBy = .none,
         shareLocationWithOrg: Bool = false,
         notifyDataSyncProgress: Bool? = false,
@@ -31,7 +31,7 @@ public struct AppPreferences: Codable {
         self.hideGettingStartedVideo = hideGettingStartedVideo
         self.selectedIncidentId = selectedIncidentId
         self.languageKey = languageKey
-        self.syncAttempt = syncAttempt
+        self.syncAttempt = nil
         self.tableViewSortBy = tableViewSortBy
         self.shareLocationWithOrg = shareLocationWithOrg
         self.notifyDataSyncProgress = notifyDataSyncProgress

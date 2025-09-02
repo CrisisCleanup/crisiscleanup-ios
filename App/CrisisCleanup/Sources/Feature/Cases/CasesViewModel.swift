@@ -354,7 +354,18 @@ class CasesViewModel: ObservableObject {
                         queryFilters,
                         CaseChangeTime(ExistingWorksiteIdentifierNone),
                     )
-                    throw CancellationError()
+
+                    if isZoomedOut {
+                        return IncidentAnnotations(
+                            queryIncidentId,
+                            queryFilters,
+                            changedCase,
+                            [],
+                            EmptyDenseMarkDescription,
+                        )
+                    } else {
+                        throw CancellationError()
+                    }
                 }
 
                 self.mapAnnotationsExchanger.onCleanStateChange(
