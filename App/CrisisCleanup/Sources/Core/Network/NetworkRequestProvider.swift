@@ -229,6 +229,14 @@ extension NetworkRequestProvider {
         )
     }
 
+    var worksiteChanges: NetworkRequest {
+        NetworkRequest(
+            apiUrl("worksites_changes"),
+            addTokenHeader: true,
+            timeoutInterval: 10.seconds,
+        )
+    }
+
     // MARK: Write requests
 
     var newWorksite: NetworkRequest {

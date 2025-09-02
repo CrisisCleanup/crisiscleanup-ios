@@ -12,10 +12,30 @@ struct RecentWorksiteRecord : Identifiable, Equatable {
 extension RecentWorksiteRecord: Codable, FetchableRecord, PersistableRecord {
     static var databaseTableName: String = "recentWorksite"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // internal for testing. Should be fileprivate.
+    internal enum Columns: String, ColumnExpression {
         case id,
              incidentId,
              viewedAt
+    }
+
+    static func updateIncident(
+        _ db: Database,
+        id: Int64,
+        incidentId: Int64
+    ) throws {
+        try db.execute(
+            sql:
+                """
+                UPDATE recentWorksite
+                SET incidentId=:incidentId
+                WHERE id=:id
+                """,
+            arguments: [
+                "id": id,
+                "incidentId": incidentId
+            ]
+        )
     }
 }
 

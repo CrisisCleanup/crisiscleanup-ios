@@ -533,6 +533,18 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                 try await checkCancelTimeout()
                 worksitesAdditionalStatsUpdater.clearStep()
             }
+
+            if !(isPaused || isSlowDownload) {
+                try await checkCancelTimeout()
+
+                logStage(incidentId, .worksitesChangeIncident)
+
+                await updateChangedIncidentWorksites(
+                    incidentId: incidentId,
+                    restartCache: syncPlan.restartCache,
+                    lastReconciled: syncPreferences.lastReconciled,
+                )
+            }
         } catch {
             with(incidentDataPullStatsSubject.value) { stats in
                 if stats.queryCount < stats.dataCount {
@@ -1304,7 +1316,42 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
     }
 
     func updateCachePreferences(_ preferences: IncidentWorksitesCachePreferences) {
-        incidentCachePreferences.setPreferences(preferences)
+        incidentCachePreferences.setPauseRegionPreferences(preferences)
+    }
+
+    private func updateChangedIncidentWorksites(
+        incidentId: Int64,
+        restartCache: Bool,
+        lastReconciled: Date?,
+    ) async {
+        let minTimestamp = Date.now.addingTimeInterval(-45.days)
+        let queryAfter = restartCache
+        ? minTimestamp
+        : max(lastReconciled ?? minTimestamp, minTimestamp)
+        do {
+            let reconcileStart = Date.now
+
+            let worksiteChanges = try await networkDataSource.getWorksiteChanges(queryAfter)
+
+            let (valid, invalid) = worksiteChanges.split { $0.invalidatedAt == nil }
+            let invalidWorksiteIds = invalid.map { $0.worksiteId }
+
+            let changedIncidents = try await worksitesRepository.processReconciliation(
+                validChanges: valid,
+                invalidatedNetworkWorksiteIds: invalidWorksiteIds,
+            )
+            if changedIncidents.isNotEmpty {
+                logStage(
+                    incidentId,
+                    .worksitesChangeIncident,
+                    "\(changedIncidents.count) Cases changed Incidents.",
+                )
+            }
+
+            incidentCachePreferences.setLastReconciled(reconcileStart)
+        } catch {
+            appLogger.logError(error)
+        }
     }
 
     private struct DownloadCountSpeed {
@@ -1331,6 +1378,7 @@ public enum IncidentCacheStage: String, Identifiable, CaseIterable {
          worksitesAdditional,
          activeIncident,
          activeIncidentOrganization,
+         worksitesChangeIncident,
          end
 
     public var id: String { rawValue }

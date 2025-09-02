@@ -14,7 +14,7 @@ public class RecentWorksiteDao {
 
     func streamRecentWorksites(
         _ incidentId: Int64,
-        limit: Int = 29,
+        limit: Int = 30,
         offset: Int = 0
     ) -> AnyPublisher<[WorksiteSummary], Error> {
         ValueObservation

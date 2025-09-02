@@ -327,4 +327,21 @@ class OfflineFirstWorksitesRepository: WorksitesRepository {
 
         return tableData
     }
+
+    func processReconciliation(
+        validChanges: [NetworkWorksiteChange],
+        invalidatedNetworkWorksiteIds: [Int64],
+    ) async throws -> [IncidentWorksiteIds] {
+        let validIds = validChanges.map {
+            IncidentWorksiteIds(
+                incidentId: $0.incidentId,
+                id: EmptyWorksite.id,
+                networkId: $0.worksiteId,
+            )
+        }
+        let changedIncidents = try await worksiteDao.syncNetworkChangedIncidents(changeCandidates: validIds)
+        try await worksiteDao.syncDeletedWorksites(networkIds: invalidatedNetworkWorksiteIds)
+
+        return changedIncidents
+    }
 }

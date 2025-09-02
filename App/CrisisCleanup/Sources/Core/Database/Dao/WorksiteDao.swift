@@ -665,6 +665,64 @@ public class WorksiteDao {
         return matchingRecord?.asSummary()
     }
 
+    func syncNetworkChangedIncidents(
+        changeCandidates: [IncidentWorksiteIds],
+        stepInterval: Int = 100,
+    ) async throws -> [IncidentWorksiteIds] {
+        try await database.dbWriter.write { db in
+            var changedIncidentWorksites = [IncidentWorksiteIds]()
+
+            let iStep = max(stepInterval, 1)
+            for i in stride(from: 0, through: changeCandidates.count, by: iStep) {
+                let iEnd = min(i + iStep, changeCandidates.count)
+                let chunk = changeCandidates[i..<iEnd]
+                let queryIds = Set(chunk.map { $0.networkWorksiteId })
+                let idRecords = try WorksiteRootRecord
+                    .all()
+                    .networkIdsIn(queryIds)
+                    .asRequest(of: IncidentWorksiteIds.self)
+                    .fetchAll(db)
+                let localLookup = idRecords.associateBy { $0.networkWorksiteId }
+                let changed = chunk.compactMap { candidate in
+                    if let localMatch = localLookup[candidate.networkWorksiteId] {
+                        return candidate.copy {
+                            $0.id = localMatch.worksiteId
+                        }
+                    }
+                    return nil
+                }
+                changedIncidentWorksites += changed
+            }
+
+            for changed in changedIncidentWorksites {
+                let id = changed.worksiteId
+                let incidentId = changed.incidentId
+                try WorksiteRootRecord.updateIncident(db, id: id, incidentId: incidentId)
+                try WorksiteRecord.updateIncident(db, id: id, incidentId: incidentId)
+                try RecentWorksiteRecord.updateIncident(db, id: id, incidentId: incidentId)
+            }
+
+            return changedIncidentWorksites
+        }
+    }
+
+    func syncDeletedWorksites(
+        networkIds: [Int64],
+        stepInterval: Int = 100,
+    ) async throws {
+        try await database.dbWriter.write { db in
+            let iStep = max(stepInterval, 1)
+            for i in stride(from: 0, through: networkIds.count, by: iStep) {
+                let iEnd = min(i + iStep, networkIds.count)
+                let deleteIds = Set(networkIds[i..<iEnd])
+                try WorksiteRootRecord
+                    .all()
+                    .networkIdsIn(deleteIds)
+                    .deleteAll(db)
+            }
+        }
+    }
+
     // TODO: Test speed on large data set and update as necessary
     func getMatchingWorksites(
         _ incidentId: Int64,

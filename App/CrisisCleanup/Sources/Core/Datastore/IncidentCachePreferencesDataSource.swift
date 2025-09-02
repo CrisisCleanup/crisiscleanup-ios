@@ -4,7 +4,8 @@ import Foundation
 public protocol IncidentCachePreferencesDataSource {
     var preferences: any Publisher<IncidentWorksitesCachePreferences, Never> { get }
 
-    func setPreferences(_ preferences: IncidentWorksitesCachePreferences)
+    func setPauseRegionPreferences(_ preferences: IncidentWorksitesCachePreferences)
+    func setLastReconciled(_ lastReconciled: Date)
 }
 
 fileprivate let jsonDecoder = JsonDecoderFactory().decoder()
@@ -27,8 +28,22 @@ class IncidentCachePreferencesUserDefaults: IncidentCachePreferencesDataSource {
             }
     }
 
-    func setPreferences(_ preferences: IncidentWorksitesCachePreferences) {
+    private func update(_ preferences: IncidentWorksitesCachePreferences) {
         UserDefaults.standard.incidentWorksitesCachePreferences = preferences
+    }
+
+    func setPauseRegionPreferences(_ preferences: IncidentWorksitesCachePreferences) {
+        update(UserDefaults.standard.incidentWorksitesCachePreferences.copy {
+            $0.isPaused = preferences.isPaused
+            $0.isRegionBounded = preferences.isRegionBounded
+            $0.boundedRegionParameters = preferences.boundedRegionParameters
+        })
+    }
+
+    func setLastReconciled(_ lastReconciled: Date) {
+        update(UserDefaults.standard.incidentWorksitesCachePreferences.copy {
+            $0.lastReconciled = lastReconciled
+        })
     }
 }
 
