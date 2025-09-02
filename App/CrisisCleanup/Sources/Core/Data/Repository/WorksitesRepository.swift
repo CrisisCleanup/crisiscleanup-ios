@@ -83,7 +83,7 @@ public protocol WorksitesRepository {
     func processReconciliation(
         validChanges: [NetworkWorksiteChange],
         invalidatedNetworkWorksiteIds: [Int64],
-    ) async throws -> [IncidentWorksiteIds]
+    ) async throws -> WorksiteIncidentChangesSummary
 }
 
 extension WorksitesRepository {

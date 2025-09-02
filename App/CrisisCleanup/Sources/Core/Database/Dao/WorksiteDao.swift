@@ -668,30 +668,33 @@ public class WorksiteDao {
     func syncNetworkChangedIncidents(
         changeCandidates: [IncidentWorksiteIds],
         stepInterval: Int = 100,
-    ) async throws -> [IncidentWorksiteIds] {
+    ) async throws -> WorksiteIncidentChangesSummary {
         try await database.dbWriter.write { db in
             var changedIncidentWorksites = [IncidentWorksiteIds]()
+            var changedFromIncidents = Set<Int64>([])
 
             let iStep = max(stepInterval, 1)
             for i in stride(from: 0, through: changeCandidates.count, by: iStep) {
                 let iEnd = min(i + iStep, changeCandidates.count)
-                let chunk = changeCandidates[i..<iEnd]
-                let queryIds = Set(chunk.map { $0.networkWorksiteId })
+                let candidatesChunk = changeCandidates[i..<iEnd]
+                let queryIds = Set(candidatesChunk.map { $0.networkWorksiteId })
                 let idRecords = try WorksiteRootRecord
                     .all()
                     .networkIdsIn(queryIds)
                     .asRequest(of: IncidentWorksiteIds.self)
                     .fetchAll(db)
                 let localLookup = idRecords.associateBy { $0.networkWorksiteId }
-                let changed = chunk.compactMap { candidate in
-                    if let localMatch = localLookup[candidate.networkWorksiteId] {
+                let chunkChanges = candidatesChunk.compactMap { candidate in
+                    if let localMatch = localLookup[candidate.networkWorksiteId],
+                       candidate.incidentId != localMatch.incidentId {
+                        changedFromIncidents.insert(localMatch.incidentId)
                         return candidate.copy {
                             $0.id = localMatch.worksiteId
                         }
                     }
                     return nil
                 }
-                changedIncidentWorksites += changed
+                changedIncidentWorksites += chunkChanges
             }
 
             for changed in changedIncidentWorksites {
@@ -702,7 +705,10 @@ public class WorksiteDao {
                 try RecentWorksiteRecord.updateIncident(db, id: id, incidentId: incidentId)
             }
 
-            return changedIncidentWorksites
+            return WorksiteIncidentChangesSummary(
+                fromIncidentIds: changedFromIncidents,
+                changeCount: changedIncidentWorksites.count,
+            )
         }
     }
 

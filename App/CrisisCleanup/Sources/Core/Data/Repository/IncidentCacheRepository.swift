@@ -1336,15 +1336,15 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
             let (valid, invalid) = worksiteChanges.split { $0.invalidatedAt == nil }
             let invalidWorksiteIds = invalid.map { $0.worksiteId }
 
-            let changedIncidents = try await worksitesRepository.processReconciliation(
+            let changeSummary = try await worksitesRepository.processReconciliation(
                 validChanges: valid,
                 invalidatedNetworkWorksiteIds: invalidWorksiteIds,
             )
-            if changedIncidents.isNotEmpty {
+            if changeSummary.changeCount > 0 {
                 logStage(
                     incidentId,
                     .worksitesChangeIncident,
-                    "\(changedIncidents.count) Cases changed Incidents.",
+                    "\(changeSummary.changeCount) Cases changed Incidents.",
                 )
             }
 
