@@ -79,25 +79,27 @@ class WorksiteSyncReconciliationTests: XCTestCase {
         let changes = try await worksiteDao.syncNetworkChangedIncidents(
             changeCandidates: [
                 makeChangeIds(1, 534),
+                makeChangeIds(1, 8984),
                 makeChangeIds(1, 987),
+                makeChangeIds(1, 2358),
                 makeChangeIds(23, 1654),
             ],
             stepInterval: 2,
         )
 
         let expectedChanges = [
-            makeIncidentWorksiteIds(1, 1, 534),
-            makeIncidentWorksiteIds(1, 5, 987),
-            makeIncidentWorksiteIds(23, 3, 1654),
+            makeIncidentWorksiteIds(23, 1, 534),
+            makeIncidentWorksiteIds(23, 5, 987),
+            makeIncidentWorksiteIds(456, 3, 1654),
         ]
         XCTAssertEqual(expectedChanges, changes)
 
         let orderedChanges = [
-            expectedChanges[0],
+            makeIncidentWorksiteIds(1, 1, 534),
             makeIncidentWorksiteIds(1, 2, 48),
-            expectedChanges[2],
+            makeIncidentWorksiteIds(23, 3, 1654),
             makeIncidentWorksiteIds(23, 4, 9),
-            expectedChanges[1],
+            makeIncidentWorksiteIds(1, 5, 987),
         ]
         let worksiteIdsA = try dbQueue.getWorksiteRecords()
         XCTAssertEqual(orderedChanges, worksiteIdsA)
@@ -113,13 +115,26 @@ class WorksiteSyncReconciliationTests: XCTestCase {
     }
 
     func testSyncDeletedWorksites() async throws {
-        try await worksiteDao.syncDeletedWorksites(networkIds: [987, 1654, 48], stepInterval: 2)
+        let changes = try await worksiteDao.syncDeletedWorksites(networkIds: [987, 9, 52, 13, 646, 7895, 48], stepInterval: 2)
+        let expectedChanges = [
+            makeIncidentWorksiteIds(23, 5, 987),
+            makeIncidentWorksiteIds(23, 4, 9),
+            makeIncidentWorksiteIds(1, 2, 48),
+        ]
+        XCTAssertEqual(expectedChanges, changes)
 
         let networkWorksiteIds = try dbQueue.getWorksiteRecords()
             .map { $0.networkId }
             .sorted()
-        XCTAssertEqual([9, 534], networkWorksiteIds)
+        XCTAssertEqual([534, 1654], networkWorksiteIds)
     }
+}
+
+fileprivate func makeWorksiteIdentifier(
+    _ incidentId: Int64,
+    _ worksiteId: Int64,
+) -> ExistingWorksiteIdentifier {
+    ExistingWorksiteIdentifier(incidentId: incidentId, worksiteId: worksiteId)
 }
 
 fileprivate func makeIncidentWorksiteIds(

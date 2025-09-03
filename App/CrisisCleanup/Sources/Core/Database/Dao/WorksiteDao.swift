@@ -665,31 +665,39 @@ public class WorksiteDao {
         return matchingRecord?.asSummary()
     }
 
+    private func queryLocalRecordsLookup(
+        _ db: Database,
+        _ networkWorksiteIds: [Int64],
+    ) throws -> [Int64: IncidentWorksiteIds] {
+        let queryIds = Set(networkWorksiteIds)
+        let idRecords = try WorksiteRootRecord
+            .all()
+            .networkIdsIn(queryIds)
+            .asRequest(of: IncidentWorksiteIds.self)
+            .fetchAll(db)
+        return idRecords.associateBy { $0.networkId }
+    }
+
     func syncNetworkChangedIncidents(
         changeCandidates: [IncidentWorksiteIds],
         stepInterval: Int = 100,
-    ) async throws -> WorksiteIncidentChangesSummary {
+    ) async throws -> [IncidentWorksiteIds] {
         try await database.dbWriter.write { db in
-            var changedIncidentWorksites = [IncidentWorksiteIds]()
-            var changedFromIncidents = Set<Int64>([])
+            var changedWorksites = [IncidentWorksiteIds]()
 
+            var changedIncidentWorksites = [IncidentWorksiteIds]()
             let iStep = max(stepInterval, 1)
             for i in stride(from: 0, through: changeCandidates.count, by: iStep) {
                 let iEnd = min(i + iStep, changeCandidates.count)
                 let candidatesChunk = changeCandidates[i..<iEnd]
-                let queryIds = Set(candidatesChunk.map { $0.networkWorksiteId })
-                let idRecords = try WorksiteRootRecord
-                    .all()
-                    .networkIdsIn(queryIds)
-                    .asRequest(of: IncidentWorksiteIds.self)
-                    .fetchAll(db)
-                let localLookup = idRecords.associateBy { $0.networkWorksiteId }
+                let networkIds = candidatesChunk.map { $0.networkWorksiteId }
+                let localLookup = try self.queryLocalRecordsLookup(db, networkIds)
                 let chunkChanges = candidatesChunk.compactMap { candidate in
                     if let localMatch = localLookup[candidate.networkWorksiteId],
                        candidate.incidentId != localMatch.incidentId {
-                        changedFromIncidents.insert(localMatch.incidentId)
+                        changedWorksites.append(localMatch)
                         return candidate.copy {
-                            $0.id = localMatch.worksiteId
+                            $0.id = localMatch.id
                         }
                     }
                     return nil
@@ -705,27 +713,34 @@ public class WorksiteDao {
                 try RecentWorksiteRecord.updateIncident(db, id: id, incidentId: incidentId)
             }
 
-            return WorksiteIncidentChangesSummary(
-                fromIncidentIds: changedFromIncidents,
-                changeCount: changedIncidentWorksites.count,
-            )
+            return changedWorksites
         }
     }
 
     func syncDeletedWorksites(
         networkIds: [Int64],
         stepInterval: Int = 100,
-    ) async throws {
+    ) async throws -> [IncidentWorksiteIds] {
         try await database.dbWriter.write { db in
+            var deletedWorksites = [IncidentWorksiteIds]()
+
             let iStep = max(stepInterval, 1)
             for i in stride(from: 0, through: networkIds.count, by: iStep) {
                 let iEnd = min(i + iStep, networkIds.count)
-                let deleteIds = Set(networkIds[i..<iEnd])
-                try WorksiteRootRecord
-                    .all()
-                    .networkIdsIn(deleteIds)
-                    .deleteAll(db)
+                let idChunk = Array(networkIds[i..<iEnd])
+                let localLookup = try self.queryLocalRecordsLookup(db, idChunk)
+                if localLookup.isNotEmpty {
+                    let deleteIds = Set(localLookup.keys)
+                    try WorksiteRootRecord
+                        .all()
+                        .networkIdsIn(deleteIds)
+                        .deleteAll(db)
+
+                    deletedWorksites += idChunk.compactMap { localLookup[$0] }
+                }
             }
+
+            return deletedWorksites
         }
     }
 

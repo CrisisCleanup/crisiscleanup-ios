@@ -249,6 +249,7 @@ extension MainComponent {
                 networkDataSource: networkDataSource,
                 worksitesRepository: worksitesRepository,
                 worksiteDao: worksiteDao,
+                worksiteInteractor: worksiteInteractor,
                 phoneNumberParser: phoneNumberParser,
                 speedMonitor: dataDownloadSpeedMonitor,
                 networkMonitor: networkMonitor,

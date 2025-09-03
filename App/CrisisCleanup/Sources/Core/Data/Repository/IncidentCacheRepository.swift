@@ -64,6 +64,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
     private let networkDataSource: CrisisCleanupNetworkDataSource
     private let worksitesRepository: WorksitesRepository
     private let worksiteDao: WorksiteDao
+    private let worksiteInteractor: WorksiteInteractor
     private let phoneNumberParser: PhoneNumberParser
     private let speedMonitor: DataDownloadSpeedMonitor
     private let networkMonitor: NetworkMonitor
@@ -109,6 +110,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         networkDataSource: CrisisCleanupNetworkDataSource,
         worksitesRepository: WorksitesRepository,
         worksiteDao: WorksiteDao,
+        worksiteInteractor: WorksiteInteractor,
         phoneNumberParser: PhoneNumberParser,
         speedMonitor: DataDownloadSpeedMonitor,
         networkMonitor: NetworkMonitor,
@@ -128,6 +130,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         self.networkDataSource = networkDataSource
         self.worksitesRepository = worksitesRepository
         self.worksiteDao = worksiteDao
+        self.worksiteInteractor = worksiteInteractor
         self.phoneNumberParser = phoneNumberParser
         self.speedMonitor = speedMonitor
         self.networkMonitor = networkMonitor
@@ -1336,16 +1339,23 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
             let (valid, invalid) = worksiteChanges.split { $0.invalidatedAt == nil }
             let invalidWorksiteIds = invalid.map { $0.worksiteId }
 
-            let changeSummary = try await worksitesRepository.processReconciliation(
+            let localChanges = try await worksitesRepository.processReconciliation(
                 validChanges: valid,
                 invalidatedNetworkWorksiteIds: invalidWorksiteIds,
             )
-            if changeSummary.changeCount > 0 {
+            if !localChanges.isEmpty {
                 logStage(
                     incidentId,
                     .worksitesChangeIncident,
-                    "\(changeSummary.changeCount) Cases changed Incidents.",
+                    "\(localChanges.count) Cases changed Incidents or were deleted.",
                 )
+
+                worksiteInteractor.onCasesChanged(localChanges.map {
+                    ExistingWorksiteIdentifier(
+                        incidentId: $0.incidentId,
+                        worksiteId: $0.worksiteId,
+                    )
+                })
             }
 
             incidentCachePreferences.setLastReconciled(reconcileStart)

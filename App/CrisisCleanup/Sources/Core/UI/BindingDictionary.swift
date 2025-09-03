@@ -6,7 +6,7 @@ import Combine
 class BindingBoolDictionary: ObservableObject, MutableCollection {
     let didChange = PassthroughSubject<Void, Never>()
 
-    var data: Dictionary<String, Bool> = [:] {
+    var data: [String: Bool] = [:] {
         didSet {
             didChange.send(())
         }
@@ -17,7 +17,7 @@ class BindingBoolDictionary: ObservableObject, MutableCollection {
     var startIndex: String = ""
     var endIndex: String = ""
 
-    init(_ data: Dictionary<String, Bool> = [:]) {
+    init(_ data: [String: Bool] = [:]) {
         self.data = data
     }
 
@@ -38,7 +38,7 @@ class BindingBoolDictionary: ObservableObject, MutableCollection {
 class BindingStringDictionary: ObservableObject {
     let didChange = PassthroughSubject<Void, Never>()
 
-    var data: Dictionary<String, String> = [:] {
+    var data: [String: String] = [:] {
         didSet {
             didChange.send(())
         }
@@ -49,7 +49,7 @@ class BindingStringDictionary: ObservableObject {
     var startIndex: String = ""
     var endIndex: String = ""
 
-    init(data: Dictionary<String, String> = [:]) {
+    init(data: [String: String] = [:]) {
         self.data = data
     }
 

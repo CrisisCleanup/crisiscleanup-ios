@@ -331,7 +331,7 @@ class OfflineFirstWorksitesRepository: WorksitesRepository {
     func processReconciliation(
         validChanges: [NetworkWorksiteChange],
         invalidatedNetworkWorksiteIds: [Int64],
-    ) async throws -> WorksiteIncidentChangesSummary {
+    ) async throws -> [IncidentWorksiteIds] {
         let validIds = validChanges.map {
             IncidentWorksiteIds(
                 incidentId: $0.incidentId,
@@ -339,9 +339,9 @@ class OfflineFirstWorksitesRepository: WorksitesRepository {
                 networkId: $0.worksiteId,
             )
         }
-        let changeSummary = try await worksiteDao.syncNetworkChangedIncidents(changeCandidates: validIds)
-        try await worksiteDao.syncDeletedWorksites(networkIds: invalidatedNetworkWorksiteIds)
+        let worksitesChanged = try await worksiteDao.syncNetworkChangedIncidents(changeCandidates: validIds)
+        let worksitesDeleted = try await worksiteDao.syncDeletedWorksites(networkIds: invalidatedNetworkWorksiteIds)
 
-        return changeSummary
+        return worksitesChanged + worksitesDeleted
     }
 }
