@@ -13,9 +13,10 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
     private var editableWorksiteProvider: EditableWorksiteProvider
     private let transferWorkTypeProvider: TransferWorkTypeProvider
     private let localImageRepository: LocalImageRepository
-    private let translator: KeyAssetTranslator
     private let worksiteChangeRepository: WorksiteChangeRepository
     private let syncPusher: SyncPusher
+    private let inputValidator: InputValidator
+    private let translator: KeyAssetTranslator
     private let logger: AppLogger
 
     private let dataLoader: CaseEditorDataLoader
@@ -30,6 +31,8 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
     @Published private(set) var subTitle = ""
 
     @Published private(set) var updatedAtText = ""
+
+    @Published private(set) var phoneNumberValidations = [PhoneNumberValidation]()
 
     @Published private(set) var distanceAway = ""
 
@@ -97,9 +100,10 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
         transferWorkTypeProvider: TransferWorkTypeProvider,
         localImageRepository: LocalImageRepository,
         worksiteImageRepository: WorksiteImageRepository,
-        translator: KeyAssetTranslator,
         worksiteChangeRepository: WorksiteChangeRepository,
         syncPusher: SyncPusher,
+        inputValidator: InputValidator,
+        translator: KeyAssetTranslator,
         appEnv: AppEnv,
         loggerFactory: AppLoggerFactory,
         incidentId: Int64,
@@ -113,9 +117,10 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
         self.editableWorksiteProvider = editableWorksiteProvider
         self.transferWorkTypeProvider = transferWorkTypeProvider
         self.localImageRepository = localImageRepository
-        self.translator = translator
         self.worksiteChangeRepository = worksiteChangeRepository
+        self.inputValidator = inputValidator
         self.syncPusher = syncPusher
+        self.translator = translator
         logger = loggerFactory.getLogger("view-case")
 
         translationCount = translator.translationCount
@@ -331,6 +336,35 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
                 self.statusOptions = stateData == nil ? [] : stateData!.statusOptions
                 self.setDistanceAway()
             })
+            .store(in: &subscriptions)
+
+        $caseData
+            .compactMap { $0?.worksite }
+            .map {
+                let phoneNumbers = [$0.phone1, $0.phone2].filterNotBlankTrim()
+                let uniquePhoneNumbers = Set(phoneNumbers)
+                return Array(uniquePhoneNumbers)
+            }
+            .map { (phoneNumbers: [String]) in
+                let validated = phoneNumbers.map { phoneNumber in
+                    self.inputValidator.validatePhoneNumber(phoneNumber)
+                }
+                return validated.sorted { a, b in
+                    if a.isValid {
+                        return true
+                    }
+                    if b.isValid {
+                        return false
+                    }
+                    let deltaLength = a.formatted.count - b.formatted.count
+                    if deltaLength == 0 {
+                        return a.formatted < b.formatted
+                    }
+                    return deltaLength > 0
+                }
+            }
+            .receive(on: RunLoop.main)
+            .assign(to: \.phoneNumberValidations, on: self)
             .store(in: &subscriptions)
     }
 

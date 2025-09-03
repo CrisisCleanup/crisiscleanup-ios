@@ -107,6 +107,8 @@ struct MainView: View {
                         requestRedeployViewBuilder: requestRedeployViewBuilder,
                         listsViewBuilder: listsViewBuilder,
                         incidentCacheViewBuilder: incidentCacheViewBuilder,
+                        authenticateViewBuilder: authenticateViewBuilder,
+                        volunteerOrgViewBuilder: volunteerOrgViewBuilder,
                         syncInsightsViewBuilder: syncInsightsViewBuilder,
                         selectedTab: $selectedTab,
                         showTabDivider: !deviceSize.isTopTabLayout,
@@ -216,9 +218,9 @@ private struct MainTabs: View {
 private struct AuthenticationNavigationStack: View {
     @EnvironmentObject var router: NavigationRouter
 
-    var authenticateViewBuilder: AuthenticateViewBuilder
-    var volunteerOrgViewBuilder: VolunteerOrgViewBuilder
-    var exitAuthNavigation: () -> Void
+    let authenticateViewBuilder: AuthenticateViewBuilder
+    let volunteerOrgViewBuilder: VolunteerOrgViewBuilder
+    let exitAuthNavigation: () -> Void
 
     var body: some View {
         NavigationStack(path: $router.path) {
@@ -240,7 +242,6 @@ private struct AuthenticationNavigationStack: View {
                         )
                     case .resetPassword(let recoverCode):
                         authenticateViewBuilder.resetPasswordView(
-                            closeAuthFlow: exitAuthNavigation,
                             resetCode: recoverCode
                         )
                     case .volunteerOrg:
@@ -286,6 +287,8 @@ private struct TermsView: View {
 }
 
 private struct MainNavigationStack: View {
+    @Environment(\.dismiss) var dismiss
+
     @EnvironmentObject var router: NavigationRouter
 
     @ObservedObject var viewModel: MainViewModel
@@ -310,6 +313,8 @@ private struct MainNavigationStack: View {
     let requestRedeployViewBuilder: RequestRedeployViewBuilder
     let listsViewBuilder: ListsViewBuilder
     let incidentCacheViewBuilder: IncidentWorksitesCacheViewBuilder
+    let authenticateViewBuilder: AuthenticateViewBuilder
+    let volunteerOrgViewBuilder: VolunteerOrgViewBuilder
     let syncInsightsViewBuilder: SyncInsightsViewBuilder
 
     @Binding var selectedTab: TopLevelDestination
@@ -404,6 +409,12 @@ private struct MainNavigationStack: View {
                     listsViewBuilder.viewListView(listId)
                 case .incidentDataCaching:
                     incidentCacheViewBuilder.incidentWorksitesCacheView
+                case .resetPassword(let recoverCode):
+                    authenticateViewBuilder.resetPasswordView(
+                        resetCode: recoverCode
+                    )
+                case .orgUserInvite(let inviteCode):
+                    volunteerOrgViewBuilder.orgUserInviteView(inviteCode)
                 case .syncInsights:
                     if viewModel.isNotProduction {
                         syncInsightsViewBuilder.syncInsightsView

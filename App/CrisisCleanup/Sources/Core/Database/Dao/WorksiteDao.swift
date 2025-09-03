@@ -665,6 +665,85 @@ public class WorksiteDao {
         return matchingRecord?.asSummary()
     }
 
+    private func queryLocalRecordsLookup(
+        _ db: Database,
+        _ networkWorksiteIds: [Int64],
+    ) throws -> [Int64: IncidentWorksiteIds] {
+        let queryIds = Set(networkWorksiteIds)
+        let idRecords = try WorksiteRootRecord
+            .all()
+            .networkIdsIn(queryIds)
+            .asRequest(of: IncidentWorksiteIds.self)
+            .fetchAll(db)
+        return idRecords.associateBy { $0.networkId }
+    }
+
+    func syncNetworkChangedIncidents(
+        changeCandidates: [IncidentWorksiteIds],
+        stepInterval: Int = 100,
+    ) async throws -> [IncidentWorksiteIds] {
+        try await database.dbWriter.write { db in
+            var changedWorksites = [IncidentWorksiteIds]()
+
+            var changedIncidentWorksites = [IncidentWorksiteIds]()
+            let iStep = max(stepInterval, 1)
+            for i in stride(from: 0, through: changeCandidates.count, by: iStep) {
+                let iEnd = min(i + iStep, changeCandidates.count)
+                let candidatesChunk = changeCandidates[i..<iEnd]
+                let networkIds = candidatesChunk.map { $0.networkWorksiteId }
+                let localLookup = try self.queryLocalRecordsLookup(db, networkIds)
+                let chunkChanges = candidatesChunk.compactMap { candidate in
+                    if let localMatch = localLookup[candidate.networkWorksiteId],
+                       candidate.incidentId != localMatch.incidentId {
+                        changedWorksites.append(localMatch)
+                        return candidate.copy {
+                            $0.id = localMatch.id
+                        }
+                    }
+                    return nil
+                }
+                changedIncidentWorksites += chunkChanges
+            }
+
+            for changed in changedIncidentWorksites {
+                let id = changed.worksiteId
+                let incidentId = changed.incidentId
+                try WorksiteRootRecord.updateIncident(db, id: id, incidentId: incidentId)
+                try WorksiteRecord.updateIncident(db, id: id, incidentId: incidentId)
+                try RecentWorksiteRecord.updateIncident(db, id: id, incidentId: incidentId)
+            }
+
+            return changedWorksites
+        }
+    }
+
+    func syncDeletedWorksites(
+        networkIds: [Int64],
+        stepInterval: Int = 100,
+    ) async throws -> [IncidentWorksiteIds] {
+        try await database.dbWriter.write { db in
+            var deletedWorksites = [IncidentWorksiteIds]()
+
+            let iStep = max(stepInterval, 1)
+            for i in stride(from: 0, through: networkIds.count, by: iStep) {
+                let iEnd = min(i + iStep, networkIds.count)
+                let idChunk = Array(networkIds[i..<iEnd])
+                let localLookup = try self.queryLocalRecordsLookup(db, idChunk)
+                if localLookup.isNotEmpty {
+                    let deleteIds = Set(localLookup.keys)
+                    try WorksiteRootRecord
+                        .all()
+                        .networkIdsIn(deleteIds)
+                        .deleteAll(db)
+
+                    deletedWorksites += idChunk.compactMap { localLookup[$0] }
+                }
+            }
+
+            return deletedWorksites
+        }
+    }
+
     // TODO: Test speed on large data set and update as necessary
     func getMatchingWorksites(
         _ incidentId: Int64,

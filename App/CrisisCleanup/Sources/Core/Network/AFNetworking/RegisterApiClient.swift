@@ -64,6 +64,16 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
         return nil
     }
 
+    private func getOrganizationName(_ orgId: Int64) async -> String {
+        let orgRequest = requestProvider.noAuthOrganization
+            .addPaths("\(orgId)")
+        let result = await networkClient.callbackContinue(
+            requestConvertible: orgRequest,
+            type: NetworkOrganizationShort.self
+        )
+        return result.value?.name ?? ""
+    }
+
     private func getUserDetails(_ userId: Int64) async -> UserDetails {
         let userRequest = requestProvider.noAuthUser
             .addPaths("\(userId)")
@@ -78,14 +88,7 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
             if let avatarUrlString = userInfo.files.profilePictureUrl {
                 avatarUrl = URL(string: avatarUrlString)
             }
-            let orgRequest = requestProvider.noAuthOrganization
-                .addPaths("\(userInfo.organization)")
-            if let organizationInfo = await networkClient.callbackContinue(
-                requestConvertible: orgRequest,
-                type: NetworkOrganizationShort.self
-            ).value {
-                orgName = organizationInfo.name
-            }
+            orgName = await getOrganizationName(userInfo.organization)
         }
 
         return UserDetails(
@@ -109,6 +112,8 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
 
             let inviter = invitationInfo.inviter
             let userDetails = await getUserDetails(inviter.id)
+            let orgId = invitationInfo.existingUser?.organization
+            let orgName = orgId == nil ? "" : await getOrganizationName(orgId!)
             return OrgUserInviteInfo(
                 displayName: "\(inviter.firstName) \(inviter.lastName)",
                 inviterEmail: inviter.email,
@@ -116,7 +121,9 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
                 invitedEmail: invitationInfo.inviteeEmail,
                 orgName: userDetails.organizationName,
                 expiration: invitationInfo.expiresAt,
-                isExpiredInvite: false
+                isExpiredInvite: false,
+                isExistingUser: invitationInfo.isExistingUser,
+                fromOrgName: orgName,
             )
         }
 
@@ -143,7 +150,9 @@ class RegisterApiClient : CrisisCleanupRegisterApi {
                 invitedEmail: "",
                 orgName: userDetails.organizationName,
                 expiration: invitationInfo.expiresAt,
-                isExpiredInvite: false
+                isExpiredInvite: false,
+                isExistingUser: false,
+                fromOrgName: "",
             )
         }
 

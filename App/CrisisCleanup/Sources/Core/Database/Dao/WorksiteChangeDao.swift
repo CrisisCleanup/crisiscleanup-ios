@@ -684,8 +684,8 @@ extension AppDatabase {
         try await dbWriter.write { db in
             let networkId = ids.networkWorksiteId
             if (networkId > 0) {
-                try WorksiteRootRecord.updateWorksiteNetworkId(
-                    db, worksiteId, ids.networkWorksiteId
+                try WorksiteRootRecord.updateNetworkId(
+                    db, id: worksiteId, networkId: ids.networkWorksiteId
                 )
                 try db.updateWorksiteNetworkId(worksiteId, ids.networkWorksiteId)
             }

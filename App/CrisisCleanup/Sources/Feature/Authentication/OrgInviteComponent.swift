@@ -12,9 +12,13 @@ extension VolunteerOrgComponent {
             _requestOrgAccessViewModel = RequestOrgAccessViewModel(
                 languageRepository: dependency.languageTranslationsRepository,
                 orgVolunteerRepository: dependency.orgVolunteerRepository,
+                accountUpdateRepository: dependency.accountUpdateRepository,
+                accountDataRepository: dependency.accountDataRepository,
                 inputValidator: dependency.inputValidator,
+                accountEventBus: dependency.accountEventBus,
                 translator: dependency.translator,
-                invitationCode: code
+                loggerFactory: dependency.loggerFactory,
+                invitationCode: code,
             )
         }
         return _requestOrgAccessViewModel!

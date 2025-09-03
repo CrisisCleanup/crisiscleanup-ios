@@ -44,8 +44,11 @@ struct AccountInfo: Codable {
     }
 }
 
+fileprivate let whitespacePattern = #/\s/#
+
 fileprivate func defaultProfilePictureUri(_ fullName: String) -> String {
-    fullName.isBlank ? "" : "https://avatars.dicebear.com/api/bottts/\(fullName).svg"
+    let seed = fullName.replacing(whitespacePattern, with: "-")
+    return fullName.isBlank ? "" : "https://api.dicebear.com/9.x/pixel-art/svg?seed=\(seed)"
 }
 
 extension AccountInfo {
@@ -54,6 +57,7 @@ extension AccountInfo {
         let fullName = "\(firstName) \(lastName)"
         let orgData = OrgData(id: orgId, name: orgName)
         let ppUri = profilePictureUri.ifBlank { defaultProfilePictureUri(fullName) }
+        let isGeneratedProfilePicture = profilePictureUri.isBlank
         return AccountData(
             id: id,
             tokenExpiry: tokenExpiry,
@@ -65,7 +69,8 @@ extension AccountInfo {
             approvedIncidents: incidentIds,
             isCrisisCleanupAdmin: activeRoles.contains(1),
             // Overwrite downstream
-            areTokensValid: tokenExpiry > Date()
+            areTokensValid: tokenExpiry > Date(),
+            isGeneratedProfilePicture: isGeneratedProfilePicture,
         )
     }
 }

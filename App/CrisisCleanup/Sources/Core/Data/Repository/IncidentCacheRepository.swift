@@ -64,6 +64,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
     private let networkDataSource: CrisisCleanupNetworkDataSource
     private let worksitesRepository: WorksitesRepository
     private let worksiteDao: WorksiteDao
+    private let worksiteInteractor: WorksiteInteractor
     private let phoneNumberParser: PhoneNumberParser
     private let speedMonitor: DataDownloadSpeedMonitor
     private let networkMonitor: NetworkMonitor
@@ -109,6 +110,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         networkDataSource: CrisisCleanupNetworkDataSource,
         worksitesRepository: WorksitesRepository,
         worksiteDao: WorksiteDao,
+        worksiteInteractor: WorksiteInteractor,
         phoneNumberParser: PhoneNumberParser,
         speedMonitor: DataDownloadSpeedMonitor,
         networkMonitor: NetworkMonitor,
@@ -128,6 +130,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         self.networkDataSource = networkDataSource
         self.worksitesRepository = worksitesRepository
         self.worksiteDao = worksiteDao
+        self.worksiteInteractor = worksiteInteractor
         self.phoneNumberParser = phoneNumberParser
         self.speedMonitor = speedMonitor
         self.networkMonitor = networkMonitor
@@ -532,6 +535,18 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
 
                 try await checkCancelTimeout()
                 worksitesAdditionalStatsUpdater.clearStep()
+            }
+
+            if !(isPaused || isSlowDownload) {
+                try await checkCancelTimeout()
+
+                logStage(incidentId, .worksitesChangeIncident)
+
+                await updateChangedIncidentWorksites(
+                    incidentId: incidentId,
+                    restartCache: syncPlan.restartCache,
+                    lastReconciled: syncPreferences.lastReconciled,
+                )
             }
         } catch {
             with(incidentDataPullStatsSubject.value) { stats in
@@ -1304,7 +1319,49 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
     }
 
     func updateCachePreferences(_ preferences: IncidentWorksitesCachePreferences) {
-        incidentCachePreferences.setPreferences(preferences)
+        incidentCachePreferences.setPauseRegionPreferences(preferences)
+    }
+
+    private func updateChangedIncidentWorksites(
+        incidentId: Int64,
+        restartCache: Bool,
+        lastReconciled: Date?,
+    ) async {
+        let minTimestamp = Date.now.addingTimeInterval(-45.days)
+        let queryAfter = restartCache
+        ? minTimestamp
+        : max(lastReconciled ?? minTimestamp, minTimestamp)
+        do {
+            let reconcileStart = Date.now
+
+            let worksiteChanges = try await networkDataSource.getWorksiteChanges(queryAfter)
+
+            let (valid, invalid) = worksiteChanges.split { $0.invalidatedAt == nil }
+            let invalidWorksiteIds = invalid.map { $0.worksiteId }
+
+            let localChanges = try await worksitesRepository.processReconciliation(
+                validChanges: valid,
+                invalidatedNetworkWorksiteIds: invalidWorksiteIds,
+            )
+            if !localChanges.isEmpty {
+                logStage(
+                    incidentId,
+                    .worksitesChangeIncident,
+                    "\(localChanges.count) Cases changed Incidents or were deleted.",
+                )
+
+                worksiteInteractor.onCasesChanged(localChanges.map {
+                    ExistingWorksiteIdentifier(
+                        incidentId: $0.incidentId,
+                        worksiteId: $0.worksiteId,
+                    )
+                })
+            }
+
+            incidentCachePreferences.setLastReconciled(reconcileStart)
+        } catch {
+            appLogger.logError(error)
+        }
     }
 
     private struct DownloadCountSpeed {
@@ -1331,6 +1388,7 @@ public enum IncidentCacheStage: String, Identifiable, CaseIterable {
          worksitesAdditional,
          activeIncident,
          activeIncidentOrganization,
+         worksitesChangeIncident,
          end
 
     public var id: String { rawValue }

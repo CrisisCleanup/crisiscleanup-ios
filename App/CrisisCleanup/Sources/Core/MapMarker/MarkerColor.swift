@@ -78,15 +78,7 @@ private let filteredOutDotStrokeAlpha = 0.2
 private let filteredOutDotFillAlpha = 0.05
 private let duplicateMarkerAlpha = 0.3
 
-func getWorkTypeFillColor(
-    _ status: WorkTypeStatus,
-    _ isClaimed: Bool
-) -> Color {
-    let statusClaim = WorkTypeStatusClaim(status, isClaimed)
-    return getMapMarkerColor(statusClaim).fill
-}
-
-internal func getMapMarkerColor(
+private func getMapMarkerColors(
     _ statusClaim: WorkTypeStatusClaim,
     isVisited: Bool = false
 ) -> MapMarkerColor {
@@ -94,15 +86,17 @@ internal func getMapMarkerColor(
     if markerColors == nil,
        let status = statusClaimToStatus[statusClaim] {
         markerColors = statusMapMarkerColors[status]
-
-        if isVisited {
-            markerColors = MapMarkerColor(
-                markerColors!.fillInt64,
-                visitedMarkerColorCode
-            )
-        }
     }
-    return markerColors ?? statusMapMarkerColors[.unknown]!
+    if markerColors == nil {
+        markerColors = statusMapMarkerColors[.unknown]!
+    }
+    if isVisited {
+        markerColors = MapMarkerColor(
+            markerColors!.fillInt64,
+            visitedMarkerColorCode
+        )
+    }
+    return markerColors!
 }
 
 internal func getMapMarkerColors(
@@ -113,20 +107,20 @@ internal func getMapMarkerColors(
     isVisited: Bool,
     isDot: Bool = false
 ) -> MapMarkerColor {
-    var colors = getMapMarkerColor(
+    var colors = getMapMarkerColors(
         statusClaim,
-        isVisited: isVisited && !(isDuplicate || isFilteredOut)
+        isVisited: isVisited && !(isDuplicate || isMarkedForDelete || isFilteredOut),
     )
 
-    if isDuplicate || isMarkedForDelete {
-        colors = MapMarkerColor(
-            colors.fill.hex(duplicateMarkerAlpha),
-            colors.stroke.hex(duplicateMarkerAlpha)
-        )
-    } else if isFilteredOut {
+    if isFilteredOut {
         colors = MapMarkerColor(
             Color.white.hex(isDot ? filteredOutDotFillAlpha : filteredOutMarkerFillAlpha),
             colors.fill.hex(isDot ? filteredOutDotStrokeAlpha : filteredOutMarkerStrokeAlpha)
+        )
+    } else if isDuplicate || isMarkedForDelete {
+        colors = MapMarkerColor(
+            colors.fill.hex(duplicateMarkerAlpha),
+            colors.stroke.hex(duplicateMarkerAlpha)
         )
     }
 

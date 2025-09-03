@@ -178,6 +178,7 @@ internal class CaseEditorDataLoader {
                         let networkId = worksite.networkId
                         if worksite.id > 0 &&
                             (networkId > 0 || localWorksite.localChanges.isLocalModified) {
+                            // TODO: Delete worksite if is not exists on backend and notify user Worksite no longer exists
                             self.isRefreshingWorksite.value = true
                             let isSynced = await self.worksiteChangeRepository.trySyncWorksite(worksite.id)
                             if isSynced && networkId > 0 {

@@ -9,6 +9,8 @@ class CasesWorksiteInteractor: WorksiteInteractor {
     private let caseChangesSubject = CurrentValueSubject<CaseChangeTime, Never>(CaseChangeTime())
     let caseChangesPublisher: any Publisher<CaseChangeTime, Never>
 
+    private var cacheIncidentId = EmptyIncident.id
+
     private var disposables = Set<AnyCancellable>()
 
     init(
@@ -17,7 +19,8 @@ class CasesWorksiteInteractor: WorksiteInteractor {
         caseChangesPublisher = caseChangesSubject
 
         incidentSelector.incidentId
-            .sink { _ in
+            .sink {
+                self.cacheIncidentId = $0
                 self.clearSelection()
             }
             .store(in: &disposables)
@@ -52,5 +55,11 @@ class CasesWorksiteInteractor: WorksiteInteractor {
             return selectedTime.distance(to: reference) < recentlySelectedDuration
         }
         return false
+    }
+
+    func onCasesChanged(_ identifiers: [ExistingWorksiteIdentifier]) {
+        if let matchingCase = identifiers.first(where: { $0.incidentId == cacheIncidentId }) {
+            onCaseChanged(matchingCase.incidentId, matchingCase.worksiteId)
+        }
     }
 }

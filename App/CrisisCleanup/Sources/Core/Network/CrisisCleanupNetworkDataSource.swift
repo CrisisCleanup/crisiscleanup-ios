@@ -138,6 +138,8 @@ public protocol CrisisCleanupNetworkDataSource {
     func getList(_ id: Int64) async throws -> NetworkList?
 
     func getLists(_ ids: [Int64]) async -> [NetworkList?]
+
+    func getWorksiteChanges(_ after: Date) async throws -> [NetworkWorksiteChange]
 }
 
 extension CrisisCleanupNetworkDataSource {

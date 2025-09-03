@@ -15,7 +15,6 @@ extension AppPreferences {
         var hideGettingStartedVideo: Bool
         var selectedIncidentId: Int64
         var languageKey: String
-        var syncAttempt: SyncAttempt
         var tableViewSortBy: WorksiteSortBy
         var shareLocationWithOrg: Bool
         var notifyDataSyncProgress: Bool?
@@ -28,7 +27,6 @@ extension AppPreferences {
             self.hideGettingStartedVideo = original.hideGettingStartedVideo
             self.selectedIncidentId = original.selectedIncidentId
             self.languageKey = original.languageKey
-            self.syncAttempt = original.syncAttempt
             self.tableViewSortBy = original.tableViewSortBy
             self.shareLocationWithOrg = original.shareLocationWithOrg
             self.notifyDataSyncProgress = original.notifyDataSyncProgress
@@ -43,7 +41,6 @@ extension AppPreferences {
                 hideGettingStartedVideo: hideGettingStartedVideo,
                 selectedIncidentId: selectedIncidentId,
                 languageKey: languageKey,
-                syncAttempt: syncAttempt,
                 tableViewSortBy: tableViewSortBy,
                 shareLocationWithOrg: shareLocationWithOrg,
                 notifyDataSyncProgress: notifyDataSyncProgress,

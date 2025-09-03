@@ -105,4 +105,15 @@ class AccountApiClient : CrisisCleanupAccountApi {
         )
         return result.value?.hasAcceptedTerms == true
     }
+
+    func moveToOrganization(action: String, token: String) async -> Bool {
+        let payload = NetworkTransferOrganizationPayload(action: action, token: token)
+        let request = requestProvider.transferOrganization
+            .setBody(payload)
+        let result = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkTransferOrganizationResult.self,
+        )
+        return result.value?.status == "accepted"
+    }
 }

@@ -2,11 +2,13 @@ import Atomics
 import Combine
 import Foundation
 
-struct IncidentAnnotations {
+// sourcery: copyBuilder, skipCopyInit
+struct IncidentAnnotations: Equatable {
     let incidentId: Int64
     let filters: CasesFilter
     let changedCase: CaseChangeTime
     let annotations: [WorksiteAnnotationMapMark]
+    let denseDescription: DenseMarkDescription
     let isClean: Bool
 
     init(
@@ -14,17 +16,18 @@ struct IncidentAnnotations {
         _ filters: CasesFilter = CasesFilter(),
         _ changedCase: CaseChangeTime = CaseChangeTime(ExistingWorksiteIdentifierNone),
         _ annotations: [WorksiteAnnotationMapMark] = [WorksiteAnnotationMapMark](),
+        _ denseDescription: DenseMarkDescription = EmptyDenseMarkDescription,
         isClean: Bool = false
     ) {
         self.incidentId = incidentId
         self.filters = filters
         self.changedCase = changedCase
         self.annotations = annotations
+        self.denseDescription = denseDescription
         self.isClean = isClean
     }
 }
 
-// sourcery: copyBuilder, skipCopyInit
 struct AnnotationsChangeSet {
     let annotations: IncidentAnnotations
     let isClean: Bool
@@ -36,7 +39,6 @@ struct AnnotationsChangeSet {
         isClean: Bool = false,
         newAnnotations: [WorksiteAnnotationMapMark] = [],
         newAnnotationIds: Set<Int64> = []
-
     ) {
         self.annotations = annotations
         self.isClean = isClean
@@ -61,12 +63,7 @@ class MapAnnotationsExchanger {
         self.annotationsSubject = annotationsSubject
     }
 
-    func onClean(
-        _ incidentId: Int64,
-        _ filters: CasesFilter,
-        _ changedCase: CaseChangeTime
-    ) {
-        let annotations = IncidentAnnotations(incidentId, filters, changedCase)
+    private func applyCleanState(_ annotations: IncidentAnnotations) {
         applyGuard.withLock {
             applyChangeSet = AnnotationsChangeSet(
                 annotations: annotations,
@@ -77,48 +74,81 @@ class MapAnnotationsExchanger {
         }
     }
 
-    func onAnnotationStateChange(
+    func onClean(
+        _ incidentId: Int64,
+        _ filters: CasesFilter,
+        _ changedCase: CaseChangeTime,
+        denseDescription: DenseMarkDescription =  EmptyDenseMarkDescription,
+    ) {
+        let annotations = IncidentAnnotations(
+            incidentId,
+            filters,
+            changedCase,
+            [],
+            denseDescription,
+        )
+        applyCleanState(annotations)
+    }
+
+    func onCleanStateChange(
         _ incidentId: Int64,
         _ filters: CasesFilter,
         _ changedCase: CaseChangeTime
-    ) -> Bool {
+    ) {
         applyGuard.withLock {
-            if isChanged(incidentId, filters, changedCase) {
+            if isCleanStateChange(incidentId, filters, changedCase) {
                 onClean(incidentId, filters, changedCase)
-                return true
             }
-            return false
         }
     }
 
-    private func isChanged(
+    private func isCleanStateChange(
         _ incidentId: Int64,
         _ filters: CasesFilter,
-        _ changedCase: CaseChangeTime
+        _ changedCase: CaseChangeTime,
+        denseDescription: DenseMarkDescription? =  nil,
     ) -> Bool {
         let state = applyChangeSet.annotations
+        let isDenseChanged = if let denseDescription = denseDescription {
+            state.denseDescription != denseDescription
+        } else {
+            false
+        }
+
         return state.incidentId != incidentId ||
         state.filters != filters ||
-        state.changedCase != changedCase
+        state.changedCase != changedCase ||
+        isDenseChanged
     }
 
-    func getChange(_ incidentAnnotations: IncidentAnnotations) throws -> AnnotationsChangeSet {
-        var isChanged = false
+    func exchange(_ incidentAnnotations: IncidentAnnotations) throws -> AnnotationsChangeSet {
+        var isCleanChange = false
         var appliedIds: Set<Int64> = []
         applyGuard.withLock {
             if incidentAnnotations.isClean {
                 self.appliedIds = []
             }
             appliedIds = self.appliedIds
-            isChanged = self.isChanged(
+            isCleanChange = self.isCleanStateChange(
                 incidentAnnotations.incidentId,
                 incidentAnnotations.filters,
                 incidentAnnotations.changedCase,
+                denseDescription: incidentAnnotations.denseDescription,
             )
         }
 
-        if isChanged {
-            throw CancellationError()
+        if isCleanChange {
+            let annotations = incidentAnnotations.annotations
+            let cleanState = incidentAnnotations.copy {
+                $0.isClean = true
+            }
+            applyCleanState(cleanState)
+            return AnnotationsChangeSet(
+                annotations: cleanState,
+                isClean: true,
+                newAnnotations: annotations,
+                newAnnotationIds: Set(annotations.map { $0.source.id }),
+            )
         }
 
         let newAnnotations = incidentAnnotations.annotations.filter {

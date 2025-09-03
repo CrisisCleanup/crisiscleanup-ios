@@ -79,6 +79,11 @@ public protocol WorksitesRepository {
         searchRadius: Double,
         count: Int
     ) async throws -> [TableDataWorksite]
+
+    func processReconciliation(
+        validChanges: [NetworkWorksiteChange],
+        invalidatedNetworkWorksiteIds: [Int64],
+    ) async throws -> [IncidentWorksiteIds]
 }
 
 extension WorksitesRepository {

@@ -59,6 +59,7 @@ struct HotlineIncidentView: View {
             }
         } else {
             Text(text)
+                .textSelection(.enabled)
         }
     }
 }

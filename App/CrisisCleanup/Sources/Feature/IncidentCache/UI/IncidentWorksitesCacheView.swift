@@ -170,6 +170,7 @@ private struct SyncInfoActionView: View {
             case .worksitesAdditional: t.t("appCache.syncing_additional_case_data")
             case .activeIncident: t.t("appCache.syncing_active_incident")
             case .activeIncidentOrganization: t.t("appCache.syncing_organizations_in_incident")
+            case .worksitesChangeIncident: t.t("~~Syncing Cases with changed Incidents...")
             case .end: t.t("appCache.sync_finished")
             }
             Text(syncStageMessage)

@@ -649,6 +649,25 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         }
         return networkLists
     }
+
+    func getWorksiteChanges(_ after: Date) async throws -> [NetworkWorksiteChange] {
+        let request = requestProvider.worksiteChanges.addQueryItems(
+                "since", dateFormatter.string(from: after)
+            )
+        let response = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkWorksiteChangeResult.self,
+            wrapResponseKey: "changes"
+        )
+        if let result = response.value {
+            try result.errors?.tryThrowException()
+            if let errorMessage = result.error {
+                throw GenericError(errorMessage)
+            }
+            return result.changes ?? []
+        }
+        throw response.error ?? networkError
+    }
 }
 
 extension Array where Element == Int64 {

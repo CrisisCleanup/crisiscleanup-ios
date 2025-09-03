@@ -5,9 +5,6 @@ struct ResetPasswordView: View {
 
     @ObservedObject var viewModel: ResetPasswordViewModel
 
-    // TODO: Incorporate or remove
-    let close: () -> Void
-
     @ObservedObject var focusableViewState = TextInputFocusableView()
 
     @FocusState private var focusState: TextInputFocused?
@@ -26,11 +23,11 @@ struct ResetPasswordView: View {
                         .fontHeader3()
                         .padding(.vertical, appTheme.listItemVerticalPadding)
                 } else {
-                    Text(t.t("resetPassword.forgot_your_password_or_reset"))
+                    Text(t.t("nav.reset_password"))
                         .fontHeader3()
                         .frame(maxWidth: .infinity, alignment: .leading)
 
-                    Text(t.t("resetPassword.enter_email_for_reset_instructions"))
+                    Text(t.t("resetPassword.enter_new_password"))
 
                     let passwordErrorMessage = viewModel.resetPasswordErrorMessage.ifBlank {
                         viewModel.resetPasswordConfirmErrorMessage

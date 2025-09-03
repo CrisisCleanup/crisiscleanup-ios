@@ -38,7 +38,7 @@ class OfflineFirstLanguageTranslationsRepository: LanguageTranslationsRepository
 
     private var appPreferences: AppPreferences = AppPreferences()
 
-    private var translations = Dictionary<String, String>()
+    private var translations = [String: String]()
     private let statusRepository: WorkTypeStatusRepository
 
     private var setLanguageTask: Task<Void, Error>? = nil

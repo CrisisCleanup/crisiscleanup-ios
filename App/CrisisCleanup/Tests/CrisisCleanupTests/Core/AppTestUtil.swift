@@ -72,3 +72,17 @@ func XCTAssertEqual<A: Equatable, B: Equatable, C: Equatable, D: Equatable>(_ a:
         XCTAssertEqual(a.2[i], b.2[i])
     }
 }
+
+extension String {
+    var toDate: Date {
+        let dateFormatter = ISO8601DateFormatter()
+        if let isoFormat = dateFormatter.date(from:self) {
+            return isoFormat
+        }
+
+        let millisecondsFormat = with(DateFormatter()) {
+            $0.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
+        }
+        return millisecondsFormat.date(from: self)!
+    }
+}

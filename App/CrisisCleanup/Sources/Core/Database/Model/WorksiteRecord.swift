@@ -53,7 +53,8 @@ struct WorksiteRootRecord : Identifiable, Equatable {
 extension WorksiteRootRecord: Codable, FetchableRecord, MutablePersistableRecord {
     static var databaseTableName: String = "worksiteRoot"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // internal for testing. Should be fileprivate.
+    internal enum Columns: String, ColumnExpression {
         case id,
              syncUuid,
              localModifiedAt,
@@ -180,10 +181,10 @@ extension WorksiteRootRecord: Codable, FetchableRecord, MutablePersistableRecord
         )
     }
 
-    static func updateWorksiteNetworkId(
+    static func updateNetworkId(
         _ db: Database,
-        _ id: Int64,
-        _ networkId: Int64
+        id: Int64,
+        networkId: Int64
     ) throws {
         try db.execute(
             sql:
@@ -196,6 +197,25 @@ extension WorksiteRootRecord: Codable, FetchableRecord, MutablePersistableRecord
             arguments: [
                 "id": id,
                 "networkId": networkId
+            ]
+        )
+    }
+
+    static func updateIncident(
+        _ db: Database,
+        id: Int64,
+        incidentId: Int64
+    ) throws {
+        try db.execute(
+            sql:
+                """
+                UPDATE worksiteRoot
+                SET incidentId=:incidentId
+                WHERE id=:id
+                """,
+            arguments: [
+                "id": id,
+                "incidentId": incidentId
             ]
         )
     }
@@ -338,7 +358,8 @@ struct WorksiteRecord : Identifiable, Equatable {
 extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
     static var databaseTableName: String = "worksite"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // internal for testing. Should be fileprivate.
+    internal enum Columns: String, ColumnExpression {
         case id,
              networkId,
              incidentId,
@@ -517,8 +538,7 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
             sql:
                 """
                 UPDATE worksite
-                SET
-                reportedBy = COALESCE(:reportedBy, reportedBy)
+                SET reportedBy = COALESCE(:reportedBy, reportedBy)
                 WHERE id=:id
                 """,
             arguments: [
@@ -555,6 +575,25 @@ extension WorksiteRecord: Codable, FetchableRecord, MutablePersistableRecord {
                 Columns.latitude > south
             )
             .fetchCount(db)
+    }
+
+    static func updateIncident(
+        _ db: Database,
+        id: Int64,
+        incidentId: Int64
+    ) throws {
+        try db.execute(
+            sql:
+                """
+                UPDATE worksite
+                SET incidentId=:incidentId
+                WHERE id=:id
+                """,
+            arguments: [
+                "id": id,
+                "incidentId": incidentId
+            ]
+        )
     }
 
     static var visualColumns: [SQLSelectable] {

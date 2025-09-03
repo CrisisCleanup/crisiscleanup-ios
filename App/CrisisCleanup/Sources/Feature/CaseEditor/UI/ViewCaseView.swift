@@ -429,16 +429,36 @@ private struct PropertyInformationView: View {
                 .modifier(CopyWithAnimation(pressed: $namePressed, copy: worksite.name))
 
                 let phoneText = [worksite.phone1, worksite.phone2]
-                    .filter { $0?.isNotBlank == true }
+                    .filterNotBlankTrim()
                     .joined(separator: "; ")
                 HStack {
                     Image(systemName: "phone.fill")
                         .frame(width: iconSize, height: iconSize)
 
-                    // TODO: Custom link won't work with the two numbers combined into one text
-                    Text(phoneText)
-                        .customLink(urlString: "tel:\(phoneText)")
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    VStack(alignment: .leading, spacing: appTheme.gridItemSpacing) {
+                        FlowStack(
+                            alignment: .leading,
+                            horizontalSpacing: appTheme.gridItemSpacing,
+                            verticalSpacing: appTheme.gridItemSpacing,
+                        ) {
+                            ForEach(viewModel.phoneNumberValidations, id: \.original) { validation in
+                                let phoneNumber = validation.isValid ? validation.formatted : validation.original
+                                Text(phoneNumber)
+                                    .if (validation.isValid) {
+                                        $0.customLink(urlString: "tel:\(phoneNumber)")
+                                    }
+                            }
+                        }
+
+                        let phoneNotes = [worksite.phone1Notes, worksite.phone2Notes]
+                            .filterNotBlankTrim()
+                            .joined(separator: "\n")
+                        if phoneNotes.isNotBlank {
+                            Text(phoneNotes)
+                                .fontBodyMedium()
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .horizontalVerticalPadding(horizontalPadding, verticalPadding)
                 .modifier(CopyWithAnimation(pressed: $phonePressed, copy: phoneText))

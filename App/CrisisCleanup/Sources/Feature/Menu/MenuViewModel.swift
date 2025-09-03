@@ -181,7 +181,7 @@ class MenuViewModel: ObservableObject {
                    let url = URL(string: escapedUrl) {
                     return AccountProfilePicture(
                         url: url,
-                        isSvg: isSvg
+                        isSvg: isSvg || $0.isGeneratedProfilePicture
                     )
                 }
                 return nil

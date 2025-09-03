@@ -2,7 +2,7 @@ import SwiftUI
 
 extension AuthenticateComponent {
     private func resetPasswordViewModel(_ resetCode: String) -> ResetPasswordViewModel {
-        if _resetPasswordViewModel == nil {
+        if resetCode != _resetPasswordViewModel?.resetPasswordToken {
             _resetPasswordViewModel = ResetPasswordViewModel(
                 resetPasswordToken: resetCode,
                 accountUpdateRepository: dependency.accountUpdateRepository,
@@ -12,15 +12,10 @@ extension AuthenticateComponent {
         return _resetPasswordViewModel!
     }
 
-    func resetPasswordView(closeAuthFlow: @escaping () -> Void, resetCode: String) -> AnyView {
-        let clearViewModelOnHide = {
-            self._resetPasswordViewModel = nil
-            closeAuthFlow()
-        }
+    func resetPasswordView(resetCode: String) -> AnyView {
         return AnyView(
             ResetPasswordView(
                 viewModel: resetPasswordViewModel(resetCode),
-                close: clearViewModelOnHide
             )
         )
     }

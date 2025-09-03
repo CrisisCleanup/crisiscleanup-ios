@@ -4,16 +4,22 @@ import SwiftUI
 class RequestOrgAccessViewModel: ObservableObject {
     private let languageRepository: LanguageTranslationsRepository
     private let orgVolunteerRepository: OrgVolunteerRepository
+    private let accountUpdateRepository: AccountUpdateRepository
+    private let accountDataRepository: AccountDataRepository
     private let inputValidator: InputValidator
+    private let accountEventBus: AccountEventBus
     private let translator: KeyAssetTranslator
+    private let logger: AppLogger
+
+    let showEmailInput: Bool
+    internal let invitationCode: String
+
+    let isFromInvite: Bool
 
     @Published var screenTitle = ""
 
-    internal let showEmailInput: Bool
     @Published var emailAddress = ""
     @Published var emailAddressError = ""
-
-    internal let invitationCode: String
 
     @Published var userInfo = UserInfoInputData()
 
@@ -34,6 +40,18 @@ class RequestOrgAccessViewModel: ObservableObject {
     private let isRequestingInviteSubject = CurrentValueSubject<Bool, Never>(false)
     @Published private var isRequestingInvite = false
 
+    @Published private(set) var wasAuthenticated = false
+
+    let transferOrgOptions = [
+        TransferOrgOption.users,
+        .all,
+        .doNotTransfer,
+    ]
+    @Published private(set) var transferOrgErrorMessage = ""
+    private let isTransferringOrgSubject = CurrentValueSubject<Bool, Never>(false)
+    @Published private(set) var isTransferringOrg = false
+    @Published private(set) var isOrgTransferred = false
+
     @Published private(set) var isLoading = false
 
     private let requestedOrgSubject = CurrentValueSubject<InvitationRequestResult?, Never>(nil)
@@ -48,25 +66,34 @@ class RequestOrgAccessViewModel: ObservableObject {
     init(
         languageRepository: LanguageTranslationsRepository,
         orgVolunteerRepository: OrgVolunteerRepository,
+        accountUpdateRepository: AccountUpdateRepository,
+        accountDataRepository: AccountDataRepository,
         inputValidator: InputValidator,
+        accountEventBus: AccountEventBus,
         translator: KeyAssetTranslator,
+        loggerFactory: AppLoggerFactory,
         showEmailInput: Bool = false,
-        invitationCode: String = ""
+        invitationCode: String = "",
     ) {
         self.languageRepository = languageRepository
         self.orgVolunteerRepository = orgVolunteerRepository
+        self.accountUpdateRepository = accountUpdateRepository
+        self.accountDataRepository = accountDataRepository
         self.inputValidator = inputValidator
         self.translator = translator
+        self.accountEventBus = accountEventBus
+        logger = loggerFactory.getLogger("org-invite")
 
         self.showEmailInput = showEmailInput
         self.invitationCode = invitationCode
+
+        isFromInvite = invitationCode.isNotBlank
     }
 
     func onViewAppear() {
         subscribeScreenTitle()
-        subscribeLoading()
+        subscribeLoadingEditable()
         subscribeLanguageOptions()
-        subscribeEditableState()
         subscribeInviteInfo()
     }
 
@@ -75,17 +102,25 @@ class RequestOrgAccessViewModel: ObservableObject {
     }
 
     private func subscribeScreenTitle() {
-        requestedOrgSubject
-            .map {
-                let key = $0 == nil ? "actions.sign_up" : "actions.request_access"
-                return self.translator.t(key)
+        Publishers.CombineLatest(
+            requestedOrgSubject,
+            $inviteDisplay,
+        )
+        .map {(org, invite) in
+            let key = if org == nil {
+                invite?.inviteInfo.isExistingUser == true ? "actions.transfer" : "actions.sign_up"
+
+            } else {
+                "actions.request_access"
             }
-            .receive(on: RunLoop.main)
-            .assign(to: \.screenTitle, on: self)
-            .store(in: &subscriptions)
+            return self.translator.t(key)
+        }
+        .receive(on: RunLoop.main)
+        .assign(to: \.screenTitle, on: self)
+        .store(in: &subscriptions)
     }
 
-    private func subscribeLoading() {
+    private func subscribeLoadingEditable() {
         isFetchingInviteInfoSubject
             .receive(on: RunLoop.main)
             .assign(to: \.isFetchingInviteInfo, on: self)
@@ -96,15 +131,35 @@ class RequestOrgAccessViewModel: ObservableObject {
             .assign(to: \.isRequestingInvite, on: self)
             .store(in: &subscriptions)
 
-        Publishers.CombineLatest3(
-            isPullingLanguageOptions,
+        isTransferringOrgSubject
+            .receive(on: RunLoop.main)
+            .assign(to: \.isTransferringOrg, on: self)
+            .store(in: &subscriptions)
+
+        let isStateTransient = Publishers.CombineLatest3(
             $isFetchingInviteInfo,
-            $isRequestingInvite
+            $isRequestingInvite,
+            $isTransferringOrg,
         )
-        .map { b0, b1, b2 in b0 || b1 || b2 }
+            .map { b0, b1, b2 in b0 || b1 || b2 }
+            .removeDuplicates()
+            .replay1()
+
+        Publishers.CombineLatest(
+            isPullingLanguageOptions,
+            isStateTransient,
+        )
+        .map { b0, b1 in b0 || b1 }
         .receive(on: RunLoop.main)
         .assign(to: \.isLoading, on: self)
         .store(in: &subscriptions)
+
+        isStateTransient
+            .receive(on: RunLoop.main)
+            .sink { isBusy in
+                self.editableViewState.isEditable = !isBusy
+            }
+            .store(in: &subscriptions)
 
         requestedOrgSubject
             .receive(on: RunLoop.main)
@@ -157,18 +212,6 @@ class RequestOrgAccessViewModel: ObservableObject {
         }
     }
 
-    private func subscribeEditableState() {
-        Publishers.CombineLatest(
-            $isFetchingInviteInfo,
-            $isRequestingInvite
-        )
-        .receive(on: RunLoop.main)
-        .sink(receiveValue: { b0, b1 in
-            self.editableViewState.isEditable = !(b0 || b1)
-        })
-        .store(in: &subscriptions)
-    }
-
     private func subscribeInviteInfo() {
         inviteInfoErrorMessageSubject
             .receive(on: RunLoop.main)
@@ -202,6 +245,12 @@ class RequestOrgAccessViewModel: ObservableObject {
                             .replacingOccurrences(of: "{email}", with: inviteInfo.invitedEmail)
                             .replacingOccurrences(of: "{organization}", with: inviteInfo.orgName)
                     )
+
+                    if userInfo.emailAddress.isBlank {
+                        Task { @MainActor in
+                            userInfo.emailAddress = inviteInfo.invitedEmail
+                        }
+                    }
                 }
             } else {
                 inviteInfoErrorMessageSubject.value = translator.t("requestAccess.invite_error")
@@ -292,6 +341,56 @@ class RequestOrgAccessViewModel: ObservableObject {
             }
         }
     }
+
+    func onChangeTransferOrgOption() {
+        transferOrgErrorMessage = ""
+    }
+
+    func onTransferOrg(_ selectedOrgTransfer: TransferOrgOption) {
+        switch selectedOrgTransfer {
+        case .users,
+                .all:
+            guard !isTransferringOrgSubject.value else {
+                return
+            }
+            isTransferringOrgSubject.value = true
+            let action = selectedOrgTransfer == .users ? ChangeOrganizationAction.users : .all
+            Task {
+                do {
+                    defer {
+                        isTransferringOrgSubject.value = false
+                    }
+
+                    try await transferToOrg(action)
+                } catch {
+                    logger.logError(error)
+                }
+            }
+
+        default: break
+        }
+    }
+
+    private func transferToOrg(_ action: ChangeOrganizationAction) async throws {
+        let isAuthenticatedPublisher = accountDataRepository.isAuthenticated.eraseToAnyPublisher()
+        let isAuthenticated = try await isAuthenticatedPublisher.asyncFirst()
+
+        let isTransferred = await accountUpdateRepository.acceptOrganizationChange(action, invitationCode)
+
+        Task { @MainActor in
+            if isTransferred {
+                isOrgTransferred = true
+
+                if isAuthenticated {
+                    wasAuthenticated = true
+                    accountEventBus.onLogout()
+                }
+            } else {
+                logger.logError(GenericError("User transfer to org failed."))
+                transferOrgErrorMessage = translator.t("~~There was an issue during organization transfer. Try again later or reach out to support for help.")
+            }
+        }
+    }
 }
 
 struct InviteDisplayInfo: Equatable {
@@ -301,4 +400,24 @@ struct InviteDisplayInfo: Equatable {
     var avatarUrl: URL? { inviteInfo.inviterAvatarUrl }
     var isSvgAvatar: Bool { avatarUrl?.lastPathComponent.hasSuffix(".svg") == true }
     var displayName: String { inviteInfo.displayName }
+}
+
+enum TransferOrgOption {
+    case notSelected,
+         users,
+         all,
+         doNotTransfer
+
+    var translateKey: String {
+        switch self {
+        case .notSelected:
+            return ""
+        case .users:
+            return "invitationSignup.yes_transfer_just_me"
+        case .all:
+            return "invitationSignup.yes_transfer_me_and_cases"
+        case .doNotTransfer:
+            return "invitationSignup.no_transfer"
+        }
+    }
 }

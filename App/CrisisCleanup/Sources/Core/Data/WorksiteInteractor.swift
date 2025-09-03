@@ -6,25 +6,27 @@ public protocol WorksiteInteractor {
 
     func onSelectCase(
         _ incidentId: Int64,
-        _ worksiteId: Int64
+        _ worksiteId: Int64,
     )
 
     func onCaseChanged(
         _ incidentId: Int64,
-        _ worksiteId: Int64
+        _ worksiteId: Int64,
     )
 
     func wasCaseSelected(
         _ incidentId: Int64,
         _ worksiteId: Int64,
-        reference: Date
+        reference: Date,
     ) -> Bool
+
+    func onCasesChanged(_ identifiers: [ExistingWorksiteIdentifier])
 }
 
 extension WorksiteInteractor {
     func wasCaseSelected(
         _ incidentId: Int64,
-        _ worksiteId: Int64
+        _ worksiteId: Int64,
     ) -> Bool {
         wasCaseSelected(incidentId, worksiteId, reference: Date.now)
     }
@@ -44,7 +46,7 @@ public struct CaseChangeTime: Equatable {
     init(
         _ incidentId: Int64 = EmptyIncident.id,
         _ worksiteId: Int64 = EmptyWorksite.id,
-        time: Date = Date.now
+        time: Date = Date.now,
     ) {
         self.caseIdentifier = ExistingWorksiteIdentifier(incidentId: incidentId, worksiteId: worksiteId)
         self.time = time

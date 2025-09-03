@@ -7,11 +7,6 @@ public protocol AppPreferencesDataSource {
     func reset()
     func setHideOnboarding(_ hide: Bool)
     func setHideGettingStartedVideo(_ hide: Bool)
-    func setSyncAttempt(
-        _ isSuccessful: Bool,
-        _ attemptedSeconds: Double
-    )
-    func clearSyncData()
     func setSelectedIncident(_ id: Int64)
     func setLanguageKey(_ key: String)
     func setTableViewSortBy(_ sortBy: WorksiteSortBy)
@@ -20,12 +15,6 @@ public protocol AppPreferencesDataSource {
     func setCasesMapBounds(_ bounds: IncidentCoordinateBounds)
     func setTeamMapBounds(_ bounds: IncidentCoordinateBounds)
     func setWorkScreenView(_ isTableView: Bool)
-}
-
-extension AppPreferencesDataSource {
-    func setSyncAttempt(_ isSuccessful: Bool) {
-        setSyncAttempt(isSuccessful, Date().timeIntervalSince1970)
-    }
 }
 
 fileprivate let jsonDecoder = JsonDecoderFactory().decoder()
@@ -59,7 +48,6 @@ class AppPreferencesUserDefaults: AppPreferencesDataSource {
                 $0.hideGettingStartedVideo = false
                 $0.selectedIncidentId = EmptyIncident.id
                 $0.languageKey = "en-US"
-                $0.syncAttempt = SyncAttempt()
                 $0.tableViewSortBy = .none
                 // TODO: Tutorial
                 $0.shareLocationWithOrg = false
@@ -82,30 +70,6 @@ class AppPreferencesUserDefaults: AppPreferencesDataSource {
                 $0.hideGettingStartedVideo = hide
             }
         )
-    }
-
-    func setSyncAttempt(
-        _ isSuccessful: Bool,
-        _ attemptedSeconds: Double
-    ) {
-        let preferences = UserDefaults.standard.appPreferences
-        let previousAttempt = preferences.syncAttempt
-        let successfulSeconds = isSuccessful ? attemptedSeconds : previousAttempt.successfulSeconds
-        let attemptedCounter = isSuccessful ? 0 : previousAttempt.attemptedCounter + 1
-        let attempt = SyncAttempt(
-            successfulSeconds: successfulSeconds,
-            attemptedSeconds: attemptedSeconds,
-            attemptedCounter: attemptedCounter
-        )
-        update(
-            preferences.copy { $0.syncAttempt = attempt }
-        )
-    }
-
-    func clearSyncData() {
-        update(UserDefaults.standard.appPreferences.copy {
-            $0.syncAttempt = SyncAttempt()
-        })
     }
 
     func setSelectedIncident(_ id: Int64) {

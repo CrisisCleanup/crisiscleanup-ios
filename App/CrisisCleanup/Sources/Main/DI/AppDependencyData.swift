@@ -123,10 +123,12 @@ extension MainComponent {
             OfflineFirstIncidentsRepository(
                 dataSource: networkDataSource,
                 appPreferencesDataSource: appPreferences,
+                accountInfoDataSource: accountDataSource,
                 incidentDao: incidentDao,
                 locationDao: locationDao,
                 incidentOrganizationDao: organizationsDao,
                 organizationsSyncer: organizationsSyncer,
+                inputValidator: inputValidator,
                 loggerFactory: loggerFactory
             )
         }
@@ -247,6 +249,7 @@ extension MainComponent {
                 networkDataSource: networkDataSource,
                 worksitesRepository: worksitesRepository,
                 worksiteDao: worksiteDao,
+                worksiteInteractor: worksiteInteractor,
                 phoneNumberParser: phoneNumberParser,
                 speedMonitor: dataDownloadSpeedMonitor,
                 networkMonitor: networkMonitor,

@@ -9,7 +9,7 @@ public protocol AuthenticateViewBuilder {
     func phoneLoginCodeView(_ phoneNumber: String) -> AnyView
     func magicLinkLoginCodeView(_ code: String) -> AnyView
     func passwordRecoverView(showForgotPassword: Bool, showMagicLink: Bool) -> AnyView
-    func resetPasswordView(closeAuthFlow: @escaping () -> Void, resetCode: String) -> AnyView
+    func resetPasswordView(resetCode: String) -> AnyView
 }
 
 class AuthenticateComponent: Component<AppDependency> {
