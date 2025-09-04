@@ -72,6 +72,7 @@ public protocol CrisisCleanupNetworkDataSource {
         pageCount: Int,
         updatedAt: Date,
         isPagingBackwards: Bool,
+        offset: Int,
     ) async throws -> NetworkWorksitesPageResult
 
     func getWorksitesFlagsFormDataPage(
@@ -79,6 +80,7 @@ public protocol CrisisCleanupNetworkDataSource {
         pageCount: Int,
         updatedAt: Date,
         isPagingBackwards: Bool,
+        offset: Int,
     ) async throws -> NetworkFlagsFormDataResult
 
     func getWorksitesFlagsFormData(
@@ -173,12 +175,14 @@ extension CrisisCleanupNetworkDataSource {
         _ incidentId: Int64,
         _ pageCount: Int,
         _ updatedBefore: Date,
+        offset: Int,
     ) async throws -> NetworkWorksitesPageResult {
         try await getWorksitesPageUpdatedAt(
             incidentId: incidentId,
             pageCount: pageCount,
             updatedAt: updatedBefore,
             isPagingBackwards: true,
+            offset: offset,
         )
     }
 
@@ -192,6 +196,7 @@ extension CrisisCleanupNetworkDataSource {
             pageCount: pageCount,
             updatedAt: updatedAfter,
             isPagingBackwards: false,
+            offset: 0,
         )
     }
 
@@ -199,12 +204,14 @@ extension CrisisCleanupNetworkDataSource {
         _ incidentId: Int64,
         _ pageCount: Int,
         _ updatedBefore: Date,
+        offset: Int,
     ) async throws -> NetworkFlagsFormDataResult {
         try await getWorksitesFlagsFormDataPage(
             incidentId: incidentId,
             pageCount: pageCount,
             updatedAt: updatedBefore,
             isPagingBackwards: true,
+            offset: offset,
         )
     }
 
@@ -218,6 +225,7 @@ extension CrisisCleanupNetworkDataSource {
             pageCount: pageCount,
             updatedAt: updatedAfter,
             isPagingBackwards: false,
+            offset: 0
         )
     }
 

@@ -901,8 +901,13 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                 statsUpdater,
                 downloadSpeedTracker,
                 getTotalCaseCount: nil,
-                getNetworkData: { count, before in
-                    try await self.networkDataSource.getWorksitesPageBefore(incidentId, count, before)
+                getNetworkData: { count, offset, before in
+                    try await self.networkDataSource.getWorksitesPageBefore(
+                        incidentId,
+                        count,
+                        before,
+                        offset: offset,
+                    )
                 },
                 saveToDb: { worksites in
                     try await self.saveWorksites(worksites, statsUpdater)
@@ -953,7 +958,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         _ statsUpdater: IncidentDataPullStatsUpdater,
         _ downloadSpeedTracker: CountTimeTracker,
         getTotalCaseCount: (() async throws -> Int)?,
-        getNetworkData: @escaping (Int, Date) async throws -> T,
+        getNetworkData: @escaping (Int, Int, Date) async throws -> T,
         saveToDb: @escaping ([U]) async throws -> Void,
     ) async throws -> DownloadCountSpeed where T.T == U {
         var isSlowDownload: Bool? = nil
@@ -964,9 +969,9 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
 
         log("Downloading Worksites before")
 
-        var queryCount = isPaused ? 100 : 1000
-        let maxQueryCount = getMaxQueryCount(stage == .worksitesAdditional)
-        var beforeTimeMarker = timeMarkers.before
+        let queryCount = isPaused ? 100 : getMaxQueryCount(stage == .worksitesAdditional)
+        var queryOffset = 0
+        let beforeTimeMarker = timeMarkers.before
         var savedWorksiteIds: Set<Int64> = Set()
         var initialCount = -1
         var savedCount = 0
@@ -978,6 +983,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                 // TODO: Edge case where paging data breaks where Cases are equally updated_at
                 let result = try await getNetworkData(
                     queryCount,
+                    queryOffset,
                     beforeTimeMarker,
                 )
 
@@ -1026,16 +1032,16 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
 
                 savedWorksiteIds = Set(networkData.map { $0.id })
 
-                queryCount = min(queryCount * 2, maxQueryCount)
-                beforeTimeMarker = networkData.last!.updatedAt
+                queryOffset += queryCount
+                let lastTimeMarker = networkData.last!.updatedAt.addingTimeInterval(1.minutes)
 
                 if stage == .worksitesCore {
-                    try await syncParameterDao.updateUpdatedBefore(incidentId, beforeTimeMarker)
+                    try await syncParameterDao.updateUpdatedBefore(incidentId, lastTimeMarker)
                 } else {
-                    try await syncParameterDao.updateAdditionalUpdatedBefore(incidentId, beforeTimeMarker)
+                    try await syncParameterDao.updateAdditionalUpdatedBefore(incidentId, lastTimeMarker)
                 }
 
-                log("Cached \(deduplicateWorksites.count) (\(savedCount)/\(initialCount)) before, back to \(beforeTimeMarker)")
+                log("Cached \(deduplicateWorksites.count) (\(savedCount)/\(initialCount)) before, back to \(beforeTimeMarker) (\(queryOffset)-\(queryCount))")
             }
 
             if isPaused {
@@ -1226,11 +1232,12 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                 statsUpdater,
                 downloadSpeedTracker,
                 getTotalCaseCount: { try self.worksitesRepository.getWorksitesCount(incidentId) },
-                getNetworkData: { count, before in
+                getNetworkData: { count, offset, before in
                     try await self.networkDataSource.getWorksitesFlagsFormDataPageBefore(
                         incidentId,
                         count,
                         before,
+                        offset: offset,
                     )
                 },
                 saveToDb: { worksites in
