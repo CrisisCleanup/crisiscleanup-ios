@@ -1036,8 +1036,6 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
 
                 savedWorksiteIds = Set(networkData.map { $0.id })
 
-                queryOffset += queryCount
-
                 let lastTimeMarker = networkData.last!.updatedAt.addingTimeInterval(1.minutes)
                 if stage == .worksitesCore {
                     try await syncParameterDao.updateUpdatedBefore(incidentId, lastTimeMarker)
@@ -1045,7 +1043,9 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                     try await syncParameterDao.updateAdditionalUpdatedBefore(incidentId, lastTimeMarker)
                 }
 
-                log("Cached \(deduplicateWorksites.count) (\(savedCount)/\(initialCount)) before, back to \(beforeTimeMarker) (\(queryOffset)-\(queryCount))")
+                log("Cached \(deduplicateWorksites.count) (\(savedCount)/\(initialCount)) before, back to \(lastTimeMarker) (\(queryOffset)-\(queryCount))")
+
+                queryOffset += queryCount
             }
 
             if isPaused {
@@ -1144,11 +1144,12 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
 
                 savedWorksiteIds = Set(networkData.map { $0.id })
 
-                queryOffset += queryCount
                 let lastTimeMarker = networkData.last!.updatedAt.addingTimeInterval(-1.minutes)
                 try await updateUpdatedAfter(lastTimeMarker)
 
-                log("Cached \(deduplicateWorksites.count) (\(savedCount)/\(initialCount)) after, up to \(afterTimeMarker) (\(queryOffset)-\(queryCount))")
+                log("Cached \(deduplicateWorksites.count) (\(savedCount)/\(initialCount)) after, up to \(lastTimeMarker) (\(queryOffset)-\(queryCount))")
+
+                queryOffset += queryCount
             }
 
             if isPaused {
