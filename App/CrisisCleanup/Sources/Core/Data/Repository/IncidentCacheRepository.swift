@@ -935,8 +935,13 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
             timeMarkers,
             statsUpdater,
             downloadSpeedTracker,
-            getNetworkData: { count, after in
-                try await self.networkDataSource.getWorksitesPageAfter(incidentId, count, after)
+            getNetworkData: { count, offset, after in
+                try await self.networkDataSource.getWorksitesPageAfter(
+                    incidentId,
+                    count,
+                    after,
+                    offset: offset,
+                )
             },
             saveToDb: { worksites in
                 try await self.saveWorksites(worksites, statsUpdater)
@@ -980,7 +985,6 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
             try await checkCancelTimeout()
 
             let networkData = try await downloadSpeedTracker.time {
-                // TODO: Edge case where paging data breaks where Cases are equally updated_at
                 let result = try await getNetworkData(
                     queryCount,
                     queryOffset,
@@ -1033,8 +1037,8 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
                 savedWorksiteIds = Set(networkData.map { $0.id })
 
                 queryOffset += queryCount
-                let lastTimeMarker = networkData.last!.updatedAt.addingTimeInterval(1.minutes)
 
+                let lastTimeMarker = networkData.last!.updatedAt.addingTimeInterval(1.minutes)
                 if stage == .worksitesCore {
                     try await syncParameterDao.updateUpdatedBefore(incidentId, lastTimeMarker)
                 } else {
@@ -1072,7 +1076,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
         _ timeMarkers: IncidentDataSyncParameters.SyncTimeMarker,
         _ statsUpdater: IncidentDataPullStatsUpdater,
         _ downloadSpeedTracker: CountTimeTracker,
-        getNetworkData: @escaping (Int, Date) async throws -> T,
+        getNetworkData: @escaping (Int, Int, Date) async throws -> T,
         saveToDb: @escaping ([U]) async throws -> Void,
     ) async throws -> DownloadCountSpeed where T.T == U {
         var isSlowDownload: Bool? = nil
@@ -1081,23 +1085,22 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
             logStage(incidentId, stage, message)
         }
 
-        var afterTimeMarker = timeMarkers.after
-
-        log("Downloading delta starting at \(afterTimeMarker)")
-
-        var queryCount = isPaused ? 100 : 1000
-        let maxQueryCount = getMaxQueryCount(stage == .worksitesAdditional)
+        let queryCount = isPaused ? 100 : getMaxQueryCount(stage == .worksitesAdditional)
+        var queryOffset = 0
+        let afterTimeMarker = timeMarkers.after
         var savedWorksiteIds: Set<Int64> = Set()
         var initialCount = -1
         var savedCount = 0
+
+        log("Downloading delta starting at \(afterTimeMarker)")
 
         repeat {
             try await checkCancelTimeout()
 
             let networkData = try await downloadSpeedTracker.time {
-                // TODO: Edge case where paging data breaks where Cases are equally updated_at
                 let result = try await getNetworkData(
                     queryCount,
+                    queryOffset,
                     afterTimeMarker,
                 )
                 if initialCount < 0 {
@@ -1118,7 +1121,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
             if networkData.isEmpty {
                 try await updateUpdatedAfter(syncStart)
 
-                log("Cached \(savedCount)/\(initialCount) after. No Cases after \(afterTimeMarker)")
+                log("Cached \(savedCount)/\(initialCount) after. No Cases after \(afterTimeMarker) (\(queryOffset)-\(queryCount))")
             } else {
                 if let averageSpeed = downloadSpeedTracker.averageSpeed() {
                     let isSlow = averageSpeed < slowDownloadSpeed
@@ -1141,12 +1144,11 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
 
                 savedWorksiteIds = Set(networkData.map { $0.id })
 
-                queryCount = min(queryCount * 2, maxQueryCount)
-                afterTimeMarker = networkData.last!.updatedAt
+                queryOffset += queryCount
+                let lastTimeMarker = networkData.last!.updatedAt.addingTimeInterval(-1.minutes)
+                try await updateUpdatedAfter(lastTimeMarker)
 
-                try await updateUpdatedAfter(afterTimeMarker)
-
-                log("Cached \(deduplicateWorksites.count) (\(savedCount)/\(initialCount)) after, up to \(afterTimeMarker)")
+                log("Cached \(deduplicateWorksites.count) (\(savedCount)/\(initialCount)) after, up to \(afterTimeMarker) (\(queryOffset)-\(queryCount))")
             }
 
             if isPaused {
@@ -1266,11 +1268,12 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
             timeMarkers,
             statsUpdater,
             downloadSpeedTracker,
-            getNetworkData: { count, after in
+            getNetworkData: { count, offset, after in
                 try await self.networkDataSource.getWorksitesFlagsFormDataPageAfter(
                     incidentId,
                     count,
                     after,
+                    offset: offset,
                 )
             },
             saveToDb: { worksites in

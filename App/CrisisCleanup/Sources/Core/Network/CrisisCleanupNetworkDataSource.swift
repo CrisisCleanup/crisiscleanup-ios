@@ -190,13 +190,14 @@ extension CrisisCleanupNetworkDataSource {
         _ incidentId: Int64,
         _ pageCount: Int,
         _ updatedAfter: Date,
+        offset: Int,
     ) async throws -> NetworkWorksitesPageResult {
         try await getWorksitesPageUpdatedAt(
             incidentId: incidentId,
             pageCount: pageCount,
             updatedAt: updatedAfter,
             isPagingBackwards: false,
-            offset: 0,
+            offset: offset,
         )
     }
 
@@ -219,13 +220,14 @@ extension CrisisCleanupNetworkDataSource {
         _ incidentId: Int64,
         _ pageCount: Int,
         _ updatedAfter: Date,
+        offset: Int,
     ) async throws -> NetworkFlagsFormDataResult {
         try await getWorksitesFlagsFormDataPage(
             incidentId: incidentId,
             pageCount: pageCount,
             updatedAt: updatedAfter,
             isPagingBackwards: false,
-            offset: 0
+            offset: offset,
         )
     }
 
