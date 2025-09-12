@@ -14,6 +14,8 @@ public struct AppPreferences: Codable {
 
     let isWorkScreenTableView: Bool?
 
+    let isMapSatelliteView: Bool?
+
     init(
         hideOnboarding: Bool = false,
         hideGettingStartedVideo: Bool = false,
@@ -26,6 +28,7 @@ public struct AppPreferences: Codable {
         casesMapBounds: IncidentCoordinateBounds? = IncidentCoordinateBoundsNone,
         teamMapBounds: IncidentCoordinateBounds? = IncidentCoordinateBoundsNone,
         isWorkScreenTableView: Bool? = false,
+        isMapSatelliteView: Bool? = false,
     ) {
         self.hideOnboarding = hideOnboarding
         self.hideGettingStartedVideo = hideGettingStartedVideo
@@ -38,5 +41,6 @@ public struct AppPreferences: Codable {
         self.casesMapBounds = casesMapBounds
         self.teamMapBounds = teamMapBounds
         self.isWorkScreenTableView = isWorkScreenTableView
+        self.isMapSatelliteView = isMapSatelliteView
     }
 }

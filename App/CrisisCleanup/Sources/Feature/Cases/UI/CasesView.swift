@@ -28,7 +28,6 @@ struct CasesLayoutView: View {
     let openAuthScreen: () -> Void
 
     @State var map = MKMapView()
-    @State private var isSatelliteMapType = false
     @State private var showMapBusyIndicator = false
     @State private var phoneCallNumbers = [ParsedPhoneNumber]()
 
@@ -59,7 +58,7 @@ struct CasesLayoutView: View {
                 CasesMapView(
                     map: $map,
                     focusWorksiteCenter: $viewModel.editedWorksiteLocation,
-                    isSatelliteMapType: $isSatelliteMapType,
+                    isSatelliteMapType: viewModel.isMapSatelliteView,
                     viewModel: viewModel,
                     mapOverlays: map.makeOverlayPolygons(),
                     onSelectWorksite: { worksiteId in
@@ -84,6 +83,12 @@ struct CasesLayoutView: View {
                         // TODO: Does this center once or follow until disengaged?
                         map.userTrackingMode = .follow
                     }
+                }
+                .onChange(of: viewModel.isMapSatelliteView) { value in
+                    map.mapType = value ? .satellite : .standard
+                }
+                .onAppear {
+                    map.mapType = viewModel.isMapSatelliteView ? .satellite : .standard
                 }
             }
 
@@ -110,7 +115,7 @@ struct CasesLayoutView: View {
             CasesOverlayElements(
                 openAuthScreen: openAuthScreen,
                 map: $map,
-                isSatelliteMapType: $isSatelliteMapType,
+                isSatelliteMapType: $viewModel.isMapSatelliteView,
                 incidentSelectViewBuilder: incidentSelectViewBuilder,
                 hasNoIncidents: hasNoIncidents,
                 animateToSelectedIncidentBounds: animateToSelectedIncidentBounds,
@@ -387,10 +392,6 @@ private struct MapResponsiveControls: View {
         ) {
             MapLayersView(isSatelliteMapType: $isSatelliteMapType)
                 .listItemModifier()
-                .onChange(of: isSatelliteMapType) { newValue in
-                    map.mapType = newValue ? .satellite : .standard
-                    // TODO: Toggle overlay
-                }
                 .presentationDetents([.medium, .fraction(0.3)])
         }
     }

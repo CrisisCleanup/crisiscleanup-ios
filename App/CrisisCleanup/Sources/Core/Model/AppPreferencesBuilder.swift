@@ -21,6 +21,7 @@ extension AppPreferences {
         var casesMapBounds: IncidentCoordinateBounds?
         var teamMapBounds: IncidentCoordinateBounds?
         var isWorkScreenTableView: Bool?
+        var isMapSatelliteView: Bool?
 
         fileprivate init(original: AppPreferences) {
             self.hideOnboarding = original.hideOnboarding
@@ -33,6 +34,7 @@ extension AppPreferences {
             self.casesMapBounds = original.casesMapBounds
             self.teamMapBounds = original.teamMapBounds
             self.isWorkScreenTableView = original.isWorkScreenTableView
+            self.isMapSatelliteView = original.isMapSatelliteView
         }
 
         fileprivate func toAppPreferences() -> AppPreferences {
@@ -47,6 +49,7 @@ extension AppPreferences {
                 casesMapBounds: casesMapBounds,
                 teamMapBounds: teamMapBounds,
                 isWorkScreenTableView: isWorkScreenTableView,
+                isMapSatelliteView: isMapSatelliteView,
             )
         }
     }

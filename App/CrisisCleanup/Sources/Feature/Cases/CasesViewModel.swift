@@ -41,6 +41,8 @@ class CasesViewModel: ObservableObject {
 
     @Published private(set) var filtersCount = 0
 
+    @Published var isMapSatelliteView = false
+
     @Published private(set) var isTableView = false
 
     private let tableDataDistanceSortSearchRadius = 100.0
@@ -529,6 +531,25 @@ class CasesViewModel: ObservableObject {
     }
 
     private func subscribeViewState() {
+        Task {
+            do {
+                let preferences = try await appPreferences.preferences.eraseToAnyPublisher().asyncFirst()
+                let isMapSatelliteView = preferences.isMapSatelliteView ?? false
+                Task { @MainActor in
+                    self.isMapSatelliteView = isMapSatelliteView
+                }
+            } catch {
+                logger.logError(error)
+            }
+        }
+
+        $isMapSatelliteView
+            .removeDuplicates()
+            .sink {
+                self.appPreferences.setMapSatelliteView($0)
+            }
+            .store(in: &subscriptions)
+
         qsm.isTableViewSubject
             .receive(on: RunLoop.main)
             .assign(to: \.isTableView, on: self)

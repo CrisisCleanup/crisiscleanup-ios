@@ -15,6 +15,7 @@ public protocol AppPreferencesDataSource {
     func setCasesMapBounds(_ bounds: IncidentCoordinateBounds)
     func setTeamMapBounds(_ bounds: IncidentCoordinateBounds)
     func setWorkScreenView(_ isTableView: Bool)
+    func setMapSatelliteView(_ isSatellite: Bool)
 }
 
 fileprivate let jsonDecoder = JsonDecoderFactory().decoder()
@@ -132,6 +133,14 @@ class AppPreferencesUserDefaults: AppPreferencesDataSource {
         update(
             UserDefaults.standard.appPreferences.copy {
                 $0.isWorkScreenTableView = isTableView
+            }
+        )
+    }
+
+    func setMapSatelliteView(_ isSatellite: Bool) {
+        update(
+            UserDefaults.standard.appPreferences.copy {
+                $0.isMapSatelliteView = isSatellite
             }
         )
     }

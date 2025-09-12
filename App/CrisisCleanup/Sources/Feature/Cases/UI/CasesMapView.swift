@@ -120,7 +120,7 @@ class CasesMapViewCoordinator: NSObject, MKMapViewDelegate {
 internal struct CasesMapView : UIViewRepresentable {
     @Binding var map: MKMapView
     @Binding var focusWorksiteCenter: CLLocationCoordinate2D?
-    @Binding var isSatelliteMapType: Bool
+    let isSatelliteMapType: Bool
 
     @ObservedObject var viewModel: CasesViewModel
 
