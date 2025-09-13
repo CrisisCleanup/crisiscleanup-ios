@@ -11,6 +11,7 @@ let orgMemberLabelKey = "actions.member_of_my_org"
 class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     private let incidentsRepository: IncidentsRepository
     private let worksitesRepository: WorksitesRepository
+    private let appPreferences: AppPreferencesDataSource
     private var worksiteProvider: EditableWorksiteProvider
     private let incidentBoundsProvider: IncidentBoundsProvider
     private let locationManager: LocationManager
@@ -49,6 +50,8 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     @Published private(set) var isLoading = true
 
     @Published private(set) var isSyncing = false
+
+    @Published var isMapSatelliteView = false
 
     @Published private(set) var areEditorsReady = false
 
@@ -130,6 +133,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         incidentRefresher: IncidentRefresher,
         incidentBoundsProvider: IncidentBoundsProvider,
         worksitesRepository: WorksitesRepository,
+        appPreferences: AppPreferencesDataSource,
         languageRepository: LanguageTranslationsRepository,
         languageRefresher: LanguageRefresher,
         workTypeStatusRepository: WorkTypeStatusRepository,
@@ -155,6 +159,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     ) {
         self.incidentsRepository = incidentsRepository
         self.worksitesRepository = worksitesRepository
+        self.appPreferences = appPreferences
         self.worksiteProvider = worksiteProvider
         self.existingWorksiteSelector = existingWorksiteSelector
         self.incidentBoundsProvider = incidentBoundsProvider
@@ -261,6 +266,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         subscribeLoading()
         subscribeSyncing()
         subscribeSaving()
+        subscribeMapState()
         subscribeEditableState()
 
         subscribeIncidentState()
@@ -343,6 +349,27 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         isSavingWorksite.eraseToAnyPublisher()
             .receive(on: RunLoop.main)
             .assign(to: \.isSaving, on: self)
+            .store(in: &subscriptions)
+    }
+
+    private func subscribeMapState() {
+        Task {
+            do {
+                let preferences = try await appPreferences.preferences.eraseToAnyPublisher().asyncFirst()
+                let isMapSatelliteView = preferences.isMapSatelliteView ?? false
+                Task { @MainActor in
+                    self.isMapSatelliteView = isMapSatelliteView
+                }
+            } catch {
+                logger.logError(error)
+            }
+        }
+
+        $isMapSatelliteView
+            .removeDuplicates()
+            .sink {
+                self.appPreferences.setMapSatelliteView($0)
+            }
             .store(in: &subscriptions)
     }
 

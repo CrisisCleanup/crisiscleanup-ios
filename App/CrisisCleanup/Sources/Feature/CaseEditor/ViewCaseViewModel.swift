@@ -8,6 +8,7 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
     private let incidentsRepository: IncidentsRepository
     private let worksitesRepository: WorksitesRepository
     private let accountDataRefresher: AccountDataRefresher
+    private let appPreferences: AppPreferencesDataSource
     private let worksiteInteractor: WorksiteInteractor
     private let locationManager: LocationManager
     private var editableWorksiteProvider: EditableWorksiteProvider
@@ -35,6 +36,8 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
     @Published private(set) var phoneNumberValidations = [PhoneNumberValidation]()
 
     @Published private(set) var distanceAway = ""
+
+    @Published var isMapSatelliteView = false
 
     @Published private(set) var isLoading = true
 
@@ -87,6 +90,7 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
         incidentsRepository: IncidentsRepository,
         organizationsRepository: OrganizationsRepository,
         accountDataRefresher: AccountDataRefresher,
+        appPreferences: AppPreferencesDataSource,
         organizationRefresher: OrganizationRefresher,
         worksiteInteractor: WorksiteInteractor,
         incidentRefresher: IncidentRefresher,
@@ -112,6 +116,7 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
         self.incidentsRepository = incidentsRepository
         self.worksitesRepository = worksitesRepository
         self.accountDataRefresher = accountDataRefresher
+        self.appPreferences = appPreferences
         self.worksiteInteractor = worksiteInteractor
         self.locationManager = locationManager
         self.editableWorksiteProvider = editableWorksiteProvider
@@ -289,6 +294,25 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
     }
 
     private func subscribeViewState() {
+        Task {
+            do {
+                let preferences = try await appPreferences.preferences.eraseToAnyPublisher().asyncFirst()
+                let isMapSatelliteView = preferences.isMapSatelliteView ?? false
+                Task { @MainActor in
+                    self.isMapSatelliteView = isMapSatelliteView
+                }
+            } catch {
+                logger.logError(error)
+            }
+        }
+
+        $isMapSatelliteView
+            .removeDuplicates()
+            .sink {
+                self.appPreferences.setMapSatelliteView($0)
+            }
+            .store(in: &subscriptions)
+
         $alertMessage
             .filter { $0.isNotBlank }
             .debounce(

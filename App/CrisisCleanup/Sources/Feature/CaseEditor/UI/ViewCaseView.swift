@@ -516,6 +516,7 @@ private struct PropertyInformationView: View {
                 }
                 .horizontalVerticalPadding(horizontalPadding, verticalPadding)
 
+                // TODO: Remove tint over satellite view
                 ViewCaseMapView(
                     map: $map,
                     caseCoordinates: CLLocationCoordinate2D(
@@ -525,6 +526,18 @@ private struct PropertyInformationView: View {
                 )
                 .frame(maxWidth: .infinity)
                 .frame(height: appTheme.listItemMapHeight)
+                .overlay(alignment: .topTrailing) {
+                    MapViewToggleButton(
+                        isMapSatelliteView: viewModel.isMapSatelliteView,
+                        onToggle: { viewModel.isMapSatelliteView.toggle() }
+                    )
+                }
+                .onChange(of: viewModel.isMapSatelliteView) { value in
+                    map.setSatelliteMapType(value)
+                }
+                .onAppear {
+                    map.setSatelliteMapType(viewModel.isMapSatelliteView)
+                }
             }
             .cardContainerPadded()
         }

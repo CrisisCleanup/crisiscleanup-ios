@@ -51,6 +51,7 @@ class CreateEditCaseComponent: Component<AppDependency>, CreateEditCaseViewBuild
             incidentRefresher: dependency.incidentRefresher,
             incidentBoundsProvider: dependency.incidentBoundsProvider,
             worksitesRepository: dependency.worksitesRepository,
+            appPreferences: dependency.appPreferences,
             languageRepository: dependency.languageTranslationsRepository,
             languageRefresher: dependency.languageRefresher,
             workTypeStatusRepository: dependency.workTypeStatusRepository,

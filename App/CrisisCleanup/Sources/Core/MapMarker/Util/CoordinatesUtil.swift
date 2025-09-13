@@ -188,8 +188,9 @@ extension Array where Element == LocationLatLng {
                         let polyDelta = polyLocation.subtract(centroidLocation)
                         let polyDeltaNorm = polyDelta.normalizeOrSelf()
                         if polyDelta != polyDeltaNorm &&
-                            polyDeltaNorm.coordinate.latitude * deltaNorm.coordinate.latitude +
-                            polyDeltaNorm.coordinate.longitude * deltaNorm.coordinate.longitude > 0.9
+                            abs(
+                                polyDeltaNorm.coordinate.latitude * deltaNorm.coordinate.latitude +
+                                polyDeltaNorm.coordinate.longitude * deltaNorm.coordinate.longitude) > 0.9
                          {
                             let distance = polyLocation.distance(from: centroidLocation)
                             if distance > furthestDistance {

@@ -221,6 +221,7 @@ private struct OutOfBoundsMoveOnMapView: View {
 
     var body: some View {
         let outOfBoundsMessage = viewModel.locationOutOfBoundsMessage
+        // TODO: Remove tint over satellite view
         MoveMapView(
             map: $map,
             targetCoordinates: viewModel.mapCoordinates,
@@ -239,6 +240,21 @@ private struct OutOfBoundsMoveOnMapView: View {
         }
         .onChange(of: viewModel.locationOutOfBoundsMessage) { newValue in
             isLocationOutOfBounds = newValue.isNotBlank
+        }
+        .overlay(alignment: .topTrailing) {
+            MapViewToggleButton(
+                isMapSatelliteView: viewModel.isMapSatelliteView,
+                onToggle: { viewModel.isMapSatelliteView.toggle() }
+            )
+        }
+        .onChange(of: viewModel.isMapSatelliteView) { value in
+            // TODO: Map does not change if satellite on load
+            //       Toggling search and dismissing renders map correctly
+            //       Doesn't seem to be due to nesting view structure
+            map.setSatelliteMapType(value)
+        }
+        .onAppear {
+            map.setSatelliteMapType(viewModel.isMapSatelliteView)
         }
     }
 }

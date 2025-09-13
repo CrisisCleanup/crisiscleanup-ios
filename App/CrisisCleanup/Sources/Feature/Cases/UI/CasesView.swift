@@ -85,10 +85,10 @@ struct CasesLayoutView: View {
                     }
                 }
                 .onChange(of: viewModel.isMapSatelliteView) { value in
-                    map.mapType = value ? .satellite : .standard
+                    map.setSatelliteMapType(value)
                 }
                 .onAppear {
-                    map.mapType = viewModel.isMapSatelliteView ? .satellite : .standard
+                    map.setSatelliteMapType(viewModel.isMapSatelliteView)
                 }
             }
 
@@ -487,7 +487,7 @@ private struct MapLayersView: View {
                     Button {
                         isSatelliteMapType = false
                     } label: {
-                        Image(systemName: "map")
+                        Image(systemName: "map.fill")
                             .frame(width: imageSize, height: imageSize)
                             .if (!isSatelliteMapType) {
                                 $0.roundedBorder(color: borderColor, lineWidth: borderWidth)
@@ -499,7 +499,7 @@ private struct MapLayersView: View {
                     Button {
                         isSatelliteMapType = true
                     } label: {
-                        Image(systemName: "mountain.2")
+                        Image(systemName: "mountain.2.fill")
                             .frame(width: imageSize, height: imageSize)
                             .if (isSatelliteMapType) {
                                 $0.roundedBorder(color: borderColor, lineWidth: borderWidth)
