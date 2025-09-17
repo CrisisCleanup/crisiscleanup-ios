@@ -323,14 +323,6 @@ private struct MenuScreenNonProductionView: View {
 
     var body: some View {
         VStack {
-            Button {
-                router.openSyncInsights()
-            } label: {
-                Text("See sync logs")
-            }
-            .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
-
             if viewModel.isDebuggable {
                 Text(viewModel.databaseVersionText)
                     .padding()
@@ -340,16 +332,28 @@ private struct MenuScreenNonProductionView: View {
                     Button("Clear refresh token") {
                         viewModel.clearRefreshToken()
                     }
-                    .padding()
+                    .listItemPadding()
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                     Button("Expire token") {
                         viewModel.expireToken()
                     }
-                    .padding()
+                    .listItemPadding()
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
+
+            Button("See sync logs") {
+                router.openSyncInsights()
+            }
+            .listItemPadding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button("Clear app data") {
+                viewModel.clearAppData()
+            }
+            .listItemPadding()
+            .frame(maxWidth: .infinity, alignment: .trailing)
         }
     }
 }

@@ -64,6 +64,7 @@ extension MainComponent {
                 worksiteChangeRepository: worksiteChangeRepository,
                 appSupportRepository: appSupportRepository,
                 dataManagementRepository: appDataManagementRepository,
+                appEnv: appEnv,
                 loggerFactory: loggerFactory,
             )
         }

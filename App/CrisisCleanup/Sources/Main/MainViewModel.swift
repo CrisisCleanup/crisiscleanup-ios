@@ -117,6 +117,7 @@ class MainViewModel: ObservableObject {
     func onBackgroundPhase() {
         backgroundTaskCoordinator.scheduleRefresh(secondsFromNow: 29 * 60)
         backgroundTaskCoordinator.schedulePushWorksites(secondsFromNow: 9 * 60)
+        backgroundTaskCoordinator.scheduleInactiveCheckup()
     }
 
     func onViewAppear() {
