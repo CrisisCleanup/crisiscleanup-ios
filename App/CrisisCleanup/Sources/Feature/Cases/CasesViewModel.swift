@@ -210,6 +210,9 @@ class CasesViewModel: ObservableObject {
         subscribeMapTiles()
 
         if let location = worksiteLocationEditor.takeEditedLocation() {
+            if isTableView {
+                toggleTableView()
+            }
             editedWorksiteLocation = location
         }
     }
