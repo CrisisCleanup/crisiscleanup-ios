@@ -222,6 +222,12 @@ extension MainComponent {
         }
     }
 
+    var appMaintenanceDataSource: AppMaintenanceDataSource {
+        shared {
+            AppMaintenanceUserDefaults()
+        }
+    }
+
     public var translator: KeyAssetTranslator { languageTranslationsRepository }
 
     public var authenticateViewBuilder: AuthenticateViewBuilder { self }

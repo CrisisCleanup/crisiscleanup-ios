@@ -27,14 +27,11 @@ class AppPreferencesUserDefaults: AppPreferencesDataSource {
     init() {
         preferences = UserDefaults.standard.publisher(for: \.appPreferencesData)
             .map { preferencesData in
-                let appPreferences: AppPreferences
-                if let preferencesData = preferencesData,
-                   let data = try? jsonDecoder.decode(AppPreferences.self, from: preferencesData) {
-                    appPreferences = data
-                } else {
-                    appPreferences = AppPreferences()
+                if let data = preferencesData,
+                   let decodedData = try? jsonDecoder.decode(AppPreferences.self, from: data) {
+                    return decodedData
                 }
-                return appPreferences
+                return AppPreferences()
             }
     }
 

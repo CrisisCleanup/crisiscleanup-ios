@@ -78,6 +78,7 @@ class CaseFlagsViewModel: ObservableObject {
         accountDataRepository: AccountDataRepository,
         addressSearchRepository: AddressSearchRepository,
         worksiteChangeRepository: WorksiteChangeRepository,
+        appDataManagementRepository: AppDataManagementRepository,
         incidentSelectManager: IncidentSelector,
         syncPusher: SyncPusher,
         translator: KeyAssetTranslator,
@@ -120,6 +121,10 @@ class CaseFlagsViewModel: ObservableObject {
         flagFlows = allFlags.filter { !existingSingularFlags.contains($0) }
 
         screenTitle = "\(translator.t("nav.flag")) (\(worksiteIn.caseNumber))"
+
+        Task {
+            await appDataManagementRepository.rebuildFts()
+        }
     }
 
     func onViewAppear() {

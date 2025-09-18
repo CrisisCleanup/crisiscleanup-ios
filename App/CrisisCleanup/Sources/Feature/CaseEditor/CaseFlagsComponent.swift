@@ -42,6 +42,7 @@ class CaseFlagsComponent: Component<AppDependency>, CaseFlagsViewBuilder {
                 accountDataRepository: dependency.accountDataRepository,
                 addressSearchRepository: dependency.addressSearchRepository,
                 worksiteChangeRepository: dependency.worksiteChangeRepository,
+                appDataManagementRepository: dependency.appDataManagementRepository,
                 incidentSelectManager: dependency.incidentSelector,
                 syncPusher: dependency.syncPusher,
                 translator: dependency.translator,

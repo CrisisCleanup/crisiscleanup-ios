@@ -174,6 +174,10 @@ public class IncidentOrganizationDao {
         }
         try database.saveOrganizations(newOrganizations, newAffiliates)
     }
+
+    func rebuildOrganizationFts() throws {
+        try database.rebuildFtsTable("incidentOrganization_ft")
+    }
 }
 
 extension AppDatabase {

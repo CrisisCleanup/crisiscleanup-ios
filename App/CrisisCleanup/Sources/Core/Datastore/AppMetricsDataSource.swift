@@ -27,14 +27,11 @@ class LocalAppMetricsDataSource: AppMetricsDataSource {
     init() {
         metrics = UserDefaults.standard.publisher(for: \.appMetricsData)
             .map { metricsData in
-                let appMetrics: AppMetrics
-                if let metricsData = metricsData,
-                   let data = try? jsonDecoder.decode(AppMetrics.self, from: metricsData) {
-                    appMetrics = data
-                } else {
-                    appMetrics = AppMetrics()
+                if let data = metricsData,
+                   let decodedData = try? jsonDecoder.decode(AppMetrics.self, from: data) {
+                    return decodedData
                 }
-                return appMetrics
+                return AppMetrics()
             }
     }
 

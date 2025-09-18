@@ -152,6 +152,10 @@ public class IncidentDao {
             )
         }
     }
+
+    func rebuildIncidentFts() throws {
+        try database.rebuildFtsTable("incident_ft")
+    }
 }
 
 extension AppDatabase {

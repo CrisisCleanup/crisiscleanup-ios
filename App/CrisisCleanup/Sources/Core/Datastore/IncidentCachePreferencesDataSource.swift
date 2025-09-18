@@ -17,14 +17,11 @@ class IncidentCachePreferencesUserDefaults: IncidentCachePreferencesDataSource {
     init() {
         preferences = UserDefaults.standard.publisher(for: \.incidentWorksitesCachePreferencesData)
             .map { preferencesData in
-                let cachePreferences: IncidentWorksitesCachePreferences
-                if let preferencesData = preferencesData,
-                   let data = try? jsonDecoder.decode(IncidentWorksitesCachePreferences.self, from: preferencesData) {
-                    cachePreferences = data
-                } else {
-                    cachePreferences = InitialIncidentWorksitesCachePreferences
+                if let data = preferencesData,
+                   let decodedData = try? jsonDecoder.decode(IncidentWorksitesCachePreferences.self, from: data) {
+                    return decodedData
                 }
-                return cachePreferences
+                return InitialIncidentWorksitesCachePreferences
             }
     }
 

@@ -776,6 +776,10 @@ public class WorksiteDao {
             .filter { $0.incidentId == incidentId }
             .map { $0.asSummary() }
     }
+
+    func rebuildWorksiteFts() throws {
+        try database.rebuildFtsTable("worksiteSearch_ft")
+    }
 }
 
 extension AppDatabase {
