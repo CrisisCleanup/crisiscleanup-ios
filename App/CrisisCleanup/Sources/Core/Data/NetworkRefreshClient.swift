@@ -17,7 +17,7 @@ public class IncidentRefresher {
 
     func pullIncident(_ id: Int64) async {
         do {
-            if recentlyRefreshedIncident.exchange(id, ordering: .releasing) == id {
+            if recentlyRefreshedIncident.exchange(id, ordering: .relaxed) == id {
                 return
             }
 

@@ -203,7 +203,11 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
     }
 
     func syncWorksites(_ syncWorksiteCount: Int) async {
-        if !syncWorksiteGuard.exchange(true, ordering: .sequentiallyConsistent) {
+        if syncWorksiteGuard.compareExchange(
+            expected: false,
+            desired: true,
+            ordering: .sequentiallyConsistent,
+        ).exchanged {
             var worksiteId: Int64
             do {
                 defer { syncWorksiteGuard.store(false, ordering: .sequentiallyConsistent) }

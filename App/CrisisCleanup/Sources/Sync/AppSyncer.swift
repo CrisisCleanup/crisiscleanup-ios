@@ -209,11 +209,17 @@ class AppSyncer: SyncPuller, SyncPusher {
             return
         }
 
-        if pullLanguageGuard.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged {
-            defer { pullLanguageGuard.store(false, ordering: .relaxed) }
-
-            await languageRepository.loadLanguages()
+        guard pullLanguageGuard.compareExchange(
+            expected: false,
+            desired: true,
+            ordering: .relaxed,
+        ).exchanged else {
+            return
         }
+
+        defer { pullLanguageGuard.store(false, ordering: .relaxed) }
+
+        await languageRepository.loadLanguages()
     }
 
     private func pullStatuses() async {
@@ -250,11 +256,15 @@ class AppSyncer: SyncPuller, SyncPusher {
     }
 
     func syncMedia() async -> Bool {
-        if await !self.isPushable() {
+        if await !isPushable() {
             return false
         }
 
-        guard !self.syncMediaGuard.exchange(true, ordering: .sequentiallyConsistent) else {
+        guard syncMediaGuard.compareExchange(
+            expected: false,
+            desired: true,
+            ordering: .sequentiallyConsistent,
+        ).exchanged else {
             return false
         }
 
@@ -301,11 +311,15 @@ class AppSyncer: SyncPuller, SyncPusher {
     }
 
     func syncWorksites() async {
-        if await !self.isPushable() {
+        if await !isPushable() {
             return
         }
 
-        guard !self.syncWorksitesGuard.exchange(true, ordering: .sequentiallyConsistent) else {
+        guard syncWorksitesGuard.compareExchange(
+            expected: false,
+            desired: true,
+            ordering: .sequentiallyConsistent,
+        ).exchanged else {
             return
         }
 

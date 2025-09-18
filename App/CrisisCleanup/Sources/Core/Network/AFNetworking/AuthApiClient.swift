@@ -80,7 +80,11 @@ class AuthApiClient : CrisisCleanupAuthApi {
      * - Returns nil if the network call was not attempted (due to onging call) or the result otherwise
      */
     func refreshTokens(_ refreshToken: String) async throws -> NetworkOAuthResult? {
-        if !refreshTokensGuard.exchange(true, ordering: .sequentiallyConsistent) {
+        if refreshTokensGuard.compareExchange(
+            expected: false,
+            desired: true,
+            ordering: .sequentiallyConsistent,
+        ).exchanged {
             do {
                 defer { refreshTokensGuard.store(false, ordering: .sequentiallyConsistent)}
 

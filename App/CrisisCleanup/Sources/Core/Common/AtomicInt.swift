@@ -1,7 +1,7 @@
 import Atomics
 
 class AtomicInt {
-    private let storage = ManagedAtomic<Int>(0)
+    private let storage = ManagedAtomic(0)
 
     init(_ initialValue: Int = 0) {
         set(initialValue)

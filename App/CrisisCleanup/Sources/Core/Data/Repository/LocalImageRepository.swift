@@ -180,12 +180,11 @@ class CrisisCleanupLocalImageRepository: LocalImageRepository {
 
         var saveCount = 0
 
-        let guardTransaction = fileUploadGuard.compareExchange(
+        if fileUploadGuard.compareExchange(
             expected: false,
             desired: true,
-            ordering: .sequentiallyConsistent
-        )
-        if guardTransaction.original == false {
+            ordering: .sequentiallyConsistent,
+        ).exchanged {
             syncingWorksiteIdSubject.value = worksiteId
             do {
                 defer {

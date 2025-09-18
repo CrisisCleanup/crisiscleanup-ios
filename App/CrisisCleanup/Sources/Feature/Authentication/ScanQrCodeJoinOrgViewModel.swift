@@ -179,12 +179,11 @@ class ScanQrCodeJoinOrgViewModel: ObservableObject {
     }
 
     private func configureVideoCapture() {
-        let isConfiguring = guardConfigureCamera.compareExchange(
+        guard guardConfigureCamera.compareExchange(
             expected: false,
             desired: true,
-            ordering: .sequentiallyConsistent
-        )
-        if isConfiguring.original {
+            ordering: .sequentiallyConsistent,
+        ).exchanged else {
             return
         }
 
