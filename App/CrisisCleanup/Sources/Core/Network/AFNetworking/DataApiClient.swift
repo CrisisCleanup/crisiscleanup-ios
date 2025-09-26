@@ -677,6 +677,18 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         }
         throw response.error ?? networkError
     }
+
+    func getClaimThresholds() async throws -> NetworkClaimThreshold {
+        let request = requestProvider.currentPortalConfig
+        let response = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkPortalConfig.self
+        )
+        if let result = response.value {
+            return result.attr
+        }
+        throw response.error ?? networkError
+    }
 }
 
 extension Array where Element == Int64 {

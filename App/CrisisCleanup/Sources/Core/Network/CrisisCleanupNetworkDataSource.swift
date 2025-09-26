@@ -142,6 +142,8 @@ public protocol CrisisCleanupNetworkDataSource {
     func getLists(_ ids: [Int64]) async -> [NetworkList?]
 
     func getWorksiteChanges(_ after: Date) async throws -> [NetworkWorksiteChange]
+
+    func getClaimThresholds() async throws -> NetworkClaimThreshold
 }
 
 extension CrisisCleanupNetworkDataSource {
