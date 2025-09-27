@@ -8,6 +8,7 @@ class AppSyncer: SyncPuller, SyncPusher {
     private let incidentCacheRepository: IncidentCacheRepository
     private let languageRepository: LanguageTranslationsRepository
     private let statusRepository: WorkTypeStatusRepository
+    private let appConfigRepository: AppConfigRepository
     private let worksiteChangeRepository: WorksiteChangeRepository
     private let localImageRepository: LocalImageRepository
     private let networkMonitor: NetworkMonitor
@@ -33,6 +34,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         incidentCacheRepository: IncidentCacheRepository,
         languageRepository: LanguageTranslationsRepository,
         statusRepository: WorkTypeStatusRepository,
+        appConfigRepository: AppConfigRepository,
         worksiteChangeRepository: WorksiteChangeRepository,
         appPreferencesDataSource: AppPreferencesDataSource,
         localImageRepository: LocalImageRepository,
@@ -47,6 +49,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         self.incidentCacheRepository = incidentCacheRepository
         self.languageRepository = languageRepository
         self.statusRepository = statusRepository
+        self.appConfigRepository = appConfigRepository
         self.worksiteChangeRepository = worksiteChangeRepository
         self.localImageRepository = localImageRepository
         self.networkMonitor = networkMonitor
@@ -195,6 +198,7 @@ class AppSyncer: SyncPuller, SyncPusher {
             await withThrowingTaskGroup(of: Void.self) { group -> Void in
                 group.addTask { await self.pullLanguage() }
                 group.addTask { await self.pullStatuses() }
+                group.addTask { await self.pullAppConfig() }
                 do {
                     try await group.waitForAll()
                 } catch {
@@ -228,6 +232,14 @@ class AppSyncer: SyncPuller, SyncPusher {
         }
 
         await statusRepository.loadStatuses()
+    }
+
+    private func pullAppConfig() async {
+        if await !isOnline() {
+            return
+        }
+
+        await appConfigRepository.pullAppConfig()
     }
 
     // MARK: SyncPusher

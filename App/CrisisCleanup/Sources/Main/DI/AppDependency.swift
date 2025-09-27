@@ -196,6 +196,7 @@ extension MainComponent {
                 networkDataSource: networkDataSource,
                 accountDataRepository: accountDataRepository,
                 organizationsRepository: organizationsRepository,
+                incidentClaimThresholdRepository: incidentClaimThresholdRepsitory,
                 accountEventBus: accountEventBus,
                 loggerFactory: loggerFactory
             )

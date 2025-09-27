@@ -6,6 +6,7 @@ extension MainComponent {
                 incidentCacheRepository: incidentCacheRepository,
                 languageRepository: languageTranslationsRepository,
                 statusRepository: workTypeStatusRepository,
+                appConfigRepository: appConfigRepository,
                 worksiteChangeRepository: worksiteChangeRepository,
                 appPreferencesDataSource: appPreferences,
                 localImageRepository: localImageRepository,

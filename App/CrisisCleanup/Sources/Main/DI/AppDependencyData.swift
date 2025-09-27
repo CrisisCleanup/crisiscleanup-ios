@@ -449,6 +449,34 @@ extension MainComponent {
         }
     }
 
+    var appConfigDataSource: AppConfigDataSource {
+        shared {
+            AppConfigUserDefaults()
+        }
+    }
+
+    var appConfigRepository: AppConfigRepository {
+        shared {
+            CrisisCleanupAppConfigRepository(
+                networkDataSource: networkDataSource,
+                appConfigDataSource: appConfigDataSource,
+                loggerFactory: loggerFactory,
+            )
+        }
+    }
+
+    var incidentClaimThresholdRepsitory: IncidentClaimThresholdRepository {
+        shared {
+            CrisisCleanupIncidentClaimThresholdRepository(
+                incidentDao: incidentDao,
+                accountInfoDataSource: accountDataSource,
+                appConfigRepository: appConfigRepository,
+                incidentSelector: incidentSelector,
+                loggerFactory: loggerFactory,
+            )
+        }
+    }
+
     var pagingSyncLogRepository: PagingSyncLogRepository {
         shared {
             PagingSyncLogRepository(

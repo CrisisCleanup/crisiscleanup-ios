@@ -362,7 +362,7 @@ class IncidentWorksitesCacheRepository: IncidentCacheRepository, IncidentDataPul
             if syncPlan.syncIncidents {
                 logStage(incidentId, .incidents)
 
-                await accountDataRefresher.updateApprovedIncidents(true)
+                await accountDataRefresher.updateProfileIncidentsData(true)
 
                 try await checkCancelTimeout()
 

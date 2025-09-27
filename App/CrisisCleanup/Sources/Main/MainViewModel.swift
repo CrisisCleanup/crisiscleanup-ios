@@ -211,7 +211,7 @@ class MainViewModel: ObservableObject {
 
                     Task {
                         await self.accountDataRefresher.updateMyOrganization(true)
-                        await self.accountDataRefresher.updateApprovedIncidents()
+                        await self.accountDataRefresher.updateProfileIncidentsData()
                     }
 
                     self.logger.setAccountId(String(accountData.id))

@@ -286,6 +286,9 @@ final class RefreshIncidentsDataOperation: AsyncOperation, @unchecked Sendable {
             restartCacheCheckpoint: false
         )
 
+        // TODO: Refactor and await. Maybe refactor into own operation.
+        puller.pullUnauthenticatedData()
+
         switch result {
         case .success:
             isSuccessful = true
