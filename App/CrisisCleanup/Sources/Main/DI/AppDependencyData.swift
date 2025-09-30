@@ -468,12 +468,12 @@ extension MainComponent {
     var incidentClaimThresholdRepository: IncidentClaimThresholdRepository {
         shared {
             CrisisCleanupIncidentClaimThresholdRepository(
-                incidentDao: incidentDao,
+                claimThresholdDataSource: incidentDao,
                 accountInfoDataSource: accountDataSource,
                 workTypeAnalyzer: workTypeAnalyzer,
                 appConfigRepository: appConfigRepository,
                 incidentSelector: incidentSelector,
-                loggerFactory: loggerFactory,
+                logger: loggerFactory.getLogger("incident-claim-threshold"),
             )
         }
     }

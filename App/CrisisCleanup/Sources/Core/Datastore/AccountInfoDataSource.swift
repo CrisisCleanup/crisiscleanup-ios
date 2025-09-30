@@ -1,6 +1,7 @@
 import Combine
 import Foundation
 
+// sourcery: AutoMockable
 protocol AccountInfoDataSource {
     var accountData: any Publisher<AccountData, Never> { get }
 

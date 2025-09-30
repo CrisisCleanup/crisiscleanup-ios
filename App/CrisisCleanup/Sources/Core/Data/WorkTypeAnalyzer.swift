@@ -1,3 +1,4 @@
+// sourcery: AutoMockable
 public protocol WorkTypeAnalyzer {
     func countUnsyncedClaimCloseWork(
         orgId: Int64,
@@ -14,10 +15,10 @@ extension WorkTypeSnapshot.WorkType {
 }
 
 class WorksiteChangeWorkTypeAnalyzer: WorkTypeAnalyzer {
-    private let worksiteChangeDao: WorksiteChangeDao
+    private let worksiteChangeDao: WorksiteChangeDataProvider
 
     init(
-        worksiteChangeDao: WorksiteChangeDao,
+        worksiteChangeDao: WorksiteChangeDataProvider,
     ) {
         self.worksiteChangeDao = worksiteChangeDao
     }
@@ -49,7 +50,8 @@ class WorksiteChangeWorkTypeAnalyzer: WorkTypeAnalyzer {
             let (firstSerializedChange, lastSerializedChange) = $0.value
             let firstEncodedData = firstSerializedChange.data(using: .utf8)!
             let firstChange = try jsonDecoder.decode(WorksiteChange.self, from: firstEncodedData)
-            if let firstSnapshot = firstChange.start {
+            if let firstSnapshot = firstChange.start,
+               firstSnapshot.core.networkId > 0 {
                 let lastSnapshot = if let lastEncodedData = lastSerializedChange?.data(using: .utf8) {
                     try jsonDecoder.decode(WorksiteChange.self, from: lastEncodedData).change
                 } else {
@@ -93,7 +95,7 @@ class WorksiteChangeWorkTypeAnalyzer: WorkTypeAnalyzer {
     }
 }
 
-public struct ClaimCloseCounts {
+public struct ClaimCloseCounts: Equatable {
     let claimCount: Int
     let closeCount: Int
 }

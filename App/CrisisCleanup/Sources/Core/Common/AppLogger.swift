@@ -1,3 +1,4 @@
+// sourcery: AutoMockable
 public protocol AppLogger {
     func logDebug(_ items: Any...)
     func logError(_ e: Error)

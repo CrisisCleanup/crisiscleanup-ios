@@ -12,7 +12,7 @@ public protocol IncidentClaimThresholdRepository {
 }
 
 class CrisisCleanupIncidentClaimThresholdRepository: IncidentClaimThresholdRepository {
-    private let incidentDao: IncidentDao
+    private let claimThresholdDataSource: IncidentClaimThresholdDataSource
     private let accountInfoDataSource: AccountInfoDataSource
     private let workTypeAnalyzer: WorkTypeAnalyzer
     private let appConfigRepository: AppConfigRepository
@@ -22,19 +22,19 @@ class CrisisCleanupIncidentClaimThresholdRepository: IncidentClaimThresholdRepos
     private var worksitesCreated = Set<Int64>()
 
     init(
-        incidentDao: IncidentDao,
+        claimThresholdDataSource: IncidentClaimThresholdDataSource,
         accountInfoDataSource: AccountInfoDataSource,
         workTypeAnalyzer: WorkTypeAnalyzer,
         appConfigRepository: AppConfigRepository,
         incidentSelector: IncidentSelector,
-        loggerFactory: AppLoggerFactory,
+        logger: AppLogger,
     ) {
-        self.incidentDao = incidentDao
+        self.claimThresholdDataSource = claimThresholdDataSource
         self.accountInfoDataSource = accountInfoDataSource
         self.workTypeAnalyzer = workTypeAnalyzer
         self.appConfigRepository = appConfigRepository
         self.incidentSelector = incidentSelector
-        logger = loggerFactory.getLogger("incident-claim-threshold")
+        self.logger = logger
     }
 
     func onWorksiteCreated(_ worksiteId: Int64) {
@@ -54,7 +54,7 @@ class CrisisCleanupIncidentClaimThresholdRepository: IncidentClaimThresholdRepos
                     userCloseRatio: $0.closedRatio,
                 )
             }
-            try await incidentDao.saveIncidentThresholds(accountId, records)
+            try await claimThresholdDataSource.saveIncidentThresholds(accountId, records)
         } catch {
             logger.logError(error)
         }
@@ -78,12 +78,12 @@ class CrisisCleanupIncidentClaimThresholdRepository: IncidentClaimThresholdRepos
             let claimCountThreshold = thresholdConfig.claimCountThreshold
             let closeRatioThreshold = thresholdConfig.closedClaimRatioThreshold
 
-            let currentIncidentThreshold = try incidentDao.getIncidentClaimThreshold(
+            let currentIncidentThreshold = try claimThresholdDataSource.getIncidentClaimThreshold(
                 accountId: accountId,
                 incidentId: incidentId,
             )
-            let userClaimCount = currentIncidentThreshold?.userClaimCount ?? 0
-            let userCloseRatio = currentIncidentThreshold?.userCloseRatio ?? 0
+            let userClaimCount = currentIncidentThreshold?.claimedCount ?? 0
+            let userCloseRatio = currentIncidentThreshold?.closedRatio ?? 0
 
             var unsyncedCounts = ClaimCloseCounts(claimCount: 0, closeCount: 0)
             if !worksitesCreated.contains(worksiteId) {

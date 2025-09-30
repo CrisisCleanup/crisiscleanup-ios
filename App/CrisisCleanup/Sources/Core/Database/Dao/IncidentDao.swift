@@ -2,7 +2,20 @@ import Combine
 import Foundation
 import GRDB
 
-public class IncidentDao {
+// sourcery: AutoMockable
+protocol IncidentClaimThresholdDataSource {
+    func saveIncidentThresholds(
+        _ accountId: Int64,
+        _ claimThresholds: [IncidentClaimThresholdRecord],
+    ) async throws
+
+    func getIncidentClaimThreshold(
+        accountId: Int64,
+        incidentId: Int64,
+    ) throws -> IncidentClaimThreshold?
+}
+
+public class IncidentDao: IncidentClaimThresholdDataSource {
     private let database: AppDatabase
     private let reader: DatabaseReader
 
@@ -136,8 +149,8 @@ public class IncidentDao {
     func getIncidentClaimThreshold(
         accountId: Int64,
         incidentId: Int64,
-    ) throws -> IncidentClaimThresholdRecord? {
-        try! reader.read { db in
+    ) throws -> IncidentClaimThreshold? {
+        let record = try! reader.read { db in
             let id = IncidentClaimThresholdRecord(
                 userId: accountId,
                 incidentId: incidentId,
@@ -148,6 +161,14 @@ public class IncidentDao {
                 .filter(id: id)
                 .fetchOne(db)
         }
+        if let threshold = record {
+            return IncidentClaimThreshold(
+                incidentId: threshold.incidentId,
+                claimedCount: threshold.userClaimCount,
+                closedRatio: threshold.userCloseRatio,
+            )
+        }
+        return nil
     }
 
 

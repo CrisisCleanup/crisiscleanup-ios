@@ -1,5 +1,6 @@
 import Combine
 
+// sourcery: AutoMockable
 public protocol AppConfigRepository {
     var appConfig: any Publisher<AppConfig, Never> { get }
 

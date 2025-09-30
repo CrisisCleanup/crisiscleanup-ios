@@ -2,6 +2,7 @@ import Combine
 import CombineExt
 import Foundation
 
+// sourcery: AutoMockable
 public protocol IncidentSelector {
     var incidentId: any Publisher<Int64, Never> { get }
     var incident: any Publisher<Incident, Never> { get }
