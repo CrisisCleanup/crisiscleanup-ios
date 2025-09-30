@@ -126,6 +126,13 @@ public class IncidentDao {
         try await database.updateFormFields(incidentData)
     }
 
+    func saveIncidentThresholds(
+        _ accountId: Int64,
+        _ claimThresholds: [IncidentClaimThresholdRecord],
+    ) async throws {
+        try await database.saveClaimThresholds(accountId, claimThresholds)
+    }
+
     func getMatchingIncidents(_ q: String) -> [IncidentIdNameType] {
         try! reader.read { db in
             let sql = """
@@ -195,6 +202,19 @@ extension AppDatabase {
                         try field.upsert(db)
                     }
                 }
+            }
+        }
+    }
+
+    fileprivate func saveClaimThresholds(
+        _ accountId: Int64,
+        _ claimThresholds: [IncidentClaimThresholdRecord],
+    ) async throws {
+        try await dbWriter.write { db in
+            let incidentIds = Set(claimThresholds.map { $0.incidentId })
+            try IncidentClaimThresholdRecord.deleteUnspecified(db, accountId, incidentIds)
+            for record in claimThresholds {
+                try record.upsert(db)
             }
         }
     }

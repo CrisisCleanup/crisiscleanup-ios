@@ -521,7 +521,7 @@ private struct PropertyInformationView: View {
                     map: $map,
                     caseCoordinates: CLLocationCoordinate2D(
                         latitude: worksite.latitude,
-                        longitude: worksite.longitude
+                        longitude: worksite.longitude,
                     )
                 )
                 .frame(maxWidth: .infinity)
@@ -529,7 +529,7 @@ private struct PropertyInformationView: View {
                 .overlay(alignment: .topTrailing) {
                     MapViewToggleButton(
                         isMapSatelliteView: viewModel.isMapSatelliteView,
-                        onToggle: { viewModel.isMapSatelliteView.toggle() }
+                        onToggle: { viewModel.isMapSatelliteView.toggle() },
                     )
                 }
                 .onChange(of: viewModel.isMapSatelliteView) { value in

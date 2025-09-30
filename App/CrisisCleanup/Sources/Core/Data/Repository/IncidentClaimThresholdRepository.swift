@@ -37,8 +37,23 @@ class CrisisCleanupIncidentClaimThresholdRepository: IncidentClaimThresholdRepos
         worksitesCreated.insert(worksiteId)
     }
 
-    func saveIncidentClaimThresholds(_ accountId: Int64, _ incidentThresholds: [IncidentClaimThreshold]) async {
-        // TODO: Save thresholds to database
+    func saveIncidentClaimThresholds(
+        _ accountId: Int64,
+        _ incidentThresholds: [IncidentClaimThreshold],
+    ) async {
+        do {
+            let records = incidentThresholds.map {
+                IncidentClaimThresholdRecord(
+                    userId: accountId,
+                    incidentId: $0.incidentId,
+                    userClaimCount: $0.claimedCount,
+                    userCloseRatio: $0.closedRatio,
+                )
+            }
+            try await incidentDao.saveIncidentThresholds(accountId, records)
+        } catch {
+            logger.logError(error)
+        }
     }
 
     func isWithinClaimCloseThreshold(

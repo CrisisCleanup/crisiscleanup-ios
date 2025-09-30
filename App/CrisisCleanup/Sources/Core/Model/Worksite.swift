@@ -89,22 +89,13 @@ public struct Worksite: Equatable {
     }
 
     let isReleaseEligible: Bool
-    // sourcery:end
 
-    private func toggleFlag(_ flag: WorksiteFlagType) -> Worksite {
-        let flagReason = flag.literal
-        let toggledFlags = {
-            if flags?.contains(where: { $0.reasonT == flagReason }) == true {
-                return flags?.filter({ $0.reasonT != flagReason })
-            } else {
-                let addFlag = WorksiteFlag.flag(reasonT: flagReason)
-                return (flags ?? []) + [addFlag]
-            }
-        }()
-        return copy {
-            $0.flags = toggledFlags
+    var unclaimedCount: Int {
+        workTypes.reduce(0) { acc, workType in
+            acc + (workType.orgClaim == nil ? 1 : 0)
         }
     }
+    // sourcery:end
 
     init(
         id: Int64,
@@ -179,8 +170,29 @@ public struct Worksite: Equatable {
         isReleaseEligible = createdAt?.addingTimeInterval(releaseDaysThreshold).isPast == true
     }
 
+    private func toggleFlag(_ flag: WorksiteFlagType) -> Worksite {
+        let flagReason = flag.literal
+        let toggledFlags = {
+            if flags?.contains(where: { $0.reasonT == flagReason }) == true {
+                return flags?.filter({ $0.reasonT != flagReason })
+            } else {
+                let addFlag = WorksiteFlag.flag(reasonT: flagReason)
+                return (flags ?? []) + [addFlag]
+            }
+        }()
+        return copy {
+            $0.flags = toggledFlags
+        }
+    }
+
     func toggleHighPriorityFlag() -> Worksite {
         toggleFlag(WorksiteFlagType.highPriority)
+    }
+
+    func getClaimedCount(_ orgId: Int64) -> Int {
+        workTypes.reduce(0) { acc, workType in
+            acc + (workType.orgClaim == orgId ? 1 : 0)
+        }
     }
 }
 

@@ -1011,6 +1011,39 @@ extension AppDatabase {
             }
         }
 
+        migrator.registerMigration(
+            "incident-claim-threshold",
+            foreignKeyChecks: .immediate
+        ) { db in
+            try db.alter(table: "incident") { t in
+                t.add(column: "ignoreClaimingThresholds", .boolean)
+                    .defaults(to: false)
+            }
+
+            try db.create(
+                indexOn: "worksiteChange",
+                columns: ["organizationId", "worksiteId", "createdAt"]
+            )
+
+            try db.create(table: "incidentClaimThreshold") { t in
+                t.column("userId", .integer)
+                    .notNull()
+                t.column("incidentId", .integer)
+                    .notNull()
+                    .references("incident", onDelete: .cascade)
+                t.column("userClaimCount", .integer)
+                    .notNull()
+                t.column("userCloseRatio", .numeric)
+                    .notNull()
+                t.primaryKey(["userId", "incidentId"])
+            }
+            try db.create(
+                indexOn: "incidentClaimThreshold",
+                columns: ["incidentId"]
+            )
+
+        }
+
         return migrator
     }
 }
