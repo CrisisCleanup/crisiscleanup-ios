@@ -2,6 +2,7 @@ import Combine
 import Foundation
 import GRDB
 
+// sourcery: AutoMockable
 class WorksiteChangeDao {
     private let database: AppDatabase
     private let reader: DatabaseReader
@@ -30,6 +31,10 @@ class WorksiteChangeDao {
 
     func getOrdered(_ worksiteId: Int64) throws -> [WorksiteChangeRecord] {
         try reader.read { db in try WorksiteChangeRecord.getOrdered(db, worksiteId) }
+    }
+
+    func getOrgChanges(_ orgId: Int64) throws -> [WorksiteChangeRecord] {
+        try reader.read { db in try WorksiteChangeRecord.getOrgChanges(db, orgId) }
     }
 
     func updateSyncIds(

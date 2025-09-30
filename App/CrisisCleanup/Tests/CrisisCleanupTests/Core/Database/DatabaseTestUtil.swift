@@ -131,6 +131,7 @@ internal func testIncidentRecord(
         type: "",
         activePhoneNumber: nil,
         turnOnRelease: false,
-        isArchived: false
+        isArchived: false,
+        ignoreClaimingThresholds: false,
     )
 }

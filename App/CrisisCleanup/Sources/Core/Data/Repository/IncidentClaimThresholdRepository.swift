@@ -1,3 +1,5 @@
+import Foundation
+
 public protocol IncidentClaimThresholdRepository {
     func saveIncidentClaimThresholds(
         _ accountId: Int64,
@@ -12,7 +14,7 @@ public protocol IncidentClaimThresholdRepository {
 class CrisisCleanupIncidentClaimThresholdRepository: IncidentClaimThresholdRepository {
     private let incidentDao: IncidentDao
     private let accountInfoDataSource: AccountInfoDataSource
-    // private let workTypeAnalyzer: WorkTypeAnalyzer
+    private let workTypeAnalyzer: WorkTypeAnalyzer
     private let appConfigRepository: AppConfigRepository
     private let incidentSelector: IncidentSelector
     private let logger: AppLogger
@@ -22,12 +24,14 @@ class CrisisCleanupIncidentClaimThresholdRepository: IncidentClaimThresholdRepos
     init(
         incidentDao: IncidentDao,
         accountInfoDataSource: AccountInfoDataSource,
+        workTypeAnalyzer: WorkTypeAnalyzer,
         appConfigRepository: AppConfigRepository,
         incidentSelector: IncidentSelector,
         loggerFactory: AppLoggerFactory,
     ) {
         self.incidentDao = incidentDao
         self.accountInfoDataSource = accountInfoDataSource
+        self.workTypeAnalyzer = workTypeAnalyzer
         self.appConfigRepository = appConfigRepository
         self.incidentSelector = incidentSelector
         logger = loggerFactory.getLogger("incident-claim-threshold")
@@ -60,7 +64,53 @@ class CrisisCleanupIncidentClaimThresholdRepository: IncidentClaimThresholdRepos
         _ worksiteId: Int64,
         _ additionalClaimCount: Int,
     ) async -> Bool {
-        // TODO: Query and compare
-        false
+        guard additionalClaimCount > 0 else {
+            return true
+        }
+
+        do {
+            let incidentId = try await incidentSelector.incidentId.eraseToAnyPublisher().asyncFirst()
+
+            let accountData = try await accountInfoDataSource.accountData.eraseToAnyPublisher().asyncFirst()
+            let accountId = accountData.id
+
+            let thresholdConfig = try await appConfigRepository.appConfig.eraseToAnyPublisher().asyncFirst()
+            let claimCountThreshold = thresholdConfig.claimCountThreshold
+            let closeRatioThreshold = thresholdConfig.closedClaimRatioThreshold
+
+            let currentIncidentThreshold = try incidentDao.getIncidentClaimThreshold(
+                accountId: accountId,
+                incidentId: incidentId,
+            )
+            let userClaimCount = currentIncidentThreshold?.userClaimCount ?? 0
+            let userCloseRatio = currentIncidentThreshold?.userCloseRatio ?? 0
+
+            var unsyncedCounts = ClaimCloseCounts(claimCount: 0, closeCount: 0)
+            if !worksitesCreated.contains(worksiteId) {
+                let orgId = accountData.org.id
+                unsyncedCounts = try workTypeAnalyzer.countUnsyncedClaimCloseWork(
+                    orgId: orgId,
+                    incidentId: incidentId,
+                    ignoreWorksiteIds: worksitesCreated,
+                )
+            }
+
+            let unsyncedClaimCount = unsyncedCounts.claimCount
+
+            let claimCount = userClaimCount + unsyncedClaimCount
+            var closeRatio = userCloseRatio
+            if claimCount > 0 {
+                let userCloseCount = ceil(userCloseRatio * Float(userClaimCount))
+                let closeCount = userCloseCount + Float(unsyncedCounts.closeCount)
+                closeRatio = closeCount / Float(claimCount)
+            }
+
+            return claimCount < claimCountThreshold ||
+            closeRatio >= closeRatioThreshold
+        } catch {
+            logger.logError(error)
+        }
+
+        return false
     }
 }

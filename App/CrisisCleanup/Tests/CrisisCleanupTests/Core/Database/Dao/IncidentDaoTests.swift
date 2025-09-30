@@ -14,7 +14,8 @@ internal let incidentA = IncidentRecord(
     type: "hurricane",
     activePhoneNumber: nil,
     turnOnRelease: true,
-    isArchived: false
+    isArchived: false,
+    ignoreClaimingThresholds: false,
 )
 internal let incidentB = IncidentRecord(
     id: 987,
@@ -25,7 +26,8 @@ internal let incidentB = IncidentRecord(
     type: "tornado",
     activePhoneNumber: nil,
     turnOnRelease: false,
-    isArchived: false
+    isArchived: false,
+    ignoreClaimingThresholds: false,
 )
 internal let incidentLocationA = IncidentLocationRecord(id: 345, location: 456)
 internal let incidentLocationB = IncidentLocationRecord(id: 864, location: 98)

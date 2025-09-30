@@ -465,16 +465,21 @@ extension MainComponent {
         }
     }
 
-    var incidentClaimThresholdRepsitory: IncidentClaimThresholdRepository {
+    var incidentClaimThresholdRepository: IncidentClaimThresholdRepository {
         shared {
             CrisisCleanupIncidentClaimThresholdRepository(
                 incidentDao: incidentDao,
                 accountInfoDataSource: accountDataSource,
+                workTypeAnalyzer: workTypeAnalyzer,
                 appConfigRepository: appConfigRepository,
                 incidentSelector: incidentSelector,
                 loggerFactory: loggerFactory,
             )
         }
+    }
+
+    var workTypeAnalyzer: WorkTypeAnalyzer {
+        WorksiteChangeWorkTypeAnalyzer(worksiteChangeDao: worksiteChangeDao)
     }
 
     var pagingSyncLogRepository: PagingSyncLogRepository {

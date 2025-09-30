@@ -133,6 +133,24 @@ public class IncidentDao {
         try await database.saveClaimThresholds(accountId, claimThresholds)
     }
 
+    func getIncidentClaimThreshold(
+        accountId: Int64,
+        incidentId: Int64,
+    ) throws -> IncidentClaimThresholdRecord? {
+        try! reader.read { db in
+            let id = IncidentClaimThresholdRecord(
+                userId: accountId,
+                incidentId: incidentId,
+                userClaimCount: 0,
+                userCloseRatio: 0.0,
+            ).id
+            return try IncidentClaimThresholdRecord
+                .filter(id: id)
+                .fetchOne(db)
+        }
+    }
+
+
     func getMatchingIncidents(_ q: String) -> [IncidentIdNameType] {
         try! reader.read { db in
             let sql = """
