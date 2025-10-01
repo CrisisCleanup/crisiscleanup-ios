@@ -1,7 +1,8 @@
+import Atomics
 import Foundation
 
 public protocol AppDataManagementRepository {
-    // TODO: Rebuild FTS
+    func rebuildFts() async
 
     func clearAppData()
     func backgroundClearAppData(_ refreshBackendData: Bool) async -> Bool
@@ -17,10 +18,16 @@ class CrisisCleanupDataManagementRepository: AppDataManagementRepository {
     private let workTypeStatusRepository: WorkTypeStatusRepository
     private let casesFilterRepository: CasesFilterRepository
     private let appSupportRepository: AppSupportRepository
+    private let incidentDao: IncidentDao
+    private let organizationDao: IncidentOrganizationDao
+    private let worksiteDao: WorksiteDao
+    private let maintenanceDataSource: AppMaintenanceDataSource
     private let syncPuller: SyncPuller
     private let databaseOperator: DatabaseOperator
     private let accountEventBus: AccountEventBus
     private let logger: AppLogger
+
+    private let isRebuildingFts = ManagedAtomic(false)
 
     private let clearDataLock = NSLock()
     private var isClearingAppData = false
@@ -37,6 +44,10 @@ class CrisisCleanupDataManagementRepository: AppDataManagementRepository {
         workTypeStatusRepository: WorkTypeStatusRepository,
         casesFilterRepository: CasesFilterRepository,
         appSupportRepository: AppSupportRepository,
+        incidentDao: IncidentDao,
+        organizationDao: IncidentOrganizationDao,
+        worksiteDao: WorksiteDao,
+        maintenanceDataSource: AppMaintenanceDataSource,
         syncPuller: SyncPuller,
         databaseOperator: DatabaseOperator,
         accountEventBus: AccountEventBus,
@@ -51,10 +62,42 @@ class CrisisCleanupDataManagementRepository: AppDataManagementRepository {
         self.workTypeStatusRepository = workTypeStatusRepository
         self.casesFilterRepository = casesFilterRepository
         self.appSupportRepository = appSupportRepository
+        self.incidentDao = incidentDao
+        self.organizationDao = organizationDao
+        self.worksiteDao = worksiteDao
+        self.maintenanceDataSource = maintenanceDataSource
         self.syncPuller = syncPuller
         self.databaseOperator = databaseOperator
         self.accountEventBus = accountEventBus
         logger = loggerFactory.getLogger("app-data")
+    }
+
+    func rebuildFts() async {
+        guard isRebuildingFts.compareExchange(
+            expected: false,
+            desired: true,
+            ordering: .relaxed,
+        ).exchanged else {
+            return
+        }
+
+        do {
+            defer {
+                isRebuildingFts.store(false, ordering: .relaxed)
+            }
+
+            let maintenancePublisher = maintenanceDataSource.appMaintenance.eraseToAnyPublisher()
+            let rebuildVersion = try await maintenancePublisher.asyncFirst().ftsRebuildVersion
+
+            if rebuildVersion < 170 {
+                try incidentDao.rebuildIncidentFts()
+                try organizationDao.rebuildOrganizationFts()
+                try worksiteDao.rebuildWorksiteFts()
+                maintenanceDataSource.setFtsRebuildVersion(170)
+            }
+        } catch {
+            logger.logError(error)
+        }
     }
 
     func clearAppData() {

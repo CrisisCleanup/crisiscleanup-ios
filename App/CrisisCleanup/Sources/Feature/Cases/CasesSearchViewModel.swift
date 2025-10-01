@@ -38,6 +38,7 @@ class CasesSearchViewModel: ObservableObject {
         incidentSelector: IncidentSelector,
         worksitesRepository: WorksitesRepository,
         searchWorksitesRepository: SearchWorksitesRepository,
+        appDataManagementRepository: AppDataManagementRepository,
         mapCaseIconProvider: MapCaseIconProvider,
         loggerFactory: AppLoggerFactory
     ) {
@@ -51,6 +52,10 @@ class CasesSearchViewModel: ObservableObject {
             .eraseToAnyPublisher()
             .removeDuplicates()
             .eraseToAnyPublisher()
+
+        Task {
+            await appDataManagementRepository.rebuildFts()
+        }
     }
 
     func onViewAppear() {

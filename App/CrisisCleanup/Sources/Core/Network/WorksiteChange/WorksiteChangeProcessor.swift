@@ -55,9 +55,14 @@ class WorksiteChangeProcessor {
 
     private func getNetworkWorksite(_ force: Bool = false) async throws -> NetworkWorksiteFull {
         do {
-            if networkWorksiteGuard.exchange(true, ordering: .sequentiallyConsistent) {
+            guard networkWorksiteGuard.compareExchange(
+                expected: false,
+                desired: true,
+                ordering: .sequentiallyConsistent,
+            ).exchanged else {
                 throw GenericError("Do not process sync tasks concurrently")
             }
+
             defer { networkWorksiteGuard.store(false, ordering: .sequentiallyConsistent) }
 
             if force || _networkWorksite == nil {

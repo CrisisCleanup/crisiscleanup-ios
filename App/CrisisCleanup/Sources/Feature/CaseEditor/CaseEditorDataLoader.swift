@@ -12,6 +12,7 @@ internal class CaseEditorDataLoader {
     private let incidentRefresher: IncidentRefresher
     private let languageRefresher: LanguageRefresher
     private let workTypeStatusRepository: WorkTypeStatusRepository
+    private let accountDataRefresher: AccountDataRefresher
     private let logger: AppLogger
 
     private let logDebug: Bool
@@ -60,6 +61,7 @@ internal class CaseEditorDataLoader {
         keyTranslator: KeyTranslator,
         languageRefresher: LanguageRefresher,
         workTypeStatusRepository: WorkTypeStatusRepository,
+        accountDataRefresher: AccountDataRefresher,
         editableWorksiteProvider: EditableWorksiteProvider,
         appEnv: AppEnv,
         loggerFactory: AppLoggerFactory,
@@ -73,6 +75,7 @@ internal class CaseEditorDataLoader {
         self.incidentRefresher = incidentRefresher
         self.languageRefresher = languageRefresher
         self.workTypeStatusRepository = workTypeStatusRepository
+        self.accountDataRefresher = accountDataRefresher
         logger = loggerFactory.getLogger(debugTag)
 
         logDebug = appEnv.isDebuggable && debugTag.isNotBlank
@@ -146,6 +149,12 @@ internal class CaseEditorDataLoader {
         translate: @escaping (String) -> String
     ) {
         Task {
+            await languageRefresher.pullLanguages()
+            await workTypeStatusRepository.loadStatuses()
+            await accountDataRefresher.updateIncidentClaimThreshold()
+        }
+
+        Task {
             self.isRefreshingIncident.value = true
             do {
                 defer { self.isRefreshingIncident.value = false }
@@ -156,8 +165,6 @@ internal class CaseEditorDataLoader {
                     try await Task.sleep(for: .seconds(0.5))
                 } catch {}
             }
-            await languageRefresher.pullLanguages()
-            await workTypeStatusRepository.loadStatuses()
         }
 
         worksiteStream

@@ -56,6 +56,14 @@ private struct ViewCaseLayoutView: View {
                 )
                 .frame(maxWidth: appTheme.contentMaxWidth, alignment: .center)
             }
+
+            if viewModel.isOverClaimingWork {
+                OverClaimAlertDialog(
+                    onClose: {
+                        viewModel.isOverClaimingWork = false
+                    }
+                )
+            }
         }
         .if (viewLayout.isOneColumnLayout) {
             $0.toolbar {
@@ -516,15 +524,28 @@ private struct PropertyInformationView: View {
                 }
                 .horizontalVerticalPadding(horizontalPadding, verticalPadding)
 
+                // TODO: Remove tint over satellite view
                 ViewCaseMapView(
                     map: $map,
                     caseCoordinates: CLLocationCoordinate2D(
                         latitude: worksite.latitude,
-                        longitude: worksite.longitude
+                        longitude: worksite.longitude,
                     )
                 )
                 .frame(maxWidth: .infinity)
                 .frame(height: appTheme.listItemMapHeight)
+                .overlay(alignment: .topTrailing) {
+                    MapViewToggleButton(
+                        isMapSatelliteView: viewModel.isMapSatelliteView,
+                        onToggle: { viewModel.isMapSatelliteView.toggle() },
+                    )
+                }
+                .onChange(of: viewModel.isMapSatelliteView) { value in
+                    map.setSatelliteMapType(value)
+                }
+                .onAppear {
+                    map.setSatelliteMapType(viewModel.isMapSatelliteView)
+                }
             }
             .cardContainerPadded()
         }

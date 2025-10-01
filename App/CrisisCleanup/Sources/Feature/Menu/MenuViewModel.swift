@@ -8,6 +8,7 @@ class MenuViewModel: ObservableObject {
     private let incidentsRepository: IncidentsRepository
     private let worksitesRepository: WorksitesRepository
     private let accountDataRepository: AccountDataRepository
+    private let appDataManagementRepository: AppDataManagementRepository
     private let accountDataRefresher: AccountDataRefresher
     private let incidentCacheRepository: IncidentCacheRepository
     private let dataDownloadSpeedMonitor: DataDownloadSpeedMonitor
@@ -68,6 +69,7 @@ class MenuViewModel: ObservableObject {
         incidentsRepository: IncidentsRepository,
         worksitesRepository: WorksitesRepository,
         accountDataRepository: AccountDataRepository,
+        appDataManagementRepository: AppDataManagementRepository,
         accountDataRefresher: AccountDataRefresher,
         incidentCacheRepository: IncidentCacheRepository,
         dataDownloadSpeedMonitor: DataDownloadSpeedMonitor,
@@ -87,6 +89,7 @@ class MenuViewModel: ObservableObject {
         self.incidentsRepository = incidentsRepository
         self.worksitesRepository = worksitesRepository
         self.accountDataRepository = accountDataRepository
+        self.appDataManagementRepository = appDataManagementRepository
         self.accountDataRefresher = accountDataRefresher
         self.incidentCacheRepository = incidentCacheRepository
         self.dataDownloadSpeedMonitor = dataDownloadSpeedMonitor
@@ -320,6 +323,12 @@ class MenuViewModel: ObservableObject {
             if let repository = accountDataRepository as? CrisisCleanupAccountDataRepository {
                 repository.expireAccessToken()
             }
+        }
+    }
+
+    func clearAppData() {
+        if !isProduction {
+            appDataManagementRepository.clearAppData()
         }
     }
 }

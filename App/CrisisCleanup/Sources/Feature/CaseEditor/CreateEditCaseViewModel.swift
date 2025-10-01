@@ -9,8 +9,22 @@ let highPriorityLabelKey = "flag.flag_high_priority"
 let orgMemberLabelKey = "actions.member_of_my_org"
 
 class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
+    static func isOverClaiming(
+        _ orgId: Int64,
+        startingWorksite: Worksite,
+        updatedWorksite: Worksite,
+        repository: IncidentClaimThresholdRepository,
+    ) async -> Bool {
+        let endClaimCount = updatedWorksite.getClaimedCount(orgId)
+        let startClaimCount = startingWorksite.getClaimedCount(orgId)
+        let deltaClaimCount = endClaimCount - startClaimCount
+        return await !repository.isWithinClaimCloseThreshold(updatedWorksite.id, deltaClaimCount)
+    }
+
+    private let accountDataRepository: AccountDataRepository
     private let incidentsRepository: IncidentsRepository
     private let worksitesRepository: WorksitesRepository
+    private let appPreferences: AppPreferencesDataSource
     private var worksiteProvider: EditableWorksiteProvider
     private let incidentBoundsProvider: IncidentBoundsProvider
     private let locationManager: LocationManager
@@ -20,6 +34,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     private let existingWorksiteSelector: ExistingWorksiteSelector
     private let translator: KeyAssetTranslator
     private let incidentSelector: IncidentSelector
+    private let claimThresholdRepository: IncidentClaimThresholdRepository
     private let worksiteChangeRepository: WorksiteChangeRepository
     let inputValidator: InputValidator
     private let syncPusher: SyncPusher
@@ -49,6 +64,8 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     @Published private(set) var isLoading = true
 
     @Published private(set) var isSyncing = false
+
+    @Published var isMapSatelliteView = false
 
     @Published private(set) var areEditorsReady = false
 
@@ -120,6 +137,8 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
 
     @Published private(set) var incidentCreation = incidentCreationNow
 
+    @Published var isOverClaimingWork = false
+
     private let isFirstVisible = ManagedAtomic(true)
 
     private var subscriptions = Set<AnyCancellable>()
@@ -130,9 +149,11 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         incidentRefresher: IncidentRefresher,
         incidentBoundsProvider: IncidentBoundsProvider,
         worksitesRepository: WorksitesRepository,
+        appPreferences: AppPreferencesDataSource,
         languageRepository: LanguageTranslationsRepository,
         languageRefresher: LanguageRefresher,
         workTypeStatusRepository: WorkTypeStatusRepository,
+        accountDataRefresher: AccountDataRefresher,
         worksiteProvider: EditableWorksiteProvider,
         locationManager: LocationManager,
         addressSearchRepository: AddressSearchRepository,
@@ -142,6 +163,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         mapCaseIconProvider: MapCaseIconProvider,
         existingWorksiteSelector: ExistingWorksiteSelector,
         incidentSelector: IncidentSelector,
+        claimThresholdRepository: IncidentClaimThresholdRepository,
         worksiteChangeRepository: WorksiteChangeRepository,
         syncPusher: SyncPusher,
         localImageRepository: LocalImageRepository,
@@ -153,14 +175,17 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         incidentId: Int64,
         worksiteId: Int64?
     ) {
+        self.accountDataRepository = accountDataRepository
         self.incidentsRepository = incidentsRepository
         self.worksitesRepository = worksitesRepository
+        self.appPreferences = appPreferences
         self.worksiteProvider = worksiteProvider
         self.existingWorksiteSelector = existingWorksiteSelector
         self.incidentBoundsProvider = incidentBoundsProvider
         self.locationManager = locationManager
         self.networkMonitor = networkMonitor
         self.incidentSelector = incidentSelector
+        self.claimThresholdRepository = claimThresholdRepository
         self.worksiteChangeRepository = worksiteChangeRepository
         self.syncPusher = syncPusher
         self.worksiteImageRepository = worksiteImageRepository
@@ -210,6 +235,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
             keyTranslator: languageRepository,
             languageRefresher: languageRefresher,
             workTypeStatusRepository: workTypeStatusRepository,
+            accountDataRefresher: accountDataRefresher,
             editableWorksiteProvider: worksiteProvider,
             appEnv: appEnv,
             loggerFactory: loggerFactory
@@ -261,6 +287,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         subscribeLoading()
         subscribeSyncing()
         subscribeSaving()
+        subscribeMapState()
         subscribeEditableState()
 
         subscribeIncidentState()
@@ -343,6 +370,27 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         isSavingWorksite.eraseToAnyPublisher()
             .receive(on: RunLoop.main)
             .assign(to: \.isSaving, on: self)
+            .store(in: &subscriptions)
+    }
+
+    private func subscribeMapState() {
+        Task {
+            do {
+                let preferences = try await appPreferences.preferences.eraseToAnyPublisher().asyncFirst()
+                let isMapSatelliteView = preferences.isMapSatelliteView ?? false
+                Task { @MainActor in
+                    self.isMapSatelliteView = isMapSatelliteView
+                }
+            } catch {
+                logger.logError(error)
+            }
+        }
+
+        $isMapSatelliteView
+            .removeDuplicates()
+            .sink {
+                self.appPreferences.setMapSatelliteView($0)
+            }
             .store(in: &subscriptions)
     }
 
@@ -771,6 +819,26 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         }
     }
 
+    private func isOverClaiming(
+        startingWorksite: Worksite,
+        updatedWorksite: Worksite,
+    ) async -> Bool {
+        do {
+            let accountDataPublisher = accountDataRepository.accountData.eraseToAnyPublisher()
+            let accountData = try await accountDataPublisher.asyncFirst()
+            let orgId = accountData.org.id
+            return await CreateEditCaseViewModel.isOverClaiming(
+                orgId,
+                startingWorksite: startingWorksite,
+                updatedWorksite: updatedWorksite,
+                repository: claimThresholdRepository,
+            )
+        } catch {
+            logger.logError(error)
+        }
+        return false
+    }
+
     func saveChanges(
         _ claimUnclaimed: Bool,
         backOnSuccess: Bool = true
@@ -803,7 +871,9 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
                 let saveIncidentId = saveChangeIncident.id
                 let isIncidentChange = saveIncidentId != EmptyIncident.id &&
                 saveIncidentId != worksite.incidentId
-                if worksite == initialWorksite && !isIncidentChange {
+                if worksite == initialWorksite,
+                   !isIncidentChange,
+                   (!claimUnclaimed || worksite.unclaimedCount == 0) {
                     if hasNewWorksitePhotosImages {
                         invalidWorksiteInfoSubject.value = propertyInputData.getInvalidSection(inputValidator, t)
                         return
@@ -847,6 +917,18 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
                     $0.what3Words = updatedWhat3Words
                 }
 
+                if !isCreateWorksite,
+                   await isOverClaiming(
+                    startingWorksite: worksite,
+                    updatedWorksite: updatedWorksite,
+                   )
+                {
+                    Task { @MainActor in
+                        self.isOverClaimingWork = true
+                    }
+                    return
+                }
+
                 try await Task.sleep(for: .seconds(0.1))
                 worksiteIdLatest = try await worksiteChangeRepository.saveWorksiteChange(
                     worksiteStart: initialWorksite,
@@ -870,6 +952,16 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
                 }
 
                 syncPusher.appPushWorksite(worksiteId, true)
+
+                if isCreateWorksite {
+                    claimThresholdRepository.onWorksiteCreated(worksiteId)
+                }
+
+                worksitesRepository.setRecentWorksite(
+                    incidentId: updatedIncidentId,
+                    worksiteId: worksiteId,
+                    viewStart: Date.now,
+                )
 
                 if isIncidentChange {
                     changeExistingWorksiteSubject.value = ExistingWorksiteIdentifier(

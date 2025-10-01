@@ -16,6 +16,7 @@ class OfflineFirstIncidentsRepository: IncidentsRepository {
         "turn_on_release",
         "active_phone_number",
         "is_archived",
+        "ignore_claiming_thresholds",
     ]
     private let fullIncidentQueryFields: [String]
 

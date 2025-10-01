@@ -21,6 +21,7 @@ struct IncidentRecord: Identifiable, Equatable {
     let activePhoneNumber: String?
     let turnOnRelease: Bool
     let isArchived: Bool
+    let ignoreClaimingThresholds: Bool
 
     func asExternalModel(
         locationIds: [Int64] = [],
@@ -55,7 +56,8 @@ extension IncidentRecord: Codable, FetchableRecord, PersistableRecord {
              type,
              activePhoneNumber,
              turnOnRelease,
-             isArchived
+             isArchived,
+             ignoreClaimingThresholds
     }
 }
 

@@ -36,6 +36,7 @@ class CasesSearchComponent: Component<AppDependency>, CasesSearchViewBuilder {
                 incidentSelector: dependency.incidentSelector,
                 worksitesRepository: dependency.worksitesRepository,
                 searchWorksitesRepository: dependency.searchWorksitesRepository,
+                appDataManagementRepository: dependency.appDataManagementRepository,
                 mapCaseIconProvider: dependency.mapCaseIconProvider,
                 loggerFactory: dependency.loggerFactory
             )

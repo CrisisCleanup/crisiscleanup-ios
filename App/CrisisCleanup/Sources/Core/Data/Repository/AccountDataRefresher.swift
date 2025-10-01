@@ -5,10 +5,12 @@ public class AccountDataRefresher {
     private let networkDataSource: CrisisCleanupNetworkDataSource
     private let accountDataRepository: AccountDataRepository
     private let organizationsRepository: OrganizationsRepository
+    private let incidentClaimThresholdRepository: IncidentClaimThresholdRepository
     private let accountEventBus: AccountEventBus
     private let logger: AppLogger
 
     private var accountDataUpdateTime = Date.epochZero
+    private var incidentClaimThresholdUpdateTime = Date.epochZero
 
     private let updateLock = NSLock()
 
@@ -17,6 +19,7 @@ public class AccountDataRefresher {
         networkDataSource: CrisisCleanupNetworkDataSource,
         accountDataRepository: AccountDataRepository,
         organizationsRepository: OrganizationsRepository,
+        incidentClaimThresholdRepository: IncidentClaimThresholdRepository,
         accountEventBus: AccountEventBus,
         loggerFactory: AppLoggerFactory
     ) {
@@ -24,6 +27,7 @@ public class AccountDataRefresher {
         self.networkDataSource = networkDataSource
         self.accountDataRepository = accountDataRepository
         self.organizationsRepository = organizationsRepository
+        self.incidentClaimThresholdRepository = incidentClaimThresholdRepository
         self.accountEventBus = accountEventBus
         self.logger = loggerFactory.getLogger("account-data-refresher")
     }
@@ -41,7 +45,7 @@ public class AccountDataRefresher {
             return
         }
 
-        logger.logCapture("Syncing \(syncTag)")
+        logger.logCapture("Refreshing \(syncTag)")
         do {
             let accountData = try await dataSource.accountData.eraseToAnyPublisher().asyncFirst()
             let accountId = accountData.id
@@ -58,7 +62,25 @@ public class AccountDataRefresher {
                     )
                 }
 
-                accountDataUpdateTime = Date.now
+                if let lookup = profile.internalState?.incidentThresholdLookup {
+                    let incidentThresholds = lookup.compactMap { (key: String, thresholds: NetworkIncidentClaimThreshold) in
+                        if let incidentId = Int64(key),
+                           let claimedCount = thresholds.claimedCount,
+                           let closedRatio = thresholds.closedRatio {
+                            return IncidentClaimThreshold(
+                                incidentId: incidentId,
+                                claimedCount: claimedCount,
+                                closedRatio: closedRatio,
+                            )
+                        }
+                        return nil
+                    }
+                    await incidentClaimThresholdRepository.saveIncidentClaimThresholds(accountId, incidentThresholds)
+                }
+
+                let now = Date.now
+                accountDataUpdateTime = now
+                incidentClaimThresholdUpdateTime = now
             }
         } catch {
             logger.logError(error)
@@ -66,7 +88,7 @@ public class AccountDataRefresher {
     }
 
     func updateProfilePicture() async {
-        await refreshAccountData("profile pic", false)
+        await refreshAccountData("profile-pic", false)
     }
 
     func updateMyOrganization(_ force: Bool) async {
@@ -85,10 +107,17 @@ public class AccountDataRefresher {
     }
 
     func updateAcceptedTerms() async {
-        await refreshAccountData("accept terms", true)
+        await refreshAccountData("accept-terms", true)
     }
 
-    func updateApprovedIncidents(_ force: Bool = false) async {
-        await refreshAccountData("approved incidents", force)
+    func updateProfileIncidentsData(_ force: Bool = false) async {
+        await refreshAccountData("profile-incidents-data", force)
+    }
+
+    func updateIncidentClaimThreshold() async {
+        await refreshAccountData(
+            "incident-claim-threshold",
+            incidentClaimThresholdUpdateTime.addingTimeInterval(5.minutes) < Date.now,
+        )
     }
 }

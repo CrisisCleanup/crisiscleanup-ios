@@ -2,7 +2,20 @@ import Combine
 import Foundation
 import GRDB
 
-public class IncidentDao {
+// sourcery: AutoMockable
+protocol IncidentClaimThresholdDataSource {
+    func saveIncidentThresholds(
+        _ accountId: Int64,
+        _ claimThresholds: [IncidentClaimThresholdRecord],
+    ) async throws
+
+    func getIncidentClaimThreshold(
+        accountId: Int64,
+        incidentId: Int64,
+    ) throws -> IncidentClaimThreshold?
+}
+
+public class IncidentDao: IncidentClaimThresholdDataSource {
     private let database: AppDatabase
     private let reader: DatabaseReader
 
@@ -126,6 +139,35 @@ public class IncidentDao {
         try await database.updateFormFields(incidentData)
     }
 
+    func saveIncidentThresholds(
+        _ accountId: Int64,
+        _ claimThresholds: [IncidentClaimThresholdRecord],
+    ) async throws {
+        try await database.saveClaimThresholds(accountId, claimThresholds)
+    }
+
+    func getIncidentClaimThreshold(
+        accountId: Int64,
+        incidentId: Int64,
+    ) throws -> IncidentClaimThreshold? {
+        let record = try! reader.read { db in
+            return try IncidentClaimThresholdRecord
+                .filter(
+                    IncidentClaimThresholdRecord.filterBy(accountId: accountId, incidentId: incidentId)
+                )
+                .fetchOne(db)
+        }
+        if let threshold = record {
+            return IncidentClaimThreshold(
+                incidentId: threshold.incidentId,
+                claimedCount: threshold.userClaimCount,
+                closedRatio: threshold.userCloseRatio,
+            )
+        }
+        return nil
+    }
+
+
     func getMatchingIncidents(_ q: String) -> [IncidentIdNameType] {
         try! reader.read { db in
             let sql = """
@@ -151,6 +193,10 @@ public class IncidentDao {
                 disasterLiteral: $0.type
             )
         }
+    }
+
+    func rebuildIncidentFts() throws {
+        try database.rebuildFtsTable("incident_ft")
     }
 }
 
@@ -191,6 +237,19 @@ extension AppDatabase {
                         try field.upsert(db)
                     }
                 }
+            }
+        }
+    }
+
+    fileprivate func saveClaimThresholds(
+        _ accountId: Int64,
+        _ claimThresholds: [IncidentClaimThresholdRecord],
+    ) async throws {
+        try await dbWriter.write { db in
+            let incidentIds = Set(claimThresholds.map { $0.incidentId })
+            try IncidentClaimThresholdRecord.deleteUnspecified(db, accountId, incidentIds)
+            for record in claimThresholds {
+                try record.upsert(db)
             }
         }
     }

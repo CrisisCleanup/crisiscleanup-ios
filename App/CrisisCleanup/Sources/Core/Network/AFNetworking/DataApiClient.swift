@@ -350,15 +350,22 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         return try await processWorksitesPage(request)
     }
 
-    func getWorksitesPageUpdatedAt(incidentId: Int64, pageCount: Int, updatedAt: Date, isPagingBackwards: Bool) async throws -> NetworkWorksitesPageResult {
+    func getWorksitesPageUpdatedAt(
+        incidentId: Int64,
+        pageCount: Int,
+        updatedAt: Date,
+        isPagingBackwards: Bool,
+        offset: Int,
+    ) async throws -> NetworkWorksitesPageResult {
         let updatedAtKey = isPagingBackwards ? "updated_at__lt" : "updated_at__gt"
         let sortValue = isPagingBackwards ? "-updated_at" : "updated_at"
         let request = requestProvider.worksitesPage
             .addQueryItems(
                 "incident", String(incidentId),
                 "limit", String(pageCount),
+                "offset", String(offset),
                 updatedAtKey, dateFormatter.string(from: updatedAt),
-                "sort", sortValue
+                "sort", sortValue,
             )
         return try await processWorksitesPage(request)
     }
@@ -380,6 +387,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         pageCount: Int,
         updatedAt: Date,
         isPagingBackwards: Bool,
+        offset: Int,
     ) async throws -> NetworkFlagsFormDataResult {
         let updatedAtKey = isPagingBackwards ? "updated_at__lt" : "updated_at__gt"
         let sortValue = isPagingBackwards ? "-updated_at" : "updated_at"
@@ -387,6 +395,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
             .addQueryItems(
                 "incident", String(incidentId),
                 "limit", String(pageCount),
+                "offset", String(offset),
                 updatedAtKey, dateFormatter.string(from: updatedAt),
                 "sort", sortValue,
             )
@@ -665,6 +674,18 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
                 throw GenericError(errorMessage)
             }
             return result.changes ?? []
+        }
+        throw response.error ?? networkError
+    }
+
+    func getClaimThresholds() async throws -> NetworkClaimThreshold {
+        let request = requestProvider.currentPortalConfig
+        let response = await networkClient.callbackContinue(
+            requestConvertible: request,
+            type: NetworkPortalConfig.self
+        )
+        if let result = response.value {
+            return result.attr
         }
         throw response.error ?? networkError
     }

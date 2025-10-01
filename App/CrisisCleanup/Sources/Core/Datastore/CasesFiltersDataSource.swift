@@ -20,14 +20,11 @@ class CasesFiltersUserDefaults: CasesFiltersDataSource {
     init() {
         filters = UserDefaults.standard.publisher(for: \.casesFilterData)
             .map { filterData in
-                let casesFilter: CasesFilter
-                if let filterData = filterData,
-                   let data = try? jsonDecoder.decode(CasesFilter.self, from: filterData) {
-                    casesFilter = data
-                } else {
-                    casesFilter = CasesFilter()
+                if let data = filterData,
+                   let decodedData = try? jsonDecoder.decode(CasesFilter.self, from: data) {
+                    return decodedData
                 }
-                return casesFilter
+                return CasesFilter()
             }
     }
 

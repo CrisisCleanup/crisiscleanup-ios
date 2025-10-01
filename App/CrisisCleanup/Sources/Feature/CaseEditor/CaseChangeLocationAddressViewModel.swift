@@ -10,10 +10,12 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
     private let incidentBoundsProvider: IncidentBoundsProvider
     private let searchWorksitesRepository: SearchWorksitesRepository
     private let addressSearchRepository: AddressSearchRepository
+    private let appPreferences: AppPreferencesDataSource
     private let caseIconProvider: MapCaseIconProvider
     private let existingWorksiteSelector: ExistingWorksiteSelector
     private let networkMonitor: NetworkMonitor
     private let translator: KeyAssetTranslator
+    private let logger: AppLogger
 
     private let locationSearchManager: LocationSearchManager
 
@@ -29,6 +31,8 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
     @Published var isLocationSearching = false
     @Published var searchResults = LocationSearchResults()
     private var selectedAddress: LocationAddress?
+
+    @Published var isMapSatelliteView = false
 
     private let outOfBoundsManager: LocationOutOfBoundsManager
 
@@ -66,6 +70,7 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
         incidentBoundsProvider: IncidentBoundsProvider,
         searchWorksitesRepository: SearchWorksitesRepository,
         addressSearchRepository: AddressSearchRepository,
+        appPreferences: AppPreferencesDataSource,
         caseIconProvider: MapCaseIconProvider,
         existingWorksiteSelector: ExistingWorksiteSelector,
         networkMonitor: NetworkMonitor,
@@ -77,14 +82,15 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
         self.incidentBoundsProvider = incidentBoundsProvider
         self.searchWorksitesRepository = searchWorksitesRepository
         self.addressSearchRepository = addressSearchRepository
+        self.appPreferences = appPreferences
         self.caseIconProvider = caseIconProvider
         self.existingWorksiteSelector = existingWorksiteSelector
         self.networkMonitor = networkMonitor
         self.translator = translator
+        let logger = loggerFactory.getLogger("move-on-map")
+        self.logger = logger
 
         mapCenterMover = AppMapCenterMover(locationManager: locationManager)
-
-        let logger = loggerFactory.getLogger("move-on-map")
 
         let worksite = worksiteProvider.editableWorksite.value
         incidentId = worksite.incidentId
@@ -98,13 +104,13 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
             locationManager: locationManager,
             addressSearchRepository: addressSearchRepository,
             iconProvider: caseIconProvider,
-            logger: logger
+            logger: logger,
         )
 
         outOfBoundsManager = LocationOutOfBoundsManager(
             worksiteProvider,
             incidentBoundsProvider,
-            logger
+            logger,
         )
     }
 
@@ -112,6 +118,7 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
         subscribeLoading()
         subscribeInternetConnection()
         subscribeSearchState()
+        subscribeMapState()
         subscribeLocationState()
         subscribeOutOfBounds()
 
@@ -177,6 +184,27 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
             )
             .receive(on: RunLoop.main)
             .assign(to: \.searchResults, on: self)
+            .store(in: &subscriptions)
+    }
+
+    private func subscribeMapState() {
+        Task {
+            do {
+                let preferences = try await appPreferences.preferences.eraseToAnyPublisher().asyncFirst()
+                let isMapSatelliteView = preferences.isMapSatelliteView ?? false
+                Task { @MainActor in
+                    self.isMapSatelliteView = isMapSatelliteView
+                }
+            } catch {
+                logger.logError(error)
+            }
+        }
+
+        $isMapSatelliteView
+            .removeDuplicates()
+            .sink {
+                self.appPreferences.setMapSatelliteView($0)
+            }
             .store(in: &subscriptions)
     }
 

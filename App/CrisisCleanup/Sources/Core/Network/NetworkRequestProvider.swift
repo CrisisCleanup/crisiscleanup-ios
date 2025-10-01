@@ -237,6 +237,13 @@ extension NetworkRequestProvider {
         )
     }
 
+    var currentPortalConfig: NetworkRequest {
+        NetworkRequest(
+            apiUrl("portals"),
+            additionalPaths: ["current"],
+        )
+    }
+
     // MARK: Write requests
 
     var newWorksite: NetworkRequest {

@@ -8,6 +8,7 @@ class AppSyncer: SyncPuller, SyncPusher {
     private let incidentCacheRepository: IncidentCacheRepository
     private let languageRepository: LanguageTranslationsRepository
     private let statusRepository: WorkTypeStatusRepository
+    private let appConfigRepository: AppConfigRepository
     private let worksiteChangeRepository: WorksiteChangeRepository
     private let localImageRepository: LocalImageRepository
     private let networkMonitor: NetworkMonitor
@@ -33,6 +34,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         incidentCacheRepository: IncidentCacheRepository,
         languageRepository: LanguageTranslationsRepository,
         statusRepository: WorkTypeStatusRepository,
+        appConfigRepository: AppConfigRepository,
         worksiteChangeRepository: WorksiteChangeRepository,
         appPreferencesDataSource: AppPreferencesDataSource,
         localImageRepository: LocalImageRepository,
@@ -47,6 +49,7 @@ class AppSyncer: SyncPuller, SyncPusher {
         self.incidentCacheRepository = incidentCacheRepository
         self.languageRepository = languageRepository
         self.statusRepository = statusRepository
+        self.appConfigRepository = appConfigRepository
         self.worksiteChangeRepository = worksiteChangeRepository
         self.localImageRepository = localImageRepository
         self.networkMonitor = networkMonitor
@@ -195,6 +198,7 @@ class AppSyncer: SyncPuller, SyncPusher {
             await withThrowingTaskGroup(of: Void.self) { group -> Void in
                 group.addTask { await self.pullLanguage() }
                 group.addTask { await self.pullStatuses() }
+                group.addTask { await self.pullAppConfig() }
                 do {
                     try await group.waitForAll()
                 } catch {
@@ -209,11 +213,17 @@ class AppSyncer: SyncPuller, SyncPusher {
             return
         }
 
-        if pullLanguageGuard.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged {
-            defer { pullLanguageGuard.store(false, ordering: .relaxed) }
-
-            await languageRepository.loadLanguages()
+        guard pullLanguageGuard.compareExchange(
+            expected: false,
+            desired: true,
+            ordering: .relaxed,
+        ).exchanged else {
+            return
         }
+
+        defer { pullLanguageGuard.store(false, ordering: .relaxed) }
+
+        await languageRepository.loadLanguages()
     }
 
     private func pullStatuses() async {
@@ -222,6 +232,14 @@ class AppSyncer: SyncPuller, SyncPusher {
         }
 
         await statusRepository.loadStatuses()
+    }
+
+    private func pullAppConfig() async {
+        if await !isOnline() {
+            return
+        }
+
+        await appConfigRepository.pullAppConfig()
     }
 
     // MARK: SyncPusher
@@ -250,11 +268,15 @@ class AppSyncer: SyncPuller, SyncPusher {
     }
 
     func syncMedia() async -> Bool {
-        if await !self.isPushable() {
+        if await !isPushable() {
             return false
         }
 
-        guard !self.syncMediaGuard.exchange(true, ordering: .sequentiallyConsistent) else {
+        guard syncMediaGuard.compareExchange(
+            expected: false,
+            desired: true,
+            ordering: .sequentiallyConsistent,
+        ).exchanged else {
             return false
         }
 
@@ -301,11 +323,15 @@ class AppSyncer: SyncPuller, SyncPusher {
     }
 
     func syncWorksites() async {
-        if await !self.isPushable() {
+        if await !isPushable() {
             return
         }
 
-        guard !self.syncWorksitesGuard.exchange(true, ordering: .sequentiallyConsistent) else {
+        guard syncWorksitesGuard.compareExchange(
+            expected: false,
+            desired: true,
+            ordering: .sequentiallyConsistent,
+        ).exchanged else {
             return
         }
 

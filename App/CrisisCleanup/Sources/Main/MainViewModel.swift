@@ -117,6 +117,7 @@ class MainViewModel: ObservableObject {
     func onBackgroundPhase() {
         backgroundTaskCoordinator.scheduleRefresh(secondsFromNow: 29 * 60)
         backgroundTaskCoordinator.schedulePushWorksites(secondsFromNow: 9 * 60)
+        backgroundTaskCoordinator.scheduleInactiveCheckup()
     }
 
     func onViewAppear() {
@@ -210,7 +211,7 @@ class MainViewModel: ObservableObject {
 
                     Task {
                         await self.accountDataRefresher.updateMyOrganization(true)
-                        await self.accountDataRefresher.updateApprovedIncidents()
+                        await self.accountDataRefresher.updateProfileIncidentsData()
                     }
 
                     self.logger.setAccountId(String(accountData.id))

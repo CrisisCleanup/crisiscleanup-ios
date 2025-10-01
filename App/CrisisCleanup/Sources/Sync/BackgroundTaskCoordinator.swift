@@ -25,7 +25,7 @@ extension BackgroundTaskCoordinator {
     }
 
     func scheduleInactiveCheckup() {
-        schedulePushWorksiteMedia(secondsFromNow: 15 * 86400)
+        scheduleInactiveCheckup(secondsFromNow: 86400)
     }
 }
 
@@ -35,7 +35,13 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
     private let worksiteChangeRepository: WorksiteChangeRepository
     private let appSupportRepository: AppSupportRepository
     private let dataManagementRepository: AppDataManagementRepository
+    private let appEnv: AppEnv
     private let logger: AppLogger
+
+    private let refreshQueue = OperationQueue()
+    private let pushWorksitesQueue = OperationQueue()
+    private let pushWorksitesMediaQueue = OperationQueue()
+    private let clearInactiveQueue = OperationQueue()
 
     init(
         syncPuller: SyncPuller,
@@ -43,14 +49,21 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
         worksiteChangeRepository: WorksiteChangeRepository,
         appSupportRepository: AppSupportRepository,
         dataManagementRepository: AppDataManagementRepository,
-        loggerFactory: AppLoggerFactory
+        appEnv: AppEnv,
+        loggerFactory: AppLoggerFactory,
     ) {
         self.syncPuller = syncPuller
         self.syncPusher = syncPusher
         self.worksiteChangeRepository = worksiteChangeRepository
         self.appSupportRepository = appSupportRepository
         self.dataManagementRepository = dataManagementRepository
+        self.appEnv = appEnv
         logger = loggerFactory.getLogger("sync")
+
+        refreshQueue.maxConcurrentOperationCount = 1
+        pushWorksitesQueue.maxConcurrentOperationCount = 1
+        pushWorksitesMediaQueue.maxConcurrentOperationCount = 1
+        clearInactiveQueue.maxConcurrentOperationCount = 1
     }
 
     public func registerTasks() {
@@ -134,17 +147,14 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
         // TODO: Adjust refresh interval based on remaining Incident data
         scheduleRefresh(secondsFromNow: 4 * 3600)
 
-        let queue = OperationQueue()
-        queue.maxConcurrentOperationCount = 1
-
         let operation = RefreshIncidentsDataOperation(syncPuller: syncPuller, appLogger: logger)
 
         let backgroundTaskId = UIApplication.shared.beginBackgroundTask(withName: "refresh-incidents-data") {
-            queue.cancelAllOperations()
+            self.refreshQueue.cancelAllOperations()
         }
 
         task.expirationHandler = {
-            queue.cancelAllOperations()
+            self.refreshQueue.cancelAllOperations()
         }
 
         operation.completionBlock = {
@@ -155,7 +165,7 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
             task.setTaskCompleted(success: operation.isSuccessful)
         }
 
-        queue.addOperations([operation], waitUntilFinished: false)
+        refreshQueue.addOperations([operation], waitUntilFinished: false)
     }
 
     private func handlePushWorksites(_ task: BGAppRefreshTask) {
@@ -169,11 +179,11 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
         )
 
         let backgroundTaskId = UIApplication.shared.beginBackgroundTask(withName: "upload-worksites") {
-            queue.cancelAllOperations()
+            self.pushWorksitesQueue.cancelAllOperations()
         }
 
         task.expirationHandler = {
-            queue.cancelAllOperations()
+            self.pushWorksitesQueue.cancelAllOperations()
         }
 
         operation.completionBlock = {
@@ -190,7 +200,7 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
             task.setTaskCompleted(success: operation.isSuccessful)
         }
 
-        queue.addOperations([operation], waitUntilFinished: false)
+        pushWorksitesQueue.addOperations([operation], waitUntilFinished: false)
     }
 
     private func handlePushWorksitesMedia(_ task: BGProcessingTask) {
@@ -200,11 +210,11 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
         let operation = UploadWorksiteMediaOperation(syncPusher: syncPusher, appLogger: logger)
 
         let backgroundTaskId = UIApplication.shared.beginBackgroundTask(withName: "upload-media") {
-            queue.cancelAllOperations()
+            self.pushWorksitesMediaQueue.cancelAllOperations()
         }
 
         task.expirationHandler = {
-            queue.cancelAllOperations()
+            self.pushWorksitesMediaQueue.cancelAllOperations()
         }
 
         operation.completionBlock = {
@@ -218,25 +228,23 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
             task.setTaskCompleted(success: operation.isSuccessful)
         }
 
-        queue.addOperations([operation], waitUntilFinished: false)
+        pushWorksitesMediaQueue.addOperations([operation], waitUntilFinished: false)
     }
 
     private func handleClearInactive(_ task: BGProcessingTask) {
-        let queue = OperationQueue()
-        queue.maxConcurrentOperationCount = 1
-
         let operation = ClearInactiveDataOperation(
             appSupportRepository: appSupportRepository,
             dataManagementRepository: dataManagementRepository,
+            appEnv: appEnv,
             appLogger: logger,
         )
 
         let backgroundTaskId = UIApplication.shared.beginBackgroundTask(withName: "clear-inactive") {
-            queue.cancelAllOperations()
+            self.clearInactiveQueue.cancelAllOperations()
         }
 
         task.expirationHandler = {
-            queue.cancelAllOperations()
+            self.clearInactiveQueue.cancelAllOperations()
         }
 
         operation.completionBlock = {
@@ -244,13 +252,13 @@ class AppBackgroundTaskCoordinator: BackgroundTaskCoordinator {
                 UIApplication.shared.endBackgroundTask(backgroundTaskId)
             }
 
-            let nextCheckInterval: TimeInterval = (operation.isSuccessful ? 15 : 1).days
-            self.schedulePushWorksiteMedia(secondsFromNow: nextCheckInterval)
+            let nextCheckInterval: TimeInterval = (operation.isSuccessful ? 2 : 1).days
+            self.scheduleInactiveCheckup(secondsFromNow: nextCheckInterval)
 
             task.setTaskCompleted(success: operation.isSuccessful)
         }
 
-        queue.addOperations([operation], waitUntilFinished: false)
+        clearInactiveQueue.addOperations([operation], waitUntilFinished: false)
     }
 }
 
@@ -277,6 +285,9 @@ final class RefreshIncidentsDataOperation: AsyncOperation, @unchecked Sendable {
             cacheFullWorksites: true,
             restartCacheCheckpoint: false
         )
+
+        // TODO: Refactor and await. Maybe refactor into own operation.
+        puller.pullUnauthenticatedData()
 
         switch result {
         case .success:
@@ -337,16 +348,25 @@ final class ClearInactiveDataOperation: AsyncOperation, @unchecked Sendable {
 
     private(set) var isSuccessful = false
 
-    private let clearDuration = 180.days
+    private let clearDuration: Double
 
     init(
         appSupportRepository: AppSupportRepository,
         dataManagementRepository: AppDataManagementRepository,
-        appLogger: AppLogger
+        appEnv: AppEnv,
+        appLogger: AppLogger,
     ) {
         self.appSupportRepository = appSupportRepository
         self.dataManagementRepository = dataManagementRepository
         logger = appLogger
+
+        clearDuration = if appEnv.isProduction {
+            60.days
+        } else if appEnv.isDebuggable {
+            3.days
+        } else {
+            6.days
+        }
     }
 
     override func operate() async {

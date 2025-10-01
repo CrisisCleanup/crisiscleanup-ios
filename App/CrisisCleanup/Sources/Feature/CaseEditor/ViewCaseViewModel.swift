@@ -8,11 +8,13 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
     private let incidentsRepository: IncidentsRepository
     private let worksitesRepository: WorksitesRepository
     private let accountDataRefresher: AccountDataRefresher
+    private let appPreferences: AppPreferencesDataSource
     private let worksiteInteractor: WorksiteInteractor
     private let locationManager: LocationManager
     private var editableWorksiteProvider: EditableWorksiteProvider
     private let transferWorkTypeProvider: TransferWorkTypeProvider
     private let localImageRepository: LocalImageRepository
+    private let claimThresholdRepository: IncidentClaimThresholdRepository
     private let worksiteChangeRepository: WorksiteChangeRepository
     private let syncPusher: SyncPusher
     private let inputValidator: InputValidator
@@ -35,6 +37,8 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
     @Published private(set) var phoneNumberValidations = [PhoneNumberValidation]()
 
     @Published private(set) var distanceAway = ""
+
+    @Published var isMapSatelliteView = false
 
     @Published private(set) var isLoading = true
 
@@ -78,6 +82,8 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
 
     private let nextRecurDateFormat: DateFormatter
 
+    @Published var isOverClaimingWork = false
+
     private let isFirstVisible = ManagedAtomic(true)
 
     private var subscriptions = Set<AnyCancellable>()
@@ -87,6 +93,7 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
         incidentsRepository: IncidentsRepository,
         organizationsRepository: OrganizationsRepository,
         accountDataRefresher: AccountDataRefresher,
+        appPreferences: AppPreferencesDataSource,
         organizationRefresher: OrganizationRefresher,
         worksiteInteractor: WorksiteInteractor,
         incidentRefresher: IncidentRefresher,
@@ -100,6 +107,7 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
         transferWorkTypeProvider: TransferWorkTypeProvider,
         localImageRepository: LocalImageRepository,
         worksiteImageRepository: WorksiteImageRepository,
+        claimThresholdRepository: IncidentClaimThresholdRepository,
         worksiteChangeRepository: WorksiteChangeRepository,
         syncPusher: SyncPusher,
         inputValidator: InputValidator,
@@ -112,11 +120,13 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
         self.incidentsRepository = incidentsRepository
         self.worksitesRepository = worksitesRepository
         self.accountDataRefresher = accountDataRefresher
+        self.appPreferences = appPreferences
         self.worksiteInteractor = worksiteInteractor
         self.locationManager = locationManager
         self.editableWorksiteProvider = editableWorksiteProvider
         self.transferWorkTypeProvider = transferWorkTypeProvider
         self.localImageRepository = localImageRepository
+        self.claimThresholdRepository = claimThresholdRepository
         self.worksiteChangeRepository = worksiteChangeRepository
         self.inputValidator = inputValidator
         self.syncPusher = syncPusher
@@ -156,6 +166,7 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
             keyTranslator: languageRepository,
             languageRefresher: languageRefresher,
             workTypeStatusRepository: workTypeStatusRepository,
+            accountDataRefresher: accountDataRefresher,
             editableWorksiteProvider: editableWorksiteProvider,
             appEnv: appEnv,
             loggerFactory: loggerFactory
@@ -289,6 +300,25 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
     }
 
     private func subscribeViewState() {
+        Task {
+            do {
+                let preferences = try await appPreferences.preferences.eraseToAnyPublisher().asyncFirst()
+                let isMapSatelliteView = preferences.isMapSatelliteView ?? false
+                Task { @MainActor in
+                    self.isMapSatelliteView = isMapSatelliteView
+                }
+            } catch {
+                logger.logError(error)
+            }
+        }
+
+        $isMapSatelliteView
+            .removeDuplicates()
+            .sink {
+                self.appPreferences.setMapSatelliteView($0)
+            }
+            .store(in: &subscriptions)
+
         $alertMessage
             .filter { $0.isNotBlank }
             .debounce(
@@ -670,6 +700,21 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
         }
     }
 
+    private func isOverClaiming(
+        startingWorksite: Worksite,
+        updatedWorksite: Worksite,
+    ) async -> Bool {
+        if let orgId = organizationId {
+            return await CreateEditCaseViewModel.isOverClaiming(
+                orgId,
+                startingWorksite: startingWorksite,
+                updatedWorksite: updatedWorksite,
+                repository: claimThresholdRepository,
+            )
+        }
+        return false
+    }
+
     private var organizationId: Int64? { caseData?.orgId }
 
     private func saveWorksiteChange(
@@ -688,6 +733,16 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
                 do {
                     defer {
                         Task { @MainActor in self.isSavingWorksite.value = false }
+                    }
+
+                    if await isOverClaiming(
+                        startingWorksite: startingWorksite,
+                        updatedWorksite: changedWorksite,
+                    ) {
+                        Task { @MainActor in
+                            self.isOverClaimingWork = true
+                        }
+                        return
                     }
 
                     _ = try await self.worksiteChangeRepository.saveWorksiteChange(

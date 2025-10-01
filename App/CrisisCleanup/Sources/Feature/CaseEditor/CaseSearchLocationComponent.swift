@@ -38,6 +38,7 @@ class CaseSearchLocationComponent: Component<AppDependency>, CaseSearchLocationV
                 incidentBoundsProvider: dependency.incidentBoundsProvider,
                 searchWorksitesRepository: dependency.searchWorksitesRepository,
                 addressSearchRepository: dependency.addressSearchRepository,
+                appPreferences: dependency.appPreferences,
                 caseIconProvider: dependency.mapCaseIconProvider,
                 existingWorksiteSelector: dependency.existingWorksiteSelector,
                 networkMonitor: dependency.networkMonitor,

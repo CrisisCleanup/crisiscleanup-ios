@@ -390,7 +390,7 @@ extension MainComponent {
                 networkDataSource: networkDataSource,
                 accountDataRepository: accountDataRepository,
                 writeApi: writeApi,
-                loggerFactory: loggerFactory
+                loggerFactory: loggerFactory,
             )
         }
     }
@@ -407,7 +407,7 @@ extension MainComponent {
                 usersRepository: usersRepository,
                 worksiteDao: worksiteDao,
                 phoneNumberParser: phoneNumberParser,
-                loggerFactory: loggerFactory
+                loggerFactory: loggerFactory,
             )
         }
     }
@@ -420,7 +420,7 @@ extension MainComponent {
                 appSupportRepository: appSupportRepository,
                 locationManager: locationManager,
                 writeApiClient: writeApi,
-                loggerFactory: loggerFactory
+                loggerFactory: loggerFactory,
             )
         }
     }
@@ -437,12 +437,49 @@ extension MainComponent {
                 workTypeStatusRepository: workTypeStatusRepository,
                 casesFilterRepository: casesFilterRepository,
                 appSupportRepository: appSupportRepository,
+                incidentDao: incidentDao,
+                organizationDao: organizationsDao,
+                worksiteDao: worksiteDao,
+                maintenanceDataSource: appMaintenanceDataSource,
                 syncPuller: syncPuller,
                 databaseOperator: databaseOperator,
                 accountEventBus: accountEventBus,
-                loggerFactory: loggerFactory
+                loggerFactory: loggerFactory,
             )
         }
+    }
+
+    var appConfigDataSource: AppConfigDataSource {
+        shared {
+            AppConfigUserDefaults()
+        }
+    }
+
+    var appConfigRepository: AppConfigRepository {
+        shared {
+            CrisisCleanupAppConfigRepository(
+                networkDataSource: networkDataSource,
+                appConfigDataSource: appConfigDataSource,
+                loggerFactory: loggerFactory,
+            )
+        }
+    }
+
+    public var claimThresholdRepository: IncidentClaimThresholdRepository {
+        shared {
+            CrisisCleanupIncidentClaimThresholdRepository(
+                claimThresholdDataSource: incidentDao,
+                accountInfoDataSource: accountDataSource,
+                workTypeAnalyzer: workTypeAnalyzer,
+                appConfigRepository: appConfigRepository,
+                incidentSelector: incidentSelector,
+                logger: loggerFactory.getLogger("incident-claim-threshold"),
+            )
+        }
+    }
+
+    var workTypeAnalyzer: WorkTypeAnalyzer {
+        WorksiteChangeWorkTypeAnalyzer(worksiteChangeDao: worksiteChangeDao)
     }
 
     var pagingSyncLogRepository: PagingSyncLogRepository {
@@ -450,7 +487,7 @@ extension MainComponent {
             PagingSyncLogRepository(
                 syncLogDao: syncLogDao,
                 appEnv: appEnv,
-                type: "sync-insights"
+                type: "sync-insights",
             )
         }
     }

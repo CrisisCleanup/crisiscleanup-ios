@@ -147,6 +147,16 @@ extension WorksiteChangeRecord: Codable, FetchableRecord, MutablePersistableReco
             .fetchAll(db)
     }
 
+    static func getOrgChanges(
+        _ db: Database,
+        _ orgId: Int64
+    ) throws -> [WorksiteChangeRecord] {
+        try WorksiteChangeRecord
+            .filter(Columns.organizationId == orgId)
+            .order(Columns.worksiteId, Columns.createdAt)
+            .fetchAll(db)
+    }
+
     static func delete(
         _ db: Database,
         _ deleteIds: Set<Int64>

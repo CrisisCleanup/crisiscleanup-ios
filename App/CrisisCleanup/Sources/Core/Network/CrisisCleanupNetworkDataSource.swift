@@ -72,6 +72,7 @@ public protocol CrisisCleanupNetworkDataSource {
         pageCount: Int,
         updatedAt: Date,
         isPagingBackwards: Bool,
+        offset: Int,
     ) async throws -> NetworkWorksitesPageResult
 
     func getWorksitesFlagsFormDataPage(
@@ -79,6 +80,7 @@ public protocol CrisisCleanupNetworkDataSource {
         pageCount: Int,
         updatedAt: Date,
         isPagingBackwards: Bool,
+        offset: Int,
     ) async throws -> NetworkFlagsFormDataResult
 
     func getWorksitesFlagsFormData(
@@ -140,6 +142,8 @@ public protocol CrisisCleanupNetworkDataSource {
     func getLists(_ ids: [Int64]) async -> [NetworkList?]
 
     func getWorksiteChanges(_ after: Date) async throws -> [NetworkWorksiteChange]
+
+    func getClaimThresholds() async throws -> NetworkClaimThreshold
 }
 
 extension CrisisCleanupNetworkDataSource {
@@ -173,12 +177,14 @@ extension CrisisCleanupNetworkDataSource {
         _ incidentId: Int64,
         _ pageCount: Int,
         _ updatedBefore: Date,
+        offset: Int,
     ) async throws -> NetworkWorksitesPageResult {
         try await getWorksitesPageUpdatedAt(
             incidentId: incidentId,
             pageCount: pageCount,
             updatedAt: updatedBefore,
             isPagingBackwards: true,
+            offset: offset,
         )
     }
 
@@ -186,12 +192,14 @@ extension CrisisCleanupNetworkDataSource {
         _ incidentId: Int64,
         _ pageCount: Int,
         _ updatedAfter: Date,
+        offset: Int,
     ) async throws -> NetworkWorksitesPageResult {
         try await getWorksitesPageUpdatedAt(
             incidentId: incidentId,
             pageCount: pageCount,
             updatedAt: updatedAfter,
             isPagingBackwards: false,
+            offset: offset,
         )
     }
 
@@ -199,12 +207,14 @@ extension CrisisCleanupNetworkDataSource {
         _ incidentId: Int64,
         _ pageCount: Int,
         _ updatedBefore: Date,
+        offset: Int,
     ) async throws -> NetworkFlagsFormDataResult {
         try await getWorksitesFlagsFormDataPage(
             incidentId: incidentId,
             pageCount: pageCount,
             updatedAt: updatedBefore,
             isPagingBackwards: true,
+            offset: offset,
         )
     }
 
@@ -212,12 +222,14 @@ extension CrisisCleanupNetworkDataSource {
         _ incidentId: Int64,
         _ pageCount: Int,
         _ updatedAfter: Date,
+        offset: Int,
     ) async throws -> NetworkFlagsFormDataResult {
         try await getWorksitesFlagsFormDataPage(
             incidentId: incidentId,
             pageCount: pageCount,
             updatedAt: updatedAfter,
             isPagingBackwards: false,
+            offset: offset,
         )
     }
 

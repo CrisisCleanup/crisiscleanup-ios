@@ -57,7 +57,7 @@ class RequestRedeployViewModel: ObservableObject {
             isFirstAppear = false
 
             Task {
-                await accountDataRefresher.updateApprovedIncidents(true)
+                await accountDataRefresher.updateProfileIncidentsData(true)
 
                 requestedIncidentIdsSubject.value = await requestRedeployRepository.getRequestedIncidents()
 

@@ -2,7 +2,12 @@ import Combine
 import Foundation
 import GRDB
 
-class WorksiteChangeDao {
+// sourcery: AutoMockable
+protocol WorksiteChangeDataProvider {
+    func getOrgChanges(_ orgId: Int64) throws -> [WorksiteSerializedChange]
+}
+
+class WorksiteChangeDao: WorksiteChangeDataProvider {
     private let database: AppDatabase
     private let reader: DatabaseReader
     private let uuidGenerator: UuidGenerator
@@ -30,6 +35,18 @@ class WorksiteChangeDao {
 
     func getOrdered(_ worksiteId: Int64) throws -> [WorksiteChangeRecord] {
         try reader.read { db in try WorksiteChangeRecord.getOrdered(db, worksiteId) }
+    }
+
+    func getOrgChanges(_ orgId: Int64) throws -> [WorksiteSerializedChange] {
+        try reader.read {
+            db in try WorksiteChangeRecord.getOrgChanges(db, orgId)
+        }
+        .map {
+            WorksiteSerializedChange(
+                worksiteId: $0.worksiteId,
+                changeData: $0.changeData,
+            )
+        }
     }
 
     func updateSyncIds(

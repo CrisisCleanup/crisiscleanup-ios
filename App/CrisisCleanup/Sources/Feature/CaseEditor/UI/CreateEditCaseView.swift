@@ -65,6 +65,14 @@ private struct CreateEditCaseLayoutView: View {
                     viewModel.showExplainLocationPermission = false
                 }
             }
+
+            if viewModel.isOverClaimingWork {
+                OverClaimAlertDialog(
+                    onClose: {
+                        viewModel.isOverClaimingWork = false
+                    }
+                )
+            }
         }
         .screenTitle(viewModel.headerTitle)
         .hideNavBarUnderSpace()
@@ -706,6 +714,7 @@ private struct PropertyInformation: View {
             }
 
             let outOfBoundsMessage = viewModel.locationOutOfBoundsMessage
+            // TODO: Remove tint over satellite view
             CreateEditCaseMapView(
                 map: $map,
                 latLng: $locationData.coordinates,
@@ -713,6 +722,8 @@ private struct PropertyInformation: View {
                 hasInitialCoordinates: viewModel.hasInitialCoordinates
             )
             .id("location-map")
+            .frame(maxWidth: .infinity)
+            .frame(height: appTheme.listItemMapHeight)
             .if (viewModel.areEditorsReady && outOfBoundsMessage.isNotBlank) { view in
                 view.overlay(alignment: .bottomLeading) {
                     Text(outOfBoundsMessage)
@@ -722,8 +733,18 @@ private struct PropertyInformation: View {
                         .padding()
                 }
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: appTheme.listItemMapHeight)
+            .overlay(alignment: .topTrailing) {
+                MapViewToggleButton(
+                    isMapSatelliteView: viewModel.isMapSatelliteView,
+                    onToggle: { viewModel.isMapSatelliteView.toggle() }
+                )
+            }
+            .onChange(of: viewModel.isMapSatelliteView) { value in
+                map.setSatelliteMapType(value)
+            }
+            .onAppear {
+                map.setSatelliteMapType(viewModel.isMapSatelliteView)
+            }
 
             HStack {
                 Button {

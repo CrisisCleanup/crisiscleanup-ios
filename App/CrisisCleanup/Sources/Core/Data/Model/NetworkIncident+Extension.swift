@@ -13,7 +13,8 @@ extension NetworkIncident {
                 .map { "\($0)"}
                 .commaJoined,
             turnOnRelease: turnOnRelease,
-            isArchived: isArchived ?? false
+            isArchived: isArchived ?? false,
+            ignoreClaimingThresholds: ignoreClaimingThresholds ?? false,
         )
     }
 

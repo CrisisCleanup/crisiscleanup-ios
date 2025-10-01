@@ -35,21 +35,23 @@ public struct NetworkIncident: Codable, Equatable {
     let activePhoneNumber: [Int64]?
     let turnOnRelease: Bool
     let isArchived: Bool?
+    let ignoreClaimingThresholds: Bool?
 
     let fields: [NetworkIncidentFormField]?
 
     enum CodingKeys: String, CodingKey {
-        case id
-        case startAt = "start_at"
-        case name
-        case shortName = "short_name"
-        case caseLabel = "case_label"
-        case locations
-        case type = "incident_type"
-        case activePhoneNumber = "active_phone_number"
-        case turnOnRelease = "turn_on_release"
-        case isArchived = "is_archived"
-        case fields = "form_fields"
+        case id,
+             startAt = "start_at",
+             name,
+             shortName = "short_name",
+             caseLabel = "case_label",
+             locations,
+             type = "incident_type",
+             activePhoneNumber = "active_phone_number",
+             turnOnRelease = "turn_on_release",
+             isArchived = "is_archived",
+             fields = "form_fields",
+             ignoreClaimingThresholds = "ignore_claiming_thresholds"
     }
 
     public init(
@@ -63,7 +65,8 @@ public struct NetworkIncident: Codable, Equatable {
         activePhoneNumber: [Int64]?,
         turnOnRelease: Bool,
         isArchived: Bool?,
-        fields: [NetworkIncidentFormField]? = nil
+        fields: [NetworkIncidentFormField]? = nil,
+        ignoreClaimingThresholds: Bool? = nil,
     ) {
         self.id = id
         self.startAt = startAt
@@ -76,21 +79,23 @@ public struct NetworkIncident: Codable, Equatable {
         self.turnOnRelease = turnOnRelease
         self.isArchived = isArchived
         self.fields = fields
+        self.ignoreClaimingThresholds = ignoreClaimingThresholds
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.id = try container.decode(Int64.self, forKey: .id)
-        self.startAt = try container.decode(Date.self, forKey: .startAt)
-        self.name = try container.decode(String.self, forKey: .name)
-        self.shortName = try container.decode(String.self, forKey: .shortName)
-        self.caseLabel = try container.decode(String.self, forKey: .caseLabel)
-        self.locations = try container.decode([NetworkIncidentLocation].self, forKey: .locations)
-        self.type = try container.decode(String.self, forKey: .type)
-        self.activePhoneNumber = container.decodeIterableInt64(.activePhoneNumber)
-        self.turnOnRelease = try container.decode(Bool.self, forKey: .turnOnRelease)
-        self.isArchived = try container.decodeIfPresent(Bool.self, forKey: .isArchived)
-        self.fields = try container.decodeIfPresent([NetworkIncidentFormField].self, forKey: .fields)
+        id = try container.decode(Int64.self, forKey: .id)
+        startAt = try container.decode(Date.self, forKey: .startAt)
+        name = try container.decode(String.self, forKey: .name)
+        shortName = try container.decode(String.self, forKey: .shortName)
+        caseLabel = try container.decode(String.self, forKey: .caseLabel)
+        locations = try container.decode([NetworkIncidentLocation].self, forKey: .locations)
+        type = try container.decode(String.self, forKey: .type)
+        activePhoneNumber = container.decodeIterableInt64(.activePhoneNumber)
+        turnOnRelease = try container.decode(Bool.self, forKey: .turnOnRelease)
+        isArchived = try container.decodeIfPresent(Bool.self, forKey: .isArchived)
+        fields = try container.decodeIfPresent([NetworkIncidentFormField].self, forKey: .fields)
+        ignoreClaimingThresholds = try container.decodeIfPresent(Bool.self, forKey: .ignoreClaimingThresholds)
     }
 }
 
