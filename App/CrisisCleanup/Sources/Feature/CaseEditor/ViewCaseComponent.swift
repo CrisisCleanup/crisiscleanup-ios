@@ -64,6 +64,7 @@ class ViewCaseComponent: Component<AppDependency>, ViewCaseViewBuilder {
             transferWorkTypeProvider: dependency.transferWorkTypeProvider,
             localImageRepository: dependency.localImageRepository,
             worksiteImageRepository: dependency.worksiteImageRepository,
+            claimThresholdRepository: dependency.claimThresholdRepository,
             worksiteChangeRepository: dependency.worksiteChangeRepository,
             syncPusher: dependency.syncPusher,
             inputValidator: dependency.inputValidator,

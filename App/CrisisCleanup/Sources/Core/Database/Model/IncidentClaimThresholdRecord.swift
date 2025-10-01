@@ -1,10 +1,8 @@
 import Foundation
 import GRDB
 
-struct IncidentClaimThresholdRecord: Identifiable, Equatable {
+struct IncidentClaimThresholdRecord: Equatable {
     static let incident = belongsTo(IncidentRecord.self)
-
-    let id: String
 
     let userId: Int64
     let incidentId: Int64
@@ -17,7 +15,6 @@ struct IncidentClaimThresholdRecord: Identifiable, Equatable {
         userClaimCount: Int,
         userCloseRatio: Float,
     ) {
-        self.id = "\(userId)-\(incidentId)"
         self.userId = userId
         self.incidentId = incidentId
         self.userClaimCount = userClaimCount
@@ -43,5 +40,13 @@ extension IncidentClaimThresholdRecord: Codable, FetchableRecord, PersistableRec
         try IncidentClaimThresholdRecord
             .filter(Columns.userId == accountId && !keepIncidentIds.contains(Columns.incidentId))
             .deleteAll(db)
+    }
+
+    static func filterBy(
+        accountId: Int64,
+        incidentId: Int64,
+    ) -> SQLSpecificExpressible {
+        Columns.userId == accountId &&
+        Columns.incidentId == incidentId
     }
 }

@@ -14,6 +14,7 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
     private var editableWorksiteProvider: EditableWorksiteProvider
     private let transferWorkTypeProvider: TransferWorkTypeProvider
     private let localImageRepository: LocalImageRepository
+    private let claimThresholdRepository: IncidentClaimThresholdRepository
     private let worksiteChangeRepository: WorksiteChangeRepository
     private let syncPusher: SyncPusher
     private let inputValidator: InputValidator
@@ -81,6 +82,8 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
 
     private let nextRecurDateFormat: DateFormatter
 
+    @Published var isOverClaimingWork = false
+
     private let isFirstVisible = ManagedAtomic(true)
 
     private var subscriptions = Set<AnyCancellable>()
@@ -104,6 +107,7 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
         transferWorkTypeProvider: TransferWorkTypeProvider,
         localImageRepository: LocalImageRepository,
         worksiteImageRepository: WorksiteImageRepository,
+        claimThresholdRepository: IncidentClaimThresholdRepository,
         worksiteChangeRepository: WorksiteChangeRepository,
         syncPusher: SyncPusher,
         inputValidator: InputValidator,
@@ -122,6 +126,7 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
         self.editableWorksiteProvider = editableWorksiteProvider
         self.transferWorkTypeProvider = transferWorkTypeProvider
         self.localImageRepository = localImageRepository
+        self.claimThresholdRepository = claimThresholdRepository
         self.worksiteChangeRepository = worksiteChangeRepository
         self.inputValidator = inputValidator
         self.syncPusher = syncPusher
@@ -161,6 +166,7 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
             keyTranslator: languageRepository,
             languageRefresher: languageRefresher,
             workTypeStatusRepository: workTypeStatusRepository,
+            accountDataRefresher: accountDataRefresher,
             editableWorksiteProvider: editableWorksiteProvider,
             appEnv: appEnv,
             loggerFactory: loggerFactory
@@ -694,6 +700,21 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
         }
     }
 
+    private func isOverClaiming(
+        startingWorksite: Worksite,
+        updatedWorksite: Worksite,
+    ) async -> Bool {
+        if let orgId = organizationId {
+            return await CreateEditCaseViewModel.isOverClaiming(
+                orgId,
+                startingWorksite: startingWorksite,
+                updatedWorksite: updatedWorksite,
+                repository: claimThresholdRepository,
+            )
+        }
+        return false
+    }
+
     private var organizationId: Int64? { caseData?.orgId }
 
     private func saveWorksiteChange(
@@ -712,6 +733,16 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
                 do {
                     defer {
                         Task { @MainActor in self.isSavingWorksite.value = false }
+                    }
+
+                    if await isOverClaiming(
+                        startingWorksite: startingWorksite,
+                        updatedWorksite: changedWorksite,
+                    ) {
+                        Task { @MainActor in
+                            self.isOverClaimingWork = true
+                        }
+                        return
                     }
 
                     _ = try await self.worksiteChangeRepository.saveWorksiteChange(

@@ -465,7 +465,7 @@ extension MainComponent {
         }
     }
 
-    var incidentClaimThresholdRepository: IncidentClaimThresholdRepository {
+    public var claimThresholdRepository: IncidentClaimThresholdRepository {
         shared {
             CrisisCleanupIncidentClaimThresholdRepository(
                 claimThresholdDataSource: incidentDao,

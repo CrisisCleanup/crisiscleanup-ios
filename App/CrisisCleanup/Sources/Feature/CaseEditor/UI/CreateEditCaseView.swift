@@ -65,6 +65,14 @@ private struct CreateEditCaseLayoutView: View {
                     viewModel.showExplainLocationPermission = false
                 }
             }
+
+            if viewModel.isOverClaimingWork {
+                OverClaimAlertDialog(
+                    onClose: {
+                        viewModel.isOverClaimingWork = false
+                    }
+                )
+            }
         }
         .screenTitle(viewModel.headerTitle)
         .hideNavBarUnderSpace()

@@ -36,6 +36,7 @@ public protocol AppDependency: Dependency {
     var searchWorksitesRepository: SearchWorksitesRepository { get }
     var organizationsRepository: OrganizationsRepository { get }
     var incidentCacheRepository: IncidentCacheRepository { get }
+    var claimThresholdRepository: IncidentClaimThresholdRepository { get }
     var worksiteChangeRepository: WorksiteChangeRepository  { get }
     var syncLogRepository: SyncLogRepository  { get }
     var addressSearchRepository: AddressSearchRepository { get }
@@ -196,7 +197,7 @@ extension MainComponent {
                 networkDataSource: networkDataSource,
                 accountDataRepository: accountDataRepository,
                 organizationsRepository: organizationsRepository,
-                incidentClaimThresholdRepository: incidentClaimThresholdRepository,
+                incidentClaimThresholdRepository: claimThresholdRepository,
                 accountEventBus: accountEventBus,
                 loggerFactory: loggerFactory
             )

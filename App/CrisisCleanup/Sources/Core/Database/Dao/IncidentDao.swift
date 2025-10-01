@@ -151,14 +151,10 @@ public class IncidentDao: IncidentClaimThresholdDataSource {
         incidentId: Int64,
     ) throws -> IncidentClaimThreshold? {
         let record = try! reader.read { db in
-            let id = IncidentClaimThresholdRecord(
-                userId: accountId,
-                incidentId: incidentId,
-                userClaimCount: 0,
-                userCloseRatio: 0.0,
-            ).id
             return try IncidentClaimThresholdRecord
-                .filter(id: id)
+                .filter(
+                    IncidentClaimThresholdRecord.filterBy(accountId: accountId, incidentId: incidentId)
+                )
                 .fetchOne(db)
         }
         if let threshold = record {

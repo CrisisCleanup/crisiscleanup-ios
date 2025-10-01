@@ -56,6 +56,14 @@ private struct ViewCaseLayoutView: View {
                 )
                 .frame(maxWidth: appTheme.contentMaxWidth, alignment: .center)
             }
+
+            if viewModel.isOverClaimingWork {
+                OverClaimAlertDialog(
+                    onClose: {
+                        viewModel.isOverClaimingWork = false
+                    }
+                )
+            }
         }
         .if (viewLayout.isOneColumnLayout) {
             $0.toolbar {
