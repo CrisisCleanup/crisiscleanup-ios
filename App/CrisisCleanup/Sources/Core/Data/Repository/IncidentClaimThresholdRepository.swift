@@ -111,6 +111,6 @@ class CrisisCleanupIncidentClaimThresholdRepository: IncidentClaimThresholdRepos
             logger.logError(error)
         }
 
-        return false
+        return true
     }
 }
