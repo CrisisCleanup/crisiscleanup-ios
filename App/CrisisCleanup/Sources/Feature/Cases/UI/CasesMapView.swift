@@ -120,7 +120,7 @@ internal struct CasesMapView : UIViewRepresentable, MapViewContainer {
     @Binding var map: MKMapView
     @Binding var focusWorksiteCenter: CLLocationCoordinate2D?
     var isSatelliteMapType: Bool
-    @Binding var mapOverlays: [MKOverlay]
+    var mapOverlays: [MKOverlay]
 
     @ObservedObject var viewModel: CasesViewModel
 

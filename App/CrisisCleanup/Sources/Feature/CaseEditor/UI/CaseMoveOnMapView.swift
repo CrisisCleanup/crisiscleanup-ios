@@ -217,6 +217,7 @@ private struct OutOfBoundsMoveOnMapView: View {
     @EnvironmentObject var viewModel: CaseChangeLocationAddressViewModel
 
     @State private var map = MKMapView()
+    // Keep reference or UX will misbehave
     @State private var mapOverlays = [MKOverlay]()
     @State private var isLocationOutOfBounds = false
 

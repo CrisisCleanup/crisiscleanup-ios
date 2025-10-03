@@ -548,7 +548,6 @@ private struct PropertyInformation: View {
     @State private var previousFocusState: TextInputFocused?
 
     @State private var map = MKMapView()
-    @State private var mapOverlays = [MKOverlay]()
 
     @State private var fullAddressPlaceholder: String = ""
 
@@ -719,7 +718,7 @@ private struct PropertyInformation: View {
                 map: $map,
                 latLng: $locationData.coordinates,
                 isSatelliteMapType: viewModel.isMapSatelliteView,
-                mapOverlays: mapOverlays,
+                mapOverlays: map.makeOverlayPolygons(),
                 isCreateWorksite: viewModel.isCreateWorksite,
                 hasInitialCoordinates: viewModel.hasInitialCoordinates
             )
@@ -745,7 +744,6 @@ private struct PropertyInformation: View {
                 map.setSatelliteMapType(value)
             }
             .onAppear {
-                mapOverlays = map.makeOverlayPolygons()
                 map.setSatelliteMapType(viewModel.isMapSatelliteView)
             }
 
