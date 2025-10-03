@@ -71,22 +71,25 @@ extension MKMapView {
 
     func configure(
         isScrollEnabled: Bool = false,
-        isExistingMap: Bool = false
+        isExistingMap: Bool = false,
+        isSatelliteView: Bool = false,
     ) {
         configure(
-            overlays: makeOverlayPolygons(),
+            overlays: isSatelliteView ? [] : makeOverlayPolygons(),
             isScrollEnabled: isScrollEnabled,
             isExistingMap: isExistingMap,
+            isSatelliteView: isSatelliteView,
         )
     }
 
     func configure(
         overlays: [MKOverlay],
         isScrollEnabled: Bool = false,
-        isExistingMap: Bool = false
+        isExistingMap: Bool = false,
+        isSatelliteView: Bool = false,
     ) {
         overrideUserInterfaceStyle = .light
-        mapType = .standard
+        setSatelliteMapType(isSatelliteView)
         pointOfInterestFilter = .excludingAll
         if !isExistingMap {
             camera.centerCoordinateDistance = 20

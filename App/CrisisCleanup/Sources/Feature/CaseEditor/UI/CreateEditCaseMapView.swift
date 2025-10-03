@@ -4,25 +4,21 @@ import Foundation
 import MapKit
 import SwiftUI
 
-class CreateEditCaseMapCoordinator: NSObject, MKMapViewDelegate {
-    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-        overlayMapRenderer(overlay as! MKPolygon)
-    }
-
-    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        mapView.staticMapAnnotationView(annotation, imageHeightOffsetWeight: -0.5)
-    }
-}
-
-struct CreateEditCaseMapView : UIViewRepresentable {
+struct CreateEditCaseMapView : UIViewRepresentable, MapViewContainer {
     @Binding var map: MKMapView
     @Binding var latLng: LatLng
+
+    let isSatelliteMapType: Bool
+    let mapOverlays: [MKOverlay]
 
     let isCreateWorksite: Bool
     let hasInitialCoordinates: Bool
 
     func makeUIView(context: Context) -> MKMapView {
-        map.configure()
+        map.configure(
+            overlays: mapOverlays,
+            isSatelliteView: isSatelliteMapType,
+        )
 
         map.delegate = context.coordinator
 
@@ -34,8 +30,8 @@ struct CreateEditCaseMapView : UIViewRepresentable {
         return map
     }
 
-    func makeCoordinator() -> CreateEditCaseMapCoordinator {
-        CreateEditCaseMapCoordinator()
+    func makeCoordinator() -> StaticMapCoordinator {
+        StaticMapCoordinator(isTintApplied: !isSatelliteMapType)
     }
 
     func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<CreateEditCaseMapView>) {
@@ -48,5 +44,7 @@ struct CreateEditCaseMapView : UIViewRepresentable {
 
             uiView.animateToCenter(coordinates, zoomLevel: zoom)
         }
+
+        syncMapOverlays(map, mapOverlays)
     }
 }

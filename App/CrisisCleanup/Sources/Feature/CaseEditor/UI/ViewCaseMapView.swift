@@ -4,23 +4,18 @@ import Foundation
 import MapKit
 import SwiftUI
 
-class ViewCaseMapCoordinator: NSObject, MKMapViewDelegate {
-    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-        overlayMapRenderer(overlay as! MKPolygon)
-    }
-
-    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        mapView.staticMapAnnotationView(annotation, imageHeightOffsetWeight: -0.5)
-    }
-}
-
-struct ViewCaseMapView : UIViewRepresentable {
+struct ViewCaseMapView : UIViewRepresentable, MapViewContainer {
     @Binding var map: MKMapView
+    let isSatelliteMapType: Bool
+    let mapOverlays: [MKOverlay]
 
-    var caseCoordinates: CLLocationCoordinate2D
+    let caseCoordinates: CLLocationCoordinate2D
 
     func makeUIView(context: Context) -> MKMapView {
-        map.configure()
+        map.configure(
+            overlays: mapOverlays,
+            isSatelliteView: isSatelliteMapType,
+        )
 
         map.delegate = context.coordinator
 
@@ -32,11 +27,13 @@ struct ViewCaseMapView : UIViewRepresentable {
         return map
     }
 
-    func makeCoordinator() -> ViewCaseMapCoordinator {
-        ViewCaseMapCoordinator()
+    func makeCoordinator() -> StaticMapCoordinator {
+        StaticMapCoordinator(isTintApplied: !isSatelliteMapType)
     }
 
     func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<ViewCaseMapView>) {
         uiView.animateToCenter(caseCoordinates)
+
+        syncMapOverlays(map, mapOverlays)
     }
 }

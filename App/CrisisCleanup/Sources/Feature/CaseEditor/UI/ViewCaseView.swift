@@ -417,6 +417,7 @@ private struct PropertyInformationView: View {
     @State private var addressPressed: Bool = false
 
     @State var map = MKMapView()
+    @State private var mapOverlays = [MKOverlay]()
 
     @State private var showWrongLocationDialog = false
 
@@ -524,13 +525,14 @@ private struct PropertyInformationView: View {
                 }
                 .horizontalVerticalPadding(horizontalPadding, verticalPadding)
 
-                // TODO: Remove tint over satellite view
                 ViewCaseMapView(
                     map: $map,
+                    isSatelliteMapType: viewModel.isMapSatelliteView,
+                    mapOverlays: mapOverlays,
                     caseCoordinates: CLLocationCoordinate2D(
                         latitude: worksite.latitude,
                         longitude: worksite.longitude,
-                    )
+                    ),
                 )
                 .frame(maxWidth: .infinity)
                 .frame(height: appTheme.listItemMapHeight)
@@ -544,6 +546,7 @@ private struct PropertyInformationView: View {
                     map.setSatelliteMapType(value)
                 }
                 .onAppear {
+                    mapOverlays = map.makeOverlayPolygons()
                     map.setSatelliteMapType(viewModel.isMapSatelliteView)
                 }
             }

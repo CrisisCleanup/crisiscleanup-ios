@@ -1,14 +1,20 @@
 import MapKit
 
-class MoveMapCoordinator: NSObject, MKMapViewDelegate {
+class MoveMapCoordinator: NSObject, MKMapViewDelegate, TintCoordinator {
     let regionChangeListener: MapViewRegionChangeListener
+
+    var isTintApplied: Bool = false
 
     internal lazy var animationManager = {
         CircleAnimationManager()
     }()
 
-    init(regionChangeListener: MapViewRegionChangeListener) {
+    init(
+        regionChangeListener: MapViewRegionChangeListener,
+        isTintApplied: Bool = true,
+    ) {
         self.regionChangeListener = regionChangeListener
+        self.isTintApplied = isTintApplied
     }
 
     private func regionDidChangeFromUserInteraction(
@@ -24,7 +30,7 @@ class MoveMapCoordinator: NSObject, MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         switch overlay {
         case let overlay as MKPolygon:
-            return overlayMapRenderer(overlay)
+            return isTintApplied ? overlayMapRenderer(overlay) : BlankRenderer(overlay: overlay)
         case let overlay as AnimatedCircleOverlay:
             let renderer = AnimatedCircleRenderer(
                 overlay,

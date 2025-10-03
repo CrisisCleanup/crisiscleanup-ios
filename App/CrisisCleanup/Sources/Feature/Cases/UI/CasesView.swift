@@ -28,6 +28,7 @@ struct CasesLayoutView: View {
     let openAuthScreen: () -> Void
 
     @State var map = MKMapView()
+    @State private var mapOverlays = [MKOverlay]()
     @State private var showMapBusyIndicator = false
     @State private var phoneCallNumbers = [ParsedPhoneNumber]()
 
@@ -59,12 +60,12 @@ struct CasesLayoutView: View {
                     map: $map,
                     focusWorksiteCenter: $viewModel.editedWorksiteLocation,
                     isSatelliteMapType: viewModel.isMapSatelliteView,
+                    mapOverlays: $mapOverlays,
                     viewModel: viewModel,
-                    mapOverlays: map.makeOverlayPolygons(),
                     onSelectWorksite: { worksiteId in
                         let incidentId = viewModel.incidentsData.selectedId
                         router.viewCase(incidentId: incidentId, worksiteId: worksiteId)
-                    }
+                    },
                 )
                 .onReceive(viewModel.$mapCameraBounds) { bounds in
                     animateToSelectedIncidentBounds(bounds.bounds)
@@ -88,6 +89,7 @@ struct CasesLayoutView: View {
                     map.setSatelliteMapType(value)
                 }
                 .onAppear {
+                    mapOverlays = map.makeOverlayPolygons()
                     map.setSatelliteMapType(viewModel.isMapSatelliteView)
                 }
             }

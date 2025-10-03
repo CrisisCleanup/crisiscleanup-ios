@@ -66,6 +66,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     @Published private(set) var isSyncing = false
 
     @Published var isMapSatelliteView = false
+    private var isMapSatelliteViewLoadedGuard = LockingBool()
 
     @Published private(set) var areEditorsReady = false
 
@@ -339,6 +340,7 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     func onViewDisappear() {
         clearInvalidWorksiteInfo()
         subscriptions = cancelSubscriptions(subscriptions)
+        isMapSatelliteViewLoadedGuard.set(to: false)
     }
 
     private func subscribeOnline() {
@@ -376,6 +378,9 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
     private func subscribeMapState() {
         Task {
             do {
+                guard !isMapSatelliteViewLoadedGuard.getAndSet(to: true) else {
+                    return
+                }
                 let preferences = try await appPreferences.preferences.eraseToAnyPublisher().asyncFirst()
                 let isMapSatelliteView = preferences.isMapSatelliteView ?? false
                 Task { @MainActor in
@@ -389,7 +394,9 @@ class CreateEditCaseViewModel: ObservableObject, KeyAssetTranslator {
         $isMapSatelliteView
             .removeDuplicates()
             .sink {
-                self.appPreferences.setMapSatelliteView($0)
+                if self.isMapSatelliteViewLoadedGuard.get() {
+                    self.appPreferences.setMapSatelliteView($0)
+                }
             }
             .store(in: &subscriptions)
     }
