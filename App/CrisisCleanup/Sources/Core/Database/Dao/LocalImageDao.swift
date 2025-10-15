@@ -134,6 +134,16 @@ public class LocalImageDao {
                 .fetchAll(db)
         }
     }
+
+    func getNewestLocalImageId() -> Int64? {
+        try! reader.read { db in
+            try WorksiteLocalImageRecord
+                .all()
+                .selectHighestId()
+                .asRequest(of: Int64.self)
+                .fetchOne(db)
+        }
+    }
 }
 
 extension AppDatabase {

@@ -500,24 +500,32 @@ class CrisisCleanupWorksiteChangeRepository: WorksiteChangeRepository {
     }
 
     func syncWorksiteMedia() async throws -> Bool {
-        let worksitesWithImages = localImageDao.getUploadImageWorksiteIds()
-        var isSyncedAll = true
-        for worksiteImageUpload in worksitesWithImages {
-            try Task.checkCancellation()
-            _ = try await UIApplication.shared.checkTimeout(15)
+        var unsyncedImageIds = Set<Int64>()
+        for _ in 1..<3 {
+            let worksitesWithImages = localImageDao.getUploadImageWorksiteIds()
+            for worksiteImageUpload in worksitesWithImages {
+                try Task.checkCancellation()
+                _ = try await UIApplication.shared.checkTimeout(15)
 
-            let worksiteId = worksiteImageUpload.worksiteId
-            let syncCount = try await localImageRepository.syncWorksiteMedia(worksiteId)
-            if syncCount > 0 {
-                try await syncWorksite(worksiteId)
+                let worksiteId = worksiteImageUpload.worksiteId
+                let syncResult = try await localImageRepository.syncWorksiteMedia(worksiteId)
+                unsyncedImageIds.formUnion(syncResult.unsyncedImageIds)
+                if !syncResult.syncedImageIds.isEmpty {
+                    try await syncWorksite(worksiteId)
+                }
+
+                let newestImageId = localImageDao.getNewestLocalImageId()
+                if newestImageId == nil || unsyncedImageIds.contains(newestImageId!) {
+                    break
+                } else {
+                    unsyncedImageIds = []
+                }
             }
-            let unsyncedCount = worksiteImageUpload.count - syncCount
-            isSyncedAll = isSyncedAll && unsyncedCount == 0
+
+            let remainingFiles = Set(localImageDao.getPendingLocalImageFileNames())
+            localFileCache.deleteUnspecifiedFiles(remainingFiles)
         }
 
-        let remainingFiles = Set(localImageDao.getPendingLocalImageFileNames())
-        localFileCache.deleteUnspecifiedFiles(remainingFiles)
-
-        return isSyncedAll
+        return unsyncedImageIds.isEmpty
     }
 }

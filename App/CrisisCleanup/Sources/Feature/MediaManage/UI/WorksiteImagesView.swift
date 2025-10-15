@@ -5,7 +5,6 @@ struct WorksiteImagesView: View {
     @Environment(\.dismiss) var dismiss
 
     @ObservedObject var viewModel: WorksiteImagesViewModel
-    @ObservedObject private var disablePaging = PageableTabView()
 
     @State private var showPhotosGrid = false
 
@@ -30,7 +29,6 @@ struct WorksiteImagesView: View {
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .environmentObject(viewModel)
-        .environmentObject(disablePaging)
         .onChange(of: viewModel.isDeletedImages) { newValue in
             if newValue {
                 dismiss()
@@ -41,12 +39,19 @@ struct WorksiteImagesView: View {
 
 private struct WorksitePhotosCarousel: View {
     @EnvironmentObject private var viewModel: WorksiteImagesViewModel
-    @EnvironmentObject var disablePaging: PageableTabView
 
     var onShowGrid: () -> Void = {}
 
     @State private var isFullscreenMode = false
     @State private var imageTabIndex = 0
+
+    private func syncTabIndex(_ index: Int) {
+        if index >= 0,
+           index < viewModel.caseImages.count,
+           index != imageTabIndex {
+            imageTabIndex = index
+        }
+    }
 
     var body: some View {
         ZStack {
@@ -95,7 +100,11 @@ private struct WorksitePhotosCarousel: View {
                         }
                     }
                     .tag(index)
-                    .simultaneousGesture(disablePaging.disablePaging ? DragGesture() : nil)
+                }
+            }
+            .onTapGesture(count: 1) {
+                withAnimation {
+                    isFullscreenMode.toggle()
                 }
             }
             .tabViewStyle(.page)
@@ -112,17 +121,17 @@ private struct WorksitePhotosCarousel: View {
                 )
             }
         }
+        // onReceive and onChange are needed due to bug and architecture
+        // TODO: Rewrite more elegantly
+        .onReceive(viewModel.$selectedImageIndex) { index in
+            syncTabIndex(index)
+        }
         .onChange(of: viewModel.selectedImageIndex) { index in
-            if index>=0 && index<viewModel.caseImages.count {
-                imageTabIndex = index
-            }
+            syncTabIndex(index)
         }
         .onAppear {
             let selectedIndex = viewModel.selectedImageIndex
-            if selectedIndex >= 0,
-               imageTabIndex != selectedIndex {
-                imageTabIndex = viewModel.selectedImageIndex
-            }
+            syncTabIndex(selectedIndex)
         }
         // TODO: Not working. Likely due to root view structure. Simplify and debug.
         .statusBar(hidden: isFullscreenMode)

@@ -94,4 +94,11 @@ extension DerivableRequest<WorksiteLocalImageRecord> {
     func selectFileName() -> Self {
         select(LocalImageColumn.localDocumentId)
     }
+
+    func selectHighestId() -> Self {
+        select(
+            LocalImageColumn.id,
+        )
+        .order(LocalImageColumn.id.desc)
+    }
 }

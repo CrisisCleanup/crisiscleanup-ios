@@ -40,7 +40,7 @@ public protocol LocalImageRepository {
 
     func deleteLocalImage(_ id: Int64) throws
 
-    func syncWorksiteMedia(_ worksiteId: Int64) async throws -> Int
+    func syncWorksiteMedia(_ worksiteId: Int64) async throws -> UploadMediaResult
 }
 
 class CrisisCleanupLocalImageRepository: LocalImageRepository {
@@ -163,22 +163,22 @@ class CrisisCleanupLocalImageRepository: LocalImageRepository {
         try localImageDao.deleteLocalImage(id)
     }
 
-    func syncWorksiteMedia(_ worksiteId: Int64) async throws -> Int {
+    func syncWorksiteMedia(_ worksiteId: Int64) async throws -> UploadMediaResult {
         let imagesPendingUpload = localImageDao.getWorksiteLocalImages(worksiteId)
         if imagesPendingUpload.isEmpty {
-            return 0
+            return UploadMediaResult(worksiteId)
         }
 
         let networkWorksiteId = worksiteDao.getWorksiteNetworkId(worksiteId)
         if networkWorksiteId <= 0 {
-            return 0
+            return UploadMediaResult(worksiteId)
         }
 
         syncLogger.type = "worksite-\(worksiteId)-media"
 
         syncLogger.log("Syncing \(imagesPendingUpload.count) images")
 
-        var saveCount = 0
+        var syncedImageIds = Set<Int64>()
 
         if fileUploadGuard.compareExchange(
             expected: false,
@@ -206,9 +206,9 @@ class CrisisCleanupLocalImageRepository: LocalImageRepository {
                     )
 
                     if isSynced {
-                        saveCount += 1
+                        syncedImageIds.insert(localImage.id)
 
-                        syncLogger.log("Synced \(saveCount)/\(imagesPendingUpload.count)")
+                        syncLogger.log("Synced \(syncedImageIds.count)/\(imagesPendingUpload.count)")
                     }
                 }
             }
@@ -216,7 +216,13 @@ class CrisisCleanupLocalImageRepository: LocalImageRepository {
             syncLogger.flush()
         }
 
-        return saveCount
+        let unsyncedIds = imagesPendingUpload.map { $0.id }
+            .filter { !syncedImageIds.contains($0) }
+        return UploadMediaResult(
+            worksiteId,
+            syncedImageIds: syncedImageIds,
+            unsyncedImageIds: Set(unsyncedIds),
+        )
     }
 
     private func getFileNameType(_ uri: URL) -> (String, String) {
@@ -262,13 +268,13 @@ class CrisisCleanupLocalImageRepository: LocalImageRepository {
         var isSynced = false
 
         if let uri = URL(string: localImage.uri) {
-            let (fileName, mimeType) = getFileNameType(uri)
-            if fileName.isBlank || mimeType.isBlank {
-                deleteLogMessage = "File not found from \(localImage.uri)"
-            } else {
-                syncingWorksiteImageSubject.value = localImage.id
+            do {
+                let (fileName, mimeType) = getFileNameType(uri)
+                if fileName.isBlank || mimeType.isBlank {
+                    deleteLogMessage = "File not found from \(localImage.uri)"
+                } else {
+                    syncingWorksiteImageSubject.value = localImage.id
 
-                do {
                     if let imageData = copyImageToData(uri, fileName) {
                         let networkFile = try await uploadWorksiteFile(
                             networkWorksiteId: networkWorksiteId,
@@ -293,15 +299,15 @@ class CrisisCleanupLocalImageRepository: LocalImageRepository {
                         try localImageDao.deleteLocalImage(localImage.id)
                         deleteLogMessage = "Missing image in cache"
                     }
-                } catch {
-                    appLogger.logError(error)
-
-                    var errorMessage = error.localizedDescription
-                    if let e = error as? GenericError {
-                        errorMessage = e.message
-                    }
-                    syncLogger.log("Sync error", details: errorMessage)
                 }
+            } catch {
+                appLogger.logError(error)
+
+                var errorMessage = error.localizedDescription
+                if let e = error as? GenericError {
+                    errorMessage = e.message
+                }
+                syncLogger.log("Sync error", details: errorMessage)
             }
         } else {
             deleteLogMessage = "Invalid URI \(localImage.uri)"
@@ -316,5 +322,21 @@ class CrisisCleanupLocalImageRepository: LocalImageRepository {
         }
 
         return isSynced
+    }
+}
+
+public struct UploadMediaResult {
+    let worksiteId: Int64
+    let syncedImageIds: Set<Int64>
+    let unsyncedImageIds: Set<Int64>
+
+    init(
+        _ worksiteId: Int64,
+        syncedImageIds: Set<Int64> = [],
+        unsyncedImageIds: Set<Int64> = [],
+    ) {
+        self.worksiteId = worksiteId
+        self.syncedImageIds = syncedImageIds
+        self.unsyncedImageIds = unsyncedImageIds
     }
 }

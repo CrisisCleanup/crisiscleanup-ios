@@ -62,7 +62,7 @@ class WorksiteImagesViewModel: ObservableObject {
         worksiteId: Int64,
         imageId: Int64,
         imageUri: String,
-        screenTitle: String
+        screenTitle: String,
     ) {
         self.worksiteImageRepository = worksiteImageRepository
         self.localImageRepository = localImageRepository

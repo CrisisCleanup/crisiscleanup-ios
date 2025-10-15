@@ -7,7 +7,6 @@ struct ViewImageView: View {
     @EnvironmentObject var router: NavigationRouter
 
     @ObservedObject var viewModel: ViewImageViewModel
-    @ObservedObject private var disablePaging = PageableTabView()
 
     @State private var showNavBar = true
 
@@ -30,7 +29,7 @@ struct ViewImageView: View {
                             withAnimation {
                                 showNavBar.toggle()
                             }
-                        }
+                        },
                     )
                 } else {
                     // TODO: Message for corrective actions (from view model)
@@ -43,7 +42,7 @@ struct ViewImageView: View {
                             withAnimation {
                                 showNavBar.toggle()
                             }
-                        }
+                        },
                     )
                 } else {
                     // TODO: Message that image may have been deleted by system. Will need to reselect to upload
@@ -58,6 +57,11 @@ struct ViewImageView: View {
                 )
             }
         }
+        .onTapGesture(count: 1) {
+            withAnimation {
+                showNavBar.toggle()
+            }
+        }
         .onAppear { viewModel.onViewAppear() }
         .onDisappear { viewModel.onViewDisappear() }
         .onChange(of: viewModel.isDeleted) { isDeleted in
@@ -65,7 +69,6 @@ struct ViewImageView: View {
                 dismiss()
             }
         }
-        .environmentObject(disablePaging)
     }
 }
 
@@ -128,13 +131,14 @@ struct UrlImageView: View {
 
     var body: some View {
         CachedAsyncImage(url: imageUrl, urlCache: .imageCache) { phase in
-            if let image = phase.image {
+            switch phase {
+            case .success(let image):
                 PanZoomImage(
                     image: image,
                     rotation: rotation,
-                    toggleViewDecoration: toggleViewDecoration
+                    toggleViewDecoration: toggleViewDecoration,
                 )
-            } else if phase.error != nil {
+            case .failure(_):
                 VStack {
                     Text(t.t("worksiteImages.try_refreshing_open_image"))
                         .foregroundColor(.white)
@@ -143,19 +147,18 @@ struct UrlImageView: View {
                         .foregroundColor(appTheme.colors.primaryRedColor)
                         .font(.system(size: placeholderImageSize))
                 }
-            } else {
+            default:
                 // TODO: Show loader instead
                 Image(systemName: "photo.circle")
                     .foregroundColor(.gray)
                     .font(.system(size: placeholderImageSize))
-            }                }
+            }
+        }
         .edgesIgnoringSafeArea(.all)
     }
 }
 
 struct PanZoomImage: View {
-    @EnvironmentObject var disablePaging: PageableTabView
-
     private let image: Image
 
     private let rotation: Double
@@ -171,7 +174,7 @@ struct PanZoomImage: View {
         minScale: 1,
         maxScale: 1,
         fitScale: 1,
-        fillScale: 1
+        fillScale: 1,
     )
     @State private var scale: CGFloat = 1.0
     @State private var scaleCache: CGFloat = 1.0
@@ -242,10 +245,6 @@ struct PanZoomImage: View {
         offset = CGPoint(x: offsetX, y: offsetY)
     }
 
-    private func updateSwipeState() {
-        disablePaging.disablePaging = scale > imageScales.minScale
-    }
-
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea(.all)
@@ -273,6 +272,8 @@ struct PanZoomImage: View {
                             }
                     }
                 )
+                .scaleEffect(scale)
+                .offset(x: offset.x, y: offset.y)
                 .onTapGesture(count: 2) {
                     if offset == CGPointZero {
                         if scale == imageScales.fitScale {
@@ -287,25 +288,24 @@ struct PanZoomImage: View {
                         offset = CGPointZero
                     }
                     scaleCache = scale
-                    updateSwipeState()
                 }
                 .onTapGesture(count: 1) {
                     toggleViewDecoration()
                 }
-                .scaleEffect(scale)
-                .offset(x: offset.x, y: offset.y)
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { gesture in
-                            // TODO: Apply velocity
+                .if (scale > imageScales.minScale) {
+                    $0.gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { gesture in
+                                // TODO: Apply velocity
 
-                            let delta = gesture.translation
-                            capPanOffset(delta)
-                        }
-                        .onEnded { value in
-                            offsetCache = offset
-                        }
-                )
+                                let delta = gesture.translation
+                                capPanOffset(delta)
+                            }
+                            .onEnded { value in
+                                offsetCache = offset
+                            }
+                    )
+                }
                 .rotationEffect(.degrees(rotation))
         }
         .simultaneousGesture(
@@ -316,12 +316,8 @@ struct PanZoomImage: View {
                 }
                 .onEnded { _ in
                     scaleCache = scale
-                    updateSwipeState()
                 }
         )
-        .onTapGesture(count: 1) {
-            toggleViewDecoration()
-        }
     }
 }
 
@@ -338,8 +334,4 @@ private struct RectangularScale {
     func bound(_ scale: CGFloat) -> CGFloat {
         max(minScale, min(maxScale, scale))
     }
-}
-
-class PageableTabView: ObservableObject {
-    @Published var disablePaging = false
 }
