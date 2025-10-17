@@ -217,13 +217,16 @@ private struct OutOfBoundsMoveOnMapView: View {
     @EnvironmentObject var viewModel: CaseChangeLocationAddressViewModel
 
     @State private var map = MKMapView()
+    // Keep reference or UX will misbehave
+    @State private var mapOverlays = [MKOverlay]()
     @State private var isLocationOutOfBounds = false
 
     var body: some View {
         let outOfBoundsMessage = viewModel.locationOutOfBoundsMessage
-        // TODO: Remove tint over satellite view
         MoveMapView(
             map: $map,
+            isSatelliteMapType: viewModel.isMapSatelliteView,
+            mapOverlays: mapOverlays,
             targetCoordinates: viewModel.mapCoordinates,
             isPinCenterScreen: viewModel.isPinCenterScreen,
             isTargetOutOfBounds: isLocationOutOfBounds,
@@ -248,12 +251,10 @@ private struct OutOfBoundsMoveOnMapView: View {
             )
         }
         .onChange(of: viewModel.isMapSatelliteView) { value in
-            // TODO: Map does not change if satellite on load
-            //       Toggling search and dismissing renders map correctly
-            //       Doesn't seem to be due to nesting view structure
             map.setSatelliteMapType(value)
         }
         .onAppear {
+            mapOverlays = map.makeOverlayPolygons()
             map.setSatelliteMapType(viewModel.isMapSatelliteView)
         }
     }

@@ -524,13 +524,14 @@ private struct PropertyInformationView: View {
                 }
                 .horizontalVerticalPadding(horizontalPadding, verticalPadding)
 
-                // TODO: Remove tint over satellite view
                 ViewCaseMapView(
                     map: $map,
+                    isSatelliteMapType: viewModel.isMapSatelliteView,
+                    mapOverlays: map.makeOverlayPolygons(),
                     caseCoordinates: CLLocationCoordinate2D(
                         latitude: worksite.latitude,
                         longitude: worksite.longitude,
-                    )
+                    ),
                 )
                 .frame(maxWidth: .infinity)
                 .frame(height: appTheme.listItemMapHeight)

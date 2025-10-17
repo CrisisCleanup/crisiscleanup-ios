@@ -33,6 +33,7 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
     private var selectedAddress: LocationAddress?
 
     @Published var isMapSatelliteView = false
+    private var isMapSatelliteViewLoadedGuard = LockingBool()
 
     private let outOfBoundsManager: LocationOutOfBoundsManager
 
@@ -130,6 +131,7 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
 
     func onViewDisappear() {
         subscriptions = cancelSubscriptions(subscriptions)
+        isMapSatelliteViewLoadedGuard.set(to: false)
     }
 
     private func subscribeLoading() {
@@ -190,6 +192,9 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
     private func subscribeMapState() {
         Task {
             do {
+                guard !isMapSatelliteViewLoadedGuard.getAndSet(to: true) else {
+                    return
+                }
                 let preferences = try await appPreferences.preferences.eraseToAnyPublisher().asyncFirst()
                 let isMapSatelliteView = preferences.isMapSatelliteView ?? false
                 Task { @MainActor in
@@ -203,7 +208,9 @@ class CaseChangeLocationAddressViewModel: ObservableObject {
         $isMapSatelliteView
             .removeDuplicates()
             .sink {
-                self.appPreferences.setMapSatelliteView($0)
+                if self.isMapSatelliteViewLoadedGuard.get() {
+                    self.appPreferences.setMapSatelliteView($0)
+                }
             }
             .store(in: &subscriptions)
     }

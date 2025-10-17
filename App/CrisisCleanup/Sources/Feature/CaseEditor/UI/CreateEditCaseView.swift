@@ -714,10 +714,11 @@ private struct PropertyInformation: View {
             }
 
             let outOfBoundsMessage = viewModel.locationOutOfBoundsMessage
-            // TODO: Remove tint over satellite view
             CreateEditCaseMapView(
                 map: $map,
                 latLng: $locationData.coordinates,
+                isSatelliteMapType: viewModel.isMapSatelliteView,
+                mapOverlays: map.makeOverlayPolygons(),
                 isCreateWorksite: viewModel.isCreateWorksite,
                 hasInitialCoordinates: viewModel.hasInitialCoordinates
             )

@@ -42,6 +42,7 @@ class CasesViewModel: ObservableObject {
     @Published private(set) var filtersCount = 0
 
     @Published var isMapSatelliteView = false
+    private var isMapSatelliteViewLoadedGuard = LockingBool()
 
     @Published private(set) var isTableView = false
 
@@ -221,6 +222,7 @@ class CasesViewModel: ObservableObject {
         subscriptions = cancelSubscriptions(subscriptions)
         hasDisappeared = true
         incidentOnDisappear = incidentId
+        isMapSatelliteViewLoadedGuard.set(to: false)
     }
 
     private func subscribeLoading() {
@@ -536,6 +538,9 @@ class CasesViewModel: ObservableObject {
     private func subscribeViewState() {
         Task {
             do {
+                guard !isMapSatelliteViewLoadedGuard.getAndSet(to: true) else {
+                    return
+                }
                 let preferences = try await appPreferences.preferences.eraseToAnyPublisher().asyncFirst()
                 let isMapSatelliteView = preferences.isMapSatelliteView ?? false
                 Task { @MainActor in
@@ -549,7 +554,9 @@ class CasesViewModel: ObservableObject {
         $isMapSatelliteView
             .removeDuplicates()
             .sink {
-                self.appPreferences.setMapSatelliteView($0)
+                if self.isMapSatelliteViewLoadedGuard.get() {
+                    self.appPreferences.setMapSatelliteView($0)
+                }
             }
             .store(in: &subscriptions)
 

@@ -4,6 +4,7 @@ import SwiftUI
 // https://developer.apple.com/forums/thread/653935
 struct HtmlTextView: View {
     let htmlContent: String
+    var linkify: Bool = true
 
     @State private var contentAttributedString = AttributedString()
 
@@ -11,7 +12,7 @@ struct HtmlTextView: View {
         Text(contentAttributedString)
             .onAppear {
                 DispatchQueue.main.async {
-                    let data = Data(self.htmlContent.utf8)
+                    let data = Data(htmlContent.utf8)
                     if let attributedString = try? NSMutableAttributedString(
                         data: data,
                         options: [
@@ -21,6 +22,14 @@ struct HtmlTextView: View {
                     ) {
                         attributedString.replaceFontBodyLarge()
                         contentAttributedString = AttributedString(attributedString)
+
+                        if !linkify {
+                            for run in contentAttributedString.runs {
+                                if run.link != nil {
+                                    contentAttributedString[run.range].link = nil
+                                }
+                            }
+                        }
                     }
                 }
             }

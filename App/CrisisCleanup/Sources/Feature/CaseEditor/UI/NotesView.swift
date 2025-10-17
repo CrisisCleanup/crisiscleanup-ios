@@ -52,10 +52,12 @@ struct NoteContentView: View {
     let text: String
 
     var body: some View {
-        if text.contains("<"),
-           text.contains(">") {
-            // TODO: Render HTML without links. Notes should never link out.
-            HtmlTextView(htmlContent: text)
+        if text.contains("<") && text.contains(">") ||
+            text.contains("&#") {
+            HtmlTextView(
+                htmlContent: text,
+                linkify: false,
+            )
         } else {
             Text(text)
         }

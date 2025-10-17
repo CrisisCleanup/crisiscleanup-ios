@@ -59,12 +59,12 @@ struct CasesLayoutView: View {
                     map: $map,
                     focusWorksiteCenter: $viewModel.editedWorksiteLocation,
                     isSatelliteMapType: viewModel.isMapSatelliteView,
-                    viewModel: viewModel,
                     mapOverlays: map.makeOverlayPolygons(),
+                    viewModel: viewModel,
                     onSelectWorksite: { worksiteId in
                         let incidentId = viewModel.incidentsData.selectedId
                         router.viewCase(incidentId: incidentId, worksiteId: worksiteId)
-                    }
+                    },
                 )
                 .onReceive(viewModel.$mapCameraBounds) { bounds in
                     animateToSelectedIncidentBounds(bounds.bounds)

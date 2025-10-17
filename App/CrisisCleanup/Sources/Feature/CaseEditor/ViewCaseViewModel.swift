@@ -39,6 +39,7 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
     @Published private(set) var distanceAway = ""
 
     @Published var isMapSatelliteView = false
+    private var isMapSatelliteViewLoadedGuard = LockingBool()
 
     @Published private(set) var isLoading = true
 
@@ -233,6 +234,7 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
 
     func onViewDisappear() {
         subscriptions = cancelSubscriptions(subscriptions)
+        isMapSatelliteViewLoadedGuard.set(to: false)
     }
 
     private func subscribeLoading() {
@@ -302,6 +304,9 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
     private func subscribeViewState() {
         Task {
             do {
+                guard !isMapSatelliteViewLoadedGuard.getAndSet(to: true) else {
+                    return
+                }
                 let preferences = try await appPreferences.preferences.eraseToAnyPublisher().asyncFirst()
                 let isMapSatelliteView = preferences.isMapSatelliteView ?? false
                 Task { @MainActor in
@@ -315,7 +320,9 @@ class ViewCaseViewModel: ObservableObject, KeyAssetTranslator {
         $isMapSatelliteView
             .removeDuplicates()
             .sink {
-                self.appPreferences.setMapSatelliteView($0)
+                if self.isMapSatelliteViewLoadedGuard.get() {
+                    self.appPreferences.setMapSatelliteView($0)
+                }
             }
             .store(in: &subscriptions)
 

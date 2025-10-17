@@ -52,17 +52,19 @@ extension MKMapView {
     }
 }
 
-class CasesMapViewCoordinator: NSObject, MKMapViewDelegate {
-    let viewModel: CasesViewModel
-    let onSelectWorksite: (Int64) -> Void
+class CasesMapViewCoordinator: NSObject, MKMapViewDelegate, TintCoordinator {
+    var isTintApplied: Bool
 
-    fileprivate var isTintApplied: Bool = false
+    private let viewModel: CasesViewModel
+    private let onSelectWorksite: (Int64) -> Void
 
     init(
         _ viewModel: CasesViewModel,
+        _ isTintApplied: Bool = false,
         _ onSelectWorksite: @escaping (Int64) -> Void
     ) {
         self.viewModel = viewModel
+        self.isTintApplied = isTintApplied
         self.onSelectWorksite = onSelectWorksite
     }
 
@@ -71,9 +73,6 @@ class CasesMapViewCoordinator: NSObject, MKMapViewDelegate {
            let selected = firstAnnotation as? WorksiteAnnotationMapMark {
             onSelectWorksite(selected.source.id)
         }
-    }
-
-    func mapView(_ mapView: MKMapView, didDeselect view: MKAnnotationView) {
     }
 
     func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
@@ -117,14 +116,13 @@ class CasesMapViewCoordinator: NSObject, MKMapViewDelegate {
     }
 }
 
-internal struct CasesMapView : UIViewRepresentable {
+internal struct CasesMapView : UIViewRepresentable, MapViewContainer {
     @Binding var map: MKMapView
     @Binding var focusWorksiteCenter: CLLocationCoordinate2D?
-    let isSatelliteMapType: Bool
+    var isSatelliteMapType: Bool
+    var mapOverlays: [MKOverlay]
 
     @ObservedObject var viewModel: CasesViewModel
-
-    let mapOverlays: [MKOverlay]
 
     let onSelectWorksite: (Int64) -> Void
 
@@ -147,7 +145,11 @@ internal struct CasesMapView : UIViewRepresentable {
     }
 
     func makeCoordinator() -> CasesMapViewCoordinator {
-        CasesMapViewCoordinator(viewModel, onSelectWorksite)
+        CasesMapViewCoordinator(
+            viewModel,
+            !isSatelliteMapType,
+            onSelectWorksite,
+        )
     }
 
     func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<CasesMapView>) {
@@ -158,16 +160,6 @@ internal struct CasesMapView : UIViewRepresentable {
             }
         }
 
-        if let coordinator = (map.delegate as? Coordinator),
-           coordinator.isTintApplied == isSatelliteMapType {
-            // Overlays references don't match on first toggle
-            let polygonOverlays = map.overlays.filter { $0 is MKPolygon }
-            map.removeOverlays(polygonOverlays)
-
-            coordinator.isTintApplied = !isSatelliteMapType
-            if !isSatelliteMapType {
-                map.addOverlays(mapOverlays)
-            }
-        }
+        syncMapOverlays(map, mapOverlays)
     }
 }

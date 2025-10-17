@@ -15,8 +15,10 @@ internal func makeCrisisCleanupPinAnnotation(
     )
 }
 
-struct MoveMapView : UIViewRepresentable {
+struct MoveMapView : UIViewRepresentable, MapViewContainer {
     @Binding var map: MKMapView
+    let isSatelliteMapType: Bool
+    let mapOverlays: [MKOverlay]
 
     var targetCoordinates: CLLocationCoordinate2D
     var isPinCenterScreen: Bool
@@ -32,8 +34,10 @@ struct MoveMapView : UIViewRepresentable {
         let isNewMap = map.annotations.isEmpty
 
         map.configure(
+            overlays: mapOverlays,
             isScrollEnabled: true,
             isExistingMap: !isNewMap,
+            isSatelliteView: isSatelliteMapType,
         )
 
         map.delegate = context.coordinator
@@ -47,7 +51,10 @@ struct MoveMapView : UIViewRepresentable {
     }
 
     func makeCoordinator() -> MoveMapCoordinator {
-        MoveMapCoordinator(regionChangeListener: regionChangeListener)
+        MoveMapCoordinator(
+            regionChangeListener: regionChangeListener,
+            isTintApplied: !isSatelliteMapType,
+        )
     }
 
     func updateUIView(_ uiView: MKMapView, context: UIViewRepresentableContext<MoveMapView>) {
@@ -72,5 +79,7 @@ struct MoveMapView : UIViewRepresentable {
                 uiView.animateToCenter(targetCoordinates, zoomLevel: 7)
             }
         }
+
+        syncMapOverlays(map, mapOverlays)
     }
 }
