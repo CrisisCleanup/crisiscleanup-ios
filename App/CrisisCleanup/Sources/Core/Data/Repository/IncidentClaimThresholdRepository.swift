@@ -46,14 +46,21 @@ class CrisisCleanupIncidentClaimThresholdRepository: IncidentClaimThresholdRepos
         _ incidentThresholds: [IncidentClaimThreshold],
     ) async {
         do {
-            let records = incidentThresholds.map {
-                IncidentClaimThresholdRecord(
-                    userId: accountId,
-                    incidentId: $0.incidentId,
-                    userClaimCount: $0.claimedCount,
-                    userCloseRatio: $0.closedRatio,
-                )
-            }
+            let incidentsPublisher = incidentSelector.incidentsData.eraseToAnyPublisher()
+            let incidentIds = try await incidentsPublisher.asyncFirst().incidents.map { $0.id }
+            let idSet = Set(incidentIds)
+            let records = incidentThresholds
+                .filter {
+                    idSet.contains($0.incidentId)
+                }
+                .map {
+                    IncidentClaimThresholdRecord(
+                        userId: accountId,
+                        incidentId: $0.incidentId,
+                        userClaimCount: $0.claimedCount,
+                        userCloseRatio: $0.closedRatio,
+                    )
+                }
             try await claimThresholdDataSource.saveIncidentThresholds(accountId, records)
         } catch {
             logger.logError(error)
