@@ -213,7 +213,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
         let request = requestProvider.incidentOrganizations
             .addQueryItems(
                 "incident", String(incidentId),
-                "fields", fields.joined(separator: ","),
+                "fields", fields.commaJoined,
                 "limit", String(limit),
                 "offset", String(offset)
             )
@@ -407,7 +407,7 @@ class DataApiClient : CrisisCleanupNetworkDataSource {
             .addQueryItems(
                 "id__in", ids
                     .map { "\($0)"}
-                    .joined(separator: ",")
+                    .commaJoined
             )
         return try await processWorksitesFlagsFormData(request).data ?? []
     }
