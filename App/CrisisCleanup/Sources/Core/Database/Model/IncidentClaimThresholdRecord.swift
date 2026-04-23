@@ -25,7 +25,8 @@ struct IncidentClaimThresholdRecord: Equatable {
 extension IncidentClaimThresholdRecord: Codable, FetchableRecord, PersistableRecord {
     static var databaseTableName: String = "incidentClaimThreshold"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // Treat as fileprivate
+    enum Columns: String, ColumnExpression {
         case userId,
              incidentId,
              userClaimCount,

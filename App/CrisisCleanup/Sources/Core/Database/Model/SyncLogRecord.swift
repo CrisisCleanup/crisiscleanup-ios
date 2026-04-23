@@ -22,7 +22,8 @@ struct SyncLogRecord: Identifiable, Equatable {
 extension SyncLogRecord: Codable, FetchableRecord, MutablePersistableRecord {
     static var databaseTableName: String = "syncLog"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // Treat as fileprivate
+    enum Columns: String, ColumnExpression {
         case id,
              logTime,
              logType,

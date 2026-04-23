@@ -48,7 +48,8 @@ struct IncidentRecord: Identifiable, Equatable {
 extension IncidentRecord: Codable, FetchableRecord, PersistableRecord {
     static var databaseTableName: String = "incident"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // Treat as fileprivate
+    enum Columns: String, ColumnExpression {
         case id,
              startAt,
              name,
@@ -93,7 +94,8 @@ struct IncidentToIncidentLocationRecord: Identifiable, Equatable {
 extension IncidentToIncidentLocationRecord: Codable, FetchableRecord, PersistableRecord {
     static var databaseTableName: String = "incidentToIncidentLocation"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // Treat as fileprivate
+    enum Columns: String, ColumnExpression {
         case id, incidentLocationId
     }
 
@@ -114,7 +116,8 @@ struct IncidentLocationRecord: Identifiable, Equatable {
 extension IncidentLocationRecord: Codable, FetchableRecord, PersistableRecord {
     static var databaseTableName: String = "incidentLocation"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // Treat as fileprivate
+    enum Columns: String, ColumnExpression {
         case id, location
     }
 }
@@ -185,7 +188,8 @@ struct IncidentFormFieldRecord: Identifiable, Equatable {
 extension IncidentFormFieldRecord: Codable, FetchableRecord, PersistableRecord {
     static var databaseTableName: String = "incidentFormField"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // Treat as fileprivate
+    enum Columns: String, ColumnExpression {
         case id,
              incidentId,
              parentKey,

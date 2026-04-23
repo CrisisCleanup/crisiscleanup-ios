@@ -18,7 +18,8 @@ struct IncidentOrganizationRecord: Identifiable, Equatable {
 extension IncidentOrganizationRecord: Codable, FetchableRecord, PersistableRecord {
     static var databaseTableName: String = "incidentOrganization"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // Treat as fileprivate
+    enum Columns: String, ColumnExpression {
         case id,
              name,
              primaryLocation,
@@ -56,7 +57,8 @@ struct OrganizationToPrimaryContactRecord: Identifiable, Equatable {
 extension OrganizationToPrimaryContactRecord: Codable, FetchableRecord, PersistableRecord {
     static var databaseTableName: String = "organizationToPrimaryContact"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // Treat as fileprivate
+    enum Columns: String, ColumnExpression {
         case id,
              contactId
     }
@@ -83,7 +85,8 @@ struct OrganizationAffiliateRecord: Identifiable, Equatable {
 extension OrganizationAffiliateRecord: Codable, FetchableRecord, PersistableRecord {
     static var databaseTableName: String = "organizationAffiliate"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // Treat as fileprivate
+    enum Columns: String, ColumnExpression {
         case id,
              affiliateId
     }
@@ -131,7 +134,8 @@ struct IncidentOrganizationSyncStatRecord : Identifiable, Equatable {
 extension IncidentOrganizationSyncStatRecord: Codable, FetchableRecord, PersistableRecord {
     static var databaseTableName: String = "incidentOrganizationSyncStat"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // Treat as fileprivate
+    enum Columns: String, ColumnExpression {
         case id,
              targetCount,
              successfulSync,

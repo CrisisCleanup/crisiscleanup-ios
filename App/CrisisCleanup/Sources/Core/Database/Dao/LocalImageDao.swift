@@ -69,9 +69,9 @@ public class LocalImageDao {
 
     func getDeletedPhotoFileIds(_ worksiteId: Int64) throws -> [Int64] {
         try reader.read { db in
-            let networkFileLocalImageAlias = TableAlias(name: "fi")
+            let networkFileLocalImageAlias = TableAlias<NetworkFileLocalImageRecord>(name: "fi")
             let fi = NetworkFileRecord.networkFileLocalImage.aliased(networkFileLocalImageAlias)
-            let worksiteToNetworkFileAlias = TableAlias(name: "wf")
+            let worksiteToNetworkFileAlias = TableAlias<WorksiteToNetworkFileRecord>(name: "wf")
             let wf = NetworkFileRecord.networkFileToWorksite
                 .aliased(worksiteToNetworkFileAlias)
             return try NetworkFileRecord

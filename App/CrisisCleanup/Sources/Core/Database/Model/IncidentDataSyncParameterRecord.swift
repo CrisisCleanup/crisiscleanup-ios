@@ -42,7 +42,8 @@ struct IncidentDataSyncParameterRecord: Identifiable, Equatable {
 extension IncidentDataSyncParameterRecord: Codable, FetchableRecord, PersistableRecord {
     static var databaseTableName: String = "incidentDataSyncParameter"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // Treat as fileprivate
+    enum Columns: String, ColumnExpression {
         case id,
              updatedBefore,
              updatedAfter,

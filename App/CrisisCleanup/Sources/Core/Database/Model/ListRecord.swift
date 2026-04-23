@@ -27,7 +27,8 @@ struct ListRecord: Identifiable, Equatable {
 extension ListRecord: Codable, FetchableRecord, MutablePersistableRecord {
     static var databaseTableName: String = "list"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // Treat as fileprivate
+    enum Columns: String, ColumnExpression {
         case id,
              networkId,
              localGlobalUuid,
@@ -61,10 +62,8 @@ extension ListRecord: Codable, FetchableRecord, MutablePersistableRecord {
     }
 
     func syncUpsert(_ db: Database) throws {
-        let inserted = try insertAndFetch(db, onConflict: .ignore)
-        if inserted == nil {
-            try syncUpdate(db)
-        }
+        let _ = try insertAndFetch(db, onConflict: .ignore)
+        try syncUpdate(db)
     }
 
     func syncUpdate(_ db: Database) throws {

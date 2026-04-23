@@ -10,7 +10,8 @@ struct WorkTypeStatusRecord : Identifiable, Equatable {
 extension WorkTypeStatusRecord: Codable, FetchableRecord, PersistableRecord {
     static var databaseTableName: String = "workTypeStatus"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // Treat as fileprivate
+    enum Columns: String, ColumnExpression {
         case id,
              name,
              listOrder,

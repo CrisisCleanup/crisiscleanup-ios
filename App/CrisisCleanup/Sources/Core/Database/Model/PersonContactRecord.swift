@@ -26,7 +26,8 @@ struct PersonContactRecord: Identifiable, Equatable {
 extension PersonContactRecord: Codable, FetchableRecord, PersistableRecord {
     static var databaseTableName: String = "personContact"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // Treat as fileprivate
+    enum Columns: String, ColumnExpression {
         case id,
              firstName,
              lastName,

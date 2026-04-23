@@ -491,7 +491,7 @@ public class WorksiteDao {
         offset: Int
     ) throws -> [PopulatedWorksiteMapVisual] {
         try reader.read { db in
-            let worksiteAlias = TableAlias(name: "w")
+            let worksiteAlias = TableAlias<WorksiteRecord>(name: "w")
             let worksiteColumns = WorksiteRootRecord.worksite
                 .select(WorksiteRecord.visualColumns)
                 .aliased(worksiteAlias)

@@ -75,8 +75,8 @@ extension DerivableRequest<NetworkFileRecord> {
     }
 
     func byWorksiteIdNotDeleted(
-        _ fiAlias: TableAlias,
-        _ wfAlias: TableAlias,
+        _ fiAlias: TableAlias<NetworkFileLocalImageRecord>,
+        _ wfAlias: TableAlias<WorksiteToNetworkFileRecord>,
         _ worksiteId: Int64
     ) -> Self {
         filter(
