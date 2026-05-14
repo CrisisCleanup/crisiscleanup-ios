@@ -1,5 +1,7 @@
 DebugConfig.xcconfig
+DebugConfig.xcconfig.bak
 NonpConfig.xcconfig
 StagingConfig.xcconfig
+StagingConfig.xcconfig.bak
 ReleaseConfig.xcconfig
 Release-auConfig.xcconfig
