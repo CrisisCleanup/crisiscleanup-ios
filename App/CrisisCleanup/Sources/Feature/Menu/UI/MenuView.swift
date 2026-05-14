@@ -414,7 +414,7 @@ private struct AppUpdateView: View {
     var body: some View {
         if let url = URL(string: "itms-apps://itunes.apple.com/app/id6463570192") {
             HStack(alignment: .center, spacing: appTheme.gridItemSpacing) {
-                Text(t.t("~~A new version of the app is available"))
+                Text(t.t("info.new_version_app_available"))
                     .overlay(
                         Circle()
                             // TODO: Common color with system badge
