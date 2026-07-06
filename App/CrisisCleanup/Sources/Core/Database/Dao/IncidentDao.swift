@@ -219,7 +219,7 @@ extension AppDatabase {
                 .filter(IncidentToIncidentLocationRecord.filterByIds(ids: incidentIds))
                 .deleteAll(db)
             try locationXrs.forEach { xr in
-                _ = try xr.insertAndFetch(db, onConflict: .ignore)
+                try xr.insert(db, onConflict: .ignore)
             }
         }
     }

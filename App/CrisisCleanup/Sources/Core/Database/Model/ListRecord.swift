@@ -62,7 +62,8 @@ extension ListRecord: Codable, FetchableRecord, MutablePersistableRecord {
     }
 
     func syncUpsert(_ db: Database) throws {
-        let _ = try insertAndFetch(db, onConflict: .ignore)
+        var insertRecord = self
+        try insertRecord.insert(db, onConflict: .ignore)
         try syncUpdate(db)
     }
 

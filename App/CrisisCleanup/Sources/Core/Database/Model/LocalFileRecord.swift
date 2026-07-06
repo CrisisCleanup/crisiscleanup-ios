@@ -44,7 +44,8 @@ extension WorksiteLocalImageRecord: Codable, FetchableRecord, PersistableRecord 
     }
 
     func insertOrUpdateTag(_ db: Database) throws {
-        let _ = try insertAndFetch(db, onConflict: .ignore)
+        var insertRecord = self
+        try insertRecord.insert(db, onConflict: .ignore)
         try db.execute(
             sql:
                 """

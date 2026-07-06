@@ -47,8 +47,8 @@ public class SyncLogDao {
 extension AppDatabase {
     fileprivate func insertSyncLogs(_ logs: [SyncLogRecord]) async throws {
         try await dbWriter.write { db in
-            for log in logs {
-                _ = try log.insertAndFetch(db, onConflict: .ignore)
+            for var log in logs {
+                try log.insert(db, onConflict: .ignore)
             }
         }
     }

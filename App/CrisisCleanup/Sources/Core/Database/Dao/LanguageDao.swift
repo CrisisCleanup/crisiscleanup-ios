@@ -73,7 +73,7 @@ extension AppDatabase {
     ) async throws {
         try await dbWriter.write { db in
             try languages.forEach { language in
-                _ = try language.insertAndFetch(db, onConflict: .ignore)
+                try language.insert(db, onConflict: .ignore)
             }
         }
     }
