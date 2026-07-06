@@ -78,7 +78,7 @@ final class CoordinatesUtilTests: XCTestCase {
     }
 
     func testLongitudeCrossover() {
-        let coordinates = [
+        let coordinates: [(start: Double, end: Double)] = [
             (170.0, -170.0),
             (165.4, -172.1),
             (177.7, -36.8),

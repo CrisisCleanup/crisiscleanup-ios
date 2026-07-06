@@ -32,7 +32,8 @@ struct LanguageTranslationRecord: Identifiable, Equatable {
 extension LanguageTranslationRecord: Codable, FetchableRecord, PersistableRecord {
     static var databaseTableName: String = "languageTranslation"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // Treat as fileprivate
+    enum Columns: String, ColumnExpression {
         case key,
              name,
              translationJson,
@@ -53,7 +54,8 @@ extension LanguageRecord: Codable, FetchableRecord, PersistableRecord {
     static var databaseTableName: String = "languageTranslation"
     static var databaseSelection: [any SQLSelectable] = [Columns.key, Columns.name]
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // Treat as fileprivate
+    enum Columns: String, ColumnExpression {
         case key, name
     }
 }

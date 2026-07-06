@@ -14,7 +14,8 @@ struct WorksiteLocalImageRecord : Identifiable, Equatable {
 extension WorksiteLocalImageRecord: Codable, FetchableRecord, PersistableRecord {
     static var databaseTableName: String = "worksiteLocalImage"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // Treat as fileprivate
+    enum Columns: String, ColumnExpression {
         case id,
              worksiteId,
              localDocumentId,
@@ -43,22 +44,21 @@ extension WorksiteLocalImageRecord: Codable, FetchableRecord, PersistableRecord 
     }
 
     func insertOrUpdateTag(_ db: Database) throws {
-        let inserted = try insertAndFetch(db, onConflict: .ignore)
-        if inserted == nil {
-            try db.execute(
-                sql:
-                    """
-                    UPDATE worksiteLocalImage
-                    SET tag=:tag
-                    WHERE worksiteId=:worksiteId AND localDocumentId=:localDocumentId
-                    """,
-                arguments: [
-                    "worksiteId": worksiteId,
-                    "localDocumentId": localDocumentId,
-                    "tag": tag,
-                ]
-            )
-        }
+        var insertRecord = self
+        try insertRecord.insert(db, onConflict: .ignore)
+        try db.execute(
+            sql:
+                """
+                UPDATE worksiteLocalImage
+                SET tag=:tag
+                WHERE worksiteId=:worksiteId AND localDocumentId=:localDocumentId
+                """,
+            arguments: [
+                "worksiteId": worksiteId,
+                "localDocumentId": localDocumentId,
+                "tag": tag,
+            ]
+        )
     }
 }
 

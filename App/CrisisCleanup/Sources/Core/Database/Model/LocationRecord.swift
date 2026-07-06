@@ -33,7 +33,8 @@ extension String {
 extension LocationRecord: Codable, FetchableRecord, PersistableRecord {
     static var databaseTableName: String = "location"
 
-    fileprivate enum Columns: String, ColumnExpression {
+    // Treat as fileprivate
+    enum Columns: String, ColumnExpression {
         case id,
              shapeType,
              coordinates

@@ -387,7 +387,7 @@ class RequestOrgAccessViewModel: ObservableObject {
                 }
             } else {
                 logger.logError(GenericError("User transfer to org failed."))
-                transferOrgErrorMessage = translator.t("~~There was an issue during organization transfer. Try again later or reach out to support for help.")
+                transferOrgErrorMessage = translator.t("requestAccess.org_transfer_error")
             }
         }
     }

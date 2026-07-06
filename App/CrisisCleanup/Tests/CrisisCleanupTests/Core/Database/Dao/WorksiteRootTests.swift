@@ -53,9 +53,9 @@ class WorksiteRootRecordTests: XCTestCase {
                     incidentId: inserted.incidentId
                 )
 
-                let worksite = testWorksiteShortRecord(inserted.networkId, inserted.incidentId, self.now)
+                var worksite = testWorksiteShortRecord(inserted.networkId, inserted.incidentId, self.now)
                     .copy { $0.id = worksiteId }
-                _ = try worksite.insertAndFetch(db)
+                try worksite.insert(db)
             } catch is GenericError {
             }
         })
@@ -84,9 +84,9 @@ class WorksiteRootRecordTests: XCTestCase {
                 incidentId: inserted.incidentId
             )
 
-            let worksite = testWorksiteShortRecord(inserted.networkId, inserted.incidentId, self.now)
+            var worksite = testWorksiteShortRecord(inserted.networkId, inserted.incidentId, self.now)
                 .copy { $0.id = worksiteId }
-            _ = try worksite.insertAndFetch(db)
+            try worksite.insert(db)
         })
         let fetchedB = try await dbQueue.write({ db in
             let root = try WorksiteRootRecord

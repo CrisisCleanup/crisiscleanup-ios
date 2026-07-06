@@ -10,8 +10,6 @@
 		4E0CCEEC2A1966EE00EC6906 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0CCEEB2A1966EE00EC6906 /* AppSettings.swift */; };
 		4E0CCEF52A196D4F00EC6906 /* AppBuildEnv.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0CCEF42A196D4F00EC6906 /* AppBuildEnv.swift */; };
 		4E0CCEF92A1970E200EC6906 /* ConfigProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0CCEF82A1970E200EC6906 /* ConfigProperties.swift */; };
-		4E0CCF032A19889B00EC6906 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 4E0CCF022A19889B00EC6906 /* FirebaseCrashlytics */; };
-		4E0CCF052A19889B00EC6906 /* FirebasePerformance in Frameworks */ = {isa = PBXBuildFile; productRef = 4E0CCF042A19889B00EC6906 /* FirebasePerformance */; };
 		4E0CCF082A1989FB00EC6906 /* AppLoggerProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0CCF072A1989FB00EC6906 /* AppLoggerProvider.swift */; };
 		4E2637D92B1E48530064424E /* GoogleService-Info-release-au.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4E2637D82B1E48530064424E /* GoogleService-Info-release-au.plist */; };
 		4E342A4D2A7A0CA600B55713 /* AppFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E342A4C2A7A0CA600B55713 /* AppFont.swift */; };
@@ -32,12 +30,14 @@
 		4E646A002A1916BB009148E0 /* NeedleGenerated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E6469FF2A1916BB009148E0 /* NeedleGenerated.swift */; };
 		4E70C5392A69F89500A6C59B /* GooglePlaceAddressSearchRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E70C5382A69F89500A6C59B /* GooglePlaceAddressSearchRepository.swift */; };
 		4E70C53B2A6A1BE300A6C59B /* Address+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E70C53A2A6A1BE300A6C59B /* Address+Extension.swift */; };
-		4E7240682D9CAF9100676823 /* GooglePlacesSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4E7240672D9CAF9100676823 /* GooglePlacesSwift */; };
 		4E75623E2A117E140029D5D7 /* CrisisCleanup in Frameworks */ = {isa = PBXBuildFile; productRef = 4E75623D2A117E140029D5D7 /* CrisisCleanup */; };
 		4EBFB44A2A1910A800DA7C84 /* NeedleFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 4EBFB4492A1910A800DA7C84 /* NeedleFoundation */; };
 		4ECCE0C62AC37A2400D91463 /* ExternalActivityProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ECCE0C52AC37A2400D91463 /* ExternalActivityProcessor.swift */; };
 		4ECCE0C82AC37D7000D91463 /* CrisisCleanupExternalEventBus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ECCE0C72AC37D7000D91463 /* CrisisCleanupExternalEventBus.swift */; };
 		4ED625932A25160800C33EAB /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4ED6258B2A25160800C33EAB /* GoogleService-Info.plist */; };
+		4ED9E9CC2FB63084002E34D6 /* GooglePlacesSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4ED9E9CB2FB63084002E34D6 /* GooglePlacesSwift */; };
+		4ED9E9CF2FB630ED002E34D6 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 4ED9E9CE2FB630ED002E34D6 /* FirebaseCrashlytics */; };
+		4ED9E9D12FB630ED002E34D6 /* FirebasePerformance in Frameworks */ = {isa = PBXBuildFile; productRef = 4ED9E9D02FB630ED002E34D6 /* FirebasePerformance */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -139,11 +139,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4E0CCF032A19889B00EC6906 /* FirebaseCrashlytics in Frameworks */,
-				4E7240682D9CAF9100676823 /* GooglePlacesSwift in Frameworks */,
 				4EBFB44A2A1910A800DA7C84 /* NeedleFoundation in Frameworks */,
-				4E0CCF052A19889B00EC6906 /* FirebasePerformance in Frameworks */,
+				4ED9E9CF2FB630ED002E34D6 /* FirebaseCrashlytics in Frameworks */,
+				4ED9E9D12FB630ED002E34D6 /* FirebasePerformance in Frameworks */,
 				4E75623E2A117E140029D5D7 /* CrisisCleanup in Frameworks */,
+				4ED9E9CC2FB63084002E34D6 /* GooglePlacesSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -201,7 +201,6 @@
 				4E46479A29EEE23E0062147F /* AppTests */,
 				4E4647A429EEE23E0062147F /* AppUITests */,
 				4E46478729EEE23B0062147F /* Products */,
-				E232BBD330A96B345051B591 /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -302,13 +301,6 @@
 			path = Sources;
 			sourceTree = "<group>";
 		};
-		E232BBD330A96B345051B591 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Pods;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -335,9 +327,9 @@
 			packageProductDependencies = (
 				4E75623D2A117E140029D5D7 /* CrisisCleanup */,
 				4EBFB4492A1910A800DA7C84 /* NeedleFoundation */,
-				4E0CCF022A19889B00EC6906 /* FirebaseCrashlytics */,
-				4E0CCF042A19889B00EC6906 /* FirebasePerformance */,
-				4E7240672D9CAF9100676823 /* GooglePlacesSwift */,
+				4ED9E9CB2FB63084002E34D6 /* GooglePlacesSwift */,
+				4ED9E9CE2FB630ED002E34D6 /* FirebaseCrashlytics */,
+				4ED9E9D02FB630ED002E34D6 /* FirebasePerformance */,
 			);
 			productName = App;
 			productReference = 4E46478629EEE23B0062147F /* CrisisCleanupApp.app */;
@@ -414,8 +406,8 @@
 			mainGroup = 4E46477D29EEE23B0062147F;
 			packageReferences = (
 				4EBFB4482A1910A800DA7C84 /* XCRemoteSwiftPackageReference "needle" */,
-				4E0CCF012A19889B00EC6906 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
-				4E7240662D9CAF9100676823 /* XCRemoteSwiftPackageReference "ios-places-sdk" */,
+				4ED9E9CA2FB63084002E34D6 /* XCRemoteSwiftPackageReference "ios-places-sdk" */,
+				4ED9E9CD2FB630ED002E34D6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			productRefGroup = 4E46478729EEE23B0062147F /* Products */;
 			projectDirPath = "";
@@ -694,7 +686,7 @@
 				CODE_SIGN_ENTITLEMENTS = "App/AppRelease-au.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 180;
+				CURRENT_PROJECT_VERSION = 185;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = ZM286L3HTV;
@@ -723,7 +715,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.9.100;
+				MARKETING_VERSION = 0.9.105;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.aus;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -909,7 +901,7 @@
 				CODE_SIGN_ENTITLEMENTS = App/AppDebug.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 180;
+				CURRENT_PROJECT_VERSION = 185;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = ZM286L3HTV;
@@ -938,7 +930,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.9.100;
+				MARKETING_VERSION = 0.9.105;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.dev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -960,7 +952,7 @@
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 180;
+				CURRENT_PROJECT_VERSION = 185;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = ZM286L3HTV;
@@ -989,7 +981,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.9.100;
+				MARKETING_VERSION = 0.9.105;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.prod;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1158,7 +1150,7 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 180;
+				CURRENT_PROJECT_VERSION = 185;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"App/Preview Content\"";
 				DEVELOPMENT_TEAM = AYLY2UUH8J;
@@ -1189,11 +1181,11 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.9.100;
+				MARKETING_VERSION = 0.9.105;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crisiscleanup.stg;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "crisis-cleanup-stg-adhoc-dist";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "crisis-cleanup-stg-adhoc";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -1299,22 +1291,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		4E0CCF012A19889B00EC6906 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 10.0.0;
-			};
-		};
-		4E7240662D9CAF9100676823 /* XCRemoteSwiftPackageReference "ios-places-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/googlemaps/ios-places-sdk";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 9.4.1;
-			};
-		};
 		4EBFB4482A1910A800DA7C84 /* XCRemoteSwiftPackageReference "needle" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/uber/needle.git";
@@ -1323,24 +1299,25 @@
 				minimumVersion = 0.0.23;
 			};
 		};
+		4ED9E9CA2FB63084002E34D6 /* XCRemoteSwiftPackageReference "ios-places-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googlemaps/ios-places-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 10.13.0;
+			};
+		};
+		4ED9E9CD2FB630ED002E34D6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.13.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		4E0CCF022A19889B00EC6906 /* FirebaseCrashlytics */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 4E0CCF012A19889B00EC6906 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseCrashlytics;
-		};
-		4E0CCF042A19889B00EC6906 /* FirebasePerformance */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 4E0CCF012A19889B00EC6906 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebasePerformance;
-		};
-		4E7240672D9CAF9100676823 /* GooglePlacesSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 4E7240662D9CAF9100676823 /* XCRemoteSwiftPackageReference "ios-places-sdk" */;
-			productName = GooglePlacesSwift;
-		};
 		4E75623D2A117E140029D5D7 /* CrisisCleanup */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = CrisisCleanup;
@@ -1349,6 +1326,21 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4EBFB4482A1910A800DA7C84 /* XCRemoteSwiftPackageReference "needle" */;
 			productName = NeedleFoundation;
+		};
+		4ED9E9CB2FB63084002E34D6 /* GooglePlacesSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4ED9E9CA2FB63084002E34D6 /* XCRemoteSwiftPackageReference "ios-places-sdk" */;
+			productName = GooglePlacesSwift;
+		};
+		4ED9E9CE2FB630ED002E34D6 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4ED9E9CD2FB630ED002E34D6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
+		4ED9E9D02FB630ED002E34D6 /* FirebasePerformance */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4ED9E9CD2FB630ED002E34D6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebasePerformance;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

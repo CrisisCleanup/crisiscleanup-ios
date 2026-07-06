@@ -3,66 +3,28 @@ import Combine
 // For binding dictionary key-values with SwiftUI views
 // Allows for toggling data from SwiftUI and observing from view models
 
-class BindingBoolDictionary: ObservableObject, MutableCollection {
-    let didChange = PassthroughSubject<Void, Never>()
-
-    var data: [String: Bool] = [:] {
-        didSet {
-            didChange.send(())
-        }
-    }
-
-    public typealias Index = String
-
-    var startIndex: String = ""
-    var endIndex: String = ""
+class BindingBoolDictionary: ObservableObject {
+    @Published var data: [String: Bool] = [:]
 
     init(_ data: [String: Bool] = [:]) {
         self.data = data
     }
 
-    subscript(position: String) -> Bool {
-        get {
-            data.keys.contains(position) ? data[position]! : false
-        }
-        set {
-            data[position] = newValue
-        }
-    }
-
-    func index(after i: String) -> String {
-        fatalError("Index after is not supported by \(self)")
+    subscript(key: String) -> Bool {
+        get { data[key] ?? false }
+        set { data[key] = newValue }
     }
 }
 
 class BindingStringDictionary: ObservableObject {
-    let didChange = PassthroughSubject<Void, Never>()
+    @Published var data: [String: String] = [:]
 
-    var data: [String: String] = [:] {
-        didSet {
-            didChange.send(())
-        }
-    }
-
-    public typealias Index = String
-
-    var startIndex: String = ""
-    var endIndex: String = ""
-
-    init(data: [String: String] = [:]) {
+    init(_ data: [String: String] = [:]) {
         self.data = data
     }
 
-    subscript(position: String) -> String {
-        get {
-            data.keys.contains(position) ? data[position]! : ""
-        }
-        set {
-            data[position] = newValue
-        }
-    }
-
-    func index(after i: String) -> String {
-        fatalError("Index after is not supported by \(self)")
+    subscript(key: String) -> String {
+        get { data[key] ?? "" }
+        set { data[key] = newValue }
     }
 }

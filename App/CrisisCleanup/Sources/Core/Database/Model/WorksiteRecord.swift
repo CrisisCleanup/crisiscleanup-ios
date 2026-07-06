@@ -81,7 +81,7 @@ extension WorksiteRootRecord: Codable, FetchableRecord, MutablePersistableRecord
             networkId: networkId,
             incidentId: incidentId
         )
-        return try rootRecord.insertAndFetch(db, onConflict: .rollback)!.id!
+        return try rootRecord.insertAndFetch(db, onConflict: .rollback).id!
     }
 
     static func syncUpdate(
@@ -625,7 +625,7 @@ extension DerivableRequest<WorksiteRecord> {
     }
 
     func byBounds(
-        alias: TableAlias,
+        alias: TableAlias<WorksiteRecord>,
         south: Double,
         north: Double,
         west: Double,
@@ -855,34 +855,33 @@ extension WorkTypeRecord: Codable, FetchableRecord, MutablePersistableRecord {
     }
 
     func syncUpsert(_ db: Database) throws {
-        let inserted = try insertAndFetch(db, onConflict: .ignore)
-        if inserted == nil {
-            try db.execute(
-                sql:
-                    """
-                    UPDATE workType SET
-                    createdAt   =COALESCE(:createdAt, createdAt),
-                    orgClaim    =:orgClaim,
-                    networkId   =:networkId,
-                    nextRecurAt =:nextRecurAt,
-                    phase       =:phase,
-                    recur       =:recur,
-                    status      =:status
-                    WHERE worksiteId=:worksiteId AND workType=:workType
-                    """,
-                arguments: [
-                    "networkId": networkId,
-                    "worksiteId": worksiteId,
-                    "createdAt": createdAt,
-                    "orgClaim": orgClaim,
-                    "nextRecurAt": nextRecurAt,
-                    "phase": phase,
-                    "recur": recur,
-                    "status": status,
-                    "workType": workType,
-                ]
-            )
-        }
+        var insertRecord = self
+        try insertRecord.insert(db, onConflict: .ignore)
+        try db.execute(
+            sql:
+                """
+                UPDATE workType SET
+                createdAt   =COALESCE(:createdAt, createdAt),
+                orgClaim    =:orgClaim,
+                networkId   =:networkId,
+                nextRecurAt =:nextRecurAt,
+                phase       =:phase,
+                recur       =:recur,
+                status      =:status
+                WHERE worksiteId=:worksiteId AND workType=:workType
+                """,
+            arguments: [
+                "networkId": networkId,
+                "worksiteId": worksiteId,
+                "createdAt": createdAt,
+                "orgClaim": orgClaim,
+                "nextRecurAt": nextRecurAt,
+                "phase": phase,
+                "recur": recur,
+                "status": status,
+                "workType": workType,
+            ]
+        )
     }
 
     static func getWorkTypes(
@@ -1232,26 +1231,25 @@ extension WorksiteNoteRecord: Codable, FetchableRecord, MutablePersistableRecord
     }
 
     func syncUpsert(_ db: Database) throws {
-        let inserted = try insertAndFetch(db, onConflict: .ignore)
-        if inserted == nil {
-            try db.execute(
-                sql:
-                    """
-                    UPDATE worksiteNote SET
-                           createdAt    =:createdAt,
-                           isSurvivor   =:isSurvivor,
-                           note         =:note
-                    WHERE worksiteId=:worksiteId AND networkId=:networkId AND localGlobalUuid=''
-                    """,
-                arguments: [
-                    "worksiteId": worksiteId,
-                    "networkId": networkId,
-                    "createdAt": createdAt,
-                    "isSurvivor": isSurvivor,
-                    "note": note,
-                ]
-            )
-        }
+        var insertRecord = self
+        try insertRecord.insert(db, onConflict: .ignore)
+        try db.execute(
+            sql:
+                """
+                UPDATE worksiteNote SET
+                       createdAt    =:createdAt,
+                       isSurvivor   =:isSurvivor,
+                       note         =:note
+                WHERE worksiteId=:worksiteId AND networkId=:networkId AND localGlobalUuid=''
+                """,
+            arguments: [
+                "worksiteId": worksiteId,
+                "networkId": networkId,
+                "createdAt": createdAt,
+                "isSurvivor": isSurvivor,
+                "note": note,
+            ]
+        )
     }
 
     static func syncDeleteUnspecified(

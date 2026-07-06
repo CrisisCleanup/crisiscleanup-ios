@@ -229,7 +229,7 @@ extension WorksiteDao {
         east: Double
     ) throws -> [PopulatedTableDataWorksite] {
         try reader.read { db in
-            let worksiteAlias = TableAlias(name: "w")
+            let worksiteAlias = TableAlias<WorksiteRecord>(name: "w")
             let worksiteRecord = WorksiteRootRecord.worksite
                 .aliased(worksiteAlias)
             return try WorksiteRootRecord

@@ -521,7 +521,7 @@ class WorksiteChangeDaoTests: XCTestCase {
     ) async throws -> EditWorksiteRecords {
         let core = records.core
         try await dbQueue.write { db in
-            _ = try WorksiteRootRecord(
+            var rootRecord = WorksiteRootRecord(
                 id: core.id,
                 syncUuid: "sync-uuid",
                 localModifiedAt: core.updatedAt,
@@ -531,8 +531,11 @@ class WorksiteChangeDaoTests: XCTestCase {
                 syncAttempt: 0,
                 networkId: core.networkId,
                 incidentId: core.incidentId
-            ).insertAndFetch(db)
-            _ = try core.insertAndFetch(db)
+            )
+            try rootRecord.insert(db)
+
+            var insertCore = core
+            try insertCore.insert(db)
 
             for record in records.flags {
                 var record = record
@@ -592,7 +595,7 @@ class WorksiteChangeDaoTests: XCTestCase {
             additionalOperations: { db in
                 // For mapping
                 try db.updateWorksiteFlagNetworkId(1, 201)
-                _ = try WorksiteFlagRecord(
+                var flagRecord = WorksiteFlagRecord(
                     11,
                     211,
                     worksiteId,
@@ -602,11 +605,11 @@ class WorksiteChangeDaoTests: XCTestCase {
                     "",
                     "reason-c",
                     ""
-                ).insertAndFetch(db, onConflict: .ignore)
+                )
+                try flagRecord.insert(db, onConflict: .ignore)
                 try db.updateWorksiteFlagNetworkId(21, 221)
 
-                try db.updateWorksiteNoteNetworkId(64, 264)
-                _ = try WorksiteNoteRecord(
+                var noteRecord = WorksiteNoteRecord(
                     41,
                     "",
                     241,
@@ -614,21 +617,24 @@ class WorksiteChangeDaoTests: XCTestCase {
                     self.createdAtB,
                     false,
                     "note-e"
-                ).insertAndFetch(db, onConflict: .ignore)
+                )
+                try db.updateWorksiteNoteNetworkId(64, 264)
+                try noteRecord.insert(db, onConflict: .ignore)
 
                 try db.updateWorkTypeNetworkId(1, 301)
-                _ = try WorkTypeRecord(
-                        id: 23,
-                        networkId: 223,
-                        worksiteId: worksiteId,
-                        createdAt: self.createdAtC,
-                        orgClaim: 523,
-                        nextRecurAt: nil,
-                        phase: 2,
-                        recur: nil,
-                        status: "status-existing",
-                        workType: "work-type-existing"
-                ).insertAndFetch(db, onConflict: .ignore)
+                var workTypeRecord = WorkTypeRecord(
+                    id: 23,
+                    networkId: 223,
+                    worksiteId: worksiteId,
+                    createdAt: self.createdAtC,
+                    orgClaim: 523,
+                    nextRecurAt: nil,
+                    phase: 2,
+                    recur: nil,
+                    status: "status-existing",
+                    workType: "work-type-existing"
+                )
+                try workTypeRecord.insert(db, onConflict: .ignore)
                 try db.updateWorkTypeNetworkId(37, 237)
             }
         )
